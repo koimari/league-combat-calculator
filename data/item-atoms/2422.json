@@ -1,0 +1,34 @@
+{
+ "name": "Slightly Magical Boots",
+ "id": 2422,
+ "atoms": [
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Slightly Quicker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Slightly Magical Boots"
+    ],
+    "binary": [],
+    "evidence": "passive:Slightly Quicker"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Slightly Quicker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Slightly Magical Boots"
+    ],
+    "binary": [],
+    "evidence": "passive:Slightly Quicker"
+   }
+  }
+ ]
+}

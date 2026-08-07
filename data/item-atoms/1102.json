@@ -1,0 +1,79 @@
+{
+ "name": "Gustwalker Hatchling",
+ "id": 1102,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.pet",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gustwalker Hatchling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Gustwalker Hatchling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gustwalker Hatchling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "vision-economy.sight",
+   "family": "vision-economy",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gustwalker Hatchling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "vision-economy.jungle-experience",
+   "family": "vision-economy",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gustwalker Hatchling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  }
+ ]
+}

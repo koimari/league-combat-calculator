@@ -39,3 +39,34 @@ atoms with dual provenance (wiki page + game binary). Schema:
 - Known limitation: damage_type is null for most damage atoms — the
   CharacterRecord bins do not carry damage types; that data lives in the
   wiki ability pages (WS1) and spell bins, and is the next iteration's fix.
+
+## Item domain (unified Atomizer, issue #140)
+
+`python scripts/atomize.py items` (or the retired
+`scripts/extract_item_atoms.py`, which delegates to the same domain) writes
+`items.json` in this directory: every item atomized with per-effect
+provenance.
+
+Contract (enforced by `tests/test_item_atomizer.py`):
+
+- Each passive/active is classified from **its own fragment text**
+  (`passives[i].branches`, `active[i].branches`), never a whole-item blob —
+  the first passive cannot absorb later effects.
+- Dedup happens at emission by `(atom_id, behavior)`; identical atoms from
+  different effects **merge while preserving every effect's evidence
+  receipt** (`passive:Cleave@kw:physical damage;active:Ravenous Crescent@kw:physical damage`).
+- Every non-stat atom's `evidence` names the exact effect + keyword that
+  produced it; structured receipts (`stats.*.flat`, `shop.prices.total`)
+  cover the stats/economy blocks.
+- Corpus gates: 0% silent later-position effects (109/109 effects at
+  position ≥2 emit atoms) and a full-corpus provenance gate over all 324
+  items.
+
+The legacy per-item files under the gitignored `data/item-atoms/` tree are
+no longer written; consumers should read `data/atoms/items.json` (the
+unified Atom record is `atom_id`/`behavior`/`source`/`name`/`values`/
+`units`/`evidence`/`hash` — see `src/calculator/atomizer.py`; the tracked
+`atoms.schema.json` describes the older champion-atom shape).
+`scripts/build_receipts.py` still reads the legacy per-item files until it is
+migrated (see `src/calculator/data_registry.py` WRITERS / `.gitignore` for
+the stale `item-atoms` entries).

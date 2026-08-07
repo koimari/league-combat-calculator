@@ -3,7 +3,7 @@
 import json
 
 from src.calculator.champion_coverage import attacker_availability
-from src.calculator.champions import reviewed_champion_names
+from src.calculator.champions import registered_champion_names, reviewed_champion_names
 
 
 def _champions():
@@ -15,7 +15,7 @@ def test_every_cached_champion_has_an_explicit_attacker_status():
     verified = set(reviewed_champion_names())
     reports = [attacker_availability(champion, verified) for champion in _champions()]
 
-    assert len(reports) == 173
+    assert len(reports) == len(registered_champion_names())
     assert sum(report["ready"] for report in reports) == len(verified)
     for report in reports:
         if report["ready"]:

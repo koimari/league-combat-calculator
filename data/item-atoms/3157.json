@@ -1,0 +1,72 @@
+{
+ "name": "Zhonya's Hourglass",
+ "id": 3157,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 105.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zhonya's Hourglass"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zhonya's Hourglass"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.stasis",
+   "family": "crowd-control-mobility",
+   "behavior": "Time Stop",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zhonya's Hourglass"
+    ],
+    "binary": [],
+    "evidence": "active:Time Stop"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Time Stop",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Zhonya's Hourglass"
+    ],
+    "binary": [],
+    "evidence": "active:Time Stop"
+   }
+  }
+ ]
+}

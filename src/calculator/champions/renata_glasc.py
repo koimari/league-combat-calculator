@@ -118,6 +118,14 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
             "Leverage on-hit procs (unmarked first-hits; the mark lasts 6s "
             "and refreshes, so a 1v1 prices one per target)"
         ),
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "P Leverage is an on-hit mark applied/refreshed by the auto "
+                "stream — self-state, no cross-slot cast edge."
+            ),
+        },
     },
 ]
 

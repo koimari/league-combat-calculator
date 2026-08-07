@@ -1,0 +1,141 @@
+{
+ "name": "Night Harvester",
+ "id": 444636,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 300.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 90.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soulrend",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "passive:Soulrend"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soulrend",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "passive:Soulrend"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Soulrend",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "passive:Soulrend"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Soulrend",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "passive:Soulrend"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Soulrend",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "passive:Soulrend"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Soulrend",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Night Harvester"
+    ],
+    "binary": [],
+    "evidence": "passive:Soulrend"
+   }
+  }
+ ]
+}

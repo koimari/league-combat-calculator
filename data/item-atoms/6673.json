@@ -1,0 +1,100 @@
+{
+ "name": "Immortal Shieldbow",
+ "id": 6673,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Shieldbow"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Shieldbow"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Shieldbow"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Shieldbow"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Shieldbow"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Immortal Shieldbow"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  }
+ ]
+}

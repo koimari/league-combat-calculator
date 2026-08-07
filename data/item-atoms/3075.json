@@ -1,0 +1,72 @@
+{
+ "name": "Thornmail",
+ "id": 3075,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 150.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Thornmail"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 75.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Thornmail"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Thorns",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Thornmail"
+    ],
+    "binary": [],
+    "evidence": "passive:Thorns"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Thorns",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Thornmail"
+    ],
+    "binary": [],
+    "evidence": "passive:Thorns"
+   }
+  }
+ ]
+}

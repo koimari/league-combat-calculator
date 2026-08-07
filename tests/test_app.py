@@ -10,6 +10,9 @@ import pytest
 from bs4 import BeautifulSoup
 
 import src.app as app_module
+from src.calculator.bis import bis_main_request
+from src.calculator.public_response import serialize_fight_result
+from src.calculator.scenario import parse_scenario_request
 from src.rate_limit import TokenBucketStore
 
 
@@ -1178,8 +1181,10 @@ def test_config_exposes_the_champion_review_boundary():
         app_module.app.test_client().get("/api/config").get_json()["champion_engine"]
     )
 
-    assert engine["registered_count"] == 173
-    assert engine["reviewed_count"] == 173
+    from src.calculator.champions import registered_champion_names
+
+    assert engine["registered_count"] == len(registered_champion_names())
+    assert engine["reviewed_count"] == len(registered_champion_names())
     assert engine["generated_count"] == 0
     assert engine["unreviewed_count"] == 0
     assert engine["module_contract"] == "full_entry_wiki_receipt"
@@ -2028,15 +2033,19 @@ class TestIconUrlsAreHttps:
         assert abilities["Q"]["name"] == "The Darkin Blade"
 
     def test_champion_api_exposes_all_ingested_and_reviewed_slots(self):
+        from src.calculator.champions import registered_champion_names
+
         champions = app_module.app.test_client().get("/api/champions").get_json()
 
-        assert len(champions) == 173
+        assert len(champions) == len(registered_champion_names())
         assert all(champion["ability_ingestion"]["complete"] for champion in champions)
         assert all(
             set(champion["abilities"]) == {"P", "Q", "W", "E", "R"}
             for champion in champions
         )
-        assert sum(champion["verified"] for champion in champions) == 173
+        assert sum(champion["verified"] for champion in champions) == len(
+            registered_champion_names()
+        )
         by_name = {champion["name"]: champion for champion in champions}
         assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
         assert by_name["Zoe"]["engine_registration"] == "reviewed_module"
@@ -2382,15 +2391,14 @@ def test_calculate_and_optimize_reject_level_impossible_ranks():
 
 
 def test_bis_main_request_preserves_authored_ability_ranks():
-    request = app_module._bis_main_request(
-        {
-            "champion": "Ahri",
-            "level": 6,
-            "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
-            "cast_order": ["R", "Q", "W", "E"],
-            "ally_effects_enabled": False,
-        }
-    )
+    payload = {
+        "champion": "Ahri",
+        "level": 6,
+        "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
+        "cast_order": ["R", "Q", "W", "E"],
+        "ally_effects_enabled": False,
+    }
+    request = bis_main_request(parse_scenario_request(payload), payload)
 
     assert request.ability_ranks == {"Q": 3, "W": 1, "E": 1, "R": 1}
     assert request.cast_order == ["R", "Q", "W", "E"]
@@ -2485,7 +2493,7 @@ class TestBreakdownProcRowShape:
 
     def test_temporary_lethality_receipt_reaches_frontend_breakdown(self):
         """Stateful penetration metadata is not dropped by API serialization."""
-        result = app_module._serialize_fight_result(
+        result = serialize_fight_result(
             {
                 "champion_stats": {},
                 "total_damage": 120.0,
@@ -2524,7 +2532,7 @@ class TestBreakdownProcRowShape:
 
     def test_chain_targeting_receipt_reaches_frontend_breakdown(self):
         """Roster allocation metadata survives the public serializer."""
-        result = app_module._serialize_fight_result(
+        result = serialize_fight_result(
             {
                 "champion_stats": {},
                 "total_damage": 60.0,

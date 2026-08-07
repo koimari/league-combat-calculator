@@ -1,0 +1,270 @@
+{
+ "name": "Celestial Opposition",
+ "id": 3869,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.gold-per-10",
+   "family": "stats",
+   "behavior": "goldPer10",
+   "parameters": {
+    "flat": 9.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.slow",
+   "family": "crowd-control-mobility",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.sight",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealth",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [
+    "vision-economy.true-sight",
+    "vision-economy.attacker-reveal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.camouflage",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.invisibility",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealthed-trap",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.true-sight",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [
+    "vision-economy.stealth",
+    "vision-economy.camouflage"
+   ],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward-destruction",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.passive-gold-generation",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  },
+  {
+   "atom_id": "vision-economy.kill-bounty",
+   "family": "vision-economy",
+   "behavior": "Blessing of the Mountain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Celestial Opposition"
+    ],
+    "binary": [],
+    "evidence": "passive:Blessing of the Mountain"
+   }
+  }
+ ]
+}

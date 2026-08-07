@@ -28,6 +28,58 @@ CAPABILITY_SCHEMA_VERSION = 1
 # resolves every participant's state transition.  Keeping the phase names in
 # the public contract lets the frontend explain why a result is unavailable
 # instead of reconstructing event order from individual controls.
+# Closed support-targeting vocabulary (issue #142).  The first set is the one
+# the coupled resolver actually resolves (champion-side packets); the second
+# extends it with the item-module disclosure scopes (item packets carry an
+# explicit roster target and these labels only describe the authored selection
+# rule).  Keeping both here makes the vocabulary a single source of truth: the
+# contract below is derived from the resolution set, so they cannot drift.
+SUPPORT_TARGET_RESOLUTION_SCOPES: frozenset[str] = frozenset(
+    {
+        "self",
+        "one_teammate",
+        "all_teammates",
+        "self_and_all_teammates",
+        "self_and_one_teammate",
+    }
+)
+
+# Item-module disclosure scopes.  These packets carry an explicit roster
+# target and never resolve through ``_support_target_ids``; the labels are
+# audited at emit time so the whole vocabulary stays closed.
+# TODO(issue #142): ``item_support_effects._packet`` should validate
+# ``target_scope`` against this set at emit time (owned by the item-support
+# group; the source-scan contract test in tests/test_issue_142.py covers it
+# until then).
+SUPPORT_TARGET_SCOPES: frozenset[str] = SUPPORT_TARGET_RESOLUTION_SCOPES | frozenset(
+    {
+        "all_selected_teammates",
+        "enemy_champions_in_radius",
+        "enemy_champions_within_range",  # damage-event disclosure (damage.py)
+        "explicit_selected_ally",
+        "healed_or_shielded_ally",
+        "holder_from_worthy_damage",
+        "most_wounded_ally",
+        "nearest_most_wounded_ally",
+        "nova_allied_champions",
+        "other_nearest_wounded_ally",
+        "redemption_allies_in_radius",
+        "self_per_champion_hit",
+    }
+)
+
+
+def _target_policy_label(scope: str) -> str:
+    """Map one resolution scope to its public target-policy label."""
+    return {
+        "self": "self",
+        "all_teammates": "all_selected_teammates",
+        "self_and_all_teammates": "self_and_all_selected_teammates",
+        "self_and_one_teammate": "self_and_first_selected_teammate",
+        "one_teammate": "first_selected_teammate",
+    }[scope]
+
+
 PARTICIPANT_LEDGER_CONTRACT: dict[str, Any] = {
     "name": "ordered_participant_ledger",
     "certification": "event_order_certified",
@@ -40,13 +92,10 @@ PARTICIPANT_LEDGER_CONTRACT: dict[str, Any] = {
         "death_or_terminal_cutoff",
     ],
     "target_policy": {
-        "self": "self",
-        "all_teammates": "all_selected_teammates",
-        "self_and_all_teammates": "self_and_all_selected_teammates",
-        "self_and_one_teammate": "self_and_first_selected_teammate",
-        "one_teammate": "first_selected_teammate",
-        "none_selected": "no_selected_teammate",
-    },
+        scope: _target_policy_label(scope)
+        for scope in sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)
+    }
+    | {"none_selected": "no_selected_teammate"},
     "fail_closed": True,
 }
 

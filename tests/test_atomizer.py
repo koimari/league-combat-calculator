@@ -26,11 +26,28 @@ def _item(name):
 
 def test_atom_contract_fields():
     a = Atomizer("items", source_ref="Test")
-    a.add("damage.magic", "damage", "Test.passives[0]", "Bolt", [50.0], ["flat"], ["kw:magic damage"])
+    a.add(
+        "damage.magic",
+        "damage",
+        "Test.passives[0]",
+        "Bolt",
+        [50.0],
+        ["flat"],
+        ["kw:magic damage"],
+    )
     emitted = a.emit()
     assert len(emitted) == 1
     atom = emitted[0]
-    for key in ("atom_id", "behavior", "source", "name", "values", "units", "evidence", "hash"):
+    for key in (
+        "atom_id",
+        "behavior",
+        "source",
+        "name",
+        "values",
+        "units",
+        "evidence",
+        "hash",
+    ):
         assert key in atom, key
     assert atom["hash"] == atom["hash"]  # deterministic
     assert atom["evidence"] == ["kw:magic damage"]
@@ -38,8 +55,24 @@ def test_atom_contract_fields():
 
 def test_dedup_merges_evidence_per_behavior():
     a = Atomizer("items", source_ref="Test")
-    a.add("damage.physical", "damage", "p[0]", "A", [10.0], ["flat"], ["passive:A@kw:physical"])
-    a.add("damage.physical", "damage", "a[0]", "B", [], [], ["active:B@kw:physical damage"])
+    a.add(
+        "damage.physical",
+        "damage",
+        "p[0]",
+        "A",
+        [10.0],
+        ["flat"],
+        ["passive:A@kw:physical"],
+    )
+    a.add(
+        "damage.physical",
+        "damage",
+        "a[0]",
+        "B",
+        [],
+        [],
+        ["active:B@kw:physical damage"],
+    )
     emitted = a.emit()
     assert len(emitted) == 1
     assert set(emitted[0]["evidence"]) == {
@@ -64,7 +97,8 @@ def test_item_multi_effect_independence_issue_140_fixture():
     assert any(ev.startswith("passive:Cleave@") for ev in evidence), evidence
     # The active's damage/lifesteal atoms must exist (not absorbed by passive).
     active_damage = [
-        a for a in atoms
+        a
+        for a in atoms
         if any(ev.startswith("active:Ravenous Crescent@") for ev in a["evidence"])
         and a["behavior"] in {"damage", "stat"}
     ]

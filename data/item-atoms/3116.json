@@ -1,0 +1,54 @@
+{
+ "name": "Rylai's Crystal Scepter",
+ "id": 3116,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 400.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rylai's Crystal Scepter"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 65.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rylai's Crystal Scepter"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.slow",
+   "family": "crowd-control-mobility",
+   "behavior": "Rimefrost",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rylai's Crystal Scepter"
+    ],
+    "binary": [],
+    "evidence": "passive:Rimefrost"
+   }
+  }
+ ]
+}

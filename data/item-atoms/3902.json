@@ -1,0 +1,20 @@
+{
+ "name": "Death's Daughter",
+ "id": 3902,
+ "atoms": [
+  {
+   "atom_id": "damage.true",
+   "family": "damage",
+   "behavior": "Death's Daughter",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Death's Daughter"
+    ],
+    "binary": [],
+    "evidence": "passive:Death's Daughter"
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "name": "Crystalline Bracer",
+ "id": 3801,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Crystalline Bracer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

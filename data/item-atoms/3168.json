@@ -1,0 +1,144 @@
+{
+ "name": "Immortal Path",
+ "id": 3168,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.energy",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "damage.zero-damage",
+   "family": "damage",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-amplification",
+   "family": "heal-shield",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [
+    "heal-shield.heal",
+    "heal-shield.shield",
+    "heal-shield.health-regeneration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "heal-shield.omnivamp",
+   "family": "heal-shield",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "heal-shield.vamp",
+   "family": "heal-shield",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Immortal Path"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  }
+ ]
+}

@@ -1,0 +1,37 @@
+{
+ "name": "Phreakish Gusto",
+ "id": 1510,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.summoned-minion",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Minion Damager",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phreakish Gusto"
+    ],
+    "binary": [],
+    "evidence": "passive:Minion Damager"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Minion Damager",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Phreakish Gusto"
+    ],
+    "binary": [],
+    "evidence": "passive:Minion Damager"
+   }
+  }
+ ]
+}

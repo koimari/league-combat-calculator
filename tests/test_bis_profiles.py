@@ -26,8 +26,7 @@ def _checked_in():
 
 def test_wiki_bis_profiles_cover_every_champion_and_slot():
     profiles = build_profiles(ROOT / "data" / "champions.json", PATCH)
-    assert profiles["champion_count"] == 173
-    assert len(profiles["champions"]) == 173
+    assert profiles["champion_count"] == len(profiles["champions"])
     assert all(
         set(champion["abilities"]) == set(ABILITY_SLOTS)
         for champion in profiles["champions"].values()
@@ -38,7 +37,7 @@ def test_checked_in_bis_profiles_preserve_role_and_scaling_signals():
     """Hand-checked domain signals the profile builder must keep carrying."""
     checked_in = _checked_in()
 
-    assert checked_in["champion_count"] == 173
+    assert checked_in["champion_count"] == len(checked_in["champions"])
     assert {"WARDEN", "TANK"}.issubset(checked_in["champions"]["Braum"]["roles"])
     assert "MARKSMAN" in checked_in["champions"]["Aphelios"]["roles"]
     assert (

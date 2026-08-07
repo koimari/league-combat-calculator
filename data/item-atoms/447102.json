@@ -1,0 +1,102 @@
+{
+ "name": "Reality Fracture",
+ "id": 447102,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 300.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reality Fracture"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 80.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reality Fracture"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reality Fracture"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "ZZ'Rot",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Reality Fracture"
+    ],
+    "binary": [],
+    "evidence": "passive:ZZ'Rot"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "ZZ'Rot",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reality Fracture"
+    ],
+    "binary": [],
+    "evidence": "passive:ZZ'Rot"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "ZZ'Rot",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reality Fracture"
+    ],
+    "binary": [],
+    "evidence": "passive:ZZ'Rot"
+   }
+  }
+ ]
+}

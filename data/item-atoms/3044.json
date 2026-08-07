@@ -1,0 +1,82 @@
+{
+ "name": "Phage",
+ "id": 3044,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phage"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phage"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.resource-gated-transform",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Rage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phage"
+    ],
+    "binary": [],
+    "evidence": "passive:Rage"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Rage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phage"
+    ],
+    "binary": [],
+    "evidence": "passive:Rage"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Rage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phage"
+    ],
+    "binary": [],
+    "evidence": "passive:Rage"
+   }
+  }
+ ]
+}

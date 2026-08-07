@@ -1,0 +1,96 @@
+{
+ "name": "Fulmination",
+ "id": 443055,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fulmination"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fulmination"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fulmination"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fulmination"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fulmination"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fulmination"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  }
+ ]
+}

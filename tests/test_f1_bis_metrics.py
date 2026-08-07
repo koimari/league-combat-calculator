@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 import src.app as app_module
+from src.calculator.bis import bis_candidate_pool
 
 
 @pytest.fixture(autouse=True)
@@ -74,7 +75,7 @@ def _bis_payload(**overrides):
 
 def _top_role_candidate_names() -> list[str]:
     """The exact pre-exclusion candidate pool /api/bis would use for slot 0."""
-    pool = app_module._bis_candidate_pool(
+    pool = bis_candidate_pool(
         "item",
         boots_tier=2,
         role="top",

@@ -145,7 +145,9 @@ SLOTS["Q"] = _super_scorcher_breath
 SLOTS["W"] = _certified_single_hit(SLOTS["W"])
 SLOTS["E"] = _certified_single_hit(SLOTS["E"])
 SLOTS["R"] = _certified_single_hit(SLOTS["R"])
-SLOTS["Q"] = with_item_on_hits(SLOTS["Q"], effectiveness=1.0, hits=1, triggers=('on_hit', 'on_attack'))
+SLOTS["Q"] = with_item_on_hits(
+    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
+)
 parse_abilities = build_parser(SLOTS, "Smolder")
 
 OPTIONS: list[dict[str, Any]] = list(_packet_options) + [

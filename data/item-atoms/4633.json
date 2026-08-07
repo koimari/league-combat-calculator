@@ -1,0 +1,113 @@
+{
+ "name": "Riftmaker",
+ "id": 4633,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Riftmaker"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 70.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Riftmaker"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Riftmaker"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Void Corruption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Riftmaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Corruption"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Void Corruption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Riftmaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Corruption"
+   }
+  },
+  {
+   "atom_id": "heal-shield.omnivamp",
+   "family": "heal-shield",
+   "behavior": "Void Corruption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Riftmaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Corruption"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Void Corruption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Riftmaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Corruption"
+   }
+  }
+ ]
+}

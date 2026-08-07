@@ -1,0 +1,187 @@
+{
+ "name": "Lord Dominik's Regards",
+ "id": 3036,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor-penetration",
+   "family": "stats",
+   "behavior": "armorPenetration",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 35.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Giant Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lord Dominik's Regards"
+    ],
+    "binary": [],
+    "evidence": "passive:Giant Slayer"
+   }
+  }
+ ]
+}

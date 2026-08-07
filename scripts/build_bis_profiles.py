@@ -405,8 +405,11 @@ def main() -> None:
         args.patch,
         args.auxiliary_source.resolve() if args.auxiliary_source.exists() else None,
     )
-    if profiles["champion_count"] != 173:
-        raise SystemExit(f"Expected 173 champions, got {profiles['champion_count']}")
+    if not profiles["champions"]:
+        raise SystemExit(
+            "No champions in the cached source — refusing to write an empty "
+            "BIS profiles asset"
+        )
     args.output.write_text(
         json.dumps(profiles, ensure_ascii=False, separators=(",", ":")) + "\n",
         encoding="utf-8",

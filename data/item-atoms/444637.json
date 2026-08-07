@@ -1,0 +1,71 @@
+{
+ "name": "Demonic Embrace",
+ "id": 444637,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 700.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Demonic Embrace"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 80.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Demonic Embrace"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Sinister Pact",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Demonic Embrace"
+    ],
+    "binary": [],
+    "evidence": "passive:Sinister Pact"
+   }
+  },
+  {
+   "atom_id": "damage.execute",
+   "family": "damage",
+   "behavior": "Sinister Pact",
+   "parameters": {},
+   "relations": [
+    "stats.health",
+    "damage.missing-health"
+   ],
+   "provenance": {
+    "wiki": [
+     "Demonic Embrace"
+    ],
+    "binary": [],
+    "evidence": "passive:Sinister Pact"
+   }
+  }
+ ]
+}

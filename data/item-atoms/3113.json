@@ -1,0 +1,23 @@
+{
+ "name": "Aether Wisp",
+ "id": 3113,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Aether Wisp"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "name": "Chempunk Chainsword",
+ "id": 6609,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 450.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chempunk Chainsword"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chempunk Chainsword"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chempunk Chainsword"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

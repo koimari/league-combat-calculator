@@ -1,0 +1,51 @@
+{
+ "name": "Tear of the Goddess",
+ "id": 3070,
+ "atoms": [
+  {
+   "atom_id": "stats.mana",
+   "family": "stats",
+   "behavior": "mana",
+   "parameters": {
+    "flat": 240.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Tear of the Goddess"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Manaflow",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Tear of the Goddess"
+    ],
+    "binary": [],
+    "evidence": "passive:Manaflow"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Manaflow",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Tear of the Goddess"
+    ],
+    "binary": [],
+    "evidence": "passive:Manaflow"
+   }
+  }
+ ]
+}

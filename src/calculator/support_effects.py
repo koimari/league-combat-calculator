@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .champions.slotlib import extract_named
 from .champions.skill_orders import get_ability_rank
 
@@ -38,7 +39,8 @@ _SUPPORT_ATTRIBUTES = frozenset(
         "Heal Per Tick",
         # E8d follow-up: Bard W (Caretaker's Shrine) heals scale with charge
         # time between these two sourced rows; Taric Q carries only the
-        # "Maximum Charges" attribute (prose heal, see _MODULE_HEAL_AMOUNTS).
+        # "Maximum Charges" attribute and its heal is owned by the E1 rule
+        # (issue #143), so it is deliberately NOT a support candidate.
         "Minimum Heal",
         "Maximum Heal",
     }
@@ -62,17 +64,12 @@ _CHAMPION_SHIELD_ATTR: dict[tuple[str, str], str] = {
     ("Lux", "W"): "Maximum Shield",
 }
 
-# E8d follow-up: prose-only ally heals that the cached leveling rows do not
-# carry as a resolvable attribute.  Each entry is
-# (base, ap_ratio, max_health_ratio) with the wiki citation in the source
-# label; the amount is computed at cast time from the fight's own stats.
-# Taric Q heals for 25 (+15% AP) (+1% max HP) per stocked charge; the
-# stocking cadence is combat state, so the deterministic model prices ONE
-# charge per cast (the conservative floor, documented in ASSUMPTIONS).
-_MODULE_HEAL_AMOUNTS: dict[tuple[str, str], tuple[float, float, float]] = {
-    ("Taric", "Q"): (25.0, 0.15, 0.01),
-}
-
+# Issue #143: prose-only ally heals were previously re-derived here from a
+# hardcoded (base, ap_ratio, max_health_ratio) tuple (Taric Q's 1-charge
+# floor).  Taric Q now has ONE ledger owner — the E1 self-heal rule in
+# ``healing.py`` prices the sourced stock and the participant timeline fans
+# out that one event to selected allies — so the scanner never re-derives it.
+# There is intentionally no numeric heal registry left in this module.
 # E8d follow-up: target-scope overrides for casts whose cached description
 # markers cannot express the sourced targeting.  Yuumi's E (Zoomies) shields
 # the attached ally, not Yuumi herself, while attached — the deterministic
@@ -107,28 +104,29 @@ _MODULE_AUTHORED_SHIELD_SLOTS = frozenset(
     }
 )
 
-# E9-3: slots whose heal the champion module/healing rule authors itself
-# instead of this scanner.  Shyvana's Inferno Aegis 'Heal' row is the
-# DRAGON-FORM recast heal (60 : 104.71 by level + 4% : 8.47% by level
-# missing health, gated on the explosion hitting a champion) and is
-# authored by ``healing.derive_self_healing``; the scanner's static read
-# would emit the rank-indexed flat at the cast time unconditionally (no
-# dragon gate, no missing-health term, wrong leveling index), so it
-# defers to the healing rule.
+# Issue #143: slots whose heal the champion module / E1 self-heal rule
+# authors itself instead of this scanner.  The scanner must never re-derive
+# these: every one is a known double-grant or fabrication (see the issue
+# audit).  Defined exactly once — a second assignment shadows the first at
+# import time (the E9-3/E9-2 history) and is a hard contract-test failure.
+#
+# - Shyvana W: the 'Heal' row is the DRAGON-FORM recast heal
+#   (60 : 104.71 by level + 4% : 8.47% by level missing health, gated on
+#   the explosion hitting a champion), authored by
+#   ``healing.derive_self_healing``; the scanner's static read would emit
+#   the rank-indexed flat at cast time unconditionally (no dragon gate, no
+#   missing-health term, wrong leveling index).
+# - Naafiri Q: the recast heal rides the module's Q damage receipts at the
+#   cached "Heal" row (``healing.derive_self_healing``).
+# - Taric Q: Starlight's Touch is priced per stocked charge by the E1 rule
+#   (sourced "Maximum Charges" row + description formulas); the scanner's
+#   hardcoded one-charge tuple double-granted the same cast at a different
+#   amount.
 _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
     {
         ("Shyvana", "W"),
-    }
-)
-
-# E9-2: slots whose heal the champion module + the E1 self-heal rule
-# author exactly (Naafiri's Q recast heal rides the module's Q damage
-# receipts at the cached "Heal" row).  The scanner would otherwise
-# re-derive the same ability from its cached JSON and double-grant the
-# heal in a separate ledger, so it defers these slots.
-_MODULE_AUTHORED_HEAL_SLOTS = frozenset(
-    {
         ("Naafiri", "Q"),
+        ("Taric", "Q"),
     }
 )
 
@@ -308,13 +306,19 @@ def derive_ally_effects(
         # P1-3: a sourced per-champion shield attribute override wins over
         # the generic lookup (Lux W's two stacked shields == Maximum Shield).
         shield_attr = _CHAMPION_SHIELD_ATTR.get(champion_key, shield_attr)
-        # E8d follow-up: prose-only module heals (Taric Q) carry no JSON heal
-        # attribute; the registry makes the slot a heal candidate anyway.
-        if heal_attr is None and champion_key in _MODULE_HEAL_AMOUNTS:
-            heal_attr = "_module_prose_heal"
         # E8d follow-up: a sourced per-champion target-scope override wins
         # over the description markers (Yuumi E attached anchor).
         target_scope = _SCOPE_OVERRIDES.get(champion_key, target_scope)
+        # Issue #142: fail closed at the emitter.  A typo or novel scope must
+        # name the champion+slot at the source instead of silently redirecting
+        # the packet to teammate zero in the coupled resolver.
+        if target_scope not in SUPPORT_TARGET_RESOLUTION_SCOPES:
+            raise ValueError(
+                "Unsupported support target_scope "
+                f"{target_scope!r} for {champion_data.get('name', '')} {slot} "
+                f"from source {ability.get('name', slot)!r}; supported scopes: "
+                f"{sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)}"
+            )
         if shield_attr is None and heal_attr is None:
             continue
         casts = [event for event in cast_timeline if event.get("slot") == slot]
@@ -338,29 +342,15 @@ def derive_ally_effects(
                             "rank": rank,
                         }
                     )
-            # E9-3: a module/healing-rule-authored heal slot is the exact
-            # receipt (level-indexed bases, missing-health terms, and a
-            # dragon-form gate the scanner cannot see).  The scanner defers
-            # so the ledger never pays the same heal twice from two
-            # derivations of one ability.
-            if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_HEAL_SLOTS:
-                heal_attr = None
+            # Issue #143: a module/healing-rule-authored heal slot is the
+            # exact receipt (level-indexed bases, missing-health terms, and a
+            # dragon-form gate the scanner cannot see).  Every registry
+            # member already ``continue``s above, so the heal branch below is
+            # unreachable for them; no per-slot null-out is needed (the
+            # E9-2-era second guard was dead code for exactly this reason).
             if heal_attr is not None:
-                module_heal = _MODULE_HEAL_AMOUNTS.get(champion_key)
-                if module_heal is not None:
-                    base, ap_ratio, max_health_ratio = module_heal
-                    amount = (
-                        base
-                        + ap_ratio * float(stats.get("ability_power", 0.0))
-                        + max_health_ratio * float(stats.get("health", 0.0))
-                    )
-                    source_label = (
-                        f"{ability.get('name', slot)} · prose heal "
-                        f"(25 + 15% AP + 1% max HP per charge, 1 charge)"
-                    )
-                else:
-                    amount = extract_named(ability, heal_attr, rank, stats, {})
-                    source_label = f"{ability.get('name', slot)} · {heal_attr}"
+                amount = extract_named(ability, heal_attr, rank, stats, {})
+                source_label = f"{ability.get('name', slot)} · {heal_attr}"
                 # A per-tick entry is not a complete heal packet without its
                 # authored duration/tick cadence; fail closed here rather than
                 # multiplying a guessed number.

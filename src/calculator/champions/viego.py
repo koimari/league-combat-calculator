@@ -163,8 +163,12 @@ SLOTS = dict(SLOTS)
 SLOTS["Q"] = _blade_of_the_ruined_king
 SLOTS["R"] = _heartbreaker
 SLOTS["W"] = _certified_single_hit(SLOTS["W"])
-SLOTS["Q"] = with_item_on_hits(SLOTS["Q"], effectiveness=1.0, hits=1, triggers=('on_hit',))
-SLOTS["R"] = with_item_on_hits(SLOTS["R"], effectiveness=1.0, hits=1, triggers=('on_hit',))
+SLOTS["Q"] = with_item_on_hits(
+    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit",)
+)
+SLOTS["R"] = with_item_on_hits(
+    SLOTS["R"], effectiveness=1.0, hits=1, triggers=("on_hit",)
+)
 parse_abilities = build_parser(SLOTS, "Viego")
 
 OPTIONS = list(OPTIONS) + [
@@ -175,6 +179,14 @@ OPTIONS = list(OPTIONS) + [
         "min": 0,
         "max": 20,
         "label": "Mark-consuming second strikes (Q passive)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "Q",
+            "note": (
+                "Mark applied and consumed by Q's own passive autos "
+                "(auto-stream self-consumed mark) — no cross-slot edge."
+            ),
+        },
     },
 ]
 

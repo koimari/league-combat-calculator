@@ -1,0 +1,54 @@
+{
+ "name": "Recurve Bow",
+ "id": 1043,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Recurve Bow"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Sting",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Recurve Bow"
+    ],
+    "binary": [],
+    "evidence": "passive:Sting"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Sting",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Recurve Bow"
+    ],
+    "binary": [],
+    "evidence": "passive:Sting"
+   }
+  }
+ ]
+}

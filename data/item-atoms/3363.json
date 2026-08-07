@@ -1,0 +1,34 @@
+{
+ "name": "Farsight Alteration",
+ "id": 3363,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Farsight Alteration"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward",
+   "family": "vision-economy",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Farsight Alteration"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  }
+ ]
+}

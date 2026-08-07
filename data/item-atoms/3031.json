@@ -1,0 +1,40 @@
+{
+ "name": "Infinity Edge",
+ "id": 3031,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 75.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Infinity Edge"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Infinity Edge"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

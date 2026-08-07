@@ -1,0 +1,175 @@
+{
+ "name": "Jarvan I's",
+ "id": 1111,
+ "atoms": [
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-penetration",
+   "family": "stats",
+   "behavior": "magicPenetration",
+   "parameters": {
+    "flat": 12.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.tenacity",
+   "family": "stats",
+   "behavior": "tenacity",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 30.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.tenacity",
+   "family": "crowd-control-mobility",
+   "behavior": "Jarvan One",
+   "parameters": {},
+   "relations": [
+    "crowd-control-mobility.brittle",
+    "crowd-control-mobility.slow",
+    "crowd-control-mobility.stun",
+    "crowd-control-mobility.root",
+    "crowd-control-mobility.silence",
+    "crowd-control-mobility.knockback"
+   ],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "passive:Jarvan One"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Jarvan One",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "passive:Jarvan One"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Jarvan One",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "passive:Jarvan One"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Jarvan One",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Jarvan I's"
+    ],
+    "binary": [],
+    "evidence": "passive:Jarvan One"
+   }
+  }
+ ]
+}

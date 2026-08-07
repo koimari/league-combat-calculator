@@ -1,0 +1,23 @@
+{
+ "name": "Needlessly Large Rod",
+ "id": 1058,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 65.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Needlessly Large Rod"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

@@ -1,0 +1,86 @@
+{
+ "name": "Randuin's Omen",
+ "id": 3143,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Randuin's Omen"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 75.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Randuin's Omen"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.slow",
+   "family": "crowd-control-mobility",
+   "behavior": "Resilience",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Randuin's Omen"
+    ],
+    "binary": [],
+    "evidence": "passive:Resilience"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Resilience",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Randuin's Omen"
+    ],
+    "binary": [],
+    "evidence": "passive:Resilience"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Resilience",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Randuin's Omen"
+    ],
+    "binary": [],
+    "evidence": "passive:Resilience"
+   }
+  }
+ ]
+}

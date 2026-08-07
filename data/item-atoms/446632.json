@@ -1,0 +1,90 @@
+{
+ "name": "Divine Sunderer",
+ "id": 446632,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Divine Sunderer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Divine Sunderer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Divine Sunderer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Divine Sunderer"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "heal-shield.vamp",
+   "family": "heal-shield",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Divine Sunderer"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  }
+ ]
+}

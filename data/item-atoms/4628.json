@@ -1,0 +1,99 @@
+{
+ "name": "Horizon Focus",
+ "id": 4628,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 75.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Horizon Focus"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Horizon Focus"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.immobilize",
+   "family": "crowd-control-mobility",
+   "behavior": "Hypershot",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Horizon Focus"
+    ],
+    "binary": [],
+    "evidence": "passive:Hypershot"
+   }
+  },
+  {
+   "atom_id": "vision-economy.sight",
+   "family": "vision-economy",
+   "behavior": "Hypershot",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Horizon Focus"
+    ],
+    "binary": [],
+    "evidence": "passive:Hypershot"
+   }
+  },
+  {
+   "atom_id": "vision-economy.true-sight",
+   "family": "vision-economy",
+   "behavior": "Hypershot",
+   "parameters": {},
+   "relations": [
+    "vision-economy.stealth",
+    "vision-economy.camouflage"
+   ],
+   "provenance": {
+    "wiki": [
+     "Horizon Focus"
+    ],
+    "binary": [],
+    "evidence": "passive:Hypershot"
+   }
+  },
+  {
+   "atom_id": "vision-economy.starting-gold",
+   "family": "vision-economy",
+   "behavior": "Hypershot",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Horizon Focus"
+    ],
+    "binary": [],
+    "evidence": "passive:Hypershot"
+   }
+  }
+ ]
+}

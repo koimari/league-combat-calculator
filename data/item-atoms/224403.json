@@ -1,0 +1,303 @@
+{
+ "name": "The Golden Spatula",
+ "id": 224403,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.mana",
+   "family": "stats",
+   "behavior": "mana",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 90.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 125.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 60.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  },
+  {
+   "atom_id": "heal-shield.omnivamp",
+   "family": "heal-shield",
+   "behavior": "Doing Something",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Golden Spatula"
+    ],
+    "binary": [],
+    "evidence": "passive:Doing Something"
+   }
+  }
+ ]
+}

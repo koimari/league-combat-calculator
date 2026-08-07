@@ -5811,9 +5811,9 @@ class TestHauntingGuiseMadness(_FightHarness):
         """Average ramp: half the per-second rate over the capped window."""
         effects = resolve_damage_effects(_build("Haunting Guise"))
         amp = {e.item_name: e for e in effects.damage_amplifiers}["Haunting Guise"]
-        assert amp.amp_fraction(2.0, 0.0) == pytest.approx(0.02)
+        assert amp.amp_fraction(2.0, 0.0, {}) == pytest.approx(0.02)
         # 6% cap is reached after 3 seconds; longer fights keep that average.
-        assert amp.amp_fraction(5.0, 0.0) == pytest.approx(0.03)
+        assert amp.amp_fraction(5.0, 0.0, {}) == pytest.approx(0.03)
 
     def test_fight_total_is_amplified_with_a_breakdown_row(self) -> None:
         """A 5s auto fight gains the 3% averaged Madness multiplier."""

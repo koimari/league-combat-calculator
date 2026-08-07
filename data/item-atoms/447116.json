@@ -1,0 +1,68 @@
+{
+ "name": "Kinkou Jitte",
+ "id": 447116,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 400.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kinkou Jitte"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kinkou Jitte"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Between the Ribs",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kinkou Jitte"
+    ],
+    "binary": [],
+    "evidence": "passive:Between the Ribs"
+   }
+  },
+  {
+   "atom_id": "damage.true",
+   "family": "damage",
+   "behavior": "Between the Ribs",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kinkou Jitte"
+    ],
+    "binary": [],
+    "evidence": "passive:Between the Ribs"
+   }
+  }
+ ]
+}

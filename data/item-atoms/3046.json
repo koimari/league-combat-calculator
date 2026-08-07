@@ -1,0 +1,128 @@
+{
+ "name": "Phantom Dancer",
+ "id": 3046,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 65.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phantom Dancer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phantom Dancer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Spectral Waltz",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phantom Dancer"
+    ],
+    "binary": [],
+    "evidence": "passive:Spectral Waltz"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Spectral Waltz",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phantom Dancer"
+    ],
+    "binary": [],
+    "evidence": "passive:Spectral Waltz"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Spectral Waltz",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phantom Dancer"
+    ],
+    "binary": [],
+    "evidence": "passive:Spectral Waltz"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Spectral Waltz",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phantom Dancer"
+    ],
+    "binary": [],
+    "evidence": "passive:Spectral Waltz"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Spectral Waltz",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Phantom Dancer"
+    ],
+    "binary": [],
+    "evidence": "passive:Spectral Waltz"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-shield-effect",
+   "family": "heal-shield",
+   "behavior": "Spectral Waltz",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Phantom Dancer"
+    ],
+    "binary": [],
+    "evidence": "passive:Spectral Waltz"
+   }
+  }
+ ]
+}

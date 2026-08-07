@@ -1,0 +1,176 @@
+{
+ "name": "Reverberation",
+ "id": 447114,
+ "atoms": [
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.heat",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Reverberate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "passive:Reverberate"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.immobilize",
+   "family": "crowd-control-mobility",
+   "behavior": "Reverberate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "passive:Reverberate"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Reverberate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "passive:Reverberate"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Reverberate",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "passive:Reverberate"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Reverberate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "passive:Reverberate"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Reverberate",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "passive:Reverberate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Reverberate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "passive:Reverberate"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Reverberate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reverberation"
+    ],
+    "binary": [],
+    "evidence": "passive:Reverberate"
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "name": "Cloak of Agility",
+ "id": 1018,
+ "atoms": [
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 15.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cloak of Agility"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

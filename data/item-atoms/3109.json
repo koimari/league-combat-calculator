@@ -1,0 +1,122 @@
+{
+ "name": "Knight's Vow",
+ "id": 3109,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Knight's Vow"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Knight's Vow"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Knight's Vow"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Sacrifice",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Knight's Vow"
+    ],
+    "binary": [],
+    "evidence": "passive:Sacrifice"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Sacrifice",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Knight's Vow"
+    ],
+    "binary": [],
+    "evidence": "passive:Sacrifice"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Sacrifice",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Knight's Vow"
+    ],
+    "binary": [],
+    "evidence": "passive:Sacrifice"
+   }
+  },
+  {
+   "atom_id": "heal-shield.vamp",
+   "family": "heal-shield",
+   "behavior": "Sacrifice",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Knight's Vow"
+    ],
+    "binary": [],
+    "evidence": "passive:Sacrifice"
+   }
+  }
+ ]
+}

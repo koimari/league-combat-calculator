@@ -1,0 +1,163 @@
+{
+ "name": "Mortal Reminder",
+ "id": 3033,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor-penetration",
+   "family": "stats",
+   "behavior": "armorPenetration",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 30.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "heal-shield.grievous-wounds",
+   "family": "heal-shield",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [
+    "heal-shield.heal",
+    "heal-shield.health-regeneration",
+    "damage.dot"
+   ],
+   "provenance": {
+    "wiki": [
+     "Mortal Reminder"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  }
+ ]
+}

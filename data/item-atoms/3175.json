@@ -1,0 +1,23 @@
+{
+ "name": "Spellslinger's Shoes",
+ "id": 3175,
+ "atoms": [
+  {
+   "atom_id": "stats.magic-penetration",
+   "family": "stats",
+   "behavior": "magicPenetration",
+   "parameters": {
+    "flat": 18.0,
+    "percent": 8.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Spellslinger's Shoes"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

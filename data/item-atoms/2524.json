@@ -1,0 +1,134 @@
+{
+ "name": "Bandlepipes",
+ "id": 2524,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bandlepipes"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bandlepipes"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bandlepipes"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bandlepipes"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.immobilize",
+   "family": "crowd-control-mobility",
+   "behavior": "Fanfare",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bandlepipes"
+    ],
+    "binary": [],
+    "evidence": "passive:Fanfare"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Fanfare",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bandlepipes"
+    ],
+    "binary": [],
+    "evidence": "passive:Fanfare"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Fanfare",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Bandlepipes"
+    ],
+    "binary": [],
+    "evidence": "passive:Fanfare"
+   }
+  },
+  {
+   "atom_id": "vision-economy.global-local-bounty",
+   "family": "vision-economy",
+   "behavior": "Fanfare",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bandlepipes"
+    ],
+    "binary": [],
+    "evidence": "passive:Fanfare"
+   }
+  }
+ ]
+}

@@ -1,0 +1,117 @@
+{
+ "name": "Sunfire Aegis",
+ "id": 3068,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sunfire Aegis"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sunfire Aegis"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sunfire Aegis"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.root",
+   "family": "crowd-control-mobility",
+   "behavior": "Immolate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sunfire Aegis"
+    ],
+    "binary": [],
+    "evidence": "passive:Immolate"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.immobilize",
+   "family": "crowd-control-mobility",
+   "behavior": "Immolate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sunfire Aegis"
+    ],
+    "binary": [],
+    "evidence": "passive:Immolate"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Immolate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sunfire Aegis"
+    ],
+    "binary": [],
+    "evidence": "passive:Immolate"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Immolate",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sunfire Aegis"
+    ],
+    "binary": [],
+    "evidence": "passive:Immolate"
+   }
+  }
+ ]
+}

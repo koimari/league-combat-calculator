@@ -1,0 +1,20 @@
+{
+ "name": "Raise Morale",
+ "id": 3903,
+ "atoms": [
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Raise Morale",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Raise Morale"
+    ],
+    "binary": [],
+    "evidence": "passive:Raise Morale"
+   }
+  }
+ ]
+}

@@ -1,0 +1,40 @@
+{
+ "name": "Blighting Jewel",
+ "id": 4630,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blighting Jewel"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-penetration",
+   "family": "stats",
+   "behavior": "magicPenetration",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 13.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blighting Jewel"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

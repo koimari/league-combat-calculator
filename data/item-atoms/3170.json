@@ -1,0 +1,62 @@
+{
+ "name": "Swiftmarch",
+ "id": 3170,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Fleetfooted",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Swiftmarch"
+    ],
+    "binary": [],
+    "evidence": "passive:Fleetfooted"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Fleetfooted",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Swiftmarch"
+    ],
+    "binary": [],
+    "evidence": "passive:Fleetfooted"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Fleetfooted",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Swiftmarch"
+    ],
+    "binary": [],
+    "evidence": "passive:Fleetfooted"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Fleetfooted",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Swiftmarch"
+    ],
+    "binary": [],
+    "evidence": "passive:Fleetfooted"
+   }
+  }
+ ]
+}

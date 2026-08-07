@@ -1,0 +1,178 @@
+{
+ "name": "Protoplasm Harness",
+ "id": 2525,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 600.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.tenacity",
+   "family": "crowd-control-mobility",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [
+    "crowd-control-mobility.brittle",
+    "crowd-control-mobility.slow",
+    "crowd-control-mobility.stun",
+    "crowd-control-mobility.root",
+    "crowd-control-mobility.silence",
+    "crowd-control-mobility.knockback"
+   ],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "heal-shield.overheal",
+   "family": "heal-shield",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "heal-shield.vamp",
+   "family": "heal-shield",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Lifeline",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Protoplasm Harness"
+    ],
+    "binary": [],
+    "evidence": "passive:Lifeline"
+   }
+  }
+ ]
+}

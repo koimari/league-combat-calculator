@@ -1,0 +1,131 @@
+{
+ "name": "Endless Hunger",
+ "id": 2517,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 65.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Endless Hunger"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.tenacity",
+   "family": "stats",
+   "behavior": "tenacity",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 20.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Endless Hunger"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Famine",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Endless Hunger"
+    ],
+    "binary": [],
+    "evidence": "passive:Famine"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Famine",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Endless Hunger"
+    ],
+    "binary": [],
+    "evidence": "passive:Famine"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.tenacity",
+   "family": "crowd-control-mobility",
+   "behavior": "Famine",
+   "parameters": {},
+   "relations": [
+    "crowd-control-mobility.brittle",
+    "crowd-control-mobility.slow",
+    "crowd-control-mobility.stun",
+    "crowd-control-mobility.root",
+    "crowd-control-mobility.silence",
+    "crowd-control-mobility.knockback"
+   ],
+   "provenance": {
+    "wiki": [
+     "Endless Hunger"
+    ],
+    "binary": [],
+    "evidence": "passive:Famine"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Famine",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Endless Hunger"
+    ],
+    "binary": [],
+    "evidence": "passive:Famine"
+   }
+  },
+  {
+   "atom_id": "heal-shield.omnivamp",
+   "family": "heal-shield",
+   "behavior": "Famine",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Endless Hunger"
+    ],
+    "binary": [],
+    "evidence": "passive:Famine"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Famine",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Endless Hunger"
+    ],
+    "binary": [],
+    "evidence": "passive:Famine"
+   }
+  }
+ ]
+}

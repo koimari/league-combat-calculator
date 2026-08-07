@@ -1,0 +1,96 @@
+{
+ "name": "Atma's Reckoning",
+ "id": 223039,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 700.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Atma's Reckoning"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 20.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Atma's Reckoning"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Big Hands",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Atma's Reckoning"
+    ],
+    "binary": [],
+    "evidence": "passive:Big Hands"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Big Hands",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Atma's Reckoning"
+    ],
+    "binary": [],
+    "evidence": "passive:Big Hands"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Big Hands",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Atma's Reckoning"
+    ],
+    "binary": [],
+    "evidence": "passive:Big Hands"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Big Hands",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Atma's Reckoning"
+    ],
+    "binary": [],
+    "evidence": "passive:Big Hands"
+   }
+  }
+ ]
+}

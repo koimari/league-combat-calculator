@@ -1,0 +1,51 @@
+{
+ "name": "Diamond-Tipped Spear",
+ "id": 447120,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Diamond-Tipped Spear"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.moonlight",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Reach Weapon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Diamond-Tipped Spear"
+    ],
+    "binary": [],
+    "evidence": "passive:Reach Weapon"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Reach Weapon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Diamond-Tipped Spear"
+    ],
+    "binary": [],
+    "evidence": "passive:Reach Weapon"
+   }
+  }
+ ]
+}

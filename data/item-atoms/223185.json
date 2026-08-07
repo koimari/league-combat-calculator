@@ -1,0 +1,116 @@
+{
+ "name": "Guardian's Dirk",
+ "id": 223185,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Dirk"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 11.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Dirk"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Dirk"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summoned-minion",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Agricultural Reaper",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Dirk"
+    ],
+    "binary": [],
+    "evidence": "passive:Agricultural Reaper"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Agricultural Reaper",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Dirk"
+    ],
+    "binary": [],
+    "evidence": "passive:Agricultural Reaper"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Agricultural Reaper",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Guardian's Dirk"
+    ],
+    "binary": [],
+    "evidence": "passive:Agricultural Reaper"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Agricultural Reaper",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Dirk"
+    ],
+    "binary": [],
+    "evidence": "passive:Agricultural Reaper"
+   }
+  }
+ ]
+}

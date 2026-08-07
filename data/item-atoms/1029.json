@@ -1,0 +1,23 @@
+{
+ "name": "Cloth Armor",
+ "id": 1029,
+ "atoms": [
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cloth Armor"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

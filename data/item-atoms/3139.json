@@ -1,0 +1,124 @@
+{
+ "name": "Mercurial Scimitar",
+ "id": 3139,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mercurial Scimitar"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mercurial Scimitar"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.debuff",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Quicksilver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mercurial Scimitar"
+    ],
+    "binary": [],
+    "evidence": "active:Quicksilver"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.airborne",
+   "family": "crowd-control-mobility",
+   "behavior": "Quicksilver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mercurial Scimitar"
+    ],
+    "binary": [],
+    "evidence": "active:Quicksilver"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.cleanse",
+   "family": "crowd-control-mobility",
+   "behavior": "Quicksilver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mercurial Scimitar"
+    ],
+    "binary": [],
+    "evidence": "active:Quicksilver"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Quicksilver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mercurial Scimitar"
+    ],
+    "binary": [],
+    "evidence": "active:Quicksilver"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Quicksilver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mercurial Scimitar"
+    ],
+    "binary": [],
+    "evidence": "active:Quicksilver"
+   }
+  },
+  {
+   "atom_id": "heal-shield.life-steal",
+   "family": "heal-shield",
+   "behavior": "Quicksilver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mercurial Scimitar"
+    ],
+    "binary": [],
+    "evidence": "active:Quicksilver"
+   }
+  }
+ ]
+}

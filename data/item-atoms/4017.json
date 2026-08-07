@@ -1,0 +1,127 @@
+{
+ "name": "Hellfire Hatchet",
+ "id": 4017,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hellfire Hatchet"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 12.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hellfire Hatchet"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Char",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hellfire Hatchet"
+    ],
+    "binary": [],
+    "evidence": "passive:Char"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Char",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Hellfire Hatchet"
+    ],
+    "binary": [],
+    "evidence": "passive:Char"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Char",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hellfire Hatchet"
+    ],
+    "binary": [],
+    "evidence": "passive:Char"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Char",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hellfire Hatchet"
+    ],
+    "binary": [],
+    "evidence": "passive:Char"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Char",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hellfire Hatchet"
+    ],
+    "binary": [],
+    "evidence": "passive:Char"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Char",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hellfire Hatchet"
+    ],
+    "binary": [],
+    "evidence": "passive:Char"
+   }
+  }
+ ]
+}

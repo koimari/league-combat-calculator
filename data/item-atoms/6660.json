@@ -1,0 +1,54 @@
+{
+ "name": "Bami's Cinder",
+ "id": 6660,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 150.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bami's Cinder"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 5.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bami's Cinder"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Immolate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bami's Cinder"
+    ],
+    "binary": [],
+    "evidence": "passive:Immolate"
+   }
+  }
+ ]
+}

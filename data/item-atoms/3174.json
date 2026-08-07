@@ -1,0 +1,87 @@
+{
+ "name": "Armored Advance",
+ "id": 3174,
+ "atoms": [
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Armored Advance"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Plating",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Armored Advance"
+    ],
+    "binary": [],
+    "evidence": "passive:Plating"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Plating",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Armored Advance"
+    ],
+    "binary": [],
+    "evidence": "passive:Plating"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Plating",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Armored Advance"
+    ],
+    "binary": [],
+    "evidence": "passive:Plating"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-physical",
+   "family": "heal-shield",
+   "behavior": "Plating",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Armored Advance"
+    ],
+    "binary": [],
+    "evidence": "passive:Plating"
+   }
+  }
+ ]
+}

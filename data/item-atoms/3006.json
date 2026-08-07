@@ -1,0 +1,23 @@
+{
+ "name": "Berserker's Greaves",
+ "id": 3006,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Berserker's Greaves"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

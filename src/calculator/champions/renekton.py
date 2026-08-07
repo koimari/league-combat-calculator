@@ -9,7 +9,7 @@ from .slotlib import with_item_on_hits
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Renekton")
 _ON_HIT_SPECS: dict[str, dict] = {
-    "W": {"effectiveness": 1.0, "hits": 2, "triggers": ('on_hit',)},
+    "W": {"effectiveness": 1.0, "hits": 2, "triggers": ("on_hit",)},
 }
 
 _parse_abilities = parse_abilities
@@ -23,7 +23,6 @@ def parse_abilities(*args, **kwargs):
         if entry is not None:
             entry["applies_item_on_hits"] = dict(spec)
     return result
-
 
 
 MODULE_COVERAGE = {

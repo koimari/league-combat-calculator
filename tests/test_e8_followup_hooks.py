@@ -76,15 +76,21 @@ def test_guardian_angel_keeps_item_source(champion_data):
     assert d.revive_source == "Guardian Angel (Rebirth)"
 
 
-def test_taric_q_prose_heal_emits(champion_data):
+def test_taric_q_prose_heal_deferred_to_the_e1_rule(champion_data):
+    """Taric Q is owned by the E1 self-heal rule (issue #143).
+
+    The scanner must NOT emit a heal packet for the slot: the rule prices
+    the sourced per-charge stock (25 + 15% AP + 1% max HP per charge) and
+    the participant timeline fans that one event out to selected allies.
+    The old scanner re-derived the same cast at a hardcoded 1-charge
+    amount (45.0 here) and double-granted it in a separate ledger.
+    """
     casts = [{"slot": "Q", "time": 1.0, "ability_name": "Starlight's Touch"}]
     eff = derive_ally_effects(
         champion_data["Taric"], 18, {"ability_power": 0.0, "health": 2000.0}, casts
     )
     heals = [e for e in eff if e["kind"] == "heal" and e["slot"] == "Q"]
-    assert heals, "Taric Q prose heal missing"
-    assert heals[0]["amount"] == pytest.approx(45.0)  # 25 + 1% max HP
-    assert heals[0]["target_scope"] == "self_and_all_teammates"
+    assert heals == [], "Taric Q heal must be authored by the E1 rule only"
 
 
 def test_bard_w_fully_charged_shrine_emits(champion_data):

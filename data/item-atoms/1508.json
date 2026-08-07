@@ -1,0 +1,55 @@
+{
+ "name": "Anti-Tower Socks",
+ "id": 1508,
+ "atoms": [
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Reinforced Armor",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Anti-Tower Socks"
+    ],
+    "binary": [],
+    "evidence": "passive:Reinforced Armor"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summoned-minion",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Minion Slayer",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Anti-Tower Socks"
+    ],
+    "binary": [],
+    "evidence": "passive:Minion Slayer"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Minion Slayer",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Anti-Tower Socks"
+    ],
+    "binary": [],
+    "evidence": "passive:Minion Slayer"
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "name": "B. F. Sword",
+ "id": 1038,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "B. F. Sword"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

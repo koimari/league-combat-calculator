@@ -1,0 +1,86 @@
+{
+ "name": "Banshee's Veil",
+ "id": 3102,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 105.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Banshee's Veil"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Banshee's Veil"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Annul",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Banshee's Veil"
+    ],
+    "binary": [],
+    "evidence": "passive:Annul"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Annul",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Banshee's Veil"
+    ],
+    "binary": [],
+    "evidence": "passive:Annul"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-magic",
+   "family": "heal-shield",
+   "behavior": "Annul",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Banshee's Veil"
+    ],
+    "binary": [],
+    "evidence": "passive:Annul"
+   }
+  }
+ ]
+}

@@ -1,0 +1,103 @@
+{
+ "name": "Morellonomicon",
+ "id": 3165,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Morellonomicon"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 75.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Morellonomicon"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Morellonomicon"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Morellonomicon"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Morellonomicon"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "heal-shield.grievous-wounds",
+   "family": "heal-shield",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [
+    "heal-shield.heal",
+    "heal-shield.health-regeneration",
+    "damage.dot"
+   ],
+   "provenance": {
+    "wiki": [
+     "Morellonomicon"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  }
+ ]
+}

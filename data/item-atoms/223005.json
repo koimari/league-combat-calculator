@@ -1,0 +1,48 @@
+{
+ "name": "Ghostcrawlers",
+ "id": 223005,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Wall Walk",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ghostcrawlers"
+    ],
+    "binary": [],
+    "evidence": "active:Wall Walk"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Wall Walk",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ghostcrawlers"
+    ],
+    "binary": [],
+    "evidence": "active:Wall Walk"
+   }
+  },
+  {
+   "atom_id": "vision-economy.unobstructed-vision",
+   "family": "vision-economy",
+   "behavior": "Wall Walk",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ghostcrawlers"
+    ],
+    "binary": [],
+    "evidence": "active:Wall Walk"
+   }
+  }
+ ]
+}

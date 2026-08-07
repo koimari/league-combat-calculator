@@ -1,0 +1,245 @@
+{
+ "name": "Umbral Glaive",
+ "id": 3179,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 60.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 18.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "damage.true",
+   "family": "damage",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.sight",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealth",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [
+    "vision-economy.true-sight",
+    "vision-economy.attacker-reveal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.camouflage",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.invisibility",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealthed-trap",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.true-sight",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [
+    "vision-economy.stealth",
+    "vision-economy.camouflage"
+   ],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.obscured-vision",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward-disabling",
+   "family": "vision-economy",
+   "behavior": "Blackout",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Umbral Glaive"
+    ],
+    "binary": [],
+    "evidence": "passive:Blackout"
+   }
+  }
+ ]
+}

@@ -1,0 +1,185 @@
+{
+ "name": "Eleisa's Miracle",
+ "id": 443063,
+ "atoms": [
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.execute",
+   "family": "damage",
+   "behavior": "Enduring Vitality",
+   "parameters": {},
+   "relations": [
+    "stats.health",
+    "damage.missing-health"
+   ],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "passive:Enduring Vitality"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Enduring Vitality",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "passive:Enduring Vitality"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Enduring Vitality",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "passive:Enduring Vitality"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Enduring Vitality",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "passive:Enduring Vitality"
+   }
+  },
+  {
+   "atom_id": "heal-shield.overheal",
+   "family": "heal-shield",
+   "behavior": "Enduring Vitality",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "passive:Enduring Vitality"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Enduring Vitality",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "passive:Enduring Vitality"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-magic",
+   "family": "heal-shield",
+   "behavior": "Enduring Vitality",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "passive:Enduring Vitality"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-physical",
+   "family": "heal-shield",
+   "behavior": "Enduring Vitality",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Eleisa's Miracle"
+    ],
+    "binary": [],
+    "evidence": "passive:Enduring Vitality"
+   }
+  }
+ ]
+}

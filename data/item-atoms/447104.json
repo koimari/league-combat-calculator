@@ -1,0 +1,148 @@
+{
+ "name": "Innervating Locket",
+ "id": 447104,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 70.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Fill the Soul",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "passive:Fill the Soul"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Fill the Soul",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "passive:Fill the Soul"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.soul",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Fill the Soul",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "passive:Fill the Soul"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Fill the Soul",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "passive:Fill the Soul"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Fill the Soul",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "passive:Fill the Soul"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Fill the Soul",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Innervating Locket"
+    ],
+    "binary": [],
+    "evidence": "passive:Fill the Soul"
+   }
+  }
+ ]
+}

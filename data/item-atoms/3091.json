@@ -1,0 +1,137 @@
+{
+ "name": "Wit's End",
+ "id": 3091,
+ "atoms": [
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wit's End"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wit's End"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.tenacity",
+   "family": "stats",
+   "behavior": "tenacity",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 20.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wit's End"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.tenacity",
+   "family": "crowd-control-mobility",
+   "behavior": "Fray",
+   "parameters": {},
+   "relations": [
+    "crowd-control-mobility.brittle",
+    "crowd-control-mobility.slow",
+    "crowd-control-mobility.stun",
+    "crowd-control-mobility.root",
+    "crowd-control-mobility.silence",
+    "crowd-control-mobility.knockback"
+   ],
+   "provenance": {
+    "wiki": [
+     "Wit's End"
+    ],
+    "binary": [],
+    "evidence": "passive:Fray"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Fray",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wit's End"
+    ],
+    "binary": [],
+    "evidence": "passive:Fray"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Fray",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Wit's End"
+    ],
+    "binary": [],
+    "evidence": "passive:Fray"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Fray",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wit's End"
+    ],
+    "binary": [],
+    "evidence": "passive:Fray"
+   }
+  },
+  {
+   "atom_id": "damage.proc",
+   "family": "damage",
+   "behavior": "Fray",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wit's End"
+    ],
+    "binary": [],
+    "evidence": "passive:Fray"
+   }
+  }
+ ]
+}

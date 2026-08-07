@@ -1,0 +1,103 @@
+{
+ "name": "Guardian Angel",
+ "id": 3026,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian Angel"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian Angel"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Rebirth",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian Angel"
+    ],
+    "binary": [],
+    "evidence": "passive:Rebirth"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.stasis",
+   "family": "crowd-control-mobility",
+   "behavior": "Rebirth",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian Angel"
+    ],
+    "binary": [],
+    "evidence": "passive:Rebirth"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Rebirth",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Guardian Angel"
+    ],
+    "binary": [],
+    "evidence": "passive:Rebirth"
+   }
+  },
+  {
+   "atom_id": "heal-shield.revive",
+   "family": "heal-shield",
+   "behavior": "Rebirth",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "heal-shield.heal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Guardian Angel"
+    ],
+    "binary": [],
+    "evidence": "passive:Rebirth"
+   }
+  }
+ ]
+}

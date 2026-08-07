@@ -1,0 +1,68 @@
+{
+ "name": "Twilight's Edge",
+ "id": 447121,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 70.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Twilight's Edge"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 100.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Twilight's Edge"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "The Path Between",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Twilight's Edge"
+    ],
+    "binary": [],
+    "evidence": "passive:The Path Between"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "The Path Between",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Twilight's Edge"
+    ],
+    "binary": [],
+    "evidence": "passive:The Path Between"
+   }
+  }
+ ]
+}

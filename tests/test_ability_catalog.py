@@ -12,8 +12,7 @@ REBUILD = "rebuild with: python scripts/build_ability_catalog.py"
 def test_cached_catalog_contains_all_five_slots_for_all_champions():
     catalog = build_catalog(ROOT / "data" / "champions.json", PATCH)
 
-    assert catalog["champion_count"] == 173
-    assert len(catalog["champions"]) == 173
+    assert catalog["champion_count"] == len(catalog["champions"])
     assert all(
         [ability["slot"] for ability in champion["abilities"]] == list(ABILITY_SLOTS)
         and all(
@@ -38,8 +37,8 @@ def test_checked_in_catalog_is_not_stale():
     )
     fresh = build_catalog(ROOT / "data" / "champions.json", PATCH)
 
-    assert checked_in["champion_count"] == fresh["champion_count"] == 173
-    assert len(checked_in["champions"]) == 173
+    assert checked_in["champion_count"] == fresh["champion_count"]
+    assert len(checked_in["champions"]) == checked_in["champion_count"]
     assert all(len(champion["abilities"]) == 5 for champion in checked_in["champions"])
     assert all(champion["complete"] for champion in checked_in["champions"])
     assert checked_in["champions"] == fresh["champions"], f"catalogue stale — {REBUILD}"

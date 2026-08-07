@@ -1,0 +1,141 @@
+{
+ "name": "Hexbolt Companion",
+ "id": 443081,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 500.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 75.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Covering Fire",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "passive:Covering Fire"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mark",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Covering Fire",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "passive:Covering Fire"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.pet",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Covering Fire",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "passive:Covering Fire"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Covering Fire",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "passive:Covering Fire"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Covering Fire",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "passive:Covering Fire"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Covering Fire",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "passive:Covering Fire"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Covering Fire",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexbolt Companion"
+    ],
+    "binary": [],
+    "evidence": "passive:Covering Fire"
+   }
+  }
+ ]
+}

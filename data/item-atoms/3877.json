@@ -1,0 +1,315 @@
+{
+ "name": "Bloodsong",
+ "id": 3877,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.gold-per-10",
+   "family": "stats",
+   "behavior": "goldPer10",
+   "parameters": {
+    "flat": 9.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.sight",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealth",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [
+    "vision-economy.true-sight",
+    "vision-economy.attacker-reveal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.camouflage",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.invisibility",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealthed-trap",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.true-sight",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [
+    "vision-economy.stealth",
+    "vision-economy.camouflage"
+   ],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward-destruction",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.passive-gold-generation",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "vision-economy.kill-bounty",
+   "family": "vision-economy",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodsong"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  }
+ ]
+}

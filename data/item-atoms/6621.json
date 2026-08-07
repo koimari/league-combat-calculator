@@ -1,0 +1,119 @@
+{
+ "name": "Dawncore",
+ "id": 6621,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dawncore"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.heal-shield-power",
+   "family": "stats",
+   "behavior": "healAndShieldPower",
+   "parameters": {
+    "flat": 16.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dawncore"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "First Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dawncore"
+    ],
+    "binary": [],
+    "evidence": "passive:First Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "First Light",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Dawncore"
+    ],
+    "binary": [],
+    "evidence": "passive:First Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "First Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dawncore"
+    ],
+    "binary": [],
+    "evidence": "passive:First Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "First Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dawncore"
+    ],
+    "binary": [],
+    "evidence": "passive:First Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "First Light",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Dawncore"
+    ],
+    "binary": [],
+    "evidence": "passive:First Light"
+   }
+  }
+ ]
+}

@@ -1,0 +1,83 @@
+{
+ "name": "Mosstomper Seedling",
+ "id": 1103,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.pet",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mosstomper Seedling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Mosstomper Seedling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Mosstomper Seedling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "vision-economy.jungle-experience",
+   "family": "vision-economy",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mosstomper Seedling"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Mosstomper's Courage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mosstomper Seedling"
+    ],
+    "binary": [],
+    "evidence": "passive:Mosstomper's Courage"
+   }
+  }
+ ]
+}

@@ -1,0 +1,135 @@
+{
+ "name": "Chainlaced Crushers",
+ "id": 3173,
+ "atoms": [
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chainlaced Crushers"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.tenacity",
+   "family": "stats",
+   "behavior": "tenacity",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 30.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chainlaced Crushers"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.multiplicative-stacking",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Noxian Persistence",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chainlaced Crushers"
+    ],
+    "binary": [],
+    "evidence": "passive:Noxian Persistence"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.tenacity",
+   "family": "crowd-control-mobility",
+   "behavior": "Noxian Persistence",
+   "parameters": {},
+   "relations": [
+    "crowd-control-mobility.brittle",
+    "crowd-control-mobility.slow",
+    "crowd-control-mobility.stun",
+    "crowd-control-mobility.root",
+    "crowd-control-mobility.silence",
+    "crowd-control-mobility.knockback"
+   ],
+   "provenance": {
+    "wiki": [
+     "Chainlaced Crushers"
+    ],
+    "binary": [],
+    "evidence": "passive:Noxian Persistence"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Noxian Persistence",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chainlaced Crushers"
+    ],
+    "binary": [],
+    "evidence": "passive:Noxian Persistence"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Noxian Persistence",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chainlaced Crushers"
+    ],
+    "binary": [],
+    "evidence": "passive:Noxian Persistence"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Noxian Persistence",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Chainlaced Crushers"
+    ],
+    "binary": [],
+    "evidence": "passive:Noxian Persistence"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-magic",
+   "family": "heal-shield",
+   "behavior": "Noxian Persistence",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chainlaced Crushers"
+    ],
+    "binary": [],
+    "evidence": "passive:Noxian Persistence"
+   }
+  }
+ ]
+}

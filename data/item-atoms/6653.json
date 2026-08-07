@@ -1,0 +1,144 @@
+{
+ "name": "Liandry's Torment",
+ "id": 6653,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 300.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 60.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Torment",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "passive:Torment"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.debuff",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Torment",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "passive:Torment"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.damage-over-time",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Torment",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "passive:Torment"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Torment",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "passive:Torment"
+   }
+  },
+  {
+   "atom_id": "damage.dot",
+   "family": "damage",
+   "behavior": "Torment",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "passive:Torment"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Torment",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "passive:Torment"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Torment",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Liandry's Torment"
+    ],
+    "binary": [],
+    "evidence": "passive:Torment"
+   }
+  }
+ ]
+}

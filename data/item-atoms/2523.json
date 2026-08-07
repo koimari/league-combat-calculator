@@ -1,0 +1,96 @@
+{
+ "name": "Hexoptics C44",
+ "id": 2523,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexoptics C44"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexoptics C44"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Magnification",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexoptics C44"
+    ],
+    "binary": [],
+    "evidence": "passive:Magnification"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Magnification",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexoptics C44"
+    ],
+    "binary": [],
+    "evidence": "passive:Magnification"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Magnification",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexoptics C44"
+    ],
+    "binary": [],
+    "evidence": "passive:Magnification"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Magnification",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hexoptics C44"
+    ],
+    "binary": [],
+    "evidence": "passive:Magnification"
+   }
+  }
+ ]
+}

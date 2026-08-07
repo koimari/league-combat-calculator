@@ -349,11 +349,13 @@ COMBO_TABLE: dict[str, ComboRule] = {
 #     ``on_hit``, ``applies_dot_stack``, ``stacking_dot``,
 #     ``post_hit_proc``, ``target_debuff``, ``stat_buff``, ``cc_kind`` on
 #     ``parts``, ``recast_of``, ``total_raw``, ``cooldown``;
-#  2. the module OPTION keys (``get_champion_options_meta``) — the typed
-#     setup/consume atoms (``target_poisoned``, ``blight_stacks``,
-#     ``poison_stacks``, ``rend_stacks``, ``r_overwhelm_stacks``,
-#     ``p_illumination_procs``, ``q_marked_target``, ``r_hemoplague_debuff``,
-#     execute options, ...);
+#  2. the module OPTION rotation declarations
+#     (``get_champion_option_rotation``) — the typed setup/consume/execute
+#     atoms authored by the champion modules (``target_poisoned``,
+#     ``blight_stacks``, ``rend_stacks``, ``p_illumination_procs``,
+#     ``moonlight_reset``, execute options, ...), with self_state and
+#     irrelevant options acknowledged in the receipt without inventing
+#     edges;
 #  3. the structured wiki attribute rows in ``data/champions.json``
 #     ("Enhanced Damage", "Bonus Damage Per Stack", "Detonation Magic
 #     Damage", "Missing Health Damage", "Mark Magic Damage", "Stored
@@ -363,94 +365,18 @@ COMBO_TABLE: dict[str, ComboRule] = {
 #     prose is never scanned.
 # ─────────────────────────────────────────────────────────────────────
 
-# ── closed vocabulary: typed consume option keys ──
-# (option key -> (role, condition)); role drives the edge direction.
-_CONSUME_OPTIONS: dict[str, tuple[str, str]] = {
-    "target_poisoned": ("poison_consume", "poison"),
-    "poison_stacks": ("stack_consume", "poison"),
-    "blight_stacks": ("stack_consume", "blight"),
-    "rend_stacks": ("stack_consume", "rend"),
-    "r_overwhelm_stacks": ("stack_consume", "overwhelm"),
-    "plasma_starting_stacks": ("stack_consume", "plasma"),
-    "denting_blows_starting_stacks": ("stack_consume", "denting-blows"),
-    "p_illumination_procs": ("mark_consume", "illumination"),
-    "q_marked_target": ("mark_consume", "mark"),
-    "w_wounded": ("mark_consume", "wounded"),
-    "q_consume": ("mark_applier", "sigil"),
-    "q_execute": ("execute", "execute"),
-    "e_execute": ("execute", "execute"),
-    "r_execute_ready": ("execute", "execute"),
-    "target_missing_hp_pct": ("execute", "execute"),
-    "q_missing_health": ("execute", "execute"),
-    "w_target_missing_health": ("execute", "execute"),
-    "r_hemoplague_debuff": ("amp", "amp"),
-}
+# ── typed rotation semantics for option keys ──
+# The module OPTIONS declarations (via ``get_champion_option_rotation``)
+# are the single authoritative vocabulary: roles setup/consume/execute feed
+# ``slot_options`` and edge detection, self_state/irrelevant options are
+# acknowledged in the receipt without inventing edges, and an unclassified
+# option fails the exhaustiveness contract.  There is deliberately no
+# hand-maintained second table in this module anymore (issue #145).
 
-# Options whose slot cannot be read from the key prefix or the parsed-row
-# detail string; mapped by inspection of the champion module.
-_OPTION_SLOT_SPECIAL: dict[str, Any] = {
-    "target_poisoned": "E",
-    "poison_stacks": "E",
-    "blight_stacks": "Q",
-    "p_illumination_procs": "R",
-    "denting_blows_starting_stacks": "W",
-    "target_missing_hp_pct": {"Bel'Veth": "E", "Briar": "W", "Varus": "Q"},
-}
-
-# Self-generated stacks / self-buffs: NOT target setup — no cross-slot edge.
-_SELF_OPTIONS = {
-    "r_stacks",
-    "q_stacks",
-    "q_gathering_storm",
-    "e_stacks",
-    "r_arcane_perfection",
-    "e_true_grit_stacks",
-    "q_focus_stacks",
-    "p_stacks",
-    "p_marks",
-    "scalemail_stacks",
-    "adoration_stacks",
-    "senna_mist_stacks",
-    "q_snippy_stacks",
-    "p_style_stacks",
-    "relentless_storm_stacks",
-    "clean_cuts_stacks",
-    "stone_skin_stacks",
-    "jinx_rev_up_stacks",
-    "jinx_get_excited_stacks",
-    "q_passive_stacks",
-    "feast_stacks",
-    "starting_hemorrhage_stacks",
-    "w_hunters_vigor_stacks",
-    "marks",
-    "lavender_stacks",
-    "stardust_stacks",
-    "chimes",
-    "souls",
-    "mist_walkers",
-    "plant_count",
-    "voidling_count",
-    "soldier_count",
-    "p_vitals",
-    "p_ferocity",
-    "p_legs",
-    "p_tentacles",
-    "p_daggers",
-    "p_procs",
-    "passive_procs",
-    "p_right_punches",
-    "p_gloom_detonations",
-    "p_triggers",
-    "p_exalted",
-    "p_essence_fragments",
-    "r_daggers",
-    "tibbers_aura_seconds",
-    "tibbers_attacks",
-    "q_target_below_half",
-    "q_isolated",
-    "soul_nails",
-    "mundo_missing_health_percent",
-}
+# Default direct-edge kind for consume/execute declarations that carry a
+# ``setup_slot`` but no explicit ``kind`` (the declaration is authoritative;
+# this is only a fallback for the two direct-edge families).
+_DIRECT_EDGE_KIND = {"consume": "mark_consume", "execute": "execute"}
 
 # Damage-amplifying stat_buff keys: buffs-first applies to these only.
 _DAMAGE_AMP_STAT_KEYS = {
@@ -621,63 +547,6 @@ def _castable(info: Mapping[str, Any], slot: str) -> bool:
 
 
 # ─────────────────────────────────────────────────────────────────────
-# Option-key slot resolution
-# ─────────────────────────────────────────────────────────────────────
-
-
-def _resolve_option_slot(  # pylint: disable=unused-argument
-    champion_name: str, key: str, ability_damages: Mapping[str, Any]
-) -> str | None:
-    """The cast slot an option atom belongs to.
-
-    Resolution order: explicit special-case map, parsed-row detail/name
-    token match (the module's own atomized output), then the option-key
-    slot prefix (``q_``/``w_``/``e_``/``r_``).
-    """
-    special = _OPTION_SLOT_SPECIAL.get(key)
-    if special is not None:
-        if isinstance(special, dict):
-            return special.get(champion_name)
-        return special
-    parts = [
-        p
-        for p in key.split("_")
-        if p
-        not in (
-            "q",
-            "w",
-            "e",
-            "r",
-            "p",
-            "stacks",
-            "stack",
-            "target",
-            "starting",
-            "procs",
-            "debuff",
-            "health",
-            "missing",
-            "consume",
-            "marked",
-            "ready",
-            "execute",
-            "pct",
-            "hp",
-            "blows",
-        )
-    ]
-    token = parts[0] if parts else key
-    for slot, info in ability_damages.items():
-        if not isinstance(info, Mapping):
-            continue
-        blob = f"{info.get('name', '')} {info.get('detail', '')}".lower()
-        if token and token in blob:
-            return slot if slot in _CAST_SLOTS else None
-    m = re.match(r"^(q|w|e|r)_", key)
-    return m.group(1).upper() if m else None
-
-
-# ─────────────────────────────────────────────────────────────────────
 # Edge detection
 # ─────────────────────────────────────────────────────────────────────
 
@@ -694,6 +563,10 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
     :class:`_Edge` constraints; a champion with no detectable signal
     returns ``[]`` and keeps its certified/default order.
     """
+    from src.calculator.champions import (  # pylint: disable=import-outside-toplevel
+        get_champion_option_rotation,
+    )
+
     slots = [s for s in _CAST_SLOTS if isinstance(ability_damages.get(s), Mapping)]
     corpora = {s: _slot_corpus(champion_data, s) for s in slots}
     corpora = {s: c for s, c in corpora.items() if c}
@@ -796,18 +669,45 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
         return any(cond_token in a for a in atoms)
 
     # ── typed consume atoms per slot ──
+    # The atom vocabulary is the module OPTIONS rotation declarations (issue
+    # #145): a consume/execute declaration with ``setup_slot`` carries the
+    # FULL edge (setup_slot -> this slot) and is added directly — it never
+    # depends on the applier-corpus phrase.  Declarations without
+    # ``setup_slot`` fall back to the corpus-based pairing below, keyed by
+    # their ``kind`` (the closed edge taxonomy).
+    rotations = get_champion_option_rotation(champion_name)
     consume_atoms: dict[str, list[tuple[str, str, str]]] = {}
     for b in corpora:
         info = infos[b]
         cons: list[tuple[str, str, str]] = []
         for key in option_keys.get(b, []) + option_keys.get("__all__", []):
-            if key in _SELF_OPTIONS:
+            decl = rotations.get(key)
+            if not decl:
                 continue
-            if key in _CONSUME_OPTIONS:
-                role, cond = _CONSUME_OPTIONS[key]
-                if role == "execute" and not _is_damage_row(info):
-                    continue
-                cons.append((role, cond, f"option {key}"))
+            role = str(decl.get("role", ""))
+            if role in ("self_state", "irrelevant", "unsupported"):
+                continue
+            setup_slot = decl.get("setup_slot")
+            if setup_slot:
+                # The declaration carries the full edge: the setup slot must
+                # cast before this consumer (Diana Q Moonlight -> E reset).
+                if setup_slot in corpora and setup_slot != b:
+                    kind = str(
+                        decl.get("kind") or _DIRECT_EDGE_KIND.get(role, "mark_consume")
+                    )
+                    add(
+                        setup_slot,
+                        b,
+                        kind,
+                        f"{b} consumes {setup_slot}'s setup via option {key} "
+                        f"({kind})",
+                    )
+                continue
+            kind = str(decl.get("kind") or role)
+            cond = str(decl.get("condition") or kind)
+            if role == "execute" and not _is_damage_row(info):
+                continue
+            cons.append((kind, cond, f"option {key}"))
         if info.get("post_hit_proc"):
             nm = (
                 info["post_hit_proc"].get("name", "proc")
@@ -882,8 +782,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
     # ── pairwise edges: setup slots before their consumers ──
     for b, cons in consume_atoms.items():
         bt = texts[b]
-        for role, cond, cite in cons:
-            if role == "poison_consume":
+        for kind, cond, cite in cons:
+            if kind == "dot_consume":
                 for a in corpora:
                     if (
                         a != b
@@ -896,7 +796,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             "dot_consume",
                             f"{b} {cite} consumes the champion's poison; {a} {', '.join(apply_atoms[a])} applies it",
                         )
-            elif role == "stack_consume":
+            elif kind == "stack_consume":
                 for a in corpora:
                     if a != b and applies_condition(a, "stack"):
                         add(
@@ -905,7 +805,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             "stack_consume",
                             f"{b} {cite} consumes stacks; {a} {', '.join(apply_atoms[a])} applies them",
                         )
-            elif role == "mark_consume":
+            elif kind == "mark_consume":
                 for a in corpora:
                     if a != b and applies_condition(a, "mark"):
                         add(
@@ -914,7 +814,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             "mark_consume",
                             f"{b} {cite} consumes the mark; {a} {', '.join(apply_atoms[a])} applies it",
                         )
-            elif role == "mark_applier":
+            elif kind == "mark_applier":
                 for a in corpora:
                     if a != b and _is_damage_row(infos[a]) and _castable(infos[a], a):
                         add(
@@ -923,7 +823,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             "mark_applier",
                             f"{b} {cite} applies a mark consumed by any next damaging ability",
                         )
-            elif role == "detonation_consume":
+            elif kind == "detonation_consume":
                 for a in corpora:
                     if a != b and applies_condition(a, "stack"):
                         add(
@@ -932,7 +832,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             "detonate",
                             f"{b} {cite} detonates stacks; {a} {', '.join(apply_atoms[a])} applies them",
                         )
-            elif role == "enhanced_consume":
+            elif kind == "enhanced_consume":
                 if not _P_COND_PHRASE.search(bt) or _P_SELF_RESOURCE.search(bt):
                     continue
                 for condtok, pattern in _CONDITIONS:
@@ -998,7 +898,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
         # execute / stored-damage consumers come after ALL other damage;
         # slots that already consume stacks/marks (detonators) are exempt —
         # their consume relationship dominates the missing-health rider.
-        if any(role in ("execute", "stored_consume") for role, _, _ in cons):
+        if any(kind in ("execute", "stored_consume") for kind, _, _ in cons):
             if not has_consume_role(
                 b,
                 (
@@ -1139,9 +1039,11 @@ _MATRIX_SPECS = (
 # per-champion cache: matrix DPS rows at the reference points
 _MATRIX_DPS_CACHE: dict[str, list[list[tuple[str, float]]]] = {}
 
-# per-champion cache: the FULL-KIT derived rule (order is matrix-invariant by
-# construction; the fight's own level/build only narrows which slots exist).
-_DERIVED_RULE_CACHE: dict[str, ComboRule] = {}
+# per-(champion, option-signature) cache: the FULL-KIT derived rule (order is
+# matrix-invariant by construction; the fight's own level/build only narrows
+# which slots exist, and the option signature keeps option-gated slots and
+# option-sensitive edges deterministic across cache warmth — issue #145 §6).
+_DERIVED_RULE_CACHE: dict[tuple[str, frozenset[tuple[str, Any]] | None], ComboRule] = {}
 
 
 def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
@@ -1184,14 +1086,19 @@ def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
     return rows
 
 
-def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel
-    champion_name: str, champion_data: Mapping[str, Any]
+def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel,unused-argument
+    champion_name: str,
+    champion_data: Mapping[str, Any],
+    champion_options: Mapping[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """The full-kit parse (level 11, no items) used for the cached derivation.
 
     The derived order is matrix-invariant by construction, so the derivation
-    runs once against the canonical kit; a request's own level/build/options
-    only narrow which slots exist.
+    runs once against the canonical kit; a request's own level/build only
+    narrow which slots exist.  The request's OPTION state is part of the
+    derivation: option-gated slots (Kalista's Soul-Marked W) and
+    option-sensitive edges are derived per option state, so a cold cache
+    cannot drop a slot the fight actually casts (issue #145 §6).
     """
     from src.calculator.champions import parse_champion_abilities
     from src.calculator.stats import calculate_total_stats
@@ -1209,7 +1116,69 @@ def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel
             "target_current_health": 2000.0,
             "target_missing_health": 0.0,
         },
-        champion_options=None,
+        champion_options=champion_options,
+    )
+
+
+def _option_signature(
+    champion_name: str, champion_options: Mapping[str, Any] | None
+) -> frozenset[tuple[str, Any]] | None:
+    """A canonical cache discriminator for the derivation's option state.
+
+    Only the champion's DECLARED option keys participate, so pipeline keys
+    (``fight_duration_seconds``, ...) never split the cache; ``None``/empty
+    maps to ``None`` so the default-option derivation keeps one cache row
+    per champion.
+    """
+    if not champion_options:
+        return None
+    from src.calculator.champions import (  # pylint: disable=import-outside-toplevel
+        get_champion_options_meta,
+    )
+
+    declared = {
+        str(opt.get("key", ""))
+        for opt in get_champion_options_meta(champion_name).get("options", [])
+    }
+    return frozenset(
+        (key, champion_options[key])
+        for key in sorted(champion_options)
+        if key in declared
+    )
+
+
+def _fit_rule_to_fight(
+    cached: ComboRule,
+    champion_name: str,
+    fight_slots: set[str],
+    certified_order: list[str] | None,
+) -> ComboRule:
+    """Filter a full-kit rule to the fight's parsed slots.
+
+    The cached rule is the FULL-KIT derivation (matrix-invariant); the
+    fight's own parse decides which slots exist — filter the order to the
+    available slots, preserving relative positions.  Option-gated slots
+    absent from the canonical kit (Kalista's Soul-Marked W, Gnar's Mega R)
+    fall back to their base-order position.  Applied on BOTH the warm-cache
+    and cold-cache paths so the result is deterministic across cache warmth
+    (issue #145 §6).
+    """
+    available = [s for s in cached.order if s in fight_slots]
+    base = [
+        s for s in (certified_order or list(DEFAULT_CAST_ORDER)) if s in fight_slots
+    ]
+    for slot in base:
+        if slot not in available:
+            available.append(slot)
+    return ComboRule(
+        champion=champion_name,
+        order=tuple(available) if available else cached.order,
+        rationale=cached.rationale,
+        sources=cached.sources,
+        setup=cached.setup,
+        consume=cached.consume,
+        aoe=dict(cached.aoe),
+        derived=True,
     )
 
 
@@ -1218,16 +1187,20 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     ability_damages: Mapping[str, Any],
     champion_data: Mapping[str, Any],
     certified_order: list[str] | None = None,
+    champion_options: Mapping[str, Any] | None = None,
 ) -> ComboRule:
     """Algorithmically derive the champion's optimal cast order.
 
     Steps (see the module docstring and ``docs/rotation-design.md``):
 
-    1. Detect setup/consume edges from the typed atoms (see
+    1. Detect setup/consume edges from the typed atoms and the module
+       OPTIONS rotation declarations (see
        :func:`detect_setup_consume_edges`).
     2. Base order = certified module ``CAST_ORDER`` when present, else the
        engine ``DEFAULT_CAST_ORDER``.
-    3. No edges → keep the base order (honest flat-kit fallback).
+    3. No edges → keep the base order (honest flat-kit fallback; the
+       rationale never claims "no signal" while an enabled option is
+       unclassified or unsupported).
     4. Edges → topological sort; free slots ranked by per-rank DPS at the
        fight's stats, but only when the ranking is CONSISTENT across the
        level/build matrix (else the certified/base relative order is kept,
@@ -1235,47 +1208,36 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     5. Build a :class:`ComboRule` with a rationale citing the driving
        atoms and the setup/consume/aoe receipts.
 
+    The derivation is cached per (champion, option signature): the canonical
+    kit is parsed with the request's option state, so option-gated slots
+    (Kalista's Soul-Marked W) and option-sensitive edges derive per option
+    state instead of dropping out on a cold cache.
+
     Returns:
         The derived rule (``derived=True``).  The order is a permutation
-        of the base slots — no new slots, none dropped.
+        of the fight's base slots — no new slots, none dropped.
     """
-    cached = _DERIVED_RULE_CACHE.get(champion_name)
+    fight_slots = {
+        s for s in ability_damages if isinstance(ability_damages.get(s), Mapping)
+    }
+    signature = _option_signature(champion_name, champion_options)
+    cache_key = (champion_name, signature)
+    cached = _DERIVED_RULE_CACHE.get(cache_key)
     if cached is not None:
-        # The cached rule is the FULL-KIT derivation (matrix-invariant); the
-        # fight's own parse decides which slots exist — filter the order to
-        # the available slots, preserving relative positions.  Option-gated
-        # slots absent from the canonical kit (Gnar's Mega R) fall back to
-        # their base-order position.
-        available = [
-            s for s in cached.order if isinstance(ability_damages.get(s), Mapping)
-        ]
-        base = [
-            s
-            for s in (certified_order or list(DEFAULT_CAST_ORDER))
-            if isinstance(ability_damages.get(s), Mapping)
-        ]
-        for slot in base:
-            if slot not in available:
-                available.append(slot)
-        return ComboRule(
-            champion=champion_name,
-            order=tuple(available) if available else cached.order,
-            rationale=cached.rationale,
-            sources=cached.sources,
-            setup=cached.setup,
-            consume=cached.consume,
-            aoe=dict(cached.aoe),
-            derived=True,
-        )
+        return _fit_rule_to_fight(cached, champion_name, fight_slots, certified_order)
 
     # Derive from the CANONICAL full-kit parse (level 11, no items), not the
     # request's parse — the request may be a partial kit (level 1) and the
-    # derivation must reflect the champion's complete mechanic surface.
-    ability_damages = _canonical_kit_parse(champion_name, champion_data)
+    # derivation must reflect the champion's complete mechanic surface.  The
+    # request's option state is honored so option-gated slots participate.
+    ability_damages = _canonical_kit_parse(
+        champion_name, champion_data, champion_options
+    )
 
-    from src.calculator.champions import (
+    from src.calculator.champions import (  # pylint: disable=import-outside-toplevel
+        get_champion_option_rotation,
         get_champion_options_meta,
-    )  # pylint: disable=import-outside-toplevel
+    )
 
     base = [
         s
@@ -1288,46 +1250,98 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         if isinstance(ability_damages[s], Mapping)
     }
 
+    # slot_options is built from the AUTHORITATIVE rotation declarations:
+    # roles setup/consume/execute feed edge detection; self_state and
+    # irrelevant options are acknowledged in the receipt without inventing
+    # edges; an unclassified or unsupported option is surfaced verbatim.
     meta = get_champion_options_meta(champion_name)
+    rotations = get_champion_option_rotation(champion_name)
     slot_options: dict[str, list[str]] = {}
+    option_receipts: list[str] = []
     for opt in meta.get("options", []):
         key = str(opt.get("key", ""))
-        if key not in _CONSUME_OPTIONS:
+        decl = rotations.get(key)
+        if not decl:
+            option_receipts.append(f"option {key} (unclassified rotation semantics)")
             continue
-        slot = _resolve_option_slot(champion_name, key, ability_damages)
-        if slot:
-            slot_options.setdefault(slot, []).append(key)
-        else:
-            slot_options.setdefault("__all__", []).append(key)
+        role = str(decl.get("role", ""))
+        slot = decl.get("slot")
+        if role in ("setup", "consume", "execute"):
+            if slot:
+                slot_options.setdefault(slot, []).append(key)
+            else:
+                slot_options.setdefault("__all__", []).append(key)
+            option_receipts.append(
+                f"option {key} ({role}"
+                + (f", slot {slot}" if slot else "")
+                + (f", consumes {decl['setup_slot']}" if decl.get("setup_slot") else "")
+                + ")"
+            )
+        elif role in ("self_state", "irrelevant"):
+            option_receipts.append(
+                f"option {key} ({role}" + (f", slot {slot}" if slot else "") + ")"
+            )
+        elif role == "unsupported":
+            option_receipts.append(f"option {key} (unsupported rotation semantics)")
 
     edges = detect_setup_consume_edges(
         champion_name, ability_damages, champion_data, slot_options
     )
 
     if not edges:
-        rationale = (
-            f"{champion_name} has no detectable setup/consume signal in the "
-            "atomized ability data — no DoT/poison/mark/stack consumer, no "
-            "resistance shred, no damage-amplifying buff, no missing-health "
-            "execute. The certified module order"
-            + (
-                " " + " → ".join(certified_order)
-                if certified_order
-                else " (engine default Q → Q2 → W → E → R)"
+        unclassified = [
+            line
+            for line in option_receipts
+            if "unclassified" in line or "unsupported" in line
+        ]
+        if unclassified:
+            # A rotation receipt cannot claim "no detectable setup/consume
+            # signal" while an enabled semantic option is unclassified or
+            # unsupported (issue #145 acceptance).
+            rationale = (
+                f"{champion_name} has option(s) not yet classified for "
+                "rotation semantics: "
+                + "; ".join(unclassified)
+                + ". The certified module order"
+                + (
+                    " " + " → ".join(certified_order)
+                    if certified_order
+                    else " (engine default Q → Q2 → W → E → R)"
+                )
+                + " is kept exactly as reviewed."
             )
-            + " is kept exactly as reviewed; the flat kit derives no reorder."
-        )
+        else:
+            rationale = (
+                f"{champion_name} has no detectable setup/consume signal in the "
+                "atomized ability data — no DoT/poison/mark/stack consumer, no "
+                "resistance shred, no damage-amplifying buff, no missing-health "
+                "execute. The certified module order"
+                + (
+                    " " + " → ".join(certified_order)
+                    if certified_order
+                    else " (engine default Q → Q2 → W → E → R)"
+                )
+                + " is kept exactly as reviewed; the flat kit derives no reorder."
+            )
+            if option_receipts:
+                rationale += (
+                    " Declared options classified for rotation: "
+                    + ", ".join(option_receipts)
+                    + "."
+                )
         rule = ComboRule(
             champion=champion_name,
             order=tuple(base),
             rationale=rationale,
-            sources=("no setup/consume atoms detected (flat kit)",),
+            sources=("no setup/consume atoms detected (flat kit)",)
+            + tuple(option_receipts),
             setup=(),
             consume=(),
             aoe=aoe,
             derived=True,
         )
-        _DERIVED_RULE_CACHE[champion_name] = rule
+        rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
+        _DERIVED_RULE_CACHE[cache_key] = rule
         return rule
 
     base_idx = {s: i for i, s in enumerate(base)}
@@ -1346,7 +1360,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             + (" ".join(certified_order) if certified_order else "Q → Q2 → W → E → R")
             + " is kept; the ambiguous atoms are listed for the F4 swarm."
         )
-        sources = tuple(e.sentence() for e in edges)
+        sources = tuple(e.sentence() for e in edges) + tuple(option_receipts)
         rule = ComboRule(
             champion=champion_name,
             order=tuple(base),
@@ -1357,7 +1371,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             aoe=aoe,
             derived=True,
         )
-        _DERIVED_RULE_CACHE[champion_name] = rule
+        rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
+        _DERIVED_RULE_CACHE[cache_key] = rule
         return rule
 
     fight_dps = rank_ability_dps(ability_damages, target_count=1, aoe=aoe)
@@ -1387,7 +1402,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
 
     setup = tuple(sorted({e.setup for e in edges}))
     consume = tuple(sorted({e.consume for e in edges}))
-    source_lines = [e.sentence() for e in edges]
+    source_lines = [e.sentence() for e in edges] + list(option_receipts)
     if use_dps_order:
         source_lines.append(
             "free slots ranked by per-rank DPS (total_raw / effective cooldown) — "
@@ -1422,7 +1437,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         aoe=aoe,
         derived=True,
     )
-    _DERIVED_RULE_CACHE[champion_name] = rule
+    rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
+    _DERIVED_RULE_CACHE[cache_key] = rule
     return rule
 
 
@@ -1432,6 +1448,7 @@ def resolve_cast_order(
     *,
     champion_data: Mapping[str, Any] | None = None,
     certified_order: list[str] | None = None,
+    champion_options: Mapping[str, Any] | None = None,
 ) -> tuple[list[str], ComboRule | None]:
     """Resolve the fight's ``cast_order``: override → algorithmic derive.
 
@@ -1446,11 +1463,16 @@ def resolve_cast_order(
     Args:
         champion_name: Public champion display name.
         ability_damages: The parsed ability package (atoms + per-rank
-            ``total_raw`` / ``cooldown`` at the fight's stats).
+            ``total_raw`` / ``cooldown`` at the fight's stats) — already
+            baked with the fight's options.
         champion_data: The cached champion object (raw wiki rows).  When
             omitted and the name is unknown, the default order applies.
         certified_order: The champion module's reviewed ``CAST_ORDER``, if
             any; looked up when omitted.
+        champion_options: The fight's champion options, when available.
+            They become part of the derivation cache signature so
+            option-gated slots and option-sensitive edges derive per option
+            state (issue #145 §6).
 
     Returns:
         ``(cast_order, rule)`` — ``rule`` is ``None`` only for unknown
@@ -1468,7 +1490,11 @@ def resolve_cast_order(
 
         certified_order = get_champion_cast_order(champion_name)
     derived = derive_champion_rule(
-        champion_name, ability_damages, champion_data or {}, certified_order
+        champion_name,
+        ability_damages,
+        champion_data or {},
+        certified_order,
+        champion_options=champion_options,
     )
     return list(derived.order), derived
 
@@ -1517,7 +1543,7 @@ def rank_ability_dps(
     return ranked
 
 
-def build_rotation_receipt(
+def build_rotation_receipt(  # pylint: disable=unused-argument
     champion_name: str,
     *,
     cast_order: list[str],

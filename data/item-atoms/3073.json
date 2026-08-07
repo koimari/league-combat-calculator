@@ -1,0 +1,99 @@
+{
+ "name": "Experimental Hexplate",
+ "id": 3073,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 450.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Experimental Hexplate"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Experimental Hexplate"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Experimental Hexplate"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Hexcharged",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Experimental Hexplate"
+    ],
+    "binary": [],
+    "evidence": "passive:Hexcharged"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Hexcharged",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Experimental Hexplate"
+    ],
+    "binary": [],
+    "evidence": "passive:Hexcharged"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Hexcharged",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Experimental Hexplate"
+    ],
+    "binary": [],
+    "evidence": "passive:Hexcharged"
+   }
+  }
+ ]
+}

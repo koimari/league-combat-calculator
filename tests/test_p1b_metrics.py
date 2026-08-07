@@ -395,9 +395,9 @@ def _seed_pass_scenario(db_module, tmp_path):
 
 def test_scorecard_pass_gate_from_seeded_rows(sqlite_database, tmp_path):
     report = _seed_pass_scenario(db, tmp_path)
-    scorecard = __import__(
-        "scripts.beta_metrics", fromlist=["compute_scorecard"]
-    ).compute_scorecard(now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report)
+    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+        now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report
+    )
 
     assert scorecard["beta"]["complete"] is True
     assert scorecard["data_sources"]["sessions_observed"] == 10
@@ -465,9 +465,9 @@ def test_scorecard_fail_gate_two_weeks_running(sqlite_database, tmp_path):
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, BETA_START - 3 * DAY)
 
-    scorecard = __import__(
-        "scripts.beta_metrics", fromlist=["compute_scorecard"]
-    ).compute_scorecard(now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report)
+    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+        now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report
+    )
     criteria = scorecard["criteria"]
     assert criteria["activation"]["status"] == "fail"
     assert criteria["retention"]["status"] == "fail"
@@ -522,9 +522,9 @@ def test_scorecard_pending_on_single_week_miss(sqlite_database, tmp_path):
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, NOW - DAY)
 
-    scorecard = __import__(
-        "scripts.beta_metrics", fromlist=["compute_scorecard"]
-    ).compute_scorecard(now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report)
+    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+        now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report
+    )
     assert scorecard["criteria"]["activation"]["status"] == "at_risk"
     assert scorecard["criteria"]["receipts"]["status"] == "at_risk"
     assert scorecard["criteria"]["retention"]["status"] == "pass"
@@ -551,9 +551,9 @@ def test_scorecard_pending_while_beta_in_progress(sqlite_database, tmp_path):
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, now - timedelta(hours=6))
 
-    scorecard = __import__(
-        "scripts.beta_metrics", fromlist=["compute_scorecard"]
-    ).compute_scorecard(now=now, beta_start=BETA_START, weeks=2, staleness_path=report)
+    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+        now=now, beta_start=BETA_START, weeks=2, staleness_path=report
+    )
     assert scorecard["beta"]["complete"] is False
     # Week 1 (complete) judged; week 2 (in progress) never judged.
     weeks = scorecard["criteria"]["receipts"]["weeks"]
@@ -574,9 +574,9 @@ def test_scorecard_retention_insufficient_until_7_days_elapse(
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, now - timedelta(hours=6))
 
-    scorecard = __import__(
-        "scripts.beta_metrics", fromlist=["compute_scorecard"]
-    ).compute_scorecard(now=now, beta_start=BETA_START, weeks=2, staleness_path=report)
+    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+        now=now, beta_start=BETA_START, weeks=2, staleness_path=report
+    )
     retention = scorecard["criteria"]["retention"]
     assert retention["numerator"] == 1
     assert retention["denominator"] == 1  # only the eligible session
@@ -593,9 +593,9 @@ def test_scorecard_activation_ten_second_boundary(sqlite_database, tmp_path):
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, NOW - timedelta(hours=6))
 
-    scorecard = __import__(
-        "scripts.beta_metrics", fromlist=["compute_scorecard"]
-    ).compute_scorecard(now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report)
+    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+        now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report
+    )
     activation = scorecard["criteria"]["activation"]
     assert activation["numerator"] == 1
     assert activation["denominator"] == 2

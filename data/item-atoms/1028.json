@@ -1,0 +1,23 @@
+{
+ "name": "Ruby Crystal",
+ "id": 1028,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 150.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ruby Crystal"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

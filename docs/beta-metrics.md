@@ -246,3 +246,7 @@ The event stream stores only: event name, anonymous session id, `took_ms`
 (a duration), and a small JSON payload.  No account identifiers, no IPs,
 no free-text.  The `scryglass_anon` cookie is first-party, HttpOnly, and
 never cross-linked to the signed auth cookie.
+
+## Shared home (issue #144)
+
+The scorecard implementation lives in `src/metrics.py` (ships in the deployed runtime package); `scripts/beta_metrics.py` is a thin CLI wrapper.

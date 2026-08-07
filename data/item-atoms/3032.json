@@ -1,0 +1,110 @@
+{
+ "name": "Yun Tal Wildarrows",
+ "id": 3032,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Yun Tal Wildarrows"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Yun Tal Wildarrows"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Practice Makes Lethal",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Yun Tal Wildarrows"
+    ],
+    "binary": [],
+    "evidence": "passive:Practice Makes Lethal"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Practice Makes Lethal",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Yun Tal Wildarrows"
+    ],
+    "binary": [],
+    "evidence": "passive:Practice Makes Lethal"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Practice Makes Lethal",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Yun Tal Wildarrows"
+    ],
+    "binary": [],
+    "evidence": "passive:Practice Makes Lethal"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Practice Makes Lethal",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Yun Tal Wildarrows"
+    ],
+    "binary": [],
+    "evidence": "passive:Practice Makes Lethal"
+   }
+  },
+  {
+   "atom_id": "damage.zero-damage",
+   "family": "damage",
+   "behavior": "Practice Makes Lethal",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Yun Tal Wildarrows"
+    ],
+    "binary": [],
+    "evidence": "passive:Practice Makes Lethal"
+   }
+  }
+ ]
+}

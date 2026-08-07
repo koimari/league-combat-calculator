@@ -936,6 +936,7 @@ def with_item_on_hits(parser, *, effectiveness, hits=1, triggers=("on_hit",)):
     ``applies_item_on_hits`` metadata to abilities that apply item on-hits
     (spellblade charges, on-hit items) without rewriting the packet parser.
     """
+
     def parse(ctx):
         entry = parser(ctx)
         if entry is None:

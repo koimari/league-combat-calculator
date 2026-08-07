@@ -1,0 +1,54 @@
+{
+ "name": "World Atlas",
+ "id": 3865,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "World Atlas"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.gold-per-10",
+   "family": "stats",
+   "behavior": "goldPer10",
+   "parameters": {
+    "flat": 3.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "World Atlas"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "vision-economy.gold-income-item",
+   "family": "vision-economy",
+   "behavior": "Support Quest",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "World Atlas"
+    ],
+    "binary": [],
+    "evidence": "passive:Support Quest"
+   }
+  }
+ ]
+}

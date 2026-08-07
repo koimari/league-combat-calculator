@@ -10,7 +10,7 @@ from .reviewed_batch_10 import build_batch_module
 _base_parse, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Zaahen")
 
 _ON_HIT_SPECS: dict[str, dict] = {
-    "Q": {"effectiveness": 1.0, "hits": 1, "triggers": ('on_hit',)},
+    "Q": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
 }
 
 _parse_abilities = _base_parse
@@ -27,6 +27,7 @@ def parse_abilities(*args, **kwargs):
 
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

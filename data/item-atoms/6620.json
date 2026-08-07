@@ -1,0 +1,192 @@
+{
+ "name": "Echoes of Helia",
+ "id": 6620,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mark",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.soul",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Soul Siphon",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Echoes of Helia"
+    ],
+    "binary": [],
+    "evidence": "passive:Soul Siphon"
+   }
+  }
+ ]
+}

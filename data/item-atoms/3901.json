@@ -1,0 +1,48 @@
+{
+ "name": "Fire at Will",
+ "id": 3901,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Fire at Will",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fire at Will"
+    ],
+    "binary": [],
+    "evidence": "passive:Fire at Will"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Fire at Will",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fire at Will"
+    ],
+    "binary": [],
+    "evidence": "passive:Fire at Will"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Fire at Will",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fire at Will"
+    ],
+    "binary": [],
+    "evidence": "passive:Fire at Will"
+   }
+  }
+ ]
+}

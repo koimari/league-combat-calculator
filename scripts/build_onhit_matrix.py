@@ -20,9 +20,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT = REPO_ROOT / "data" / "onhit-matrix.json"
 
-_APPLIES = re.compile(
-    r"appl(?:ies|y|ying|ied).{0,60}on[- ]?hit effects", re.I
-)
+_APPLIES = re.compile(r"appl(?:ies|y|ying|ied).{0,60}on[- ]?hit effects", re.I)
 _TRIGGERS_ON_ATTACK = re.compile(r"trigger(?:s|ing).{0,40}on[- ]?attack", re.I)
 _NEGATED = re.compile(
     r"(?:cannot|does not|don'?t|no longer|not).{0,50}(?:apply|trigger).{0,40}on[- ]?hit",

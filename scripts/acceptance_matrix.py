@@ -329,7 +329,9 @@ def main() -> int:
         ],
         extra={
             "scenario_count": len(results),
-            "origin": args.base_url.rstrip("/") if args.base_url else "local:test_client",
+            "origin": (
+                args.base_url.rstrip("/") if args.base_url else "local:test_client"
+            ),
             "evidence_contract": [
                 "origin",
                 "request_paths",

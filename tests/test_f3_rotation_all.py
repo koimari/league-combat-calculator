@@ -1,4 +1,4 @@
-"""F3 — algorithmic optimal-order derivation for all 173 champions.
+"""F3 — algorithmic optimal-order derivation for every registered champion.
 
 The F2 combo layer hand-curated ten ``COMBO_TABLE`` seeds; every other
 champion fell back to the certified/default order with a generic
@@ -7,8 +7,9 @@ rationale.  F3 replaces that with a fully algorithmic derivation
 order is computed on the fly from the atomized ability data — typed
 parsed atoms (``dot_duration``, ``on_hit``, ``applies_dot_stack``,
 ``post_hit_proc``, ``target_debuff``, ``stat_buff``, ``cc_kind``),
-module OPTION keys (``target_poisoned``, ``blight_stacks``,
-``p_illumination_procs``, ...), and the structured wiki attribute rows.
+module OPTION rotation declarations (``target_poisoned``,
+``blight_stacks``, ``p_illumination_procs``, ``moonlight_reset``, ...),
+and the structured wiki attribute rows.
 
 This suite asserts the combo invariants the product owner asked for, for
 EVERY champion:
@@ -30,8 +31,6 @@ from src.calculator.champions import get_champion_cast_order
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.rotation_resolver import (
     COMBO_TABLE,
-    _CONSUME_OPTIONS,
-    _resolve_option_slot,
     detect_setup_consume_edges,
     resolve_cast_order,
 )
@@ -110,7 +109,7 @@ def items_by_name():
     return {data["name"]: data for data in fetch_item_data().values()}
 
 
-def _parse(champion_data, level, items, items_by_name):
+def _parse(champion_data, level, items, items_by_name, champion_options=None):
     from src.calculator.champions import parse_champion_abilities
     from src.calculator.stats import calculate_total_stats
 
@@ -127,30 +126,42 @@ def _parse(champion_data, level, items, items_by_name):
             "target_current_health": 2000.0,
             "target_missing_health": 0.0,
         },
-        champion_options=None,
+        champion_options=champion_options,
     )
 
 
-def _resolve(champion_data, parsed, certified_order=None):
+def _resolve(champion_data, parsed, certified_order=None, champion_options=None):
     return resolve_cast_order(
         champion_data.get("name", ""),
         parsed,
         champion_data=champion_data,
         certified_order=certified_order,
+        champion_options=champion_options,
     )
 
 
 def _detect_edges(champion_name, champion_data, parsed):
-    """Re-run the resolver's own edge detector (mirrors the derive path)."""
-    from src.calculator.champions import get_champion_options_meta
+    """Re-run the resolver's own edge detector (mirrors the derive path).
+
+    Builds ``slot_options`` from the PUBLIC rotation accessor
+    (``get_champion_option_rotation``) — the same authoritative declaration
+    the resolver consumes — so production and tests cannot drift (issue
+    #145: the old shared ``_CONSUME_OPTIONS`` allowlist is gone).
+    """
+    from src.calculator.champions import (
+        get_champion_option_rotation,
+        get_champion_options_meta,
+    )
 
     meta = get_champion_options_meta(champion_name)
+    rotations = get_champion_option_rotation(champion_name)
     slot_options = {}
     for opt in meta.get("options", []):
         key = str(opt.get("key", ""))
-        if key not in _CONSUME_OPTIONS:
+        decl = rotations.get(key)
+        if not decl or decl.get("role") not in ("setup", "consume", "execute"):
             continue
-        slot = _resolve_option_slot(champion_name, key, parsed)
+        slot = decl.get("slot")
         if slot:
             slot_options.setdefault(slot, []).append(key)
         else:

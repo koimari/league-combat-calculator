@@ -1,0 +1,23 @@
+{
+ "name": "Sapphire Crystal",
+ "id": 1027,
+ "atoms": [
+  {
+   "atom_id": "stats.mana",
+   "family": "stats",
+   "behavior": "mana",
+   "parameters": {
+    "flat": 300.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sapphire Crystal"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

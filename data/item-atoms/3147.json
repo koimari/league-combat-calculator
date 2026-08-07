@@ -1,0 +1,68 @@
+{
+ "name": "Haunting Guise",
+ "id": 3147,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Haunting Guise"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Haunting Guise"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Madness",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Haunting Guise"
+    ],
+    "binary": [],
+    "evidence": "passive:Madness"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Madness",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Haunting Guise"
+    ],
+    "binary": [],
+    "evidence": "passive:Madness"
+   }
+  }
+ ]
+}

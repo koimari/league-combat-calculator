@@ -1,0 +1,162 @@
+{
+ "name": "Rite of Ruin",
+ "id": 3430,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Wrath and Ruin",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "passive:Wrath and Ruin"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Wrath and Ruin",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "passive:Wrath and Ruin"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Wrath and Ruin",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "passive:Wrath and Ruin"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Wrath and Ruin",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "passive:Wrath and Ruin"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Wrath and Ruin",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "passive:Wrath and Ruin"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-stacking-priority",
+   "family": "heal-shield",
+   "behavior": "Wrath and Ruin",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "passive:Wrath and Ruin"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-shield-effect",
+   "family": "heal-shield",
+   "behavior": "Wrath and Ruin",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rite of Ruin"
+    ],
+    "binary": [],
+    "evidence": "passive:Wrath and Ruin"
+   }
+  }
+ ]
+}

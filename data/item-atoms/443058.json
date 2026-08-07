@@ -1,0 +1,121 @@
+{
+ "name": "Shield of Molten Stone",
+ "id": 443058,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 300.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Shield of Molten Stone"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 100.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Shield of Molten Stone"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Immovable as the Earth",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Shield of Molten Stone"
+    ],
+    "binary": [],
+    "evidence": "passive:Immovable as the Earth"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Immovable as the Earth",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Shield of Molten Stone"
+    ],
+    "binary": [],
+    "evidence": "passive:Immovable as the Earth"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Immovable as the Earth",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Shield of Molten Stone"
+    ],
+    "binary": [],
+    "evidence": "passive:Immovable as the Earth"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-physical",
+   "family": "heal-shield",
+   "behavior": "Immovable as the Earth",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Shield of Molten Stone"
+    ],
+    "binary": [],
+    "evidence": "passive:Immovable as the Earth"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-shield-effect",
+   "family": "heal-shield",
+   "behavior": "Immovable as the Earth",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Shield of Molten Stone"
+    ],
+    "binary": [],
+    "evidence": "passive:Immovable as the Earth"
+   }
+  }
+ ]
+}

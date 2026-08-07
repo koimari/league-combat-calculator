@@ -1,0 +1,172 @@
+{
+ "name": "The Collector",
+ "id": 6676,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "passive:Death"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "passive:Death"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "passive:Death"
+   }
+  },
+  {
+   "atom_id": "damage.execute",
+   "family": "damage",
+   "behavior": "Death",
+   "parameters": {},
+   "relations": [
+    "stats.health",
+    "damage.missing-health"
+   ],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "passive:Death"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "passive:Death"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "passive:Death"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward-destruction",
+   "family": "vision-economy",
+   "behavior": "Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "passive:Death"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "The Collector"
+    ],
+    "binary": [],
+    "evidence": "passive:Death"
+   }
+  }
+ ]
+}

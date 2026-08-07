@@ -11,6 +11,7 @@ Usage:
 
 Exit code 0 = the issue may be closed; non-zero = do NOT close (reasons printed).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -48,9 +49,7 @@ def gate(args: argparse.Namespace) -> int:
         failures.append("fetch origin failed")
     ancestor = _git("merge-base", "--is-ancestor", commit, f"origin/{BRANCH}")
     if ancestor.returncode != 0:
-        failures.append(
-            f"commit {commit[:10]} is not merged on origin/{BRANCH}"
-        )
+        failures.append(f"commit {commit[:10]} is not merged on origin/{BRANCH}")
     # (2) Working tree clean
     status = _git("status", "--porcelain")
     if status.stdout.strip():
@@ -59,21 +58,34 @@ def gate(args: argparse.Namespace) -> int:
     venv = REPO / ".venv" / "bin" / "python"
     if venv.exists():
         golden = subprocess.run(
-            [str(venv), "scripts/golden_snapshot.py", "compare",
-             "scripts/golden_baseline.json"],
-            capture_output=True, text=True, timeout=600, cwd=REPO,
+            [
+                str(venv),
+                "scripts/golden_snapshot.py",
+                "compare",
+                "scripts/golden_baseline.json",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=600,
+            cwd=REPO,
         )
         if golden.returncode != 0:
             failures.append("golden snapshot differs from baseline")
         pytest = subprocess.run(
-            [str(venv), "-m", "pytest", "-q"], capture_output=True, text=True,
-            timeout=2400, cwd=REPO,
+            [str(venv), "-m", "pytest", "-q"],
+            capture_output=True,
+            text=True,
+            timeout=2400,
+            cwd=REPO,
         )
         if pytest.returncode != 0:
             failures.append("full pytest suite not green")
         pylint = subprocess.run(
             [str(venv), "-m", "pylint", "src/", "--fail-under=9"],
-            capture_output=True, text=True, timeout=900, cwd=REPO,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            cwd=REPO,
         )
         if pylint.returncode != 0:
             failures.append("pylint < 9")
@@ -85,7 +97,11 @@ def gate(args: argparse.Namespace) -> int:
     print(
         f"ISSUE GATE PASSED: commit {commit[:10]} is merged on "
         f"origin/{BRANCH}, gates green"
-        + (f", deployment ancestor of {args.deploy_sha[:10]}" if args.deploy_sha else "")
+        + (
+            f", deployment ancestor of {args.deploy_sha[:10]}"
+            if args.deploy_sha
+            else ""
+        )
     )
     return 0
 
@@ -97,7 +113,9 @@ def main() -> int:
     check.add_argument("--issue", required=True, help="issue number (informational)")
     check.add_argument("--commit", required=True, help="claim commit SHA")
     check.add_argument(
-        "--deploy-sha", default=None, help="deployed SHA to gate against (optional; wired fully at P10)"
+        "--deploy-sha",
+        default=None,
+        help="deployed SHA to gate against (optional; wired fully at P10)",
     )
     check.set_defaults(func=gate)
     args = parser.parse_args()

@@ -24,6 +24,11 @@ from typing import Any, Mapping
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+try:
+    from gate_receipt import build_receipt
+except ImportError:  # imported as scripts.item_umbrella_audit in tests
+    from scripts.gate_receipt import build_receipt
+
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_coverage import (
     item_model_coverage,
@@ -140,17 +145,49 @@ def run_audit() -> dict[str, Any]:
             unresolved_source,
         )
     )
-    return {
-        "audit": "item_umbrella_runtime_coverage",
-        "passed": passed,
-        "counts": counts,
-        "review_pending": review_pending,
-        "unexplained_blocks": unexplained_blocks,
-        "path_mismatches": path_mismatches,
-        "unresolved_source_conflicts": unresolved_source,
-        "entries": entries,
-        "source_complete": bool(source.get("complete")),
-    }
+
+    # Envelope (issue #139): one unit per failing *distinct* item, deduped
+    # across the four checks so the sums cannot double-count.  Source
+    # conflicts can name non-ordinary records, which are outside the runtime
+    # umbrella's covered units; they still fail the gate, so they are added
+    # to ``total`` as gate units rather than silently ignored.
+    failing: dict[str, list[str]] = {}
+    for name in review_pending:
+        failing.setdefault(name, []).append("review_pending")
+    for row in unexplained_blocks:
+        failing.setdefault(row["item"], []).append("unexplained_block")
+    for row in path_mismatches:
+        failing.setdefault(row["item"], []).append("path_mismatch")
+    for row in unresolved_source:
+        failing.setdefault(row["item"], []).append("unresolved_source_conflict")
+    ordinary_names = {entry["name"] for entry in entries}
+    failed = len(failing)
+    total = len(entries) + len(set(failing) - ordinary_names)
+    failures = [
+        {"item": name, "reason": "; ".join(sorted(reasons))}
+        for name, reasons in sorted(failing.items())
+    ]
+    report = build_receipt(
+        matrix="item_umbrella_runtime_coverage",
+        passed=passed,
+        passed_count=total - failed,
+        failed_count=failed,
+        total_count=total,
+        withheld_count=0,
+        failures=failures,
+        extra={
+            "audit": "item_umbrella_runtime_coverage",
+            "review_pending": review_pending,
+            "unexplained_blocks": unexplained_blocks,
+            "path_mismatches": path_mismatches,
+            "unresolved_source_conflicts": unresolved_source,
+            "entries": entries,
+            "source_complete": bool(source.get("complete")),
+        },
+    )
+    # The detailed per-scope counts stay addressable for existing consumers.
+    report["counts"].update(counts)
+    return report
 
 
 def main() -> int:

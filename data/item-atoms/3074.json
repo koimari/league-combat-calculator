@@ -1,0 +1,82 @@
+{
+ "name": "Ravenous Hydra",
+ "id": 3074,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 65.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ravenous Hydra"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ravenous Hydra"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ravenous Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  },
+  {
+   "atom_id": "damage.aoe",
+   "family": "damage",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ravenous Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  },
+  {
+   "atom_id": "heal-shield.life-steal",
+   "family": "heal-shield",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ravenous Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  }
+ ]
+}

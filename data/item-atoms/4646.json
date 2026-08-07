@@ -1,0 +1,96 @@
+{
+ "name": "Stormsurge",
+ "id": 4646,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 90.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormsurge"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-penetration",
+   "family": "stats",
+   "behavior": "magicPenetration",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormsurge"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Stormraider",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormsurge"
+    ],
+    "binary": [],
+    "evidence": "passive:Stormraider"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Stormraider",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormsurge"
+    ],
+    "binary": [],
+    "evidence": "passive:Stormraider"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Stormraider",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormsurge"
+    ],
+    "binary": [],
+    "evidence": "passive:Stormraider"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Stormraider",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormsurge"
+    ],
+    "binary": [],
+    "evidence": "passive:Stormraider"
+   }
+  }
+ ]
+}

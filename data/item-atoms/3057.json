@@ -1,0 +1,54 @@
+{
+ "name": "Sheen",
+ "id": 3057,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sheen"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sheen"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sheen"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  }
+ ]
+}

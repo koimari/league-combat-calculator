@@ -1,0 +1,138 @@
+{
+ "name": "Scarecrow Effigy",
+ "id": 3330,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealth",
+   "family": "vision-economy",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [
+    "vision-economy.true-sight",
+    "vision-economy.attacker-reveal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "vision-economy.camouflage",
+   "family": "vision-economy",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "vision-economy.invisibility",
+   "family": "vision-economy",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealthed-trap",
+   "family": "vision-economy",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward",
+   "family": "vision-economy",
+   "behavior": "Trinket",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scarecrow Effigy"
+    ],
+    "binary": [],
+    "evidence": "active:Trinket"
+   }
+  }
+ ]
+}

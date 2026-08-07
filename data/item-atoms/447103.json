@@ -1,0 +1,127 @@
+{
+ "name": "Hemomancer's Helm",
+ "id": 447103,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 70.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hemomancer's Helm"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hemomancer's Helm"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Scarlet Allegiance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hemomancer's Helm"
+    ],
+    "binary": [],
+    "evidence": "passive:Scarlet Allegiance"
+   }
+  },
+  {
+   "atom_id": "damage.execute",
+   "family": "damage",
+   "behavior": "Scarlet Allegiance",
+   "parameters": {},
+   "relations": [
+    "stats.health",
+    "damage.missing-health"
+   ],
+   "provenance": {
+    "wiki": [
+     "Hemomancer's Helm"
+    ],
+    "binary": [],
+    "evidence": "passive:Scarlet Allegiance"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-threshold",
+   "family": "heal-shield",
+   "behavior": "Scarlet Allegiance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hemomancer's Helm"
+    ],
+    "binary": [],
+    "evidence": "passive:Scarlet Allegiance"
+   }
+  },
+  {
+   "atom_id": "heal-shield.life-steal",
+   "family": "heal-shield",
+   "behavior": "Scarlet Allegiance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hemomancer's Helm"
+    ],
+    "binary": [],
+    "evidence": "passive:Scarlet Allegiance"
+   }
+  },
+  {
+   "atom_id": "heal-shield.omnivamp",
+   "family": "heal-shield",
+   "behavior": "Scarlet Allegiance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hemomancer's Helm"
+    ],
+    "binary": [],
+    "evidence": "passive:Scarlet Allegiance"
+   }
+  },
+  {
+   "atom_id": "heal-shield.drain",
+   "family": "heal-shield",
+   "behavior": "Scarlet Allegiance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hemomancer's Helm"
+    ],
+    "binary": [],
+    "evidence": "passive:Scarlet Allegiance"
+   }
+  }
+ ]
+}

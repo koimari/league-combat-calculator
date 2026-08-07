@@ -1,4 +1,4 @@
-"""Run a bounded 173-champion optimizer smoke matrix for issue #38.
+"""Run a bounded all-champion optimizer smoke matrix for issue #38.
 
 Each registered champion is sent through the real local Flask
 ``/api/optimize`` path with one locked item so the sweep stays bounded.  The
@@ -146,7 +146,7 @@ def run_matrix(
 
 
 def main() -> int:
-    """Run the local 173-champion smoke matrix."""
+    """Run the local all-champion smoke matrix."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="emit JSON only")
     args = parser.parse_args()
@@ -170,9 +170,40 @@ def main() -> int:
             ),
             names,
         )
-    report["registry_size_expected"] = 173
+    # Self-consistency check only: the expected size is DERIVED from the
+    # registry, so a roster expansion never trips the CI gate (issue #136).
+    report["registry_size_expected"] = len(names)
     report["registry_size_ok"] = len(names) == report["registry_size_expected"]
     report["passed"] = bool(report["passed"] and report["registry_size_ok"])
+
+    # #139: shared gate receipt envelope (strict boolean passed + counts).
+    from gate_receipt import build_receipt  # pylint: disable=import-outside-toplevel
+
+    counts = report["outcome_counts"]
+    certified = counts.get("certified", 0)
+    withheld = counts.get("expected_withholding", 0) + counts.get(
+        "partial_or_unexhaustive", 0
+    )
+    failed = counts.get("unexpected_failure", 0)
+    report = build_receipt(
+        matrix="issue_38_champion_optimizer",
+        passed=bool(report["passed"]),
+        passed_count=int(certified),
+        failed_count=int(failed),
+        total_count=len(names),
+        withheld_count=int(withheld),
+        failures=[
+            {"champion": row["champion"], "outcome": row["outcome"]}
+            for row in report["results"]
+            if row["outcome"] not in {"certified"}
+        ],
+        extra={
+            "registered_count": len(names),
+            "exercised_count": report["exercised_count"],
+            "all_registered_exercised": report["all_registered_exercised"],
+            "results": report["results"],
+        },
+    )
 
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))

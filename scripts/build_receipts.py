@@ -5,6 +5,7 @@
 Output: docs/receipts/champions/<name>.json, docs/receipts/items/<id>.json,
 docs/receipts/summary.json.
 """
+
 from __future__ import annotations
 
 import json
@@ -45,18 +46,40 @@ def champion_receipt(name: str, champ: dict, audits: dict) -> dict:
         "audit_verdict": audit.get("verdict"),
         "audit_gap": audit.get("gap_summary", "")[:200],
         "ability_damage_types": {
-            slot: ((abs_[0].get("damageType") if abs_ and isinstance(abs_[0], dict) else None))
+            slot: (
+                (
+                    abs_[0].get("damageType")
+                    if abs_ and isinstance(abs_[0], dict)
+                    else None
+                )
+            )
             for slot, abs_ in (champ.get("abilities") or {}).items()
         },
     }
 
 
 def item_receipt(item_id: str, item: dict) -> dict:
+    """Read atoms from the unified Atomizer item domain (data/atoms/items.json)."""
     atoms = []
-    atoms_file = ITEM_ATOMS_DIR / f"{item_id}.json"
+    atoms_file = ITEM_ATOMS_DIR / "items.json"
     if atoms_file.exists():
         dec = json.loads(atoms_file.read_text())
-        atoms = dec.get("atoms", []) if isinstance(dec, dict) else []
+        objects = dec.get("objects", {}) if isinstance(dec, dict) else {}
+        atoms = objects.get(str(item_id), []) if isinstance(objects, dict) else []
+    return _item_receipt_body(item_id, item, atoms)
+
+
+def _item_receipt_body(item_id: str, item: dict, atoms: list) -> dict:
+    return {
+        "name": item.get("name"),
+        "id": item_id,
+        "atoms": {
+            "count": len(atoms),
+            "ids": [atom.get("atom_id") for atom in atoms if isinstance(atom, dict)][
+                :100
+            ],
+        },
+    }
     return {
         "name": item.get("name"),
         "id": item_id,
@@ -84,7 +107,9 @@ def main():
     summary = {"champions": {}, "items": {}}
     for name, champ in champs.items():
         rec = champion_receipt(name, champ, audits)
-        (OUT / "champions" / f"{name.lower()}.json").write_text(json.dumps(rec, indent=1))
+        (OUT / "champions" / f"{name.lower()}.json").write_text(
+            json.dumps(rec, indent=1)
+        )
         summary["champions"][name] = {
             "atoms": rec["atoms"]["count"],
             "verdict": rec["audit_verdict"],
@@ -100,6 +125,7 @@ def main():
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
     print(f"champions: {len(summary['champions'])} | items: {len(summary['items'])}")
     from collections import Counter
+
     verdicts = Counter(v["verdict"] for v in summary["champions"].values())
     print("audit verdicts:", dict(verdicts))
 

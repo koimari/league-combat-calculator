@@ -1,0 +1,65 @@
+{
+ "name": "Scout's Slingshot",
+ "id": 3144,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scout's Slingshot"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.cripple",
+   "family": "crowd-control-mobility",
+   "behavior": "Bullseye",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scout's Slingshot"
+    ],
+    "binary": [],
+    "evidence": "passive:Bullseye"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.slow",
+   "family": "crowd-control-mobility",
+   "behavior": "Bullseye",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scout's Slingshot"
+    ],
+    "binary": [],
+    "evidence": "passive:Bullseye"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Bullseye",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scout's Slingshot"
+    ],
+    "binary": [],
+    "evidence": "passive:Bullseye"
+   }
+  }
+ ]
+}

@@ -1,0 +1,188 @@
+{
+ "name": "Stormrazor",
+ "id": 3097,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "heal-shield.vamp",
+   "family": "heal-shield",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward-destruction",
+   "family": "vision-economy",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "vision-economy.kill-bounty",
+   "family": "vision-economy",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Stormrazor"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  }
+ ]
+}

@@ -1,0 +1,71 @@
+{
+ "name": "Ohmwrecker (Turret Item)",
+ "id": 1500,
+ "atoms": [
+  {
+   "atom_id": "stats.armor-penetration",
+   "family": "stats",
+   "behavior": "armorPenetration",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 30.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ohmwrecker (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Dodge Piercing",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ohmwrecker (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "passive:Dodge Piercing"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Dodge Piercing",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Ohmwrecker (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "passive:Dodge Piercing"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Dodge Piercing",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Ohmwrecker (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "passive:Dodge Piercing"
+   }
+  }
+ ]
+}

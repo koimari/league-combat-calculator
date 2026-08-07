@@ -1,0 +1,116 @@
+{
+ "name": "Warmog's Armor",
+ "id": 3083,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 1000.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Warmog's Armor"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "passive",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Warmog's Armor"
+    ],
+    "binary": [],
+    "evidence": "passive:"
+   }
+  },
+  {
+   "atom_id": "damage.zero-damage",
+   "family": "damage",
+   "behavior": "passive",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Warmog's Armor"
+    ],
+    "binary": [],
+    "evidence": "passive:"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "passive",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Warmog's Armor"
+    ],
+    "binary": [],
+    "evidence": "passive:"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "passive",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Warmog's Armor"
+    ],
+    "binary": [],
+    "evidence": "passive:"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "passive",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Warmog's Armor"
+    ],
+    "binary": [],
+    "evidence": "passive:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "passive",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Warmog's Armor"
+    ],
+    "binary": [],
+    "evidence": "passive:"
+   }
+  }
+ ]
+}

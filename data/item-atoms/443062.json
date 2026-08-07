@@ -1,0 +1,164 @@
+{
+ "name": "Sanguine Gift",
+ "id": 443062,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 80.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.heal-shield-power",
+   "family": "stats",
+   "behavior": "healAndShieldPower",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Patronage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "passive:Patronage"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mark",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Patronage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "passive:Patronage"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Patronage",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "passive:Patronage"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Patronage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "passive:Patronage"
+   }
+  },
+  {
+   "atom_id": "heal-shield.overheal",
+   "family": "heal-shield",
+   "behavior": "Patronage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "passive:Patronage"
+   }
+  },
+  {
+   "atom_id": "heal-shield.vamp",
+   "family": "heal-shield",
+   "behavior": "Patronage",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "passive:Patronage"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Patronage",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sanguine Gift"
+    ],
+    "binary": [],
+    "evidence": "passive:Patronage"
+   }
+  }
+ ]
+}

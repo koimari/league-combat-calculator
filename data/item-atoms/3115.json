@@ -1,0 +1,116 @@
+{
+ "name": "Nashor's Tooth",
+ "id": 3115,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 80.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Nashor's Tooth"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Nashor's Tooth"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Nashor's Tooth"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.multiplicative-stacking",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Icathian Bite",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Nashor's Tooth"
+    ],
+    "binary": [],
+    "evidence": "passive:Icathian Bite"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Icathian Bite",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Nashor's Tooth"
+    ],
+    "binary": [],
+    "evidence": "passive:Icathian Bite"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Icathian Bite",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Nashor's Tooth"
+    ],
+    "binary": [],
+    "evidence": "passive:Icathian Bite"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Icathian Bite",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Nashor's Tooth"
+    ],
+    "binary": [],
+    "evidence": "passive:Icathian Bite"
+   }
+  }
+ ]
+}

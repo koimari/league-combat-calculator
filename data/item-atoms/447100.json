@@ -1,0 +1,96 @@
+{
+ "name": "Mirage Blade",
+ "id": 447100,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 60.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mirage Blade"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.dash",
+   "family": "crowd-control-mobility",
+   "behavior": "Blur",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mirage Blade"
+    ],
+    "binary": [],
+    "evidence": "passive:Blur"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.blink",
+   "family": "crowd-control-mobility",
+   "behavior": "Blur",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mirage Blade"
+    ],
+    "binary": [],
+    "evidence": "passive:Blur"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Blur",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mirage Blade"
+    ],
+    "binary": [],
+    "evidence": "passive:Blur"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Blur",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Mirage Blade"
+    ],
+    "binary": [],
+    "evidence": "passive:Blur"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Blur",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mirage Blade"
+    ],
+    "binary": [],
+    "evidence": "passive:Blur"
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "name": "Sorcerer's Shoes",
+ "id": 3020,
+ "atoms": [
+  {
+   "atom_id": "stats.magic-penetration",
+   "family": "stats",
+   "behavior": "magicPenetration",
+   "parameters": {
+    "flat": 12.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sorcerer's Shoes"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

@@ -1,0 +1,184 @@
+{
+ "name": "Sword of Blossoming Dawn",
+ "id": 4011,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.heal-shield-power",
+   "family": "stats",
+   "behavior": "healAndShieldPower",
+   "parameters": {
+    "flat": 12.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Effervescence",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "passive:Effervescence"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Effervescence",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "passive:Effervescence"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Effervescence",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "passive:Effervescence"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Effervescence",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "passive:Effervescence"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Effervescence",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "passive:Effervescence"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-heal-effect",
+   "family": "heal-shield",
+   "behavior": "Effervescence",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "passive:Effervescence"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-shield-effect",
+   "family": "heal-shield",
+   "behavior": "Effervescence",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of Blossoming Dawn"
+    ],
+    "binary": [],
+    "evidence": "passive:Effervescence"
+   }
+  }
+ ]
+}

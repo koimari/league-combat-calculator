@@ -1,0 +1,127 @@
+{
+ "name": "Blackfire Torch",
+ "id": 2503,
+ "atoms": [
+  {
+   "atom_id": "stats.mana",
+   "family": "stats",
+   "behavior": "mana",
+   "parameters": {
+    "flat": 600.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blackfire Torch"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 80.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blackfire Torch"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blackfire Torch"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.damage-over-time",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Baleful Blaze",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blackfire Torch"
+    ],
+    "binary": [],
+    "evidence": "passive:Baleful Blaze"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Baleful Blaze",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blackfire Torch"
+    ],
+    "binary": [],
+    "evidence": "passive:Baleful Blaze"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Baleful Blaze",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blackfire Torch"
+    ],
+    "binary": [],
+    "evidence": "passive:Baleful Blaze"
+   }
+  },
+  {
+   "atom_id": "vision-economy.global-local-bounty",
+   "family": "vision-economy",
+   "behavior": "Baleful Blaze",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blackfire Torch"
+    ],
+    "binary": [],
+    "evidence": "passive:Baleful Blaze"
+   }
+  },
+  {
+   "atom_id": "vision-economy.jungle-experience",
+   "family": "vision-economy",
+   "behavior": "Baleful Blaze",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blackfire Torch"
+    ],
+    "binary": [],
+    "evidence": "passive:Baleful Blaze"
+   }
+  }
+ ]
+}

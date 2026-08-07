@@ -1,0 +1,40 @@
+{
+ "name": "Noonquiver",
+ "id": 6670,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Noonquiver"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 20.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Noonquiver"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

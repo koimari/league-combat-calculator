@@ -70,3 +70,17 @@ with tier 1 of `/add-champion` if the user cares about that champion.
 - Commit `data/`, `scripts/golden_baseline.json`, and any code changes
   together, with every baseline diff explained in the commit message
   (see commit f7e8aad for the format).
+
+## Patch-day gates (issue #134)
+
+`python scripts/patch_update.py run` now fails closed BEFORE re-capturing the
+golden baseline when any of these are missing/stale:
+- reviewed champion packets (packet freshness receipts vs champions.json +
+  the Meraki axword kit; rebuild with `build_reviewed_modules.py` and commit
+  the asset with its source receipts),
+- the full-entry audit tool (`--query-tool`/`LCC_WIKI_QUERY`/PATH/vendor),
+- the patch-regression staleness check (`CDTB_BIN` or `--patch`).
+
+Environment: set `LCC_WIKI_DB` (wiki sqlite), `LCC_AXWORD_SOURCE` (Meraki
+kit sibling repo), `LCC_WIKI_QUERY`, and `CDTB_BIN` in the runbook; every
+path now resolves repo-relative/env/CLI with an actionable error.

@@ -1,0 +1,71 @@
+{
+ "name": "Decapitator",
+ "id": 447107,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Decapitator"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Anticipation",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Decapitator"
+    ],
+    "binary": [],
+    "evidence": "passive:Anticipation"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Anticipation",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Decapitator"
+    ],
+    "binary": [],
+    "evidence": "passive:Anticipation"
+   }
+  },
+  {
+   "atom_id": "damage.dot",
+   "family": "damage",
+   "behavior": "Anticipation",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Decapitator"
+    ],
+    "binary": [],
+    "evidence": "passive:Anticipation"
+   }
+  }
+ ]
+}

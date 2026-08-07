@@ -1,0 +1,103 @@
+{
+ "name": "Wooglet's Witchcap",
+ "id": 228002,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 300.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wooglet's Witchcap"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wooglet's Witchcap"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wooglet's Witchcap"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.stasis",
+   "family": "crowd-control-mobility",
+   "behavior": "Magical Opus",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wooglet's Witchcap"
+    ],
+    "binary": [],
+    "evidence": "passive:Magical Opus"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Magical Opus",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Wooglet's Witchcap"
+    ],
+    "binary": [],
+    "evidence": "passive:Magical Opus"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Magical Opus",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Wooglet's Witchcap"
+    ],
+    "binary": [],
+    "evidence": "passive:Magical Opus"
+   }
+  }
+ ]
+}

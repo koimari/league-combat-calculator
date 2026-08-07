@@ -1,0 +1,169 @@
+{
+ "name": "Runaan's Hurricane",
+ "id": 3085,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.resource-gated-transform",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Wind's Fury",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runaan's Hurricane"
+    ],
+    "binary": [],
+    "evidence": "passive:Wind's Fury"
+   }
+  }
+ ]
+}

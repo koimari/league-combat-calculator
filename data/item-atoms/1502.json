@@ -1,0 +1,83 @@
+{
+ "name": "Reinforced Armor (Turret Item)",
+ "id": 1502,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Reinforced",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reinforced Armor (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "passive:Reinforced"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Reinforced",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reinforced Armor (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "passive:Reinforced"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Reinforced",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Reinforced Armor (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "passive:Reinforced"
+   }
+  },
+  {
+   "atom_id": "damage.true",
+   "family": "damage",
+   "behavior": "Reinforced",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reinforced Armor (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "passive:Reinforced"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Reinforced",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Reinforced Armor (Turret Item)"
+    ],
+    "binary": [],
+    "evidence": "passive:Reinforced"
+   }
+  }
+ ]
+}

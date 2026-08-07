@@ -1,0 +1,130 @@
+{
+ "name": "Kraken Slayer",
+ "id": 6672,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kraken Slayer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kraken Slayer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Bring It Down",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kraken Slayer"
+    ],
+    "binary": [],
+    "evidence": "passive:Bring It Down"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Bring It Down",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Kraken Slayer"
+    ],
+    "binary": [],
+    "evidence": "passive:Bring It Down"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Bring It Down",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kraken Slayer"
+    ],
+    "binary": [],
+    "evidence": "passive:Bring It Down"
+   }
+  },
+  {
+   "atom_id": "damage.execute",
+   "family": "damage",
+   "behavior": "Bring It Down",
+   "parameters": {},
+   "relations": [
+    "stats.health",
+    "damage.missing-health"
+   ],
+   "provenance": {
+    "wiki": [
+     "Kraken Slayer"
+    ],
+    "binary": [],
+    "evidence": "passive:Bring It Down"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Bring It Down",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kraken Slayer"
+    ],
+    "binary": [],
+    "evidence": "passive:Bring It Down"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Bring It Down",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Kraken Slayer"
+    ],
+    "binary": [],
+    "evidence": "passive:Bring It Down"
+   }
+  }
+ ]
+}

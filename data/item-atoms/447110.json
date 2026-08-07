@@ -1,0 +1,120 @@
+{
+ "name": "Moonflair Spellblade",
+ "id": 447110,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 400.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Moonflair Spellblade"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 85.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Moonflair Spellblade"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.tenacity",
+   "family": "stats",
+   "behavior": "tenacity",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 30.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Moonflair Spellblade"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.tenacity",
+   "family": "crowd-control-mobility",
+   "behavior": "Relentless",
+   "parameters": {},
+   "relations": [
+    "crowd-control-mobility.brittle",
+    "crowd-control-mobility.slow",
+    "crowd-control-mobility.stun",
+    "crowd-control-mobility.root",
+    "crowd-control-mobility.silence",
+    "crowd-control-mobility.knockback"
+   ],
+   "provenance": {
+    "wiki": [
+     "Moonflair Spellblade"
+    ],
+    "binary": [],
+    "evidence": "passive:Relentless"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.dash",
+   "family": "crowd-control-mobility",
+   "behavior": "Relentless",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Moonflair Spellblade"
+    ],
+    "binary": [],
+    "evidence": "passive:Relentless"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.blink",
+   "family": "crowd-control-mobility",
+   "behavior": "Relentless",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Moonflair Spellblade"
+    ],
+    "binary": [],
+    "evidence": "passive:Relentless"
+   }
+  },
+  {
+   "atom_id": "damage.basic-attack",
+   "family": "damage",
+   "behavior": "Relentless",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Moonflair Spellblade"
+    ],
+    "binary": [],
+    "evidence": "passive:Relentless"
+   }
+  }
+ ]
+}

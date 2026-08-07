@@ -1,0 +1,103 @@
+{
+ "name": "Frozen Heart",
+ "id": 3110,
+ "atoms": [
+  {
+   "atom_id": "stats.mana",
+   "family": "stats",
+   "behavior": "mana",
+   "parameters": {
+    "flat": 400.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Frozen Heart"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 75.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Frozen Heart"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Frozen Heart"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Winter's Caress",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Frozen Heart"
+    ],
+    "binary": [],
+    "evidence": "passive:Winter's Caress"
+   }
+  },
+  {
+   "atom_id": "damage.basic-attack",
+   "family": "damage",
+   "behavior": "Winter's Caress",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Frozen Heart"
+    ],
+    "binary": [],
+    "evidence": "passive:Winter's Caress"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Winter's Caress",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Frozen Heart"
+    ],
+    "binary": [],
+    "evidence": "passive:Winter's Caress"
+   }
+  }
+ ]
+}

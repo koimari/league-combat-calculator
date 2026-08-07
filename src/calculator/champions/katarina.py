@@ -72,8 +72,12 @@ _sinister_steel = proc_damage(
 GRIEVOUS_WOUNDS_SOURCES = frozenset({"R"})
 
 SLOTS = {**_packet_slots, "P": _sinister_steel}
-SLOTS["P"] = with_item_on_hits(SLOTS["P"], effectiveness=1.0, hits=1, triggers=('on_hit',))
-SLOTS["E"] = with_item_on_hits(SLOTS["E"], effectiveness=1.0, hits=1, triggers=('on_hit',))
+SLOTS["P"] = with_item_on_hits(
+    SLOTS["P"], effectiveness=1.0, hits=1, triggers=("on_hit",)
+)
+SLOTS["E"] = with_item_on_hits(
+    SLOTS["E"], effectiveness=1.0, hits=1, triggers=("on_hit",)
+)
 parse_abilities = build_parser(SLOTS, "Katarina")
 
 OPTIONS = list(_packet_options)

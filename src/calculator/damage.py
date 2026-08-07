@@ -9241,6 +9241,7 @@ def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> No
             effect.amp_fraction(
                 state.fight_duration_seconds,
                 max(0, state.target_bonus_health),
+                state.champion_stats,
             ),
         )
         for effect in state.damage_effects.damage_amplifiers

@@ -1,0 +1,23 @@
+{
+ "name": "Forbidden Idol",
+ "id": 3114,
+ "atoms": [
+  {
+   "atom_id": "stats.heal-shield-power",
+   "family": "stats",
+   "behavior": "healAndShieldPower",
+   "parameters": {
+    "flat": 8.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Forbidden Idol"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

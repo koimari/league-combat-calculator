@@ -11,10 +11,20 @@ golden diffs in the commit) starts from a focused report:
                limited to what the calculator implements: registered
                champions and items in the parse config, plus net-new /
                removed items shop-wide and a roster add/remove roll-call.
-  3. Gates   — pytest, then golden compare (diffs printed so the commit can
-               explain them). If pytest is green the baseline is re-captured
-               in place; if it is red, hand-validated expectations drifted
-               and a human/Claude must update them first.
+  3. Gates   — reviewed-packet freshness, full-entry audit, staleness
+               (patch_regression), then pytest and golden compare. The
+               baseline is re-captured only when every gate is green: a
+               stale packet asset, a review-pending entry, or a stale wiki
+               cache aborts the run before capture (issue #134).
+
+Reviewed-packet gate (issue #134): the checked-in
+``static/reviewed-packets.json`` must prove it was built from the current
+sources — the ``data/champions.json`` sha256 and Axword Meraki kit sha256
+receipts plus a current per-champion wiki revision receipt.  On a real patch
+day the pull changes those sources and the gate fails closed with the exact
+rebuild command; regenerate, re-review, and commit the packets before
+re-running.  Sources resolve portably: ``--wiki-db`` / ``LCC_WIKI_DB`` and
+``--axword-source`` / ``LCC_AXWORD_SOURCE``.
 
 Interpreting the report and finishing the update is the `patch-update`
 skill's job (.claude/skills/patch-update/SKILL.md).
@@ -24,6 +34,7 @@ Usage:
     python scripts/patch_update.py audit           # re-print audit, no pull
     python scripts/patch_update.py detail NAME...  # full leaf diff for any
                                                    # champion/item vs HEAD
+    python scripts/patch_update.py run --patch 16.16  # pin the staleness gate
 """
 
 import argparse
@@ -43,8 +54,26 @@ from src.calculator.item_effects import _STATIC_VALUE_KEYS_BY_ITEM
 from src.calculator.item_source import branch_losses, source_audit
 
 GOLDEN_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
+REVIEWED_PACKETS = REPO_ROOT / "static" / "reviewed-packets.json"
+DEFAULT_AUDIT_OUTPUT = REPO_ROOT / "docs" / "wiki-full-entry-audit.json"
+DEFAULT_STALENESS_OUT = REPO_ROOT / "data" / "staleness.json"
 # Wiki noise: cosmetic/bookkeeping fields whose churn never affects math.
 NOISE_SUBSTRINGS = ("icon", "releaseDate", "patchLastChanged", "price", "salePrice")
+
+try:
+    from build_reviewed_modules import (  # pylint: disable=import-error
+        _wiki_revisions,
+        resolve_axword_source,
+        resolve_wiki_db,
+    )
+    from source_receipt import source_receipt
+except ImportError:  # imported as scripts.patch_update in tests
+    from scripts.build_reviewed_modules import (
+        _wiki_revisions,
+        resolve_axword_source,
+        resolve_wiki_db,
+    )
+    from scripts.source_receipt import source_receipt
 
 
 # ---------------------------------------------------------------------------
@@ -403,6 +432,195 @@ def rebuild_static_artifacts():
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Reviewed-packet freshness gate (issue #134)
+# ---------------------------------------------------------------------------
+
+
+def check_reviewed_packets_current(
+    *,
+    asset_path: Path | None = None,
+    champions_source: Path | None = None,
+    axword_source: Path | None = None,
+    wiki_db: Path | None = None,
+) -> list[str]:
+    """Return staleness reasons for the checked-in reviewed-packet asset.
+
+    Empty list means the asset proves it was built from the current sources:
+    the ``data/champions.json`` and Axword kit sha256 receipts plus a current
+    per-champion wiki revision receipt.  Any mismatch is a hard pre-capture
+    failure — a frozen asset plus green tests must never re-bless stale
+    numbers into the golden baseline.
+    """
+    asset_path = Path(asset_path or REVIEWED_PACKETS)
+    champions_source = Path(champions_source or REPO_ROOT / "data" / "champions.json")
+    axword_source = Path(axword_source or resolve_axword_source())
+    wiki_db = Path(wiki_db or resolve_wiki_db())
+    try:
+        asset = json.loads(asset_path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        return [f"reviewed-packets.json is missing or unreadable ({asset_path}): {exc}"]
+    problems: list[str] = []
+
+    receipts = asset.get("source_receipts") or {}
+    if not receipts:
+        problems.append(
+            "reviewed-packets.json carries no source receipts — rebuild it with "
+            "scripts/build_reviewed_modules.py so patch day can prove currency"
+        )
+    expected_champions = source_receipt(champions_source, kind="tracked wiki cache")
+    actual = receipts.get("champions.json") or {}
+    if actual.get("sha256") != expected_champions["sha256"]:
+        problems.append(
+            "data/champions.json changed since the packet asset was reviewed "
+            f"(asset sha256 {actual.get('sha256')!r} != current "
+            f"{expected_champions['sha256']!r})"
+        )
+    if not axword_source.is_file():
+        problems.append(
+            f"Axword Meraki kit source not found ({axword_source}) — supply "
+            "--axword-source or LCC_AXWORD_SOURCE"
+        )
+    else:
+        expected_axword = source_receipt(
+            axword_source, kind="Axword Meraki ability kits"
+        )
+        actual_axword = receipts.get("axword_source") or {}
+        if actual_axword.get("sha256") != expected_axword["sha256"]:
+            problems.append(
+                "Axword Meraki kit source changed since the packet asset was "
+                f"reviewed (asset sha256 {actual_axword.get('sha256')!r} != "
+                f"current {expected_axword['sha256']!r})"
+            )
+
+    try:
+        cached_names = {
+            str(entry.get("name", "")).strip()
+            for entry in json.loads(
+                champions_source.read_text(encoding="utf-8")
+            ).values()
+            if isinstance(entry, dict)
+        }
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        problems.append(f"champions.json is unreadable: {exc}")
+        return problems
+
+    asset_names = set(asset.get("champions") or {})
+    for name in sorted(cached_names - asset_names):
+        problems.append(
+            f"{name} is in data/champions.json but missing from "
+            "reviewed-packets.json"
+        )
+    for name in sorted(asset_names - cached_names):
+        problems.append(
+            f"{name} is in reviewed-packets.json but missing from "
+            "data/champions.json"
+        )
+
+    try:
+        revisions = _wiki_revisions(wiki_db)
+    except RuntimeError as exc:
+        problems.append(str(exc))
+        return problems
+
+    stale_revisions: list[str] = []
+    missing_receipts: list[str] = []
+    for name in sorted(asset_names & cached_names):
+        entry = asset["champions"][name]
+        sources = entry.get("sources") or []
+        receipt = next(
+            (
+                source
+                for source in sources
+                if isinstance(source, dict) and source.get("revision_id")
+            ),
+            None,
+        )
+        if not receipt:
+            missing_receipts.append(name)
+            continue
+        current = revisions.get(name)
+        if current is None or current.get("revision_id") != receipt["revision_id"]:
+            stale_revisions.append(name)
+    if stale_revisions:
+        preview = ", ".join(stale_revisions[:5])
+        problems.append(
+            f"{len(stale_revisions)} champion(s) carry a wiki revision that is "
+            f"not current ({preview}{'...' if len(stale_revisions) > 5 else ''}) "
+            "— rebuild reviewed packets"
+        )
+    if missing_receipts:
+        preview = ", ".join(missing_receipts[:5])
+        problems.append(
+            f"{len(missing_receipts)} champion(s) carry no wiki revision "
+            f"receipt ({preview}{'...' if len(missing_receipts) > 5 else ''})"
+        )
+    return problems
+
+
+# ---------------------------------------------------------------------------
+# Patch-day gates (issue #134): audit + staleness run before golden capture
+# ---------------------------------------------------------------------------
+
+
+def run_full_entry_audit(output: Path | None = None) -> int:
+    """Run the full parent-entry audit (no --limit); non-zero aborts the run."""
+    output = output or DEFAULT_AUDIT_OUTPUT
+    print("== Gate: full parent-entry audit ==", flush=True)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/full_entry_audit.py",
+            "--output",
+            str(output),
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    if result.returncode == 2:
+        print(
+            "\nFAIL: the full-entry audit could not run (infrastructure). Point\n"
+            "LCC_WIKI_QUERY / --query-tool at query_league_wiki.py and re-run.",
+            flush=True,
+        )
+    elif result.returncode != 0:
+        print(
+            "\nFAIL: the full-entry audit found review-pending entries — resolve\n"
+            "them before re-capturing golden.",
+            flush=True,
+        )
+    return result.returncode
+
+
+def run_staleness_gate(out: Path | None = None, patch: str | None = None) -> int:
+    """Compare the wiki cache against game files; non-zero aborts the run."""
+    out = out or DEFAULT_STALENESS_OUT
+    print("== Gate: staleness vs game files (patch_regression check) ==", flush=True)
+    command = [
+        sys.executable,
+        "scripts/patch_regression.py",
+        "check",
+        "--out",
+        str(out),
+    ]
+    if patch:
+        command += ["--patch", patch]
+    result = subprocess.run(command, cwd=REPO_ROOT, check=False)
+    if result.returncode == 2:
+        print(
+            "\nFAIL: staleness gate could not run — cdtb is missing. Install it\n"
+            "and set CDTB_BIN, or pin the comparison with --patch <version>.",
+            flush=True,
+        )
+    elif result.returncode != 0:
+        print(
+            "\nFAIL: the wiki cache is stale vs the game files — update the cache\n"
+            "before re-capturing golden.",
+            flush=True,
+        )
+    return result.returncode
+
+
 def run_gates():
     """pytest, golden compare, and (only on green tests) baseline re-capture.
 
@@ -444,16 +662,25 @@ def run_gates():
     return capture.returncode
 
 
-def run_full():
-    """Full patch-day run: clear caches, pull, audit, rebuild catalogues, gates.
+def run_full(
+    *,
+    wiki_db: Path | None = None,
+    axword_source: Path | None = None,
+    audit_output: Path | None = None,
+    staleness_out: Path | None = None,
+    patch: str | None = None,
+):
+    """Full patch-day run: pull, audit, rebuild catalogues, gates, capture.
 
-    A source-completeness failure stops the run before the gates: a cache that
-    lost an effect branch would make pytest and the golden baseline agree on
-    the wrong numbers.
+    Order (issue #134 — golden capture stays last and conditional):
+    source-completeness audit, catalogue rebuild, reviewed-packet freshness,
+    full parent-entry audit, staleness vs game files, then pytest + capture.
+    Any gate failure aborts before ``run_gates()`` so a stale packet asset or
+    a review-pending entry can never be re-blessed into the new baseline.
     """
     clear_wiki_caches()
-    patch = run_pull()
-    print(f"\nPulled patch: {patch}")
+    pulled_patch = run_pull()
+    print(f"\nPulled patch: {pulled_patch}")
     if not print_audit():
         print(
             "\nFAIL: the item cache lost source coverage. Resolve the BLOCKING\n"
@@ -463,6 +690,30 @@ def run_full():
     rebuild_failed = rebuild_static_artifacts()
     if rebuild_failed:
         return rebuild_failed
+
+    packet_problems = check_reviewed_packets_current(
+        axword_source=axword_source, wiki_db=wiki_db
+    )
+    if packet_problems:
+        print("\nFAIL: reviewed packets are stale (issue #134):", flush=True)
+        for problem in packet_problems:
+            print(f"  - {problem}", flush=True)
+        print(
+            "\nRebuild them with:\n"
+            "    python scripts/build_reviewed_modules.py [--wiki-db PATH] "
+            "[--axword-source PATH]\n"
+            "then re-review the regenerated packets and commit them before "
+            "re-running.",
+            flush=True,
+        )
+        return 1
+
+    audit_rc = run_full_entry_audit(audit_output)
+    if audit_rc:
+        return audit_rc
+    staleness_rc = run_staleness_gate(staleness_out, patch)
+    if staleness_rc:
+        return staleness_rc
     return run_gates()
 
 
@@ -470,12 +721,49 @@ def main():
     """CLI entry point: run | audit | detail NAME..."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("run")
+    run = commands.add_parser("run")
+    run.add_argument(
+        "--wiki-db",
+        type=Path,
+        default=None,
+        help="Local League Wiki sqlite index (env LCC_WIKI_DB)",
+    )
+    run.add_argument(
+        "--axword-source",
+        type=Path,
+        default=None,
+        help="Axword Meraki kit source (env LCC_AXWORD_SOURCE)",
+    )
+    run.add_argument(
+        "--audit-output",
+        type=Path,
+        default=None,
+        help="full-entry audit receipt path (default docs/wiki-full-entry-audit.json)",
+    )
+    run.add_argument(
+        "--staleness-out",
+        type=Path,
+        default=None,
+        help="staleness receipt path (default data/staleness.json)",
+    )
+    run.add_argument(
+        "--patch",
+        default=None,
+        help="pin the staleness gate to this patch instead of resolving cdtb",
+    )
     commands.add_parser("audit")
     commands.add_parser("detail").add_argument("names", nargs="+")
     args = parser.parse_args()
     if args.command == "run":
-        sys.exit(run_full())
+        sys.exit(
+            run_full(
+                wiki_db=args.wiki_db,
+                axword_source=args.axword_source,
+                audit_output=args.audit_output,
+                staleness_out=args.staleness_out,
+                patch=args.patch,
+            )
+        )
     if args.command == "audit":
         sys.exit(0 if print_audit() else 1)
     print_detail(args.names)

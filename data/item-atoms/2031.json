@@ -1,0 +1,34 @@
+{
+ "name": "Refillable Potion",
+ "id": 2031,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "passive",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Refillable Potion"
+    ],
+    "binary": [],
+    "evidence": "passive:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.item-sellback",
+   "family": "vision-economy",
+   "behavior": "passive",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Refillable Potion"
+    ],
+    "binary": [],
+    "evidence": "passive:"
+   }
+  }
+ ]
+}

@@ -1,0 +1,110 @@
+{
+ "name": "Regicide",
+ "id": 447115,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 60.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Regicide"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Regicide"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.buff",
+   "family": "stack-transform-summon-resource",
+   "behavior": "End the Line",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Regicide"
+    ],
+    "binary": [],
+    "evidence": "passive:End the Line"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "End the Line",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Regicide"
+    ],
+    "binary": [],
+    "evidence": "passive:End the Line"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "End the Line",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Regicide"
+    ],
+    "binary": [],
+    "evidence": "passive:End the Line"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "End the Line",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Regicide"
+    ],
+    "binary": [],
+    "evidence": "passive:End the Line"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "End the Line",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Regicide"
+    ],
+    "binary": [],
+    "evidence": "passive:End the Line"
+   }
+  }
+ ]
+}

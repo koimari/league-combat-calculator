@@ -1,0 +1,113 @@
+{
+ "name": "Cosmic Drive",
+ "id": 4629,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cosmic Drive"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 70.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cosmic Drive"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cosmic Drive"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.multiplicative-stacking",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Spelldance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cosmic Drive"
+    ],
+    "binary": [],
+    "evidence": "passive:Spelldance"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Spelldance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cosmic Drive"
+    ],
+    "binary": [],
+    "evidence": "passive:Spelldance"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Spelldance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cosmic Drive"
+    ],
+    "binary": [],
+    "evidence": "passive:Spelldance"
+   }
+  },
+  {
+   "atom_id": "damage.true",
+   "family": "damage",
+   "behavior": "Spelldance",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cosmic Drive"
+    ],
+    "binary": [],
+    "evidence": "passive:Spelldance"
+   }
+  }
+ ]
+}

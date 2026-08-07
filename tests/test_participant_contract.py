@@ -1,7 +1,10 @@
 """Public contract and regression tests for the shared participant ledger."""
 
 from src import app as app_module
-from src.calculator.capabilities import PARTICIPANT_LEDGER_CONTRACT
+from src.calculator.capabilities import (
+    PARTICIPANT_LEDGER_CONTRACT,
+    SUPPORT_TARGET_RESOLUTION_SCOPES,
+)
 
 
 def test_capability_contract_publishes_one_ordered_participant_ledger():
@@ -36,3 +39,14 @@ def test_participant_controls_share_the_same_target_policy_receipt():
             contract["participants"][kind]["fields"]["role_quest_complete"]["supported"]
             is True
         )
+
+
+def test_target_policy_contract_is_the_closed_resolution_vocabulary():
+    """Issue #142: the published target-policy map is exactly the closed
+    resolver vocabulary plus ``none_selected`` — the contract and the
+    resolver cannot drift."""
+    policies = PARTICIPANT_LEDGER_CONTRACT["target_policy"]
+    assert set(policies) == SUPPORT_TARGET_RESOLUTION_SCOPES | {"none_selected"}
+    assert policies["one_teammate"] == "first_selected_teammate"
+    assert policies["none_selected"] == "no_selected_teammate"
+    assert PARTICIPANT_LEDGER_CONTRACT["fail_closed"] is True

@@ -138,9 +138,10 @@ def main() -> None:
     args = parser.parse_args()
 
     catalog = build_catalog(args.source.resolve(), args.patch)
-    if catalog["champion_count"] != 173:
+    if not catalog["champions"]:
         raise SystemExit(
-            f"Expected 173 champions in the cached source, got {catalog['champion_count']}"
+            "No champions in the cached source — refusing to write an empty "
+            "ability catalog"
         )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(

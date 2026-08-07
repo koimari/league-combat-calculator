@@ -1,0 +1,52 @@
+{
+ "name": "Dragonheart",
+ "id": 447106,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.soul",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Inner Flame",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dragonheart"
+    ],
+    "binary": [],
+    "evidence": "passive:Inner Flame"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Inner Flame",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dragonheart"
+    ],
+    "binary": [],
+    "evidence": "passive:Inner Flame"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Inner Flame",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Dragonheart"
+    ],
+    "binary": [],
+    "evidence": "passive:Inner Flame"
+   }
+  }
+ ]
+}

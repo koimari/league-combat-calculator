@@ -49,10 +49,19 @@ Comparison contract
 
 Exit code: 0 = nothing stale; 1 = any stale champion or item (patch gate).
 
+cdtb resolution (issue #134, portable): ``CDTB_BIN`` env var, else the
+``cdtb`` executable on PATH, else an actionable error.  When cdtb is
+unavailable, pin the comparison with ``--patch <version>`` — the gate then
+uses the pinned patch instead of resolving the live one.
+
 Usage:
     python scripts/patch_regression.py check [--patch 16.15] [--cache-dir DIR]
                                              [--out FILE]
     python scripts/patch_regression.py check --verify-wads Ahri,Gnar
+
+Configuration:
+    CDTB_BIN       path to the cdtb CLI (default: cdtb on PATH)
+    CDTB_PYTHON    interpreter with the cdtb module for --verify-wads
 """
 
 import argparse
@@ -73,19 +82,12 @@ DEFAULT_DATA_DIR = REPO_ROOT / "data"
 DEFAULT_GAME_DIR = DEFAULT_DATA_DIR / "gamefiles"
 DEFAULT_OUT = DEFAULT_DATA_DIR / "staleness.json"
 
-# cdtb CLI (CommunityDragonToolbox).  Resolvable via PATH or CDTB_BIN.
-_CDTB_KNOWN = "/Users/river/.local/mcp/wad-env/bin/cdtb"
-CDTB_BIN = (
-    os.environ.get("CDTB_BIN")
-    or shutil.which("cdtb")
-    or (_CDTB_KNOWN if os.path.exists(_CDTB_KNOWN) else "cdtb")
-)
+# cdtb CLI (CommunityDragonToolbox).  Resolvable via CDTB_BIN or PATH — no
+# developer-home fallback (issue #134): on any other machine the missing
+# binary is an actionable error, not a silent crash or a wrong-machine tool.
+CDTB_BIN = os.environ.get("CDTB_BIN") or shutil.which("cdtb") or "cdtb"
 # Python interpreter that has the cdtb module (used only by --verify-wads).
-CDTB_PYTHON = os.environ.get("CDTB_PYTHON") or (
-    "/Users/river/.local/mcp/wad-env/bin/python"
-    if os.path.exists("/Users/river/.local/mcp/wad-env/bin/python")
-    else shutil.which("python3")
-)
+CDTB_PYTHON = os.environ.get("CDTB_PYTHON") or shutil.which("python3") or "python3"
 
 CDRAGON_RAW = "https://raw.communitydragon.org/{patch}/game/data/characters/{name}/{name}.bin.json"
 ITEMS_URL = "https://raw.communitydragon.org/{patch}/game/items.cdtb.bin.json"
@@ -189,6 +191,11 @@ def within_tolerance(cached, game, relative=REL_TOLERANCE, flat=FLAT_TOLERANCE):
 def resolve_patch(cdtb_bin=None):
     """Return the live game patch version via `cdtb versions game -a`."""
     binary = cdtb_bin or CDTB_BIN
+    if not binary or (not os.path.isfile(binary) and shutil.which(binary) is None):
+        raise RuntimeError(
+            "cdtb not found — install it and set CDTB_BIN, or pin with "
+            "--patch <version>"
+        )
     # cdtb's default storage is a relative `cdn/` directory; run it inside
     # the (gitignored) game-file cache so the repo root never grows a copy.
     scratch = DEFAULT_GAME_DIR / ".cdtb"
@@ -1076,7 +1083,13 @@ def main(argv=None):
         parser.print_help()
         return 2
 
-    patch = args.patch or resolve_patch(args.cdtb_bin)
+    # A missing cdtb is an infrastructure failure (exit 2), not a bare
+    # FileNotFoundError traceback: the message points at CDTB_BIN / --patch.
+    try:
+        patch = args.patch or resolve_patch(args.cdtb_bin)
+    except RuntimeError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 2
     data_dir = Path(args.data_dir)
     with open(data_dir / "champions.json", encoding="utf-8") as handle:
         champions_cache = json.load(handle)

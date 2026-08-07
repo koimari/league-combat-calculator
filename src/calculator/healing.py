@@ -114,6 +114,67 @@ def _event_source(event: dict[str, Any]) -> str:
     return str(event.get("source_key", ""))
 
 
+def _taric_starlights_touch(
+    q_ability: dict[str, Any],
+    q_rank: int,
+    champion_stats: dict[str, float],
+) -> tuple[float, int]:
+    """Price one Taric Q (Starlight's Touch) cast from the cached data.
+
+    The per-charge and maximum formulas are wiki description text in
+    ``data/champions.json``; the stock is the rank-scaled "Maximum Charges"
+    leveling attribute.  Returns ``(heal_amount, charges_used)`` — the
+    amount at the sourced stock, capped at the "maximum of ... at 5
+    charges" row, with zero when no per-charge formula or stock exists.
+    Issue #143: this is the single formula source for the Q heal; the
+    support scanner never re-prices the slot.
+    """
+    charges = extract_named(q_ability, "Maximum Charges", q_rank, champion_stats, {})
+    descriptions = [
+        effect.get("description", "") for effect in q_ability.get("effects", [])
+    ]
+    per_charge_match = re.search(
+        r"for\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
+        r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)\s*per charge",
+        " ".join(descriptions),
+        flags=re.IGNORECASE,
+    )
+    maximum_match = re.search(
+        r"maximum of\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
+        r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)",
+        " ".join(descriptions),
+        flags=re.IGNORECASE,
+    )
+    if per_charge_match is None or charges <= 0.0:
+        return 0.0, max(0, int(round(charges)))
+    maximum_health = float(champion_stats.get("health", 0.0) or 0.0)
+    ability_power = float(champion_stats.get("ability_power", 0.0) or 0.0)
+
+    def _charge_heal(flat: float, ap_percent: float, hp_percent: float) -> float:
+        return (
+            flat
+            + ability_power * ap_percent / 100.0
+            + maximum_health * hp_percent / 100.0
+        )
+
+    per_charge = _charge_heal(
+        float(per_charge_match.group(1)),
+        float(per_charge_match.group(2)),
+        float(per_charge_match.group(3)),
+    )
+    heal = charges * per_charge
+    if maximum_match is not None:
+        heal = min(
+            heal,
+            _charge_heal(
+                float(maximum_match.group(1)),
+                float(maximum_match.group(2)),
+                float(maximum_match.group(3)),
+            ),
+        )
+    return max(0.0, heal), max(0, int(round(charges)))
+
+
 def _is_persistent(event: dict[str, Any]) -> bool:
     """Return the source-certified persistent/periodic damage boundary.
 
@@ -1202,65 +1263,34 @@ def derive_self_healing(
         # his maximum health) per charge" and "up to a maximum of 125
         # (+ 75% AP) (+ 5% of his maximum health) at 5 charges").  The
         # stock is the rank-scaled "Maximum Charges" leveling attribute.
-        q = _ability(champion_data, "Q")
-        q_rank = _rank(ability_damages, "Q")
-        charges = extract_named(q, "Maximum Charges", q_rank, champion_stats)
-        descriptions = [
-            effect.get("description", "") for effect in q.get("effects", [])
-        ]
-        per_charge_match = re.search(
-            r"for\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
-            r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)\s*per charge",
-            " ".join(descriptions),
-            flags=re.IGNORECASE,
+        #
+        # Issue #143: this rule is the ONE ledger owner of the Q heal.  The
+        # support scanner defers the slot (``_MODULE_AUTHORED_HEAL_SLOTS``)
+        # and the participant timeline fans this event out to selected
+        # teammates, so one formula prices every recipient.  The event
+        # declares ``target_scope: self_and_all_teammates`` and stamps the
+        # charge count used (``charges``) for the public receipt.
+        heal, charges = _taric_starlights_touch(
+            _ability(champion_data, "Q"),
+            _rank(ability_damages, "Q"),
+            champion_stats,
         )
-        maximum_match = re.search(
-            r"maximum of\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
-            r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)",
-            " ".join(descriptions),
-            flags=re.IGNORECASE,
-        )
-        if per_charge_match is not None and charges > 0.0:
-            maximum_health = float(champion_stats.get("health", 0.0) or 0.0)
-            ability_power = float(champion_stats.get("ability_power", 0.0) or 0.0)
-
-            def _charge_heal(
-                flat: float, ap_percent: float, hp_percent: float
-            ) -> float:
-                return (
-                    flat
-                    + ability_power * ap_percent / 100.0
-                    + maximum_health * hp_percent / 100.0
+        if heal > 0.0:
+            for cast_index, cast in enumerate(cast_timeline or []):
+                if cast.get("slot") != "Q":
+                    continue
+                healing.append(
+                    {
+                        "time": float(cast.get("time", 0.0)),
+                        "amount": heal,
+                        "source": "Starlight's Touch",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                        "target_scope": "self_and_all_teammates",
+                        "charges": charges,
+                        "_event_id": f"taric:q:{cast_index}",
+                    }
                 )
-
-            per_charge = _charge_heal(
-                float(per_charge_match.group(1)),
-                float(per_charge_match.group(2)),
-                float(per_charge_match.group(3)),
-            )
-            heal = charges * per_charge
-            if maximum_match is not None:
-                heal = min(
-                    heal,
-                    _charge_heal(
-                        float(maximum_match.group(1)),
-                        float(maximum_match.group(2)),
-                        float(maximum_match.group(3)),
-                    ),
-                )
-            if heal > 0.0:
-                for cast in cast_timeline or []:
-                    if cast.get("slot") != "Q":
-                        continue
-                    healing.append(
-                        {
-                            "time": float(cast.get("time", 0.0)),
-                            "amount": heal,
-                            "source": "Starlight's Touch",
-                            "kind": "champion_ability",
-                            "actor_wide": True,
-                        }
-                    )
     elif name == "Nami":
         # Ebb and Flow (W): cast on the enemy, the stream bounces to Nami
         # next, so her self-heal is the first bounce — "each bounce

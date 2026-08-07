@@ -392,7 +392,13 @@ def refresh_item_sources(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
         _wiki_item_table(),
         _riot_item_descriptions(),
     )
-    write_runtime_cache(data_dir, "items.json", merged, source_version=latest_version, source_url="https://wiki.leagueoflegends.com/en-us/Item")
+    write_runtime_cache(
+        data_dir,
+        "items.json",
+        merged,
+        source_version=latest_version,
+        source_url="https://wiki.leagueoflegends.com/en-us/Item",
+    )
     return merged
 
 
@@ -457,7 +463,12 @@ def update_rune_data() -> dict[str, Any]:
         except StopIteration as stop:
             runes = stop.value or {}
             break
-    write_runtime_cache(DEFAULT_DATA_DIR, "runes.json", runes, source_url="https://wiki.leagueoflegends.com/en-us/Rune")
+    write_runtime_cache(
+        DEFAULT_DATA_DIR,
+        "runes.json",
+        runes,
+        source_url="https://wiki.leagueoflegends.com/en-us/Rune",
+    )
     return runes
 
 
@@ -481,7 +492,12 @@ def reparse_cached_rune_effects(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, 
         entry.pop("parse_warnings", None)
         if warnings:
             entry["parse_warnings"] = warnings
-    write_runtime_cache(data_dir, "runes.json", runes, source_url="https://wiki.leagueoflegends.com/en-us/Rune")
+    write_runtime_cache(
+        data_dir,
+        "runes.json",
+        runes,
+        source_url="https://wiki.leagueoflegends.com/en-us/Rune",
+    )
     return runes
 
 
@@ -522,7 +538,13 @@ def update_data() -> Generator[dict[str, Any], None, None]:
             champions, skipped_champions = result
 
         champion_dict = {payload["key"]: payload for payload in champions}
-        write_runtime_cache(DEFAULT_DATA_DIR, "champions.json", champion_dict, source_version=latest_version, source_url="https://wiki.leagueoflegends.com/en-us/List_of_champions")
+        write_runtime_cache(
+            DEFAULT_DATA_DIR,
+            "champions.json",
+            champion_dict,
+            source_version=latest_version,
+            source_url="https://wiki.leagueoflegends.com/en-us/List_of_champions",
+        )
 
         champ_status = f"Saved {len(champions)} champions"
         if skipped_champions:
@@ -545,7 +567,13 @@ def update_data() -> Generator[dict[str, Any], None, None]:
 
         items_data = _process_items()
         if items_data:
-            write_runtime_cache(DEFAULT_DATA_DIR, "items.json", items_data, source_version=latest_version, source_url="https://wiki.leagueoflegends.com/en-us/Item")
+            write_runtime_cache(
+                DEFAULT_DATA_DIR,
+                "items.json",
+                items_data,
+                source_version=latest_version,
+                source_url="https://wiki.leagueoflegends.com/en-us/Item",
+            )
             yield {
                 "phase": "items",
                 "status": f"Saved {len(items_data)} items",
@@ -559,7 +587,12 @@ def update_data() -> Generator[dict[str, Any], None, None]:
         # --- Runes (keystones) ---
         yield {"phase": "runes", "status": "Updating keystone runes..."}
         runes = yield from _process_runes(latest_version)
-        write_runtime_cache(DEFAULT_DATA_DIR, "runes.json", runes, source_url="https://wiki.leagueoflegends.com/en-us/Rune")
+        write_runtime_cache(
+            DEFAULT_DATA_DIR,
+            "runes.json",
+            runes,
+            source_url="https://wiki.leagueoflegends.com/en-us/Rune",
+        )
         failed_runes = [name for name, entry in runes.items() if "error" in entry]
         rune_status = f"Saved {len(runes) - len(failed_runes)} keystones"
         if failed_runes:

@@ -1,0 +1,68 @@
+{
+ "name": "Guardian's Horn",
+ "id": 2051,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 150.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Horn"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.debuff",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Undaunted",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Horn"
+    ],
+    "binary": [],
+    "evidence": "passive:Undaunted"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.damage-over-time",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Undaunted",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Guardian's Horn"
+    ],
+    "binary": [],
+    "evidence": "passive:Undaunted"
+   }
+  },
+  {
+   "atom_id": "damage.dot",
+   "family": "damage",
+   "behavior": "Undaunted",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Guardian's Horn"
+    ],
+    "binary": [],
+    "evidence": "passive:Undaunted"
+   }
+  }
+ ]
+}

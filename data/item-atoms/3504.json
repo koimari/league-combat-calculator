@@ -1,0 +1,248 @@
+{
+ "name": "Ardent Censer",
+ "id": 3504,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.heal-shield-power",
+   "family": "stats",
+   "behavior": "healAndShieldPower",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.drain",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.vamp",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-magic",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-heal-effect",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-shield-effect",
+   "family": "heal-shield",
+   "behavior": "Sanctify",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ardent Censer"
+    ],
+    "binary": [],
+    "evidence": "passive:Sanctify"
+   }
+  }
+ ]
+}

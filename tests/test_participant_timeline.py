@@ -10,7 +10,8 @@ from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.app import _enemy_bis_rank_key, _role_scoped_bis_candidates, app
+from src.app import app
+from src.calculator.bis import enemy_bis_rank_key, role_scoped_bis_candidates
 from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
@@ -1918,7 +1919,7 @@ def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch)
 
     candidates = [get_item_by_name("Luden's Echo"), get_item_by_name("Warmog's Armor")]
     monkeypatch.setattr(
-        "src.app._bis_candidate_pool",
+        "src.app.bis_candidate_pool",
         lambda *_args, **_kwargs: candidates,
     )
 
@@ -1970,7 +1971,7 @@ def test_bis_excludes_audited_item_timing_before_ranking(monkeypatch):
         get_item_by_name("Warmog's Armor"),
     ]
     monkeypatch.setattr(
-        "src.app._bis_candidate_pool",
+        "src.app.bis_candidate_pool",
         lambda *_args, **_kwargs: candidates,
     )
 
@@ -2090,7 +2091,7 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
     """A live damage item beats pure health, but an early death does not."""
 
     monkeypatch.setattr(
-        "src.app._bis_candidate_pool",
+        "src.app.bis_candidate_pool",
         lambda *_args, **_kwargs: [
             {"name": "Luden's Echo", "icon": "", "stats": {}},
             {"name": "Warmog's Armor", "icon": "", "stats": {}},
@@ -2157,7 +2158,7 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
 
 
 def test_enemy_bis_rank_key_is_deterministic_and_event_derived():
-    survived_damage = _enemy_bis_rank_key(
+    survived_damage = enemy_bis_rank_key(
         {"focus_damage_before_death": 1_000.0},
         {
             "death_time": None,
@@ -2168,7 +2169,7 @@ def test_enemy_bis_rank_key_is_deterministic_and_event_derived():
         },
         duration=10.0,
     )
-    survived_health = _enemy_bis_rank_key(
+    survived_health = enemy_bis_rank_key(
         {"focus_damage_before_death": 500.0},
         {
             "death_time": None,
@@ -2179,7 +2180,7 @@ def test_enemy_bis_rank_key_is_deterministic_and_event_derived():
         },
         duration=10.0,
     )
-    early_glass = _enemy_bis_rank_key(
+    early_glass = enemy_bis_rank_key(
         {"focus_damage_before_death": 5_000.0},
         {
             "death_time": 2.0,
@@ -2190,7 +2191,7 @@ def test_enemy_bis_rank_key_is_deterministic_and_event_derived():
         },
         duration=10.0,
     )
-    later_death = _enemy_bis_rank_key(
+    later_death = enemy_bis_rank_key(
         {"focus_damage_before_death": 100.0},
         {
             "death_time": 8.0,
@@ -2219,9 +2220,9 @@ def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
 def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
     candidates = optimizer_supported_items(get_eligible_legendaries())
     support = {
-        item["name"] for item in _role_scoped_bis_candidates(candidates, role="support")
+        item["name"] for item in role_scoped_bis_candidates(candidates, role="support")
     }
-    top = {item["name"] for item in _role_scoped_bis_candidates(candidates, role="top")}
+    top = {item["name"] for item in role_scoped_bis_candidates(candidates, role="top")}
 
     assert "Locket of the Iron Solari" in support
     assert "Moonstone Renewer" in support

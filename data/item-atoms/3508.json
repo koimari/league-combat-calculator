@@ -1,0 +1,144 @@
+{
+ "name": "Essence Reaver",
+ "id": 3508,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Essence Reaver"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  }
+ ]
+}

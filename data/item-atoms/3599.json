@@ -1,0 +1,34 @@
+{
+ "name": "Black Spear",
+ "id": 3599,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Oathsworn Bond",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Black Spear"
+    ],
+    "binary": [],
+    "evidence": "active:Oathsworn Bond"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mark",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Oathsworn Bond",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Black Spear"
+    ],
+    "binary": [],
+    "evidence": "active:Oathsworn Bond"
+   }
+  }
+ ]
+}

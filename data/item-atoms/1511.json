@@ -1,0 +1,24 @@
+{
+ "name": "Super Mech Armor",
+ "id": 1511,
+ "atoms": [
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Super Mech Armor",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Super Mech Armor"
+    ],
+    "binary": [],
+    "evidence": "passive:Super Mech Armor"
+   }
+  }
+ ]
+}

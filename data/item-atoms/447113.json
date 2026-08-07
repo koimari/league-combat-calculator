@@ -1,0 +1,161 @@
+{
+ "name": "Detonation Orb",
+ "id": 447113,
+ "atoms": [
+  {
+   "atom_id": "stats.mana",
+   "family": "stats",
+   "behavior": "mana",
+   "parameters": {
+    "flat": 600.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 90.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-penetration",
+   "family": "stats",
+   "behavior": "magicPenetration",
+   "parameters": {
+    "flat": 12.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mark",
+   "family": "stack-transform-summon-resource",
+   "behavior": "The Bomb",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "passive:The Bomb"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "The Bomb",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "passive:The Bomb"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.immobilize",
+   "family": "crowd-control-mobility",
+   "behavior": "The Bomb",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "passive:The Bomb"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "The Bomb",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "passive:The Bomb"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "The Bomb",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "passive:The Bomb"
+   }
+  },
+  {
+   "atom_id": "heal-shield.grey-health",
+   "family": "heal-shield",
+   "behavior": "The Bomb",
+   "parameters": {},
+   "relations": [
+    "heal-shield.heal",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Detonation Orb"
+    ],
+    "binary": [],
+    "evidence": "passive:The Bomb"
+   }
+  }
+ ]
+}

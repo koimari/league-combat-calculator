@@ -12,6 +12,7 @@ Usage:
     python scripts/decompose_wiki.py --fetch "Ahri"       # fetch one page's wikitext
     python scripts/decompose_wiki.py --fetch-family champions --limit 5
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,7 +31,10 @@ def _anchored_out_root() -> Path:
     """Resolve --out-root, refusing any path outside the repository."""
     root = Path(OUT_ROOT) if OUT_ROOT else _REPO_ROOT / "data"
     resolved = root.resolve()
-    if _REPO_ROOT.resolve() not in resolved.parents and resolved != _REPO_ROOT.resolve():
+    if (
+        _REPO_ROOT.resolve() not in resolved.parents
+        and resolved != _REPO_ROOT.resolve()
+    ):
         raise SystemExit(f"--out-root {root} is outside the repository ({_REPO_ROOT})")
     return resolved
 
@@ -53,12 +57,19 @@ def api(client, params):
 def build_index(out: Path) -> int:
     pages = {}
     cont = None
-    with httpx.Client(timeout=60, headers={"User-Agent": UA}, follow_redirects=True) as c:
+    with httpx.Client(
+        timeout=60, headers={"User-Agent": UA}, follow_redirects=True
+    ) as c:
         while True:
             params = {
-                "action": "query", "generator": "allpages", "gapnamespace": "0",
-                "gaplimit": "50", "gapfilterredir": "nonredirects",
-                "prop": "info|categories", "inprop": "size", "cllimit": "25",
+                "action": "query",
+                "generator": "allpages",
+                "gapnamespace": "0",
+                "gaplimit": "50",
+                "gapfilterredir": "nonredirects",
+                "prop": "info|categories",
+                "inprop": "size",
+                "cllimit": "25",
             }
             if cont:
                 params.update(cont)
@@ -67,7 +78,10 @@ def build_index(out: Path) -> int:
                 pages[p["title"]] = {
                     "pageid": pid,
                     "len": p.get("length", 0),
-                    "cats": [x["title"].replace("Category:", "") for x in p.get("categories", [])],
+                    "cats": [
+                        x["title"].replace("Category:", "")
+                        for x in p.get("categories", [])
+                    ],
                 }
             cont = d.get("continue")
             if not cont:
@@ -79,9 +93,20 @@ def build_index(out: Path) -> int:
 
 
 def fetch_wikitext(title: str, out: Path) -> Path | None:
-    with httpx.Client(timeout=120, headers={"User-Agent": UA}, follow_redirects=True) as c:
-        d = api(c, {"action": "query", "titles": title, "prop": "revisions",
-                    "rvprop": "content|ids", "rvslots": "main", "formatversion": "2"})
+    with httpx.Client(
+        timeout=120, headers={"User-Agent": UA}, follow_redirects=True
+    ) as c:
+        d = api(
+            c,
+            {
+                "action": "query",
+                "titles": title,
+                "prop": "revisions",
+                "rvprop": "content|ids",
+                "rvslots": "main",
+                "formatversion": "2",
+            },
+        )
         for page in d.get("query", {}).get("pages", []):
             if "missing" in page:
                 return None
@@ -121,7 +146,9 @@ def main():
         return
     if args.fetch_family:
         index = json.loads(INDEX_PATH.read_text())
-        members = [t for t in index if args.fetch_family.lower() in t.lower()][: args.limit]
+        members = [t for t in index if args.fetch_family.lower() in t.lower()][
+            : args.limit
+        ]
         for t in members:
             dest = fetch_wikitext(t, RAW_DIR)
             print(f"  {t} -> {dest}")

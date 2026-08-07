@@ -1,0 +1,99 @@
+{
+ "name": "Archangel's Staff",
+ "id": 3003,
+ "atoms": [
+  {
+   "atom_id": "stats.mana",
+   "family": "stats",
+   "behavior": "mana",
+   "parameters": {
+    "flat": 600.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Archangel's Staff"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 70.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Archangel's Staff"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Archangel's Staff"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack-consumption",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Awe",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Archangel's Staff"
+    ],
+    "binary": [],
+    "evidence": "passive:Awe"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Awe",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Archangel's Staff"
+    ],
+    "binary": [],
+    "evidence": "passive:Awe"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Awe",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Archangel's Staff"
+    ],
+    "binary": [],
+    "evidence": "passive:Awe"
+   }
+  }
+ ]
+}

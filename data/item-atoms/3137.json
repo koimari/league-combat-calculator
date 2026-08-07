@@ -1,0 +1,113 @@
+{
+ "name": "Cryptbloom",
+ "id": 3137,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 75.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cryptbloom"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-penetration",
+   "family": "stats",
+   "behavior": "magicPenetration",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 30.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cryptbloom"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cryptbloom"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.debuff",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Life From Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cryptbloom"
+    ],
+    "binary": [],
+    "evidence": "passive:Life From Death"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.clone",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Life From Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cryptbloom"
+    ],
+    "binary": [],
+    "evidence": "passive:Life From Death"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Life From Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cryptbloom"
+    ],
+    "binary": [],
+    "evidence": "passive:Life From Death"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Life From Death",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Cryptbloom"
+    ],
+    "binary": [],
+    "evidence": "passive:Life From Death"
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "name": "Long Sword",
+ "id": 1036,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Long Sword"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

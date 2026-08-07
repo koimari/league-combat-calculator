@@ -57,7 +57,9 @@ def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Warwick")
 SLOTS["R"] = _infinite_duress
-SLOTS["Q"] = with_item_on_hits(SLOTS["Q"], effectiveness=1.0, hits=1, triggers=('on_hit', 'on_attack'))
+SLOTS["Q"] = with_item_on_hits(
+    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
+)
 parse_abilities = build_parser(SLOTS, "Warwick")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

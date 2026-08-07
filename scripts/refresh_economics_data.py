@@ -52,10 +52,16 @@ def round_half_up(value: float) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--patch", default="16.15.1")
-    parser.add_argument("--out", default=None, help="output file (default <repo>/data/economics-sourced.json)")
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="output file (default <repo>/data/economics-sourced.json)",
+    )
     args = parser.parse_args()
 
-    out_path = Path(args.out) if args.out else REPO_ROOT / "data" / "economics-sourced.json"
+    out_path = (
+        Path(args.out) if args.out else REPO_ROOT / "data" / "economics-sourced.json"
+    )
     out_path = out_path.resolve()
     if REPO_ROOT.resolve() not in out_path.parents:
         raise SystemExit(f"--out {out_path} is outside the repository ({REPO_ROOT})")
@@ -147,7 +153,11 @@ def main() -> int:
 
     out = {
         "generated": "refresh",
-        "patch": {"cdragon": args.patch, "ddragon": args.patch, "repo_cache_fetched": None},
+        "patch": {
+            "cdragon": args.patch,
+            "ddragon": args.patch,
+            "repo_cache_fetched": None,
+        },
         "groups_26_12": previous.get("groups_26_12", {}),
         "transforms": previous.get("transforms", {}),
         "sell_rule": {
@@ -160,7 +170,9 @@ def main() -> int:
                 "Rejuvenation Bead",
                 "Seeker's Armguard / Shattered Armguard",
             ],
-            "exceptions_30pct": ["Slightly Magical Footwear (rune-granted, sells 90 of 300)"],
+            "exceptions_30pct": [
+                "Slightly Magical Footwear (rune-granted, sells 90 of 300)"
+            ],
             "exceptions_0pct": [
                 "Jungle pets (no resell since V25.09)",
                 "Support chain (World Atlas -> Bounty of Worlds, no resell since V25.09)",
@@ -180,7 +192,9 @@ def main() -> int:
     tmp = out_path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
     __import__("os").replace(tmp, out_path)
-    print(f"wrote {out_path} ({len(per_item_sell)} sell rows, {len(combine_costs)} combine rows)")
+    print(
+        f"wrote {out_path} ({len(per_item_sell)} sell rows, {len(combine_costs)} combine rows)"
+    )
     return 0
 
 

@@ -145,7 +145,9 @@ SLOTS = dict(_packet_slots)
 SLOTS["P"] = _absolution
 _packet_r = SLOTS["R"]
 SLOTS["R"] = _dawning_shadow
-SLOTS["Q"] = with_item_on_hits(SLOTS["Q"], effectiveness=1.0, hits=1, triggers=('on_hit', 'on_attack'))
+SLOTS["Q"] = with_item_on_hits(
+    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
+)
 parse_abilities = build_parser(SLOTS, "Senna")
 
 OPTIONS = list(_packet_options) + [

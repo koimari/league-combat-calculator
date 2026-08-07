@@ -1,0 +1,147 @@
+{
+ "name": "Bastionbreaker",
+ "id": 2520,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 22.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Shaped Charge",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Shaped Charge"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Shaped Charge",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Shaped Charge"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Shaped Charge",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Shaped Charge"
+   }
+  },
+  {
+   "atom_id": "damage.true",
+   "family": "damage",
+   "behavior": "Shaped Charge",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Shaped Charge"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Shaped Charge",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Shaped Charge"
+   }
+  },
+  {
+   "atom_id": "vision-economy.global-local-bounty",
+   "family": "vision-economy",
+   "behavior": "Shaped Charge",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bastionbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Shaped Charge"
+   }
+  }
+ ]
+}

@@ -1,0 +1,72 @@
+{
+ "name": "Seeker's Armguard",
+ "id": 2420,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Seeker's Armguard"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Seeker's Armguard"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.stasis",
+   "family": "crowd-control-mobility",
+   "behavior": "Time Stop",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Seeker's Armguard"
+    ],
+    "binary": [],
+    "evidence": "active:Time Stop"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Time Stop",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Seeker's Armguard"
+    ],
+    "binary": [],
+    "evidence": "active:Time Stop"
+   }
+  }
+ ]
+}

@@ -1,0 +1,68 @@
+{
+ "name": "Youmuu's Ghostblade",
+ "id": 3142,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Youmuu's Ghostblade"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 18.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Youmuu's Ghostblade"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Haunt",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Youmuu's Ghostblade"
+    ],
+    "binary": [],
+    "evidence": "passive:Haunt"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Haunt",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Youmuu's Ghostblade"
+    ],
+    "binary": [],
+    "evidence": "passive:Haunt"
+   }
+  }
+ ]
+}

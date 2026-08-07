@@ -1,0 +1,37 @@
+{
+ "name": "Gusto",
+ "id": 1509,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.summoned-minion",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Minion Wounder",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gusto"
+    ],
+    "binary": [],
+    "evidence": "passive:Minion Wounder"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Minion Wounder",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Gusto"
+    ],
+    "binary": [],
+    "evidence": "passive:Minion Wounder"
+   }
+  }
+ ]
+}

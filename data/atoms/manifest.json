@@ -1,0 +1,12 @@
+{
+ "schema_version": 1,
+ "domains": {
+  "items": {
+   "domain": "items",
+   "object_count": 324,
+   "atom_count": 1663,
+   "sha256": "da4867a44433ec85",
+   "source_ref": null
+  }
+ }
+}

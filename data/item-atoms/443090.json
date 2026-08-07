@@ -1,0 +1,110 @@
+{
+ "name": "Reaper's Toll",
+ "id": 443090,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reaper's Toll"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Reap",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reaper's Toll"
+    ],
+    "binary": [],
+    "evidence": "passive:Reap"
+   }
+  },
+  {
+   "atom_id": "damage.true",
+   "family": "damage",
+   "behavior": "Reap",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reaper's Toll"
+    ],
+    "binary": [],
+    "evidence": "passive:Reap"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Reap",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Reaper's Toll"
+    ],
+    "binary": [],
+    "evidence": "passive:Reap"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Reap",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reaper's Toll"
+    ],
+    "binary": [],
+    "evidence": "passive:Reap"
+   }
+  },
+  {
+   "atom_id": "damage.zero-damage",
+   "family": "damage",
+   "behavior": "Reap",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reaper's Toll"
+    ],
+    "binary": [],
+    "evidence": "passive:Reap"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Reap",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Reaper's Toll"
+    ],
+    "binary": [],
+    "evidence": "passive:Reap"
+   }
+  }
+ ]
+}

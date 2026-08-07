@@ -1,0 +1,37 @@
+{
+ "name": "Fated Ashes",
+ "id": 2508,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fated Ashes"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Inflame",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Fated Ashes"
+    ],
+    "binary": [],
+    "evidence": "passive:Inflame"
+   }
+  }
+ ]
+}

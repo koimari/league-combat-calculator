@@ -1,0 +1,128 @@
+{
+ "name": "Hullbreaker",
+ "id": 3181,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 500.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hullbreaker"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hullbreaker"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Skipper",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hullbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Skipper"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Skipper",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hullbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Skipper"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Skipper",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hullbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Skipper"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Skipper",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Hullbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Skipper"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Skipper",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hullbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Skipper"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Skipper",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hullbreaker"
+    ],
+    "binary": [],
+    "evidence": "passive:Skipper"
+   }
+  }
+ ]
+}

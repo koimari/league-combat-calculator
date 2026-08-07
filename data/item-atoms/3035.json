@@ -1,0 +1,40 @@
+{
+ "name": "Last Whisper",
+ "id": 3035,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Last Whisper"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor-penetration",
+   "family": "stats",
+   "behavior": "armorPenetration",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 18.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Last Whisper"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

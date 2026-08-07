@@ -84,11 +84,13 @@ def test_item_scope_includes_transformed_and_non_purchasable_records(monkeypatch
 
 
 def test_champion_module_receipts_cover_every_cached_champion():
-    """The full-entry gate distinguishes exact modules from generated packets."""
+    """The full-entry gate reports every cached champion as a reviewed module."""
+    from src.calculator.champions import registered_champion_names
+
     names = audit.champion_names()
-    assert len(names) == 173
+    assert len(names) == len(registered_champion_names())
     receipts = [audit._champion_module_receipt(name) for name in names]
-    assert sum(receipt["status"] == "ready" for receipt in receipts) == 173
+    assert sum(receipt["status"] == "ready" for receipt in receipts) == len(names)
     assert sum(receipt["status"] == "review_pending" for receipt in receipts) == 0
     assert all(receipt["status"] == "ready" for receipt in receipts)
     assert all(
@@ -139,6 +141,21 @@ def test_expected_effects_names_every_item_branch_and_champion_slot():
         audit.REQUIRED_CHAMPION_SLOTS
     )
     assert all(row["variant_count"] == 1 for row in champion["effects"])
+
+
+def test_full_entry_audit_emits_the_gate_receipt_envelope():
+    """The audit receipt carries the shared envelope (issue #139)."""
+    from scripts.gate_receipt import SCHEMA_VERSION, validate_receipt
+
+    report = audit.audit(champions=[], items=[], query_tool=__file__)
+    validate_receipt(report)
+    assert report["schema_version"] == SCHEMA_VERSION
+    assert type(report["passed"]) is bool
+    assert report["counts"]["total"] == 0
+    assert report["counts"]["failed"] == 0
+    assert report["failures"] == []
+    # The detailed per-scope counts remain addressable alongside the envelope.
+    assert report["counts"]["champions_expected"] == 0
 
 
 def test_item_effect_receipt_keeps_each_branch_and_runtime_path_visible():

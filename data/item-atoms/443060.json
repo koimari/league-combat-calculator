@@ -1,0 +1,65 @@
+{
+ "name": "Sword of the Divine",
+ "id": 443060,
+ "atoms": [
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 50.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of the Divine"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Excoriate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of the Divine"
+    ],
+    "binary": [],
+    "evidence": "passive:Excoriate"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Excoriate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of the Divine"
+    ],
+    "binary": [],
+    "evidence": "passive:Excoriate"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Excoriate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sword of the Divine"
+    ],
+    "binary": [],
+    "evidence": "passive:Excoriate"
+   }
+  }
+ ]
+}

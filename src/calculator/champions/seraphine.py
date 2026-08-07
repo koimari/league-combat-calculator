@@ -57,12 +57,17 @@ def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (
-        DamagePart("magic", base),
+        # Both the flat base and the missing-health amplifier land at the
+        # cast boundary: authored time_offset 0.0 upgrades their events from
+        # cast_boundary to hit precision so the coverage classifier certifies
+        # the row instead of downgrading it coarse (Viego R pattern).
+        DamagePart("magic", base, time_offset=0.0),
         DamagePart(
             "magic",
             hp_scaled_damage=lambda missing, base=base: base
             * _Q_MISSING_HEALTH_MAX_BONUS
             * max(0.0, min(1.0, missing)),
+            time_offset=0.0,
         ),
     )
     entry["detail"] = (

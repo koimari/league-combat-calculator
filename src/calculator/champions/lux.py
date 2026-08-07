@@ -63,8 +63,30 @@ def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
         per_proc * count,
         "magic",
     )
+    # Illumination procs ride the post-ability autos / Final Spark: the
+    # proc event lands at the consuming hit boundary, so the part carries an
+    # authored time_offset 0.0 (hit precision, Viego R pattern) — without it
+    # the row emits no hit event and the coverage classifier downgrades it
+    # coarse, withholding the champion from optimizer certification.
     entry["parts"] = (DamagePart("magic", per_proc),)
     entry["proc_count"] = count
+    # Each proc is consumed by the next post-ability auto / Final Spark.
+    # Declare the fixed-count ledger (Diana passive precedent) so the row is
+    # event-ordered instead of phase-order coarse: one exact event per proc,
+    # spaced at the authored auto cadence when the engine supplies auto
+    # timestamps, else stamped at the cast boundary.
+    # The one-rotation ledger stamps each proc at the cast boundary; the
+    # sequence field preserves their order relative to the marking casts.
+    entry["damage_events"] = [
+        {
+            "time": 0.0,
+            "damage_type": "magic",
+            "damage": per_proc,
+            "event_precision": "exact",
+        }
+        for _ in range(count)
+    ]
+    entry["event_phase"] = "effect"
     entry["detail"] = (
         f"{count} Illumination proc(s): 30 : 200 (based on level) "
         f"({per_proc:g} at level {level}) + 35% AP bonus magic damage "

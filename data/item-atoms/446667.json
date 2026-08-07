@@ -1,0 +1,227 @@
+{
+ "name": "Radiant Virtue",
+ "id": 446667,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 400.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-resistance",
+   "family": "stats",
+   "behavior": "magicResistance",
+   "parameters": {
+    "flat": 35.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.heal-shield-power",
+   "family": "stats",
+   "behavior": "healAndShieldPower",
+   "parameters": {
+    "flat": 12.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.overheal",
+   "family": "heal-shield",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-magic",
+   "family": "heal-shield",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-physical",
+   "family": "heal-shield",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Guiding Light",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Radiant Virtue"
+    ],
+    "binary": [],
+    "evidence": "passive:Guiding Light"
+   }
+  }
+ ]
+}

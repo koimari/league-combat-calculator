@@ -1,0 +1,99 @@
+{
+ "name": "Lich Bane",
+ "id": 3100,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 100.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lich Bane"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lich Bane"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lich Bane"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lich Bane"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Lich Bane"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Spellblade",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lich Bane"
+    ],
+    "binary": [],
+    "evidence": "passive:Spellblade"
+   }
+  }
+ ]
+}

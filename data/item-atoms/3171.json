@@ -1,0 +1,37 @@
+{
+ "name": "Crimson Lucidity",
+ "id": 3171,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Crimson Lucidity"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Ionian Lucidity",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Crimson Lucidity"
+    ],
+    "binary": [],
+    "evidence": "passive:Ionian Lucidity"
+   }
+  }
+ ]
+}

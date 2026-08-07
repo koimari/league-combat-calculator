@@ -1,0 +1,23 @@
+{
+ "name": "Chain Vest",
+ "id": 1031,
+ "atoms": [
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Chain Vest"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

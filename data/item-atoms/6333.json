@@ -1,0 +1,122 @@
+{
+ "name": "Death's Dance",
+ "id": 6333,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 60.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Death's Dance"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Death's Dance"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Death's Dance"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.health-as-resource",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Ignore Pain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Death's Dance"
+    ],
+    "binary": [],
+    "evidence": "passive:Ignore Pain"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.cleanse",
+   "family": "crowd-control-mobility",
+   "behavior": "Ignore Pain",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Death's Dance"
+    ],
+    "binary": [],
+    "evidence": "passive:Ignore Pain"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Ignore Pain",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Death's Dance"
+    ],
+    "binary": [],
+    "evidence": "passive:Ignore Pain"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Ignore Pain",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Death's Dance"
+    ],
+    "binary": [],
+    "evidence": "passive:Ignore Pain"
+   }
+  }
+ ]
+}

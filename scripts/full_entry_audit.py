@@ -8,10 +8,16 @@ Ability-template pages are not silently substituted for the parent page: the
 parent's references are recorded so a later module can prove which full entry
 it reviewed.
 
+The wiki query CLI is portable (issue #134): ``--query-tool`` /
+``LCC_WIKI_QUERY``, then PATH, then the repo-relative vendor checkout.  A
+missing tool is an infrastructure failure (exit 2) reported before any entry
+is audited — never as per-entry ``review_pending``.
+
 Examples::
 
     python scripts/full_entry_audit.py --output docs/wiki-full-entry-audit.json
     python scripts/full_entry_audit.py --limit 3 --json
+    LCC_WIKI_QUERY=/path/to/query_league_wiki.py python scripts/full_entry_audit.py
 """
 
 from __future__ import annotations
@@ -20,7 +26,9 @@ import argparse
 import hashlib
 import importlib
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -32,13 +40,55 @@ ROOT = Path(__file__).resolve().parent.parent
 # checks so the source-receipt audit cannot depend on the caller's cwd.
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-WIKI_QUERY = Path(
-    "/Users/river/.codex/skills/league-wiki-query/scripts/query_league_wiki.py"
-)
+
+try:
+    from gate_receipt import build_receipt
+except ImportError:  # imported as scripts.full_entry_audit in tests
+    from scripts.gate_receipt import build_receipt
+
 CHAMPIONS_PATH = ROOT / "data" / "champions.json"
 ITEMS_PATH = ROOT / "data" / "items.json"
 REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
 PACKET_MANIFEST_PATH = ROOT / "static" / "reviewed-packets.json"
+
+# Resolved path of the read-only ``league-wiki-query`` CLI.  No developer-home
+# default (issue #134): resolution order is --query-tool / LCC_WIKI_QUERY,
+# then PATH, then the repo-relative vendor checkout.
+QUERY_TOOL: Path | None = None
+
+
+class InfrastructureError(RuntimeError):
+    """A required external tool is missing or broken — not an entry finding.
+
+    Kept distinct from per-entry ``review_pending`` so a machine-level
+    failure can never masquerade as "entry needs review".
+    """
+
+
+def resolve_query_tool(cli_value: str | Path | None = None) -> Path:
+    """Resolve the wiki query CLI or raise one actionable InfrastructureError."""
+    raw = cli_value or os.environ.get("LCC_WIKI_QUERY")
+    if raw:
+        path = Path(str(raw)).expanduser()
+        if not path.is_file():
+            raise InfrastructureError(
+                f"Wiki query tool not found: {path}\n"
+                "Supply it with --query-tool or the LCC_WIKI_QUERY "
+                "environment variable."
+            )
+        return path
+    on_path = shutil.which("query_league_wiki.py")
+    if on_path:
+        return Path(on_path)
+    vendor = ROOT / "vendor" / "league-wiki-query" / "scripts" / "query_league_wiki.py"
+    if vendor.is_file():
+        return vendor
+    raise InfrastructureError(
+        "Wiki query tool (query_league_wiki.py) not found.\n"
+        "Install the league-wiki-query skill and point at it with "
+        "--query-tool or LCC_WIKI_QUERY, add it to PATH, or vendor it at "
+        "vendor/league-wiki-query/scripts/query_league_wiki.py."
+    )
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -452,7 +502,8 @@ def _item_effect_coverage(
 
 
 def _query(args: list[str]) -> Any:
-    command = [sys.executable, str(WIKI_QUERY), *args]
+    tool = QUERY_TOOL or resolve_query_tool()
+    command = [sys.executable, str(tool), *args]
     completed = subprocess.run(
         command,
         cwd=ROOT,
@@ -609,8 +660,23 @@ def audit(
     champions: Iterable[str] | None = None,
     items: Iterable[str] | None = None,
     limit: int | None = None,
+    query_tool: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Run the complete parent-page audit for the selected scope."""
+    """Run the complete parent-page audit for the selected scope.
+
+    Pre-flights the query tool: a missing/broken tool raises
+    :class:`InfrastructureError` before any entry is audited, so a machine
+    failure is never reported as per-entry ``review_pending`` (issue #134).
+    """
+    global QUERY_TOOL
+    tool = Path(query_tool) if query_tool else (QUERY_TOOL or resolve_query_tool())
+    if not tool.is_file():
+        raise InfrastructureError(
+            f"Wiki query tool not found: {tool}\n"
+            "Supply it with --query-tool or the LCC_WIKI_QUERY environment "
+            "variable."
+        )
+    QUERY_TOOL = tool
     champion_list = list(champions if champions is not None else champion_names())
     item_list = list(items if items is not None else ordinary_sr_item_names())
     entries: list[dict[str, Any]] = []
@@ -650,21 +716,42 @@ def audit(
         "champion_modules_ready": len(module_entries) - len(module_failures),
         "champion_modules_review_pending": len(module_failures),
     }
-    return {
-        "audit": "league_wiki_full_parent_entry",
-        "required_champion_slots": list(REQUIRED_CHAMPION_SLOTS),
-        "counts": counts,
-        "passed": (
-            not failures
-            and not module_failures
-            and len(entries) == len(targets)
-            and len(module_entries) == len(champion_list)
-        ),
-        "entries": entries,
-        "failures": failures,
-        "champion_modules": module_entries,
-        "champion_module_failures": module_failures,
-    }
+    passed = (
+        not failures
+        and not module_failures
+        and len(entries) == len(targets)
+        and len(module_entries) == len(champion_list)
+    )
+    # Envelope (issue #139): the gate's contract units are the full expected
+    # scope — every audited target plus every champion module receipt.  A
+    # --limit run that only audits part of the scope therefore cannot pass.
+    total = len(targets) + len(champion_list)
+    failed = (
+        len(failures)
+        + len(module_failures)
+        + max(0, len(targets) - len(entries))
+        + max(0, len(champion_list) - len(module_entries))
+    )
+    report = build_receipt(
+        matrix="league_wiki_full_parent_entry",
+        passed=passed,
+        passed_count=total - failed,
+        failed_count=failed,
+        total_count=total,
+        withheld_count=0,
+        failures=failures,
+        extra={
+            "audit": "league_wiki_full_parent_entry",
+            "required_champion_slots": list(REQUIRED_CHAMPION_SLOTS),
+            "entries": entries,
+            "champion_modules": module_entries,
+            "champion_module_failures": module_failures,
+            "infrastructure": {"ok": True, "query_tool": str(tool)},
+        },
+    )
+    # The detailed per-scope counts stay addressable for existing consumers.
+    report["counts"].update(counts)
+    return report
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -676,8 +763,21 @@ def main(argv: list[str] | None = None) -> int:
         "--output", type=Path, help="write the JSON receipt to this path"
     )
     parser.add_argument("--json", action="store_true", help="emit JSON to stdout")
+    parser.add_argument(
+        "--query-tool",
+        type=Path,
+        help="path to query_league_wiki.py (env LCC_WIKI_QUERY; default: "
+        "PATH, then vendor/league-wiki-query/scripts/)",
+    )
     args = parser.parse_args(argv)
-    report = audit(limit=args.limit)
+    # Pre-flight: a missing query tool is an infrastructure failure (exit 2),
+    # distinct from a gate that found review-pending entries (exit 1).
+    try:
+        tool = resolve_query_tool(args.query_tool)
+    except InfrastructureError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 2
+    report = audit(limit=args.limit, query_tool=tool)
     rendered = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

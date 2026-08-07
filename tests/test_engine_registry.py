@@ -4,11 +4,9 @@ import json
 
 from src.calculator.champions import (
     _CUSTOM_CHAMPION_MODULES,
-    _GENERATED_CHAMPION_MODULES,
     engine_registration_kind,
     parse_champion_abilities,
     registered_champion_names,
-    registered_engine_champion_names,
 )
 
 
@@ -20,47 +18,21 @@ def _champions() -> dict:
 def test_every_cached_champion_has_an_importable_engine_registration():
     champions = _champions()
     names = {champion["name"] for champion in champions.values()}
-    registered = set(registered_engine_champion_names())
+    registered = set(registered_champion_names())
 
     assert names == registered
-    assert len(registered) == 173
-    assert len(registered_champion_names()) == 173
+    assert len(registered) == len(_CUSTOM_CHAMPION_MODULES)
+    assert len(registered_champion_names()) == len(_CUSTOM_CHAMPION_MODULES)
     assert all(
         engine_registration_kind(name) == "reviewed_module"
         for name in _CUSTOM_CHAMPION_MODULES
     )
-    assert all(
-        engine_registration_kind(name) == "generated_packet"
-        for name in _GENERATED_CHAMPION_MODULES
-    )
 
 
-def test_generic_registration_runs_through_the_same_validated_parser():
+def test_custom_manifest_is_the_single_authoritative_roster():
+    """_CUSTOM_CHAMPION_MODULES is the one explicit roster manifest: it must
+    exactly equal the cached champion names (issue #136 — a new champion
+    needs no count edits anywhere, only a manifest entry + reviewed module)."""
     champions = _champions()
-    stats = {
-        "attack_damage": 100.0,
-        "bonus_attack_damage": 50.0,
-        "base_attack_damage": 100.0,
-        "ability_power": 100.0,
-        "health": 1_000.0,
-        "bonus_health": 500.0,
-        "armor": 50.0,
-        "magic_resistance": 50.0,
-    }
-    target = {
-        "target_max_health": 1_000.0,
-        "target_current_health": 1_000.0,
-        "target_missing_health": 0.0,
-    }
-
-    for champion in champions.values():
-        if champion["name"] not in _GENERATED_CHAMPION_MODULES:
-            continue
-        result = parse_champion_abilities(
-            champion,
-            6,
-            100.0,
-            champion_stats=stats,
-            target_stats=target,
-        )
-        assert isinstance(result, dict), champion["name"]
+    cache_names = {champion["name"] for champion in champions.values()}
+    assert set(_CUSTOM_CHAMPION_MODULES) == cache_names

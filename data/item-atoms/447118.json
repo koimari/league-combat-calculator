@@ -1,0 +1,132 @@
+{
+ "name": "Pyromancer's Cloak",
+ "id": 447118,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 400.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Pyromancer's Cloak"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Pyromancer's Cloak"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.damage-over-time",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Spark",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Pyromancer's Cloak"
+    ],
+    "binary": [],
+    "evidence": "passive:Spark"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.cleanse",
+   "family": "crowd-control-mobility",
+   "behavior": "Spark",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Pyromancer's Cloak"
+    ],
+    "binary": [],
+    "evidence": "passive:Spark"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Spark",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Pyromancer's Cloak"
+    ],
+    "binary": [],
+    "evidence": "passive:Spark"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Spark",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Pyromancer's Cloak"
+    ],
+    "binary": [],
+    "evidence": "passive:Spark"
+   }
+  },
+  {
+   "atom_id": "damage.dot",
+   "family": "damage",
+   "behavior": "Spark",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Pyromancer's Cloak"
+    ],
+    "binary": [],
+    "evidence": "passive:Spark"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Spark",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Pyromancer's Cloak"
+    ],
+    "binary": [],
+    "evidence": "passive:Spark"
+   }
+  }
+ ]
+}

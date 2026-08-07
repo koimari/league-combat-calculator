@@ -1,0 +1,313 @@
+{
+ "name": "Talisman of Ascension",
+ "id": 443064,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal-and-shield-power",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.life-steal",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.omnivamp",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.drain",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.vamp",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-magic",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-physical",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-heal-effect",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-shield-effect",
+   "family": "heal-shield",
+   "behavior": "Imbricate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Talisman of Ascension"
+    ],
+    "binary": [],
+    "evidence": "active:Imbricate"
+   }
+  }
+ ]
+}

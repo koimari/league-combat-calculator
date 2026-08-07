@@ -1,0 +1,40 @@
+{
+ "name": "Void Staff",
+ "id": 3135,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 95.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Void Staff"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.magic-penetration",
+   "family": "stats",
+   "behavior": "magicPenetration",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 40.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Void Staff"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

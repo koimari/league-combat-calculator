@@ -1,0 +1,118 @@
+{
+ "name": "Serpent's Fang",
+ "id": 6695,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Serpent's Fang"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Serpent's Fang"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Shield Reaver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Serpent's Fang"
+    ],
+    "binary": [],
+    "evidence": "passive:Shield Reaver"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Shield Reaver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Serpent's Fang"
+    ],
+    "binary": [],
+    "evidence": "passive:Shield Reaver"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Shield Reaver",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Serpent's Fang"
+    ],
+    "binary": [],
+    "evidence": "passive:Shield Reaver"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield-reduction",
+   "family": "heal-shield",
+   "behavior": "Shield Reaver",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield",
+    "heal-shield.shield-magic",
+    "heal-shield.shield-physical"
+   ],
+   "provenance": {
+    "wiki": [
+     "Serpent's Fang"
+    ],
+    "binary": [],
+    "evidence": "passive:Shield Reaver"
+   }
+  },
+  {
+   "atom_id": "heal-shield.on-shield-effect",
+   "family": "heal-shield",
+   "behavior": "Shield Reaver",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Serpent's Fang"
+    ],
+    "binary": [],
+    "evidence": "passive:Shield Reaver"
+   }
+  }
+ ]
+}

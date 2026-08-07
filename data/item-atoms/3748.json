@@ -1,0 +1,113 @@
+{
+ "name": "Titanic Hydra",
+ "id": 3748,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 600.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Titanic Hydra"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Titanic Hydra"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Titanic Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Titanic Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  },
+  {
+   "atom_id": "damage.aoe",
+   "family": "damage",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Titanic Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Titanic Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Titanic Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  }
+ ]
+}

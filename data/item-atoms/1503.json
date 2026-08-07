@@ -1,0 +1,51 @@
+{
+ "name": "Warden's Eye",
+ "id": 1503,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "True Sight",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Warden's Eye"
+    ],
+    "binary": [],
+    "evidence": "passive:True Sight"
+   }
+  },
+  {
+   "atom_id": "vision-economy.sight",
+   "family": "vision-economy",
+   "behavior": "True Sight",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Warden's Eye"
+    ],
+    "binary": [],
+    "evidence": "passive:True Sight"
+   }
+  },
+  {
+   "atom_id": "vision-economy.true-sight",
+   "family": "vision-economy",
+   "behavior": "True Sight",
+   "parameters": {},
+   "relations": [
+    "vision-economy.stealth",
+    "vision-economy.camouflage"
+   ],
+   "provenance": {
+    "wiki": [
+     "Warden's Eye"
+    ],
+    "binary": [],
+    "evidence": "passive:True Sight"
+   }
+  }
+ ]
+}

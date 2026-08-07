@@ -1,0 +1,51 @@
+{
+ "name": "Hextech Alternator",
+ "id": 3145,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hextech Alternator"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Revved",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hextech Alternator"
+    ],
+    "binary": [],
+    "evidence": "passive:Revved"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Revved",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hextech Alternator"
+    ],
+    "binary": [],
+    "evidence": "passive:Revved"
+   }
+  }
+ ]
+}

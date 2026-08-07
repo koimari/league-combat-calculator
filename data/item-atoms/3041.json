@@ -1,0 +1,54 @@
+{
+ "name": "Mejai's Soulstealer",
+ "id": 3041,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 100.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mejai's Soulstealer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mejai's Soulstealer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Glory",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Mejai's Soulstealer"
+    ],
+    "binary": [],
+    "evidence": "passive:Glory"
+   }
+  }
+ ]
+}

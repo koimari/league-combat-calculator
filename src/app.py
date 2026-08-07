@@ -22,11 +22,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-# Ensure the src directory is on the path so calculator imports work
+# Ensure the src directory is on the path so calculator imports work.
+# The beta metrics scorecard lives in src/metrics.py (deployed shape), so no
+# repo-root insert is needed (issue #144).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-# Repo root too: the /api/metrics scorecard is computed by the importable
-# scripts.beta_metrics module (P1b), which lives outside src/.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from flask import (
     Flask,
@@ -53,22 +52,13 @@ from calculator.item_effects import (
 from calculator.rune_effects import keystone_catalog, refresh_rune_effects
 from calculator.item_coverage import (
     item_model_coverage,
-    require_calculation_item_coverage,
     require_certified_target_timeline,
-    require_target_item_coverage,
     target_item_model_coverage,
-    target_build_coverage,
 )
-from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
-from calculator.loadout_rules import (
-    role_quest_legal_items,
-    role_scoped_shop_items,
-    validate_resolved_loadout,
-)
+from calculator.loadout_rules import validate_resolved_loadout
 from calculator.defensive_effects import resolve_starting_defenses
 from calculator.participant_timeline import (
     build_participant_timeline,
-    require_roster_fight_window_support,
 )
 from calculator.champions import (
     champion_options_meta_map,
@@ -83,31 +73,41 @@ from calculator.capabilities import public_capability_contract
 from calculator.optimizer import (
     exclusivity_groups,
     get_eligible_boots,
-    get_eligible_legendaries,
     get_selectable_items,
     optimize_build,
     optimize_purchase,
-    optimizer_supported_items,
 )
 from calculator.stats import MAX_LEVEL
 from calculator.stats import calculate_total_stats, get_item_stats
 from calculator.timeline_coverage import applicability_exclusion_sources
+from calculator.bis import (
+    BIS_CERTIFIED_DEFENSIVE_EFFECTS,
+    BIS_UNMODELED_DEFENSIVE_EFFECTS,
+    bis_candidate_pool,
+    bis_defensive_effect_receipt,
+    bis_main_request,
+    bis_objective_meta,
+    bis_objective_score,
+    bis_replaced_loadout,
+    roster_target_coverage,
+)
+from calculator.public_response import (
+    aggregate_public_results,
+    serialize_fight_result,
+)
 from calculator.scenario import (
-    MAX_ALLIES,
-    MAX_ENEMIES,
     MAX_LOADOUT_ITEMS,
     ChampionLoadout,
-    parse_roster,
+    parse_scenario_request,
+    resolve_scenario,
     validate_item_input_options,
 )
 from calculator.role_quests import (
-    require_level_within_cap,
     boot_upgrade_contract,
     role_quest_meta,
     support_quest_item_contract,
     support_quest_item_stage,
 )
-from calculator.timeline_coverage import combine_timeline_coverages
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_AUTO_ATTACK_UPTIME_MODE,
@@ -221,6 +221,16 @@ _SCOPE_LABELS = {
     "calculate": "Calculator",
     "optimize": "Optimizer",
     "metrics_event": "Metrics",
+}
+# One table for the per-operation cache/rate-limit policy (issue #138).
+# ``rate_limit_scope`` names the token bucket; ``cache_namespace`` names the
+# deterministic result cache.  BIS deliberately shares the calculator budget
+# (it is invoked from the same UI surface), and optimize is cached like the
+# other two because it is deterministic and the most expensive endpoint.
+_OPERATION_POLICY = {
+    "calculate": {"rate_limit_scope": "calculate", "cache_namespace": "calculate"},
+    "bis": {"rate_limit_scope": "calculate", "cache_namespace": "bis"},
+    "optimize": {"rate_limit_scope": "optimize", "cache_namespace": "optimize"},
 }
 _VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
 _ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
@@ -667,55 +677,6 @@ def _request_string_list(
     return names
 
 
-def _validate_champion_options(champion_name: str, data: Mapping[str, object]) -> None:
-    """Enforce each champion module's declared public option contract."""
-    supplied = data.get("champion_options")
-    if supplied is None:
-        return
-    if not isinstance(supplied, Mapping):
-        raise ValueError("champion_options must be an object")
-
-    declared = {
-        option["key"]: option
-        for option in champion_options_meta_map()
-        .get(champion_name, {})
-        .get("options", [])
-    }
-    unknown = set(supplied) - set(declared)
-    if unknown:
-        raise ValueError(f"Unknown champion option: {sorted(unknown)[0]}")
-
-    for key, value in supplied.items():
-        option = declared[key]
-        option_type = option["type"]
-        if option_type == "bool":
-            if not isinstance(value, bool):
-                raise ValueError(f"champion_options.{key} must be true or false")
-            continue
-        if option_type == "select":
-            if isinstance(value, bool) and option.get("legacy_bool"):
-                continue
-            if not isinstance(value, str):
-                raise ValueError(f"champion_options.{key} must be a string")
-            choices = {choice["value"] for choice in option["choices"]}
-            if value not in choices:
-                raise ValueError(
-                    f"champion_options.{key} must be one of {sorted(choices)}"
-                )
-            continue
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            raise ValueError(f"champion_options.{key} must be a number")
-        if option_type == "int" and not isinstance(value, int):
-            raise ValueError(f"champion_options.{key} must be an integer")
-        if not math.isfinite(value):
-            raise ValueError(f"champion_options.{key} must be finite")
-        if not option["min"] <= value <= option["max"]:
-            raise ValueError(
-                f"champion_options.{key} must be between "
-                f"{option['min']} and {option['max']}"
-            )
-
-
 def _resolve_named_item(name: str, *, kind: str = "Item") -> dict:
     """Resolve one item name and translate data misses into a public 404."""
     try:
@@ -748,299 +709,6 @@ def _public_loadout_summary(loadout) -> dict:
     return summary
 
 
-def _public_event_time(event: Mapping[str, object]) -> float | None:
-    """Return a finite event timestamp, withholding malformed public rows."""
-    if "time" not in event:
-        return None
-    value = event["time"]
-    if isinstance(value, bool):
-        return None
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError):
-        return None
-    if not math.isfinite(parsed):
-        return None
-    return round(parsed, 3)
-
-
-def _target_effective_health(result: Mapping[str, object]) -> float:
-    """Estimate one target's effective health from a legacy engine result.
-
-    The event-ordered combat ledger reports the exact effective health per
-    participant; the standalone per-target engine only carries max health,
-    shield absorption, and healing received.  Summing those three reproduces
-    the ledger's effective-health definition (max health + shields +
-    healing) for the common case so the overkill receipt stays comparable
-    across both response shapes.
-    """
-    return (
-        float(result.get("target_effective_max_health", 0.0))
-        + float(result.get("shield_absorbed", 0.0))
-        + float(result.get("target_healing_received", 0.0))
-    )
-
-
-def _legacy_overkill(result: Mapping[str, object]) -> float:
-    """Return raw total damage beyond the target's effective health.
-
-    The standalone engine keeps applying damage after defeat, so total
-    damage can exceed every amount the target could absorb.  Overkill is
-    that excess; the coupled combat ledger carries the exact per-event
-    value in each participant's survival receipt instead.
-    """
-    return max(
-        0.0, float(result.get("total_damage", 0.0)) - _target_effective_health(result)
-    )
-
-
-def _serialize_fight_result(result: Mapping[str, object]) -> dict:
-    """Translate one engine result into the stable public response shape."""
-    breakdown = result.get("breakdown", {})
-    api_breakdown = {}
-    for key, entry in breakdown.items():
-        has_damage = entry.get("total_damage", 0.0) > 0
-        total_amount = entry.get("total_amount", 0.0)
-        has_amount = isinstance(total_amount, (int, float)) and total_amount > 0
-        if not (has_damage or has_amount or "detail" in entry):
-            continue
-        row = {
-            "name": entry.get("name", key),
-            "total_damage": round(entry.get("total_damage", 0.0), 1),
-            "total_amount": round(total_amount, 1) if has_amount else None,
-            "casts": entry.get("casts", None),
-            "count": entry.get("count", None),
-            "unit": entry.get("unit", None),
-            "damage_per_hit": (
-                round(entry["damage_per_hit"], 1) if "damage_per_hit" in entry else None
-            ),
-            "num_crits": entry.get("num_crits", None),
-            "num_non_crits": entry.get("num_non_crits", None),
-            "crit_damage_per_hit": (
-                round(entry["crit_damage_per_hit"], 1)
-                if entry.get("crit_damage_per_hit") is not None
-                else None
-            ),
-            "non_crit_damage_per_hit": (
-                round(entry["non_crit_damage_per_hit"], 1)
-                if entry.get("non_crit_damage_per_hit") is not None
-                else None
-            ),
-        }
-        if has_amount:
-            row["amount_per_proc"] = (
-                round(entry["amount_per_proc"], 1)
-                if entry.get("amount_per_proc") is not None
-                else None
-            )
-            row["proc_times"] = list(entry.get("proc_times", []))
-            row["output_type"] = "mana" if entry.get("unit") == "mana" else "health"
-        for display_key in ("detail", "damage_display"):
-            if display_key in entry:
-                row[display_key] = entry[display_key]
-        temporary_lethality = entry.get("temporary_lethality")
-        if isinstance(temporary_lethality, Mapping):
-            # Preserve the engine's sourced state receipt so the frontend can
-            # explain a temporary penetration window instead of collapsing it
-            # into an unexplained aggregate damage number.
-            row["temporary_lethality"] = dict(temporary_lethality)
-        if "targeting" in entry:
-            row["targeting"] = dict(entry["targeting"])
-        api_breakdown[key] = row
-
-    return {
-        "champion_stats": result["champion_stats"],
-        "total_damage": round(result.get("total_damage", 0.0), 1),
-        "health_damage": round(result.get("health_damage", 0.0), 1),
-        "shield_absorbed": round(result.get("shield_absorbed", 0.0), 1),
-        "magic_shield_absorbed": round(result.get("magic_shield_absorbed", 0.0), 1),
-        "physical_shield_absorbed": round(
-            result.get("physical_shield_absorbed", 0.0), 1
-        ),
-        "general_shield_absorbed": round(result.get("general_shield_absorbed", 0.0), 1),
-        "threshold_shield_absorbed": round(
-            result.get("threshold_shield_absorbed", 0.0), 1
-        ),
-        "threshold_health_triggered": bool(
-            result.get("threshold_health_triggered", False)
-        ),
-        "threshold_health_bonus_gained": round(
-            result.get("threshold_health_bonus_gained", 0.0), 1
-        ),
-        "target_healing_received": round(result.get("target_healing_received", 0.0), 1),
-        "target_ending_health": round(result.get("target_ending_health", 0.0), 1),
-        "target_effective_max_health": round(
-            result.get("target_effective_max_health", 0.0), 1
-        ),
-        "target_effective_health": round(_target_effective_health(result), 1),
-        "overkill": round(_legacy_overkill(result), 1),
-        "ability_damage": round(result["ability_damage"], 1),
-        "auto_attack_damage": round(result["auto_attack_damage"], 1),
-        "damage_by_type": {
-            dtype: round(amount, 1)
-            for dtype, amount in result["damage_by_type"].items()
-        },
-        "breakdown": api_breakdown,
-        "effective_mr": round(result.get("effective_mr", 0.0), 1),
-        "effective_armor": round(result.get("effective_armor", 0.0), 1),
-        "notes": list(result.get("notes", [])),
-        "cast_timeline": list(result.get("cast_timeline", [])),
-        "rotation": dict(result.get("rotation") or {}),
-        "resource_spent": round(result.get("resource_spent", 0.0), 1),
-        "resource_remaining": round(result.get("resource_remaining", 0.0), 1),
-        "timeline_coverage": dict(result.get("timeline_coverage", {})),
-        "auto_attack_policy": dict(result.get("auto_attack_policy", {})),
-        "auto_attack_schedule": dict(result.get("auto_attack_schedule", {})),
-        "damage_events": [
-            {
-                "time": _public_event_time(event),
-                "source": str(event.get("source_key", "")),
-                "damage_type": str(event.get("damage_type", "")),
-                "damage": round(float(event.get("damage", 0.0)), 1),
-                "phase": str(event.get("phase", "")),
-            }
-            for event in result.get("damage_events", [])
-            if isinstance(event, Mapping) and _public_event_time(event) is not None
-        ],
-        "self_healing": round(float(result.get("self_healing", 0.0)), 1),
-        "self_healing_events": [
-            {
-                "time": _public_event_time(event),
-                "source": str(event.get("source", "")),
-                "kind": str(event.get("kind", "")),
-                "amount": round(float(event.get("amount", 0.0)), 1),
-            }
-            for event in result.get("self_healing_events", [])
-            if isinstance(event, Mapping) and _public_event_time(event) is not None
-        ],
-    }
-
-
-def _aggregate_timeline_coverage(results: list[dict]) -> dict:
-    """Combine per-target ordering receipts without overstating precision."""
-    return combine_timeline_coverages(
-        (result.get("timeline_coverage", {}) for result in results),
-        target_count=len(results),
-    )
-
-
-def _aggregate_public_results(results: list[dict]) -> dict:
-    """Sum the same selected damage package across every hit target."""
-    primary = results[0]
-    target_count = len(results)
-    timeline_coverage = _aggregate_timeline_coverage(results)
-    damage_types = {"physical": 0.0, "magic": 0.0, "true": 0.0}
-    breakdown = {}
-    for result in results:
-        for damage_type, amount in result["damage_by_type"].items():
-            damage_types[damage_type] = damage_types.get(damage_type, 0.0) + amount
-        for key, entry in result["breakdown"].items():
-            aggregate = breakdown.setdefault(
-                key,
-                {
-                    "name": entry["name"],
-                    "total_damage": 0.0,
-                    "casts": entry.get("casts"),
-                    "count": entry.get("count"),
-                    "unit": entry.get("unit"),
-                    "damage_per_hit": None,
-                    "num_crits": None,
-                    "num_non_crits": None,
-                    "crit_damage_per_hit": None,
-                    "non_crit_damage_per_hit": None,
-                    "total_amount": 0.0,
-                    "amount_per_proc": None,
-                    "proc_times": [],
-                    "output_type": entry.get("output_type"),
-                },
-            )
-            aggregate["total_damage"] += entry["total_damage"]
-            aggregate["total_amount"] += float(entry.get("total_amount") or 0.0)
-            if entry.get("amount_per_proc") is not None:
-                aggregate["amount_per_proc"] = entry["amount_per_proc"]
-            aggregate["proc_times"].extend(entry.get("proc_times") or [])
-
-    for entry in breakdown.values():
-        entry["total_damage"] = round(entry["total_damage"], 1)
-        target_label = "target" if target_count == 1 else "targets"
-        entry["detail"] = f"Across {target_count} selected {target_label}"
-
-    return {
-        "champion_stats": primary["champion_stats"],
-        "total_damage": round(sum(result["total_damage"] for result in results), 1),
-        "health_damage": round(sum(result["health_damage"] for result in results), 1),
-        "shield_absorbed": round(
-            sum(result["shield_absorbed"] for result in results), 1
-        ),
-        "magic_shield_absorbed": round(
-            sum(result.get("magic_shield_absorbed", 0.0) for result in results), 1
-        ),
-        "physical_shield_absorbed": round(
-            sum(result.get("physical_shield_absorbed", 0.0) for result in results), 1
-        ),
-        "general_shield_absorbed": round(
-            sum(result.get("general_shield_absorbed", 0.0) for result in results), 1
-        ),
-        "threshold_shield_absorbed": round(
-            sum(result.get("threshold_shield_absorbed", 0.0) for result in results), 1
-        ),
-        "threshold_health_triggered": any(
-            result.get("threshold_health_triggered", False) for result in results
-        ),
-        "threshold_health_bonus_gained": round(
-            sum(result.get("threshold_health_bonus_gained", 0.0) for result in results),
-            1,
-        ),
-        "target_healing_received": round(
-            sum(result.get("target_healing_received", 0.0) for result in results), 1
-        ),
-        "target_ending_health": round(
-            sum(result.get("target_ending_health", 0.0) for result in results), 1
-        ),
-        "target_effective_max_health": round(
-            sum(result.get("target_effective_max_health", 0.0) for result in results), 1
-        ),
-        "target_effective_health": round(
-            sum(_target_effective_health(result) for result in results), 1
-        ),
-        "overkill": round(sum(_legacy_overkill(result) for result in results), 1),
-        "ability_damage": round(sum(result["ability_damage"] for result in results), 1),
-        "auto_attack_damage": round(
-            sum(result["auto_attack_damage"] for result in results), 1
-        ),
-        "damage_by_type": {
-            damage_type: round(amount, 1)
-            for damage_type, amount in damage_types.items()
-        },
-        "breakdown": breakdown,
-        # Each target runs the same ordered package independently. Preserve
-        # the resulting recovery receipts when the public response aggregates
-        # those target results, otherwise the frontend would lose standalone
-        # self-healing even though every per-target engine result emitted it.
-        "self_healing": round(
-            sum(float(result.get("self_healing", 0.0)) for result in results), 1
-        ),
-        "self_healing_events": [
-            event
-            for result in results
-            for event in result.get("self_healing_events", [])
-        ],
-        # Existing result cards expect scalar effective defenses.  The first
-        # selected enemy is the primary target; every target's values are also
-        # available in the per-target table.
-        "effective_mr": primary["effective_mr"],
-        "effective_armor": primary["effective_armor"],
-        "cast_timeline": primary.get("cast_timeline", []),
-        "rotation": dict(primary.get("rotation") or {}),
-        "resource_spent": primary.get("resource_spent", 0.0),
-        "resource_remaining": primary.get("resource_remaining", 0.0),
-        "notes": list(primary.get("notes", [])),
-        "timeline_coverage": timeline_coverage,
-        "auto_attack_policy": dict(primary.get("auto_attack_policy", {})),
-        "auto_attack_schedule": dict(primary.get("auto_attack_schedule", {})),
-    }
-
-
 def _comparison_curve(
     champion_data: dict,
     level: int,
@@ -1064,7 +732,7 @@ def _comparison_curve(
             one_rotation=False,
         )
         if not enemies:
-            result = _serialize_fight_result(
+            result = serialize_fight_result(
                 run_fight(champion_data, level, items, params)
             )
         else:
@@ -1127,10 +795,10 @@ def _comparison_curve(
                 target_results.append(
                     {
                         "target": _public_loadout_summary(enemy),
-                        "result": _serialize_fight_result(target_result),
+                        "result": serialize_fight_result(target_result),
                     }
                 )
-            result = _aggregate_public_results(
+            result = aggregate_public_results(
                 [target["result"] for target in target_results]
             )
         total = float(result["total_damage"])
@@ -1853,110 +1521,51 @@ def _calculate_response(data: Mapping[str, object]) -> tuple[Any, int]:
     receipt's model prediction is exactly the number the UI displayed.
     Returns the Flask ``(payload, status)`` pair; caching and rate
     limiting behave identically to the original route.
+
+    Validation runs through the shared scenario boundary
+    (``parse_scenario_request``/``resolve_scenario``) so calculate, optimize,
+    and BIS reject the same malformed payloads with the same messages
+    (issue #138).
     """
     try:
-        champion_name = _request_string(data, "champion", required=True)
-        level = _request_int(data, "level", 1, 1, MAX_LEVEL)
-        item_names = _request_string_list(data, "items", maximum=6)
-        boots_name = _request_string(data, "boots")
-        fight_params = FightParams.from_request(data)
-        require_level_within_cap(
-            level, fight_params.role, fight_params.role_quest_complete
-        )
-        include_crossover = data.get("include_crossover", False)
-        if not isinstance(include_crossover, bool):
-            raise ValueError("include_crossover must be true or false")
-        enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
-        ally_requests = parse_roster(data, "allies", maximum=MAX_ALLIES)
+        request = parse_scenario_request(data)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
     cache_key = None
     if _result_cache_enabled():
-        cache_key = stable_cache_key("calculate", data)
+        cache_key = stable_cache_key(
+            _OPERATION_POLICY["calculate"]["cache_namespace"], data
+        )
         cached_payload = cache_get(cache_key)
         if cached_payload is not None:
             return jsonify(cached_payload)
 
     try:
-        champion_data = _load_public_champion(champion_name)
-    except LookupError as exc:
-        return jsonify({"error": str(exc)}), 404
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 422
-    try:
-        fight_params.validate_for_champion(champion_data["name"], level)
-        _validate_champion_options(champion_data["name"], data)
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    # Resolve and validate the inventory in the same backend contract used by BIS.
-    try:
-        resolved_boots = (
-            _resolve_named_item(boots_name, kind="Boots") if boots_name else None
-        )
-        ordinary_items = [_resolve_named_item(item_name) for item_name in item_names]
-        validate_resolved_loadout(
-            ordinary_items,
-            boots=resolved_boots,
-            role=fight_params.role,
-            role_quest_complete=fight_params.role_quest_complete,
-        )
-        require_calculation_item_coverage(
-            ([resolved_boots] if resolved_boots else []) + ordinary_items,
-            participant="Attacker",
-            allow_ally_effects=True,
-        )
+        resolved = resolve_scenario(request)
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
-    items = ([resolved_boots] if resolved_boots else []) + ordinary_items
 
-    try:
-        enemies = [loadout.resolve() for loadout in enemy_requests]
-        allies = [loadout.resolve() for loadout in ally_requests]
-        require_roster_fight_window_support(
-            fight_params, enemies=enemies, allies=allies
-        )
-        for enemy in enemies:
-            participant = f"Enemy {enemy.champion_data['name']}"
-            require_calculation_item_coverage(
-                list(enemy.item_data), participant=participant
-            )
-            require_target_item_coverage(list(enemy.item_data))
-        for ally in allies:
-            participant = f"Ally {ally.champion_data['name']}"
-            require_calculation_item_coverage(
-                list(ally.item_data),
-                participant=participant,
-                allow_ally_effects=True,
-            )
-    except KeyError as exc:
-        missing = exc.args[0] if exc.args else "requested data"
-        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+    champion_data = resolved.champion_data
+    level = request.level
+    items = list(resolved.items)
+    enemies = list(resolved.enemies)
+    allies = list(resolved.allies)
+    fight_params = resolved.fight_params
+    ally_effects = resolved.ally_effects
+    include_crossover = request.include_crossover
 
-    rate_limit_response = _spend_rate_limit("calculate")
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["calculate"]["rate_limit_scope"]
+    )
     if rate_limit_response is not None:
         return rate_limit_response
 
-    ally_effects = tuple(
-        effect
-        for ally in allies
-        if ally.request.ally_effects_enabled
-        for effect in resolve_ally_stat_effects(ally.item_data)
-    )
-    if ally_effects:
-        fight_params = replace(
-            fight_params,
-            ally_stat_bonuses=combine_ally_stat_effects(ally_effects),
-        )
-
     if not enemies:
         result = run_fight(champion_data, level, items, fight_params)
-        response = _serialize_fight_result(result)
+        response = serialize_fight_result(result)
         if include_crossover:
             _add_comparison_curve(
                 response, champion_data, level, items, fight_params, enemies
@@ -2025,40 +1634,7 @@ def _calculate_response(data: Mapping[str, object]) -> tuple[Any, int]:
 
     target_results = []
     for target_index, enemy in enumerate(enemies):
-        target_params = replace(
-            fight_params,
-            roster_target_index=target_index,
-            roster_target_count=len(enemies),
-            target_health=enemy.stats["health"],
-            target_bonus_health=enemy.stats["bonus_health"],
-            target_armor=enemy.stats["armor"],
-            target_magic_resistance=enemy.stats["magic_resistance"],
-            target_magic_shield=enemy.defenses.magic_shield,
-            target_physical_shield=enemy.defenses.physical_shield,
-            target_general_shield=enemy.defenses.general_shield,
-            target_basic_damage_multiplier=enemy.defenses.basic_damage_multiplier,
-            target_basic_damage_flat_reduction=(
-                enemy.defenses.basic_damage_flat_reduction
-            ),
-            target_basic_damage_flat_reduction_cap=(
-                enemy.defenses.basic_damage_flat_reduction_cap
-            ),
-            target_critical_strike_damage_multiplier=(
-                enemy.defenses.critical_strike_damage_multiplier
-            ),
-            target_threshold_shield_amount=enemy.defenses.threshold_shield_amount,
-            target_threshold_shield_health_ratio=(
-                enemy.defenses.threshold_shield_health_ratio
-            ),
-            target_threshold_shield_duration=(enemy.defenses.threshold_shield_duration),
-            target_threshold_shield_damage_type=(
-                enemy.defenses.threshold_shield_damage_type
-            ),
-            target_threshold_health_bonus=enemy.defenses.threshold_health_bonus,
-            target_threshold_health_heal=enemy.defenses.threshold_health_heal,
-            target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
-            target_threshold_health_duration=(enemy.defenses.threshold_health_duration),
-        )
+        target_params = resolved.target_fight_params[target_index]
         result = run_fight(champion_data, level, items, target_params)
         if not fight_params.one_rotation:
             # Lifeline defenses are priced from the ordered ledger; a timed
@@ -2073,13 +1649,10 @@ def _calculate_response(data: Mapping[str, object]) -> tuple[Any, int]:
         target_results.append(
             {
                 "target": _public_loadout_summary(enemy),
-                "result": _serialize_fight_result(result),
+                "result": serialize_fight_result(result),
             }
         )
-
-    response = _aggregate_public_results(
-        [target["result"] for target in target_results]
-    )
+    response = aggregate_public_results([target["result"] for target in target_results])
     response.update(
         {
             "targets": target_results,
@@ -2149,409 +1722,6 @@ def _calculate_response(data: Mapping[str, object]) -> tuple[Any, int]:
     return jsonify(response)
 
 
-def _bis_main_request(data: Mapping[str, object]) -> ChampionLoadout:
-    """Parse the actual main champion used by focused BIS requests."""
-    return ChampionLoadout.from_request(
-        {
-            "champion": data.get("champion", ""),
-            "level": data.get("level", 1),
-            "items": data.get("items", []),
-            "boots": data.get("boots", ""),
-            "item_options": data.get("item_options"),
-            "role": data.get("role", ""),
-            "role_quest_complete": data.get("role_quest_complete", False),
-            "ally_effects_enabled": data.get("ally_effects_enabled", True),
-            # Focused BIS must use the same authored rank allocation as the
-            # ordinary calculate/optimize paths.  Omitting this field makes
-            # ChampionLoadout silently fall back to level-derived ranks.
-            "ability_ranks": data.get("ability_ranks"),
-            "champion_options": data.get("champion_options"),
-            "cast_order": data.get("cast_order"),
-        },
-        field="attacker",
-    )
-
-
-def _bis_replaced_loadout(
-    loadout: ChampionLoadout,
-    *,
-    slot_index: int,
-    slot_kind: str,
-    candidate_name: str,
-    candidate_item_options: dict[str, int | float] | None = None,
-) -> ChampionLoadout:
-    """Replace one ordinary or boots slot while preserving sourced options."""
-    item_options = dict(loadout.item_options or {})
-    if candidate_item_options:
-        item_options[candidate_name] = dict(candidate_item_options)
-    if slot_kind == "boots":
-        return replace(loadout, boots=candidate_name, item_options=item_options)
-    items = list(loadout.items)
-    if slot_index < 0 or slot_index > MAX_LOADOUT_ITEMS - 1:
-        raise ValueError("slot_index must be between 0 and 5")
-    if slot_index >= len(items):
-        # Empty browser slots are not serialized as placeholder items; the
-        # next completed candidate therefore occupies the next legal slot.
-        items.append(candidate_name)
-    else:
-        items[slot_index] = candidate_name
-    # The browser represents empty slots as absent request entries.  A
-    # candidate is therefore the only item introduced for a previously empty
-    # slot; duplicate validation remains owned by ChampionLoadout.resolve.
-    return replace(loadout, items=tuple(items), item_options=item_options)
-
-
-def _role_scoped_bis_candidates(
-    candidates: list[dict],
-    *,
-    role: str,
-) -> list[dict]:
-    """Keep roster BIS candidates within the selected role's sourced shop scope.
-
-    The item cache carries Riot's shop tags for each completed item.  A roster
-    role is an explicit scenario input, so using those tags here prevents a
-    support-only item from being recommended to a top/mid enemy and prevents a
-    support ally's BIS from collapsing into raw-health tank items.  This is a
-    candidate-legality boundary, not a champion archetype or damage heuristic;
-    the surviving candidates are still scored by the coupled event timeline.
-    """
-    return role_scoped_shop_items(candidates, role)
-
-
-def _bis_candidate_pool(
-    slot_kind: str,
-    *,
-    boots_tier: int,
-    role: str = "",
-    role_quest_complete: bool = False,
-) -> list[dict]:
-    legal = (
-        get_eligible_boots(tier=boots_tier)
-        if slot_kind == "boots"
-        else get_eligible_legendaries()
-    )
-    supported = optimizer_supported_items(legal)
-    scoped = (
-        supported
-        if slot_kind == "boots"
-        else _role_scoped_bis_candidates(supported, role=role)
-    )
-    if slot_kind != "boots":
-        scoped = role_quest_legal_items(
-            scoped, role=role, role_quest_complete=role_quest_complete
-        )
-    return sorted(scoped, key=lambda item: item.get("name", ""))
-
-
-def _roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, object]]:
-    """Return unsupported target mechanics for the coupled roster.
-
-    Roster BIS candidates are later used as passive targets by the main
-    champion's event timeline. Do not apply a candidate whose target-side
-    item effect is outside the sourced target model; that would either fail
-    the next main optimization late or silently ignore the mechanic.
-    """
-    blocked: list[dict[str, object]] = []
-    for loadout in loadouts:
-        coverage = target_build_coverage(list(loadout.item_data))
-        for entry in coverage.get("blocked", []):
-            blocked.append(
-                {
-                    "champion": loadout.champion_data.get(
-                        "name", loadout.request.champion
-                    ),
-                    "name": entry.get("name", ""),
-                    "reason": entry.get("reason", ""),
-                }
-            )
-    return blocked
-
-
-def _enemy_bis_rank_key(
-    objective: Mapping[str, object],
-    survival: Mapping[str, object],
-    *,
-    duration: float,
-) -> tuple[float, ...]:
-    """Order enemy candidates by a survival-gated, event-derived objective.
-
-    A roster enemy must remain a live participant before its outgoing damage
-    can be useful, but surviving builds should not all collapse to a health
-    race.  The first components are a hard event gate (alive through the
-    requested window) and survival time, followed by damage dealt before
-    defeat (the timeline's TTD-truncated threat).  Effective health and
-    recovery actually applied by the timeline are deterministic tie-breakers.
-    This is deliberately champion/event based: it does not infer a role or
-    assign a damage/tank archetype from the champion name.
-    """
-    death_time = survival.get("death_time")
-    survival_time = float(duration if death_time is None else death_time)
-    threat = float(objective.get("focus_damage_before_death", 0.0))
-    effective_health = float(survival.get("effective_health", 0.0))
-    healing = float(survival.get("healing_received", 0.0))
-    support_shield = float(survival.get("support_shield_received", 0.0))
-    shield_absorbed = float(survival.get("shield_absorbed", 0.0))
-    # Survival is a gate, not an archetype prior.  Survival time still
-    # separates candidates that both die before the window; once candidates
-    # live equally long, modeled threat is the first discriminator.  Remaining
-    # event-derived durability/recovery fields only break ties.
-    survived_window = 1.0 if death_time is None else 0.0
-    return (
-        survived_window,
-        survival_time,
-        threat,
-        effective_health,
-        healing,
-        support_shield,
-        shield_absorbed,
-    )
-
-
-# Best-in-slot is an objective selector, not a second stat-only optimizer.
-# Keep the definitions in one place so the API receipt and the browser filter
-# cannot silently disagree about direction or units.
-_BIS_OBJECTIVES: dict[str, dict[str, str]] = {
-    "overall": {
-        "label": "Overall",
-        "direction": "higher",
-        "metric": "event-ordered team-fight value",
-    },
-    "kill": {
-        "label": "Kill pressure",
-        "direction": "lower",
-        "metric": "time to first target defeat",
-    },
-    "survival": {
-        "label": "Survival",
-        "direction": "higher",
-        "metric": "effective health (event-applied)",
-    },
-    "damage": {
-        "label": "Damage",
-        "direction": "higher",
-        "metric": "damage before focus defeat",
-    },
-    "utility": {
-        "label": "Utility",
-        "direction": "higher",
-        "metric": "healing, shields, and support value",
-    },
-}
-
-_BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
-    "Eclipse": (
-        "Ever Rising Moon's two-hit trigger creates a timestamped self shield "
-        "with its sourced melee/ranged amount and two-second expiry."
-    ),
-    "Death's Dance": (
-        "Ignore Pain splits post-mitigation physical/magic damage into sourced "
-        "true-damage ticks; Defy clears the remaining store and heals on a "
-        "qualifying takedown."
-    ),
-    "Sundered Sky": (
-        "Lightshield Strike's first-hit heal is timestamped and included in "
-        "the participant survival/eHP ledger; any sourced temporary-health "
-        "overheal is applied through the same ordered heal event."
-    ),
-}
-
-# Retained as an explicit API field for clients that display the audit
-# contract.  A non-empty entry means the candidate is withheld; CP6 now
-# certifies Eclipse and Death's Dance through the ordered event walk.
-_BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {}
-
-
-def _bis_defensive_effect_receipt(
-    item_name: str, survival: Mapping[str, object]
-) -> dict[str, object]:
-    """Describe why a defensive item did or did not affect candidate eHP."""
-    certified_note = _BIS_CERTIFIED_DEFENSIVE_EFFECTS.get(item_name)
-    if certified_note is None:
-        return {"status": "no_special_defensive_effect", "sources": []}
-    return {
-        "status": "certified",
-        "sources": [item_name],
-        "note": certified_note,
-        "evidence": {
-            "healing_received": round(
-                float(survival.get("healing_received", 0.0) or 0.0), 1
-            ),
-            "temporary_health_received": round(
-                float(survival.get("temporary_health_received", 0.0) or 0.0), 1
-            ),
-            "effective_health": round(
-                float(survival.get("effective_health", 0.0) or 0.0), 1
-            ),
-        },
-    }
-
-
-def _bis_objective_meta(key: str) -> dict[str, str]:
-    """Return a defensive copy of the API's objective contract."""
-    meta = _BIS_OBJECTIVES.get(key)
-    if meta is None:
-        raise ValueError(
-            "objective must be one of: overall, kill, survival, damage, utility"
-        )
-    return {"key": key, **meta}
-
-
-def _bis_time_to_target_defeat(
-    combat: Mapping[str, object],
-    *,
-    subject_team: str,
-    focus_id: str,
-    duration: float,
-) -> float:
-    """Return an explicit event-derived kill-time objective in seconds.
-
-    For a main/ally item, kill pressure means the first enemy defeat.  For an
-    enemy item, it means how quickly the selected enemy is defeated.  An
-    undefeated participant is assigned the requested window, never zero or a
-    guessed extrapolation.
-    """
-    participants = combat.get("participants", [])
-    if not isinstance(participants, list):
-        participants = []
-    if subject_team == "enemy":
-        participant_ids = {focus_id}
-    else:
-        participant_ids = {
-            str(row.get("participant_id", ""))
-            for row in participants
-            if isinstance(row, Mapping) and row.get("team") == "enemy"
-        }
-    times: list[float] = []
-    for row in participants:
-        if (
-            not isinstance(row, Mapping)
-            or str(row.get("participant_id", "")) not in participant_ids
-        ):
-            continue
-        survival = row.get("survival", {})
-        if not isinstance(survival, Mapping):
-            continue
-        death_time = survival.get("death_time")
-        if death_time is None:
-            continue
-        try:
-            parsed = float(death_time)
-        except (TypeError, ValueError):
-            continue
-        if math.isfinite(parsed):
-            times.append(max(0.0, min(duration, parsed)))
-    return min(times, default=duration)
-
-
-def _bis_objective_score(
-    objective_key: str,
-    *,
-    subject_team: str,
-    focus_id: str,
-    combat: Mapping[str, object],
-    objective: Mapping[str, object],
-    focus: Mapping[str, object],
-) -> tuple[float, str, dict[str, float], tuple[float, ...] | None]:
-    """Derive one candidate's selected objective from the shared timeline."""
-    focus_survival = focus.get("survival", {})
-    if not isinstance(focus_survival, Mapping):
-        focus_survival = {}
-    duration = float(combat.get("duration", 0.0) or 0.0)
-    if duration <= 0.0:
-        duration = DEFAULT_FIGHT_DURATION
-    focus_damage = float(objective.get("focus_damage_before_death", 0.0) or 0.0)
-    effective_health = float(focus_survival.get("effective_health", 0.0) or 0.0)
-    healing = float(focus_survival.get("healing_received", 0.0) or 0.0)
-    support_shield = float(focus_survival.get("support_shield_received", 0.0) or 0.0)
-    support_value = float(objective.get("focus_support_value", 0.0) or 0.0)
-    if objective_key == "overall":
-        if subject_team == "main":
-            score = focus_damage
-            metric = "main TTD (survival-coupled)"
-            components = {
-                "damage_before_death": focus_damage,
-                "effective_health": effective_health,
-                "healing": healing,
-                "support_shield_received": support_shield,
-            }
-            return score, metric, components, None
-        if subject_team == "ally":
-            team_damage = float(
-                objective.get("main_team_damage_before_death", 0.0) or 0.0
-            )
-            score = team_damage + support_value + effective_health
-            metric = "team damage + ally utility + effective health"
-            components = {
-                "main_team_damage_before_death": team_damage,
-                "outgoing_support": support_value,
-                "healing": float(objective.get("focus_healing", 0.0) or 0.0),
-                "effective_health": effective_health,
-            }
-            return score, metric, components, None
-        survival_time = _bis_time_to_target_defeat(
-            combat,
-            subject_team=subject_team,
-            focus_id=focus_id,
-            duration=duration,
-        )
-        rank_key = _enemy_bis_rank_key(objective, focus_survival, duration=duration)
-        score = focus_damage
-        metric = "enemy survival gate · threat before defeat"
-        components = {
-            "survival_time": survival_time,
-            "effective_health": effective_health,
-            "threat_before_defeat": focus_damage,
-            "healing": healing,
-            "shield_absorbed": float(focus_survival.get("shield_absorbed", 0.0) or 0.0),
-        }
-        return score, metric, components, rank_key
-
-    if objective_key == "kill":
-        score = _bis_time_to_target_defeat(
-            combat,
-            subject_team=subject_team,
-            focus_id=focus_id,
-            duration=duration,
-        )
-        metric = _BIS_OBJECTIVES[objective_key]["metric"]
-        components = {
-            "time_to_target_defeat": score,
-            "damage_before_death": focus_damage,
-        }
-        return score, metric, components, None
-    if objective_key == "survival":
-        score = effective_health
-        metric = _BIS_OBJECTIVES[objective_key]["metric"]
-        components = {
-            "effective_health": effective_health,
-            "healing": healing,
-            "support_shield_received": support_shield,
-        }
-        return score, metric, components, None
-    if objective_key == "damage":
-        if subject_team == "ally":
-            score = float(objective.get("main_team_damage_before_death", 0.0) or 0.0)
-        else:
-            score = focus_damage
-        metric = _BIS_OBJECTIVES[objective_key]["metric"]
-        components = {
-            "damage_before_death": score,
-            "effective_health": effective_health,
-        }
-        return score, metric, components, None
-    # Utility is intentionally an additive receipt of values that the event
-    # walk actually applied.  It does not infer movement, range, or a value
-    # for an unmodelled item tooltip.
-    score = support_value + healing + support_shield
-    metric = _BIS_OBJECTIVES[objective_key]["metric"]
-    components = {
-        "support_value": support_value,
-        "healing": healing,
-        "support_shield_received": support_shield,
-    }
-    return score, metric, components, None
-
-
 @app.route("/api/bis", methods=["POST"])
 def api_bis():
     """Rank one slot from the same coupled participant event model.
@@ -2560,9 +1730,18 @@ def api_bis():
     historical stat/archetype estimator.  ``subject_team`` identifies whose
     build is being changed; all other selected champions remain active in the
     timeline and the response exposes the metric components and coverage.
+
+    Request parsing and validation run through the shared scenario boundary
+    (``parse_scenario_request``/``resolve_scenario``), so BIS rejects the
+    same malformed payloads and calc-blocked participant items as
+    /api/calculate and /api/optimize (issue #138).  The objective definitions
+    and candidate scoring live in calculator.bis.
     """
     try:
         data = _json_object()
+        request = parse_scenario_request(
+            data, deterministic=True, parse_crossover=False
+        )
         subject_team = _request_string(data, "subject_team", "main")
         if subject_team not in {"main", "ally", "enemy"}:
             raise ValueError("subject_team must be main, ally, or enemy")
@@ -2572,55 +1751,37 @@ def api_bis():
             raise ValueError("slot_kind must be item or boots")
         subject_index = _request_int(data, "subject_index", 0, 0, 4)
         objective_key = _request_string(data, "objective", "overall")
-        objective_meta = _bis_objective_meta(objective_key)
-        fight_params = FightParams.from_request(data, deterministic=True)
-        main_request = _bis_main_request(data)
-        enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
-        ally_requests = parse_roster(data, "allies", maximum=MAX_ALLIES)
-        if subject_team == "ally" and subject_index >= len(ally_requests):
+        objective_meta = bis_objective_meta(objective_key)
+        if subject_team == "ally" and subject_index >= len(request.allies):
             raise ValueError("subject_index is outside the selected ally roster")
-        if subject_team == "enemy" and subject_index >= len(enemy_requests):
+        if subject_team == "enemy" and subject_index >= len(request.enemies):
             raise ValueError("subject_index is outside the selected enemy roster")
-        if subject_team != "main" and slot_kind == "boots":
-            # Roster cards use the same tier contract as their role; ordinary
-            # roster roles default to tier-2 boots unless explicitly mid quest.
-            pass
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
     cache_key = None
     if _result_cache_enabled():
-        cache_key = stable_cache_key("bis", data)
+        cache_key = stable_cache_key(_OPERATION_POLICY["bis"]["cache_namespace"], data)
         cached_payload = cache_get(cache_key)
         if cached_payload is not None:
             return jsonify(cached_payload)
 
     try:
+        resolved = resolve_scenario(request)
+        main_request = bis_main_request(request, data)
         main_loadout = main_request.resolve()
-        # Validate the focused main request against the same champion-specific
-        # rank and option contracts as /api/calculate and /api/optimize.  The
-        # FightParams parser checks JSON shape/ranges; this second gate checks
-        # level legality and module-declared option keys before any candidate
-        # evaluation starts.
-        fight_params.validate_for_champion(
-            main_loadout.champion_data["name"], main_request.level
-        )
-        _validate_champion_options(main_loadout.champion_data["name"], data)
         candidate_item_options = validate_item_input_options(
             data.get("candidate_item_options")
         )
-        enemies = [loadout.resolve() for loadout in enemy_requests]
-        allies = [loadout.resolve() for loadout in ally_requests]
-        require_roster_fight_window_support(
-            fight_params, enemies=enemies, allies=allies
-        )
+        enemies = list(resolved.enemies)
+        allies = list(resolved.allies)
         subject_base = (
             main_request
             if subject_team == "main"
             else (
-                ally_requests[subject_index]
+                request.allies[subject_index]
                 if subject_team == "ally"
-                else enemy_requests[subject_index]
+                else request.enemies[subject_index]
             )
         )
         if subject_team != "main" and not subject_base.role:
@@ -2636,7 +1797,7 @@ def api_bis():
         role = subject_base.role
         if role == "mid" and subject_base.role_quest_complete:
             boots_tier = 3
-        candidates = _bis_candidate_pool(
+        candidates = bis_candidate_pool(
             slot_kind,
             boots_tier=boots_tier,
             role=role,
@@ -2663,19 +1824,24 @@ def api_bis():
                 for candidate in candidates
                 if candidate.get("name") != equipped_slot_item
             ]
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
-    rate_limit_response = _spend_rate_limit("calculate")
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["bis"]["rate_limit_scope"]
+    )
     if rate_limit_response is not None:
         return rate_limit_response
 
     ranked: list[dict] = []
     withheld_candidates: list[dict[str, object]] = []
     target_coverage_filtered: list[dict[str, object]] = []
+    fight_params = resolved.fight_params
     for candidate in candidates:
         try:
             candidate_params = fight_params
@@ -2690,7 +1856,7 @@ def api_bis():
                         candidate["name"]: candidate_specific_item_options,
                     },
                 )
-            candidate_request = _bis_replaced_loadout(
+            candidate_request = bis_replaced_loadout(
                 subject_base,
                 slot_index=slot_index,
                 slot_kind=slot_kind,
@@ -2698,28 +1864,6 @@ def api_bis():
                 candidate_item_options=candidate_specific_item_options,
             )
             resolved_subject = candidate_request.resolve()
-            if (
-                subject_team != "enemy"
-                and candidate["name"] in _BIS_UNMODELED_DEFENSIVE_EFFECTS
-            ):
-                reason = _BIS_UNMODELED_DEFENSIVE_EFFECTS[candidate["name"]]
-                withheld_candidates.append(
-                    {
-                        "name": candidate["name"],
-                        "icon": _https_icon(candidate.get("icon", "")),
-                        "reason": "objective_effect_unavailable",
-                        "objective": objective_meta,
-                        "detail": reason,
-                        "timeline_coverage": {
-                            "complete": False,
-                            "certification": "objective_effect_unavailable",
-                            "exact_sources": [],
-                            "coarse_sources": [candidate["name"]],
-                            "note": reason,
-                        },
-                    }
-                )
-                continue
             candidate_main = (
                 resolved_subject if subject_team == "main" else main_loadout
             )
@@ -2729,7 +1873,7 @@ def api_bis():
                 candidate_enemies[subject_index] = resolved_subject
             elif subject_team == "ally":
                 candidate_allies[subject_index] = resolved_subject
-            blocked_targets = _roster_target_coverage(
+            blocked_targets = roster_target_coverage(
                 [*candidate_enemies, *candidate_allies]
             )
             if blocked_targets:
@@ -2792,7 +1936,7 @@ def api_bis():
                 == ("main" if subject_team == "main" else subject_id)
             )
             focus_id = "main" if subject_team == "main" else subject_id
-            score, metric, components, rank_key = _bis_objective_score(
+            score, metric, components, rank_key = bis_objective_score(
                 objective_key,
                 subject_team=subject_team,
                 focus_id=focus_id,
@@ -2810,7 +1954,7 @@ def api_bis():
                     "components": components,
                     "stats": candidate.get("stats", {}),
                     "survival": focus["survival"],
-                    "defensive_effect_receipt": _bis_defensive_effect_receipt(
+                    "defensive_effect_receipt": bis_defensive_effect_receipt(
                         candidate["name"], focus["survival"]
                     ),
                     "timeline_coverage": combat["timeline_coverage"],
@@ -2888,8 +2032,8 @@ def api_bis():
     result = {
         "objective": objective_meta,
         "defensive_effects": {
-            "certified": _BIS_CERTIFIED_DEFENSIVE_EFFECTS,
-            "withheld": _BIS_UNMODELED_DEFENSIVE_EFFECTS,
+            "certified": BIS_CERTIFIED_DEFENSIVE_EFFECTS,
+            "withheld": BIS_UNMODELED_DEFENSIVE_EFFECTS,
         },
         "subject_team": subject_team,
         "subject_index": subject_index,
@@ -2965,11 +2109,20 @@ def api_bis():
 
 @app.route("/api/optimize", methods=["POST"])
 def api_optimize():
-    """Find the optimal item build for a champion."""
+    """Find the optimal item build for a champion.
+
+    Request parsing and validation run through the shared scenario boundary
+    (``parse_scenario_request``/``resolve_scenario``), so optimize rejects
+    the same malformed payloads and calc-blocked participant items as
+    /api/calculate and /api/bis (issue #138).  Optimizer-only fields
+    (objective, locked items, budgets) are parsed after the shared call, and
+    the deterministic result is cached under the ``optimize`` namespace.
+    """
     try:
         data = _json_object()
-        champion_name = _request_string(data, "champion", required=True)
-        level = _request_int(data, "level", 1, 1, MAX_LEVEL)
+        request = parse_scenario_request(
+            data, deterministic=True, parse_crossover=False
+        )
         objective = _request_string(data, "objective", "total_damage")
         locked_items = _request_string_list(data, "locked_items", maximum=6)
         locked_boots = _request_string(data, "locked_boots")
@@ -3006,27 +2159,34 @@ def api_optimize():
         if not isinstance(include_starters, bool):
             raise ValueError("include_starters must be true or false")
         time_budget_ms = _request_int(data, "time_budget_ms", 12_000, 100, 60_000)
-        fight_params = FightParams.from_request(data, deterministic=True)
-        require_level_within_cap(
-            level, fight_params.role, fight_params.role_quest_complete
-        )
-        enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
-        ally_requests = parse_roster(data, "allies", maximum=MAX_ALLIES)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
+    cache_key = None
+    if _result_cache_enabled():
+        # Optimize is deterministic (``deterministic=True``) and the most
+        # expensive endpoint (worst case ~1.8 CPU seconds), so it consults
+        # and populates the same result cache as calculate/BIS.
+        cache_key = stable_cache_key(
+            _OPERATION_POLICY["optimize"]["cache_namespace"], data
+        )
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
     try:
-        champion_data = _load_public_champion(champion_name)
+        resolved = resolve_scenario(request)
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
     except ValueError as exc:
-        return jsonify({"error": str(exc)}), 422
-
-    try:
-        fight_params.validate_for_champion(champion_data["name"], level)
-        _validate_champion_options(champion_data["name"], data)
-    except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+
+    champion_data = resolved.champion_data
+    level = request.level
+    fight_params = resolved.fight_params
+    enemies = list(resolved.enemies)
+    allies = list(resolved.allies)
+    target_fight_params = resolved.target_fight_params
 
     # Optimizer-specific parameters
     if objective not in ("total_damage", "physical_damage", "magic_damage"):
@@ -3077,71 +2237,9 @@ def api_optimize():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
-    try:
-        enemies = [loadout.resolve() for loadout in enemy_requests]
-        allies = [loadout.resolve() for loadout in ally_requests]
-        require_roster_fight_window_support(
-            fight_params, enemies=enemies, allies=allies
-        )
-        for enemy in enemies:
-            require_target_item_coverage(list(enemy.item_data))
-    except KeyError as exc:
-        missing = exc.args[0] if exc.args else "requested data"
-        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    ally_effects = tuple(
-        effect
-        for ally in allies
-        if ally.request.ally_effects_enabled
-        for effect in resolve_ally_stat_effects(ally.item_data)
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["optimize"]["rate_limit_scope"]
     )
-    if ally_effects:
-        fight_params = replace(
-            fight_params,
-            ally_stat_bonuses=combine_ally_stat_effects(ally_effects),
-        )
-
-    target_fight_params = tuple(
-        replace(
-            fight_params,
-            roster_target_index=target_index,
-            roster_target_count=len(enemies),
-            target_health=enemy.stats["health"],
-            target_bonus_health=enemy.stats["bonus_health"],
-            target_armor=enemy.stats["armor"],
-            target_magic_resistance=enemy.stats["magic_resistance"],
-            target_magic_shield=enemy.defenses.magic_shield,
-            target_physical_shield=enemy.defenses.physical_shield,
-            target_general_shield=enemy.defenses.general_shield,
-            target_basic_damage_multiplier=enemy.defenses.basic_damage_multiplier,
-            target_basic_damage_flat_reduction=(
-                enemy.defenses.basic_damage_flat_reduction
-            ),
-            target_basic_damage_flat_reduction_cap=(
-                enemy.defenses.basic_damage_flat_reduction_cap
-            ),
-            target_critical_strike_damage_multiplier=(
-                enemy.defenses.critical_strike_damage_multiplier
-            ),
-            target_threshold_shield_amount=enemy.defenses.threshold_shield_amount,
-            target_threshold_shield_health_ratio=(
-                enemy.defenses.threshold_shield_health_ratio
-            ),
-            target_threshold_shield_duration=(enemy.defenses.threshold_shield_duration),
-            target_threshold_shield_damage_type=(
-                enemy.defenses.threshold_shield_damage_type
-            ),
-            target_threshold_health_bonus=enemy.defenses.threshold_health_bonus,
-            target_threshold_health_heal=enemy.defenses.threshold_health_heal,
-            target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
-            target_threshold_health_duration=(enemy.defenses.threshold_health_duration),
-        )
-        for target_index, enemy in enumerate(enemies)
-    )
-
-    rate_limit_response = _spend_rate_limit("optimize")
     if rate_limit_response is not None:
         return rate_limit_response
 
@@ -3198,6 +2296,8 @@ def api_optimize():
             )
         return jsonify(payload), 400
 
+    if cache_key is not None:
+        cache_set(cache_key, result)
     return jsonify(result)
 
 
@@ -3818,13 +2918,19 @@ def api_metrics_event():
 def api_metrics():
     """Beta success scorecard with the PASS/FAIL gate (auth-gated).
 
-    The scorecard is computed by scripts/beta_metrics.compute_scorecard so
-    the dashboard endpoint and the ``scripts/beta_metrics.py`` CLI share
-    one definition of the gate (see docs/beta-metrics.md).
+    The scorecard is computed by src/metrics.compute_scorecard so the
+    dashboard endpoint and the ``scripts/beta_metrics.py`` CLI share one
+    definition of the gate (see docs/beta-metrics.md).  The module ships
+    inside the runtime package (issue #144).
+
+    TODO(cross-group): point docs/beta-metrics.md at src/metrics.py and add
+    an authenticated /api/metrics smoke to .github/workflows/tests.yml and
+    docs/deploy.md (issue #144 findings §5.5/§5.7; tests/test_deployment_package.py
+    already covers the identical deployed file set locally).
     """
     try:
         # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
-        from scripts.beta_metrics import compute_scorecard
+        from metrics import compute_scorecard
     except ImportError as exc:
         app.logger.exception("Failed to import the beta metrics scorecard")
         return jsonify({"error": "Metrics module unavailable"}), 503

@@ -1,0 +1,99 @@
+{
+ "name": "Overlord's Bloodmail",
+ "id": 2501,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 550.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Overlord's Bloodmail"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Overlord's Bloodmail"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Tyranny",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Overlord's Bloodmail"
+    ],
+    "binary": [],
+    "evidence": "passive:Tyranny"
+   }
+  },
+  {
+   "atom_id": "damage.execute",
+   "family": "damage",
+   "behavior": "Tyranny",
+   "parameters": {},
+   "relations": [
+    "stats.health",
+    "damage.missing-health"
+   ],
+   "provenance": {
+    "wiki": [
+     "Overlord's Bloodmail"
+    ],
+    "binary": [],
+    "evidence": "passive:Tyranny"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Tyranny",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Overlord's Bloodmail"
+    ],
+    "binary": [],
+    "evidence": "passive:Tyranny"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Tyranny",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Overlord's Bloodmail"
+    ],
+    "binary": [],
+    "evidence": "passive:Tyranny"
+   }
+  }
+ ]
+}

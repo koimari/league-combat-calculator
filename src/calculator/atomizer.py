@@ -86,7 +86,9 @@ class Atomizer:
         key = (atom_id, behavior)
         atom = self._atoms.get(key)
         if atom is None:
-            self._atoms[key] = Atom(atom_id, behavior, source, name, values, units, list(evidence))
+            self._atoms[key] = Atom(
+                atom_id, behavior, source, name, values, units, list(evidence)
+            )
             return
         # merge: keep the first non-empty values, union evidence
         if not atom.values and values:
@@ -106,9 +108,7 @@ def number_and_unit(text: str) -> tuple[list[float], list[str]]:
     '50 (+ 25% AP)' -> ([50.0, 0.25], ['flat', 'ratio'])."""
     values: list[float] = []
     units: list[str] = []
-    for match in re.finditer(
-        r"(-?\d+(?:\.\d+)?)\s*(%|/5s|/s|gold|s)?", text
-    ):
+    for match in re.finditer(r"(-?\d+(?:\.\d+)?)\s*(%|/5s|/s|gold|s)?", text):
         values.append(float(match.group(1)))
         unit = match.group(2) or ""
         if unit == "%":
@@ -158,17 +158,25 @@ def split_effect_fragments(
     one blob (the item-atomizer bug).
     """
     fragments: list[tuple[str, str]] = []
-    branches = effect.get("branches") if isinstance(effect.get("branches"), list) else None
+    branches = (
+        effect.get("branches") if isinstance(effect.get("branches"), list) else None
+    )
     if branches:
         for branch_index, branch in enumerate(branches):
             if isinstance(branch, str):
-                fragments.append((f"{prefix}[{index}].branches[{branch_index}]", branch))
+                fragments.append(
+                    (f"{prefix}[{index}].branches[{branch_index}]", branch)
+                )
             elif isinstance(branch, dict):
                 text = " ".join(
-                    str(branch.get(k, "")) for k in ("description", "name") if branch.get(k)
+                    str(branch.get(k, ""))
+                    for k in ("description", "name")
+                    if branch.get(k)
                 )
                 if text:
-                    fragments.append((f"{prefix}[{index}].branches[{branch_index}]", text))
+                    fragments.append(
+                        (f"{prefix}[{index}].branches[{branch_index}]", text)
+                    )
     description = str(effect.get("description", ""))
     for sentence in re.split(r"(?<=[.!?])\s+", description):
         if sentence.strip():

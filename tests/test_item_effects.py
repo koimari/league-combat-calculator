@@ -158,6 +158,32 @@ def test_cp13_item_state_controls_are_bounded_and_typed() -> None:
         )
 
 
+def test_lord_dominik_amp_receives_holder_context_and_uses_target_bonus_health() -> (
+    None
+):
+    """Giant Slayer receives its current holder and prices target bonus HP."""
+    amp = item_effects.lord_dominik_damage_amp_fraction(
+        attacker_stats={"bonus_health": 500.0},
+        target_bonus_health=750.0,
+        maximum=0.15,
+        bonus_hp_cap=1500.0,
+    )
+    same_target_different_holder = item_effects.lord_dominik_damage_amp_fraction(
+        attacker_stats={"bonus_health": 1500.0},
+        target_bonus_health=750.0,
+        maximum=0.15,
+        bonus_hp_cap=1500.0,
+    )
+    assert amp == pytest.approx(0.075)
+    assert same_target_different_holder == pytest.approx(amp)
+    assert item_effects.lord_dominik_damage_amp_fraction(
+        attacker_stats={},
+        target_bonus_health=2000.0,
+        maximum=0.15,
+        bonus_hp_cap=1500.0,
+    ) == pytest.approx(0.15)
+
+
 def test_actualizer_active_window_is_explicit_and_boundary_clipped() -> None:
     items = _build("Actualizer")
     assert actualizer_active_seconds(
@@ -849,7 +875,7 @@ class TestResolveDamageEffects:
         assert effects.armor_reduction is not None
         assert effects.armor_reduction.average_reduction(10) == pytest.approx(0.24)
         amp_by_item = {
-            effect.item_name: effect.amp_fraction(4.0, 750.0)
+            effect.item_name: effect.amp_fraction(4.0, 750.0, {})
             for effect in effects.damage_amplifiers
         }
         assert amp_by_item == pytest.approx(

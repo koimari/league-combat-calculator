@@ -1,0 +1,141 @@
+{
+ "name": "Force of Entropy",
+ "id": 443061,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 900.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Atrophy",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "passive:Atrophy"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Atrophy",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "passive:Atrophy"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.immobilize",
+   "family": "crowd-control-mobility",
+   "behavior": "Atrophy",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "passive:Atrophy"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Atrophy",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "passive:Atrophy"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Atrophy",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "passive:Atrophy"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Atrophy",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Force of Entropy"
+    ],
+    "binary": [],
+    "evidence": "passive:Atrophy"
+   }
+  }
+ ]
+}

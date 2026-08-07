@@ -1,0 +1,55 @@
+{
+ "name": "Executioner's Calling",
+ "id": 3123,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Executioner's Calling"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Executioner's Calling"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  },
+  {
+   "atom_id": "heal-shield.grievous-wounds",
+   "family": "heal-shield",
+   "behavior": "Grievous Wounds",
+   "parameters": {},
+   "relations": [
+    "heal-shield.heal",
+    "heal-shield.health-regeneration",
+    "damage.dot"
+   ],
+   "provenance": {
+    "wiki": [
+     "Executioner's Calling"
+    ],
+    "binary": [],
+    "evidence": "passive:Grievous Wounds"
+   }
+  }
+ ]
+}

@@ -1,0 +1,117 @@
+{
+ "name": "Darksteel Talons",
+ "id": 443054,
+ "atoms": [
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Darksteel Talons"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Darksteel Talons"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Gash",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Darksteel Talons"
+    ],
+    "binary": [],
+    "evidence": "passive:Gash"
+   }
+  },
+  {
+   "atom_id": "damage.true",
+   "family": "damage",
+   "behavior": "Gash",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Darksteel Talons"
+    ],
+    "binary": [],
+    "evidence": "passive:Gash"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Gash",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Darksteel Talons"
+    ],
+    "binary": [],
+    "evidence": "passive:Gash"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Gash",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Darksteel Talons"
+    ],
+    "binary": [],
+    "evidence": "passive:Gash"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Gash",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Darksteel Talons"
+    ],
+    "binary": [],
+    "evidence": "passive:Gash"
+   }
+  }
+ ]
+}

@@ -1,0 +1,144 @@
+{
+ "name": "Duskblade of Draktharr",
+ "id": 446691,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 50.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.stasis",
+   "family": "crowd-control-mobility",
+   "behavior": "Nightstalker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "passive:Nightstalker"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.untargetable",
+   "family": "crowd-control-mobility",
+   "behavior": "Nightstalker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "passive:Nightstalker"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Nightstalker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "passive:Nightstalker"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Nightstalker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "passive:Nightstalker"
+   }
+  },
+  {
+   "atom_id": "damage.execute",
+   "family": "damage",
+   "behavior": "Nightstalker",
+   "parameters": {},
+   "relations": [
+    "stats.health",
+    "damage.missing-health"
+   ],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "passive:Nightstalker"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Nightstalker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Duskblade of Draktharr"
+    ],
+    "binary": [],
+    "evidence": "passive:Nightstalker"
+   }
+  }
+ ]
+}

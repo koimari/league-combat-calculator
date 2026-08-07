@@ -129,7 +129,9 @@ def _transcend_one_self(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = dict(SLOTS)
 SLOTS["W"] = _arc_of_judgment
 SLOTS["R"] = _transcend_one_self
-SLOTS["Q"] = with_item_on_hits(SLOTS["Q"], effectiveness=0.3, hits=1, triggers=('on_hit',))
+SLOTS["Q"] = with_item_on_hits(
+    SLOTS["Q"], effectiveness=0.3, hits=1, triggers=("on_hit",)
+)
 parse_abilities = build_parser(SLOTS, "Yunara")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

@@ -1,0 +1,23 @@
+{
+ "name": "Blasting Wand",
+ "id": 1026,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Blasting Wand"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

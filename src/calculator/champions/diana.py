@@ -225,6 +225,17 @@ OPTIONS: list[dict[str, Any]] = [
         "type": "bool",
         "default": True,
         "label": "E consumes Q's Moonlight and resets (2 dashes per activation)",
+        "rotation": {
+            "role": "consume",
+            "slot": "E",
+            "condition": "moonlight",
+            "kind": "mark_consume",
+            "setup_slot": "Q",
+            "note": (
+                "E consumes Q's Moonlight for the reset; the option gates "
+                "the dash count (2 vs 1 damage instances), not the Q->E edge."
+            ),
+        },
     },
     {
         "key": "champions_pulled",

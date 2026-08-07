@@ -1,0 +1,51 @@
+{
+ "name": "Tiamat",
+ "id": 3077,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Tiamat"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Tiamat"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  },
+  {
+   "atom_id": "damage.aoe",
+   "family": "damage",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Tiamat"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  }
+ ]
+}

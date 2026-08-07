@@ -103,7 +103,13 @@ def test_sentry_captures_route_500(monkeypatch, fake_sentry):
     def _broken_loader(_champion_name):
         raise RuntimeError("p0b deliberate boom")
 
-    monkeypatch.setattr(app_module, "_load_public_champion", _broken_loader)
+    # The shared scenario boundary owns champion loading for the
+    # calculate path (issue #138), so the break is injected there.  The app
+    # imports the top-level ``calculator`` package (src/ is on sys.path),
+    # so that module object is the one the route executes.
+    import calculator.scenario as calculator_scenario
+
+    monkeypatch.setattr(calculator_scenario, "_load_public_champion", _broken_loader)
     payload = {
         "champion": "Ahri",
         "level": 18,

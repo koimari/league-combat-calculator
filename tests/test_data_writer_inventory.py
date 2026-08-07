@@ -33,20 +33,33 @@ def _data_writes(tree: ast.AST) -> list[str]:
     def literal_data_parent(node):
         # Path("data/...") or Path(...) / "data" / ...
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            if node.value.startswith("data") and ("/" in node.value or node.value == "data"):
+            if node.value.startswith("data") and (
+                "/" in node.value or node.value == "data"
+            ):
                 return node.value
         return None
 
     for n in ast.walk(tree):
         if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute):
             name = n.func.attr
-            if name in {"write_text", "write_bytes", "mkdir", "open", "replace", "rename"}:
+            if name in {
+                "write_text",
+                "write_bytes",
+                "mkdir",
+                "open",
+                "replace",
+                "rename",
+            }:
                 for a in ast.walk(n):
                     lit = literal_data_parent(a)
                     if lit:
                         hits.append(f"{name}({lit})")
                         break
-        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "open":
+        if (
+            isinstance(n, ast.Call)
+            and isinstance(n.func, ast.Name)
+            and n.func.id == "open"
+        ):
             if n.args and isinstance(n.args[0], ast.Constant):
                 v = n.args[0].value
                 if isinstance(v, str) and v.startswith("data") and "/" in v:
@@ -82,7 +95,9 @@ def test_no_cwd_relative_data_path_literals_in_writers():
     import importlib.util
 
     for script in ("decompose_wiki", "decompose_binaries"):
-        spec = importlib.util.spec_from_file_location(script, ROOT / "scripts" / f"{script}.py")
+        spec = importlib.util.spec_from_file_location(
+            script, ROOT / "scripts" / f"{script}.py"
+        )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         assert hasattr(module, "_REPO_ROOT"), script
@@ -109,7 +124,9 @@ def test_runtime_cache_writes_only_via_registry():
             if func_name not in {"write_runtime_cache", "_write_cache"}:
                 continue
             if not any(
-                isinstance(a, ast.Constant) and isinstance(a.value, str) and a.value in CACHE_FILES
+                isinstance(a, ast.Constant)
+                and isinstance(a.value, str)
+                and a.value in CACHE_FILES
                 for a in node.args
             ):
                 continue
@@ -122,7 +139,9 @@ def test_runtime_cache_writes_only_via_registry():
 
 def test_write_runtime_cache_is_atomic_and_refuses_foreign_names(tmp_path):
     payload = {"champion": "Ahri"}
-    write_runtime_cache(tmp_path, "champions.json", payload, source_url="https://example.test")
+    write_runtime_cache(
+        tmp_path, "champions.json", payload, source_url="https://example.test"
+    )
     written = json.loads((tmp_path / "champions.json").read_text(encoding="utf-8"))
     assert written == payload
     meta = json.loads((tmp_path / ".champions.json.meta").read_text(encoding="utf-8"))

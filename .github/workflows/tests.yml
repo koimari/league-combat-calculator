@@ -51,6 +51,18 @@ jobs:
             exit 1
           fi
 
+      - name: Validate gate receipt schema
+        # Runs even when a matrix gate is red — that is exactly when
+        # consumers need trustworthy artifacts (issue #139).  Schema
+        # validity is not the same as a green gate: a `passed: false`
+        # receipt is valid and keeps its failure signal.
+        if: ${{ !cancelled() }}
+        run: |
+          python scripts/validate_receipt.py             artifacts/backend/acceptance_matrix.json
+          # TODO(issue #139): add champion_optimizer_matrix.json here once
+          # the #139 envelope lands in scripts/champion_optimizer_matrix.py
+          # (that file is owned by the #136/#145 fix batch this cycle).
+
       - name: Upload backend acceptance evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -106,6 +118,13 @@ jobs:
             --data '{"champion":"Aatrox"}' \
             http://127.0.0.1:18000/api/calculate \
             | grep --quiet '"total_damage"'
+
+          # Issue #144: the beta metrics scorecard must ship in the runtime
+          # package (scripts/ is excluded from the artifact); a 503
+          # "Metrics module unavailable" here means the deploy is broken.
+          curl --fail --silent --show-error \
+            http://127.0.0.1:18000/api/metrics \
+            | grep --quiet 'scorecard'
 
           for attempt in {1..45}; do
             health="$(docker inspect --format '{{.State.Health.Status}}' lol-calculator-smoke)"

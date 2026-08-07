@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from src.app import _serialize_fight_result
+from src.calculator.public_response import serialize_fight_result
 
 
 def _result(*, damage_events=(), self_healing_events=(), breakdown=None):
@@ -20,7 +20,7 @@ def _result(*, damage_events=(), self_healing_events=(), breakdown=None):
 
 
 def test_serializer_preserves_non_damage_amount_receipts():
-    response = _serialize_fight_result(
+    response = serialize_fight_result(
         _result(
             breakdown={
                 "mana_Essence Reaver": {
@@ -43,7 +43,7 @@ def test_serializer_preserves_non_damage_amount_receipts():
 
 
 def test_serializer_preserves_valid_damage_and_healing_times():
-    response = _serialize_fight_result(
+    response = serialize_fight_result(
         _result(
             damage_events=[{"time": "1.25", "source_key": "Q", "damage": 10}],
             self_healing_events=[{"time": 2.5, "source": "Heal", "amount": 4}],
@@ -59,7 +59,7 @@ def test_serializer_withholds_malformed_damage_event_times(bad_time):
     malformed = {"source_key": "bad", "damage": 10}
     if bad_time is not None:
         malformed["time"] = bad_time
-    response = _serialize_fight_result(
+    response = serialize_fight_result(
         _result(
             damage_events=[malformed, {"time": 1.0, "source_key": "good", "damage": 5}]
         )
@@ -73,7 +73,7 @@ def test_serializer_withholds_malformed_self_healing_event_times(bad_time):
     malformed = {"source": "bad", "amount": 10}
     if bad_time is not None:
         malformed["time"] = bad_time
-    response = _serialize_fight_result(
+    response = serialize_fight_result(
         _result(
             self_healing_events=[
                 malformed,

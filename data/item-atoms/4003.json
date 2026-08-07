@@ -1,0 +1,152 @@
+{
+ "name": "Lifeline",
+ "id": 4003,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 5.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Anchor",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "active:Soul Anchor"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mark",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Anchor",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "active:Soul Anchor"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Anchor",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "active:Soul Anchor"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.soul",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Soul Anchor",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "active:Soul Anchor"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.ground",
+   "family": "crowd-control-mobility",
+   "behavior": "Soul Anchor",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "active:Soul Anchor"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Soul Anchor",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "active:Soul Anchor"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Soul Anchor",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "active:Soul Anchor"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Soul Anchor",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Lifeline"
+    ],
+    "binary": [],
+    "evidence": "active:Soul Anchor"
+   }
+  }
+ ]
+}

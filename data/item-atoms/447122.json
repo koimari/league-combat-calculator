@@ -1,0 +1,136 @@
+{
+ "name": "Black Hole Gauntlet",
+ "id": 447122,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 900.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Black Hole Gauntlet"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Black Hole Gauntlet"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Accretion",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Black Hole Gauntlet"
+    ],
+    "binary": [],
+    "evidence": "passive:Accretion"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Accretion",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Black Hole Gauntlet"
+    ],
+    "binary": [],
+    "evidence": "passive:Accretion"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.immobilize",
+   "family": "crowd-control-mobility",
+   "behavior": "Accretion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Black Hole Gauntlet"
+    ],
+    "binary": [],
+    "evidence": "passive:Accretion"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Accretion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Black Hole Gauntlet"
+    ],
+    "binary": [],
+    "evidence": "passive:Accretion"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Accretion",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Black Hole Gauntlet"
+    ],
+    "binary": [],
+    "evidence": "passive:Accretion"
+   }
+  },
+  {
+   "atom_id": "damage.dot",
+   "family": "damage",
+   "behavior": "Accretion",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Black Hole Gauntlet"
+    ],
+    "binary": [],
+    "evidence": "passive:Accretion"
+   }
+  }
+ ]
+}

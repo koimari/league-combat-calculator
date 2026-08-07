@@ -143,6 +143,15 @@ OPTIONS = [
         "type": "bool",
         "default": False,
         "label": "Terrify target already feared",
+        "rotation": {
+            "role": "irrelevant",
+            "slot": "Q",
+            "note": (
+                "External pre-condition (fear from another source); "
+                "modifies Q's damage branch, imposes no ordering "
+                "constraint."
+            ),
+        },
     },
     {
         "key": "w_ticks",

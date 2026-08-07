@@ -1,0 +1,189 @@
+{
+ "name": "Hamstringer",
+ "id": 443069,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.critical-chance",
+   "family": "stats",
+   "behavior": "criticalStrikeChance",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 25.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.damage-over-time",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.cripple",
+   "family": "crowd-control-mobility",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.slow",
+   "family": "crowd-control-mobility",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  },
+  {
+   "atom_id": "damage.critical-strike",
+   "family": "damage",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  },
+  {
+   "atom_id": "damage.critical-chance",
+   "family": "damage",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  },
+  {
+   "atom_id": "damage.critical-damage",
+   "family": "damage",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Scour",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hamstringer"
+    ],
+    "binary": [],
+    "evidence": "passive:Scour"
+   }
+  }
+ ]
+}

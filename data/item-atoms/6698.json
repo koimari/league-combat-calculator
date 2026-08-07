@@ -1,0 +1,85 @@
+{
+ "name": "Profane Hydra",
+ "id": 6698,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Profane Hydra"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 18.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Profane Hydra"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Profane Hydra"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.aoe",
+   "family": "damage",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Profane Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Cleave",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Profane Hydra"
+    ],
+    "binary": [],
+    "evidence": "passive:Cleave"
+   }
+  }
+ ]
+}

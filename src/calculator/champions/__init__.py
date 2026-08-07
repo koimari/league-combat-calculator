@@ -1,27 +1,22 @@
 """Champion ability registry.
 
 Every champion in the pinned Wiki cache has a dedicated importable module.
-Long-lived hand-authored modules remain authoritative for mechanics that need
-stateful event timelines; the generated modules are explicit, source-pinned
-packet modules for the remaining kits.  There is no runtime archetype or
-implicit generic champion registration in the reviewed surface.
+The reviewed modules are explicit, source-pinned packet modules for the
+entire roster; there is no generated or generic middle lane and no runtime
+archetype registration in the reviewed surface.
 """
 
-import json
 import importlib
-import os
-import re
+import json
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from .generic import GENERIC_SLOTS, parse_abilities as parse_generic_abilities
 
-# Map display name -> module name within this package.
-# Hand-authored modules own mechanics that need stateful timelines. The
-# generated packet modules below provide the same dedicated-module contract
-# for every other cached champion; no champion is routed through an archetype
-# parser at runtime.
+# Map display name -> module name within this package.  This is the single
+# explicit roster manifest: every cached champion has a reviewed module and
+# no champion is routed through an archetype parser at runtime.
 _CUSTOM_CHAMPION_MODULES: dict[str, str] = {
     "Aatrox": "aatrox",
     "Ahri": "ahri",
@@ -199,49 +194,14 @@ _CUSTOM_CHAMPION_MODULES: dict[str, str] = {
 }
 
 
-def _wiki_cache_names() -> tuple[str, ...]:
-    """Read display names from the checked-in Wiki snapshot.
-
-    Keeping generated registration derived from the same cache that feeds
-    the browser prevents key/display-name drift (e.g. ``K'Sante`` and
-    ``Nunu & Willump``).  A missing cache is treated conservatively: custom
-    modules remain available, while deployment health can surface the missing
-    ingestion artifact instead of inventing names.
-    """
-    path = Path(__file__).resolve().parents[3] / "data" / "champions.json"
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, TypeError, ValueError, json.JSONDecodeError):
-        return ()
-    if not isinstance(payload, dict):
-        return ()
-    names = {
-        str(champion.get("name", "")).strip()
-        for champion in payload.values()
-        if isinstance(champion, dict) and str(champion.get("name", "")).strip()
-    }
-    return tuple(sorted(names))
-
-
-# Explicit generated-module registrations for every cached champion that does
-# not yet have a hand-authored stateful module. Each packet is a real module
-# import target, not an implicit runtime archetype fallback.
-_GENERATED_CHAMPION_MODULES: dict[str, str] = {
-    name: "generated." + re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
-    for name in _wiki_cache_names()
-    if name not in _CUSTOM_CHAMPION_MODULES
-}
-_ENGINE_CHAMPION_MODULES: dict[str, str] = {
-    **_CUSTOM_CHAMPION_MODULES,
-    **_GENERATED_CHAMPION_MODULES,
-}
-# Compatibility alias for callers that used the old internal name. It does
-# not indicate a runtime generic/archetype path.
-_GENERIC_CHAMPION_MODULES = _GENERATED_CHAMPION_MODULES
-# Public/internal callers historically imported ``_CHAMPION_MODULES``. Keep
-# that symbol, but make it the complete engine registration map now that every
-# cached champion has a dedicated packet module. Certification is exposed
-# separately through ``reviewed_champion_names``.
+# The complete runnable registration surface.  Every cached champion has a
+# reviewed module (the CP10 review program closed the generated-packet lane),
+# so the engine map IS the custom manifest — the same dict object, so a
+# manifest entry is immediately visible through every alias and there is no
+# derived generated/generic middle lane.
+_ENGINE_CHAMPION_MODULES: dict[str, str] = _CUSTOM_CHAMPION_MODULES
+# Compatibility alias for internal callers that used the historical name; it
+# is the same complete registration map, not a generic fallback path.
 _CHAMPION_MODULES: dict[str, str] = _ENGINE_CHAMPION_MODULES
 
 # Resolved module ``parse_abilities`` callables — the import system already
@@ -462,6 +422,403 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     return result
 
 
+# ─────────────────────────────────────────────────────────────────────────
+# Typed rotation semantics for OPTIONS keys (issue #145)
+#
+# The rotation resolver builds its setup/consume edges FROM these
+# declarations — there is no second hand-maintained vocabulary in
+# rotation_resolver.py anymore.  A module OPTIONS entry may carry an
+# inline ``rotation`` dict (authoritative at the option's source, e.g.
+# Diana's ``moonlight_reset``); every other key is classified here, as
+# data, so an unclassified option is a contract failure
+# (tests/test_champion_options.py).
+#
+# Fields:
+#   role       setup | consume | self_state | execute | irrelevant |
+#              unsupported  (closed six-role vocabulary)
+#   slot       the cast slot the option belongs to ("Q"/"W"/"E"/"R"/"P"),
+#              "auto_stream" for auto/on-hit-stream inputs, or a
+#              per-champion dict for keys whose slot differs by champion
+#              (``target_missing_hp_pct``).
+#   condition  free token used in the receipt cite (consume/setup/execute)
+#   kind       edge-pairing behavior for the corpus fallback:
+#              dot_consume | stack_consume | mark_consume | mark_applier |
+#              execute | amp  (consume/setup/execute only)
+#   setup_slot (consume/execute only) the slot whose setup is consumed —
+#              produces the direct ``setup_slot -> slot`` edge without
+#              depending on applier-corpus phrases.
+#
+# Classification notes for the bulk (self_state/irrelevant): the report for
+# issue #145 verified that cross-slot semantics of the remaining options
+# (shreds, marks, executes, recasts) are ALREADY detected through parsed
+# atoms (``target_debuff``, ``post_hit_proc``, ``recast_of``, ...), so their
+# classification is receipt-only — they are acknowledged in the rotation
+# receipt without inventing duplicate edges.
+# ─────────────────────────────────────────────────────────────────────────
+
+_ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
+    "accelerated_q": {"role": "irrelevant", "slot": "Q"},
+    "adoration_cash_in": {"role": "irrelevant", "slot": "P"},
+    "adoration_stacks": {"role": "self_state", "slot": "P"},
+    "all_out": {"role": "self_state", "slot": "R"},
+    "aphelios_bonus_ad_points": {"role": "self_state", "slot": "P"},
+    "aphelios_bonus_as_points": {"role": "self_state", "slot": "P"},
+    "aphelios_lethality_points": {"role": "self_state", "slot": "P"},
+    "aphelios_main_weapon": {"role": "irrelevant", "slot": "Q"},
+    "aphelios_overheal_shield": {"role": "self_state", "slot": "P"},
+    "bladecaller_feathers": {"role": "self_state", "slot": "E"},
+    "blight_stacks": {
+        "condition": "blight",
+        "kind": "stack_consume",
+        "role": "consume",
+        "slot": "Q",
+    },
+    "blood_frenzy_active": {"role": "self_state", "slot": "W"},
+    "bonus_movement_speed": {"role": "self_state", "slot": "auto_stream"},
+    "champions_pulled": {"role": "self_state", "slot": "R"},
+    "charge_fraction": {"role": "self_state", "slot": "R"},
+    "chimes": {"role": "self_state", "slot": "P"},
+    "clean_cuts_stacks": {"role": "self_state", "slot": "P"},
+    "condemn_wall": {"role": "irrelevant", "slot": "E"},
+    "daisy_attacks": {"role": "self_state", "slot": "R"},
+    "denting_blows_starting_stacks": {
+        "condition": "denting-blows",
+        "kind": "stack_consume",
+        "role": "consume",
+        "slot": "W",
+    },
+    "dragon_form": {"role": "self_state", "slot": "R"},
+    "e_attack_delay": {"role": "self_state", "slot": "E"},
+    "e_attacks": {"role": "self_state", "slot": "E"},
+    "e_chain_complete": {"role": "irrelevant", "slot": "E"},
+    "e_charge": {"role": "self_state", "slot": "E"},
+    "e_cone_uptime": {"role": "self_state", "slot": "E"},
+    "e_dash": {"role": "self_state", "slot": "E"},
+    "e_dash_distance": {"role": "self_state", "slot": "E"},
+    "e_detonations": {"role": "irrelevant", "slot": "E"},
+    "e_dodged_attacks": {"role": "self_state", "slot": "E"},
+    "e_empowered": {"role": "irrelevant", "slot": "E"},
+    "e_execute": {
+        "condition": "execute",
+        "kind": "execute",
+        "role": "execute",
+        "slot": "E",
+    },
+    "e_fury": {"role": "self_state", "slot": "E"},
+    "e_nearest_target": {"role": "irrelevant", "slot": "E"},
+    "e_passes_through_target": {"role": "irrelevant", "slot": "E"},
+    "e_second_explosion": {"role": "irrelevant", "slot": "E"},
+    "e_second_hit": {"role": "irrelevant", "slot": "E"},
+    "e_shots": {"role": "self_state", "slot": "E"},
+    "e_stacks": {"role": "self_state", "slot": "E"},
+    "e_ticks": {"role": "self_state", "slot": "E"},
+    "e_traps": {"role": "self_state", "slot": "E"},
+    "e_true_grit_stacks": {"role": "self_state", "slot": "E"},
+    "e_upgrade": {"role": "irrelevant", "slot": "E"},
+    "e_variant": {"role": "irrelevant", "slot": "E"},
+    "e_wall_collision": {"role": "irrelevant", "slot": "E"},
+    "feast_stacks": {"role": "self_state", "slot": "R"},
+    "form": {"role": "irrelevant", "slot": "P"},
+    "hammer_stance": {"role": "irrelevant", "slot": "R"},
+    "jinx_get_excited_stacks": {"role": "self_state", "slot": "P"},
+    "jinx_rev_up_stacks": {"role": "self_state", "slot": "Q"},
+    "jinx_weapon": {"role": "irrelevant", "slot": "Q"},
+    "lavender_stacks": {"role": "self_state", "slot": "P"},
+    "lulu_pix_bolts": {"role": "self_state", "slot": "P"},
+    "maiden_attacks": {"role": "self_state", "slot": "R"},
+    "marks": {"role": "self_state", "slot": "P"},
+    "mega": {"role": "self_state", "slot": "R"},
+    "mines_hit": {"role": "self_state", "slot": "E"},
+    "mist_walker_attacks": {"role": "self_state", "slot": "R"},
+    "mist_walkers": {"role": "self_state", "slot": "R"},
+    "mundo_missing_health_percent": {"role": "self_state", "slot": "E"},
+    "near_flag": {"role": "self_state", "slot": "E"},
+    "p_critical_pellets": {"role": "irrelevant", "slot": "P"},
+    "p_daggers": {"role": "self_state", "slot": "P"},
+    "p_essence_fragments": {"role": "self_state", "slot": "P"},
+    "p_exalted": {"role": "self_state", "slot": "P"},
+    "p_ferocity": {"role": "self_state", "slot": "P"},
+    "p_final_shot": {"role": "irrelevant", "slot": "P"},
+    "p_gloom_detonations": {"role": "self_state", "slot": "P"},
+    "p_illumination_procs": {
+        "condition": "illumination",
+        "kind": "mark_consume",
+        "role": "consume",
+        "slot": "R",
+    },
+    "p_legs": {"role": "self_state", "slot": "P"},
+    "p_marks": {"role": "self_state", "slot": "P"},
+    "p_missing_health": {"role": "irrelevant", "slot": "P"},
+    "p_pre_stacks": {"role": "self_state", "slot": "P"},
+    "p_procs": {"role": "self_state", "slot": "P"},
+    "p_ready": {"role": "self_state", "slot": "P"},
+    "p_right_punches": {"role": "self_state", "slot": "P"},
+    "p_shot_number": {"role": "self_state", "slot": "P"},
+    "p_stacks": {"role": "self_state", "slot": "P"},
+    "p_style_stacks": {"role": "self_state", "slot": "P"},
+    "p_tentacles": {"role": "self_state", "slot": "P"},
+    "p_ticks": {"role": "self_state", "slot": "P"},
+    "p_triggers": {"role": "self_state", "slot": "P"},
+    "p_vitals": {"role": "self_state", "slot": "P"},
+    "passive_procs": {"role": "self_state", "slot": "P"},
+    "passive_stacks": {"role": "self_state", "slot": "P"},
+    "plant_attacks": {"role": "self_state", "slot": "R"},
+    "plant_count": {"role": "self_state", "slot": "R"},
+    "plasma_starting_stacks": {
+        "condition": "plasma",
+        "kind": "stack_consume",
+        "role": "consume",
+        "slot": "W",
+    },
+    "poison_stacks": {
+        "condition": "poison",
+        "kind": "stack_consume",
+        "role": "consume",
+        "slot": "E",
+    },
+    "q_active": {"role": "self_state", "slot": "Q"},
+    "q_armor_reduction": {"role": "self_state", "slot": "Q"},
+    "q_armor_shred": {"role": "self_state", "slot": "Q"},
+    "q_attacks_landed": {"role": "self_state", "slot": "Q"},
+    "q_awaken": {"role": "self_state", "slot": "Q"},
+    "q_beams": {"role": "self_state", "slot": "Q"},
+    "q_bounces": {"role": "self_state", "slot": "Q"},
+    "q_casts": {"role": "self_state", "slot": "Q"},
+    "q_center": {"role": "irrelevant", "slot": "Q"},
+    "q_charge": {"role": "self_state", "slot": "Q"},
+    "q_charge_fraction": {"role": "self_state", "slot": "Q"},
+    "q_charge_seconds": {"role": "self_state", "slot": "Q"},
+    "q_consume": {
+        "condition": "sigil",
+        "kind": "mark_applier",
+        "role": "setup",
+        "slot": "Q",
+    },
+    "q_dash_distance": {"role": "self_state", "slot": "Q"},
+    "q_discharge": {"role": "self_state", "slot": "Q"},
+    "q_empowered_attacks": {"role": "self_state", "slot": "Q"},
+    "q_evolved": {"role": "irrelevant", "slot": "Q"},
+    "q_execute": {
+        "condition": "execute",
+        "kind": "execute",
+        "role": "execute",
+        "slot": "Q",
+    },
+    "q_explosions": {"role": "self_state", "slot": "Q"},
+    "q_first_attack_delay": {"role": "self_state", "slot": "Q"},
+    "q_focus_stacks": {"role": "self_state", "slot": "Q"},
+    "q_form": {"role": "irrelevant", "slot": "Q"},
+    "q_fully_fermented": {"role": "irrelevant", "slot": "Q"},
+    "q_gathering_storm": {"role": "self_state", "slot": "Q"},
+    "q_ground": {"role": "irrelevant", "slot": "Q"},
+    "q_isolated": {"role": "self_state", "slot": "Q"},
+    "q_mantra": {"role": "self_state", "slot": "Q"},
+    "q_marked_target": {
+        "condition": "mark",
+        "kind": "mark_consume",
+        "role": "consume",
+        "slot": "Q",
+    },
+    "q_missing_health": {
+        "condition": "execute",
+        "kind": "execute",
+        "role": "execute",
+        "slot": "Q",
+    },
+    "q_mortal_will": {"role": "self_state", "slot": "Q"},
+    "q_outer_edge": {"role": "irrelevant", "slot": "Q"},
+    "q_passive_stacks": {"role": "self_state", "slot": "Q"},
+    "q_pickup": {"role": "irrelevant", "slot": "Q"},
+    "q_pull": {"role": "irrelevant", "slot": "Q"},
+    "q_recast": {"role": "self_state", "slot": "Q"},
+    "q_recasts": {"role": "self_state", "slot": "Q"},
+    "q_shred": {"role": "self_state", "slot": "Q"},
+    "q_snippy_stacks": {"role": "self_state", "slot": "Q"},
+    "q_spirit_blade_hit": {"role": "irrelevant", "slot": "Q"},
+    "q_stacks": {"role": "self_state", "slot": "Q"},
+    "q_target_below_half": {"role": "self_state", "slot": "Q"},
+    "q_target_deaths": {"role": "self_state", "slot": "Q"},
+    "q_target_distance": {"role": "self_state", "slot": "Q"},
+    "q_turret_attacks": {"role": "self_state", "slot": "Q"},
+    "q_turrets": {"role": "self_state", "slot": "Q"},
+    "q_variant": {"role": "irrelevant", "slot": "Q"},
+    "r_arcane_perfection": {"role": "self_state", "slot": "R"},
+    "r_big_one_cycle_position": {"role": "self_state", "slot": "R"},
+    "r_bolts": {"role": "self_state", "slot": "R"},
+    "r_bounces": {"role": "self_state", "slot": "R"},
+    "r_casts": {"role": "self_state", "slot": "R"},
+    "r_charged": {"role": "irrelevant", "slot": "R"},
+    "r_clone_attacks": {"role": "self_state", "slot": "R"},
+    "r_daggers": {"role": "self_state", "slot": "R"},
+    "r_deaths_daughter": {"role": "irrelevant", "slot": "R"},
+    "r_duration": {"role": "self_state", "slot": "R"},
+    "r_edge": {"role": "irrelevant", "slot": "R"},
+    "r_empowered": {"role": "self_state", "slot": "R"},
+    "r_execute_ready": {
+        "condition": "execute",
+        "kind": "execute",
+        "role": "execute",
+        "slot": "R",
+    },
+    "r_fire_at_will": {"role": "irrelevant", "slot": "R"},
+    "r_hemoplague_debuff": {
+        "condition": "amp",
+        "kind": "amp",
+        "role": "setup",
+        "slot": "R",
+    },
+    "r_mimic": {"role": "irrelevant", "slot": "R"},
+    "r_nearby_champions": {"role": "self_state", "slot": "R"},
+    "r_overwhelm_stacks": {
+        "condition": "overwhelm",
+        "kind": "stack_consume",
+        "role": "consume",
+        "slot": "R",
+    },
+    "r_passes": {"role": "self_state", "slot": "R"},
+    "r_passive_ready": {"role": "self_state", "slot": "P"},
+    "r_secondary_target": {"role": "irrelevant", "slot": "R"},
+    "r_shots": {"role": "self_state", "slot": "R"},
+    "r_shrooms": {"role": "self_state", "slot": "R"},
+    "r_size": {"role": "irrelevant", "slot": "R"},
+    "r_spheres": {"role": "self_state", "slot": "R"},
+    "r_stacks": {"role": "self_state", "slot": "R"},
+    "r_start_distance": {"role": "self_state", "slot": "R"},
+    "r_starting_charges": {"role": "self_state", "slot": "R"},
+    "r_sweet_spot": {"role": "irrelevant", "slot": "R"},
+    "r_terrain": {"role": "irrelevant", "slot": "R"},
+    "r_ticks": {"role": "self_state", "slot": "R"},
+    "r_transcendent": {"role": "self_state", "slot": "R"},
+    "r_variant": {"role": "irrelevant", "slot": "R"},
+    "r_wake": {"role": "irrelevant", "slot": "R"},
+    "r_wall": {"role": "irrelevant", "slot": "R"},
+    "relentless_storm_stacks": {"role": "self_state", "slot": "P"},
+    "rend_stacks": {
+        "condition": "rend",
+        "kind": "stack_consume",
+        "role": "consume",
+        "slot": "E",
+    },
+    "sapling_empowered": {"role": "irrelevant", "slot": "E"},
+    "scalemail_stacks": {"role": "self_state", "slot": "P"},
+    "senna_mist_stacks": {"role": "self_state", "slot": "P"},
+    "soldier_autos": {"role": "self_state", "slot": "R"},
+    "soldier_count": {"role": "self_state", "slot": "R"},
+    "soul_nails": {"role": "self_state", "slot": "P"},
+    "souls": {"role": "self_state", "slot": "P"},
+    "spider_form": {"role": "self_state", "slot": "R"},
+    "splinters": {"role": "self_state", "slot": "P"},
+    "stardust_stacks": {"role": "self_state", "slot": "P"},
+    "starting_hemorrhage_stacks": {"role": "self_state", "slot": "R"},
+    "stone_skin_stacks": {"role": "self_state", "slot": "P"},
+    "sweetspot": {"role": "irrelevant", "slot": "Q"},
+    "target_cursed": {"role": "self_state", "slot": "R"},
+    "target_missing_hp_pct": {
+        "condition": "execute",
+        "kind": "execute",
+        "role": "execute",
+        "slot": {"Bel'Veth": "E", "Briar": "W", "Varus": "Q"},
+    },
+    "target_poisoned": {
+        "condition": "poison",
+        "kind": "dot_consume",
+        "role": "consume",
+        "slot": "E",
+    },
+    "tibbers_attacks": {"role": "self_state", "slot": "R"},
+    "tibbers_aura_seconds": {"role": "self_state", "slot": "R"},
+    "true_form": {"role": "self_state", "slot": "R"},
+    "voidling_attacks": {"role": "self_state", "slot": "R"},
+    "voidling_count": {"role": "self_state", "slot": "R"},
+    "w_active": {"role": "self_state", "slot": "W"},
+    "w_active_empower": {"role": "self_state", "slot": "W"},
+    "w_attacks": {"role": "self_state", "slot": "W"},
+    "w_box_attacks": {"role": "self_state", "slot": "W"},
+    "w_card": {"role": "irrelevant", "slot": "W"},
+    "w_charge": {"role": "self_state", "slot": "W"},
+    "w_charge_seconds": {"role": "self_state", "slot": "W"},
+    "w_charmed": {"role": "irrelevant", "slot": "W"},
+    "w_empowered": {"role": "irrelevant", "slot": "W"},
+    "w_epicenter": {"role": "irrelevant", "slot": "W"},
+    "w_evolved": {"role": "irrelevant", "slot": "W"},
+    "w_grit": {"role": "self_state", "slot": "W"},
+    "w_hunters_vigor_stacks": {"role": "self_state", "slot": "W"},
+    "w_in_brush": {"role": "irrelevant", "slot": "W"},
+    "w_nearby_champions": {"role": "self_state", "slot": "W"},
+    "w_outer_cone": {"role": "irrelevant", "slot": "W"},
+    "w_passive_ready": {"role": "self_state", "slot": "W"},
+    "w_patch_uptime": {"role": "self_state", "slot": "W"},
+    "w_recast": {"role": "self_state", "slot": "W"},
+    "w_renewal": {"role": "self_state", "slot": "W"},
+    "w_rockets": {"role": "self_state", "slot": "W"},
+    "w_seconds": {"role": "self_state", "slot": "W"},
+    "w_summoner": {"role": "irrelevant", "slot": "W"},
+    "w_target_distance": {"role": "self_state", "slot": "W"},
+    "w_target_missing_health": {
+        "condition": "execute",
+        "kind": "execute",
+        "role": "execute",
+        "slot": "W",
+    },
+    "w_tether_holds": {"role": "irrelevant", "slot": "W"},
+    "w_thorns_autos": {"role": "self_state", "slot": "W"},
+    "w_ticks": {"role": "self_state", "slot": "W"},
+    "w_traps": {"role": "self_state", "slot": "W"},
+    "w_variant": {"role": "irrelevant", "slot": "W"},
+    "w_wounded": {
+        "condition": "wounded",
+        "kind": "mark_consume",
+        "role": "consume",
+        "slot": "W",
+    },
+    "wall_contact": {"role": "irrelevant", "slot": "W"},
+    "we_hits": {"role": "self_state", "slot": "E"},
+}
+
+_ROTATION_ROLES = frozenset(
+    {"setup", "consume", "self_state", "execute", "irrelevant", "unsupported"}
+)
+
+
+def get_champion_option_rotation(
+    champion_name: str,
+) -> dict[str, dict[str, Any] | None]:
+    """Return the typed rotation declaration for every declared option.
+
+    The declaration is authoritative at the option's source: a module
+    OPTIONS entry may carry an inline ``rotation`` dict; keys without an
+    inline declaration fall back to the central classification table.  An
+    unclassified key maps to ``None`` — the exhaustiveness contract
+    (``tests/test_champion_options.py``) fails when any declared option is
+    unclassified, so a rotation receipt can never claim "no detectable
+    setup/consume signal" while a semantic option is unclassified.
+
+    Returns:
+        ``{option_key: rotation_decl_or_None}`` for the champion's declared
+        OPTIONS entries.  Unknown synthetic fixtures without a module
+        return ``{}``.
+    """
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return {}
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    result: dict[str, dict[str, Any] | None] = {}
+    for opt in getattr(module, "OPTIONS", []):
+        key = str(opt.get("key", ""))
+        inline = opt.get("rotation")
+        if isinstance(inline, dict) and inline.get("role") in _ROTATION_ROLES:
+            decl = dict(inline)
+        else:
+            central = _ROTATION_CLASSIFICATIONS.get(key)
+            decl = dict(central) if isinstance(central, dict) else None
+        if decl is not None:
+            slot = decl.get("slot")
+            if isinstance(slot, dict):
+                decl["slot"] = slot.get(champion_name)
+        result[key] = decl
+    return result
+
+
 def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
     """Return the module-level trust metadata used by the validation layer.
 
@@ -496,11 +853,9 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
     result["coverage"] = dict(coverage) if isinstance(coverage, dict) else {}
     review_status = str(getattr(module, "REVIEW_STATUS", "")).strip() or "unregistered"
     result["review_status"] = review_status
-    result["registration"] = (
-        "reviewed_module"
-        if champion_name in _CUSTOM_CHAMPION_MODULES
-        else "generated_packet"
-    )
+    # Every registered module is a reviewed module; the generated-packet
+    # registration branch was removed with the generated lane (issue #136).
+    result["registration"] = "reviewed_module"
     return result
 
 
@@ -561,10 +916,9 @@ def champion_options_meta_map() -> dict[str, dict[str, list]]:
 def registered_champion_names() -> list[str]:
     """Display names of all champions with a dedicated engine module.
 
-    This is the runnable registration surface, not the certification surface.
-    Generated packet modules remain registered so the calculator can expose a
-    deterministic, fail-closed result while their full champion-specific
-    mechanics are completed.
+    This is the runnable registration surface, not the certification surface:
+    every registered module is reviewed, and the reviewed surface is exposed
+    separately through :func:`reviewed_champion_names`.
     """
     return sorted(_CHAMPION_MODULES)
 
@@ -572,12 +926,9 @@ def registered_champion_names() -> list[str]:
 def reviewed_champion_names() -> list[str]:
     """Display names whose modules passed the exact champion review gate.
 
-    Hand-authored modules are the only modules that currently carry the exact
-    stateful contract.  Generated packet modules deliberately stay out of
-    this set until their full Wiki parent entry, all P/Q/W/E/R mechanics, and
-    focused tests are complete.  Keeping this separate from
-    :func:`registered_champion_names` prevents a generated file from being
-    presented as a reviewed champion merely because it imports successfully.
+    Every registered champion has a reviewed module (the CP10 review program
+    closed the generated lane), so this equals the registration surface.
+    Kept as a separate name for API compatibility with older clients.
     """
     return sorted(_CUSTOM_CHAMPION_MODULES)
 
@@ -585,8 +936,9 @@ def reviewed_champion_names() -> list[str]:
 def registered_engine_champion_names() -> list[str]:
     """Display names with an importable backend module, sorted.
 
-    This is the complete runnable registration surface.  It is retained as a
-    separate name for API compatibility with older clients.
+    This is the complete runnable registration surface (all reviewed
+    modules).  It is retained as a separate name for API compatibility with
+    older clients.
     """
     return sorted(_ENGINE_CHAMPION_MODULES)
 
@@ -594,16 +946,11 @@ def registered_engine_champion_names() -> list[str]:
 def engine_registration_kind(champion_name: str) -> str | None:
     """Return the public registration kind for one champion module.
 
-    ``generated_packet`` is intentionally distinct from ``reviewed_module``.
-    A generated packet is a deterministic runtime implementation, but its
-    full champion-specific Wiki mechanics have not yet passed the exact
-    module gate in issue #15.  The API can therefore keep the backend path
-    available without claiming that the packet is reviewed.
+    Every registered module is a reviewed module (the generated-packet lane
+    was removed with issue #136); unknown names return ``None``.
     """
     if champion_name in _CUSTOM_CHAMPION_MODULES:
         return "reviewed_module"
-    if champion_name in _GENERATED_CHAMPION_MODULES:
-        return "generated_packet"
     return None
 
 

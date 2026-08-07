@@ -1,0 +1,270 @@
+{
+ "name": "Zaz'Zak's Realmspike",
+ "id": 3871,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 200.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.gold-per-10",
+   "family": "stats",
+   "behavior": "goldPer10",
+   "parameters": {
+    "flat": 9.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.sight",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealth",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [
+    "vision-economy.true-sight",
+    "vision-economy.attacker-reveal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.camouflage",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.invisibility",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealthed-trap",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.true-sight",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [
+    "vision-economy.stealth",
+    "vision-economy.camouflage"
+   ],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward-destruction",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.passive-gold-generation",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  },
+  {
+   "atom_id": "vision-economy.kill-bounty",
+   "family": "vision-economy",
+   "behavior": "Void Explosion",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Zaz'Zak's Realmspike"
+    ],
+    "binary": [],
+    "evidence": "passive:Void Explosion"
+   }
+  }
+ ]
+}

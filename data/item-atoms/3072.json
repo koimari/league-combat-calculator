@@ -1,0 +1,88 @@
+{
+ "name": "Bloodthirster",
+ "id": 3072,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 80.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodthirster"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "heal-shield.heal",
+   "family": "heal-shield",
+   "behavior": "Ichorshield",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "heal-shield.heal-amplification",
+    "heal-shield.healing-negation",
+    "heal-shield.overheal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Bloodthirster"
+    ],
+    "binary": [],
+    "evidence": "passive:Ichorshield"
+   }
+  },
+  {
+   "atom_id": "heal-shield.overheal",
+   "family": "heal-shield",
+   "behavior": "Ichorshield",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodthirster"
+    ],
+    "binary": [],
+    "evidence": "passive:Ichorshield"
+   }
+  },
+  {
+   "atom_id": "heal-shield.life-steal",
+   "family": "heal-shield",
+   "behavior": "Ichorshield",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Bloodthirster"
+    ],
+    "binary": [],
+    "evidence": "passive:Ichorshield"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "Ichorshield",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Bloodthirster"
+    ],
+    "binary": [],
+    "evidence": "passive:Ichorshield"
+   }
+  }
+ ]
+}

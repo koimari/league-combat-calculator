@@ -1,0 +1,107 @@
+{
+ "name": "Sterak's Gage",
+ "id": 3053,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 400.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sterak's Gage"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.tenacity",
+   "family": "stats",
+   "behavior": "tenacity",
+   "parameters": {
+    "flat": 0.0,
+    "percent": 20.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sterak's Gage"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.tenacity",
+   "family": "crowd-control-mobility",
+   "behavior": "The Claws that Catch",
+   "parameters": {},
+   "relations": [
+    "crowd-control-mobility.brittle",
+    "crowd-control-mobility.slow",
+    "crowd-control-mobility.stun",
+    "crowd-control-mobility.root",
+    "crowd-control-mobility.silence",
+    "crowd-control-mobility.knockback"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sterak's Gage"
+    ],
+    "binary": [],
+    "evidence": "passive:The Claws that Catch"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "The Claws that Catch",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sterak's Gage"
+    ],
+    "binary": [],
+    "evidence": "passive:The Claws that Catch"
+   }
+  },
+  {
+   "atom_id": "heal-shield.shield",
+   "family": "heal-shield",
+   "behavior": "The Claws that Catch",
+   "parameters": {},
+   "relations": [
+    "heal-shield.shield-reduction",
+    "heal-shield.shield-destruction",
+    "heal-shield.heal-and-shield-power"
+   ],
+   "provenance": {
+    "wiki": [
+     "Sterak's Gage"
+    ],
+    "binary": [],
+    "evidence": "passive:The Claws that Catch"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "The Claws that Catch",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Sterak's Gage"
+    ],
+    "binary": [],
+    "evidence": "passive:The Claws that Catch"
+   }
+  }
+ ]
+}

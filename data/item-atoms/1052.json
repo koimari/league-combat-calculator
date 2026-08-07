@@ -1,0 +1,23 @@
+{
+ "name": "Amplifying Tome",
+ "id": 1052,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Amplifying Tome"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

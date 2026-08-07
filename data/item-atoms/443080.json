@@ -1,0 +1,38 @@
+{
+ "name": "Twin Mask",
+ "id": 443080,
+ "atoms": [
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Unanimity",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Twin Mask"
+    ],
+    "binary": [],
+    "evidence": "passive:Unanimity"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Unanimity",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Twin Mask"
+    ],
+    "binary": [],
+    "evidence": "passive:Unanimity"
+   }
+  }
+ ]
+}

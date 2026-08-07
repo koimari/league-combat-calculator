@@ -1,0 +1,82 @@
+{
+ "name": "Hextech Gunblade",
+ "id": 3146,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 40.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hextech Gunblade"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 80.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hextech Gunblade"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.slow",
+   "family": "crowd-control-mobility",
+   "behavior": "Lightning Bolt",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hextech Gunblade"
+    ],
+    "binary": [],
+    "evidence": "active:Lightning Bolt"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Lightning Bolt",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hextech Gunblade"
+    ],
+    "binary": [],
+    "evidence": "active:Lightning Bolt"
+   }
+  },
+  {
+   "atom_id": "heal-shield.omnivamp",
+   "family": "heal-shield",
+   "behavior": "Lightning Bolt",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Hextech Gunblade"
+    ],
+    "binary": [],
+    "evidence": "active:Lightning Bolt"
+   }
+  }
+ ]
+}

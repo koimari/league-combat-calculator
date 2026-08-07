@@ -1,0 +1,163 @@
+{
+ "name": "Oracle Lens",
+ "id": 3364,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.buff-duration-class",
+   "family": "stack-transform-summon-resource",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.blood-well",
+   "family": "stack-transform-summon-resource",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealth",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [
+    "vision-economy.true-sight",
+    "vision-economy.attacker-reveal"
+   ],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.camouflage",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.invisibility",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.stealthed-trap",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.obscured-vision",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Oracle Lens"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  }
+ ]
+}

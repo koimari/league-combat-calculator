@@ -1,0 +1,93 @@
+{
+ "name": "Gluttonous Greaves",
+ "id": 3008,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Gluttonous Greaves"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gluttonous Greaves"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gluttonous Greaves"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gluttonous Greaves"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "damage.zero-damage",
+   "family": "damage",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gluttonous Greaves"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  },
+  {
+   "atom_id": "heal-shield.omnivamp",
+   "family": "heal-shield",
+   "behavior": "Slay",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Gluttonous Greaves"
+    ],
+    "binary": [],
+    "evidence": "passive:Slay"
+   }
+  }
+ ]
+}

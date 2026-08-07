@@ -1,0 +1,175 @@
+{
+ "name": "Statikk Shiv",
+ "id": 3087,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 45.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.attack-speed",
+   "family": "stats",
+   "behavior": "attackSpeed",
+   "parameters": {
+    "flat": 30.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ammo",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.basic-attack",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.on-hit",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [
+    "stack-transform-summon-resource.stack",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.aoe",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Statikk Shiv"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  }
+ ]
+}

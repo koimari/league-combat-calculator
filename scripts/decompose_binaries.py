@@ -18,6 +18,7 @@ Usage:
     ~/.local/mcp/wad-env/bin/python scripts/decompose_binaries.py --champions --items
     ~/.local/mcp/wad-env/bin/python scripts/decompose_binaries.py --items --verify
 """
+
 from __future__ import annotations
 
 import argparse
@@ -38,6 +39,7 @@ OUT_DIR = _REPO_ROOT / "data" / "bin"
 
 def _download(url: str, dest: Path, chunk=1 << 20) -> None:
     import requests
+
     dest.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(url, stream=True, timeout=600) as r:
         r.raise_for_status()
@@ -55,8 +57,12 @@ def ensure_hash_tables() -> dict[int, str]:
         for line in f:
             h, _, path = line.partition(" ")
             table[int(h, 16)] = path.rstrip("\n")
-    for name in ["hashes.binhashes.txt", "hashes.binfields.txt",
-                 "hashes.bintypes.txt", "hashes.binentries.txt"]:
+    for name in [
+        "hashes.binhashes.txt",
+        "hashes.binfields.txt",
+        "hashes.bintypes.txt",
+        "hashes.binentries.txt",
+    ]:
         dest = CDTB_HASH_DIR / name
         if not dest.exists():
             print(f"downloading {name} ...")
@@ -66,6 +72,7 @@ def ensure_hash_tables() -> dict[int, str]:
 
 def open_wad(path: Path):
     from league_tools import WAD
+
     return WAD(str(path))
 
 
@@ -82,6 +89,7 @@ def extract_path(wad, table, path: str) -> bytes | None:
 def parse_bin(data: bytes, name: str):
     from cdtb.binfile import BinFile
     import io
+
     bf = BinFile(io.BytesIO(data))
     return bf.to_serializable()
 
@@ -96,6 +104,7 @@ def champion_wads():
 
 def decompose_champions(table, out: Path) -> list[str]:
     from league_tools import WAD
+
     done = []
     for wad_path in champion_wads():
         name = wad_path.stem.replace(".wad", "")
@@ -121,9 +130,14 @@ def decompose_items(table, out: Path):
     source = "local"
     if data is None:
         import requests
-        print("items.bin not local; fetching pinned 16.15 dump from CommunityDragon ...")
-        r = requests.get("https://raw.communitydragon.org/16.15/game/data/items/items.bin.json",
-                         timeout=300)
+
+        print(
+            "items.bin not local; fetching pinned 16.15 dump from CommunityDragon ..."
+        )
+        r = requests.get(
+            "https://raw.communitydragon.org/16.15/game/data/items/items.bin.json",
+            timeout=300,
+        )
         if r.status_code != 200:
             raise RuntimeError(
                 "items.bin unavailable locally and 16.15 CDN dump 404; "
@@ -144,6 +158,7 @@ def decompose_items(table, out: Path):
 
 def decompose_map11(table, out: Path):
     import glob
+
     map_wads = list((FINAL_DIR / "Maps/Shipping").glob("*.wad.client"))
     for mw in map_wads:
         try:
@@ -178,7 +193,12 @@ def main():
 
     if args.items:
         dest, raw, parsed, source = decompose_items(table, out)
-        receipt["files"]["items"] = {"path": str(dest), "raw_bytes": raw, "json_chars": parsed, "source": source}
+        receipt["files"]["items"] = {
+            "path": str(dest),
+            "raw_bytes": raw,
+            "json_chars": parsed,
+            "source": source,
+        }
         print(f"items -> {dest} ({raw} raw bytes)")
 
     if args.champions:

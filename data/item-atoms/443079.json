@@ -1,0 +1,37 @@
+{
+ "name": "Turbo Chemtank",
+ "id": 443079,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 600.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Turbo Chemtank"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.immobilize",
+   "family": "crowd-control-mobility",
+   "behavior": "Supercharged",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Turbo Chemtank"
+    ],
+    "binary": [],
+    "evidence": "active:Supercharged"
+   }
+  }
+ ]
+}

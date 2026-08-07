@@ -1,0 +1,110 @@
+{
+ "name": "Scorchclaw Pup",
+ "id": 1101,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.damage-over-time",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scorchclaw Pup"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.pet",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scorchclaw Pup"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.summon",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.aoe"
+   ],
+   "provenance": {
+    "wiki": [
+     "Scorchclaw Pup"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.cripple",
+   "family": "crowd-control-mobility",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scorchclaw Pup"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.slow",
+   "family": "crowd-control-mobility",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scorchclaw Pup"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "damage.dot",
+   "family": "damage",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Scorchclaw Pup"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  },
+  {
+   "atom_id": "vision-economy.jungle-experience",
+   "family": "vision-economy",
+   "behavior": "Jungle Companions",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Scorchclaw Pup"
+    ],
+    "binary": [],
+    "evidence": "passive:Jungle Companions"
+   }
+  }
+ ]
+}

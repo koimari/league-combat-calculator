@@ -14999,8 +14999,29 @@
         },
         "passive": {
           "cooldown": 0.0,
+          "damage_events": [
+            {
+              "damage": 130.0,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "time": 0.0
+            },
+            {
+              "damage": 130.0,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "time": 0.0
+            },
+            {
+              "damage": 130.0,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "time": 0.0
+            }
+          ],
           "damage_type": "magic",
           "detail": "3 Illumination proc(s): 30 : 200 (based on level) (130 at level 11) + 35% AP bonus magic damage per post-ability auto / Final Spark",
+          "event_phase": "effect",
           "name": "Illumination",
           "parts": [
             "DamagePart(magic, amount=130.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -22887,8 +22908,8 @@
           "event_order_certified": "single_hit",
           "name": "High Note",
           "parts": [
-            "DamagePart(magic, amount=160.0, count=1, hp_scaled=no, crit_effectiveness=0.0)",
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=160.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)",
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0, time_offset=0.0)"
           ],
           "rank": 5,
           "resource_cost": 100.0,
@@ -41155,7 +41176,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1786113324.862417,
-    "git_head": "3c43f3b338badc72ac2ce0147361acfd7275ec7d",
+    "git_head": "e62fb2428581833b602c04fed8f0d4c896dab007",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1786113359.0537379,
@@ -55214,9 +55235,9 @@
               "auto_attacks": 221.33,
               "passive": 312.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 62.4
+              "shadowflame_Shadowflame": 148.86
             },
-            "total_damage": 2287.49
+            "total_damage": 2373.96
           },
           "no_items": {
             "breakdown_totals": {
@@ -55312,9 +55333,9 @@
               "auto_attacks": 293.33,
               "passive": 480.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 96.0
+              "shadowflame_Shadowflame": 256.3
             },
-            "total_damage": 2801.09
+            "total_damage": 2961.4
           },
           "no_items": {
             "breakdown_totals": {

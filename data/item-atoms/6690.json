@@ -1,0 +1,23 @@
+{
+ "name": "Rectrix",
+ "id": 6690,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 15.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rectrix"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  }
+ ]
+}

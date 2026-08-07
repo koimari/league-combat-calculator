@@ -1,0 +1,116 @@
+{
+ "name": "Everfrost",
+ "id": 446656,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 250.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Everfrost"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.mana",
+   "family": "stats",
+   "behavior": "mana",
+   "parameters": {
+    "flat": 600.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Everfrost"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 100.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Everfrost"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 25.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Everfrost"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.mana",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Glaciate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Everfrost"
+    ],
+    "binary": [],
+    "evidence": "active:Glaciate"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.root",
+   "family": "crowd-control-mobility",
+   "behavior": "Glaciate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Everfrost"
+    ],
+    "binary": [],
+    "evidence": "active:Glaciate"
+   }
+  },
+  {
+   "atom_id": "damage.aoe",
+   "family": "damage",
+   "behavior": "Glaciate",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Everfrost"
+    ],
+    "binary": [],
+    "evidence": "active:Glaciate"
+   }
+  }
+ ]
+}

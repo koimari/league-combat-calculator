@@ -4,12 +4,22 @@
 The generated modules are deliberately explicit: every cached ability slot is
 represented either by a numeric Wiki/Axword packet or by a sourced no-damage
 entry.  A missing numeric row is never replaced with an archetype estimate.
+
+Source supply contract (issue #134): the Wiki index and the Axword Meraki kit
+source resolve repo-relative by default (``data/wiki/league-wiki.sqlite3`` and
+the sibling ``lol-strength-analysis`` checkout) and are overridable per run
+with ``--wiki-db`` / ``LCC_WIKI_DB`` and ``--axword-source`` /
+``LCC_AXWORD_SOURCE``.  A missing source aborts with one actionable error, and
+a champion is only labeled ``reviewed_packet`` when the Wiki index carries a
+current revision receipt for its page — revision-less packets are labeled
+``generated_packet`` and a zero-receipt run aborts entirely.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sqlite3
 import sys
@@ -29,8 +39,62 @@ from src.calculator.champions.attribute_classifier import (
     is_primary_damage_attribute,
 )
 
+try:
+    from source_receipt import source_receipt
+except ImportError:  # imported as scripts.build_reviewed_modules in tests
+    from scripts.source_receipt import source_receipt
+
 SLOTS = ("P", "Q", "W", "E", "R")
-WIKI_DB = Path("/Users/river/scryglass/data/lol/knowledge/league-wiki.sqlite3")
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+# Source supply contract (issue #134): every external dependency resolves
+# repo-relative by default and is overridable per-run via CLI flag or
+# environment variable.  No developer-home paths are hardcoded anywhere, so
+# the generator behaves identically on any machine that supplies the files.
+DEFAULT_WIKI_DB = REPO_ROOT / "data" / "wiki" / "league-wiki.sqlite3"
+DEFAULT_AXWORD_SOURCE = (
+    REPO_ROOT.parent
+    / "lol-strength-analysis"
+    / "src"
+    / "data"
+    / "generated"
+    / "merakiAbilityKits.ts"
+)
+
+
+def resolve_wiki_db(cli_value: str | Path | None = None) -> Path:
+    """Resolve the Local League Wiki cache: --wiki-db > LCC_WIKI_DB > repo default."""
+    raw = cli_value or os.environ.get("LCC_WIKI_DB")
+    return Path(raw).expanduser() if raw else DEFAULT_WIKI_DB
+
+
+def resolve_axword_source(cli_value: str | Path | None = None) -> Path:
+    """Resolve the Axword Meraki kit source: flag > LCC_AXWORD_SOURCE > sibling repo."""
+    raw = cli_value or os.environ.get("LCC_AXWORD_SOURCE")
+    return Path(raw).expanduser() if raw else DEFAULT_AXWORD_SOURCE
+
+
+def _derive_patch(champions_source: Path) -> str:
+    """Derive the patch string from the cache's pinned ddragon icon URLs.
+
+    Replaces the old hardcoded ``"patch": "16.15"`` so the emitted value
+    always matches the cache the packets were built from.
+    """
+    try:
+        raw = json.loads(champions_source.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return "unknown"
+    for entry in raw.values():
+        if not isinstance(entry, dict):
+            continue
+        match = re.search(
+            r"cdn/([0-9]+\.[0-9]+)\.[0-9]+/img/champion/",
+            str(entry.get("icon") or ""),
+        )
+        if match:
+            return match.group(1)
+    return "unknown"
 
 
 def _norm(value: str) -> str:
@@ -60,16 +124,32 @@ def _axword_by_name(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return result
 
 
-def _wiki_revisions() -> dict[str, dict[str, Any]]:
-    """Read revision receipts from the local read-only Wiki index, if present."""
+def _wiki_revisions(wiki_db: str | Path | None = None) -> dict[str, dict[str, Any]]:
+    """Read revision receipts from the local read-only Wiki index.
+
+    Fail closed (issue #134): a missing or unreadable cache raises one
+    actionable error instead of silently returning ``{}`` — an empty receipt
+    set used to let ``build()`` label every champion ``reviewed_packet``
+    against no evidence at all.
+    """
+    db = Path(wiki_db).expanduser() if wiki_db else resolve_wiki_db()
+    if not db.is_file():
+        raise RuntimeError(
+            f"Local League Wiki cache not found: {db}\n"
+            "Supply it with --wiki-db or the LCC_WIKI_DB environment "
+            "variable (repo convention: data/wiki/league-wiki.sqlite3)."
+        )
     try:
-        with sqlite3.connect(f"file:{WIKI_DB}?mode=ro", uri=True) as connection:
+        with sqlite3.connect(f"file:{db}?mode=ro", uri=True) as connection:
             rows = connection.execute(
                 "SELECT title, revision_id, revision_timestamp "
                 "FROM pages WHERE namespace = 0"
             ).fetchall()
-    except (OSError, sqlite3.Error):
-        return {}
+    except (OSError, sqlite3.Error) as exc:
+        raise RuntimeError(
+            f"Local League Wiki cache is unreadable ({db}): {exc}\n"
+            "Supply a readable copy with --wiki-db or LCC_WIKI_DB."
+        ) from exc
     return {
         str(title): {
             "revision_id": int(revision_id),
@@ -395,11 +475,40 @@ def _render_module(name: str, option_keys: list[str]) -> str:
 
 
 def build(
-    source: Path, axword_source: Path, output: Path, modules: Path
+    source: Path,
+    axword_source: Path,
+    output: Path,
+    modules: Path,
+    wiki_db: str | Path | None = None,
 ) -> dict[str, Any]:
+    """Generate the reviewed-packet asset and its explicit champion modules.
+
+    Fail closed (issue #134): every source is pre-flighted before any output
+    is written, and a champion is only ever labeled ``reviewed_packet`` when
+    the current Wiki index carries a revision receipt for its page.  A run
+    without any receipts aborts entirely.
+    """
+    if not source.is_file():
+        raise RuntimeError(
+            f"Champion cache not found: {source}\n"
+            "Supply it with --source (repo convention: data/champions.json)."
+        )
+    if not axword_source.is_file():
+        raise RuntimeError(
+            f"Axword Meraki kit source not found: {axword_source}\n"
+            "Supply it with --axword-source or the LCC_AXWORD_SOURCE "
+            "environment variable (repo convention: the sibling "
+            "lol-strength-analysis checkout)."
+        )
     raw = json.loads(source.read_text(encoding="utf-8"))
     axword = _axword_by_name(_load_axword(axword_source))
-    revisions = _wiki_revisions()
+    revisions = _wiki_revisions(wiki_db)
+    if not revisions:
+        raise RuntimeError(
+            "The Wiki index returned zero revision receipts — no champion can "
+            "be labeled reviewed_packet against no evidence. Check --wiki-db / "
+            "LCC_WIKI_DB and rebuild the index before generating packets."
+        )
     champions: dict[str, Any] = {}
     for champion in sorted(raw.values(), key=lambda row: str(row.get("name", ""))):
         name = str(champion["name"])
@@ -440,8 +549,12 @@ def build(
             name.replace(" ", "_")
         )
         receipt = revisions.get(name, {})
+        # A champion whose page has no revision receipt in the current index
+        # is generated, never reviewed: the packet may embed stale numbers
+        # and nothing proves what was read.
+        review_status = "reviewed_packet" if receipt else "generated_packet"
         champions[name] = {
-            "review_status": "reviewed_packet",
+            "review_status": review_status,
             "review_manifest": {
                 "module_kind": "dedicated_champion_module",
                 "formula_slots": sorted(
@@ -471,9 +584,15 @@ def build(
         json.dumps(
             {
                 "schema_version": 1,
-                "patch": "16.15",
+                "patch": _derive_patch(source),
                 "source": "League Wiki cache + Axword Meraki ability kits",
                 "champion_count": len(champions),
+                "source_receipts": {
+                    "champions.json": source_receipt(source, kind="tracked wiki cache"),
+                    "axword_source": source_receipt(
+                        axword_source, kind="Axword Meraki ability kits"
+                    ),
+                },
                 "champions": champions,
             },
             ensure_ascii=False,
@@ -500,14 +619,29 @@ def build(
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Source supply (issue #134, no developer-home defaults):\n"
+            "  --wiki-db / LCC_WIKI_DB      -> data/wiki/league-wiki.sqlite3\n"
+            "  --axword-source / LCC_AXWORD_SOURCE\n"
+            "                                -> sibling lol-strength-analysis checkout\n"
+            "  --source                     -> data/champions.json"
+        ),
+    )
     parser.add_argument("--source", type=Path, default=root / "data" / "champions.json")
     parser.add_argument(
         "--axword-source",
         type=Path,
-        default=Path(
-            "/Users/river/Projects/lol-strength-analysis/src/data/generated/merakiAbilityKits.ts"
-        ),
+        default=None,
+        help="Axword Meraki ability kits source (env LCC_AXWORD_SOURCE)",
+    )
+    parser.add_argument(
+        "--wiki-db",
+        type=Path,
+        default=None,
+        help="Local League Wiki sqlite index (env LCC_WIKI_DB)",
     )
     parser.add_argument(
         "--output", type=Path, default=root / "static" / "reviewed-packets.json"
@@ -518,12 +652,17 @@ def main() -> None:
         default=root / "src" / "calculator" / "champions" / "generated",
     )
     args = parser.parse_args()
-    result = build(
-        args.source.resolve(),
-        args.axword_source.resolve(),
-        args.output.resolve(),
-        args.modules.resolve(),
-    )
+    try:
+        result = build(
+            args.source.resolve(),
+            resolve_axword_source(args.axword_source).resolve(),
+            args.output.resolve(),
+            args.modules.resolve(),
+            wiki_db=resolve_wiki_db(args.wiki_db).resolve(),
+        )
+    except RuntimeError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
     print(json.dumps(result, sort_keys=True))
 
 

@@ -1,0 +1,37 @@
+{
+ "name": "Rabadon's Deathcap",
+ "id": 3089,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 130.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rabadon's Deathcap"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Magical Opus",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Rabadon's Deathcap"
+    ],
+    "binary": [],
+    "evidence": "passive:Magical Opus"
+   }
+  }
+ ]
+}

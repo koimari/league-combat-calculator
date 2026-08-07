@@ -98,6 +98,19 @@ OPTIONS = [
         "type": "bool",
         "default": False,
         "label": "Soul-Marked proc is armed",
+        "rotation": {
+            "role": "consume",
+            "slot": "W",
+            "condition": "soul-mark",
+            "kind": "mark_consume",
+            "setup_slot": "auto_stream",
+            "note": (
+                "W's damage consumes the Oathsworn/Kalista marks applied "
+                "by the auto stream — no cast-slot applier, so no "
+                "cross-slot edge; the option gates W's presence in the "
+                "rotation."
+            ),
+        },
     },
 ]
 

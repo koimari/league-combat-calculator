@@ -1,0 +1,37 @@
+{
+ "name": "Ionian Boots of Lucidity",
+ "id": 3158,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 10.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ionian Boots of Lucidity"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Ionian Insight",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Ionian Boots of Lucidity"
+    ],
+    "binary": [],
+    "evidence": "passive:Ionian Insight"
+   }
+  }
+ ]
+}

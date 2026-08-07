@@ -1,0 +1,144 @@
+{
+ "name": "Runecarver",
+ "id": 447108,
+ "atoms": [
+  {
+   "atom_id": "stats.ability-power",
+   "family": "stats",
+   "behavior": "abilityPower",
+   "parameters": {
+    "flat": 80.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.stack",
+   "family": "stack-transform-summon-resource",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [
+    "damage.on-hit",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.magic",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "damage.dot",
+   "family": "damage",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [
+    "heal-shield.grievous-wounds",
+    "damage.damage-instance"
+   ],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "vision-economy.zombie-ward",
+   "family": "vision-economy",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Energized",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Runecarver"
+    ],
+    "binary": [],
+    "evidence": "passive:Energized"
+   }
+  }
+ ]
+}

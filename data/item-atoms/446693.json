@@ -1,0 +1,113 @@
+{
+ "name": "Prowler's Claw",
+ "id": 446693,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Prowler's Claw"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 22.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Prowler's Claw"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Prowler's Claw"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.dash",
+   "family": "crowd-control-mobility",
+   "behavior": "Sandswipe",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Prowler's Claw"
+    ],
+    "binary": [],
+    "evidence": "active:Sandswipe"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Sandswipe",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Prowler's Claw"
+    ],
+    "binary": [],
+    "evidence": "active:Sandswipe"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Sandswipe",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Prowler's Claw"
+    ],
+    "binary": [],
+    "evidence": "active:Sandswipe"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Sandswipe",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Prowler's Claw"
+    ],
+    "binary": [],
+    "evidence": "active:Sandswipe"
+   }
+  }
+ ]
+}

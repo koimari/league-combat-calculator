@@ -13,6 +13,7 @@ from src.calculator.champions import (
     _CHAMPION_MODULES,
     RESERVED_OPTION_KEYS,
     champion_options_meta_map,
+    get_champion_option_rotation,
     get_champion_options_meta,
     registered_champion_names,
 )
@@ -155,9 +156,9 @@ class TestOptionsDeclarationValidity:
                 assert isinstance(source["revision_id"], int), (name, source)
 
     def test_all_registered_modules_expose_manifest_or_inline_receipts(self) -> None:
-        """The 173-module registry has no provenance-empty champion metadata."""
+        """The full registry has no provenance-empty champion metadata."""
         names = registered_champion_names()
-        assert len(names) == 173
+        assert len(names) == len(_CHAMPION_MODULES)
         assert all(get_champion_options_meta(name)["sources"] for name in names)
 
     def test_no_option_key_collides_with_a_reserved_key(self) -> None:
@@ -189,3 +190,55 @@ class TestOptionsDeclarationValidity:
                     f"{name}: OPTIONS key {opt['key']!r} is not referenced "
                     f"anywhere in its module — stale declaration or rename?"
                 )
+
+
+class TestRotationDeclarations:
+    """Every OPTIONS entry carries typed rotation semantics (issue #145).
+
+    The rotation resolver builds its setup/consume edges FROM these
+    declarations, so an unclassified option is a contract failure: a
+    rotation receipt must never claim "no detectable setup/consume signal"
+    while an enabled semantic option is unclassified or unsupported.
+    """
+
+    _ROTATION_ROLES = {
+        "setup",
+        "consume",
+        "self_state",
+        "execute",
+        "irrelevant",
+        "unsupported",
+    }
+    _VALID_SLOTS = {"P", "Q", "Q2", "W", "E", "R", "auto_stream"}
+
+    def test_every_option_is_classified_for_rotation_semantics(self) -> None:
+        """An unclassified option fails the suite (exhaustiveness)."""
+        for name in _CHAMPION_MODULES:
+            rotations = get_champion_option_rotation(name)
+            for opt in get_champion_options_meta(name)["options"]:
+                key = str(opt["key"])
+                decl = rotations.get(key)
+                assert (
+                    decl is not None
+                ), f"{name}: option {key!r} has no rotation classification"
+
+    def test_rotation_declaration_shape_is_valid(self) -> None:
+        """Role is closed to the six-role vocabulary; slot/setup_slot valid."""
+        for name in _CHAMPION_MODULES:
+            rotations = get_champion_option_rotation(name)
+            for opt in get_champion_options_meta(name)["options"]:
+                key = str(opt["key"])
+                decl = rotations.get(key)
+                assert decl is not None, (name, key)
+                role = decl.get("role")
+                assert role in self._ROTATION_ROLES, (name, key, decl)
+                assert decl.get("slot") in self._VALID_SLOTS, (name, key, decl)
+                if role in ("consume", "execute"):
+                    setup_slot = decl.get("setup_slot")
+                    assert setup_slot is None or setup_slot in self._VALID_SLOTS, (
+                        name,
+                        key,
+                        decl,
+                    )
+                else:
+                    assert "setup_slot" not in decl, (name, key, decl)

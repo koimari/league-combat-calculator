@@ -1,0 +1,93 @@
+{
+ "name": "Arcane Sweeper (Trinket)",
+ "id": 3348,
+ "atoms": [
+  {
+   "atom_id": "stack-transform-summon-resource.trap",
+   "family": "stack-transform-summon-resource",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Arcane Sweeper (Trinket)"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.ward-unit",
+   "family": "stack-transform-summon-resource",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Arcane Sweeper (Trinket)"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "stack-transform-summon-resource.soul",
+   "family": "stack-transform-summon-resource",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Arcane Sweeper (Trinket)"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.sight",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Arcane Sweeper (Trinket)"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.true-sight",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [
+    "vision-economy.stealth",
+    "vision-economy.camouflage"
+   ],
+   "provenance": {
+    "wiki": [
+     "Arcane Sweeper (Trinket)"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  },
+  {
+   "atom_id": "vision-economy.ward",
+   "family": "vision-economy",
+   "behavior": "active",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Arcane Sweeper (Trinket)"
+    ],
+    "binary": [],
+    "evidence": "active:"
+   }
+  }
+ ]
+}

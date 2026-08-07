@@ -1,0 +1,93 @@
+{
+ "name": "Heartsteel",
+ "id": 3084,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 900.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Heartsteel"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.on-attack",
+   "family": "damage",
+   "behavior": "Colossal Consumption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Heartsteel"
+    ],
+    "binary": [],
+    "evidence": "passive:Colossal Consumption"
+   }
+  },
+  {
+   "atom_id": "heal-shield.health-regeneration",
+   "family": "heal-shield",
+   "behavior": "Colossal Consumption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Heartsteel"
+    ],
+    "binary": [],
+    "evidence": "passive:Colossal Consumption"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Colossal Consumption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Heartsteel"
+    ],
+    "binary": [],
+    "evidence": "passive:Colossal Consumption"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Colossal Consumption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Heartsteel"
+    ],
+    "binary": [],
+    "evidence": "passive:Colossal Consumption"
+   }
+  },
+  {
+   "atom_id": "vision-economy.assist-bounty",
+   "family": "vision-economy",
+   "behavior": "Colossal Consumption",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Heartsteel"
+    ],
+    "binary": [],
+    "evidence": "passive:Colossal Consumption"
+   }
+  }
+ ]
+}

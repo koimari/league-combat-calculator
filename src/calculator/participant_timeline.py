@@ -19,10 +19,10 @@ from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
 from .timeline_coverage import combine_timeline_coverages
 from .item_coverage import item_model_coverage
+from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
     derive_item_support_effects,
-    has_ordered_item_team_effects,
     schedule_knights_vow,
 )
 from .champions.skill_orders import get_ability_rank
@@ -412,6 +412,12 @@ def _has_stateful_defense(defenses: Any) -> bool:
     the live health boundary, so routing them through the panel would silently
     erase a state change. The caller falls back to the authoritative event
     walk when any such field is armed.
+
+    Issue #137: this field scan is the defense-side capability check that
+    replaced the item-name blocklists (Force of Nature / Jak'Sho stacks,
+    Death's Dance deferral/Defy, Zhonya stasis, Bloodthirster ichorshield,
+    Maw lifeline omnivamp, ... all live on the defense object, not on a
+    packet the compiler could see).
     """
     return (
         any(
@@ -422,6 +428,13 @@ def _has_stateful_defense(defenses: Any) -> bool:
                 "threshold_health_heal",
                 "revive_health_amount",
                 "reactive_shield_amount",
+                "bloodthirster_shield_cap",
+                "maw_lifeline_omnivamp_percent",
+                "damage_deferral_fraction",
+                "defy_window",
+                "force_stack_interval",
+                "jaksho_stack_interval",
+                "starting_stasis_duration",
             )
         )
         or bool(getattr(defenses, "spell_shield_ready", False))
@@ -429,86 +442,13 @@ def _has_stateful_defense(defenses: Any) -> bool:
     )
 
 
-def _has_ordered_item_defense(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Return whether a loadout needs the full ordered item event walk."""
-    return any(
-        str(item.get("name", ""))
-        in {
-            "Eclipse",
-            "Death's Dance",
-            "Armored Advance",
-            "Chainlaced Crushers",
-            "Celestial Opposition",
-            "Bloodthirster",
-            "Fimbulwinter",
-            "Force of Nature",
-            "Jak'Sho, The Protean",
-            "Zhonya's Hourglass",
-            "Seeker's Armguard",
-        }
-        for item in items
-    )
-
-
-def _has_ordered_item_sustain(
-    items: Iterable[Mapping[str, Any]], *, include_warmog: bool = True
-) -> bool:
-    """Return whether item healing/regen needs the authoritative event walk.
-
-    The compiled optimizer walk intentionally stores only numeric heal
-    amounts.  It cannot carry the source category needed for Spirit Visage
-    (lifesteal/omnivamp are stat conversions, while direct heals and regen
-    are received-healing packets), nor can it author Warmog/Doran trigger
-    state.  Route those builds through the same ordered path as the visible
-    participant receipt.
-    """
-    stateful_names = {
-        "Doran's Blade",
-        "Doran's Ring",
-        "Doran's Shield",
-        "Catalyst of Aeons",
-        "Immortal Path",
-        "Maw of Malmortius",
-    }
-    for item in items:
-        name = str(item.get("name", ""))
-        if name == "Warmog's Armor" and not include_warmog:
-            continue
-        if include_warmog and name == "Warmog's Armor":
-            return True
-        if name in stateful_names:
-            return True
-        try:
-            stats = get_item_stats(dict(item))
-        except (TypeError, ValueError, KeyError):
-            # A malformed cached item must not be made more permissive by
-            # the optimizer shortcut; the normal path will surface its
-            # source/schema error.
-            return True
-        if any(
-            float(stats[key]) > 0.0
-            for key in (
-                "lifesteal_percent",
-                "omnivamp_percent",
-            )
-        ):
-            return True
-    return False
-
-
-def _has_active_warmog(loadout: ResolvedLoadout) -> bool:
-    """Whether a roster loadout can arm Warmog's combat regen gate."""
-    if not any(
-        str(item.get("name", "")) == "Warmog's Armor" for item in loadout.item_data
-    ):
-        return False
-    try:
-        threshold = sustain_effect_value(
-            "Warmog's Armor", "heart_bonus_health_threshold"
-        )
-    except (KeyError, TypeError, ValueError):
-        return True
-    return float(loadout.stats.get("bonus_health", 0.0)) >= threshold
+# Issue #137: the item-name dispatch blocklists that used to live here
+# (_has_ordered_item_defense, _has_ordered_item_sustain, _has_active_warmog)
+# are gone.  Their mechanics are now caught by the extended
+# ``_has_stateful_defense`` field scan, the ``_WalkCompiler`` packet checks,
+# and the compile-stage ``_uncompilable_item_receipt`` capability report —
+# so a newly authored mechanic can never be silently erased by the score
+# path just because nobody remembered to add an item name to a gate.
 
 
 def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
@@ -764,6 +704,24 @@ def _participant_defenses(defenses: Any) -> dict[str, float]:
     }
 
 
+def _first_pair_defender_id(
+    attacker: Combatant, all_actors: Iterable[Combatant]
+) -> str | None:
+    """The first defender in this attacker's ordered pair list.
+
+    Mirrors the legacy attack groups (main/ally attack the enemies in
+    roster order; an enemy attacks the main first).  Used to reconstruct
+    the pair-enriched id of an attacker's applied self-heal copy so
+    fan-out clones can link back to it (``_source_event_id``).
+    """
+    if attacker.team == "enemy":
+        return "main"
+    for actor in all_actors:
+        if actor.team == "enemy":
+            return actor.participant_id
+    return None
+
+
 def _support_target_ids(
     attacker: Combatant,
     effect: Mapping[str, Any],
@@ -778,6 +736,20 @@ def _support_target_ids(
     choice was observed.
     """
     target_scope = effect.get("target_scope")
+    # Issue #142: fail closed BEFORE any team/roster branching.  Every
+    # unrecognized / missing / structurally invalid scope used to land in the
+    # terminal catch-all and silently redirect the packet to teammate zero
+    # (or drop it entirely for an enemy attacker) — contradicting the
+    # published ``fail_closed: True`` contract.  Main, ally, and enemy actors
+    # must fail identically, so this check runs before the no-teammate block.
+    if target_scope not in SUPPORT_TARGET_RESOLUTION_SCOPES:
+        raise ValueError(
+            "Unsupported support target_scope "
+            f"{target_scope!r} for {attacker.participant_id} "
+            f"({attacker.champion_data.get('name', '')}) from source "
+            f"{effect.get('source', '')!r}; supported scopes: "
+            f"{sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)}"
+        )
     if target_scope == "self":
         return [attacker.participant_id], "self"
     # ``main`` and ``ally`` are separate UI buckets but they are one allied
@@ -808,7 +780,16 @@ def _support_target_ids(
         ], "self_and_first_selected_teammate"
     if target_scope == "all_teammates":
         return [actor.participant_id for actor in teammates], "all_selected_teammates"
-    return [teammates[0].participant_id], "first_selected_teammate"
+    if target_scope == "one_teammate":
+        # The one-teammate scope (Karma E, Orianna E, Yuumi E, Lulu E — the
+        # self-or-target default) used to be resolved ONLY by the terminal
+        # catch-all.  It is now an explicit branch, so the terminal default
+        # can be an unreachable exhaustiveness guard.
+        return [teammates[0].participant_id], "first_selected_teammate"
+    raise AssertionError(
+        f"unhandled support target_scope {target_scope!r} — the closed "
+        "resolution vocabulary and this branch list have drifted"
+    )
 
 
 def _support_effect_templates(
@@ -854,6 +835,51 @@ def _support_effect_templates(
                             f"{attacker.participant_id}:support:{effect_index}:{target_index}",
                         )
                     ),
+                }
+            )
+    # Issue #143: fan out champion-owned heal events (authored by the E1
+    # self-heal rule for slots in ``_MODULE_AUTHORED_HEAL_SLOTS`` — Taric Q
+    # today) to the attacker's selected teammates.  The self copy stays in
+    # the attacker's healing ledger at its original event id; each ally copy
+    # is one support heal template with the same time/amount/source/kind,
+    # ``_event_id = f"{self_id}:ally:{i}"`` and ``_source_event_id`` = the
+    # self copy's id, so the receipt can prove one formula priced every
+    # recipient.  The clones are added BEFORE item support effects so item
+    # passives that trigger off ally heals/shields (Moonstone Renewer) see
+    # them, exactly like the scanner packets they replace.
+    first_defender_id = _first_pair_defender_id(attacker, all_actors)
+    for heal_index, heal_event in enumerate(result.get("self_healing_events", [])):
+        if not isinstance(heal_event, Mapping):
+            continue
+        if str(heal_event.get("target_scope", "")) not in {
+            "self_and_all_teammates",
+            "self_and_one_teammate",
+        }:
+            continue
+        target_ids, target_policy = _support_target_ids(
+            attacker, heal_event, all_actors
+        )
+        raw_id = heal_event.get("_event_id") or (
+            f"{attacker.participant_id}:heal:{heal_index}"
+        )
+        applied_self_id = (
+            f"{raw_id}:{first_defender_id}" if first_defender_id else str(raw_id)
+        )
+        for ally_index, target_id in enumerate(target_ids):
+            if target_id == attacker.participant_id:
+                continue
+            templates.append(
+                {
+                    **{key: value for key, value in heal_event.items() if key != "_sk"},
+                    # The clone is a support heal packet (like the scanner
+                    # packet it replaces), so it rides the heal application
+                    # phase and counts toward the attacker's healing output.
+                    "kind": "heal",
+                    "attacker": attacker.participant_id,
+                    "target": target_id,
+                    "target_policy": target_policy,
+                    "_event_id": f"{applied_self_id}:ally:{ally_index}",
+                    "_source_event_id": applied_self_id,
                 }
             )
     item_result = dict(result)
@@ -1104,20 +1130,6 @@ def _target_allocation_receipt(
             ["secondary packet is missing allocated_target_index"] if missing else []
         ),
     }
-
-
-def _has_ordered_item_team_effects(
-    items: Iterable[Mapping[str, Any]],
-    enemies: Iterable[ResolvedLoadout] = (),
-    allies: Iterable[ResolvedLoadout] = (),
-) -> bool:
-    """Return whether any participant needs the full item-team event walk."""
-    if has_ordered_item_team_effects(items):
-        return True
-    return any(
-        has_ordered_item_team_effects(loadout.item_data)
-        for loadout in (*enemies, *allies)
-    )
 
 
 def _thorns_return_damage(
@@ -4324,6 +4336,144 @@ _KIND_DAMAGE, _KIND_HEAL, _KIND_SHIELD, _KIND_PLAIN_DAMAGE = 0, 1, 2, 3
 # live-health repricing, no Grievous pack, and no wound — the walk
 # skips those four branch reads.  Classified at compile time only.
 
+
+class UncompilableActionError(ValueError):
+    """A packet/loadout transition the compiled score kernel cannot represent.
+
+    Raised by ``_WalkCompiler`` and the compile-stage capability checks so
+    the caller falls back to the authoritative event walk instead of
+    silently dropping a state transition (issue #137).  ``receipt`` names
+    the transition, ``source`` names where it was authored, and
+    ``invariant`` marks failures in search-invariant compilation (roster
+    pairs, signature panels) so the caller can skip re-attempting the
+    compiled path for the rest of the search.
+    """
+
+    def __init__(self, *, receipt: str, source: str, invariant: bool = False) -> None:
+        super().__init__(f"uncompilable action {receipt!r} from {source!r}")
+        self.receipt = receipt
+        self.source = source
+        self.invariant = invariant
+
+
+# Item mechanics that never surface as a packet flag but are authored
+# inside the authoritative event walk (or a legacy-only second pass) and
+# would be silently erased by the compiled score kernel.  This is the
+# compiler's capability report, not a dispatch blocklist: the dispatch
+# predicate below no longer names items; compilation itself fails closed.
+_COMPILED_WALK_UNREPRESENTABLE_ITEMS = frozenset(
+    {
+        "Catalyst of Aeons",  # Eternity resource-restore second pass is legacy-only
+        "Doran's Blade",  # Life Draining trigger-gated sustain (conservative)
+        "Doran's Ring",  # Drain tick cadence (conservative)
+        "Doran's Shield",  # Enduring Focus authored in the event walk
+        "Eclipse",  # stack self-shield attached only by the receipt path
+        "Fimbulwinter",  # Awe stat conversion (conservative)
+        "Immortal Path",  # below-half received-healing multiplier state
+        "Maw of Malmortius",  # Lifeline omnivamp state transition
+        "Warmog's Armor",  # Warmog's Heart ticks authored in the event walk
+    }
+)
+
+
+def _uncompilable_item_receipt(
+    items: Iterable[Mapping[str, Any]],
+    *,
+    loadout_stats: Mapping[str, float] | None = None,
+) -> str | None:
+    """Return a named receipt when a build cannot ride the compiled walk.
+
+    Item mechanics the score kernel cannot stage either (a) are authored
+    inside the authoritative event walk (Warmog's Heart, Doran's Shield
+    Enduring Focus) or (b) ride a legacy-only receipt pass (Catalyst's
+    Eternity resource restores).  Lifesteal/omnivamp stats are reported
+    here too: their heals carry ``healing_category: vamp`` and would
+    diverge under Spirit Visage in the compiled walk; the packet-level
+    check in ``_WalkCompiler`` is the backstop for champion-authored vamp.
+
+    ``loadout_stats`` is the actor's resolved stats.  It is required for
+    Warmog's Armor so the check mirrors the receipt walk's own gate: the
+    Heart ticks are only authored once the bonus-health threshold is met,
+    so an inactive Warmog is numerically identical in both walks (the
+    legacy ``_has_active_warmog`` precision).  ``None`` fails closed.
+    """
+    for item in items:
+        name = str(item.get("name", ""))
+        if name == "Warmog's Armor":
+            if loadout_stats is None:
+                return f"item_mechanic={name}"
+            try:
+                threshold = sustain_effect_value(
+                    "Warmog's Armor", "heart_bonus_health_threshold"
+                )
+            except (KeyError, TypeError, ValueError):
+                return f"item_mechanic={name}"
+            if float(loadout_stats.get("bonus_health", 0.0) or 0.0) >= float(threshold):
+                return f"item_mechanic={name}"
+            continue
+        if name in _COMPILED_WALK_UNREPRESENTABLE_ITEMS:
+            return f"item_mechanic={name}"
+        try:
+            stats = get_item_stats(dict(item))
+        except (TypeError, ValueError, KeyError):
+            # A malformed cached item must not become compilable by
+            # accident; the normal path surfaces its source/schema error.
+            return f"item_stats_unreadable={name}"
+        if (
+            float(stats.get("lifesteal_percent", 0.0) or 0.0) > 0.0
+            or float(stats.get("omnivamp_percent", 0.0) or 0.0) > 0.0
+        ):
+            return "item_stat=lifesteal_or_omnivamp"
+    return None
+
+
+def _unrepresentable_heal_receipt(event: Mapping[str, Any]) -> str | None:
+    """Return a named receipt when a heal packet carries a transition the
+    compiled score kernel cannot stage, else None."""
+    if event.get("overheal_to_shield"):
+        return "overheal_to_shield"
+    if event.get("healing_category"):
+        return f"healing_category={event.get('healing_category')}"
+    if event.get("requires_holder_health_ratio"):
+        return "requires_holder_health_ratio"
+    if event.get("requires_damage_free_seconds"):
+        return "requires_damage_free_seconds"
+    if event.get("_deferred"):
+        return "deferred_transition"
+    return None
+
+
+def _unrepresentable_damage_receipt(event: Mapping[str, Any]) -> str | None:
+    """Return a named receipt when a damage packet carries a transition the
+    compiled score kernel cannot stage, else None."""
+    if event.get("execute_threshold_ratio") is not None:
+        return f"execute_threshold={event.get('execute_source', '')}"
+    if event.get("redirect_fraction"):
+        return "redirect_fraction"
+    if event.get("_deferred"):
+        return "deferred_transition"
+    if event.get("self_shield"):
+        return "self_shield_payload"
+    return None
+
+
+def _unrepresentable_template_receipt(template: Mapping[str, Any]) -> str | None:
+    """Return a named receipt when a resolved support template cannot ride
+    the compiled score kernel, else None."""
+    kind = str(template.get("kind", ""))
+    if kind not in {"shield", "heal"}:
+        return f"support_kind={kind}"
+    try:
+        duration = max(0.0, float(template.get("duration", 0.0) or 0.0))
+    except (TypeError, ValueError):
+        duration = 0.0
+    if duration > 0.0:
+        return f"support_duration={template.get('duration')}"
+    if template.get("amount_formula") is not None:
+        return "support_amount_formula"
+    return _unrepresentable_heal_receipt(template)
+
+
 # Positional layout of one compiled walk action (built by _WalkCompiler,
 # consumed by _compiled_survival_walk).  Slot 0 is the sort key; every
 # compiler site fills ``attacker`` with a real participant index, so the
@@ -4460,6 +4610,15 @@ class _WalkCompiler:
                 raw_formula if callable(raw_formula) and raw_damage > 0 else None
             )
             grievous = grievous_by_dtype.get(damage_type)
+            # Issue #137: fail closed on any damage transition the score
+            # kernel cannot stage (execute thresholds, redirects, deferred
+            # batches, stack self-shields) instead of silently erasing it.
+            damage_receipt = _unrepresentable_damage_receipt(event)
+            if damage_receipt is not None:
+                raise UncompilableActionError(
+                    receipt=damage_receipt,
+                    source=str(event.get("source", event.get("source_key", "packet"))),
+                )
             # Champion-applied wounds (Katarina R, Varus E) arrive stamped
             # on the packet events by ``_pair_packet``; the walk consumes
             # them exactly like a thorns strike-back wound.
@@ -4506,6 +4665,15 @@ class _WalkCompiler:
             aidx += 1
         self.next_aidx = aidx
         for event in heals:
+            # Issue #137: fail closed on any heal transition the score
+            # kernel cannot stage (Severum overheal-to-shield, vamp source
+            # categories, live gates) instead of silently erasing it.
+            heal_receipt = _unrepresentable_heal_receipt(event)
+            if heal_receipt is not None:
+                raise UncompilableActionError(
+                    receipt=heal_receipt,
+                    source=str(event.get("source", event.get("source_key", "heal"))),
+                )
             trigger = aidx_by_key.get(_heal_trigger_key(event), -1)
             if trigger < 0:
                 candidates = aidx_by_source_time.get(
@@ -4708,6 +4876,15 @@ class _WalkCompiler:
                 raw_formula if callable(raw_formula) and raw_damage > 0 else None
             )
             grievous = grievous_by_dtype.get(damage_type)
+            # Issue #137: fail closed on damage transitions the score kernel
+            # cannot stage (execute thresholds, redirects, deferred batches,
+            # stack self-shields) instead of silently erasing them.
+            damage_receipt = _unrepresentable_damage_receipt(event)
+            if damage_receipt is not None:
+                raise UncompilableActionError(
+                    receipt=damage_receipt,
+                    source=str(event.get("source", source_key)),
+                )
             wound = _champion_wound_tuple(champion_wounds, source_key, damage)
             actions_append(
                 (
@@ -4750,6 +4927,15 @@ class _WalkCompiler:
             aidx += 1
         self.next_aidx = aidx
         for heal_index, event in enumerate(heals):
+            # Issue #137: fail closed on any heal transition the score
+            # kernel cannot stage (Severum overheal-to-shield, vamp source
+            # categories, live gates) instead of silently erasing it.
+            heal_receipt = _unrepresentable_heal_receipt(event)
+            if heal_receipt is not None:
+                raise UncompilableActionError(
+                    receipt=heal_receipt,
+                    source=str(event.get("source", event.get("source_key", "heal"))),
+                )
             trigger = aidx_by_key.get(_heal_trigger_key(event), -1)
             if trigger < 0:
                 candidates = aidx_by_source_time.get(
@@ -4793,6 +4979,11 @@ class _WalkCompiler:
             later_amount = event.get("_later_target_amount")
             if defender_index > 0 and later_amount is not None:
                 amount = max(0.0, float(later_amount))
+            # The heal id mirrors ``_pair_packet``'s enrichment
+            # (``{raw_id}:{defender_id}``) so fan-out clones can point
+            # ``_source_event_id`` at the applied self copy (issue #143).
+            raw_heal_id = event.get("_event_id") or (f"{attacker_id}:heal:{heal_index}")
+            heal_event_id = f"{raw_heal_id}:{defender_id}"
             actions_append(
                 (
                     (
@@ -4801,7 +4992,7 @@ class _WalkCompiler:
                         _event_sequence(event),
                         *source_order,
                         attacker_id,
-                        f"{attacker_id}:{defender_id}:heal:{heal_index}",
+                        heal_event_id,
                         str(event.get("source", event.get("source_key", ""))),
                     ),
                     _KIND_HEAL,
@@ -4840,14 +5031,26 @@ class _WalkCompiler:
             subject_i = index_of[target_id]
             kind = str(template.get("kind", ""))
             priority = -1.0 if kind == "shield" else 1.0
+            # Issue #137: fail closed on any resolved support template the
+            # score kernel cannot stage — non-heal/shield kinds (stat buffs,
+            # damage modifiers, on-hit magic, temporary health, ...), timed
+            # shields/heals (duration > 0), live gates, vamp source
+            # categories, live amount formulas, and trigger links — instead
+            # of mis-compiling it as a flat heal or silently dropping it.
+            template_receipt = _unrepresentable_template_receipt(template)
+            if template_receipt is not None:
+                raise UncompilableActionError(
+                    receipt=template_receipt,
+                    source=str(template.get("source", "")),
+                )
             if template.get("_trigger_event_id") is not None:
                 # No current support author emits a trigger link; resolving
                 # one would need the same cross-pair id map as heals, so
                 # fail closed instead of silently skipping what the legacy
                 # walk might apply.
-                raise ValueError(
-                    "support template carries a trigger link; the compiled "
-                    "walk cannot resolve it"
+                raise UncompilableActionError(
+                    receipt="support_trigger_link",
+                    source=str(template.get("source", "")),
                 )
             aidx = self.next_aidx
             self.next_aidx += 1
@@ -4973,10 +5176,15 @@ class CoupledSearchContext:
         "base_sorted",
         "base_heal_dedup",
         "validated_roster_window",
+        # Issue #137: set when search-invariant compilation (roster pairs or
+        # a signature panel) hit an unrepresentable transition; the compiled
+        # path is then skipped for the rest of the search.
+        "uncompilable",
     )
 
     def __init__(self) -> None:
         self.panels: dict[tuple[Any, ...], "_SignaturePanel"] = {}
+        self.uncompilable = False
         self.roster_actors: list[Combatant] | None = None
         self.actor_params: dict[str, FightParams] = {}
         self.main_request: Any = None
@@ -5443,6 +5651,21 @@ def _context_setup(
     if not context.validated_roster_window:
         require_roster_fight_window_support(params, enemies=enemies, allies=allies)
         context.validated_roster_window = True
+    # Issue #137: the roster is search-invariant, so a loadout the compiled
+    # kernel cannot represent poisons the whole context.  Checked BEFORE any
+    # pair fight runs so the fallback costs nothing beyond the capability
+    # scan.  (Defense fields are already excluded by the dispatch
+    # pre-check; this covers walk-authored item mechanics.)
+    for loadout in (*enemies, *allies):
+        item_receipt = _uncompilable_item_receipt(
+            loadout.item_data, loadout_stats=loadout.stats
+        )
+        if item_receipt is not None:
+            raise UncompilableActionError(
+                receipt=f"roster:{loadout.champion_data.get('name', '')}:{item_receipt}",
+                source=str(loadout.champion_data.get("name", "")),
+                invariant=True,
+            )
     ally_actors = [
         _from_loadout(f"ally:{loadout.champion_data['name']}", "ally", loadout)
         for loadout in allies
@@ -5688,6 +5911,23 @@ def _score_with_search_context(
     total — while compiling only the main champion's fresh outgoing
     fights.
     """
+    # Issue #137: a search-invariant compilation failure (roster pair or
+    # signature panel) poisons the context; every later evaluation raises
+    # immediately instead of re-attempting the compiled path.
+    if getattr(context, "uncompilable", False):
+        raise UncompilableActionError(
+            receipt="context_marked_uncompilable",
+            source=str(champion_data.get("name", "")),
+        )
+    # The main candidate's own loadout is candidate-dependent: a failure
+    # here falls back per evaluation and never poisons the context.  Checked
+    # before any pair fight so the fallback costs only the capability scan.
+    main_item_receipt = _uncompilable_item_receipt(items)
+    if main_item_receipt is not None:
+        raise UncompilableActionError(
+            receipt=f"main:{main_item_receipt}",
+            source=str(champion_data.get("name", "")),
+        )
     if context.roster_actors is None:
         setup_allies = [
             _from_loadout(f"ally:{loadout.champion_data['name']}", "ally", loadout)
@@ -5707,16 +5947,23 @@ def _score_with_search_context(
             defenses=main_defenses,
             request=None,
         )
-        _context_setup(
-            context,
-            params,
-            enemies,
-            allies,
-            str(champion_data.get("name", "")),
-            level,
-            pair_result_cache,
-            [placeholder, *setup_allies, *setup_enemies],
-        )
+        try:
+            _context_setup(
+                context,
+                params,
+                enemies,
+                allies,
+                str(champion_data.get("name", "")),
+                level,
+                pair_result_cache,
+                [placeholder, *setup_allies, *setup_enemies],
+            )
+        except UncompilableActionError as exc:
+            # Roster pair compilation is search-invariant: one failure means
+            # the compiled path can never be used for this search.
+            raise UncompilableActionError(
+                receipt=exc.receipt, source=exc.source, invariant=True
+            ) from exc
     duration = params.fight_duration_seconds
     main = Combatant(
         participant_id="main",
@@ -5733,9 +5980,17 @@ def _score_with_search_context(
     signature = _defensive_signature(main)
     panel = context.panels.get(signature)
     if panel is None:
-        panel = _build_signature_panel(
-            context, main, params, pair_result_cache, signature, all_actors
-        )
+        try:
+            panel = _build_signature_panel(
+                context, main, params, pair_result_cache, signature, all_actors
+            )
+        except UncompilableActionError as exc:
+            # Signature-panel compilation is invariant per defensive
+            # signature; mark the whole context so later evaluations skip
+            # the compiled path instead of re-raising per candidate.
+            raise UncompilableActionError(
+                receipt=exc.receipt, source=exc.source, invariant=True
+            ) from exc
         context.panels[signature] = panel
 
     fresh = _WalkCompiler(panel.n_actions)
@@ -6140,6 +6395,13 @@ def build_participant_timeline(
         and not include_receipt
         and pair_result_cache is not None
         and enemies
+        # Issue #137: the dispatch no longer names items.  These two cheap
+        # capability pre-checks stay: defense-object fields the panel cannot
+        # stage (threshold/reactive/spell-shield/revive/incoming-multiplier
+        # plus FoN/Jak'Sho/stasis/deferral/Defy/ichorshield state) and
+        # Grievous-Wounds profiles (the panel compiles their packs).  Every
+        # other unrepresentable mechanic fails closed INSIDE the compiler,
+        # which raises UncompilableActionError and falls back below.
         and not _has_stateful_defense(main_defenses)
         and not any(_has_stateful_defense(loadout.defenses) for loadout in enemies)
         and not any(_has_stateful_defense(loadout.defenses) for loadout in allies)
@@ -6148,43 +6410,28 @@ def build_participant_timeline(
             healing_reduction_profiles(loadout.item_data) for loadout in enemies
         )
         and not any(healing_reduction_profiles(loadout.item_data) for loadout in allies)
-        # Eclipse and Death's Dance carry ordered self-state that the compact
-        # panel cannot represent (timed shields, deferral, and Defy).
-        and not _has_ordered_item_defense(items)
-        # Vamp, stat regeneration, and trigger-gated sustain packets carry
-        # source categories/live state that the flat panel does not retain.
-        and not _has_ordered_item_sustain(items)
-        and not any(
-            _has_ordered_item_defense(loadout.item_data)
-            for loadout in (*enemies, *allies)
-        )
-        and not any(
-            _has_ordered_item_sustain(loadout.item_data, include_warmog=False)
-            or _has_active_warmog(loadout)
-            for loadout in (*enemies, *allies)
-        )
-        # Ally/team packets carry timestamped shields, heals, stat buffs, and
-        # debuffs.  The compact optimizer panel cannot apply those state
-        # transitions without silently dropping a recipient, so use the
-        # authoritative event walk whenever one is equipped in the roster.
-        and not _has_ordered_item_team_effects(items, enemies, allies)
-        # Collector is a terminal target-state transition, not a score-only
-        # damage effect; keep it on the authoritative event walk.
-        and not any(item.get("name") == "The Collector" for item in items)
     ):
-        return _score_with_search_context(
-            champion_data,
-            level,
-            items,
-            params,
-            main_stats=main_stats,
-            main_defenses=main_defenses,
-            enemies=enemies,
-            allies=allies,
-            pair_result_cache=pair_result_cache,
-            context=search_context,
-            reuse_main_stats=reuse_main_stats,
-        )
+        try:
+            return _score_with_search_context(
+                champion_data,
+                level,
+                items,
+                params,
+                main_stats=main_stats,
+                main_defenses=main_defenses,
+                enemies=enemies,
+                allies=allies,
+                pair_result_cache=pair_result_cache,
+                context=search_context,
+                reuse_main_stats=reuse_main_stats,
+            )
+        except UncompilableActionError as exc:
+            # A transition the score kernel cannot represent must never be
+            # silently dropped (issue #137).  Mark search-invariant failures
+            # so later evaluations skip the compiled path; candidate-local
+            # failures fall back per evaluation.
+            if exc.invariant:
+                search_context.uncompilable = True
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
         champion_data,
@@ -7078,6 +7325,11 @@ def build_participant_timeline(
                 ),
                 **({"grey_health": True} if event.get("_grey_health") else {}),
                 **(
+                    {"charges": int(event["charges"])}
+                    if event.get("charges") is not None
+                    else {}
+                ),
+                **(
                     {
                         "ichorshield_generated": round(
                             float(event["ichorshield_generated"]), 1
@@ -7108,6 +7360,11 @@ def build_participant_timeline(
                 **(
                     {"trigger_event_id": str(event["_trigger_event_id"])}
                     if event.get("_trigger_event_id") is not None
+                    else {}
+                ),
+                **(
+                    {"source_event_id": str(event["_source_event_id"])}
+                    if event.get("_source_event_id") is not None
                     else {}
                 ),
                 "source": event.get("source", ""),

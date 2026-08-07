@@ -1,0 +1,85 @@
+{
+ "name": "Axiom Arc",
+ "id": 6696,
+ "atoms": [
+  {
+   "atom_id": "stats.attack-damage",
+   "family": "stats",
+   "behavior": "attackDamage",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Axiom Arc"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.lethality",
+   "family": "stats",
+   "behavior": "lethality",
+   "parameters": {
+    "flat": 18.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Axiom Arc"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.ability-haste",
+   "family": "stats",
+   "behavior": "abilityHaste",
+   "parameters": {
+    "flat": 20.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Axiom Arc"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "damage.penetration",
+   "family": "damage",
+   "behavior": "Flux",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Axiom Arc"
+    ],
+    "binary": [],
+    "evidence": "passive:Flux"
+   }
+  },
+  {
+   "atom_id": "vision-economy.item-sellback",
+   "family": "vision-economy",
+   "behavior": "Flux",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Axiom Arc"
+    ],
+    "binary": [],
+    "evidence": "passive:Flux"
+   }
+  }
+ ]
+}

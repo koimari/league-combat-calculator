@@ -1,0 +1,100 @@
+{
+ "name": "Dead Man's Plate",
+ "id": 3742,
+ "atoms": [
+  {
+   "atom_id": "stats.health",
+   "family": "stats",
+   "behavior": "health",
+   "parameters": {
+    "flat": 350.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dead Man's Plate"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "stats.armor",
+   "family": "stats",
+   "behavior": "armor",
+   "parameters": {
+    "flat": 55.0,
+    "percent": 0.0
+   },
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dead Man's Plate"
+    ],
+    "binary": [],
+    "evidence": "stats"
+   }
+  },
+  {
+   "atom_id": "crowd-control-mobility.movement-speed",
+   "family": "crowd-control-mobility",
+   "behavior": "Shipwrecker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dead Man's Plate"
+    ],
+    "binary": [],
+    "evidence": "passive:Shipwrecker"
+   }
+  },
+  {
+   "atom_id": "damage.resistance-mitigation",
+   "family": "damage",
+   "behavior": "Shipwrecker",
+   "parameters": {},
+   "relations": [
+    "damage.damage-instance",
+    "damage.armor-penetration",
+    "damage.magic-penetration"
+   ],
+   "provenance": {
+    "wiki": [
+     "Dead Man's Plate"
+    ],
+    "binary": [],
+    "evidence": "passive:Shipwrecker"
+   }
+  },
+  {
+   "atom_id": "heal-shield.max-health-increase-restores-current",
+   "family": "heal-shield",
+   "behavior": "Shipwrecker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dead Man's Plate"
+    ],
+    "binary": [],
+    "evidence": "passive:Shipwrecker"
+   }
+  },
+  {
+   "atom_id": "vision-economy.deep-ward",
+   "family": "vision-economy",
+   "behavior": "Shipwrecker",
+   "parameters": {},
+   "relations": [],
+   "provenance": {
+    "wiki": [
+     "Dead Man's Plate"
+    ],
+    "binary": [],
+    "evidence": "passive:Shipwrecker"
+   }
+  }
+ ]
+}
