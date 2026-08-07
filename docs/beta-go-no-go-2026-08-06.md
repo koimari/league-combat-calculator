@@ -35,9 +35,9 @@ Production metrics were verified by running:
 vercel env run --scope koidevelopments -e production -- .venv/bin/python scripts/beta_metrics.py --beta-start 2026-08-06T22:29:00+00:00 --weeks 2 --json
 ```
 
-This returned `sessions_observed=0`, `builds=0`, `metrics_events=0`,
-`receipts=0`, and the beta gate remained **PENDING** — the window is not yet
-complete.
+The latest scoped production run at `2026-08-07T00:17:36Z` returned
+`sessions_observed=0`, `builds=0`, `metrics_events=0`, `receipts=0`, and the
+beta gate remained **PENDING** — the window is not yet complete.
 
 The canonical completed window was also checked:
 
