@@ -34,7 +34,7 @@
    },
    "expected": {
     "tdd": 203,
-    "auto_readout": "95% calculated · 3 autos/rotation"
+    "auto_readout": "95% calculated \u00b7 3 autos/rotation"
    },
    "practice_tool_steps": "Load Ziggs with no items; add practice dummy; one full rotation; compare damage dealt."
   },
@@ -127,7 +127,7 @@
   {
    "id": "e9-e1-aatrox-umbral-dash-heal",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E1",
    "setup": {
     "champion": "Aatrox",
@@ -174,7 +174,7 @@
   {
    "id": "e9-e2-malzahar-malefic-visions",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E2",
    "setup": {
     "champion": "Malzahar",
@@ -210,7 +210,7 @@
   {
    "id": "e9-e3-varus-blight-detonation",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E3",
    "setup": {
     "champion": "Varus",
@@ -250,7 +250,7 @@
   {
    "id": "e9-e3-nasus-siphoning-stacks",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E3",
    "setup": {
     "champion": "Nasus",
@@ -289,7 +289,7 @@
   {
    "id": "e9-e4-zyra-plant-attacks",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E4",
    "setup": {
     "champion": "Zyra",
@@ -327,7 +327,7 @@
   {
    "id": "e9-e4-yorick-mist-walkers",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E4",
    "setup": {
     "champion": "Yorick",
@@ -369,7 +369,7 @@
   {
    "id": "e9-e5-zed-death-mark",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E5",
    "setup": {
     "champion": "Zed",
@@ -405,7 +405,7 @@
   {
    "id": "e9-e5-veigar-primordial-burst",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E5",
    "setup": {
     "champion": "Veigar",
@@ -441,7 +441,7 @@
   {
    "id": "e9-e5-sion-decimating-smash",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E5",
    "setup": {
     "champion": "Sion",
@@ -477,7 +477,7 @@
   {
    "id": "e9-e8-rengar-battle-roar-grey",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E8",
    "setup": {
     "champion": "Rengar",
@@ -525,7 +525,7 @@
   {
    "id": "e9-e8-annie-molten-shield",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -564,7 +564,7 @@
   {
    "id": "e9-e8-anivia-rebirth",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E8",
    "setup": {
     "champion": "Anivia",
@@ -599,12 +599,12 @@
     "revived": true,
     "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive lands at 6.0 in this fight; she is killed again at 11.858"
    },
-   "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) — read the death/revive events in the combat log."
+   "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) \u2014 read the death/revive events in the combat log."
   },
   {
    "id": "e9-e8-morellonomicon-grievous",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E8",
    "setup": {
     "champion": "Aatrox",
@@ -662,7 +662,7 @@
     "healing_received": 363.8,
     "healing_reduced": 242.5,
     "reduction_sources": [
-     "Morellonomicon · Grievous Wounds"
+     "Morellonomicon \u00b7 Grievous Wounds"
     ],
     "formula": "Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut). F2: both sides now play their optimal rotations, shifting every event +0.25s (Annie opens E->R, Aatrox opens R); the cut amounts are unchanged. Sum of cuts = 242.5"
    },
@@ -671,7 +671,7 @@
   {
    "id": "e9-e8-serpents-fang-shield-cut",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -712,7 +712,7 @@
     "applied": 200.0,
     "received": 200.0,
     "venom_factor": 0.65,
-    "formula": "Ahri's ranged Serpent's Fang venom cuts shields granted inside the 3s window by the sourced 35% (keep 65%). F2: Annie's optimal rotation opens with E (Molten Shield), granting the 200 shield at t=0 — before Ahri's first venom application lands at the same timestamp — so it lands uncut (200) and is fully absorbed. The venom-cut window itself stays covered by e9-item-serpents-fang-venom.",
+    "formula": "Ahri's ranged Serpent's Fang venom cuts shields granted inside the 3s window by the sourced 35% (keep 65%). F2: Annie's optimal rotation opens with E (Molten Shield), granting the 200 shield at t=0 \u2014 before Ahri's first venom application lands at the same timestamp \u2014 so it lands uncut (200) and is fully absorbed. The venom-cut window itself stays covered by e9-item-serpents-fang-venom.",
     "absorbed": 200.0
    },
    "practice_tool_steps": "Practice Tool: Ahri buys Serpent's Fang (ranged -> 35% cut). Annie casts E (Molten Shield 200) while the venom window is active; the shield lands at 130 (combat log)."
@@ -720,7 +720,7 @@
   {
    "id": "e9-item-serpents-fang-venom",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "item",
    "setup": {
     "champion": "Katarina",
@@ -769,7 +769,7 @@
   {
    "id": "e9-item-fimbulwinter-everlasting",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "item",
    "setup": {
     "champion": "Ahri",
@@ -803,12 +803,12 @@
     "cooldown": 8.0,
     "formula": "Everlasting: 100 base + 4.5% of current mana (1783) = 180.235, triggered by the E charm immobilize (8s cooldown)"
    },
-   "practice_tool_steps": "Practice Tool: Ahri buys Fimbulwinter. Charm an enemy (E immobilizes -> Everlasting triggers); combat log shows the 180.235 shield from Fimbulwinter — Everlasting."
+   "practice_tool_steps": "Practice Tool: Ahri buys Fimbulwinter. Charm an enemy (E immobilizes -> Everlasting triggers); combat log shows the 180.235 shield from Fimbulwinter \u2014 Everlasting."
   },
   {
    "id": "e9-item-steraks-lifeline",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "item",
    "setup": {
     "champion": "Darius",
@@ -860,7 +860,7 @@
   {
    "id": "e9-item-bloodthirster-lifesteal",
    "tier": "local",
-   "sha": "d7ba174a762972a6191bc41e3c6521b29d42cdbc",
+   "sha": "6c1b64d23223167035aed529b37faa31215a7c1f",
    "workstream": "item",
    "setup": {
     "champion": "Ashe",
