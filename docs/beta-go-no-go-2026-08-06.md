@@ -49,6 +49,16 @@ It returned receipts **FAIL** (0/week for both weeks) and an overall **FAIL**.
 
 Because the GO criteria are unmet, **no invites were distributed**.
 
+## Staleness triage note
+
+`data/staleness.json` (checked `2026-08-06T12:36:09Z`, age ≈ 12 h at this
+writing) is well inside the 72 h SLA and carries **11 stale flags** — 5
+champions (AurelionSol Q cost drift; Kled movespeed/attack-range drift; Mel,
+Nilah, Soraka single ability-row drift) and 6 item rows. These are triage
+items for the weekly ops checklist (bias/staleness step), not gate failures
+while the report stays fresh; a re-check plus documented disposition is
+required before any GO can be reconsidered.
+
 ## Invite-gate verification
 
 The production alias was checked without exposing any configured code:
