@@ -13,7 +13,7 @@ all-champion F3 invariants, and the F4 semantic regression suite.
 |---:|---|---|
 | 1 | Tristana | Fixed: typed `self_setup` E charge; E opens the cast order. |
 | 2 | Caitlyn | Certified with limitation: trap/Headshot is passive damage state, not a cast-slot edge. |
-| 3 | Kennen | Certified with limitation: Mark of the Storm is passive/auto-driven; W prose detonation remains documented. |
+| 3 | Kennen | Certified with limitation (deep review 2026-08-07): W active is a flat hit gated by Mark-of-the-Storm-or-Maelstrom eligibility, not a consume/detonation; the mark's only consumer is P's 3rd-stack stun (no damage). No typed detonate atom is source-backed; W passive empowered-auto damage stays a separate on-hit stream. |
 | 4 | Volibear | Certified with limitation: Wounded is a self-consumed, order-neutral mark. |
 | 5 | Viego | Certified with limitation: Q mark is consumed by the auto stream, not a cast slot. |
 | 6 | Naafiri | Certified with limitation: Q bleed/recast is self-slot state; no cross-slot edge is claimed. |
