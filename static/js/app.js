@@ -28,6 +28,12 @@ const engine = {
   loadoutStats: null,
   loadoutStatsKey: "",
   loadoutStatsTimer: null,
+  // The last cached stats stay on screen while a fresh request is in flight
+  // (#151). They are only reusable for the champion they were fetched for,
+  // and only the newest request may write them.
+  loadoutStatsChampion: "",
+  loadoutStatsRequestId: 0,
+  loadoutStatsPending: false,
 };
 
 const state = {
@@ -89,6 +95,14 @@ function usesLevelDerivedRanks(championName) {
 const $ = (id) => document.getElementById(id);
 const fmt = (value) => Math.round(value).toLocaleString("en-US");
 const one = (value) => Number(value).toFixed(1).replace(/\.0$/, "");
+// An event's timestamp, or null when the receipt withheld one. Number(null)
+// and Number("") are both 0, so a bare Number.isFinite check silently dates a
+// timestamp-less event to 0.0s — a wrong number wearing an exact face.
+const eventTime = (event) => {
+  if (event?.time == null || event.time === "") return null;
+  const time = Number(event.time);
+  return Number.isFinite(time) ? time : null;
+};
 const percent = (value) => `${value.toFixed(value < 10 ? 1 : 0)}%`;
 const plural = (count, singular, pluralForm = `${singular}s`) => count === 1 ? singular : pluralForm;
 const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
@@ -96,7 +110,10 @@ const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (char) => ({ "&":
 function invalidateOptimization() {
   if (!state.optimizer.running) state.optimizer.summary = null;
   engine.responses = null;
-  engine.loadoutStats = null;
+  // The cached stats are stale, not worthless: clearing the key re-requests
+  // them while the last known values stay on screen as a pending panel.
+  // Dropping engine.loadoutStats here is what blanked the whole champion card
+  // on every level step (#151).
   engine.loadoutStatsKey = "";
 }
 
@@ -244,21 +261,39 @@ function participantKindForPath(path) {
   return "main";
 }
 
-function applyControlCapabilities() {
-  // P2 (#78 follow-up): consume contract.controls so the backend can
-  // runtime-disable a control family; unsupported families get disabled
-  // with the backend reason instead of silently ignoring input.
-  const fields = engine.capabilities?.controls?.fields || {};
-  const gated = (token) => {
-    const hit = Object.values(fields).find((f) => f.frontend_token === token);
-    return hit && hit.supported === false ? hit : null;
-  };
-  if (gated("data-bis-path")) {
-    document.querySelectorAll(".bis-trigger, #bisButton").forEach((b) => {
-      b.disabled = true;
-      b.title = gated("data-bis-path").reason || "BIS unavailable";
-    });
+/**
+ * Disable the scenario actions whose prerequisites are not met yet, and say
+ * why next to the control.
+ *
+ * Backend capability gating (applyControlCapabilities) is a boot-time fact;
+ * these blocks are state-derived and change with every edit, so this runs on
+ * every render. Issue #152: "Find best item for a slot" looked actionable
+ * with an empty enemy roster and only wrote its warning into the result
+ * column, far from the button that appeared to do nothing.
+ */
+function applyPrerequisiteGates() {
+  const bisButton = document.getElementById("bisButton");
+  if (bisButton && !bisButton.dataset.capabilityGated) {
+    const blocked = !state.attacker.champion
+      ? "Choose a champion to rank items for."
+      : !state.targets.length
+        ? "Best-in-slot needs an enemy to rank against."
+        : !state.targets.every((target) => target.champion)
+          ? "Finish every enemy in the roster before ranking items."
+          : "";
+    bisButton.disabled = Boolean(blocked);
+    bisButton.title = blocked;
+    const note = document.getElementById("bisPrerequisite");
+    if (note) {
+      note.hidden = !blocked;
+      const text = document.getElementById("bisPrerequisiteText");
+      if (text) text.textContent = blocked;
+      // The shortcut only helps when an enemy is what is missing.
+      const addEnemy = document.getElementById("bisAddEnemy");
+      if (addEnemy) addEnemy.hidden = !blocked || !state.attacker.champion;
+    }
   }
+
   const economicsBtn = document.getElementById("economicsOptimize");
   if (economicsBtn) {
     let block = "";
@@ -272,6 +307,29 @@ function applyControlCapabilities() {
     economicsBtn.disabled = Boolean(block);
     economicsBtn.title = block;
   }
+}
+
+function applyControlCapabilities() {
+  // P2 (#78 follow-up): consume contract.controls so the backend can
+  // runtime-disable a control family; unsupported families get disabled
+  // with the backend reason instead of silently ignoring input.
+  const fields = engine.capabilities?.controls?.fields || {};
+  const gated = (token) => {
+    const hit = Object.values(fields).find((f) => f.frontend_token === token);
+    return hit && hit.supported === false ? hit : null;
+  };
+  if (gated("data-bis-path")) {
+    document.querySelectorAll(".bis-trigger, #bisButton").forEach((b) => {
+      b.disabled = true;
+      b.title = gated("data-bis-path").reason || "BIS unavailable";
+      // Marks the control as backend-gated so the per-render prerequisite
+      // pass leaves it disabled instead of re-enabling it. Deliberately not
+      // dataset.capabilityField — that names a payload field, and this is a
+      // control family.
+      b.dataset.capabilityGated = "true";
+    });
+  }
+  applyPrerequisiteGates();
   if (gated("data-game-state")) {
     document.querySelectorAll("[data-game-state]").forEach((b) => {
       b.disabled = true;
@@ -1548,10 +1606,19 @@ function renderScenarioRail() {
     button.classList.toggle("active", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
+  // Every game-state button carries its own description for assistive tech
+  // (#150). The active one is mirrored into the visible summary so sighted
+  // users read the same sentence — the copy lives in the template only.
+  const summary = $("gameStateHelp");
   document.querySelectorAll("[data-game-state]").forEach((button) => {
     const selected = button.dataset.gameState === state.ui.gameState;
     button.classList.toggle("active", selected);
     button.setAttribute("aria-pressed", String(selected));
+    const description = document.getElementById(button.getAttribute("aria-describedby") || "");
+    if (description) {
+      button.title = description.textContent;
+      if (selected && summary) summary.textContent = description.textContent;
+    }
   });
 }
 
@@ -1777,7 +1844,12 @@ function mainParticipantBackendStats(result) {
 }
 
 function currentLoadoutStats() {
-  if (engine.loadoutStats?.stats) return displayStatsFromBackend(engine.loadoutStats.stats);
+  // Cached stats survive an invalidation so a level step never blanks the
+  // panel, but only for the champion they describe — showing one champion's
+  // numbers under another's portrait would be worse than showing none.
+  if (engine.loadoutStats?.stats && engine.loadoutStatsChampion === state.attacker.champion) {
+    return displayStatsFromBackend(engine.loadoutStats.stats);
+  }
   return displayStatsFromBackend(mainParticipantBackendStats(engine.responses?.a));
 }
 
@@ -1786,6 +1858,11 @@ function scheduleLoadoutStats() {
   const key = loadoutStatsKey();
   if (key === engine.loadoutStatsKey) return;
   if (engine.loadoutStatsTimer) clearTimeout(engine.loadoutStatsTimer);
+  const champion = state.attacker.champion;
+  // Rapid level steps queue several requests; only the newest may land, so a
+  // slow earlier response cannot overwrite the level the user settled on.
+  const requestId = (engine.loadoutStatsRequestId += 1);
+  engine.loadoutStatsPending = true;
   engine.loadoutStatsTimer = setTimeout(() => {
     engine.loadoutStatsTimer = null;
     fetch("/api/loadout-stats", {
@@ -1795,12 +1872,17 @@ function scheduleLoadoutStats() {
     })
       .then((response) => response.json())
       .then((result) => {
+        if (requestId !== engine.loadoutStatsRequestId) return;
+        engine.loadoutStatsPending = false;
         if (!result || result.error || !result.stats) return;
         engine.loadoutStats = result;
         engine.loadoutStatsKey = key;
+        engine.loadoutStatsChampion = champion;
         renderPrototypeChampion();
       })
-      .catch(() => {});
+      .catch(() => {
+        if (requestId === engine.loadoutStatsRequestId) engine.loadoutStatsPending = false;
+      });
   }, 60);
 }
 
@@ -1856,7 +1938,14 @@ function renderPrototypeChampion() {
   $("bootsToggle").title = capabilityTitle(bootsCapability);
   $("bootsToggle").dataset.capabilityField = "include_boots";
   $("stateReadout").textContent = `${state.ui.gameState === "live" ? "Snapshot lens" : "Theory state"} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
-  $("statsGrid").innerHTML = stats ? prototypeStats(stats) : `<div class="matrix-placeholder">Patch-pinned stats appear once the backend resolves this loadout.</div>`;
+  // The placeholder is for "no stats yet", not "stats are refreshing" (#151):
+  // a recalculation keeps the previous values on screen and marks the grid
+  // pending, so the portrait, identity and controls never flash empty.
+  const statsGrid = $("statsGrid");
+  const refreshing = Boolean(stats) && engine.loadoutStatsPending;
+  statsGrid.innerHTML = stats ? prototypeStats(stats) : `<div class="matrix-placeholder">Patch-pinned stats appear once the backend resolves this loadout.</div>`;
+  statsGrid.classList.toggle("is-pending", refreshing);
+  statsGrid.setAttribute("aria-busy", String(refreshing));
 }
 
 function renderPrototypeRoster(kind) {
@@ -1947,6 +2036,46 @@ function renderPrototypeBuilder() {
     modeButton.title = capabilityTitle(modeCapability);
     modeButton.dataset.capabilityField = "auto_attack_uptime_mode";
   }
+}
+
+/** Number of ordered events the timeline draws before it says it stopped. */
+const TIMELINE_EVENT_LIMIT = 60;
+
+/**
+ * Draw the ordered event ledger as one lane per event.
+ *
+ * Issue #155: events used to be 17px markers absolutely positioned on a
+ * single shared line, labelled with the first three characters of the source
+ * — dense or simultaneous events overlapped and read as fragments. Giving
+ * each event its own full-width row makes collision structurally impossible
+ * and leaves room for the untruncated source, the actor pair and the value.
+ * The proportional tick keeps the at-a-glance sense of when it landed, and
+ * data-event-index ties each lane to the matching ledger-table line.
+ */
+function renderEventTimeline(combatEvents, duration, eventLabel) {
+  const timed = combatEvents
+    .map((event, index) => ({ event, index, time: eventTime(event) }))
+    .filter(({ time }) => time !== null);
+  if (!timed.length) return `<p class="roster-empty">No participant event ledger returned.</p>`;
+  const shown = timed.slice(0, TIMELINE_EVENT_LIMIT);
+  const lanes = shown.map(({ event, index, time }) => {
+    const position = Math.min(100, Math.max(0, time / duration * 100));
+    const precision = event.event_precision && event.event_precision !== "exact" ? ` · ${event.event_precision}` : "";
+    const damage = Number(event.damage || 0);
+    const value = damage > 0 ? `${fmt(damage)} damage` : event.skipped_reason || "no damage";
+    return `<li class="timeline-event" data-event-index="${index}">
+      <span class="timeline-time">${one(time)}s</span>
+      <span class="timeline-what"><b>${escapeHtml(eventLabel(event.attacker))}</b> → ${escapeHtml(eventLabel(event.target))} · ${escapeHtml(event.source || "event")}${escapeHtml(precision)}</span>
+      <b class="timeline-value">${escapeHtml(value)}</b>
+      <span class="timeline-tick" style="--at:${position}%" aria-hidden="true"></span>
+    </li>`;
+  }).join("");
+  const note = shown.length === combatEvents.length
+    ? `${combatEvents.length} ordered ${plural(combatEvents.length, "event")}, oldest first`
+    : `First ${shown.length} of ${combatEvents.length} ordered events — the full sequence is in the ledger below`;
+  return `<div class="timeline-axis"><span>0:00</span><span>${one(duration / 2)}s</span><span>${one(duration)}s</span></div>
+    <ol class="timeline-events" aria-label="Ordered combat events">${lanes}</ol>
+    <small class="timeline-note">${escapeHtml(note)}</small>`;
 }
 
 function prototypeMetricRow(label, a, b, lower = false, unit = "value", aAlive = "", bAlive = "") {
@@ -2061,33 +2190,27 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   const supportEvents = Array.isArray(aResult?.combat?.support_events) ? aResult.combat.support_events : [];
   const duration = Math.max(1, Number(aResult?.combat?.duration || state.fight.duration));
   const eventLabel = (participantId) => participantLabels.get(participantId) || participantId || "Participant";
-  const markerEvents = combatEvents.filter((event) => Number.isFinite(Number(event.time))).slice(0, 40);
-  const markers = markerEvents.map((event) => {
-    const position = Math.min(100, Math.max(0, Number(event.time) / duration * 100));
-    const title = `${one(Number(event.time))}s · ${eventLabel(event.attacker)} → ${eventLabel(event.target)} · ${event.source || "event"}`;
-    return `<i style="left:${position}%" title="${escapeHtml(title)}">${escapeHtml(String(event.source || "·").slice(0, 3))}</i>`;
-  }).join("");
-  $("timeline").innerHTML = markerEvents.length
-    ? `<div class="timeline-axis"><span>0:00</span><span>${one(duration / 2)}s</span><span>${one(duration)}s</span></div><div class="timeline-row"><span class="timeline-label">${escapeHtml(state.attacker.champion || "Main")}</span><div class="timeline-line">${markers}</div></div><small class="timeline-note">${markerEvents.length === combatEvents.length ? `${combatEvents.length} ordered events` : `First 40 of ${combatEvents.length} ordered events`}</small>`
-    : `<p class="roster-empty">No participant event ledger returned.</p>`;
-  const eventRows = combatEvents.slice(0, 24).map((event) => {
-    const time = Number(event.time);
-    const timeLabel = Number.isFinite(time) ? `${one(time)}s` : "time withheld";
+  $("timeline").innerHTML = renderEventTimeline(combatEvents, duration, eventLabel);
+  // data-event-index matches the timeline lane above, so a row and its lane
+  // are traceably the same event (#155).
+  const eventRows = combatEvents.slice(0, 24).map((event, index) => {
+    const time = eventTime(event);
+    const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
     const value = Number(event.damage || 0);
     const precision = event.event_precision && event.event_precision !== "exact" ? ` · ${event.event_precision}` : "";
     const source = `${eventLabel(event.attacker)} → ${eventLabel(event.target)} · ${event.source || "event"}${precision}`;
-    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(source)}</span><strong>${value > 0 ? `${fmt(value)} damage` : escapeHtml(event.skipped_reason || "No damage")}</strong></div>`;
+    return `<div class="ledger-line" data-event-index="${index}"><span>${escapeHtml(timeLabel)} · ${escapeHtml(source)}</span><strong>${value > 0 ? `${fmt(value)} damage` : escapeHtml(event.skipped_reason || "No damage")}</strong></div>`;
   });
   const healingRows = healingEvents.slice(0, 12).map((event) => {
-    const time = Number(event.time);
-    const timeLabel = Number.isFinite(time) ? `${one(time)}s` : "time withheld";
+    const time = eventTime(event);
+    const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
     const temporaryHealth = Number(event.temporary_health || 0);
     const value = `${fmt(Number(event.applied_amount ?? event.amount ?? 0))} healing${temporaryHealth ? ` + ${fmt(temporaryHealth)} temporary health` : ""}`;
     return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} · ${escapeHtml(event.source || "healing")}</span><strong>${value}</strong></div>`;
   });
   const supportRows = supportEvents.slice(0, 12).map((event) => {
-    const time = Number(event.time);
-    const timeLabel = Number.isFinite(time) ? `${one(time)}s` : "time withheld";
+    const time = eventTime(event);
+    const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
     const recipient = eventLabel(event.target || event.recipient);
     const policy = event.target_policy || event.target_scope || "explicit recipient";
     const details = [
@@ -2126,6 +2249,7 @@ function render() {
   renderPrototypeResult(engine.responses?.a || null, engine.responses?.b || null);
   renderScenarioRail();
   $("scenarioSentence").innerHTML = scenarioSentence();
+  applyPrerequisiteGates();
   scheduleEngineCalculation();
   scheduleLoadoutStats();
 }
@@ -2777,7 +2901,14 @@ document.addEventListener("click", (event) => {
     render();
     return openPicker("champion", `allies.${index}.champion`);
   }
+  if (event.target.closest("#bisAddEnemy")) {
+    // The blocked-state shortcut: jump straight from the prerequisite note to
+    // the enemy the optimizer is waiting on (#152).
+    return document.getElementById("addEnemy")?.click();
+  }
   if (event.target.closest("#bisButton")) {
+    // applyPrerequisiteGates() disables this button and states the reason
+    // beside it, so reaching here without a roster means a stale gate.
     if (!bisReadyForPath("attacker.buildA.0")) {
       const summary = $("resultSummary");
       if (summary) {
@@ -2785,6 +2916,7 @@ document.addEventListener("click", (event) => {
           ? "Best-in-slot needs an enemy roster — add an enemy or use “vs practice target” first."
           : "Choose a champion before ranking items.";
       }
+      applyPrerequisiteGates();
       return;
     }
     return openBis("attacker.buildA.0");
@@ -3140,15 +3272,6 @@ document.addEventListener("change", (event) => {
   if (event.target.closest("[data-fight-range]")) render();
 });
 
-const shareDismiss = document.getElementById("shareDismiss");
-if (shareDismiss) {
-  shareDismiss.addEventListener("click", () => {
-    document.getElementById("shareBanner").hidden = true;
-    const url = new URL(window.location.href);
-    url.searchParams.delete("share");
-    window.history.replaceState({}, "", url);
-  });
-}
 $("pickerSearch").addEventListener("input", (event) => renderPicker(event.target.value));
 $("pickerClose").addEventListener("click", closePicker);
 $("picker").addEventListener("click", (event) => { if (event.target === $("picker")) closePicker(); });
@@ -3869,66 +3992,69 @@ async function shareAnalystBuild() {
 
 // --- Shared build rendering (?share=<token>) --------------------------------
 
+/**
+ * Present a ?share= token in the analyst view, read-only.
+ *
+ * The shared payload is loaded into the analyst state so the recipient sees
+ * the real build and its live result, but the builder column is inert until
+ * they press "Open in editor". An invalid or expired token leaves no inert
+ * controls behind: the banner stays hidden and the failure is stated inline.
+ */
 async function renderSharedBuild(token) {
-  const response = await fetch(`/api/share/${encodeURIComponent(token)}`);
-  const payload = await response.json();
-  if (!response.ok || payload.error) {
-    // Invalid/expired share token: keep the banner hidden, surface inline.
-    document.getElementById("shareBanner").hidden = true;
-    let host = document.getElementById("shareError");
-    if (!host) {
-      host = document.createElement("p");
-      host.id = "shareError";
-      host.className = "engine-error";
-      const col = document.querySelector(".result-column");
-      if (col) col.prepend(host);
-    }
-    if (host) host.textContent = "This shared build link is invalid or expired.";
+  let payload = null;
+  try {
+    const response = await fetch(`/api/share/${encodeURIComponent(token)}`);
+    payload = await response.json();
+    if (!response.ok || payload.error) throw new Error(payload.error || "share lookup failed");
+  } catch (error) {
+    dismissShareBanner();
+    showShareError("This shared build link is invalid or expired.");
     return;
   }
+  window.__sharedBuild = payload;
   document.getElementById("shareBanner").hidden = false;
   document.getElementById("shareBannerText").textContent = `Shared build · ${payload.champion || "unknown champion"} · level ${payload.level || 18} · created ${payload.created_at || ""}`;
-  window.__sharedBuild = payload;
-  const request = payload.request || payload;
-  const host = document.getElementById("quickResults");
-  host.hidden = false;
-  const itemChips = (payload.items || []).map((name) => {
-    const item = findItemByBackendName(name);
-    return `<span class="quick-item-chip"><img src="${item ? itemImage(item.id) : ""}" alt="" /><b>${escapeHtml(name)}</b></span>`;
-  }).join("") || `<span class="quick-items-empty">No items</span>`;
-  const enemyChips = (payload.enemies || []).map((enemy) => `<span class="quick-shared-participant">${escapeHtml(enemy.champion)} <small>Lv ${enemy.level || 18}${enemy.role ? ` · ${escapeHtml(enemy.role)}` : ""}</small></span>`).join("") || `<span class="quick-shared-participant">Practice target</span>`;
-  host.innerHTML = `<div class="quick-shared-card">
-    <div class="quick-results-head"><div><p class="eyebrow">Shared build</p><h2>${escapeHtml(payload.champion || "Unknown champion")}</h2></div><p class="quick-scenario-line">${ROLE_LABELS[payload.role || "mid"] || "Mid"} · level ${payload.level || 18}</p></div>
-    <div class="quick-shared-row"><span class="quick-shared-label">Items</span><div class="quick-shared-chips">${itemChips}</div></div>
-    <div class="quick-shared-row"><span class="quick-shared-label">Enemies</span><div class="quick-shared-chips">${enemyChips}</div></div>
-    <div class="quick-shared-metrics" id="quickSharedMetrics"><span class="quick-spinner-inline">Calculating…</span></div>
-    <div class="quick-shared-sources" id="quickSharedSources"></div>
-  </div>`;
   try {
-    if (usesLevelDerivedRanks(request.champion)) request.ability_ranks = null;
-    const result = await postJson("/api/calculate", request);
-    const data = await result.json();
-    if (!result.ok || data.error) throw new Error(data.error || "calculate failed");
-    const main = (data.combat?.participants || []).find((participant) => participant.participant_id === "main");
-    const mainBreakdown = (data.combat?.breakdown || []).find((row) => row.participant_id === "main");
-    const tdd = Number(mainBreakdown?.total_damage ?? data.total_damage ?? 0);
-    const ehp = Number(main?.survival?.effective_health ?? 0);
-    document.getElementById("quickSharedMetrics").innerHTML = `<div><dt>TDD</dt><dd>${fmt(tdd)}</dd></div><div><dt>eHP</dt><dd>${fmt(ehp)}</dd></div>`;
-    const rows = Object.entries(data.breakdown || {}).filter(([, entry]) => Number(entry.total_damage || 0) > 0).slice(0, 6).map(([slot, entry]) => `<div class="quick-shared-source"><span>${escapeHtml(entry.name || slot)}</span>${certaintyChipHtml(slot)}<b>${fmt(entry.total_damage)}</b></div>`).join("");
-    document.getElementById("quickSharedSources").innerHTML = rows ? `<p class="eyebrow">Damage sources</p>${rows}` : "";
+    loadSharedBuildIntoAnalyst(payload);
+    setSharedReadOnly(true);
+    loadTrustLabels(payload.champion || "");
   } catch (error) {
-    document.getElementById("quickSharedMetrics").innerHTML = `<p class="quick-error">${escapeHtml(error.message)}</p>`;
+    showShareError(`This shared build could not be opened: ${error.message}`);
   }
+}
+
+function showShareError(message) {
+  let host = document.getElementById("shareError");
+  if (!host) {
+    host = document.createElement("p");
+    host.id = "shareError";
+    host.className = "engine-error";
+    const column = document.querySelector(".result-column");
+    if (!column) return;
+    column.prepend(host);
+  }
+  host.textContent = message;
+}
+
+/** Freeze or release the analyst builder while a shared build is on screen. */
+function setSharedReadOnly(readOnly) {
+  const analyst = document.getElementById("analystView");
+  if (analyst) analyst.classList.toggle("is-shared", readOnly);
+  const builder = document.querySelector(".builder-column");
+  if (builder) builder.inert = readOnly;
 }
 
 function openSharedBuildInEditor() {
   const payload = window.__sharedBuild;
-  if (!payload) return;
+  if (!payload) {
+    document.getElementById("shareBannerText").textContent = "This shared build is no longer available to open.";
+    return;
+  }
   try {
-    const quickView = document.getElementById("quickView");
-    if (quickView) quickView.classList.remove("is-shared");
     loadSharedBuildIntoAnalyst(payload);
+    setSharedReadOnly(false);
     switchView("analyst");
+    document.getElementById("championPicker")?.focus();
   } catch (error) {
     document.getElementById("shareBannerText").textContent = `Could not open in editor: ${error.message}`;
   }
@@ -4013,26 +4139,30 @@ function loadSharedBuildIntoAnalyst(payload) {
 
 // --- View switching ---------------------------------------------------------
 
+// Quick mode was removed in 2026-08; the analyst view is the app. Every hop
+// here is guarded so a template without the quick shell (the shipped one)
+// still switches cleanly instead of throwing on a missing node (#147).
 function switchView(view) {
   const quick = document.getElementById("quickView");
   const analyst = document.getElementById("analystView");
   const quickTab = document.getElementById("viewQuickTab");
   const analystTab = document.getElementById("viewAnalystTab");
-  if (view === "analyst") {
-    quick.hidden = true;
-    analyst.hidden = false;
-    quickTab.classList.remove("active");
-    analystTab.classList.add("active");
-    quickTab.setAttribute("aria-selected", "false");
-    analystTab.setAttribute("aria-selected", "true");
+  const select = (tab, selected) => {
+    if (!tab) return;
+    tab.classList.toggle("active", selected);
+    tab.setAttribute("aria-selected", String(selected));
+  };
+  if (view === "analyst" || !quick) {
+    if (quick) quick.hidden = true;
+    if (analyst) analyst.hidden = false;
+    select(quickTab, false);
+    select(analystTab, true);
     requestAnimationFrame(() => scheduleEngineCalculation());
   } else {
-    analyst.hidden = true;
+    if (analyst) analyst.hidden = true;
     quick.hidden = false;
-    analystTab.classList.remove("active");
-    quickTab.classList.add("active");
-    analystTab.setAttribute("aria-selected", "false");
-    quickTab.setAttribute("aria-selected", "true");
+    select(analystTab, false);
+    select(quickTab, true);
     renderQuickView();
   }
   window.scrollTo({ top: 0 });
@@ -4119,20 +4249,78 @@ function bindQuickEvents() {
   document.getElementById("quickRun").addEventListener("click", runQuickBestNextItem);
   document.getElementById("quickShareButton").addEventListener("click", shareQuickBuild);
   document.getElementById("quickAnalystButton").addEventListener("click", openQuickInAnalyst);
-  document.getElementById("shareAnalystButton").addEventListener("click", shareAnalystBuild);
-  document.getElementById("sharePanelClose").addEventListener("click", () => { document.getElementById("sharePanel").hidden = true; });
-  document.getElementById("shareCopy").addEventListener("click", async () => {
-    const urlInput = document.getElementById("shareUrl");
-    const status = document.getElementById("shareStatus");
-    try {
-      await navigator.clipboard.writeText(urlInput.value);
-      status.textContent = "Copied to clipboard";
-    } catch (error) {
-      urlInput.select();
-      status.textContent = "Select the link and copy it manually.";
-    }
-  });
-  document.getElementById("shareOpenEditor").addEventListener("click", openSharedBuildInEditor);
+}
+
+// --- Share controls ---------------------------------------------------------
+
+/**
+ * Wire every build-sharing control and honor a ?share= token.
+ *
+ * Issue #147: this wiring used to live inside bindQuickEvents(), which
+ * initQuickView() skips whenever #quickView is absent — and quick mode was
+ * removed in 2026-08. That left the shared-build banner's "Open in editor"
+ * and dismiss controls, the share panel, and the ?share= read all dead on the
+ * shipped template. Sharing is its own concern with its own initializer, and
+ * it depends on nothing but the analyst view.
+ */
+function initShareControls() {
+  const openEditor = document.getElementById("shareOpenEditor");
+  if (openEditor) openEditor.addEventListener("click", openSharedBuildInEditor);
+
+  const dismiss = document.getElementById("shareDismiss");
+  if (dismiss) {
+    dismiss.addEventListener("click", () => {
+      dismissShareBanner();
+      const url = new URL(window.location.href);
+      url.searchParams.delete("share");
+      window.history.replaceState({}, "", url);
+    });
+  }
+
+  const shareButton = document.getElementById("shareAnalystButton");
+  if (shareButton) shareButton.addEventListener("click", shareAnalystBuild);
+
+  const panelClose = document.getElementById("sharePanelClose");
+  if (panelClose) {
+    panelClose.addEventListener("click", () => { document.getElementById("sharePanel").hidden = true; });
+  }
+
+  const copyButton = document.getElementById("shareCopy");
+  if (copyButton) {
+    copyButton.addEventListener("click", async () => {
+      const urlInput = document.getElementById("shareUrl");
+      const status = document.getElementById("shareStatus");
+      try {
+        await navigator.clipboard.writeText(urlInput.value);
+        status.textContent = "Copied to clipboard";
+      } catch (error) {
+        urlInput.select();
+        status.textContent = "Select the link and copy it manually.";
+      }
+    });
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const shareToken = params.get("share");
+  // The controls above bind immediately — that is the whole point of #147 —
+  // but applying the payload has to wait for the patch snapshot: it resolves
+  // champion and item *names* against the catalogue, and an empty catalogue
+  // would silently drop every item from the shared build.
+  if (shareToken) whenEngineReady(() => renderSharedBuild(shareToken));
+}
+
+/** Run ``callback`` once the patch snapshot is loaded (now, or on ready). */
+function whenEngineReady(callback) {
+  if (DATA.champions.length && engine.itemCatalogReady) {
+    callback();
+    return;
+  }
+  document.addEventListener("scryglass:engine-ready", callback, { once: true });
+}
+
+function dismissShareBanner() {
+  const banner = document.getElementById("shareBanner");
+  if (banner) banner.hidden = true;
 }
 
 // --- Boot -------------------------------------------------------------------
@@ -4152,15 +4340,9 @@ async function initQuickView() {
   QUICK_VIEW_READY = true;
   bindQuickEvents();
   renderQuickView();
-  const params = new URLSearchParams(window.location.search);
-  const shareToken = params.get("share");
-  if (shareToken) {
-    switchView("analyst");
-    renderSharedBuild(shareToken);
-    loadTrustLabels((window.__sharedBuild || {}).champion || "");
-  } else if (state.attacker.champion) {
-    loadTrustLabels(state.attacker.champion);
-  }
+  // Share handling lives in initShareControls(); quick view only needs to
+  // hand the analyst view its trust labels.
+  if (state.attacker.champion) loadTrustLabels(state.attacker.champion);
 }
 
 document.addEventListener("scryglass:engine-ready", () => {
@@ -4172,6 +4354,8 @@ document.addEventListener("scryglass:engine-ready", () => {
 // Boot the quick view immediately so its controls are live even before the
 // patch snapshot finishes loading; grids repopulate on engine-ready.
 initQuickView();
+// Sharing boots unconditionally — it is not a quick-view feature (#147).
+initShareControls();
 
 // Patch the analyst champion selection so trust labels follow the analyst view.
 const _originalRenderPrototypeChampion = renderPrototypeChampion;

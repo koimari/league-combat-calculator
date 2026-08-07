@@ -32,7 +32,10 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
 
     assert response.status_code == 200
     assert "Scryglass — Item calculator" in page
-    assert 'class="brand" href="https://scryglass.xyz/"' in page
+    # #148: the brand returns to this app's canonical home. It used to point
+    # at the retired external marketing site; tests/test_frontend_qa_147_157.py
+    # owns the full contract.
+    assert 'class="brand" href="/"' in page
     assert "<h1>Item calculator</h1>" in page
     # F0: the analyst builder exists exactly once and its proof surfaces ride
     # in the visible result column — the legacy hidden DOM is gone.
