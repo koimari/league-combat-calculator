@@ -1,0 +1,595 @@
+"""Issue #137 Phase 2 — one survival kernel, two ledger adapters.
+
+Contract tests: the optimizer score path (``search_context`` +
+:class:`ScoreLedger`) must deep-equal the authoritative receipt walk
+(:class:`ReceiptLedger`) for every scenario, across the mechanics the
+kernel implements.  Before Phase 2 the two walks were hand-synchronized
+mirror implementations that drifted silently (Aphelios Severum); now both
+adapters drive one :func:`apply_transition` kernel and these tests pin the
+adapters.
+
+Every scenario asserts the *full* scoring receipt (participants +
+breakdown + duration) equality, plus which path served it:
+
+* ``compiled`` — the score adapter ran the shared kernel (the scenario is
+  staged by the compiler);
+* ``fallback`` — compilation failed closed with a named receipt and the
+  caller fell back to the receipt walk (never a silent drop);
+* ``invariant`` — the failure poisoned the context so later evaluations
+  skip the compiled path entirely.
+"""
+
+from dataclasses import replace
+
+from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.participant_timeline import (
+    CoupledSearchContext,
+    build_participant_timeline,
+)
+from src.calculator.pipeline import FightParams
+from src.calculator.scenario import ChampionLoadout
+from src.calculator.stats import calculate_total_stats
+
+
+def _timeline(
+    champion_name,
+    level,
+    items,
+    params,
+    enemies,
+    allies=(),
+    *,
+    role="mid",
+    **kwargs,
+):
+    champion = get_champion(champion_name)
+    stats = calculate_total_stats(champion, level, items, role=role)
+    defenses = resolve_starting_defenses(champion_name, level, stats, items)
+    return build_participant_timeline(
+        champion,
+        level,
+        items,
+        params,
+        main_stats=stats,
+        main_defenses=defenses,
+        enemies=list(enemies),
+        allies=list(allies),
+        **kwargs,
+    )
+
+
+def _assert_contract(
+    name,
+    champion_name,
+    items,
+    params,
+    enemies,
+    allies=(),
+    *,
+    level=18,
+    role="mid",
+    compiled=True,
+    invariant=False,
+):
+    """The score path must deep-equal the receipt path on the whole scoring
+    receipt, and must have taken the documented path."""
+    legacy = _timeline(
+        champion_name,
+        level,
+        items,
+        params,
+        enemies,
+        allies,
+        role=role,
+        include_receipt=False,
+    )
+    context = CoupledSearchContext()
+    fast = _timeline(
+        champion_name,
+        level,
+        items,
+        params,
+        enemies,
+        allies,
+        role=role,
+        include_receipt=False,
+        pair_result_cache={},
+        search_context=context,
+    )
+    assert fast == legacy, f"{name}: score path diverged from the receipt walk"
+    assert (
+        context.uncompilable is invariant
+    ), f"{name}: expected invariant={invariant}, got {context.uncompilable}"
+    if invariant:
+        # The failure poisoned the context: no panel may be reused later.
+        assert not context.panels, f"{name}: expected no panels after poisoning"
+    elif compiled:
+        assert context.panels, f"{name}: expected the compiled path to be used"
+    else:
+        # Candidate-local fallback: the panel may exist (it is built before
+        # the fresh compile raises); the context must not be poisoned.
+        assert not context.uncompilable
+
+
+_ITEMS = {
+    name: get_item_by_name(name)
+    for name in (
+        "Infinity Edge",
+        "Rapid Firecannon",
+        "Phantom Dancer",
+        "Essence Reaver",
+        "Lord Dominik's Regards",
+        "Berserker's Greaves",
+        "Rabadon's Deathcap",
+        "The Collector",
+        "Death's Dance",
+    )
+}
+
+
+def _roster(champion, level=18, items=(), role="mid", quest=False):
+    return ChampionLoadout(
+        champion=champion,
+        level=level,
+        role=role,
+        items=items,
+        role_quest_complete=quest,
+    ).resolve()
+
+
+# ---------------------------------------------------------------------------
+# Compiled scenarios — the score adapter drives the shared kernel
+# ---------------------------------------------------------------------------
+
+
+def test_plain_ad_fight_compiled_walk_equals_receipt_walk():
+    """A plain six-item AD fight (no stateful mechanics) rides the compiled
+    walk and deep-equals the receipt walk."""
+    _assert_contract(
+        "plain-AD",
+        "Ahri",
+        [
+            _ITEMS[n]
+            for n in (
+                "Infinity Edge",
+                "Rapid Firecannon",
+                "Phantom Dancer",
+                "Essence Reaver",
+                "Lord Dominik's Regards",
+                "Berserker's Greaves",
+            )
+        ],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 10,
+                "role": "mid",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+            deterministic=True,
+        ),
+        [_roster("Janna")],
+    )
+
+
+def test_taric_1v1_compiled_walk_equals_receipt_walk():
+    _assert_contract(
+        "taric-1v1",
+        "Taric",
+        [],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 8,
+                "role": "support",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 0.5,
+            },
+            deterministic=True,
+        ),
+        [_roster("Draven", role="bottom")],
+        role="support",
+    )
+
+
+def test_taric_roster_compiled_walk_equals_receipt_walk():
+    """Taric with a selected ally: his sourced heals fan out to the roster,
+    and the compiled walk must reproduce the receipt exactly."""
+    _assert_contract(
+        "taric-roster",
+        "Taric",
+        [],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 8,
+                "role": "support",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 0.5,
+            },
+            deterministic=True,
+        ),
+        [_roster("Draven", role="bottom")],
+        [_roster("Ashe", role="bottom")],
+        role="support",
+    )
+
+
+def test_support_fan_out_heals_compiled_walk_equals_receipt_walk():
+    """Sona/Janna/Milio fan-out heals (caster + selected ally) ride the
+    compiled walk and deep-equal the receipt."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 8,
+            "role": "support",
+            "include_auto_attacks": False,
+            "auto_attack_uptime": 0.0,
+        },
+        deterministic=True,
+    )
+    for champion in ("Sona", "Janna", "Milio"):
+        _assert_contract(
+            f"{champion}-fanout",
+            champion,
+            [],
+            params,
+            [_roster("Draven", role="bottom")],
+            [_roster("Ashe", role="bottom")],
+            role="support",
+        )
+
+
+def test_volibear_w_compiled_walk_equals_receipt_walk():
+    """Volibear W's mark heal rides the compiled walk."""
+    _assert_contract(
+        "volibear-W",
+        "Volibear",
+        [],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 8,
+                "role": "top",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 0.5,
+            },
+            deterministic=True,
+        ),
+        [_roster("Ahri")],
+        [_roster("Ashe", role="bottom")],
+        role="top",
+    )
+
+
+def test_rakan_q_compiled_walk_equals_receipt_walk():
+    """Rakan Q's self + ally heal fan-out rides the compiled walk."""
+    _assert_contract(
+        "rakan-Q",
+        "Rakan",
+        [],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 8,
+                "role": "support",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 0.5,
+            },
+            deterministic=True,
+        ),
+        [_roster("Draven", role="bottom")],
+        [_roster("Ashe", role="bottom")],
+        role="support",
+    )
+
+
+def test_threshold_shield_compiled_walk_equals_receipt_walk():
+    """A defense-armed threshold lifeline (Sterak's Gage) is kernel state in
+    both adapters: the compiled walk applies it exactly like the receipt."""
+    _assert_contract(
+        "steraks-threshold",
+        "Ahri",
+        [_ITEMS["Infinity Edge"]],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 12,
+                "role": "mid",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+            deterministic=True,
+        ),
+        [_roster("Janna", items=("Sterak's Gage",))],
+    )
+
+
+def test_starting_stasis_compiled_walk_equals_receipt_walk():
+    """Zhonya's explicit Time Stop input is kernel state in both adapters."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 12,
+            "role": "mid",
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "item_options": {"Zhonya's Hourglass": {"stasis_active_seconds": 2.0}},
+        },
+        deterministic=True,
+    )
+    _assert_contract(
+        "zhonya-stasis",
+        "Ahri",
+        [_ITEMS["Infinity Edge"]],
+        params,
+        [_roster("Janna")],
+    )
+
+
+def test_champion_revive_compiled_walk_equals_receipt_walk():
+    """A champion-passive revive (Zac Cell Division) authors one candidate
+    per incoming damaging packet in both adapters; the compiled walk applies
+    the kernel's revive transition exactly like the receipt."""
+    _assert_contract(
+        "zac-revive",
+        "Zac",
+        [],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 12,
+                "role": "top",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+            deterministic=True,
+        ),
+        [_roster("Janna")],
+        role="top",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Fail-closed scenarios — compilation raises a named receipt, the caller
+# falls back to the receipt walk, and the receipts still agree
+# ---------------------------------------------------------------------------
+
+
+def test_aphelios_severum_score_path_matches_receipt():
+    """Severum's overheal-to-shield is a champion-authored transition: the
+    compiler raises per evaluation and the caller falls back — the score
+    receipt still deep-equals the receipt walk (the Phase 1 drift case)."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 20,
+            "role": "bottom",
+            "champion_options": {"aphelios_main_weapon": "severum"},
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "cast_order": ["R", "Q", "W", "E"],
+        },
+        deterministic=True,
+    )
+    for items in (
+        [],
+        [
+            _ITEMS[n]
+            for n in (
+                "Infinity Edge",
+                "Rapid Firecannon",
+                "Phantom Dancer",
+                "Essence Reaver",
+                "Lord Dominik's Regards",
+                "Berserker's Greaves",
+            )
+        ],
+    ):
+        _assert_contract(
+            "aphelios-severum",
+            "Aphelios",
+            items,
+            params,
+            [_roster("Janna", role="support")],
+            level=18,
+            role="bottom",
+            compiled=False,
+        )
+
+
+def test_active_warmog_poisons_context_and_falls_back():
+    """Warmog's Heart ticks are authored only by the receipt walk; the
+    compile-stage capability report poisons the context and the score
+    receipt deep-equals the receipt."""
+    _assert_contract(
+        "warmog-gate",
+        "Cassiopeia",
+        [_ITEMS["Rabadon's Deathcap"]],
+        FightParams.from_request(
+            {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+        ),
+        [
+            _roster(
+                "Dr. Mundo",
+                level=18,
+                items=("Warmog's Armor", "Heartsteel", "Randuin's Omen"),
+                role="top",
+            )
+        ],
+        level=13,
+        compiled=False,
+        invariant=True,
+    )
+
+
+def test_collector_execute_falls_back():
+    """The Collector's execute threshold is an authored terminal transition;
+    the compiler raises per evaluation and the score receipt deep-equals the
+    receipt."""
+    _assert_contract(
+        "collector-execute",
+        "Ahri",
+        [_ITEMS["The Collector"], _ITEMS["Infinity Edge"], _ITEMS["Rapid Firecannon"]],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 10,
+                "role": "mid",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+            deterministic=True,
+        ),
+        [_roster("Janna")],
+        compiled=False,
+    )
+
+
+def test_deaths_dance_deferral_falls_back():
+    """Death's Dance Ignore Pain ticks and Defy are authored by the receipt
+    walk; the capability report routes the build to the receipt path and the
+    score receipt deep-equals it."""
+    _assert_contract(
+        "deaths-dance-defer",
+        "Ahri",
+        [_ITEMS["Death's Dance"], _ITEMS["Infinity Edge"]],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 10,
+                "role": "mid",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+            deterministic=True,
+        ),
+        [_roster("Janna")],
+        compiled=False,
+    )
+
+
+def test_knights_vow_redirect_poisons_context_and_falls_back():
+    """Knight's Vow's Worthy redirect is authored by the receipt scheduler;
+    the roster capability report poisons the context and the score receipt
+    deep-equals the receipt."""
+    _assert_contract(
+        "knights-vow-redirect",
+        "Ahri",
+        [_ITEMS["Infinity Edge"]],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 12,
+                "role": "mid",
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+            deterministic=True,
+        ),
+        [_roster("Janna")],
+        [_roster("Ashe", role="bottom", items=("Knight's Vow",))],
+        compiled=False,
+        invariant=True,
+    )
+
+
+def test_receipt_and_score_adapters_share_one_kernel():
+    """Unit-level pin: the same typed action applied through the receipt
+    ledger and the score ledger produces identical survival rows."""
+    from types import SimpleNamespace
+
+    from src.calculator.participant_timeline import Combatant
+    from src.calculator.survival import (
+        ActionKind,
+        ReceiptLedger,
+        ScoreLedger,
+        SurvivalAction,
+        TransitionContext,
+        assemble_survival_rows,
+        build_states,
+        finalize_states,
+        run_survival_walk,
+    )
+
+    combatant = Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": "target"},
+        level=1,
+        items=(),
+        stats={"health": 100.0, "is_melee": True},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            healing_received_multiplier=1.0,
+        ),
+    )
+    actions = [
+        SurvivalAction(
+            sort_key=(0.0, 0.0, 0, 0, 0, "target", "hit", "auto"),
+            time=0.0,
+            phase=0.0,
+            kind=ActionKind.PLAIN_DAMAGE,
+            subject=0,
+            attacker=0,
+            aidx=0,
+            amount=60.0,
+            damage_type="physical",
+            source_key="auto_attacks",
+            source="auto_attacks",
+            event_id="hit",
+            sequence=0,
+        ),
+        SurvivalAction(
+            sort_key=(1.0, 1.0, 0, 0, 0, "target", "heal", "heal"),
+            time=1.0,
+            phase=1.0,
+            kind=ActionKind.HEAL,
+            subject=0,
+            attacker=0,
+            aidx=1,
+            amount=50.0,
+            source_key="heal",
+            source="heal",
+            event_id="heal",
+            sequence=0,
+        ),
+    ]
+
+    def _walk(ledger_cls, annotate):
+        states = build_states([combatant])
+        if ledger_cls is ReceiptLedger:
+            ledger = ledger_cls(
+                actions=[a._replace(event={}) for a in actions],
+                index_of={"target": 0},
+                annotating=annotate,
+            )
+        else:
+            ledger = ledger_cls(len(actions))
+        ctx = TransitionContext(
+            duration=5.0,
+            states=states,
+            combatants=[combatant],
+            index_of={"target": 0},
+            ledger=ledger,
+        )
+        run_survival_walk(
+            (
+                actions
+                if ledger_cls is ScoreLedger
+                else [a._replace(event={}) for a in actions]
+            ),
+            ctx,
+        )
+        finalize_states(states, 5.0)
+        return assemble_survival_rows(states, [combatant])["target"]
+
+    receipt_row = _walk(ReceiptLedger, annotate=False)
+    score_row = _walk(ScoreLedger, annotate=False)
+    assert score_row == receipt_row
+    assert score_row["ending_health"] == 90.0
+    assert score_row["healing_received"] == 50.0
