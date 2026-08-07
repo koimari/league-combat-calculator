@@ -24,7 +24,7 @@ gate remains **PENDING** and the decision is **NO-GO**.
 | Production commit `3c11a59` | Deployed **READY** under `koidevelopments` |
 | `/healthz` | HTTP **200** |
 | `/api/health/deep` | HTTP **200** |
-| Sentry DSN | **Unavailable** (billing inactive) |
+| Sentry DSN | **Unavailable** (no legitimate Sentry resource/DSN provisioned) |
 | Auth encrypted env values | **Configured encrypted; values not printed** |
 
 ## Production Metrics Verification
@@ -73,8 +73,8 @@ the NO-GO decision: production beta traffic is still absent.
    and receipts.
 2. Activation, retention, receipts, and staleness statuses computed from real
    data, meeting the thresholds above.
-3. Sentry DSN availability resolved (billing reactivated) or explicitly
-   waived with rationale.
+3. A legitimate Sentry resource/DSN is provisioned under the team, or an
+   explicit monitoring waiver is recorded with rationale.
 4. Auth encrypted env values verified (decryption/load check passed).
 5. Beta gate flipped to PASSED only after all evidence is exact and recorded.
 
