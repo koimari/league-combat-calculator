@@ -25,7 +25,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .reviewed_batch_07 import build_batch_module
-from .slotlib import extract_named
+from .slotlib import with_item_on_hits, extract_named
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_batch_module("Smolder")
@@ -145,6 +145,7 @@ SLOTS["Q"] = _super_scorcher_breath
 SLOTS["W"] = _certified_single_hit(SLOTS["W"])
 SLOTS["E"] = _certified_single_hit(SLOTS["E"])
 SLOTS["R"] = _certified_single_hit(SLOTS["R"])
+SLOTS["Q"] = with_item_on_hits(SLOTS["Q"], effectiveness=1.0, hits=1, triggers=('on_hit', 'on_attack'))
 parse_abilities = build_parser(SLOTS, "Smolder")
 
 OPTIONS: list[dict[str, Any]] = list(_packet_options) + [

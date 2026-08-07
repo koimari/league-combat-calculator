@@ -27986,7 +27986,7 @@
         "mythic": false,
         "name": "Shaped Charge",
         "range": null,
-        "cooldown": 20,
+        "cooldown": "20",
         "stats": {
           "abilityPower": {
             "flat": 0.0,
@@ -31002,7 +31002,8 @@
       },
       "purchasable": true,
       "tags": [
-        "MAGE"
+        "MAGE",
+        "SUPPORT"
       ]
     },
     "iconOverlay": false,
@@ -31599,7 +31600,9 @@
         "sell": 900
       },
       "purchasable": false,
-      "tags": []
+      "tags": [
+        "SUPPORT"
+      ]
     },
     "iconOverlay": false,
     "modes": {

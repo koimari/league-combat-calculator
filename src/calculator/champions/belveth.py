@@ -4,11 +4,10 @@ Why each slot is non-generic:
 - P (Death in Lavender) has no direct damage. Ability casts grant a flat
   20% bonus attack speed for three seconds; permanent Lavender stacks grant
   0.1-2% bonus attack speed each by champion level. Patch 26.15 restored
-  basic attacks to 100% damage while retaining the passive's 75% modifier
-  on on-hit riders.
+  basic attacks to 100% damage and removed the 75% on-hit rider modifier.
 - Q (Void Surge) is four directional dashes: the ``q_casts`` option
   multiplies the per-rotation cast count, dashes can crit and each applies
-  item on-hit effects at 75% (``applies_item_on_hits``), and the real
+  item on-hit effects at 100% (``applies_item_on_hits``), and the real
   per-direction cooldown is wiki prose (the JSON cooldown field holds only
   the 1s cast lockout).
 - W (Above and Below) is the one generic-shaped slot: a plain
@@ -47,10 +46,10 @@ from .slotlib import (
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Bel%27Veth
 PASSIVE_BASIC_ATTACK_RATIO = 1.0  # patch 26.15 restored full basic-attack damage
-PASSIVE_ON_HIT_RATIO = 0.75  # on-hit riders retain Bel'Veth's modifier
+PASSIVE_ON_HIT_RATIO = 1.0  # 26.15 removed the 75% on-hit rider modifier
 PASSIVE_TEMP_BONUS_AS = 20.0  # refreshed for 3 seconds by every ability cast
 Q_DIRECTION_COOLDOWNS = (16.0, 15.0, 14.0, 13.0, 12.0)  # per-direction dash CD
-Q_ON_HIT_EFFECTIVENESS = 0.75  # each dash applies item on-hits at 75%
+Q_ON_HIT_EFFECTIVENESS = 1.0  # 26.15 removed the 75% Q on-hit reduction
 E_BASE_SLASHES = 6  # base slash count
 E_BONUS_AS_PER_EXTRA_SLASH = 40.0  # +1 slash per 40% bonus attack speed
 E_ON_HIT_MIN_EFFECTIVENESS = 0.12  # per-slash on-hits at 0% missing HP
@@ -82,13 +81,13 @@ def _per_level_scaling(ability: dict[str, Any], occurrence: int, level: int) -> 
 
 
 def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: full basic-attack damage, 75% on-hits, and bonus attack speed.
+    """P: full basic-attack damage, full on-hits, and bonus attack speed.
 
     BUFF phase — the bonus AS (temporary buff + permanent Lavender stacks)
     is fed into ``ctx.stats`` so E's slash count sees it, and emitted as
     a ``stat_buff`` so the fight engine's auto count scales too. The attack
     override keeps attacks at full damage while scaling every on-hit rider
-    (items, spellblade, R's ramping proc) to 75%.
+    (items, spellblade, R's ramping proc).
     """
     ability = ctx.ability()
     if ability is None:
@@ -158,8 +157,8 @@ def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
         ),
         # Each dash is its own cast (per-cast item procs, e.g. Muramana).
         "cast_instances": casts,
-        # Each dash applies item on-hit effects at 75% — Q's own
-        # modifier, independent of the passive's auto-only 75%. Q is
+        # Each dash applies item on-hit effects at 100% — Q's own
+        # modifier, independent of the passive's auto-only modifier. Q is
         # NOT an attack: on-hit trigger only (no on-attack cadences).
         "applies_item_on_hits": {
             "effectiveness": Q_ON_HIT_EFFECTIVENESS,
@@ -284,7 +283,7 @@ def _endless_banquet_onhit(ctx: SlotCtx) -> dict[str, Any] | None:
     Hit k deals k x (2/4/6 + 3% bonus AD) — stacks accumulate on one target
     and expire after five seconds without a hit. Emitted as a ramping on-hit;
     the fight engine owns the hit sequence, and each carrier's on-hit
-    modifier (75% autos/Q, 12-24% E) applies to that instance.
+    modifier (100% autos/Q, 12-24% E) applies to that instance.
     """
     ability = ctx.ability("R")
     if ability is None:
@@ -350,10 +349,10 @@ ASSUMPTIONS = [
     "Passive 20% temporary attack speed is treated as active throughout the "
     "selected combo because every ability cast refreshes its three seconds",
     "Patch 26.15 restored basic attacks and crits to 100% damage; on-hit "
-    "riders still use Bel'Veth's sourced 75% modifier",
-    "Q applies item on-hit effects once per dash at 75%; E once per slash "
+    "riders use Bel'Veth's sourced 100% modifier (75% removed in 26.15)",
+    "Q applies item on-hit effects once per dash at 100%; E once per slash "
     "at 12-24% (interpolated by target missing health) — each is that "
-    "ability's own modifier, independent of the passive's auto-only 75%",
+    "ability's own modifier, independent of the passive's auto-only modifier",
     "R's ramping true-damage passive applies on every basic attack and on "
     "Q/E on-hit instance, using the carrier's own on-hit effectiveness",
     "Q/E applications trigger on-hit item damage (Nashor's, Wit's End, "

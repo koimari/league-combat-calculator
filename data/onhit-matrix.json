@@ -1,0 +1,339 @@
+{
+ "champions": {
+  "Akshan": [
+   {
+    "slot": "P",
+    "name": "Dirty Fighting",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   },
+   {
+    "slot": "E",
+    "name": "Heroic Swing",
+    "effectiveness": 0.25,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Aphelios": [
+   {
+    "slot": "Q",
+    "name": "Onslaught",
+    "effectiveness": 0.25,
+    "on_attack": false,
+    "only_once_per_cast": false
+   },
+   {
+    "slot": "Q",
+    "name": "Duskwave",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   },
+   {
+    "slot": "R",
+    "name": "Moonlight Vigil",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Ashe": [
+   {
+    "slot": "Q",
+    "name": "Ranger's Focus",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": true
+   }
+  ],
+  "Belveth": [
+   {
+    "slot": "Q",
+    "name": "Void Surge",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Briar": [
+   {
+    "slot": "Q",
+    "name": "Head Rush",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   }
+  ],
+  "Elise": [
+   {
+    "slot": "Q",
+    "name": "Venomous Bite",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Evelynn": [
+   {
+    "slot": "E",
+    "name": "Whiplash",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   },
+   {
+    "slot": "E",
+    "name": "Empowered Whiplash",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Ezreal": [
+   {
+    "slot": "Q",
+    "name": "Mystic Shot",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   }
+  ],
+  "Fiora": [
+   {
+    "slot": "Q",
+    "name": "Lunge",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Fizz": [
+   {
+    "slot": "Q",
+    "name": "Urchin Strike",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Gangplank": [
+   {
+    "slot": "Q",
+    "name": "Parrrley",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   }
+  ],
+  "Graves": [
+   {
+    "slot": "P",
+    "name": "New Destiny",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Irelia": [
+   {
+    "slot": "Q",
+    "name": "Bladesurge",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Katarina": [
+   {
+    "slot": "P",
+    "name": "Voracity",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   },
+   {
+    "slot": "E",
+    "name": "Shunpo",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Kayle": [
+   {
+    "slot": "E",
+    "name": "Starfire Spellblade",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Locke": [
+   {
+    "slot": "E",
+    "name": "Ashen Pursuit",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Lucian": [
+   {
+    "slot": "P",
+    "name": "Lightslinger",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   }
+  ],
+  "MasterYi": [
+   {
+    "slot": "P",
+    "name": "Double Strike",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   },
+   {
+    "slot": "Q",
+    "name": "Alpha Strike",
+    "effectiveness": 0.75,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "MissFortune": [
+   {
+    "slot": "Q",
+    "name": "Double Up",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Nocturne": [
+   {
+    "slot": "P",
+    "name": "Umbra Blades",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Pantheon": [
+   {
+    "slot": "W",
+    "name": "Shield Vault",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Renekton": [
+   {
+    "slot": "W",
+    "name": "Ruthless Predator",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Samira": [
+   {
+    "slot": "P",
+    "name": "Daredevil Impulse",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Senna": [
+   {
+    "slot": "Q",
+    "name": "Piercing Darkness",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   }
+  ],
+  "Smolder": [
+   {
+    "slot": "Q",
+    "name": "Super Scorcher Breath",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   }
+  ],
+  "Twitch": [
+   {
+    "slot": "R",
+    "name": "Spray and Pray",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Viego": [
+   {
+    "slot": "Q",
+    "name": "Blade of the Ruined King",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   },
+   {
+    "slot": "R",
+    "name": "Heartbreaker",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Volibear": [
+   {
+    "slot": "W",
+    "name": "Frenzied Maul",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Warwick": [
+   {
+    "slot": "Q",
+    "name": "Jaws of the Beast",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   },
+   {
+    "slot": "R",
+    "name": "Infinite Duress",
+    "effectiveness": 1.0,
+    "on_attack": true,
+    "only_once_per_cast": false
+   }
+  ],
+  "Yunara": [
+   {
+    "slot": "Q",
+    "name": "Cultivation of Spirit",
+    "effectiveness": 0.3,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ],
+  "Zaahen": [
+   {
+    "slot": "Q",
+    "name": "The Darkin Glaive",
+    "effectiveness": 1.0,
+    "on_attack": false,
+    "only_once_per_cast": false
+   }
+  ]
+ }
+}

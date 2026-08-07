@@ -22,7 +22,7 @@ from typing import Any, Callable
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .reviewed_batch_03 import build_batch_module
-from .slotlib import extract_value, proc_damage
+from .slotlib import with_item_on_hits, extract_value, proc_damage
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_batch_module("Katarina")
@@ -72,6 +72,8 @@ _sinister_steel = proc_damage(
 GRIEVOUS_WOUNDS_SOURCES = frozenset({"R"})
 
 SLOTS = {**_packet_slots, "P": _sinister_steel}
+SLOTS["P"] = with_item_on_hits(SLOTS["P"], effectiveness=1.0, hits=1, triggers=('on_hit',))
+SLOTS["E"] = with_item_on_hits(SLOTS["E"], effectiveness=1.0, hits=1, triggers=('on_hit',))
 parse_abilities = build_parser(SLOTS, "Katarina")
 
 OPTIONS = list(_packet_options)

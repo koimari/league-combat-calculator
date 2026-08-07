@@ -25,7 +25,7 @@ from typing import Any
 
 from .engine import BUFF, SlotCtx, build_parser
 from .reviewed_batch_07 import build_batch_module
-from .slotlib import attach_self_shield, extract_named, extract_value
+from .slotlib import with_item_on_hits, attach_self_shield, extract_named, extract_value
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_batch_module("Senna")
@@ -145,6 +145,7 @@ SLOTS = dict(_packet_slots)
 SLOTS["P"] = _absolution
 _packet_r = SLOTS["R"]
 SLOTS["R"] = _dawning_shadow
+SLOTS["Q"] = with_item_on_hits(SLOTS["Q"], effectiveness=1.0, hits=1, triggers=('on_hit', 'on_attack'))
 parse_abilities = build_parser(SLOTS, "Senna")
 
 OPTIONS = list(_packet_options) + [

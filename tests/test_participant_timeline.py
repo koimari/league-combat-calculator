@@ -2227,7 +2227,16 @@ def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
     assert "Moonstone Renewer" in support
     assert "Warmog's Armor" not in support
     assert "Warmog's Armor" in top
-    assert "Locket of the Iron Solari" not in top
+    # 26.15 role-scope rule: SUPPORT-tagged items with another lane class
+    # (TANK/MAGE/...) stay available to that lane (patch 16.15.1 added the
+    # SUPPORT tag to Whispering Circlet, a MAGE item).
+    assert "Locket of the Iron Solari" in top
+    assert "Abyssal Mask" in top
+    assert "Morellonomicon" in top
+    assert "Whispering Circlet" in top
+    assert "Shurelya's Battlesong" not in top
+    assert "Ardent Censer" not in top
+    assert "Redemption" not in top
 
 
 def test_roster_bis_includes_event_certified_target_defenses():

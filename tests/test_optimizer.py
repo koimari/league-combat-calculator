@@ -8,8 +8,12 @@ from src.calculator.optimizer import (
     exclusivity_groups,
     get_eligible_legendaries,
     get_eligible_boots,
+    optimizer_supported_items,
     optimize_build as _optimize_build,
     get_selectable_items,
+    get_purchase_items,
+    optimize_purchase,
+    _required_item_gold,
     _SPELLBLADE_ITEMS,
     _hill_climb,
 )
@@ -1077,3 +1081,128 @@ def test_coupled_optimizer_caches_do_not_change_results(monkeypatch):
     baseline.pop("optimization_time_ms")
     uncached.pop("optimization_time_ms")
     assert baseline == uncached
+
+
+_PURCHASE_IDS = {
+    "Large Rod": 90101,
+    "Blasting Wand": 90102,
+    "Amplifying Tome": 90103,
+    "Ruby Crystal": 90104,
+    "Aether Wisp": 90105,
+    "Doran's Ring": 90106,
+}
+
+
+def _purchase_item(name, rank, price):
+    return {
+        "name": name,
+        "id": _PURCHASE_IDS[name],
+        "rank": [rank],
+        "shop": {"prices": {"total": price}, "tags": []},
+    }
+
+
+def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
+    monkeypatch,
+):
+    completed = _purchase_item("Large Rod", "LEGENDARY", 1000)
+    wand = _purchase_item("Blasting Wand", "EPIC", 500)
+    tome = _purchase_item("Amplifying Tome", "BASIC", 500)
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_purchase_items",
+        lambda _role="": [completed, wand, tome],
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda _items: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._public_search_timeline_coverage",
+        lambda _audit: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._build_timeline_coverage",
+        lambda *_args, **_kwargs: {"complete": True},
+    )
+
+    def score(_champion, _level, items, **_kwargs):
+        names = {item["name"] for item in items}
+        if {"Blasting Wand", "Amplifying Tome"} <= names:
+            return 100.0
+        if "Large Rod" in names:
+            return 90.0
+        return 50.0
+
+    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=1000,
+        include_boots=False,
+    )
+
+    assert result["purchase_items"] == ["Blasting Wand", "Amplifying Tome"]
+    assert result["recommendation_type"] == "component_set"
+    assert result["spent_gold"] == 1000
+    assert result["remaining_gold"] == 0
+    assert result["is_certified_best"] is True
+
+
+def test_purchase_price_fails_closed_with_item_and_key():
+    with pytest.raises(KeyError, match=r"Broken Item: shop\.prices\.total"):
+        _required_item_gold({"name": "Broken Item", "shop": {"prices": {}}})
+
+
+def test_purchase_pool_includes_components_but_not_starters(monkeypatch):
+    items = [
+        _purchase_item("Ruby Crystal", "BASIC", 400),
+        _purchase_item("Aether Wisp", "EPIC", 900),
+        _purchase_item("Doran's Ring", "STARTER", 400),
+    ]
+    monkeypatch.setattr("src.calculator.optimizer._ordinary_sr_items", lambda: items)
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_supported_items", lambda rows: list(rows)
+    )
+
+    assert [item["name"] for item in get_purchase_items("top")] == [
+        "Ruby Crystal",
+        "Aether Wisp",
+    ]
+
+
+def test_optimize_build_rejects_consumable_locked_items():
+    with pytest.raises(ValueError, match="not an ordinary non-boots shop item"):
+        optimize_build(
+            "Ahri",
+            get_champion("Ahri"),
+            level=13,
+            locked_items=["Health Potion"],
+        )
+
+
+def test_role_scope_keeps_multiclass_lane_items_available():
+    """A SUPPORT tag no longer hides lane-class items (patch 16.15.1 added
+    SUPPORT to Whispering Circlet, a MAGE item; Morellonomicon/Frozen Heart
+    are TANK/MAGE+SUPPORT and legal for those lanes in the real shop)."""
+    from src.calculator.loadout_rules import role_scoped_shop_items
+
+    pool = optimizer_supported_items(get_eligible_legendaries())
+    top = {item["name"] for item in role_scoped_shop_items(pool, "top")}
+    mid = {item["name"] for item in role_scoped_shop_items(pool, "mid")}
+    support = {item["name"] for item in role_scoped_shop_items(pool, "support")}
+
+    assert "Whispering Circlet" in top and "Whispering Circlet" in mid
+    assert "Morellonomicon" in top
+    assert "Frozen Heart" in top
+    assert "Locket of the Iron Solari" in top
+    # Pure support items stay support-exclusive.
+    assert "Shurelya's Battlesong" not in top
+    assert "Ardent Censer" not in top
+    assert "Redemption" not in top
+    assert "Whispering Circlet" in support

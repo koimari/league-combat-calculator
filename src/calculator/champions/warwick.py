@@ -18,7 +18,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .reviewed_batch_09 import build_batch_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import with_item_on_hits, damage_entry, extract_cooldown, extract_named
 
 # Sourced channel (wiki R): "deal magic damage every 0.25 seconds" over
 # the up-to-1.5s suppress; "applies on-hit effects and triggers
@@ -57,6 +57,7 @@ def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Warwick")
 SLOTS["R"] = _infinite_duress
+SLOTS["Q"] = with_item_on_hits(SLOTS["Q"], effectiveness=1.0, hits=1, triggers=('on_hit', 'on_attack'))
 parse_abilities = build_parser(SLOTS, "Warwick")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

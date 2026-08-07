@@ -108,6 +108,15 @@ def required_boots_tier(role: str, role_quest_complete: bool) -> int:
     return 3 if parsed_role == "mid" and role_quest_complete else 2
 
 
+# Lane-class tags come from the wiki shop category system.  An item that
+# carries a lane class besides SUPPORT (e.g. Morellonomicon is MAGE+SUPPORT,
+# Frozen Heart is TANK+SUPPORT) is buyable by that lane in the real shop and
+# must stay in that role's optimizer scope; only SUPPORT-with-no-other-lane-
+# class items are support-exclusive.  Effect tags (MOVEMENT, ATTACK_SPEED,
+# ...) never lift the boundary.
+_LANE_CLASS_TAGS = frozenset({"MAGE", "TANK", "FIGHTER", "ASSASSIN", "MARKSMAN"})
+
+
 def role_scoped_shop_items(
     items: Iterable[dict[str, Any]], role: str
 ) -> list[dict[str, Any]]:
@@ -120,19 +129,19 @@ def role_scoped_shop_items(
     """
     parsed_role = validate_role(role)
     candidates = list(items)
+
+    def tags_of(item: dict[str, Any]) -> set[str]:
+        return {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
+
     if parsed_role == "support":
-        return [
-            item
-            for item in candidates
-            if "SUPPORT"
-            in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
-        ]
+        return [item for item in candidates if "SUPPORT" in tags_of(item)]
     if parsed_role in {"top", "jungle", "mid", "bottom"}:
         return [
             item
             for item in candidates
-            if "SUPPORT"
-            not in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
+            if not (
+                "SUPPORT" in tags_of(item) and not (tags_of(item) & _LANE_CLASS_TAGS)
+            )
         ]
     return candidates
 

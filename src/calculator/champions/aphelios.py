@@ -102,7 +102,15 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
         original = ctx.options.get("q_variant")
         ctx.options["q_variant"] = _WEAPON_INDEX[weapon]
         try:
-            return _packet_slots["Q"](ctx)
+            result = _packet_slots["Q"](ctx)
+            if result is not None and weapon == "calibrum":
+                # Wiki: Duskwave volleys apply on-hit effects at 100%.
+                result["applies_item_on_hits"] = {
+                    "effectiveness": 1.0,
+                    "hits": 1,
+                    "triggers": ("on_hit",),
+                }
+            return result
         finally:
             if original is None:
                 ctx.options.pop("q_variant", None)
@@ -126,6 +134,12 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("physical", amount=per_hit, count=count),)
     entry["detail"] = f"Onslaught: {count} weapon attacks at {ratio:.1%} AD each"
+    # Wiki: every Onslaught attack applies on-hit effects at 25% effectiveness.
+    entry["applies_item_on_hits"] = {
+        "effectiveness": 0.25,
+        "hits": count,
+        "triggers": ("on_hit",),
+    }
     return entry
 
 
@@ -200,7 +214,7 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs.",
-    "Onslaught uses the Wiki attack-count rule and 20%-41% AD per attack; its on-hit item payload is not silently invented.",
+    "Onslaught applies wiki-sourced item on-hits at 25% per attack; Duskwave (calibrum Q) at 100%. Moonlight Vigil follow-ups remain unmodeled.",
     "Moonlight Vigil models the sourced initial blast; weapon-specific follow-up attacks remain listed in the result as a separate coverage boundary.",
     "Severum's excess healing converts into a shield capped at the sourced "
     "per-level 'Heal' row (10 : 160 by level + 6% maximum health) that "

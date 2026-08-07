@@ -184,7 +184,14 @@ def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
 
     name = ability.get("name", "Heroic Swing")
     cooldown = extract_cooldown(ability, rank)
-    return damage_entry(name, rank, cooldown, per_shot * shots, "physical")
+    entry = damage_entry(name, rank, cooldown, per_shot * shots, "physical")
+    # Wiki: every Heroic Swing shot applies on-hit effects at 25% effectiveness.
+    entry["applies_item_on_hits"] = {
+        "effectiveness": 0.25,
+        "hits": shots,
+        "triggers": ("on_hit",),
+    }
+    return entry
 
 
 def _comeuppance(ctx: SlotCtx) -> dict[str, Any] | None:

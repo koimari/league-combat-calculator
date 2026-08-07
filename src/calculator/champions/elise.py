@@ -66,6 +66,13 @@ def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
         "Human-form Q reads target current health; spider-form Q reads target missing health."
     )
     entry["target_max_health_sensitive"] = True
+    # Wiki: Venomous Bite (spider Q) applies on-hit effects at 100%.
+    if form == 1:
+        entry["applies_item_on_hits"] = {
+            "effectiveness": 1.0,
+            "hits": 1,
+            "triggers": ("on_hit",),
+        }
     return entry
 
 

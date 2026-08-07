@@ -288,6 +288,11 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
             state_path="optimization.roster",
             frontend_token="data-optimize-roster",
         ),
+        "purchase_optimize": _field(
+            payload_field="purchase_optimize",
+            state_path="optimization.purchase",
+            frontend_token='id="economicsGold"',
+        ),
         "share": _field(
             payload_field="share",
             state_path="share",

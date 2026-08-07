@@ -60,7 +60,7 @@ const state = {
   targets: [],
   allies: [],
   fight: { rotations: 1, duration: 10, aaUptime: 0, aaUptimeMode: "calculated" },
-  optimizer: { running: false, summary: null, scope: null, rosterErrors: {} },
+  optimizer: { running: false, summary: null, scope: null, rosterErrors: {}, availableGold: 0 },
 };
 
 const OBJECTIVES = {
@@ -253,6 +253,19 @@ function applyControlCapabilities() {
       b.disabled = true;
       b.title = gated("data-bis-path").reason || "BIS unavailable";
     });
+  }
+  const economicsBtn = document.getElementById("economicsOptimize");
+  if (economicsBtn) {
+    let block = "";
+    const equipped = state.attacker.buildA.filter(Boolean).length + (state.attacker.questBootA ? 1 : 0);
+    if (!state.attacker.champion) block = "Choose a champion first.";
+    else if (!optimizerDamagePackageReady()) block = "Select a reviewed damage package first.";
+    else if (!state.targets.length || !state.targets.every((target) => target.champion)) block = "Add at least one enemy first.";
+    else if (!Number.isInteger(state.optimizer.availableGold) || state.optimizer.availableGold < 1) block = "Enter available gold.";
+    else if (equipped >= (state.attacker.role === "bottom" && state.attacker.roleQuestComplete ? 7 : 6)) block = "Build A inventory is full.";
+    else if (state.optimizer.running) block = "Optimization is already running.";
+    economicsBtn.disabled = Boolean(block);
+    economicsBtn.title = block;
   }
   if (gated("data-game-state")) {
     document.querySelectorAll("[data-game-state]").forEach((b) => {
@@ -3625,6 +3638,85 @@ async function optimizeMainBuildFromBackend() {
     return result;
 }
 
+async function startPurchaseOptimize() {
+  if (state.optimizer.running || !Number.isInteger(state.optimizer.availableGold) || state.optimizer.availableGold < 1) return;
+  state.optimizer.running = true;
+  state.optimizer.scope = "purchase";
+  state.optimizer.summary = null;
+  render();
+  const started = performance.now();
+  try {
+    const payload = engineFightPayload("A");
+    const ownedIds = state.attacker.buildA.filter(Boolean);
+    const ownedNames = ownedIds.map((id) => itemName(id));
+    payload.optimization_scope = "purchase";
+    payload.available_gold = state.optimizer.availableGold;
+    payload.max_purchase_items = 2;
+    payload.allow_sell = Boolean(document.getElementById("economicsSell")?.checked);
+    payload.max_sell_items = 1;
+    payload.combine_policy = "shop_combine";
+    payload.objective = "total_damage";
+    payload.locked_items = ownedNames;
+    payload.locked_boots = state.attacker.questBootA ? itemName(state.attacker.questBootA) : "";
+    const response = await fetch("/api/optimize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok || result.error) throw new Error(result.error || "Best-buy search unavailable");
+    if (result.recommendation_type === "no_affordable_purchase") {
+      state.optimizer.summary = {
+        tested: 0,
+        elapsedMs: performance.now() - started,
+        label: `No legal modeled purchase fits ${fmt(state.optimizer.availableGold)} gold.`,
+      };
+      return;
+    }
+    if (!result.is_certified_best || !result.winner_event_order_certified) {
+      state.optimizer.summary = {
+        tested: Number(result.evaluations || 0),
+        elapsedMs: Number(result.optimization_time_ms || performance.now() - started),
+        withheld: true,
+        label: "Best buy withheld because the exhaustive candidate set is not fully event-order certified.",
+      };
+      return;
+    }
+    const previous = new Map();
+    state.attacker.buildA.forEach((id, index) => {
+      if (!id) return;
+      previous.set(itemName(id), {
+        stack: state.attacker.buildAStacks[index],
+        options: state.attacker.buildAItemOptions[index],
+      });
+    });
+    const soldNames = new Set(result.sell_items || []);
+    const resultIds = (result.items || []).map((name) => findItemByBackendName(name)?.id || 0).filter(Boolean);
+    state.attacker.buildA = [...resultIds, ...Array(Math.max(0, 6 - resultIds.length)).fill(0)].slice(0, 6);
+    state.attacker.buildAStacks = state.attacker.buildA.map((id) => previous.get(itemName(id))?.stack || 0);
+    state.attacker.buildAItemOptions = state.attacker.buildA.map((id) => previous.get(itemName(id))?.options || {});
+    state.attacker.questBootA = findItemByBackendName(result.boots)?.id || 0;
+    const purchase = (result.purchase_items || []).join(" + ");
+    const sold = soldNames.size ? ` · sell ${[...soldNames].join(" + ")}` : "";
+    const pivot = result.recommendation_type === "sell_pivot" ? " · pivot" : "";
+    state.optimizer.summary = {
+      tested: Number(result.evaluations || result.candidate_count || 0),
+      elapsedMs: Number(result.optimization_time_ms || performance.now() - started),
+      label: `Buy ${purchase}${sold}${pivot} · ${fmt(result.spent_gold)} spent${result.sell_refund ? ` · ${fmt(result.sell_refund)} from sells` : ""} · ${fmt(result.remaining_gold)} remaining. ${result.exhaustive_within_scope ? "Exhaustive purchase search within your gold." : "Best evaluated plan; the full space was truncated."}`,
+    };
+  } catch (error) {
+    state.optimizer.summary = {
+      tested: 0,
+      elapsedMs: performance.now() - started,
+      label: `Best-buy search stopped: ${error.message}`,
+    };
+  } finally {
+    state.optimizer.running = false;
+    state.optimizer.scope = null;
+    render();
+  }
+}
+
 async function startOptimizeBuild() {
   if (state.optimizer.running || !state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return;
   state.optimizer.running = true;
@@ -3772,6 +3864,7 @@ document.addEventListener("click", (event) => {
   if (rosterOptimizeAll) return startRosterOptimization(rosterOptimizeAll.dataset.optimizeRosterAll);
   const rosterOptimize = event.target.closest("[data-optimize-roster]");
   if (rosterOptimize) return startRosterOptimization(rosterOptimize.dataset.optimizeRoster);
+  if (event.target.closest("#economicsOptimize")) return startPurchaseOptimize();
   if (event.target.closest("[data-optimize-build]")) return startOptimizeBuild();
   const roleButton = event.target.closest("[data-role]");
   if (roleButton) {
@@ -4033,6 +4126,12 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("change", (event) => {
+  const economicsGold = event.target.closest("#economicsGold");
+  if (economicsGold) {
+    const value = Number.parseInt(economicsGold.value, 10);
+    state.optimizer.availableGold = Number.isInteger(value) ? Math.max(0, Math.min(30_000, value)) : 0;
+    return render();
+  }
   const championOption = event.target.closest("[data-champion-option]");
   if (championOption) {
     const key = championOption.dataset.championOption;

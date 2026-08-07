@@ -1,0 +1,6601 @@
+{
+ "generated": "refresh",
+ "patch": {
+  "cdragon": "16.15.1",
+  "ddragon": "16.15.1",
+  "repo_cache_fetched": null
+ },
+ "groups_26_12": {
+  "Annul": [
+   "Verdant Barrier",
+   "Banshee's Veil",
+   "Edge of Night"
+  ],
+  "Blight": [
+   "Blighting Jewel",
+   "Bloodletter's Curse",
+   "Cryptbloom",
+   "Terminus",
+   "Void Staff"
+  ],
+  "Boots": [
+   "Armored Advance",
+   "Berserker's Greaves",
+   "Boots",
+   "Boots of Swiftness",
+   "Chainlaced Crushers",
+   "Crimson Lucidity",
+   "Gluttonous Greaves",
+   "Gunmetal Greaves",
+   "Immortal Path",
+   "Ionian Boots of Lucidity",
+   "Mercury's Treads",
+   "Plated Steelcaps",
+   "Slightly Magical Boots",
+   "Sorcerer's Shoes",
+   "Spellslinger's Shoes",
+   "Swiftmarch"
+  ],
+  "Dirk": [
+   "Serrated Dirk"
+  ],
+  "Elixir": [
+   "Elixir of Iron",
+   "Elixir of Sorcery",
+   "Elixir of Wrath"
+  ],
+  "Eternity": [
+   "Catalyst of Aeons",
+   "Rod of Ages"
+  ],
+  "Fatality": [
+   "Last Whisper",
+   "Black Cleaver",
+   "Lord Dominik's Regards",
+   "Mortal Reminder",
+   "Serylda's Grudge",
+   "Terminus"
+  ],
+  "Glory": [
+   "Dark Seal",
+   "Mejai's Soulstealer"
+  ],
+  "Guardian": [
+   "Guardian's Blade",
+   "Guardian's Hammer",
+   "Guardian's Horn",
+   "Guardian's Orb"
+  ],
+  "Hydra": [
+   "Tiamat",
+   "Profane Hydra",
+   "Ravenous Hydra",
+   "Stridebreaker",
+   "Titanic Hydra"
+  ],
+  "Immolate": [
+   "Bami's Cinder",
+   "Sunfire Aegis",
+   "Hollow Radiance"
+  ],
+  "Lifeline": [
+   "Archangel's Staff",
+   "Hexdrinker",
+   "Immortal Shieldbow",
+   "Maw of Malmortius",
+   "Protoplasm Harness",
+   "Seraph's Embrace",
+   "Sterak's Gage"
+  ],
+  "Manaflow": [
+   "Archangel's Staff",
+   "Manamune",
+   "Tear of the Goddess",
+   "Whispering Circlet",
+   "Winter's Approach"
+  ],
+  "Momentum": [
+   "Dead Man's Plate"
+  ],
+  "Potion": [
+   "Health Potion",
+   "Refillable Potion"
+  ],
+  "Quicksilver": [
+   "Mercurial Scimitar",
+   "Quicksilver Sash"
+  ],
+  "Soul Anchor": [
+   "Lifeline",
+   "Spectral Cutlass"
+  ],
+  "Spellblade": [
+   "Sheen",
+   "Bloodsong",
+   "Dusk and Dawn",
+   "Essence Reaver",
+   "Iceborn Gauntlet",
+   "Lich Bane",
+   "Trinity Force"
+  ],
+  "Starter": [
+   "Bloodsong",
+   "Bounty of Worlds",
+   "Celestial Opposition",
+   "Doran's Blade",
+   "Doran's Bow",
+   "Doran's Helm",
+   "Doran's Ring",
+   "Doran's Shield",
+   "Dream Maker",
+   "Gustwalker Hatchling",
+   "Mosstomper Seedling",
+   "Scorchclaw Pup",
+   "Solstice Sleigh",
+   "World Atlas",
+   "Runic Compass",
+   "Zaz'Zak's Realmspike"
+  ],
+  "Stasis": [
+   "Seeker's Armguard",
+   "Shattered Armguard",
+   "Zhonya's Hourglass"
+  ],
+  "Trinket": [
+   "Farsight Alteration",
+   "Oracle Lens",
+   "Stealth Ward"
+  ]
+ },
+ "transforms": {
+  "Manamune -> Muramana": {
+   "at": "360 Manaflow bonus mana",
+   "free": true,
+   "special_recipe": 3004,
+   "wiki": "Manamune rev 3982212"
+  },
+  "Archangel's Staff -> Seraph's Embrace": {
+   "at": "360 Manaflow bonus mana",
+   "free": true,
+   "special_recipe": 3003,
+   "wiki": "Archangel's Staff rev 3989100"
+  },
+  "Winter's Approach -> Fimbulwinter": {
+   "at": "360 Manaflow bonus mana",
+   "free": true,
+   "special_recipe": 3119,
+   "wiki": "Winter's Approach rev 3984418"
+  },
+  "Whispering Circlet -> Diadem of Songs": {
+   "at": "360 Manaflow bonus mana",
+   "free": true,
+   "special_recipe": 2526,
+   "wiki": "Whispering Circlet rev 4015267"
+  },
+  "World Atlas -> Runic Compass": {
+   "at": "Support Quest (gold earned)",
+   "free": true,
+   "special_recipe": 3865,
+   "wiki": "World Atlas rev 4004090"
+  },
+  "Runic Compass -> Bounty of Worlds": {
+   "at": "Support Quest complete",
+   "free": true,
+   "special_recipe": 3866,
+   "wiki": "Runic Compass rev 4028000"
+  },
+  "Bounty of Worlds -> 1 of 5 final support items": {
+   "at": "free Upgrade choice (menu/shop)",
+   "free": true,
+   "wiki": "Bounty of Worlds rev 4028001"
+  },
+  "Tier-2 boots -> Tier-3 boots (mid quest)": {
+   "at": "Mid role quest complete; free; proactive",
+   "free": true,
+   "wiki": "Role Quests rev 4026385"
+  },
+  "Jungle pet -> evolution buff": {
+   "at": "15/35 treats (V26.01); consumes the item",
+   "free": true,
+   "wiki": "Template:Jungle pet info rev 4028041"
+  },
+  "Ornn Masterwork (self lvl 13, ally lvl 14-17)": {
+   "at": "Ornn passive; +1000g value on upgradeable stats",
+   "free": true,
+   "wiki": "Ornn champion data"
+  }
+ },
+ "sell_rule": {
+  "default_ratio": 0.7,
+  "rounding": "round half up (floor(x*ratio + 0.5))",
+  "exceptions_40pct": [
+   "All SR starters (Doran's x5, Cull, Dark Seal)",
+   "Consumables (Health Potion, Refillable Potion, Control Ward, Elixir of Iron/Sorcery/Wrath)",
+   "Guardian Angel",
+   "Rejuvenation Bead",
+   "Seeker's Armguard / Shattered Armguard"
+  ],
+  "exceptions_30pct": [
+   "Slightly Magical Footwear (rune-granted, sells 90 of 300)"
+  ],
+  "exceptions_0pct": [
+   "Jungle pets (no resell since V25.09)",
+   "Support chain (World Atlas -> Bounty of Worlds, no resell since V25.09)",
+   "Trinkets and distributed items (no shop value)"
+  ],
+  "wiki_corrections": "Support chain and jungle pets set to 0% per wiki V25.09 rev 4021809 (DDragon stale); in-game adjudication recommended."
+ },
+ "per_item_sell": [
+  {
+   "id": 1001,
+   "name": "Boots",
+   "total": 300,
+   "cache_sell": null,
+   "ddragon_sell": 210,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1004,
+   "name": "Faerie Charm",
+   "total": 200,
+   "cache_sell": null,
+   "ddragon_sell": 140,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1006,
+   "name": "Rejuvenation Bead",
+   "total": 300,
+   "cache_sell": null,
+   "ddragon_sell": 120,
+   "ratio": 0.4,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1011,
+   "name": "Giant's Belt",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1018,
+   "name": "Cloak of Agility",
+   "total": 600,
+   "cache_sell": null,
+   "ddragon_sell": 420,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1026,
+   "name": "Blasting Wand",
+   "total": 850,
+   "cache_sell": null,
+   "ddragon_sell": 595,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1027,
+   "name": "Sapphire Crystal",
+   "total": 300,
+   "cache_sell": null,
+   "ddragon_sell": 210,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1028,
+   "name": "Ruby Crystal",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 280,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1029,
+   "name": "Cloth Armor",
+   "total": 300,
+   "cache_sell": null,
+   "ddragon_sell": 210,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1031,
+   "name": "Chain Vest",
+   "total": 800,
+   "cache_sell": null,
+   "ddragon_sell": 560,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1033,
+   "name": "Null-Magic Mantle",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 280,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1036,
+   "name": "Long Sword",
+   "total": 350,
+   "cache_sell": null,
+   "ddragon_sell": 245,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1037,
+   "name": "Pickaxe",
+   "total": 875,
+   "cache_sell": null,
+   "ddragon_sell": 613,
+   "ratio": 0.701,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1038,
+   "name": "B. F. Sword",
+   "total": 1300,
+   "cache_sell": null,
+   "ddragon_sell": 910,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1042,
+   "name": "Dagger",
+   "total": 250,
+   "cache_sell": null,
+   "ddragon_sell": 175,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1043,
+   "name": "Recurve Bow",
+   "total": 700,
+   "cache_sell": null,
+   "ddragon_sell": 490,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1052,
+   "name": "Amplifying Tome",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 280,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1053,
+   "name": "Vampiric Scepter",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1054,
+   "name": "Doran's Shield",
+   "total": 450,
+   "cache_sell": null,
+   "ddragon_sell": 180,
+   "ratio": 0.4,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1055,
+   "name": "Doran's Blade",
+   "total": 450,
+   "cache_sell": null,
+   "ddragon_sell": 180,
+   "ratio": 0.4,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1056,
+   "name": "Doran's Ring",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 160,
+   "ratio": 0.4,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1057,
+   "name": "Negatron Cloak",
+   "total": 850,
+   "cache_sell": null,
+   "ddragon_sell": 595,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1058,
+   "name": "Needlessly Large Rod",
+   "total": 1200,
+   "cache_sell": null,
+   "ddragon_sell": 840,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1082,
+   "name": "Dark Seal",
+   "total": 350,
+   "cache_sell": null,
+   "ddragon_sell": 140,
+   "ratio": 0.4,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1083,
+   "name": "Cull",
+   "total": 450,
+   "cache_sell": null,
+   "ddragon_sell": 180,
+   "ratio": 0.4,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1086,
+   "name": "Doran's Bow",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 160,
+   "ratio": 0.4,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1101,
+   "name": "Scorchclaw Pup",
+   "total": 450,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 1102,
+   "name": "Gustwalker Hatchling",
+   "total": 450,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 1103,
+   "name": "Mosstomper Seedling",
+   "total": 450,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 1111,
+   "name": "Jarvan I's",
+   "total": 300,
+   "cache_sell": null,
+   "ddragon_sell": 210,
+   "ratio": 0.7,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1120,
+   "name": "Doran's Helm",
+   "total": 450,
+   "cache_sell": null,
+   "ddragon_sell": 180,
+   "ratio": 0.4,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 1500,
+   "name": "Penetrating Bullets",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TURRET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1502,
+   "name": "Reinforced Armor",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TURRET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1503,
+   "name": "Warden's Eye",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TURRET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1506,
+   "name": "Reinforced Armor",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TURRET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1507,
+   "name": "Overcharged",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TURRET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1508,
+   "name": "Anti-tower Socks",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "MINION"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1509,
+   "name": "Gusto",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "MINION"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1510,
+   "name": "Phreakish Gusto",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "MINION"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1511,
+   "name": "Super Mech Armor",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "MINION"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1512,
+   "name": "Super Mech Power Field",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "MINION"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1515,
+   "name": "Turret Plating",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TURRET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 1524,
+   "name": "Overgrowth",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TURRET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2003,
+   "name": "Health Potion",
+   "total": 50,
+   "cache_sell": null,
+   "ddragon_sell": 20,
+   "ratio": 0.4,
+   "rank": [
+    "POTION"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2010,
+   "name": "Total Biscuit of Everlasting Will",
+   "total": 50,
+   "cache_sell": null,
+   "ddragon_sell": 5,
+   "ratio": 0.1,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2019,
+   "name": "Steel Sigil",
+   "total": 1100,
+   "cache_sell": null,
+   "ddragon_sell": 770,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2020,
+   "name": "The Brutalizer",
+   "total": 1337,
+   "cache_sell": null,
+   "ddragon_sell": 936,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2021,
+   "name": "Tunneler",
+   "total": 1150,
+   "cache_sell": null,
+   "ddragon_sell": 805,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2022,
+   "name": "Glowing Mote",
+   "total": 250,
+   "cache_sell": null,
+   "ddragon_sell": 175,
+   "ratio": 0.7,
+   "rank": [
+    "BASIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2031,
+   "name": "Refillable Potion",
+   "total": 150,
+   "cache_sell": null,
+   "ddragon_sell": 60,
+   "ratio": 0.4,
+   "rank": [
+    "POTION"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2049,
+   "name": "Guardian's Amulet",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 250,
+   "ratio": 0.5,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2050,
+   "name": "Guardian's Shroud",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 250,
+   "ratio": 0.5,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2051,
+   "name": "Guardian's Horn",
+   "total": 950,
+   "cache_sell": null,
+   "ddragon_sell": 665,
+   "ratio": 0.7,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2052,
+   "name": "Poro-Snax",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2055,
+   "name": "Control Ward",
+   "total": 75,
+   "cache_sell": null,
+   "ddragon_sell": 30,
+   "ratio": 0.4,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2065,
+   "name": "Shurelya's Battlesong",
+   "total": 2200,
+   "cache_sell": null,
+   "ddragon_sell": 1540,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2138,
+   "name": "Elixir of Iron",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 200,
+   "ratio": 0.4,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2139,
+   "name": "Elixir of Sorcery",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 200,
+   "ratio": 0.4,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2140,
+   "name": "Elixir of Wrath",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 200,
+   "ratio": 0.4,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2141,
+   "name": "Cappa Juice",
+   "total": 300,
+   "cache_sell": null,
+   "ddragon_sell": 300,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2142,
+   "name": "Juice of Power",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 500,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2143,
+   "name": "Juice of Vitality",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 500,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2144,
+   "name": "Juice of Haste",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 500,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2145,
+   "name": "Lucky Dice",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2146,
+   "name": "Enhanced Lucky Dice",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2150,
+   "name": "Elixir of Skill",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2151,
+   "name": "Elixir of Avarice",
+   "total": 50,
+   "cache_sell": null,
+   "ddragon_sell": 20,
+   "ratio": 0.4,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2152,
+   "name": "Elixir of Force",
+   "total": 50,
+   "cache_sell": null,
+   "ddragon_sell": 20,
+   "ratio": 0.4,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2420,
+   "name": "Seeker's Armguard",
+   "total": 1600,
+   "cache_sell": null,
+   "ddragon_sell": 640,
+   "ratio": 0.4,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2421,
+   "name": "Shattered Armguard",
+   "total": 1600,
+   "cache_sell": null,
+   "ddragon_sell": 640,
+   "ratio": 0.4,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2422,
+   "name": "Slightly Magical Footwear",
+   "total": 300,
+   "cache_sell": null,
+   "ddragon_sell": 90,
+   "ratio": 0.3,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 2501,
+   "name": "Overlord's Bloodmail",
+   "total": 3300,
+   "cache_sell": null,
+   "ddragon_sell": 2310,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2502,
+   "name": "Unending Despair",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2503,
+   "name": "Blackfire Torch",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2504,
+   "name": "Kaenic Rookern",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2508,
+   "name": "Fated Ashes",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2510,
+   "name": "Dusk and Dawn",
+   "total": 3100,
+   "cache_sell": null,
+   "ddragon_sell": 2170,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2512,
+   "name": "Fiendhunter Bolts",
+   "total": 2650,
+   "cache_sell": null,
+   "ddragon_sell": 1855,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2517,
+   "name": "Endless Hunger",
+   "total": 3100,
+   "cache_sell": null,
+   "ddragon_sell": 2170,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2520,
+   "name": "Bastionbreaker",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2522,
+   "name": "Actualizer",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2523,
+   "name": "Hexoptics C44",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2524,
+   "name": "Bandlepipes",
+   "total": 2300,
+   "cache_sell": null,
+   "ddragon_sell": 1610,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2525,
+   "name": "Protoplasm Harness",
+   "total": 2600,
+   "cache_sell": null,
+   "ddragon_sell": 1820,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2526,
+   "name": "Whispering Circlet",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 1575,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 2530,
+   "name": "Diadem of Songs",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 1575,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3003,
+   "name": "Archangel's Staff",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3004,
+   "name": "Manamune",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3006,
+   "name": "Berserker's Greaves",
+   "total": 1100,
+   "cache_sell": null,
+   "ddragon_sell": 770,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3008,
+   "name": "Gluttonous Greaves",
+   "total": 1000,
+   "cache_sell": null,
+   "ddragon_sell": 700,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3009,
+   "name": "Boots of Swiftness",
+   "total": 1000,
+   "cache_sell": null,
+   "ddragon_sell": 700,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3020,
+   "name": "Sorcerer's Shoes",
+   "total": 1100,
+   "cache_sell": null,
+   "ddragon_sell": 770,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3024,
+   "name": "Glacial Buckler",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3026,
+   "name": "Guardian Angel",
+   "total": 3200,
+   "cache_sell": null,
+   "ddragon_sell": 1280,
+   "ratio": 0.4,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3031,
+   "name": "Infinity Edge",
+   "total": 3500,
+   "cache_sell": null,
+   "ddragon_sell": 2450,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3032,
+   "name": "Yun Tal Wildarrows",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3033,
+   "name": "Mortal Reminder",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3035,
+   "name": "Last Whisper",
+   "total": 1450,
+   "cache_sell": null,
+   "ddragon_sell": 1015,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3036,
+   "name": "Lord Dominik's Regards",
+   "total": 3300,
+   "cache_sell": null,
+   "ddragon_sell": 2310,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3040,
+   "name": "Seraph's Embrace",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3041,
+   "name": "Mejai's Soulstealer",
+   "total": 1500,
+   "cache_sell": null,
+   "ddragon_sell": 1050,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3042,
+   "name": "Muramana",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3044,
+   "name": "Phage",
+   "total": 1100,
+   "cache_sell": null,
+   "ddragon_sell": 770,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3046,
+   "name": "Phantom Dancer",
+   "total": 2650,
+   "cache_sell": null,
+   "ddragon_sell": 1855,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3047,
+   "name": "Plated Steelcaps",
+   "total": 1200,
+   "cache_sell": null,
+   "ddragon_sell": 840,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3050,
+   "name": "Zeke's Convergence",
+   "total": 2200,
+   "cache_sell": null,
+   "ddragon_sell": 1540,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3051,
+   "name": "Hearthbound Axe",
+   "total": 1200,
+   "cache_sell": null,
+   "ddragon_sell": 840,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3053,
+   "name": "Sterak's Gage",
+   "total": 3200,
+   "cache_sell": null,
+   "ddragon_sell": 2240,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3057,
+   "name": "Sheen",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3065,
+   "name": "Spirit Visage",
+   "total": 2700,
+   "cache_sell": null,
+   "ddragon_sell": 1890,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3066,
+   "name": "Winged Moonplate",
+   "total": 800,
+   "cache_sell": null,
+   "ddragon_sell": 560,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3067,
+   "name": "Kindlegem",
+   "total": 800,
+   "cache_sell": null,
+   "ddragon_sell": 560,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3068,
+   "name": "Sunfire Aegis",
+   "total": 2700,
+   "cache_sell": null,
+   "ddragon_sell": 1890,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3070,
+   "name": "Tear of the Goddess",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 280,
+   "ratio": 0.7,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3071,
+   "name": "Black Cleaver",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3072,
+   "name": "Bloodthirster",
+   "total": 3400,
+   "cache_sell": null,
+   "ddragon_sell": 2380,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3073,
+   "name": "Experimental Hexplate",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3074,
+   "name": "Ravenous Hydra",
+   "total": 3300,
+   "cache_sell": null,
+   "ddragon_sell": 2310,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3075,
+   "name": "Thornmail",
+   "total": 2450,
+   "cache_sell": null,
+   "ddragon_sell": 1715,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3076,
+   "name": "Bramble Vest",
+   "total": 800,
+   "cache_sell": null,
+   "ddragon_sell": 560,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3077,
+   "name": "Tiamat",
+   "total": 1200,
+   "cache_sell": null,
+   "ddragon_sell": 840,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3078,
+   "name": "Trinity Force",
+   "total": 3333,
+   "cache_sell": null,
+   "ddragon_sell": 2333,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3082,
+   "name": "Warden's Mail",
+   "total": 1000,
+   "cache_sell": null,
+   "ddragon_sell": 700,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3083,
+   "name": "Warmog's Armor",
+   "total": 3100,
+   "cache_sell": null,
+   "ddragon_sell": 2170,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3084,
+   "name": "Heartsteel",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3085,
+   "name": "Runaan's Hurricane",
+   "total": 2650,
+   "cache_sell": null,
+   "ddragon_sell": 1855,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3086,
+   "name": "Zeal",
+   "total": 1200,
+   "cache_sell": null,
+   "ddragon_sell": 840,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3087,
+   "name": "Statikk Shiv",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3089,
+   "name": "Rabadon's Deathcap",
+   "total": 3500,
+   "cache_sell": null,
+   "ddragon_sell": 2450,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3091,
+   "name": "Wit's End",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3094,
+   "name": "Rapid Firecannon",
+   "total": 2650,
+   "cache_sell": null,
+   "ddragon_sell": 1855,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3097,
+   "name": "Stormrazor",
+   "total": 3200,
+   "cache_sell": null,
+   "ddragon_sell": 2240,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3100,
+   "name": "Lich Bane",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3102,
+   "name": "Banshee's Veil",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3107,
+   "name": "Redemption",
+   "total": 2300,
+   "cache_sell": null,
+   "ddragon_sell": 1610,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3108,
+   "name": "Fiendish Codex",
+   "total": 850,
+   "cache_sell": null,
+   "ddragon_sell": 595,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3109,
+   "name": "Knight's Vow",
+   "total": 2300,
+   "cache_sell": null,
+   "ddragon_sell": 1610,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3110,
+   "name": "Frozen Heart",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1750,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3111,
+   "name": "Mercury's Treads",
+   "total": 1250,
+   "cache_sell": null,
+   "ddragon_sell": 875,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3112,
+   "name": "Guardian's Orb",
+   "total": 950,
+   "cache_sell": null,
+   "ddragon_sell": 665,
+   "ratio": 0.7,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3113,
+   "name": "Aether Wisp",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3114,
+   "name": "Forbidden Idol",
+   "total": 600,
+   "cache_sell": null,
+   "ddragon_sell": 420,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3115,
+   "name": "Nashor's Tooth",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3116,
+   "name": "Rylai's Crystal Scepter",
+   "total": 2600,
+   "cache_sell": null,
+   "ddragon_sell": 1820,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3118,
+   "name": "Malignance",
+   "total": 2700,
+   "cache_sell": null,
+   "ddragon_sell": 1890,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3119,
+   "name": "Winter's Approach",
+   "total": 2400,
+   "cache_sell": null,
+   "ddragon_sell": 1680,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3121,
+   "name": "Fimbulwinter",
+   "total": 2400,
+   "cache_sell": null,
+   "ddragon_sell": 1680,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3123,
+   "name": "Executioner's Calling",
+   "total": 800,
+   "cache_sell": null,
+   "ddragon_sell": 560,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3124,
+   "name": "Guinsoo's Rageblade",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3133,
+   "name": "Caulfield's Warhammer",
+   "total": 1050,
+   "cache_sell": null,
+   "ddragon_sell": 735,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3134,
+   "name": "Serrated Dirk",
+   "total": 1000,
+   "cache_sell": null,
+   "ddragon_sell": 700,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3135,
+   "name": "Void Staff",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3137,
+   "name": "Cryptbloom",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3139,
+   "name": "Mercurial Scimitar",
+   "total": 3200,
+   "cache_sell": null,
+   "ddragon_sell": 2240,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3140,
+   "name": "Quicksilver Sash",
+   "total": 1300,
+   "cache_sell": null,
+   "ddragon_sell": 910,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3142,
+   "name": "Youmuu's Ghostblade",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3143,
+   "name": "Randuin's Omen",
+   "total": 2700,
+   "cache_sell": null,
+   "ddragon_sell": 1890,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3144,
+   "name": "Scout's Slingshot",
+   "total": 600,
+   "cache_sell": null,
+   "ddragon_sell": 420,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3145,
+   "name": "Hextech Alternator",
+   "total": 1100,
+   "cache_sell": null,
+   "ddragon_sell": 770,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3146,
+   "name": "Hextech Gunblade",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3147,
+   "name": "Haunting Guise",
+   "total": 1300,
+   "cache_sell": null,
+   "ddragon_sell": 910,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3152,
+   "name": "Hextech Rocketbelt",
+   "total": 2650,
+   "cache_sell": null,
+   "ddragon_sell": 1855,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3153,
+   "name": "Blade of The Ruined King",
+   "total": 3200,
+   "cache_sell": null,
+   "ddragon_sell": 2240,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3155,
+   "name": "Hexdrinker",
+   "total": 1300,
+   "cache_sell": null,
+   "ddragon_sell": 910,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3156,
+   "name": "Maw of Malmortius",
+   "total": 3100,
+   "cache_sell": null,
+   "ddragon_sell": 2170,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3157,
+   "name": "Zhonya's Hourglass",
+   "total": 3250,
+   "cache_sell": null,
+   "ddragon_sell": 2275,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3158,
+   "name": "Ionian Boots of Lucidity",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3161,
+   "name": "Spear of Shojin",
+   "total": 3100,
+   "cache_sell": null,
+   "ddragon_sell": 2170,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3165,
+   "name": "Morellonomicon",
+   "total": 2850,
+   "cache_sell": null,
+   "ddragon_sell": 1995,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3168,
+   "name": "Immortal Path",
+   "total": 1000,
+   "cache_sell": null,
+   "ddragon_sell": 700,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3170,
+   "name": "Swiftmarch",
+   "total": 1000,
+   "cache_sell": null,
+   "ddragon_sell": 700,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3171,
+   "name": "Crimson Lucidity",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3172,
+   "name": "Gunmetal Greaves",
+   "total": 1100,
+   "cache_sell": null,
+   "ddragon_sell": 770,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3173,
+   "name": "Chainlaced Crushers",
+   "total": 1250,
+   "cache_sell": null,
+   "ddragon_sell": 875,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3174,
+   "name": "Armored Advance",
+   "total": 1200,
+   "cache_sell": null,
+   "ddragon_sell": 840,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3175,
+   "name": "Spellslinger's Shoes",
+   "total": 1100,
+   "cache_sell": null,
+   "ddragon_sell": 770,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3177,
+   "name": "Guardian's Blade",
+   "total": 950,
+   "cache_sell": null,
+   "ddragon_sell": 665,
+   "ratio": 0.7,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3179,
+   "name": "Umbral Glaive",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3181,
+   "name": "Hullbreaker",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3184,
+   "name": "Guardian's Hammer",
+   "total": 950,
+   "cache_sell": null,
+   "ddragon_sell": 665,
+   "ratio": 0.7,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3190,
+   "name": "Locket of the Iron Solari",
+   "total": 2200,
+   "cache_sell": null,
+   "ddragon_sell": 1540,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3211,
+   "name": "Spectre's Cowl",
+   "total": 1250,
+   "cache_sell": null,
+   "ddragon_sell": 875,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3222,
+   "name": "Mikael's Blessing",
+   "total": 2300,
+   "cache_sell": null,
+   "ddragon_sell": 1610,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3302,
+   "name": "Terminus",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3330,
+   "name": "Scarecrow Effigy",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TRINKET"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3340,
+   "name": "Stealth Ward",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TRINKET"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3348,
+   "name": "Arcane Sweeper",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TRINKET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3363,
+   "name": "Farsight Alteration",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TRINKET"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3364,
+   "name": "Oracle Lens",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TRINKET"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3400,
+   "name": "Your Cut",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3430,
+   "name": "Rite Of Ruin",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3504,
+   "name": "Ardent Censer",
+   "total": 2200,
+   "cache_sell": null,
+   "ddragon_sell": 1540,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3508,
+   "name": "Essence Reaver",
+   "total": 3050,
+   "cache_sell": null,
+   "ddragon_sell": 2135,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3513,
+   "name": "Eye of the Herald",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "TRINKET"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3599,
+   "name": "Kalista's Black Spear",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3742,
+   "name": "Dead Man's Plate",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3748,
+   "name": "Titanic Hydra",
+   "total": 3300,
+   "cache_sell": null,
+   "ddragon_sell": 2310,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3801,
+   "name": "Crystalline Bracer",
+   "total": 800,
+   "cache_sell": null,
+   "ddragon_sell": 560,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3802,
+   "name": "Lost Chapter",
+   "total": 1200,
+   "cache_sell": null,
+   "ddragon_sell": 840,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3803,
+   "name": "Catalyst of Aeons",
+   "total": 1300,
+   "cache_sell": null,
+   "ddragon_sell": 910,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3814,
+   "name": "Edge of Night",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3865,
+   "name": "World Atlas",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 3866,
+   "name": "Runic Compass",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": false,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 3867,
+   "name": "Bounty of Worlds",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": false,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 3869,
+   "name": "Celestial Opposition",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 3870,
+   "name": "Dream Maker",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 3871,
+   "name": "Zaz'Zak's Realmspike",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 160,
+   "ratio": 0.4,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3876,
+   "name": "Solstice Sleigh",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
+  },
+  {
+   "id": 3877,
+   "name": "Bloodsong",
+   "total": 400,
+   "cache_sell": null,
+   "ddragon_sell": 160,
+   "ratio": 0.4,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 3901,
+   "name": "<rarityLegendary>Fire at Will</rarityLegendary><br><subtitleLeft><silver>500 Silver Serpents</silver></subtitleLeft>",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3902,
+   "name": "<rarityLegendary>Death's Daughter</rarityLegendary><br><subtitleLeft><silver>500 Silver Serpents</silver></subtitleLeft>",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3903,
+   "name": "<rarityLegendary>Raise Morale</rarityLegendary><br><subtitleLeft><silver>500 Silver Serpents</silver></subtitleLeft>",
+   "total": 0,
+   "cache_sell": null,
+   "ddragon_sell": 0,
+   "ratio": 0.0,
+   "rank": [],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 3916,
+   "name": "Oblivion Orb",
+   "total": 800,
+   "cache_sell": null,
+   "ddragon_sell": 560,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4003,
+   "name": "Lifeline",
+   "total": 1600,
+   "cache_sell": null,
+   "ddragon_sell": 1120,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4005,
+   "name": "Imperial Mandate",
+   "total": 2400,
+   "cache_sell": null,
+   "ddragon_sell": 1680,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4011,
+   "name": "Sword of Blossoming Dawn",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4015,
+   "name": "Perplexity",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4016,
+   "name": "Wordless Promise",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4017,
+   "name": "Hellfire Hatchet",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4401,
+   "name": "Force of Nature",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4628,
+   "name": "Horizon Focus",
+   "total": 2700,
+   "cache_sell": null,
+   "ddragon_sell": 1890,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4629,
+   "name": "Cosmic Drive",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4630,
+   "name": "Blighting Jewel",
+   "total": 1100,
+   "cache_sell": null,
+   "ddragon_sell": 770,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4632,
+   "name": "Verdant Barrier",
+   "total": 1600,
+   "cache_sell": null,
+   "ddragon_sell": 1120,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4633,
+   "name": "Riftmaker",
+   "total": 3100,
+   "cache_sell": null,
+   "ddragon_sell": 2170,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4642,
+   "name": "Bandleglass Mirror",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4645,
+   "name": "Shadowflame",
+   "total": 3200,
+   "cache_sell": null,
+   "ddragon_sell": 2240,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 4646,
+   "name": "Stormsurge",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6333,
+   "name": "Death's Dance",
+   "total": 3300,
+   "cache_sell": null,
+   "ddragon_sell": 2310,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6609,
+   "name": "Chempunk Chainsword",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6610,
+   "name": "Sundered Sky",
+   "total": 3100,
+   "cache_sell": null,
+   "ddragon_sell": 2170,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6616,
+   "name": "Staff of Flowing Water",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 1575,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6617,
+   "name": "Moonstone Renewer",
+   "total": 2200,
+   "cache_sell": null,
+   "ddragon_sell": 1540,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6620,
+   "name": "Echoes of Helia",
+   "total": 2200,
+   "cache_sell": null,
+   "ddragon_sell": 1540,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6621,
+   "name": "Dawncore",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1750,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6631,
+   "name": "Stridebreaker",
+   "total": 3300,
+   "cache_sell": null,
+   "ddragon_sell": 2310,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6653,
+   "name": "Liandry's Torment",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6655,
+   "name": "Luden's Echo",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1925,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6657,
+   "name": "Rod of Ages",
+   "total": 2600,
+   "cache_sell": null,
+   "ddragon_sell": 1820,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6660,
+   "name": "Bami's Cinder",
+   "total": 900,
+   "cache_sell": null,
+   "ddragon_sell": 630,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6662,
+   "name": "Iceborn Gauntlet",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6664,
+   "name": "Hollow Radiance",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6665,
+   "name": "Jak'Sho, The Protean",
+   "total": 3200,
+   "cache_sell": null,
+   "ddragon_sell": 2240,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6670,
+   "name": "Noonquiver",
+   "total": 1300,
+   "cache_sell": null,
+   "ddragon_sell": 910,
+   "ratio": 0.7,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6672,
+   "name": "Kraken Slayer",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6673,
+   "name": "Immortal Shieldbow",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6675,
+   "name": "Navori Flickerblade",
+   "total": 2650,
+   "cache_sell": null,
+   "ddragon_sell": 1855,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6676,
+   "name": "The Collector",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6690,
+   "name": "Rectrix",
+   "total": 775,
+   "cache_sell": null,
+   "ddragon_sell": 543,
+   "ratio": 0.701,
+   "rank": [
+    "EPIC"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6692,
+   "name": "Eclipse",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6694,
+   "name": "Serylda's Grudge",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6695,
+   "name": "Serpent's Fang",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1750,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6696,
+   "name": "Axiom Arc",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1925,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6697,
+   "name": "Hubris",
+   "total": 2800,
+   "cache_sell": null,
+   "ddragon_sell": 1960,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6698,
+   "name": "Profane Hydra",
+   "total": 2850,
+   "cache_sell": null,
+   "ddragon_sell": 1995,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 6699,
+   "name": "Voltaic Cyclosword",
+   "total": 3000,
+   "cache_sell": null,
+   "ddragon_sell": 2100,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 8010,
+   "name": "Bloodletter's Curse",
+   "total": 2900,
+   "cache_sell": null,
+   "ddragon_sell": 2030,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 8020,
+   "name": "Abyssal Mask",
+   "total": 2650,
+   "cache_sell": null,
+   "ddragon_sell": 1855,
+   "ratio": 0.7,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 220000,
+   "name": "Stat Bonus",
+   "total": 750,
+   "cache_sell": null,
+   "ddragon_sell": 375,
+   "ratio": 0.5,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 220001,
+   "name": "Legendary Fighter Item",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 2250,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 220002,
+   "name": "Legendary Marksman Item",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 2250,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 220003,
+   "name": "Legendary Assassin Item",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 2250,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 220004,
+   "name": "Legendary Mage Item",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 2250,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 220005,
+   "name": "Legendary Tank Item",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 2250,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 220006,
+   "name": "Legendary Support Item",
+   "total": 2250,
+   "cache_sell": null,
+   "ddragon_sell": 2250,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 220007,
+   "name": "Prismatic Item",
+   "total": 4000,
+   "cache_sell": null,
+   "ddragon_sell": 4000,
+   "ratio": 1.0,
+   "rank": [
+    "CONSUMABLE"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 223005,
+   "name": "Ghostcrawlers",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 350,
+   "ratio": 0.7,
+   "rank": [
+    "BOOTS"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 223039,
+   "name": "Atma's Reckoning",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 223069,
+   "name": "Void Immolation",
+   "total": 6000,
+   "cache_sell": null,
+   "ddragon_sell": 4200,
+   "ratio": 0.7,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 223172,
+   "name": "Zephyr",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 223185,
+   "name": "Guardian's Dirk",
+   "total": 500,
+   "cache_sell": null,
+   "ddragon_sell": 250,
+   "ratio": 0.5,
+   "rank": [
+    "STARTER"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 224004,
+   "name": "Spectral Cutlass",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 224403,
+   "name": "The Golden Spatula",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1750,
+   "ratio": 0.7,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 226630,
+   "name": "Goredrinker",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 228001,
+   "name": "Anathema's Chains",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 228002,
+   "name": "Wooglet's Witchcap",
+   "total": 6000,
+   "cache_sell": null,
+   "ddragon_sell": 4200,
+   "ratio": 0.7,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 228009,
+   "name": "Multitool",
+   "total": 2500,
+   "cache_sell": null,
+   "ddragon_sell": 1250,
+   "ratio": 0.5,
+   "rank": [
+    "LEGENDARY"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443054,
+   "name": "Darksteel Talons",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443055,
+   "name": "Fulmination",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443056,
+   "name": "Demon King's Crown",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443058,
+   "name": "Shield of Molten Stone",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443059,
+   "name": "Cloak of Starry Night",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443060,
+   "name": "Sword of the Divine",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443061,
+   "name": "Force Of Entropy",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443062,
+   "name": "Sanguine Gift",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443063,
+   "name": "Eleisa's Miracle",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443064,
+   "name": "Talisman Of Ascension",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443069,
+   "name": "Hamstringer",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443079,
+   "name": "Turbo Chemtank",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443080,
+   "name": "Twin Mask",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": false,
+   "wiki_note": ""
+  },
+  {
+   "id": 443081,
+   "name": "Hexbolt Companion",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443090,
+   "name": "Reaper's Toll",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 443193,
+   "name": "Gargoyle Stoneplate",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 444636,
+   "name": "Night Harvester",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 444637,
+   "name": "Demonic Embrace",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 444644,
+   "name": "Crown of the Shattered Queen",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 446632,
+   "name": "Divine Sunderer",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 446656,
+   "name": "Everfrost",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 446667,
+   "name": "Radiant Virtue",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 446671,
+   "name": "Galeforce",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 446691,
+   "name": "Duskblade of Draktharr",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 446693,
+   "name": "Prowler's Claw",
+   "total": 1000,
+   "cache_sell": null,
+   "ddragon_sell": 400,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447100,
+   "name": "Mirage Blade",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447101,
+   "name": "Gambler's Blade",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447102,
+   "name": "Reality Fracture",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447103,
+   "name": "Hemomancer's Helm",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447104,
+   "name": "Innervating Locket",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447105,
+   "name": "Empyrean Promise",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447106,
+   "name": "Dragonheart",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447107,
+   "name": "Decapitator",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447108,
+   "name": "Runecarver",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447109,
+   "name": "Cruelty",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447110,
+   "name": "Moonflair Spellblade",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447112,
+   "name": "Flesheater",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447113,
+   "name": "Detonation Orb",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447114,
+   "name": "Reverberation",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447115,
+   "name": "Regicide",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447116,
+   "name": "Kinkou Jitte",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447118,
+   "name": "Pyromancer's Cloak",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447119,
+   "name": "Lightning Rod",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447120,
+   "name": "Diamond-Tipped Spear",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447121,
+   "name": "Twilight's Edge",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447122,
+   "name": "Black Hole Gauntlet",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  },
+  {
+   "id": 447123,
+   "name": "Puppeteer",
+   "total": 2750,
+   "cache_sell": null,
+   "ddragon_sell": 1100,
+   "ratio": 0.4,
+   "rank": [
+    "DISTRIBUTED"
+   ],
+   "purchasable": true,
+   "wiki_note": ""
+  }
+ ],
+ "combine_costs": [
+  {
+   "id": 1011,
+   "name": "Giant's Belt",
+   "total": 900,
+   "components": [
+    "Ruby Crystal"
+   ],
+   "component_total": 400,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 1031,
+   "name": "Chain Vest",
+   "total": 800,
+   "components": [
+    "Cloth Armor"
+   ],
+   "component_total": 300,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 1043,
+   "name": "Recurve Bow",
+   "total": 700,
+   "components": [
+    "Dagger"
+   ],
+   "component_total": 250,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 1053,
+   "name": "Vampiric Scepter",
+   "total": 900,
+   "components": [
+    "Long Sword"
+   ],
+   "component_total": 350,
+   "derived_combine": 550,
+   "cache_combine": 0
+  },
+  {
+   "id": 1057,
+   "name": "Negatron Cloak",
+   "total": 850,
+   "components": [
+    "Null-Magic Mantle"
+   ],
+   "component_total": 400,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 2019,
+   "name": "Steel Sigil",
+   "total": 1100,
+   "components": [
+    "Cloth Armor",
+    "Long Sword",
+    "Cloth Armor"
+   ],
+   "component_total": 950,
+   "derived_combine": 150,
+   "cache_combine": 0
+  },
+  {
+   "id": 2020,
+   "name": "The Brutalizer",
+   "total": 1337,
+   "components": [
+    "Glowing Mote",
+    "Pickaxe"
+   ],
+   "component_total": 1125,
+   "derived_combine": 212,
+   "cache_combine": 0
+  },
+  {
+   "id": 2021,
+   "name": "Tunneler",
+   "total": 1150,
+   "components": [
+    "Long Sword",
+    "Ruby Crystal"
+   ],
+   "component_total": 750,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 2065,
+   "name": "Shurelya's Battlesong",
+   "total": 2200,
+   "components": [
+    "Aether Wisp",
+    "Bandleglass Mirror"
+   ],
+   "component_total": 1800,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 2420,
+   "name": "Seeker's Armguard",
+   "total": 1600,
+   "components": [
+    "Amplifying Tome",
+    "Cloth Armor",
+    "Amplifying Tome"
+   ],
+   "component_total": 1100,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 2421,
+   "name": "Shattered Armguard",
+   "total": 1600,
+   "components": [
+    "Amplifying Tome",
+    "Cloth Armor",
+    "Amplifying Tome"
+   ],
+   "component_total": 1100,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 2501,
+   "name": "Overlord's Bloodmail",
+   "total": 3300,
+   "components": [
+    "Tunneler",
+    "Tunneler"
+   ],
+   "component_total": 2300,
+   "derived_combine": 1000,
+   "cache_combine": 0
+  },
+  {
+   "id": 2502,
+   "name": "Unending Despair",
+   "total": 2800,
+   "components": [
+    "Chain Vest",
+    "Kindlegem",
+    "Ruby Crystal"
+   ],
+   "component_total": 2000,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 2503,
+   "name": "Blackfire Torch",
+   "total": 2800,
+   "components": [
+    "Lost Chapter",
+    "Fated Ashes"
+   ],
+   "component_total": 2100,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 2504,
+   "name": "Kaenic Rookern",
+   "total": 2900,
+   "components": [
+    "Spectre's Cowl",
+    "Negatron Cloak"
+   ],
+   "component_total": 2100,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 2508,
+   "name": "Fated Ashes",
+   "total": 900,
+   "components": [
+    "Amplifying Tome"
+   ],
+   "component_total": 400,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 2510,
+   "name": "Dusk and Dawn",
+   "total": 3100,
+   "components": [
+    "Sheen",
+    "Blasting Wand",
+    "Kindlegem",
+    "Dagger"
+   ],
+   "component_total": 2800,
+   "derived_combine": 300,
+   "cache_combine": 0
+  },
+  {
+   "id": 2512,
+   "name": "Fiendhunter Bolts",
+   "total": 2650,
+   "components": [
+    "Zeal",
+    "Scout's Slingshot"
+   ],
+   "component_total": 1800,
+   "derived_combine": 850,
+   "cache_combine": 0
+  },
+  {
+   "id": 2517,
+   "name": "Endless Hunger",
+   "total": 3100,
+   "components": [
+    "Caulfield's Warhammer",
+    "Pickaxe",
+    "Long Sword"
+   ],
+   "component_total": 2275,
+   "derived_combine": 825,
+   "cache_combine": 0
+  },
+  {
+   "id": 2520,
+   "name": "Bastionbreaker",
+   "total": 3000,
+   "components": [
+    "The Brutalizer",
+    "Serrated Dirk"
+   ],
+   "component_total": 2337,
+   "derived_combine": 663,
+   "cache_combine": 0
+  },
+  {
+   "id": 2522,
+   "name": "Actualizer",
+   "total": 2800,
+   "components": [
+    "Lost Chapter",
+    "Blasting Wand"
+   ],
+   "component_total": 2050,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 2523,
+   "name": "Hexoptics C44",
+   "total": 2800,
+   "components": [
+    "Pickaxe",
+    "Noonquiver",
+    "Long Sword"
+   ],
+   "component_total": 2525,
+   "derived_combine": 275,
+   "cache_combine": 0
+  },
+  {
+   "id": 2524,
+   "name": "Bandlepipes",
+   "total": 2300,
+   "components": [
+    "Kindlegem",
+    "Cloth Armor",
+    "Null-Magic Mantle"
+   ],
+   "component_total": 1500,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 2525,
+   "name": "Protoplasm Harness",
+   "total": 2600,
+   "components": [
+    "Kindlegem",
+    "Giant's Belt"
+   ],
+   "component_total": 1700,
+   "derived_combine": 900,
+   "cache_combine": 0
+  },
+  {
+   "id": 2526,
+   "name": "Whispering Circlet",
+   "total": 2250,
+   "components": [
+    "Forbidden Idol",
+    "Ruby Crystal",
+    "Tear of the Goddess"
+   ],
+   "component_total": 1400,
+   "derived_combine": 850,
+   "cache_combine": 0
+  },
+  {
+   "id": 3003,
+   "name": "Archangel's Staff",
+   "total": 2900,
+   "components": [
+    "Tear of the Goddess",
+    "Lost Chapter",
+    "Fiendish Codex"
+   ],
+   "component_total": 2450,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 3004,
+   "name": "Manamune",
+   "total": 2900,
+   "components": [
+    "Tear of the Goddess",
+    "Caulfield's Warhammer",
+    "Long Sword"
+   ],
+   "component_total": 1800,
+   "derived_combine": 1100,
+   "cache_combine": 0
+  },
+  {
+   "id": 3006,
+   "name": "Berserker's Greaves",
+   "total": 1100,
+   "components": [
+    "Boots",
+    "Dagger",
+    "Dagger"
+   ],
+   "component_total": 800,
+   "derived_combine": 300,
+   "cache_combine": 0
+  },
+  {
+   "id": 3008,
+   "name": "Gluttonous Greaves",
+   "total": 1000,
+   "components": [
+    "Boots"
+   ],
+   "component_total": 300,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 3009,
+   "name": "Boots of Swiftness",
+   "total": 1000,
+   "components": [
+    "Boots"
+   ],
+   "component_total": 300,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 3020,
+   "name": "Sorcerer's Shoes",
+   "total": 1100,
+   "components": [
+    "Boots"
+   ],
+   "component_total": 300,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 3024,
+   "name": "Glacial Buckler",
+   "total": 900,
+   "components": [
+    "Cloth Armor",
+    "Sapphire Crystal",
+    "Glowing Mote"
+   ],
+   "component_total": 850,
+   "derived_combine": 50,
+   "cache_combine": 0
+  },
+  {
+   "id": 3026,
+   "name": "Guardian Angel",
+   "total": 3200,
+   "components": [
+    "Steel Sigil",
+    "B. F. Sword"
+   ],
+   "component_total": 2400,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 3031,
+   "name": "Infinity Edge",
+   "total": 3500,
+   "components": [
+    "B. F. Sword",
+    "Pickaxe",
+    "Cloak of Agility"
+   ],
+   "component_total": 2775,
+   "derived_combine": 725,
+   "cache_combine": 0
+  },
+  {
+   "id": 3032,
+   "name": "Yun Tal Wildarrows",
+   "total": 3000,
+   "components": [
+    "B. F. Sword",
+    "Scout's Slingshot",
+    "Long Sword"
+   ],
+   "component_total": 2250,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 3033,
+   "name": "Mortal Reminder",
+   "total": 3000,
+   "components": [
+    "Executioner's Calling",
+    "Last Whisper",
+    "Cloak of Agility"
+   ],
+   "component_total": 2850,
+   "derived_combine": 150,
+   "cache_combine": 0
+  },
+  {
+   "id": 3035,
+   "name": "Last Whisper",
+   "total": 1450,
+   "components": [
+    "Long Sword",
+    "Long Sword"
+   ],
+   "component_total": 700,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 3036,
+   "name": "Lord Dominik's Regards",
+   "total": 3300,
+   "components": [
+    "Last Whisper",
+    "Noonquiver"
+   ],
+   "component_total": 2750,
+   "derived_combine": 550,
+   "cache_combine": 0
+  },
+  {
+   "id": 3041,
+   "name": "Mejai's Soulstealer",
+   "total": 1500,
+   "components": [
+    "Dark Seal"
+   ],
+   "component_total": 350,
+   "derived_combine": 1150,
+   "cache_combine": 0
+  },
+  {
+   "id": 3044,
+   "name": "Phage",
+   "total": 1100,
+   "components": [
+    "Ruby Crystal",
+    "Long Sword"
+   ],
+   "component_total": 750,
+   "derived_combine": 350,
+   "cache_combine": 0
+  },
+  {
+   "id": 3046,
+   "name": "Phantom Dancer",
+   "total": 2650,
+   "components": [
+    "Dagger",
+    "Zeal",
+    "Dagger"
+   ],
+   "component_total": 1700,
+   "derived_combine": 950,
+   "cache_combine": 0
+  },
+  {
+   "id": 3047,
+   "name": "Plated Steelcaps",
+   "total": 1200,
+   "components": [
+    "Boots",
+    "Cloth Armor"
+   ],
+   "component_total": 600,
+   "derived_combine": 600,
+   "cache_combine": 0
+  },
+  {
+   "id": 3050,
+   "name": "Zeke's Convergence",
+   "total": 2200,
+   "components": [
+    "Kindlegem",
+    "Cloth Armor",
+    "Null-Magic Mantle"
+   ],
+   "component_total": 1500,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 3051,
+   "name": "Hearthbound Axe",
+   "total": 1200,
+   "components": [
+    "Long Sword",
+    "Dagger",
+    "Long Sword"
+   ],
+   "component_total": 950,
+   "derived_combine": 250,
+   "cache_combine": 0
+  },
+  {
+   "id": 3053,
+   "name": "Sterak's Gage",
+   "total": 3200,
+   "components": [
+    "Pickaxe",
+    "Tunneler",
+    "Ruby Crystal"
+   ],
+   "component_total": 2425,
+   "derived_combine": 775,
+   "cache_combine": 0
+  },
+  {
+   "id": 3057,
+   "name": "Sheen",
+   "total": 900,
+   "components": [
+    "Glowing Mote"
+   ],
+   "component_total": 250,
+   "derived_combine": 650,
+   "cache_combine": 0
+  },
+  {
+   "id": 3065,
+   "name": "Spirit Visage",
+   "total": 2700,
+   "components": [
+    "Spectre's Cowl",
+    "Kindlegem"
+   ],
+   "component_total": 2050,
+   "derived_combine": 650,
+   "cache_combine": 0
+  },
+  {
+   "id": 3066,
+   "name": "Winged Moonplate",
+   "total": 800,
+   "components": [
+    "Ruby Crystal"
+   ],
+   "component_total": 400,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 3067,
+   "name": "Kindlegem",
+   "total": 800,
+   "components": [
+    "Ruby Crystal",
+    "Glowing Mote"
+   ],
+   "component_total": 650,
+   "derived_combine": 150,
+   "cache_combine": 0
+  },
+  {
+   "id": 3068,
+   "name": "Sunfire Aegis",
+   "total": 2700,
+   "components": [
+    "Bami's Cinder",
+    "Chain Vest",
+    "Ruby Crystal"
+   ],
+   "component_total": 2100,
+   "derived_combine": 600,
+   "cache_combine": 0
+  },
+  {
+   "id": 3071,
+   "name": "Black Cleaver",
+   "total": 3000,
+   "components": [
+    "Phage",
+    "Kindlegem",
+    "Pickaxe"
+   ],
+   "component_total": 2775,
+   "derived_combine": 225,
+   "cache_combine": 0
+  },
+  {
+   "id": 3072,
+   "name": "Bloodthirster",
+   "total": 3400,
+   "components": [
+    "B. F. Sword",
+    "Pickaxe",
+    "Vampiric Scepter"
+   ],
+   "component_total": 3075,
+   "derived_combine": 325,
+   "cache_combine": 0
+  },
+  {
+   "id": 3073,
+   "name": "Experimental Hexplate",
+   "total": 3000,
+   "components": [
+    "Tunneler",
+    "Dagger",
+    "Phage"
+   ],
+   "component_total": 2500,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 3074,
+   "name": "Ravenous Hydra",
+   "total": 3300,
+   "components": [
+    "Tiamat",
+    "Vampiric Scepter",
+    "Caulfield's Warhammer"
+   ],
+   "component_total": 3150,
+   "derived_combine": 150,
+   "cache_combine": 0
+  },
+  {
+   "id": 3075,
+   "name": "Thornmail",
+   "total": 2450,
+   "components": [
+    "Bramble Vest",
+    "Chain Vest",
+    "Ruby Crystal"
+   ],
+   "component_total": 2000,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 3076,
+   "name": "Bramble Vest",
+   "total": 800,
+   "components": [
+    "Cloth Armor",
+    "Cloth Armor"
+   ],
+   "component_total": 600,
+   "derived_combine": 200,
+   "cache_combine": 0
+  },
+  {
+   "id": 3077,
+   "name": "Tiamat",
+   "total": 1200,
+   "components": [
+    "Long Sword",
+    "Long Sword"
+   ],
+   "component_total": 700,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 3078,
+   "name": "Trinity Force",
+   "total": 3333,
+   "components": [
+    "Sheen",
+    "Phage",
+    "Hearthbound Axe"
+   ],
+   "component_total": 3200,
+   "derived_combine": 133,
+   "cache_combine": 0
+  },
+  {
+   "id": 3082,
+   "name": "Warden's Mail",
+   "total": 1000,
+   "components": [
+    "Cloth Armor",
+    "Cloth Armor"
+   ],
+   "component_total": 600,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 3083,
+   "name": "Warmog's Armor",
+   "total": 3100,
+   "components": [
+    "Giant's Belt",
+    "Giant's Belt",
+    "Crystalline Bracer"
+   ],
+   "component_total": 2600,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 3084,
+   "name": "Heartsteel",
+   "total": 3000,
+   "components": [
+    "Giant's Belt",
+    "Crystalline Bracer",
+    "Giant's Belt"
+   ],
+   "component_total": 2600,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 3085,
+   "name": "Runaan's Hurricane",
+   "total": 2650,
+   "components": [
+    "Zeal",
+    "Scout's Slingshot"
+   ],
+   "component_total": 1800,
+   "derived_combine": 850,
+   "cache_combine": 0
+  },
+  {
+   "id": 3086,
+   "name": "Zeal",
+   "total": 1200,
+   "components": [
+    "Cloak of Agility",
+    "Dagger"
+   ],
+   "component_total": 850,
+   "derived_combine": 350,
+   "cache_combine": 0
+  },
+  {
+   "id": 3087,
+   "name": "Statikk Shiv",
+   "total": 3000,
+   "components": [
+    "Scout's Slingshot",
+    "Aether Wisp",
+    "Pickaxe"
+   ],
+   "component_total": 2375,
+   "derived_combine": 625,
+   "cache_combine": 0
+  },
+  {
+   "id": 3089,
+   "name": "Rabadon's Deathcap",
+   "total": 3500,
+   "components": [
+    "Needlessly Large Rod",
+    "Needlessly Large Rod"
+   ],
+   "component_total": 2400,
+   "derived_combine": 1100,
+   "cache_combine": 0
+  },
+  {
+   "id": 3091,
+   "name": "Wit's End",
+   "total": 2800,
+   "components": [
+    "Recurve Bow",
+    "Negatron Cloak",
+    "Recurve Bow"
+   ],
+   "component_total": 2250,
+   "derived_combine": 550,
+   "cache_combine": 0
+  },
+  {
+   "id": 3094,
+   "name": "Rapid Firecannon",
+   "total": 2650,
+   "components": [
+    "Zeal",
+    "Scout's Slingshot"
+   ],
+   "component_total": 1800,
+   "derived_combine": 850,
+   "cache_combine": 0
+  },
+  {
+   "id": 3097,
+   "name": "Stormrazor",
+   "total": 3200,
+   "components": [
+    "B. F. Sword",
+    "Cloak of Agility",
+    "Scout's Slingshot"
+   ],
+   "component_total": 2500,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 3100,
+   "name": "Lich Bane",
+   "total": 2900,
+   "components": [
+    "Sheen",
+    "Aether Wisp",
+    "Blasting Wand"
+   ],
+   "component_total": 2650,
+   "derived_combine": 250,
+   "cache_combine": 0
+  },
+  {
+   "id": 3102,
+   "name": "Banshee's Veil",
+   "total": 3000,
+   "components": [
+    "Needlessly Large Rod",
+    "Verdant Barrier"
+   ],
+   "component_total": 2800,
+   "derived_combine": 200,
+   "cache_combine": 0
+  },
+  {
+   "id": 3107,
+   "name": "Redemption",
+   "total": 2300,
+   "components": [
+    "Fiendish Codex",
+    "Forbidden Idol"
+   ],
+   "component_total": 1450,
+   "derived_combine": 850,
+   "cache_combine": 0
+  },
+  {
+   "id": 3108,
+   "name": "Fiendish Codex",
+   "total": 850,
+   "components": [
+    "Amplifying Tome",
+    "Glowing Mote"
+   ],
+   "component_total": 650,
+   "derived_combine": 200,
+   "cache_combine": 0
+  },
+  {
+   "id": 3109,
+   "name": "Knight's Vow",
+   "total": 2300,
+   "components": [
+    "Kindlegem",
+    "Chain Vest",
+    "Rejuvenation Bead"
+   ],
+   "component_total": 1900,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 3110,
+   "name": "Frozen Heart",
+   "total": 2500,
+   "components": [
+    "Warden's Mail",
+    "Glacial Buckler"
+   ],
+   "component_total": 1900,
+   "derived_combine": 600,
+   "cache_combine": 0
+  },
+  {
+   "id": 3111,
+   "name": "Mercury's Treads",
+   "total": 1250,
+   "components": [
+    "Boots",
+    "Null-Magic Mantle"
+   ],
+   "component_total": 700,
+   "derived_combine": 550,
+   "cache_combine": 0
+  },
+  {
+   "id": 3113,
+   "name": "Aether Wisp",
+   "total": 900,
+   "components": [
+    "Amplifying Tome"
+   ],
+   "component_total": 400,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 3114,
+   "name": "Forbidden Idol",
+   "total": 600,
+   "components": [
+    "Faerie Charm"
+   ],
+   "component_total": 200,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 3115,
+   "name": "Nashor's Tooth",
+   "total": 2900,
+   "components": [
+    "Recurve Bow",
+    "Blasting Wand",
+    "Fiendish Codex"
+   ],
+   "component_total": 2400,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 3116,
+   "name": "Rylai's Crystal Scepter",
+   "total": 2600,
+   "components": [
+    "Blasting Wand",
+    "Giant's Belt",
+    "Amplifying Tome"
+   ],
+   "component_total": 2150,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 3118,
+   "name": "Malignance",
+   "total": 2700,
+   "components": [
+    "Lost Chapter",
+    "Blasting Wand"
+   ],
+   "component_total": 2050,
+   "derived_combine": 650,
+   "cache_combine": 0
+  },
+  {
+   "id": 3119,
+   "name": "Winter's Approach",
+   "total": 2400,
+   "components": [
+    "Tear of the Goddess",
+    "Giant's Belt",
+    "Kindlegem"
+   ],
+   "component_total": 2100,
+   "derived_combine": 300,
+   "cache_combine": 0
+  },
+  {
+   "id": 3123,
+   "name": "Executioner's Calling",
+   "total": 800,
+   "components": [
+    "Long Sword"
+   ],
+   "component_total": 350,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 3124,
+   "name": "Guinsoo's Rageblade",
+   "total": 3000,
+   "components": [
+    "Amplifying Tome",
+    "Recurve Bow",
+    "Pickaxe"
+   ],
+   "component_total": 1975,
+   "derived_combine": 1025,
+   "cache_combine": 0
+  },
+  {
+   "id": 3133,
+   "name": "Caulfield's Warhammer",
+   "total": 1050,
+   "components": [
+    "Long Sword",
+    "Glowing Mote",
+    "Long Sword"
+   ],
+   "component_total": 950,
+   "derived_combine": 100,
+   "cache_combine": 0
+  },
+  {
+   "id": 3134,
+   "name": "Serrated Dirk",
+   "total": 1000,
+   "components": [
+    "Long Sword",
+    "Long Sword"
+   ],
+   "component_total": 700,
+   "derived_combine": 300,
+   "cache_combine": 0
+  },
+  {
+   "id": 3135,
+   "name": "Void Staff",
+   "total": 3000,
+   "components": [
+    "Blighting Jewel",
+    "Blasting Wand"
+   ],
+   "component_total": 1950,
+   "derived_combine": 1050,
+   "cache_combine": 0
+  },
+  {
+   "id": 3137,
+   "name": "Cryptbloom",
+   "total": 3000,
+   "components": [
+    "Blighting Jewel",
+    "Fiendish Codex",
+    "Fiendish Codex"
+   ],
+   "component_total": 2800,
+   "derived_combine": 200,
+   "cache_combine": 0
+  },
+  {
+   "id": 3139,
+   "name": "Mercurial Scimitar",
+   "total": 3200,
+   "components": [
+    "Quicksilver Sash",
+    "Pickaxe",
+    "Vampiric Scepter"
+   ],
+   "component_total": 3075,
+   "derived_combine": 125,
+   "cache_combine": 0
+  },
+  {
+   "id": 3140,
+   "name": "Quicksilver Sash",
+   "total": 1300,
+   "components": [
+    "Null-Magic Mantle"
+   ],
+   "component_total": 400,
+   "derived_combine": 900,
+   "cache_combine": 0
+  },
+  {
+   "id": 3142,
+   "name": "Youmuu's Ghostblade",
+   "total": 2800,
+   "components": [
+    "Serrated Dirk",
+    "Rectrix",
+    "Long Sword"
+   ],
+   "component_total": 2125,
+   "derived_combine": 675,
+   "cache_combine": 0
+  },
+  {
+   "id": 3143,
+   "name": "Randuin's Omen",
+   "total": 2700,
+   "components": [
+    "Warden's Mail",
+    "Giant's Belt"
+   ],
+   "component_total": 1900,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 3144,
+   "name": "Scout's Slingshot",
+   "total": 600,
+   "components": [
+    "Dagger",
+    "Dagger"
+   ],
+   "component_total": 500,
+   "derived_combine": 100,
+   "cache_combine": 0
+  },
+  {
+   "id": 3145,
+   "name": "Hextech Alternator",
+   "total": 1100,
+   "components": [
+    "Amplifying Tome",
+    "Amplifying Tome"
+   ],
+   "component_total": 800,
+   "derived_combine": 300,
+   "cache_combine": 0
+  },
+  {
+   "id": 3146,
+   "name": "Hextech Gunblade",
+   "total": 3000,
+   "components": [
+    "Vampiric Scepter",
+    "Hextech Alternator",
+    "Amplifying Tome"
+   ],
+   "component_total": 2400,
+   "derived_combine": 600,
+   "cache_combine": 0
+  },
+  {
+   "id": 3147,
+   "name": "Haunting Guise",
+   "total": 1300,
+   "components": [
+    "Amplifying Tome",
+    "Ruby Crystal"
+   ],
+   "component_total": 800,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 3152,
+   "name": "Hextech Rocketbelt",
+   "total": 2650,
+   "components": [
+    "Hextech Alternator",
+    "Kindlegem",
+    "Ruby Crystal"
+   ],
+   "component_total": 2300,
+   "derived_combine": 350,
+   "cache_combine": 0
+  },
+  {
+   "id": 3153,
+   "name": "Blade of The Ruined King",
+   "total": 3200,
+   "components": [
+    "Vampiric Scepter",
+    "Recurve Bow",
+    "Pickaxe"
+   ],
+   "component_total": 2475,
+   "derived_combine": 725,
+   "cache_combine": 0
+  },
+  {
+   "id": 3155,
+   "name": "Hexdrinker",
+   "total": 1300,
+   "components": [
+    "Long Sword",
+    "Null-Magic Mantle",
+    "Long Sword"
+   ],
+   "component_total": 1100,
+   "derived_combine": 200,
+   "cache_combine": 0
+  },
+  {
+   "id": 3156,
+   "name": "Maw of Malmortius",
+   "total": 3100,
+   "components": [
+    "Hexdrinker",
+    "Caulfield's Warhammer"
+   ],
+   "component_total": 2350,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 3157,
+   "name": "Zhonya's Hourglass",
+   "total": 3250,
+   "components": [
+    "Needlessly Large Rod",
+    "Seeker's Armguard"
+   ],
+   "component_total": 2800,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 3158,
+   "name": "Ionian Boots of Lucidity",
+   "total": 900,
+   "components": [
+    "Boots",
+    "Glowing Mote"
+   ],
+   "component_total": 550,
+   "derived_combine": 350,
+   "cache_combine": 0
+  },
+  {
+   "id": 3161,
+   "name": "Spear of Shojin",
+   "total": 3100,
+   "components": [
+    "Pickaxe",
+    "Tunneler",
+    "Ruby Crystal"
+   ],
+   "component_total": 2425,
+   "derived_combine": 675,
+   "cache_combine": 0
+  },
+  {
+   "id": 3165,
+   "name": "Morellonomicon",
+   "total": 2850,
+   "components": [
+    "Oblivion Orb",
+    "Blasting Wand",
+    "Kindlegem"
+   ],
+   "component_total": 2450,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 3168,
+   "name": "Immortal Path",
+   "total": 1000,
+   "components": [
+    "Gluttonous Greaves"
+   ],
+   "component_total": 1000,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3170,
+   "name": "Swiftmarch",
+   "total": 1000,
+   "components": [
+    "Boots of Swiftness"
+   ],
+   "component_total": 1000,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3171,
+   "name": "Crimson Lucidity",
+   "total": 900,
+   "components": [
+    "Ionian Boots of Lucidity"
+   ],
+   "component_total": 900,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3172,
+   "name": "Gunmetal Greaves",
+   "total": 1100,
+   "components": [
+    "Berserker's Greaves"
+   ],
+   "component_total": 1100,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3173,
+   "name": "Chainlaced Crushers",
+   "total": 1250,
+   "components": [
+    "Mercury's Treads"
+   ],
+   "component_total": 1250,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3174,
+   "name": "Armored Advance",
+   "total": 1200,
+   "components": [
+    "Plated Steelcaps"
+   ],
+   "component_total": 1200,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3175,
+   "name": "Spellslinger's Shoes",
+   "total": 1100,
+   "components": [
+    "Sorcerer's Shoes"
+   ],
+   "component_total": 1100,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3179,
+   "name": "Umbral Glaive",
+   "total": 2800,
+   "components": [
+    "Serrated Dirk",
+    "Caulfield's Warhammer"
+   ],
+   "component_total": 2050,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 3181,
+   "name": "Hullbreaker",
+   "total": 3000,
+   "components": [
+    "Tunneler",
+    "Winged Moonplate",
+    "Pickaxe"
+   ],
+   "component_total": 2825,
+   "derived_combine": 175,
+   "cache_combine": 0
+  },
+  {
+   "id": 3190,
+   "name": "Locket of the Iron Solari",
+   "total": 2200,
+   "components": [
+    "Kindlegem",
+    "Cloth Armor",
+    "Null-Magic Mantle"
+   ],
+   "component_total": 1500,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 3211,
+   "name": "Spectre's Cowl",
+   "total": 1250,
+   "components": [
+    "Ruby Crystal",
+    "Null-Magic Mantle",
+    "Rejuvenation Bead"
+   ],
+   "component_total": 1100,
+   "derived_combine": 150,
+   "cache_combine": 0
+  },
+  {
+   "id": 3222,
+   "name": "Mikael's Blessing",
+   "total": 2300,
+   "components": [
+    "Kindlegem",
+    "Forbidden Idol"
+   ],
+   "component_total": 1400,
+   "derived_combine": 900,
+   "cache_combine": 0
+  },
+  {
+   "id": 3302,
+   "name": "Terminus",
+   "total": 3000,
+   "components": [
+    "Hearthbound Axe",
+    "Recurve Bow"
+   ],
+   "component_total": 1900,
+   "derived_combine": 1100,
+   "cache_combine": 0
+  },
+  {
+   "id": 3504,
+   "name": "Ardent Censer",
+   "total": 2200,
+   "components": [
+    "Aether Wisp",
+    "Forbidden Idol"
+   ],
+   "component_total": 1500,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 3508,
+   "name": "Essence Reaver",
+   "total": 3050,
+   "components": [
+    "Sheen",
+    "Caulfield's Warhammer",
+    "Cloak of Agility"
+   ],
+   "component_total": 2550,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 3742,
+   "name": "Dead Man's Plate",
+   "total": 2900,
+   "components": [
+    "Winged Moonplate",
+    "Ruby Crystal",
+    "Chain Vest"
+   ],
+   "component_total": 2000,
+   "derived_combine": 900,
+   "cache_combine": 0
+  },
+  {
+   "id": 3748,
+   "name": "Titanic Hydra",
+   "total": 3300,
+   "components": [
+    "Tiamat",
+    "Tunneler",
+    "Giant's Belt"
+   ],
+   "component_total": 3250,
+   "derived_combine": 50,
+   "cache_combine": 0
+  },
+  {
+   "id": 3801,
+   "name": "Crystalline Bracer",
+   "total": 800,
+   "components": [
+    "Ruby Crystal",
+    "Rejuvenation Bead"
+   ],
+   "component_total": 700,
+   "derived_combine": 100,
+   "cache_combine": 0
+  },
+  {
+   "id": 3802,
+   "name": "Lost Chapter",
+   "total": 1200,
+   "components": [
+    "Amplifying Tome",
+    "Sapphire Crystal",
+    "Glowing Mote"
+   ],
+   "component_total": 950,
+   "derived_combine": 250,
+   "cache_combine": 0
+  },
+  {
+   "id": 3803,
+   "name": "Catalyst of Aeons",
+   "total": 1300,
+   "components": [
+    "Ruby Crystal",
+    "Ruby Crystal",
+    "Sapphire Crystal"
+   ],
+   "component_total": 1100,
+   "derived_combine": 200,
+   "cache_combine": 0
+  },
+  {
+   "id": 3814,
+   "name": "Edge of Night",
+   "total": 3000,
+   "components": [
+    "Serrated Dirk",
+    "Tunneler"
+   ],
+   "component_total": 2150,
+   "derived_combine": 850,
+   "cache_combine": 0
+  },
+  {
+   "id": 3869,
+   "name": "Celestial Opposition",
+   "total": 400,
+   "components": [
+    "Bounty of Worlds"
+   ],
+   "component_total": 400,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3870,
+   "name": "Dream Maker",
+   "total": 400,
+   "components": [
+    "Bounty of Worlds"
+   ],
+   "component_total": 400,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3871,
+   "name": "Zaz'Zak's Realmspike",
+   "total": 400,
+   "components": [
+    "Bounty of Worlds"
+   ],
+   "component_total": 400,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3876,
+   "name": "Solstice Sleigh",
+   "total": 400,
+   "components": [
+    "Bounty of Worlds"
+   ],
+   "component_total": 400,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3877,
+   "name": "Bloodsong",
+   "total": 400,
+   "components": [
+    "Bounty of Worlds"
+   ],
+   "component_total": 400,
+   "derived_combine": 0,
+   "cache_combine": 0
+  },
+  {
+   "id": 3916,
+   "name": "Oblivion Orb",
+   "total": 800,
+   "components": [
+    "Amplifying Tome"
+   ],
+   "component_total": 400,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 4003,
+   "name": "Lifeline",
+   "total": 1600,
+   "components": [
+    "Rectrix",
+    "Long Sword"
+   ],
+   "component_total": 1125,
+   "derived_combine": 475,
+   "cache_combine": 0
+  },
+  {
+   "id": 4005,
+   "name": "Imperial Mandate",
+   "total": 2400,
+   "components": [
+    "Amplifying Tome",
+    "Bandleglass Mirror",
+    "Amplifying Tome"
+   ],
+   "component_total": 1700,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 4401,
+   "name": "Force of Nature",
+   "total": 2800,
+   "components": [
+    "Negatron Cloak",
+    "Ruby Crystal",
+    "Winged Moonplate"
+   ],
+   "component_total": 2050,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 4628,
+   "name": "Horizon Focus",
+   "total": 2700,
+   "components": [
+    "Fiendish Codex",
+    "Fiendish Codex",
+    "Amplifying Tome"
+   ],
+   "component_total": 2100,
+   "derived_combine": 600,
+   "cache_combine": 0
+  },
+  {
+   "id": 4629,
+   "name": "Cosmic Drive",
+   "total": 3000,
+   "components": [
+    "Kindlegem",
+    "Aether Wisp",
+    "Fiendish Codex"
+   ],
+   "component_total": 2550,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 4630,
+   "name": "Blighting Jewel",
+   "total": 1100,
+   "components": [
+    "Amplifying Tome"
+   ],
+   "component_total": 400,
+   "derived_combine": 700,
+   "cache_combine": 0
+  },
+  {
+   "id": 4632,
+   "name": "Verdant Barrier",
+   "total": 1600,
+   "components": [
+    "Amplifying Tome",
+    "Null-Magic Mantle",
+    "Amplifying Tome"
+   ],
+   "component_total": 1200,
+   "derived_combine": 400,
+   "cache_combine": 0
+  },
+  {
+   "id": 4633,
+   "name": "Riftmaker",
+   "total": 3100,
+   "components": [
+    "Haunting Guise",
+    "Fiendish Codex"
+   ],
+   "component_total": 2150,
+   "derived_combine": 950,
+   "cache_combine": 0
+  },
+  {
+   "id": 4642,
+   "name": "Bandleglass Mirror",
+   "total": 900,
+   "components": [
+    "Faerie Charm",
+    "Amplifying Tome",
+    "Glowing Mote"
+   ],
+   "component_total": 850,
+   "derived_combine": 50,
+   "cache_combine": 0
+  },
+  {
+   "id": 4645,
+   "name": "Shadowflame",
+   "total": 3200,
+   "components": [
+    "Hextech Alternator",
+    "Needlessly Large Rod"
+   ],
+   "component_total": 2300,
+   "derived_combine": 900,
+   "cache_combine": 0
+  },
+  {
+   "id": 4646,
+   "name": "Stormsurge",
+   "total": 2800,
+   "components": [
+    "Hextech Alternator",
+    "Aether Wisp"
+   ],
+   "component_total": 2000,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 6333,
+   "name": "Death's Dance",
+   "total": 3300,
+   "components": [
+    "Steel Sigil",
+    "Pickaxe",
+    "Caulfield's Warhammer"
+   ],
+   "component_total": 3025,
+   "derived_combine": 275,
+   "cache_combine": 0
+  },
+  {
+   "id": 6609,
+   "name": "Chempunk Chainsword",
+   "total": 3000,
+   "components": [
+    "Executioner's Calling",
+    "Giant's Belt",
+    "Caulfield's Warhammer"
+   ],
+   "component_total": 2750,
+   "derived_combine": 250,
+   "cache_combine": 0
+  },
+  {
+   "id": 6610,
+   "name": "Sundered Sky",
+   "total": 3100,
+   "components": [
+    "Tunneler",
+    "Caulfield's Warhammer",
+    "Ruby Crystal"
+   ],
+   "component_total": 2600,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 6616,
+   "name": "Staff of Flowing Water",
+   "total": 2250,
+   "components": [
+    "Fiendish Codex",
+    "Forbidden Idol"
+   ],
+   "component_total": 1450,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 6617,
+   "name": "Moonstone Renewer",
+   "total": 2200,
+   "components": [
+    "Kindlegem",
+    "Bandleglass Mirror"
+   ],
+   "component_total": 1700,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 6620,
+   "name": "Echoes of Helia",
+   "total": 2200,
+   "components": [
+    "Kindlegem",
+    "Bandleglass Mirror"
+   ],
+   "component_total": 1700,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 6621,
+   "name": "Dawncore",
+   "total": 2500,
+   "components": [
+    "Blasting Wand",
+    "Forbidden Idol",
+    "Forbidden Idol"
+   ],
+   "component_total": 2050,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 6631,
+   "name": "Stridebreaker",
+   "total": 3300,
+   "components": [
+    "Tiamat",
+    "Phage",
+    "Dagger"
+   ],
+   "component_total": 2550,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 6653,
+   "name": "Liandry's Torment",
+   "total": 3000,
+   "components": [
+    "Haunting Guise",
+    "Fated Ashes"
+   ],
+   "component_total": 2200,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 6655,
+   "name": "Luden's Echo",
+   "total": 2750,
+   "components": [
+    "Lost Chapter",
+    "Hextech Alternator"
+   ],
+   "component_total": 2300,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 6657,
+   "name": "Rod of Ages",
+   "total": 2600,
+   "components": [
+    "Blasting Wand",
+    "Catalyst of Aeons"
+   ],
+   "component_total": 2150,
+   "derived_combine": 450,
+   "cache_combine": 0
+  },
+  {
+   "id": 6660,
+   "name": "Bami's Cinder",
+   "total": 900,
+   "components": [
+    "Ruby Crystal",
+    "Glowing Mote"
+   ],
+   "component_total": 650,
+   "derived_combine": 250,
+   "cache_combine": 0
+  },
+  {
+   "id": 6662,
+   "name": "Iceborn Gauntlet",
+   "total": 2900,
+   "components": [
+    "Sheen",
+    "Ruby Crystal",
+    "Chain Vest"
+   ],
+   "component_total": 2100,
+   "derived_combine": 800,
+   "cache_combine": 0
+  },
+  {
+   "id": 6664,
+   "name": "Hollow Radiance",
+   "total": 2800,
+   "components": [
+    "Bami's Cinder",
+    "Spectre's Cowl"
+   ],
+   "component_total": 2150,
+   "derived_combine": 650,
+   "cache_combine": 0
+  },
+  {
+   "id": 6665,
+   "name": "Jak'Sho, The Protean",
+   "total": 3200,
+   "components": [
+    "Giant's Belt",
+    "Chain Vest",
+    "Negatron Cloak"
+   ],
+   "component_total": 2550,
+   "derived_combine": 650,
+   "cache_combine": 0
+  },
+  {
+   "id": 6670,
+   "name": "Noonquiver",
+   "total": 1300,
+   "components": [
+    "Long Sword",
+    "Cloak of Agility"
+   ],
+   "component_total": 950,
+   "derived_combine": 350,
+   "cache_combine": 0
+  },
+  {
+   "id": 6672,
+   "name": "Kraken Slayer",
+   "total": 3000,
+   "components": [
+    "Rectrix",
+    "Hearthbound Axe",
+    "Recurve Bow"
+   ],
+   "component_total": 2675,
+   "derived_combine": 325,
+   "cache_combine": 0
+  },
+  {
+   "id": 6673,
+   "name": "Immortal Shieldbow",
+   "total": 3000,
+   "components": [
+    "Pickaxe",
+    "Noonquiver"
+   ],
+   "component_total": 2175,
+   "derived_combine": 825,
+   "cache_combine": 0
+  },
+  {
+   "id": 6675,
+   "name": "Navori Flickerblade",
+   "total": 2650,
+   "components": [
+    "Dagger",
+    "Zeal",
+    "Dagger"
+   ],
+   "component_total": 1700,
+   "derived_combine": 950,
+   "cache_combine": 0
+  },
+  {
+   "id": 6676,
+   "name": "The Collector",
+   "total": 3000,
+   "components": [
+    "Pickaxe",
+    "Serrated Dirk",
+    "Cloak of Agility"
+   ],
+   "component_total": 2475,
+   "derived_combine": 525,
+   "cache_combine": 0
+  },
+  {
+   "id": 6690,
+   "name": "Rectrix",
+   "total": 775,
+   "components": [
+    "Long Sword"
+   ],
+   "component_total": 350,
+   "derived_combine": 425,
+   "cache_combine": 0
+  },
+  {
+   "id": 6692,
+   "name": "Eclipse",
+   "total": 2900,
+   "components": [
+    "Caulfield's Warhammer",
+    "Pickaxe",
+    "Long Sword"
+   ],
+   "component_total": 2275,
+   "derived_combine": 625,
+   "cache_combine": 0
+  },
+  {
+   "id": 6694,
+   "name": "Serylda's Grudge",
+   "total": 3000,
+   "components": [
+    "Caulfield's Warhammer",
+    "Last Whisper"
+   ],
+   "component_total": 2500,
+   "derived_combine": 500,
+   "cache_combine": 0
+  },
+  {
+   "id": 6695,
+   "name": "Serpent's Fang",
+   "total": 2500,
+   "components": [
+    "Serrated Dirk",
+    "Pickaxe"
+   ],
+   "component_total": 1875,
+   "derived_combine": 625,
+   "cache_combine": 0
+  },
+  {
+   "id": 6696,
+   "name": "Axiom Arc",
+   "total": 2750,
+   "components": [
+    "The Brutalizer",
+    "Caulfield's Warhammer"
+   ],
+   "component_total": 2387,
+   "derived_combine": 363,
+   "cache_combine": 0
+  },
+  {
+   "id": 6697,
+   "name": "Hubris",
+   "total": 2800,
+   "components": [
+    "Serrated Dirk",
+    "Caulfield's Warhammer"
+   ],
+   "component_total": 2050,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 6698,
+   "name": "Profane Hydra",
+   "total": 2850,
+   "components": [
+    "Tiamat",
+    "The Brutalizer"
+   ],
+   "component_total": 2537,
+   "derived_combine": 313,
+   "cache_combine": 0
+  },
+  {
+   "id": 6699,
+   "name": "Voltaic Cyclosword",
+   "total": 3000,
+   "components": [
+    "The Brutalizer",
+    "Long Sword",
+    "Long Sword"
+   ],
+   "component_total": 2037,
+   "derived_combine": 963,
+   "cache_combine": 0
+  },
+  {
+   "id": 8010,
+   "name": "Bloodletter's Curse",
+   "total": 2900,
+   "components": [
+    "Haunting Guise",
+    "Fiendish Codex"
+   ],
+   "component_total": 2150,
+   "derived_combine": 750,
+   "cache_combine": 0
+  },
+  {
+   "id": 8020,
+   "name": "Abyssal Mask",
+   "total": 2650,
+   "components": [
+    "Kindlegem",
+    "Negatron Cloak"
+   ],
+   "component_total": 1650,
+   "derived_combine": 1000,
+   "cache_combine": 0
+  }
+ ],
+ "revisions": {
+  "Shop": [
+   "https://wiki.leagueoflegends.com/en-us/Shop",
+   3982704,
+   "2026-01-09"
+  ],
+  "Item": [
+   "https://wiki.leagueoflegends.com/en-us/Item",
+   3985678,
+   "2026-01-21"
+  ],
+  "Item group": [
+   "https://wiki.leagueoflegends.com/en-us/Item_group",
+   4030983,
+   "2026-06-17"
+  ],
+  "Named item effect": [
+   "https://wiki.leagueoflegends.com/en-us/Named_item_effect",
+   4045631,
+   "2026-07-25"
+  ],
+  "Role Quests": [
+   "https://wiki.leagueoflegends.com/en-us/Role_Quests",
+   4026385,
+   "2026-06-09"
+  ],
+  "World Atlas": [
+   "https://wiki.leagueoflegends.com/en-us/World_Atlas",
+   4004090,
+   "2026-03-31"
+  ],
+  "Runic Compass": [
+   "https://wiki.leagueoflegends.com/en-us/Runic_Compass",
+   4028000,
+   "2026-06-13"
+  ],
+  "Bounty of Worlds": [
+   "https://wiki.leagueoflegends.com/en-us/Bounty_of_Worlds",
+   4028001,
+   "2026-06-13"
+  ],
+  "Manamune": [
+   "https://wiki.leagueoflegends.com/en-us/Manamune",
+   3982212,
+   "2026-01-08"
+  ],
+  "Boots": [
+   "https://wiki.leagueoflegends.com/en-us/Boots",
+   4022256,
+   "2026-05-24"
+  ],
+  "Control Ward": [
+   "https://wiki.leagueoflegends.com/en-us/Control_Ward",
+   4021833,
+   "2026-05-21"
+  ],
+  "Jungle pet info template": [
+   "https://wiki.leagueoflegends.com/en-us/Template:Jungle_pet_info",
+   4028041,
+   "2026-06-13"
+  ],
+  "Manaflow info template": [
+   "https://wiki.leagueoflegends.com/en-us/Template:Manaflow_info",
+   3981316,
+   "2026-01-05"
+  ]
+ }
+}

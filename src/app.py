@@ -86,6 +86,7 @@ from calculator.optimizer import (
     get_eligible_legendaries,
     get_selectable_items,
     optimize_build,
+    optimize_purchase,
     optimizer_supported_items,
 )
 from calculator.stats import MAX_LEVEL
@@ -2981,6 +2982,30 @@ def api_optimize():
             if data.get("gold_budget") not in (None, "")
             else None
         )
+        optimization_scope = _request_string(data, "optimization_scope", "build")
+        if optimization_scope not in {"build", "purchase"}:
+            raise ValueError("optimization_scope must be 'build' or 'purchase'")
+        available_gold = (
+            _request_int(data, "available_gold", 0, 1, 30_000)
+            if data.get("available_gold") not in (None, "")
+            else None
+        )
+        if optimization_scope == "purchase" and available_gold is None:
+            raise ValueError("available_gold is required for purchase optimization")
+        max_purchase_items = _request_int(data, "max_purchase_items", 2, 1, 2)
+        allow_sell = data.get("allow_sell", False)
+        if not isinstance(allow_sell, bool):
+            raise ValueError("allow_sell must be true or false")
+        max_sell_items = _request_int(data, "max_sell_items", 1, 0, 1)
+        combine_policy = _request_string(data, "combine_policy", "shop_combine")
+        if combine_policy not in {"shop_combine", "component_accumulate"}:
+            raise ValueError(
+                "combine_policy must be 'shop_combine' or 'component_accumulate'"
+            )
+        include_starters = data.get("include_starters", False)
+        if not isinstance(include_starters, bool):
+            raise ValueError("include_starters must be true or false")
+        time_budget_ms = _request_int(data, "time_budget_ms", 12_000, 100, 60_000)
         fight_params = FightParams.from_request(data, deterministic=True)
         require_level_within_cap(
             level, fight_params.role, fight_params.role_quest_complete
@@ -3006,7 +3031,7 @@ def api_optimize():
     # Optimizer-specific parameters
     if objective not in ("total_damage", "physical_damage", "magic_damage"):
         return jsonify({"error": "Invalid objective"}), 400
-    if len(locked_items) > max_legendary_slots:
+    if optimization_scope == "build" and len(locked_items) > max_legendary_slots:
         return (
             jsonify(
                 {
@@ -3121,30 +3146,50 @@ def api_optimize():
         return rate_limit_response
 
     try:
-        result = optimize_build(
-            champion_data=champion_data,
-            level=level,
-            fight_params=fight_params,
-            objective=objective,
-            locked_items=locked_items if locked_items else None,
-            locked_boots=locked_boots if locked_boots else None,
-            max_legendary_slots=max_legendary_slots,
-            target_fight_params=target_fight_params or None,
-            boots_tier=(
+        common_optimizer_args = {
+            "champion_data": champion_data,
+            "level": level,
+            "fight_params": fight_params,
+            "objective": objective,
+            "locked_items": locked_items if locked_items else None,
+            "locked_boots": locked_boots if locked_boots else None,
+            "target_fight_params": target_fight_params or None,
+            "boots_tier": (
                 3
                 if fight_params.role == "mid" and fight_params.role_quest_complete
                 else 2
             ),
-            gold_budget=gold_budget,
-            require_complete_timeline=True,
-            enemy_loadouts=enemies,
-            ally_loadouts=allies,
-            include_boots=include_boots,
-        )
-    except ValueError as exc:
+            "require_complete_timeline": True,
+            "enemy_loadouts": enemies,
+            "ally_loadouts": allies,
+            "include_boots": include_boots,
+        }
+        if optimization_scope == "purchase":
+            result = optimize_purchase(
+                **common_optimizer_args,
+                available_gold=available_gold or 0,
+                max_purchase_items=max_purchase_items,
+                allow_sell=allow_sell,
+                max_sell_items=max_sell_items,
+                combine_policy=combine_policy,
+                include_starters=include_starters,
+                time_budget_ms=time_budget_ms,
+            )
+        else:
+            result = optimize_build(
+                **common_optimizer_args,
+                max_legendary_slots=max_legendary_slots,
+                gold_budget=gold_budget,
+            )
+    except (KeyError, ValueError) as exc:
         message = str(exc)
         payload = {"error": message}
-        if message.startswith("No complete legal event-ordered build fits"):
+        if message.startswith(
+            (
+                "No complete legal event-ordered build fits",
+                "No complete legal event-ordered purchase fits",
+            )
+        ):
             payload.update(
                 {
                     "error_code": "no_complete_event_order",

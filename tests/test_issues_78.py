@@ -185,6 +185,9 @@ CONTROL_IDS = {
     "bis": ("controls", "best_in_slot"),
     "bisClose": ("controls", "best_in_slot"),
     "addPracticeEnemy": ("controls", "roster_membership"),
+    "economicsGold": ("controls", "purchase_optimize"),
+    "economicsOptimize": ("controls", "purchase_optimize"),
+    "economicsSell": ("controls", "purchase_optimize"),
 }
 
 

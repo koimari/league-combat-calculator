@@ -1470,3 +1470,81 @@ select { font-size: 13px; }
 .quick-view.is-shared .quick-after {
   display: none;
 }
+
+/* Best-buy economics: a paper panel like the build cards, with the same
+   raised-control grammar (patch 26.15 economics engine). */
+.economics-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto auto;
+  gap: 10px 14px;
+  align-items: end;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 253, 244, .58);
+  backdrop-filter: blur(15px) saturate(145%);
+}
+.economics-bar > div { display: grid; gap: 3px; min-width: 0; }
+.economics-bar > div strong { font-size: 14px; font-weight: 800; letter-spacing: -.02em; }
+.economics-bar > div span,
+.economics-bar small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.economics-bar label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.economics-bar input {
+  width: 128px;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--line-dark);
+  border-radius: var(--radius);
+  background: var(--white);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+.economics-bar .economics-sell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  align-self: end;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line-dark);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 244, .72);
+  color: var(--ink-soft);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.economics-bar .economics-sell input { width: 15px; height: 15px; accent-color: var(--black); }
+.economics-bar button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--black);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  box-shadow: 0 3px 7px rgba(7, 26, 21, .22);
+  transition: transform 170ms var(--control-ease, ease), box-shadow 170ms var(--control-ease, ease);
+}
+.economics-bar button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 12px rgba(7, 26, 21, .26); }
+.economics-bar button:disabled { cursor: not-allowed; opacity: .5; box-shadow: none; }
+.economics-bar > small { grid-column: 1 / -1; }
+@media (max-width: 700px) {
+  .economics-bar { grid-template-columns: 1fr; align-items: stretch; }
+  .economics-bar input { width: 100%; }
+  .economics-bar .economics-sell { align-self: stretch; justify-content: center; }
+}

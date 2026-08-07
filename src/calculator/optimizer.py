@@ -22,6 +22,7 @@ from .loadout_rules import (
     conflicts_with_groups,
     exclusivity_groups,
     occupied_groups,
+    inventory_capacity,
     role_quest_legal_items,
     role_scoped_shop_items,
     validate_resolved_loadout,
@@ -780,6 +781,518 @@ def _hill_climb(
     return current, current_boots, best_score, evals
 
 
+_LEGAL_LOCKED_RANKS = {"BASIC", "EPIC", "LEGENDARY", "STARTER"}
+
+
+def _legal_locked_shop_item(item: dict[str, Any]) -> bool:
+    """Return whether an item may be locked in an optimizer inventory.
+
+    Ordinary-shop availability is not enough: consumables (POTION,
+    CONSUMABLE) are buyable in the shop but are not final-build items.
+    """
+    if not is_ordinary_sr_item(item):
+        return False
+    ranks = {str(rank).upper() for rank in item.get("rank", []) or []}
+    return bool(ranks & _LEGAL_LOCKED_RANKS)
+
+
+def _required_item_gold(item: dict[str, Any]) -> int:
+    """Return sourced total price, failing closed instead of making an item free."""
+    name = str(item.get("name") or "Unknown item")
+    prices = item.get("shop", {}).get("prices", {})
+    if "total" not in prices:
+        raise KeyError(f"{name}: shop.prices.total")
+    price = int(prices["total"])
+    if price <= 0:
+        raise ValueError(f"{name}: shop.prices.total must be positive")
+    return price
+
+
+def get_purchase_items(role: str = "") -> list[dict[str, Any]]:
+    """Return ordinary modeled singles for the one/two-purchase search.
+
+    Components (BASIC/EPIC) plus role-scoped legendaries.  Boots stay in a
+    separate pool and transformation items are excluded by ``is_purchasable``
+    at the search site, never by this helper.
+    """
+    supported = optimizer_supported_items(_ordinary_sr_items())
+    components = [
+        item
+        for item in supported
+        if {"BASIC", "EPIC"}.intersection(item.get("rank", []))
+        and "BOOTS" not in item.get("rank", [])
+    ]
+    legendaries = role_scoped_shop_items(
+        [
+            item
+            for item in supported
+            if "LEGENDARY" in item.get("rank", [])
+            and "BOOTS" not in item.get("rank", [])
+        ],
+        role,
+    )
+    return components + legendaries
+
+
+def optimize_purchase(
+    champion_data: dict[str, Any],
+    level: int,
+    *,
+    available_gold: int,
+    fight_params: FightParams | None = None,
+    objective: str = "total_damage",
+    locked_items: list[str] | None = None,
+    locked_boots: str | None = None,
+    max_purchase_items: int = 2,
+    target_fight_params: tuple[FightParams, ...] | None = None,
+    boots_tier: int = 2,
+    require_complete_timeline: bool = True,
+    enemy_loadouts: list[Any] | None = None,
+    ally_loadouts: list[Any] | None = None,
+    include_boots: bool = True,
+    candidate_cap: int = 2500,
+    allow_sell: bool = False,
+    max_sell_items: int = 1,
+    combine_policy: str = "shop_combine",
+    include_starters: bool = False,
+    time_budget_ms: int = 12_000,
+) -> dict[str, Any]:
+    """Rank real-shop purchase plans (buy / combine / sell) by combat value.
+
+    Every plan is priced by the shop model (list-price buys, explicit
+    combine fees, 40%-refund-era exceptions replaced by the sourced 70% sell
+    table) and scored on its *resolved final loadout* through the existing
+    event-order-certified fight pipeline.  Owned items are preserved unless a
+    plan sells them.
+
+    Certification is scoped honestly: ``exhaustive_within_scope`` is true
+    only when every generated plan was evaluated and both model and timeline
+    coverage are complete; otherwise the claim downgrades to
+    ``best_evaluated_plan``.
+    """
+    from .economy import (
+        apply_purchase_plan,
+        combine_candidates,
+        is_purchasable,
+        is_stackable,
+        item_sell_value,
+        item_total,
+        validate_economy_loadout,
+        _item_by_id,
+    )
+
+    if available_gold < 1:
+        raise ValueError("available_gold must be at least 1")
+    if max_purchase_items not in (1, 2):
+        raise ValueError("max_purchase_items must be 1 or 2")
+    if max_sell_items not in (0, 1):
+        raise ValueError("max_sell_items must be 0 or 1")
+    if objective not in ("total_damage", "physical_damage", "magic_damage"):
+        raise ValueError("Invalid objective")
+    if combine_policy not in {"shop_combine", "component_accumulate"}:
+        raise ValueError(
+            "combine_policy must be 'shop_combine' or 'component_accumulate'"
+        )
+
+    started = time.perf_counter()
+    params: FightParams | tuple[FightParams, ...]
+    if target_fight_params:
+        target_count = len(target_fight_params)
+        params = tuple(
+            replace(
+                target,
+                deterministic=True,
+                roster_target_index=index,
+                roster_target_count=target_count,
+            )
+            for index, target in enumerate(target_fight_params)
+        )
+    else:
+        base = fight_params or FightParams.from_request({}, deterministic=True)
+        params = base if base.deterministic else replace(base, deterministic=True)
+    base_params = params[0] if isinstance(params, tuple) else params
+    role = base_params.role
+    role_quest_complete = base_params.role_quest_complete
+
+    allowed_legendary_names = {
+        item["name"]
+        for item in role_scoped_shop_items(
+            optimizer_supported_items(get_eligible_legendaries()), role
+        )
+    }
+    owned = []
+    for name in locked_items or []:
+        item = get_item_by_name(name)
+        if not _legal_locked_shop_item(item):
+            raise ValueError(f"{name} is not an ordinary non-boots shop item")
+        if "LEGENDARY" in item.get("rank", []) and name not in allowed_legendary_names:
+            raise ValueError(f"{name} is not available in the selected role shop")
+        require_optimizer_item_coverage(item)
+        _required_item_gold(item)
+        owned.append(item)
+    owned_boots = None
+    if locked_boots:
+        if not include_boots:
+            raise ValueError("locked_boots cannot be used when include_boots is false")
+        owned_boots = get_item_by_name(locked_boots)
+        if not is_ordinary_sr_item(owned_boots):
+            raise ValueError(f"{locked_boots} is not an ordinary shop item")
+        require_optimizer_item_coverage(owned_boots)
+        _required_item_gold(owned_boots)
+    validate_resolved_loadout(
+        owned,
+        boots=owned_boots,
+        role=role,
+        role_quest_complete=role_quest_complete,
+    )
+
+    capacity = inventory_capacity(role, role_quest_complete)
+    owned_names = {item["name"] for item in owned}
+    if owned_boots:
+        owned_names.add(owned_boots["name"])
+
+    pool = [
+        item
+        for item in get_purchase_items(role)
+        if is_purchasable(item, include_starters=include_starters)
+        and item["name"] not in owned_names
+    ]
+    component_pool = [
+        item for item in pool if {"BASIC", "EPIC"}.intersection(item.get("rank", []))
+    ]
+    boot_pool = []
+    if include_boots and owned_boots is None:
+        boot_pool = [
+            item
+            for item in optimizer_supported_items(get_eligible_boots(tier=boots_tier))
+            if is_purchasable(item) and item["name"] not in owned_names
+        ]
+
+    # ---- plan shapes -------------------------------------------------------
+    # (sell_name | None, buys: list[str], combine_name | None)
+    sell_options: list[str | None] = [None]
+    if allow_sell and max_sell_items >= 1:
+        sell_options.extend(item["name"] for item in owned)
+        if owned_boots is not None:
+            sell_options.append(owned_boots["name"])
+
+    buy_shapes: list[list[str]] = [[]]
+    if max_purchase_items >= 1:
+        buy_shapes.extend([item["name"]] for item in pool)
+        buy_shapes.extend([boot["name"]] for boot in boot_pool)
+    if max_purchase_items >= 2:
+        for left_index, left in enumerate(component_pool):
+            for right_index, right in enumerate(component_pool):
+                if right_index < left_index:
+                    continue
+                if left_index == right_index and not is_stackable(left):
+                    continue
+                buy_shapes.append([left["name"], right["name"]])
+        for item in pool:
+            for boot in boot_pool:
+                buy_shapes.append([item["name"], boot["name"]])
+
+    raw_plans: list[tuple[str | None, list[str], str | None]] = []
+    for sell_name in sell_options:
+        for buys in buy_shapes:
+            raw_plans.append((sell_name, buys, None))
+    # Add combine completion plans for every inventory reachable by a shape.
+    extended: list[tuple[str | None, list[str], str | None]] = []
+    by_name = {item["name"]: item for item in [*owned, *pool, *boot_pool]}
+    for sell_name, buys, _combine in raw_plans:
+        extended.append((sell_name, buys, None))
+        inventory = {}
+        for item in owned:
+            if item["name"] == sell_name:
+                continue
+            inventory[int(item["id"])] = inventory.get(int(item["id"]), 0) + 1
+        for buy_name in buys:
+            buy = by_name.get(buy_name)
+            if buy is None:
+                continue
+            if "BOOTS" in {str(r).upper() for r in buy.get("rank", []) or []}:
+                continue
+            inventory[int(buy["id"])] = inventory.get(int(buy["id"]), 0) + 1
+        for combine_id, _demand, _fee in combine_candidates(inventory, _item_by_id()):
+            combine_name = _item_by_id()[combine_id]["name"]
+            if combine_name not in {item["name"] for item in pool}:
+                continue
+            extended.append((sell_name, buys, combine_name))
+    raw_plans = extended
+
+    # ---- apply the shop model to every raw plan ----------------------------
+    by_name_full = {item["name"]: item for item in [*owned, *pool, *boot_pool]}
+    plan_rows: list[tuple[Any, int]] = []  # (plan, spend)
+    for sell_name, buys, combine_name in raw_plans:
+        sells = [by_name_full[sell_name]] if sell_name else None
+        purchase_objs = [by_name_full[name] for name in buys if name in by_name_full]
+        combine_objs = [by_name_full[combine_name]] if combine_name else None
+        try:
+            plan = apply_purchase_plan(
+                owned,
+                owned_boots,
+                purchase_objs,
+                available_gold,
+                sell_items=sells,
+                combine_items=combine_objs,
+                combine_policy=combine_policy,
+                role=role,
+                role_quest_complete=role_quest_complete,
+            )
+        except (KeyError, ValueError, LookupError):
+            continue
+        try:
+            validate_economy_loadout(
+                plan,
+                role=role,
+                role_quest_complete=role_quest_complete,
+            )
+        except ValueError:
+            continue
+        plan_rows.append((plan, plan.spend))
+
+    plan_rows.sort(key=lambda row: (row[1], _plan_key(row[0])))
+    truncated = len(plan_rows) > candidate_cap
+    plan_rows = plan_rows[:candidate_cap]
+
+    if not plan_rows:
+        return {
+            "optimization_scope": "purchase",
+            "items": [item["name"] for item in owned],
+            "boots": owned_boots["name"] if owned_boots else None,
+            "purchase_items": [],
+            "sell_items": [],
+            "recommendation_type": "no_affordable_purchase",
+            "spent_gold": 0,
+            "sell_refund": 0,
+            "remaining_gold": available_gold,
+            "inventory_gold": _build_gold(
+                ([owned_boots] if owned_boots else []) + owned
+            ),
+            "ranked_purchases": [],
+            "candidate_count": 0,
+            "evaluations": 0,
+            "optimization_time_ms": round((time.perf_counter() - started) * 1000, 1),
+            "searched_space": "no affordable legal plan",
+            "exhaustive_within_scope": True,
+            "truncated": False,
+            "certification": {
+                "event_order": True,
+                "economy": True,
+                "legality": True,
+                "claim": "no_affordable_purchase",
+            },
+            "winner_event_order_certified": True,
+            "is_certified_best": True,
+            "search_guarantee": "exhaustive_purchase_scope",
+            "available_gold": available_gold,
+            "objective": objective,
+        }
+
+    timeline_audit = {
+        "evaluations": 0,
+        "partial_evaluations": 0,
+        "excluded_evaluations": 0,
+        "exact_sources": set(),
+        "coarse_sources": set(),
+        "excluded_sources": set(),
+        "build_coverages": {},
+        "withheld_builds": {},
+    }
+    combat_context = (
+        {"enemies": list(enemy_loadouts or ()), "allies": list(ally_loadouts or ())}
+        if enemy_loadouts or ally_loadouts
+        else None
+    )
+    if combat_context is not None:
+        combat_context.update(
+            {
+                "pair_result_cache": {},
+                "score_memo": {},
+                "search_context": CoupledSearchContext(),
+            }
+        )
+
+    def current_loadout_score() -> float | None:
+        current_items = ([owned_boots] if owned_boots else []) + owned
+        if not current_items:
+            return None
+        return _evaluate_build(
+            champion_data,
+            level,
+            current_items,
+            fight_params=params,
+            objective=objective,
+            timeline_audit=timeline_audit,
+            require_complete_timeline=require_complete_timeline,
+            combat_context=combat_context,
+        )
+
+    current_score = current_loadout_score()
+
+    scored: list[tuple[float, Any, int]] = []
+    memo: dict[tuple[tuple[str, ...], str | None], float] = {}
+    evaluations = 0
+    for plan, spend in plan_rows:
+        if time.perf_counter() - started > time_budget_ms / 1000:
+            truncated = True
+            break
+        key = _plan_key(plan)
+        if key in memo:
+            score = memo[key]
+        else:
+            build_items = (
+                [plan.final_boots] if plan.final_boots else []
+            ) + plan.final_items
+            score = _evaluate_build(
+                champion_data,
+                level,
+                build_items,
+                fight_params=params,
+                objective=objective,
+                timeline_audit=timeline_audit,
+                require_complete_timeline=require_complete_timeline,
+                combat_context=combat_context,
+            )
+            evaluations += 1
+            memo[key] = score
+        if math.isfinite(score):
+            scored.append((score, plan, spend))
+    if not scored:
+        raise ValueError(
+            "No complete legal event-ordered purchase fits the selected constraints"
+        )
+    scored.sort(key=lambda row: (-row[0], row[2], _plan_key(row[1])))
+
+    coverage_pool = [
+        item for item in [*pool, *boot_pool] if item["name"] not in owned_names
+    ]
+    candidate_coverage = optimizer_candidate_coverage(coverage_pool)
+    search_coverage = _public_search_timeline_coverage(timeline_audit)
+    exhaustive_within_scope = (
+        not truncated and candidate_coverage["complete"] and search_coverage["complete"]
+    )
+    event_order_certified = search_coverage["complete"]
+
+    best_score, best_plan, best_spend = scored[0]
+    rank_count = min(3, len(scored))
+    public_ranked = []
+    for rank, (score, plan, spend) in enumerate(scored[:rank_count], start=1):
+        build_items = (
+            [plan.final_boots] if plan.final_boots else []
+        ) + plan.final_items
+        public_ranked.append(
+            {
+                "rank": rank,
+                "purchase_items": [
+                    *plan.purchases,
+                    *[row.item for row in plan.price_rows if row.combined_charged],
+                ],
+                "sell_items": plan.sell_items,
+                "recommendation_type": _plan_type(plan),
+                "spent_gold": spend,
+                "sell_refund": plan.refund,
+                "remaining_gold": plan.remaining,
+                "total_damage": round(score, 1),
+                "price_rows": [row.to_dict() for row in plan.price_rows],
+                "timeline_coverage": _build_timeline_coverage(
+                    champion_data, level, build_items, params
+                ),
+            }
+        )
+
+    purchase_names = [
+        *best_plan.purchases,
+        *[row.item for row in best_plan.price_rows if row.combined_charged],
+    ]
+    build_items = (
+        [best_plan.final_boots] if best_plan.final_boots else []
+    ) + best_plan.final_items
+    resulting_total = round(best_score, 1)
+    delta = (
+        round(best_score - current_score, 1)
+        if current_score is not None and math.isfinite(current_score)
+        else None
+    )
+    searched_space = (
+        f"{'truncated ' if truncated else 'exhaustive '}"
+        f"{{1-2 buys | 1 combine | {1 if allow_sell else 0} sell}} "
+        f"within {available_gold:,} gold"
+    )
+    return {
+        "optimization_scope": "purchase",
+        "items": [item["name"] for item in best_plan.final_items],
+        "boots": best_plan.final_boots["name"] if best_plan.final_boots else None,
+        "purchase_items": purchase_names,
+        "sell_items": best_plan.sell_items,
+        "recommendation_type": _plan_type(best_plan),
+        "spent_gold": best_spend,
+        "sell_refund": best_plan.refund,
+        "remaining_gold": best_plan.remaining,
+        "inventory_gold": _build_gold(build_items),
+        "resulting_total_damage": resulting_total,
+        "damage_delta_vs_current": delta,
+        "damage_per_100_gold": (
+            round(resulting_total / best_spend * 100, 1) if best_spend else None
+        ),
+        "price_rows": [row.to_dict() for row in best_plan.price_rows],
+        "incomplete_combine": best_plan.incomplete_combine,
+        "ranked_purchases": public_ranked,
+        "candidate_count": len(plan_rows),
+        "evaluations": evaluations,
+        "optimization_time_ms": round((time.perf_counter() - started) * 1000, 1),
+        "searched_space": searched_space,
+        "exhaustive_within_scope": exhaustive_within_scope,
+        "truncated": truncated,
+        "certification": {
+            "event_order": event_order_certified,
+            "economy": True,
+            "legality": True,
+            "claim": (
+                "certified_best_purchase_within_scope"
+                if exhaustive_within_scope
+                else "best_evaluated_plan"
+            ),
+        },
+        "winner_event_order_certified": event_order_certified,
+        "is_certified_best": exhaustive_within_scope,
+        "search_guarantee": (
+            "exhaustive_purchase_scope"
+            if not truncated
+            else "best_evaluated_plan_truncated"
+        ),
+        "candidate_coverage": candidate_coverage,
+        "search_timeline_coverage": search_coverage,
+        "available_gold": available_gold,
+        "objective": objective,
+    }
+
+
+def _plan_key(plan: Any) -> tuple[tuple[str, ...], str | None]:
+    """Canonical final-loadout key for score memoization."""
+    names = tuple(sorted(item["name"] for item in plan.final_items))
+    return (names, plan.final_boots["name"] if plan.final_boots else None)
+
+
+def _plan_type(plan: Any) -> str:
+    """Human recommendation type for a priced plan."""
+    if plan.sell_items:
+        return "sell_pivot"
+    combined = [
+        row.item
+        for row in plan.price_rows
+        if row.combined_charged or row.components_consumed
+    ]
+    if combined:
+        return "recipe_completion"
+    if len(plan.purchases) == 1:
+        boots = plan.final_boots and not plan.final_items
+        return "boots" if boots else "single_item"
+    if len(plan.purchases) >= 2:
+        return "component_set"
+    return "single_item"
+
+
 def optimize_build(
     champion_data: dict[str, Any],
     level: int,
@@ -892,7 +1405,10 @@ def optimize_build(
         for name in locked_items:
             if name:
                 item = get_item_by_name(name)
+                if not _legal_locked_shop_item(item):
+                    raise ValueError(f"{name} is not an ordinary non-boots shop item")
                 require_optimizer_item_coverage(item)
+                _required_item_gold(item)
                 resolved_locked.append(item)
                 locked_names.add(name)
 

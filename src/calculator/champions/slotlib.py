@@ -927,3 +927,24 @@ def on_hit_auto(source: tuple[str, int] | None = None) -> SlotParser:
 
     parse.phase = ONHIT
     return parse
+
+
+def with_item_on_hits(parser, *, effectiveness, hits=1, triggers=("on_hit",)):
+    """Wrap a slot parser so its entry declares item on-hit application.
+
+    Used by reviewed batch wrappers to add wiki-sourced
+    ``applies_item_on_hits`` metadata to abilities that apply item on-hits
+    (spellblade charges, on-hit items) without rewriting the packet parser.
+    """
+    def parse(ctx):
+        entry = parser(ctx)
+        if entry is None:
+            return None
+        entry["applies_item_on_hits"] = {
+            "effectiveness": effectiveness,
+            "hits": hits,
+            "triggers": tuple(triggers),
+        }
+        return entry
+
+    return parse

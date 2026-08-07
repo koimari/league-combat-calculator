@@ -101,6 +101,13 @@ def _whiplash(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("magic", value),)
     entry["target_max_health_sensitive"] = True
+    # Wiki: Whiplash applies on-hit effects (empowered variant only to the
+    # primary target — the module models the primary hit).
+    entry["applies_item_on_hits"] = {
+        "effectiveness": 1.0,
+        "hits": 1,
+        "triggers": ("on_hit",),
+    }
     entry["detail"] = "Empowered Whiplash applies on-hit only to its primary target."
     return entry
 
