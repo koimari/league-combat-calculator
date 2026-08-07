@@ -128,7 +128,7 @@ jobs:
             echo "metrics module missing from the runtime package (issue #144)"
             exit 1
           fi
-          printf '%s' "$metrics" | grep --quiet 'scorecard' \
+          printf '%s' "$metrics" | grep --quiet '"gate"' \
             || printf '%s' "$metrics" | grep --quiet 'Database unavailable'
 
           for attempt in {1..45}; do
