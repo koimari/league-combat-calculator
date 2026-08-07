@@ -28,7 +28,7 @@ from bs4 import BeautifulSoup
 
 import src.app as app_module
 
-import db
+from src import db
 
 ROOT = Path(__file__).resolve().parent.parent
 PRESETS_PATH = ROOT / "static" / "quick-presets.json"

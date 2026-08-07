@@ -17,7 +17,7 @@ import src.app as app_module
 
 # The app imports its persistence layer as the top-level ``db`` module (src/
 # is placed on sys.path by app.py), so tests reuse that same module instance.
-import db
+from src import db
 
 
 @pytest.fixture(autouse=True)

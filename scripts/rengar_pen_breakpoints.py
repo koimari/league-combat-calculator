@@ -2,8 +2,10 @@
 """Interactive Rengar pen comparison.
 
 The file has no third-party dependency.  Run it from this repository to use
-the current calculator data.  A copied file uses the level-14 Rengar snapshot
-in ``_standalone_model``.  This keeps the calculator easy to share.
+the current calculator data and the canonical resistance/penetration math
+(``src.calculator.resistance``).  ``_standalone_model`` keeps a source-pinned
+level-14 Rengar snapshot for scenarios where the live registry is unavailable,
+but the resistance math is never duplicated here (issue #164).
 
 The comparison is:
 
@@ -28,25 +30,7 @@ if (_PROJECT_ROOT / "src").is_dir():
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 
-try:
-    from src.calculator.resistance import apply_armor_penetration, apply_resistance
-except (ImportError, TypeError):
-    # Python 3.9 cannot import the repository's PEP 604 annotations.  The
-    # copied script still has a complete level-14 snapshot for that case.
-
-    def apply_resistance(raw_damage: float, resistance: float) -> float:
-        """Apply League resistance math for the standalone copy."""
-        if resistance >= 0.0:
-            return raw_damage * 100.0 / (100.0 + resistance)
-        return raw_damage * (2.0 - 100.0 / (100.0 - resistance))
-
-    def apply_armor_penetration(
-        target_armor: float, flat_penetration: float, percent_penetration: float
-    ) -> float:
-        """Apply percent armor penetration, then flat penetration."""
-        if target_armor <= 0.0:
-            return target_armor
-        return max(0.0, target_armor * (1.0 - percent_penetration) - flat_penetration)
+from src.calculator.resistance import apply_armor_penetration, apply_resistance
 
 
 @dataclass(frozen=True)

@@ -45,28 +45,28 @@ _IGNORED_NAMES = {
 _IGNORED_SUFFIXES = (".pyc", ".blend", ".blend1", ".psd", ".mov")
 
 _ROUTE_DEPENDENCIES = [
-    "calculator.data_fetcher",
-    "calculator.item_effects",
-    "calculator.rune_effects",
-    "calculator.item_coverage",
-    "calculator.ally_effects",
-    "calculator.loadout_rules",
-    "calculator.defensive_effects",
-    "calculator.participant_timeline",
-    "calculator.champions",
-    "calculator.champion_coverage",
-    "calculator.capabilities",
-    "calculator.optimizer",
-    "calculator.stats",
-    "calculator.timeline_coverage",
-    "calculator.scenario",
-    "calculator.role_quests",
-    "calculator.pipeline",
-    "calculator.public_response",
-    "calculator.bis",
-    "rate_limit",
-    "db",
-    "metrics",
+    "src.calculator.data_fetcher",
+    "src.calculator.item_effects",
+    "src.calculator.rune_effects",
+    "src.calculator.item_coverage",
+    "src.calculator.ally_effects",
+    "src.calculator.loadout_rules",
+    "src.calculator.defensive_effects",
+    "src.calculator.participant_timeline",
+    "src.calculator.champions",
+    "src.calculator.champion_coverage",
+    "src.calculator.capabilities",
+    "src.calculator.optimizer",
+    "src.calculator.stats",
+    "src.calculator.timeline_coverage",
+    "src.calculator.scenario",
+    "src.calculator.role_quests",
+    "src.calculator.pipeline",
+    "src.calculator.public_response",
+    "src.calculator.bis",
+    "src.rate_limit",
+    "src.db",
+    "src.metrics",
 ]
 
 
@@ -133,9 +133,9 @@ def test_deployment_package_imports_every_route_dependency(deployment_package):
 import sys
 import importlib.util
 assert importlib.util.find_spec("scripts") is None, "scripts must not ship"
-# Importing src.app first mirrors the production entrypoint: app.py puts
-# src/ on sys.path, then every route dependency must resolve from the
-# packaged artifact alone.
+# Importing src.app first mirrors the production entrypoint; every route
+# dependency must then resolve from the packaged artifact alone under the
+# single ``src.*`` namespace (issue #164).
 import src.app
 {imports}
 print("ALL-IMPORTS-OK")
@@ -179,7 +179,7 @@ app_module.app.config["TESTING"] = True
 app_module.app.config["RATE_LIMIT_ENABLED"] = False
 client = app_module.app.test_client()
 endpoint_body = client.get("/api/metrics").get_json()
-import metrics
+from src import metrics
 cli_body = metrics.compute_scorecard()
 # ``generated_at`` and the beta window bounds embed the evaluation moment;
 # normalize them so the shared criteria/receipt schema is what is compared.

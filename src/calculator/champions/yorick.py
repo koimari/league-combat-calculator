@@ -28,6 +28,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..stats import growth_multiplier
 from .engine import SlotCtx, build_parser
 from .reviewed_batch_01 import no_damage
 from .reviewed_batch_10 import build_batch_module
@@ -74,8 +75,7 @@ def _mist_walker_attack_damage(ctx: SlotCtx) -> float:
     """
     span = _MIST_WALKER_DAMAGE_END - _MIST_WALKER_DAMAGE_START
     interpolated = _MIST_WALKER_DAMAGE_START + span * (ctx.level - 1) / 17.0
-    growth_multiplier = 0.7025 + 0.0175 * (ctx.level - 1)
-    base = interpolated * growth_multiplier
+    base = interpolated * growth_multiplier(ctx.level)
     return base + _MIST_WALKER_AD_RATIO * ctx.stats.get("attack_damage", 0.0)
 
 

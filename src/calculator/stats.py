@@ -20,6 +20,32 @@ from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 MAX_LEVEL = 20
 
 
+def growth_multiplier(level: int) -> float:
+    """The shared LoL stat-progression multiplier ``0.7025 + 0.0175 * (level-1)``.
+
+    This is the parenthesized term of the growth formula (1.0 at level 18);
+    formulas that scale a *relative* value by the progression curve (e.g.
+    Yorick's Mist Walker interpolation) use this, while absolute per-level
+    growth uses :func:`growth_factor`.  Level-bound contract shared with
+    ``growth_stat``.
+    """
+    if level < 1 or level > MAX_LEVEL:
+        raise ValueError(f"Level must be between 1 and {MAX_LEVEL}, got {level}")
+    return 0.7025 + 0.0175 * (level - 1)
+
+
+def growth_factor(level: int) -> float:
+    """The shared LoL stat-growth term ``(level-1) * (0.7025 + 0.0175 * (level-1))``.
+
+    One named owner for the per-level growth term so pet/companion attack
+    speeds and any other relative-growth formula use the same primitive and
+    the same level-bound contract as ``growth_stat``.
+    """
+    if level < 1 or level > MAX_LEVEL:
+        raise ValueError(f"Level must be between 1 and {MAX_LEVEL}, got {level}")
+    return (level - 1) * growth_multiplier(level)
+
+
 def growth_stat(base: float, growth: float, level: int) -> float:
     """Calculate a champion stat at a given level using the LoL growth formula.
 
@@ -33,9 +59,7 @@ def growth_stat(base: float, growth: float, level: int) -> float:
     Returns:
         The stat value at the given level (not rounded).
     """
-    if level < 1 or level > MAX_LEVEL:
-        raise ValueError(f"Level must be between 1 and {MAX_LEVEL}, got {level}")
-    return base + growth * (level - 1) * (0.7025 + 0.0175 * (level - 1))
+    return base + growth * (level - 1) * growth_multiplier(level)
 
 
 # The game clamps a unit's TOTAL attack speed to 3.003 (one basic attack

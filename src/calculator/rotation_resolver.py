@@ -52,7 +52,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
-from .damage import DEFAULT_CAST_ORDER
+from .damage import DEFAULT_CAST_ORDER, effective_cooldown
 
 # Fallback rationale when no combo rule and no certified order exists.
 _DEFAULT_RATIONALE = (
@@ -563,9 +563,10 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
     :class:`_Edge` constraints; a champion with no detectable signal
     returns ``[]`` and keeps its certified/default order.
     """
-    from src.calculator.champions import (  # pylint: disable=import-outside-toplevel
+
+    from .champions import (
         get_champion_option_rotation,
-    )
+    )  # pylint: disable=import-outside-toplevel
 
     slots = [s for s in _CAST_SLOTS if isinstance(ability_damages.get(s), Mapping)]
     corpora = {s: _slot_corpus(champion_data, s) for s in slots}
@@ -1058,9 +1059,12 @@ def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
     cached = _MATRIX_DPS_CACHE.get(champion_name)
     if cached is not None:
         return cached
-    from src.calculator.champions import parse_champion_abilities
-    from src.calculator.data_fetcher import fetch_item_data
-    from src.calculator.stats import calculate_total_stats
+
+    from .champions import (
+        parse_champion_abilities,
+    )  # pylint: disable=import-outside-toplevel
+    from .data_fetcher import fetch_item_data  # pylint: disable=import-outside-toplevel
+    from .stats import calculate_total_stats  # pylint: disable=import-outside-toplevel
 
     items_by_name = {d["name"]: d for d in fetch_item_data().values()}
     target_stats = {
@@ -1100,8 +1104,11 @@ def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel,unused-argu
     option-sensitive edges are derived per option state, so a cold cache
     cannot drop a slot the fight actually casts (issue #145 §6).
     """
-    from src.calculator.champions import parse_champion_abilities
-    from src.calculator.stats import calculate_total_stats
+
+    from .champions import (
+        parse_champion_abilities,
+    )  # pylint: disable=import-outside-toplevel
+    from .stats import calculate_total_stats  # pylint: disable=import-outside-toplevel
 
     data = dict(champion_data)
     stats = calculate_total_stats(data, 11, [])
@@ -1132,9 +1139,10 @@ def _option_signature(
     """
     if not champion_options:
         return None
-    from src.calculator.champions import (  # pylint: disable=import-outside-toplevel
+
+    from .champions import (
         get_champion_options_meta,
-    )
+    )  # pylint: disable=import-outside-toplevel
 
     declared = {
         str(opt.get("key", ""))
@@ -1234,7 +1242,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         champion_name, champion_data, champion_options
     )
 
-    from src.calculator.champions import (  # pylint: disable=import-outside-toplevel
+    from .champions import (  # pylint: disable=import-outside-toplevel
         get_champion_option_rotation,
         get_champion_options_meta,
     )
@@ -1484,7 +1492,8 @@ def resolve_cast_order(
     if champion_data is None and not ability_damages:
         return list(DEFAULT_CAST_ORDER), None
     if certified_order is None:
-        from src.calculator.champions import (
+
+        from .champions import (
             get_champion_cast_order,
         )  # pylint: disable=import-outside-toplevel
 
@@ -1536,7 +1545,7 @@ def rank_ability_dps(
         raw = float(info.get("total_raw", 0.0) or 0.0)
         if raw <= 0:
             continue
-        effective = cooldown * (100.0 / (100.0 + max(0.0, ability_haste)))
+        effective = effective_cooldown(cooldown, ability_haste)
         targets = min(target_count, max(1, int(aoe.get(slot, 1))))
         ranked.append((slot, raw * targets / effective, raw, cooldown))
     ranked.sort(key=lambda row: (-row[1], row[0]))
