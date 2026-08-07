@@ -237,7 +237,11 @@ def test_zilean_chronoshift_revives_with_sourced_flat_ap_heal():
         ("Kayle", "Celestial Blessing", "heal", 155.0),
         ("Seraphine", "Surround Sound", "shield", 140.0),
         ("Janna", "Eye of the Storm", "shield", 240.0),
-        ("Janna", "Monsoon", "heal", 600.0),
+        # Issue #143 (phase 2): Monsoon's heal is rule-owned and fans out
+        # as the sourced per-tick events (12 x 50 at rank 3, 0 AP), so the
+        # first matching packet is one 50 tick — the full channel still
+        # totals the sourced 600 (asserted in test_heal_ledger_phase2.py).
+        ("Janna", "Monsoon", "heal", 50.0),
         ("Yuumi", "Final Chapter", "heal", 350.0),
         ("Soraka", "Astral Infusion", "heal", 170.0),
     ],

@@ -1114,16 +1114,26 @@ def derive_self_healing(
                 )
 
     elif name == "Sona":
-        # Aria of Perseverance heals Sona herself on every W cast (wiki:
-        # "Heal: 30 / 45 / 60 / 75 / 90 (+ 30% AP)"); the tone's ally half
-        # is authored by the support layer.  W has no enemy damage, so the
-        # cast timeline is the sourced trigger.
+        # Aria of Perseverance heals Sona herself and sends out a tone to
+        # heal the most wounded nearby allied champion on every W cast
+        # (wiki: "Heal: 30 / 45 / 60 / 75 / 90 (+ 30% AP)"; cached prose
+        # "Sona heals herself and sends out a tone to heal the most wounded
+        # allied champion nearby").  W has no enemy damage, so the cast
+        # timeline is the sourced trigger.
+        #
+        # Issue #143 (phase 2): this rule is the ONE ledger owner of the W
+        # heal.  The support scanner defers the slot
+        # (``_MODULE_AUTHORED_HEAL_SLOTS``) and the participant timeline
+        # fans this event out to the first selected teammate
+        # (``target_scope: self_and_one_teammate``), so one formula prices
+        # both recipients at the same amount.  The Melody shield stays
+        # scanner-owned.
         w_rank = _rank(ability_damages, "W")
         heal = extract_named(
             _ability(champion_data, "W"), "Heal", w_rank, champion_stats
         )
         if heal > 0.0:
-            for cast in cast_timeline or []:
+            for cast_index, cast in enumerate(cast_timeline or []):
                 if cast.get("slot") != "W":
                     continue
                 healing.append(
@@ -1133,15 +1143,26 @@ def derive_self_healing(
                         "source": "Aria of Perseverance",
                         "kind": "champion_ability",
                         "actor_wide": True,
+                        "target_scope": "self_and_one_teammate",
+                        "_event_id": f"sona:w:{cast_index}",
                     }
                 )
 
     elif name == "Janna":
         # Monsoon channels for up to 3 seconds, healing Janna herself and
         # nearby allies every 0.25 seconds (wiki: "Heal Per Tick: 25 / 37.5
-        # / 50 (+ 12.5% AP)"; "Total Heal: 300 / 450 / 600 (+ 150% AP)").
-        # The tick count is sourced from the total/per-tick ratio so the
-        # authored sum stays exact at every rank.
+        # / 50 (+ 12.5% AP)"; "Total Heal: 300 / 450 / 600 (+ 150% AP)";
+        # cached prose "healing herself and nearby allies every 0.25
+        # seconds").  The tick count is sourced from the total/per-tick
+        # ratio so the authored sum stays exact at every rank.
+        #
+        # Issue #143 (phase 2): this rule is the ONE ledger owner of the R
+        # heal.  The support scanner defers the slot
+        # (``_MODULE_AUTHORED_HEAL_SLOTS``) and the participant timeline
+        # fans every tick out to all selected teammates
+        # (``target_scope: self_and_all_teammates``), so the ally heal is
+        # the same ticked sourced heal as the self heal instead of the
+        # scanner's 600 lump.
         r_rank = _rank(ability_damages, "R")
         ability = _ability(champion_data, "R")
         per_tick = extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
@@ -1152,7 +1173,7 @@ def derive_self_healing(
             else 12
         )
         if per_tick > 0.0:
-            for cast in cast_timeline or []:
+            for cast_index, cast in enumerate(cast_timeline or []):
                 if cast.get("slot") != "R":
                     continue
                 start = float(cast.get("time", 0.0))
@@ -1164,6 +1185,8 @@ def derive_self_healing(
                             "source": "Monsoon",
                             "kind": "champion_ability",
                             "actor_wide": True,
+                            "target_scope": "self_and_all_teammates",
+                            "_event_id": f"janna:r:{cast_index}:{index}",
                         }
                     )
 
@@ -1202,14 +1225,23 @@ def derive_self_healing(
 
     elif name == "Milio":
         # Breath of Life heals Milio himself and nearby allied champions
-        # on cast (wiki: "Heal: 150 / 250 / 350 (+ 50% AP)").  R deals no
-        # enemy damage, so the R cast timeline is the sourced trigger.
+        # on cast (wiki: "Heal: 150 / 250 / 350 (+ 50% AP)"; cached prose
+        # "healing and cleansing himself and nearby allied champions").  R
+        # deals no enemy damage, so the R cast timeline is the sourced
+        # trigger.
+        #
+        # Issue #143 (phase 2): this rule is the ONE ledger owner of the R
+        # heal.  The support scanner defers the slot
+        # (``_MODULE_AUTHORED_HEAL_SLOTS``) and the participant timeline
+        # fans this event out to all selected teammates
+        # (``target_scope: self_and_all_teammates``), so one formula prices
+        # every recipient.
         r_rank = _rank(ability_damages, "R")
         heal = extract_named(
             _ability(champion_data, "R"), "Heal", r_rank, champion_stats
         )
         if heal > 0.0:
-            for cast in cast_timeline or []:
+            for cast_index, cast in enumerate(cast_timeline or []):
                 if cast.get("slot") != "R":
                     continue
                 healing.append(
@@ -1219,6 +1251,8 @@ def derive_self_healing(
                         "source": "Breath of Life",
                         "kind": "champion_ability",
                         "actor_wide": True,
+                        "target_scope": "self_and_all_teammates",
+                        "_event_id": f"milio:r:{cast_index}",
                     }
                 )
         # Cozy Campfire (W): the fuemigo heals Milio himself — "Milio counts

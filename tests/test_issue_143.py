@@ -36,11 +36,33 @@ import src.calculator.support_effects as support_effects
 
 
 def test_registry_membership_and_single_definition():
-    """One registry, exactly the three module-owned heal slots, defined
-    exactly once (a second assignment shadows the first at import time —
-    the E9-3/E9-2 history)."""
+    """One registry, the 18 module-owned heal slots (phase 1 trio + the
+    phase 2 audit: 11 remaining self double-grants + 5 fabricated ally
+    heals), defined exactly once (a second assignment shadows the first at
+    import time — the E9-3/E9-2 history).  Rakan Q is deliberately absent:
+    its scanner ally branch stays at its own amount (see
+    ``_SCOPE_OVERRIDES``)."""
     assert _MODULE_AUTHORED_HEAL_SLOTS == frozenset(
-        {("Shyvana", "W"), ("Naafiri", "Q"), ("Taric", "Q")}
+        {
+            ("Shyvana", "W"),
+            ("Naafiri", "Q"),
+            ("Taric", "Q"),
+            ("Sona", "W"),
+            ("Janna", "R"),
+            ("Milio", "R"),
+            ("Irelia", "Q"),
+            ("Vladimir", "Q"),
+            ("Volibear", "W"),
+            ("Ekko", "R"),
+            ("Gangplank", "W"),
+            ("Kha'Zix", "W"),
+            ("Tahm Kench", "Q"),
+            ("Sylas", "W"),
+            ("Tryndamere", "Q"),
+            ("Talon", "Q"),
+            ("Yorick", "Q"),
+            ("Kindred", "W"),
+        }
     )
     source = inspect.getsource(support_effects)
     assert source.count("_MODULE_AUTHORED_HEAL_SLOTS = frozenset(") == 1

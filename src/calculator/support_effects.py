@@ -81,6 +81,15 @@ _SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
     # the wand"); the allied half needs a teammate roster the 1v1 lacks,
     # so the deterministic single-target cast targets self.
     ("Lux", "W"): "self",
+    # Issue #143 (phase 2): Rakan Q's cached prose ("Rakan heals himself
+    # and nearby allied champions") resolves ``self_and_all_teammates``,
+    # which double-granted the self heal at the scanner's rank-indexed 80
+    # while the champion rule prices the per-LEVEL self heal (40 : 230
+    # based on level — 210 at level 18).  The champion-owned self-heal
+    # wins; the scanner's ally branch stays at its own amount, so the
+    # packet targets ALLIES ONLY.  In a 1v1 (no selected teammate) the
+    # packet resolves to nothing and the self heal pays exactly once.
+    ("Rakan", "Q"): "all_teammates",
 }
 
 # E8c: slots whose shield the champion module authors itself (via the
@@ -107,9 +116,11 @@ _MODULE_AUTHORED_SHIELD_SLOTS = frozenset(
 # Issue #143: slots whose heal the champion module / E1 self-heal rule
 # authors itself instead of this scanner.  The scanner must never re-derive
 # these: every one is a known double-grant or fabrication (see the issue
-# audit).  Defined exactly once — a second assignment shadows the first at
-# import time (the E9-3/E9-2 history) and is a hard contract-test failure.
+# audit and output/issue-143-findings.md).  Defined exactly once — a second
+# assignment shadows the first at import time (the E9-3/E9-2 history) and
+# is a hard contract-test failure.
 #
+# Phase 1 (E9-3/E9-2/E1 reconciliation):
 # - Shyvana W: the 'Heal' row is the DRAGON-FORM recast heal
 #   (60 : 104.71 by level + 4% : 8.47% by level missing health, gated on
 #   the explosion hitting a champion), authored by
@@ -122,11 +133,47 @@ _MODULE_AUTHORED_SHIELD_SLOTS = frozenset(
 #   (sourced "Maximum Charges" row + description formulas); the scanner's
 #   hardcoded one-charge tuple double-granted the same cast at a different
 #   amount.
+#
+# Phase 2 (the remaining issue #143 audit).  Two groups:
+# 1) SELF-heal double-grants — the healing rule authors the self heal
+#    (rank/level-indexed sourced rows, missing-health terms, Wound/first-W
+#    gates) and the scanner re-derived the same cast into the support
+#    ledger, so one cast healed self twice at (often) inconsistent amounts:
+#    Sona W, Janna R, Milio R, Irelia Q, Vladimir Q, Volibear W, Ekko R,
+#    Gangplank W, Kha'Zix W, Tahm Kench Q.
+# 2) FABRICATED ally heals — self-only abilities whose description markers
+#    made the scanner emit an ally packet that does not exist in the game:
+#    Sylas W (Kingslayer), Tryndamere Q (Bloodlust), Talon Q (Noxian
+#    Diplomacy), Yorick Q (Last Rites), Kindred W (Hunter's Vigor).  The
+#    cached prose for each says the champion heals THEMSELVES only.
+#
+# Rakan Q is deliberately NOT here: its scanner ALLY branch (rank-indexed
+# 80) is kept at its own amount while the champion rule owns the self heal
+# (per-level 210) — see ``_SCOPE_OVERRIDES``.
+#
+# Sona W is in this set but its Melody shield stays scanner-owned: the
+# heal-branch skip below nulls only ``heal_attr``, so "Shield Strength"
+# packets still emit (the shield has no module author).
 _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
     {
         ("Shyvana", "W"),
         ("Naafiri", "Q"),
         ("Taric", "Q"),
+        ("Sona", "W"),
+        ("Janna", "R"),
+        ("Milio", "R"),
+        ("Irelia", "Q"),
+        ("Vladimir", "Q"),
+        ("Volibear", "W"),
+        ("Ekko", "R"),
+        ("Gangplank", "W"),
+        ("Kha'Zix", "W"),
+        ("Tahm Kench", "Q"),
+        ("Sylas", "W"),
+        ("Tryndamere", "Q"),
+        ("Talon", "Q"),
+        ("Yorick", "Q"),
+        ("Kindred", "W"),
     }
 )
 
@@ -292,11 +339,9 @@ def derive_ally_effects(
         # E8c: a module-authored shield slot is the module's exact receipt
         # (level-indexed bases, stat scalings, and sourced duration).  The
         # scanner defers to it so the ledger never grants the same shield
-        # twice from two derivations of one ability.
-        if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_SHIELD_SLOTS or (
-            champion_data.get("name", ""),
-            slot,
-        ) in _MODULE_AUTHORED_HEAL_SLOTS:
+        # twice from two derivations of one ability (Shyvana W is in both
+        # registries — the shield set alone skips the whole slot).
+        if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_SHIELD_SLOTS:
             continue
         shield_attr, heal_attr, target_self, target_scope = _support_profile(ability)
         champion_key = (champion_data.get("name", ""), slot)
@@ -309,6 +354,14 @@ def derive_ally_effects(
         # E8d follow-up: a sourced per-champion target-scope override wins
         # over the description markers (Yuumi E attached anchor).
         target_scope = _SCOPE_OVERRIDES.get(champion_key, target_scope)
+        # Issue #143 (phase 2): a module/healing-rule-authored heal slot is
+        # the exact receipt (level-indexed bases, missing-health terms, a
+        # dragon-form gate and Wound/first-cast gates the scanner cannot
+        # see).  Only the HEAL branch defers: shield packets on the same
+        # slot stay scanner-owned unless the shield registry claims the
+        # whole slot (Sona W's Melody shield has no module author).
+        if champion_key in _MODULE_AUTHORED_HEAL_SLOTS:
+            heal_attr = None
         # Issue #142: fail closed at the emitter.  A typo or novel scope must
         # name the champion+slot at the source instead of silently redirecting
         # the packet to teammate zero in the coupled resolver.
@@ -344,10 +397,9 @@ def derive_ally_effects(
                     )
             # Issue #143: a module/healing-rule-authored heal slot is the
             # exact receipt (level-indexed bases, missing-health terms, and a
-            # dragon-form gate the scanner cannot see).  Every registry
-            # member already ``continue``s above, so the heal branch below is
-            # unreachable for them; no per-slot null-out is needed (the
-            # E9-2-era second guard was dead code for exactly this reason).
+            # dragon-form gate the scanner cannot see).  Registry members
+            # reach this branch with ``heal_attr`` already nulled above (the
+            # E9-2-era per-slot null-out guard lives there now).
             if heal_attr is not None:
                 amount = extract_named(ability, heal_attr, rank, stats, {})
                 source_label = f"{ability.get('name', slot)} · {heal_attr}"
