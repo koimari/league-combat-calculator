@@ -134,8 +134,15 @@ select { min-width: 132px; height: 34px; appearance: none; padding: 0 30px 0 12p
 .range-control output { font-size: 13px; font-weight: 800; }
 .range-control input { grid-column: 1 / -1; width: 100%; accent-color: var(--black); }
 
-.result-column { min-width: 0; }
-.result-card { position: sticky; top: 22px; overflow: hidden; background: rgba(7,26,21,.92); backdrop-filter: blur(16px) saturate(135%); color: var(--white); box-shadow: var(--shadow); }
+/* The column — not the card — is the sticky frame (issues #156, #157).
+   The card used to stick on its own with overflow:hidden, which cropped
+   expanded receipts and painted over the certainty legend and feedback card
+   that follow it in flow. Sticking the whole column instead gives the panel
+   one stable boundary: everything scrolls together inside an intentional
+   container that can never outgrow the viewport, and no surface can slide
+   over a sibling. */
+.result-column { position: sticky; top: 22px; min-width: 0; max-height: calc(100vh - 44px); overflow-y: auto; overscroll-behavior: contain; }
+.result-card { background: rgba(7,26,21,.92); backdrop-filter: blur(16px) saturate(135%); color: var(--white); box-shadow: var(--shadow); }
 .result-top { display: flex; align-items: center; justify-content: space-between; padding: 17px 20px; border-bottom: 1px solid rgba(255,255,255,.18); color: rgba(255,255,255,.62); }
 .result-status { color: var(--white); }
 .result-hero { padding: 30px 20px 24px; }
@@ -171,18 +178,29 @@ select { min-width: 132px; height: 34px; appearance: none; padding: 0 30px 0 12p
 .proof-details { border-top: 1px solid rgba(255,255,255,.18); }
 .proof-details summary { display: flex; align-items: center; justify-content: space-between; padding: 17px 20px; color: var(--white); font-size: 10px; font-weight: 800; list-style: none; cursor: pointer; }
 .proof-details summary::-webkit-details-marker { display: none; }
+/* Event ledger timeline (issue #155).
+   Markers used to be 17px chips absolutely positioned on one shared 1px
+   line, with source names cut to three characters — they collided and read
+   as fragments. Each event now owns a lane: a full-width row carrying its
+   timestamp, actor pair, untruncated source and value, plus a proportional
+   tick that shows where in the window it landed. Simultaneous events are
+   simply consecutive rows, so collision is structurally impossible. */
 .timeline { padding: 0 20px 17px; }
-.timeline-axis { display: flex; justify-content: space-between; color: rgba(255,255,255,.42); font-size: 8px; font-weight: 700; }
-.timeline-row { display: grid; grid-template-columns: 70px 1fr; gap: 8px; align-items: center; min-height: 42px; }
-.timeline-label { overflow: hidden; color: rgba(255,255,255,.72); font-size: 9px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.timeline-line { position: relative; height: 1px; background: rgba(255,255,255,.3); }
-.timeline-line i { position: absolute; top: -8px; display: grid; place-items: center; width: 17px; height: 17px; border: 1px solid var(--white); background: var(--black); color: var(--white); font-size: 8px; font-style: normal; font-weight: 800; }
-.timeline-note { display: block; margin-top: 4px; color: rgba(255,255,255,.42); font-size: 8px; }
-.muted-line { background: rgba(255,255,255,.16); }
+.timeline-axis { display: flex; justify-content: space-between; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,.18); color: rgba(255,255,255,.62); font-size: 11px; font-weight: 700; }
+.timeline-events { display: grid; gap: 2px; max-height: 340px; margin: 0; padding: 6px 0 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; }
+.timeline-event { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; padding: 8px 2px; border-bottom: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.72); font-size: 12px; }
+.timeline-time { color: var(--white); font: 800 12px/1.3 var(--mono); }
+.timeline-what { min-width: 0; overflow-wrap: anywhere; color: rgba(255,255,255,.86); line-height: 1.4; }
+.timeline-what b { color: var(--white); font-weight: 800; }
+.timeline-value { color: var(--white); font: 800 12px/1.3 var(--mono); text-align: right; white-space: nowrap; }
+.timeline-tick { grid-column: 2 / -1; position: relative; height: 2px; margin-top: 2px; background: rgba(255,255,255,.18); }
+.timeline-tick::after { position: absolute; top: -2px; left: clamp(0%, var(--at, 0%), 100%); width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--white); content: ""; }
+.timeline-note { display: block; margin-top: 8px; color: rgba(255,255,255,.62); font-size: 11px; }
 .ledger-table { padding: 0 20px 18px; }
-.ledger-line { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.58); font-size: 10px; }
-.ledger-line span { min-width: 0; }
-.ledger-line strong { color: var(--white); font-weight: 800; }
+/* Long labels wrap instead of pushing their value out of the card (#156). */
+.ledger-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.58); font-size: 10px; }
+.ledger-line span { min-width: 0; overflow-wrap: anywhere; }
+.ledger-line strong { color: var(--white); font-weight: 800; overflow-wrap: anywhere; }
 .result-note { display: flex; align-items: start; gap: 9px; margin-top: 13px; color: var(--muted); font-size: 10px; line-height: 1.45; }
 .note-mark { display: grid; place-items: center; flex: 0 0 auto; width: 17px; height: 17px; border: 1px solid var(--ink); border-radius: 50%; color: var(--ink); font-size: 10px; font-weight: 800; }
 
@@ -217,8 +235,40 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .empty-slot { min-height: 68px; }
 .empty-slot:hover { border-color: var(--ink); background: var(--black); color: var(--white); }
 .compare-link { border-style: solid; border-color: var(--black); background: var(--black); color: var(--white); }
-.compare-link:hover { background: var(--ink-soft); border-color: var(--ink-soft); transform: translateY(-1px); box-shadow: 0 8px 18px rgba(7,26,21,.18); }
+.compare-link:hover:not(:disabled) { background: var(--ink-soft); border-color: var(--ink-soft); transform: translateY(-1px); box-shadow: 0 8px 18px rgba(7,26,21,.18); }
 .compare-link span { border-color: currentColor; }
+/* Best-in-slot needs an enemy. When it cannot run it reads as blocked rather
+   than broken, and the reason sits under the button instead of in the far
+   result column (issue #152). */
+.compare-link:disabled { cursor: not-allowed; border-style: dashed; background: var(--ink-soft); opacity: .7; }
+.bis-prerequisite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+  padding: 11px 13px;
+  border: 1px solid var(--line-dark);
+  border-left: 3px solid var(--ink);
+  background: rgba(255, 253, 244, .96);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.bis-prerequisite button {
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--black);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.bis-prerequisite button:hover { background: var(--ink-soft); }
 .add-button { min-height: 32px; padding: 6px 9px; border: 1px solid var(--line-dark); border-radius: var(--radius); }
 .add-button:hover { border-color: var(--ink); background: var(--black); color: var(--white); }
 .remove-roster { width: 32px; height: 32px; border: 1px solid transparent; border-radius: var(--radius); }
@@ -241,8 +291,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
   .objective-block { grid-column: 1 / -1; display: grid; gap: 8px; align-items: stretch; }
   .objective-list { display: grid; grid-template-columns: repeat(5, 1fr); }
   .content-grid { display: block; }
-  .result-column { margin-top: 28px; }
-  .result-card { position: static; }
+  /* Single-column: release the sticky frame so the panel grows in flow. */
+  .result-column { position: static; max-height: none; overflow-y: visible; margin-top: 28px; }
 }
 @media (max-width: 560px) {
   .topbar-meta { gap: 7px; font-size: 9px; }
@@ -274,7 +324,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
    the visible page; these rules cover only engine controls and local assets. */
 .map-wash { background-image: linear-gradient(90deg, rgba(6,18,16,.14) 0%, rgba(6,18,16,.02) 44%, rgba(6,18,16,.2) 100%), linear-gradient(180deg, rgba(5,18,16,.04) 0%, rgba(5,18,16,.24) 100%), url("/static/img/rift-illustration-4k.webp"); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.app-shell > h1 { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+/* The page title sits directly on the Summoner's Rift illustration, so it
+   takes the same white-on-map treatment as the rest of the rail metadata
+   (issue #149 — it was inheriting near-black --ink over a dark background).
+   .map-wash keeps an opaque dark background-color under the image, so this
+   stays readable while the illustration loads and if it never does. */
+.app-shell h1 {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -.05em;
+  line-height: 1.05;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .85), 0 2px 18px rgba(0, 0, 0, .55);
+}
 .champion-portrait-button { display: block; flex: 0 0 112px; width: 112px; height: 132px; padding: 0; border: 0; cursor: pointer; }
 .champion-portrait-button img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
 .ability-card { grid-template-columns: 34px 1fr; }
@@ -290,6 +353,33 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .ability-variants button.active { border-color: var(--ink); background: var(--black); color: var(--white); }
 .ability-casts button:disabled { cursor: not-allowed; opacity: .45; }
 .slot-wrap { display: grid; min-width: 0; gap: 4px; }
+
+/* Keystone build-slot accessory (issue #154).
+   The selected-rune markup had no size contract at all, so the artwork
+   rendered at its intrinsic size — hundreds of pixels wide — and shoved the
+   item slots down the build card. It now shares the item slot's geometry
+   exactly (full cell width, square, cropped), which is what keeps Build A
+   and Build B aligned whether a keystone is empty, selected, or renamed. */
+.quest-item { display: grid; gap: 4px; min-width: 0; }
+.quest-item > span { color: var(--ink-soft); font: 800 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.item-slot { display: grid; gap: 5px; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; }
+.keystone-icon {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--line-dark);
+  background: var(--paper-deep);
+  color: var(--ink-soft);
+  font-size: 22px;
+  line-height: 1;
+}
+.keystone-icon.empty { border-style: dashed; }
+.keystone-icon img { width: 100%; height: 100%; object-fit: cover; }
+.keystone-slot small { display: block; min-width: 0; overflow: hidden; color: var(--ink-soft); font-size: 10px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.keystone-slot:hover .keystone-icon, .keystone-slot:focus-visible .keystone-icon { border-color: var(--ink); }
 .bis-trigger {
   font: 600 8px/1 var(--mono);
   letter-spacing: .08em;
@@ -443,8 +533,6 @@ select { font-size: 13px; }
 .health-person small { font-size: 9px; }
 .health-row > b { font-size: 11px; }
 .proof-details summary { font-size: 12px; }
-.timeline-axis { font-size: 10px; }
-.timeline-label { font-size: 11px; }
 .ledger-line { font-size: 12px; }
 .picker-option strong { font-size: 12px; }
 .picker-option small { font-size: 10px; }
@@ -517,7 +605,21 @@ select { font-size: 13px; }
 .topbar { background: rgba(246,242,223,.92); }
 .scenario-rail { grid-template-columns: minmax(0, .9fr) minmax(0, 2fr); align-items: center; min-height: 72px; padding-bottom: 18px; gap: 28px; }
 .scenario-block, .objective-block { align-items: center; }
-.state-block { justify-content: flex-start; }
+/* Game state stacks its label, its two modes, and the active mode's
+   explanation (issue #150 — neither mode said what it did before you
+   picked it). The summary rides on the map, so it takes the same white +
+   scrim treatment as the rest of the rail metadata. */
+.state-block { display: grid; gap: 8px; align-content: center; justify-content: stretch; }
+.state-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.state-help {
+  max-width: 52ch;
+  margin: 0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .85);
+}
 .objective-block { min-width: 0; }
 .objective-list { min-width: 0; }
 .state-button, .objective { font-size: 13px; }
@@ -540,6 +642,10 @@ select { font-size: 13px; }
 .level-stepper output { display: grid; place-items: center; min-width: 38px; height: 32px; border: 1px solid var(--line-dark); background: var(--white); color: var(--ink); font-size: 14px; font-weight: 800; }
 .level-stepper input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .stats-grid { min-width: 0; }
+/* A level change re-requests the loadout stats; the previous values stay on
+   screen and simply read as pending (issue #151 — the panel used to be
+   replaced with a blank placeholder for the length of the round trip). */
+.stats-grid.is-pending { opacity: .62; transition: opacity 120ms ease; }
 .stat { min-height: 90px; padding: 16px 18px; background: rgba(255,253,244,.76); }
 .stat span { display: flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: 11px; font-weight: 800; letter-spacing: .03em; }
 .stat-icon { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--line-dark); color: var(--ink); font-size: 8px; font-style: normal; letter-spacing: -.04em; }
@@ -1155,16 +1261,31 @@ select { font-size: 13px; }
 .trust-legend-note {
   flex-basis: 100%;
   color: #6b5210;
-  font-size: 11px;
+  font-size: 12px;
+  line-height: 1.45;
   margin: 2px 0 0;
 }
-.analyst-trust-legend { margin: 12px 2px 0; display: inline-flex; }
+/* The analyst legend sits in the result column on the map illustration, not
+   inside a card (issue #157). It gets its own opaque surface and stays in
+   normal flow — the sticky frame is the column, so nothing can scroll over
+   it and it is never clipped. */
+.analyst-trust-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 2px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+}
 .certainty-chip {
   display: inline-flex;
   align-items: center;
-  padding: 3px 8px;
+  padding: 4px 9px;
   border-radius: 999px;
-  font: 800 9px/1.4 var(--font);
+  font: 800 11px/1.4 var(--font);
   letter-spacing: .1em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1347,7 +1468,13 @@ select { font-size: 13px; }
 .site-footer-note { margin-left: auto; color: var(--muted); font-size: 12.5px; }
 @media (max-width: 720px) {
   .site-footer-note { margin-left: 0; width: 100%; }
-/* --- F0: honor the hidden attribute regardless of display helpers ---------- */
+}
+
+/* --- F0: honor the hidden attribute regardless of display helpers ----------
+   Unconditional on purpose. This rule sat inside the unclosed 720px media
+   query above until #147/#157, which left every JS-toggled surface (share
+   banner, certainty legend) permanently visible on desktop because their
+   class rules out-specify the user-agent [hidden] default. */
 [hidden] {
   display: none !important;
 }
@@ -1365,15 +1492,42 @@ select { font-size: 13px; }
   font-weight: 700;
 }
 
-/* --- F0: damage breakdown panel inside the result column -------------------- */
+/* --- F0: damage breakdown panel inside the result column --------------------
+   These receipts render inside the dark .result-card, so every colour here is
+   an on-card light value. They used to inherit --ink / --line (the paper
+   palette), which is what made "Starting defenses" and its labels read as
+   collided, invisible text in the #156 capture. Long headers and values wrap
+   rather than clipping at the card edge. */
 .breakdown-panel {
   margin-top: 16px;
+  padding: 0 20px 18px;
+  color: rgba(255, 255, 255, .78);
+}
+.breakdown-panel header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+.breakdown-panel header h2 {
+  margin: 2px 0 0;
+  color: var(--white);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+.breakdown-panel header .eyebrow,
+.breakdown-panel header > span {
+  color: rgba(255, 255, 255, .62);
+  font-size: 11px;
 }
 .breakdown-panel .breakdown-outcome {
   margin: 0 0 10px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--white);
 }
 .breakdown-panel .damage-table-wrap {
   overflow-x: auto;
@@ -1388,31 +1542,39 @@ select { font-size: 13px; }
 .breakdown-panel .damage-table td {
   padding: 7px 8px;
   text-align: right;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
+.breakdown-panel .damage-table th {
+  color: rgba(255, 255, 255, .62);
+  font-size: 11px;
+  font-weight: 800;
+}
+.breakdown-panel .damage-table td { color: var(--white); }
 .breakdown-panel .damage-table th:first-child,
 .breakdown-panel .damage-table td:first-child {
   text-align: left;
 }
 .breakdown-panel .damage-table td small {
   display: block;
-  color: var(--muted);
-  font-size: 10px;
+  color: rgba(255, 255, 255, .62);
+  font-size: 11px;
   margin-top: 2px;
 }
 .breakdown-panel .damage-table tr.damage-total td {
-  border-top: 2px solid var(--line-dark);
+  border-top: 2px solid rgba(255, 255, 255, .32);
   border-bottom: 0;
   font-weight: 800;
 }
 .breakdown-panel .breakdown-audit {
   margin: 12px 0;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255, 255, 255, .18);
   border-radius: 12px;
   padding: 10px 14px;
 }
 .breakdown-panel .breakdown-audit summary {
+  color: var(--white);
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
@@ -1458,41 +1620,42 @@ select { font-size: 13px; }
   }
 }
 
-/* --- F0: shared-link read-only mode ---------------------------------------- */
-/* Recipients of a ?share= link see the shared build card first; the
-   interactive quick form collapses to keep the card above the fold. */
-.quick-view.is-shared .quick-head,
-.quick-view.is-shared .quick-steps,
-.quick-view.is-shared .quick-run,
-.quick-view.is-shared .quick-spinner {
-  display: none;
-}
-.quick-view.is-shared .quick-after {
-  display: none;
+/* --- F0/#147: shared-link read-only mode ------------------------------------
+   Recipients of a ?share= link get the real build and its live result in the
+   analyst view, with the builder frozen until they press "Open in editor".
+   The freeze itself is the `inert` attribute set by setSharedReadOnly(); this
+   only makes it look frozen. */
+#analystView.is-shared .builder-column {
+  opacity: .72;
+  filter: saturate(.85);
 }
 
 /* Best-buy economics: a paper panel like the build cards, with the same
    raised-control grammar (patch 26.15 economics engine). */
+/* The panel sits on the map illustration, so its surface is opaque rather
+   than a blur (issue #153: labels, helper copy and the footnote were being
+   read against the background art). Copy uses --ink-soft throughout, which
+   clears WCAG AA against this paper surface at every size below. */
 .economics-bar {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) auto auto auto;
-  gap: 10px 14px;
+  gap: 12px 16px;
   align-items: end;
   margin-top: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  background: rgba(255, 253, 244, .58);
-  backdrop-filter: blur(15px) saturate(145%);
+  padding: 16px 18px;
+  border: 1px solid var(--line-dark);
+  background: rgba(255, 253, 244, .96);
 }
-.economics-bar > div { display: grid; gap: 3px; min-width: 0; }
-.economics-bar > div strong { font-size: 14px; font-weight: 800; letter-spacing: -.02em; }
-.economics-bar > div span,
-.economics-bar small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.economics-bar > div { display: grid; gap: 4px; min-width: 0; }
+.economics-bar > div strong { color: var(--ink); font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
+.economics-bar > div span { color: var(--ink-soft); font-size: 13px; line-height: 1.45; }
+.economics-bar small { color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
 .economics-bar label {
   display: grid;
-  gap: 4px;
-  color: var(--muted);
-  font-size: 10px;
+  gap: 5px;
+  min-width: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .05em;
@@ -1511,15 +1674,16 @@ select { font-size: 13px; }
 .economics-bar .economics-sell {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   align-self: end;
-  min-height: 34px;
-  padding: 0 10px;
+  min-height: 38px;
+  padding: 0 12px;
   border: 1px solid var(--line-dark);
   border-radius: var(--radius);
-  background: rgba(255, 253, 244, .72);
+  background: var(--white);
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .04em;
   cursor: pointer;
@@ -1541,8 +1705,17 @@ select { font-size: 13px; }
   transition: transform 170ms var(--control-ease, ease), box-shadow 170ms var(--control-ease, ease);
 }
 .economics-bar button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 12px rgba(7, 26, 21, .26); }
-.economics-bar button:disabled { cursor: not-allowed; opacity: .5; box-shadow: none; }
+/* Disabled controls still have to be readable: the prerequisite lives in the
+   button's title, and a washed-out label hides why the action is blocked. */
+.economics-bar button:disabled { cursor: not-allowed; opacity: .65; box-shadow: none; }
 .economics-bar > small { grid-column: 1 / -1; }
+/* The builder column loses ~90px at 1080px and the whole grid stacks below
+   700px; the middle step keeps the controls from wedging into one line. */
+@media (max-width: 1080px) {
+  .economics-bar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .economics-bar > div { grid-column: 1 / -1; }
+  .economics-bar input { width: 100%; }
+}
 @media (max-width: 700px) {
   .economics-bar { grid-template-columns: 1fr; align-items: stretch; }
   .economics-bar input { width: 100%; }

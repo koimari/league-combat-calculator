@@ -2,8 +2,9 @@
 
 Absorption order and shield/health mutation used to be hand-maintained in
 five places: two ordered walks in ``damage.py``, the authoritative receipt
-walk, and both damage branches of the compiled score walk.  They now all
-execute ``shield_ledger.absorb``.
+walk, and both damage branches of the compiled score walk.  Issue #137's
+survival kernel folded the last three into one damage transition; #159 makes
+that transition and both ``damage.py`` walks execute ``shield_ledger.absorb``.
 
 The per-transition contract lives in ``tests/test_shield_ledger.py``; these
 are the ownership guards and the end-to-end proof that the two engines agree.
@@ -50,25 +51,30 @@ class TestOneOwner:
         )
 
     def test_the_retired_duplicate_walks_are_gone(self):
-        """The five hand-maintained copies named by the issue stay deleted."""
+        """The hand-maintained copies named by the issue stay deleted."""
         retired = (
             "_LifelineShieldState",
-            "_consume_typed_shield",
-            "_consume_general_shield",
-            "_expire_timed_shields",
+            "consume_typed_shield",
+            "consume_general_shield",
+            "expire_timed_shields",
         )
-        for path in (SRC / "damage.py", SRC / "participant_timeline.py"):
+        for path in sorted(SRC.rglob("*.py")):
+            if path == LEDGER:
+                continue
             source = path.read_text(encoding="utf-8")
             for name in retired:
                 assert name not in source, f"{name} came back in {path.name}"
 
     def test_every_absorption_consumer_calls_the_kernel(self):
-        """Both damage.py walks and all three participant walks drive it."""
+        """The one-pair engine's two walks, and the survival kernel's one.
+
+        Issue #137 left a single damage transition on the participant side;
+        this pins that no path grew a second copy of the absorption order.
+        """
         damage = (SRC / "damage.py").read_text(encoding="utf-8")
-        timeline = (SRC / "participant_timeline.py").read_text(encoding="utf-8")
+        transitions = (SRC / "survival" / "transitions.py").read_text(encoding="utf-8")
         assert damage.count("shield_ledger.absorb(") == 2
-        # Receipt walk, compiled plain-damage branch, compiled general branch.
-        assert timeline.count("shield_ledger.absorb(") == 3
+        assert transitions.count("shield_ledger.absorb(") == 1
 
 
 def _coupled(items, **kwargs):

@@ -20,9 +20,18 @@ from src.calculator.participant_timeline import (
     _actor_params,
     _schedule_authored_reactive_events,
     _schedule_thorns_events,
-    _compiled_survival_walk,
     _simulate_survival,
     build_participant_timeline,
+)
+from src.calculator.survival import (
+    ActionKind,
+    ScoreLedger,
+    SurvivalAction,
+    TransitionContext,
+    assemble_survival_rows,
+    build_states,
+    finalize_states,
+    run_survival_walk,
 )
 
 
@@ -4217,30 +4226,60 @@ def test_heal_overflow_can_become_temporary_health_and_expires():
 
 
 def test_compiled_heal_overflow_matches_temporary_health_expiry():
-    action = (
-        (0.0, 1.0, 0, 0, 0, "target", "heal", "Sundered Sky"),
-        1,
-        0,
-        0,
-        -1,
-        0,
-        50.0,
-        2,
-        None,
-        0.0,
-        None,
-        2.0,
-        False,
-        0.0,
+    """The score adapter (parallel-array ledger) and the receipt adapter
+    share one kernel: an overheal-to-temporary-health heal arms the window
+    in the score walk exactly like the annotated walk."""
+    from types import SimpleNamespace
+
+    combatants = [
+        Combatant(
+            participant_id="target",
+            team="enemy",
+            champion_data={"name": "target"},
+            level=1,
+            items=(),
+            stats={"health": 100.0, "is_melee": True},
+            defenses=SimpleNamespace(
+                magic_shield=0.0,
+                physical_shield=0.0,
+                general_shield=0.0,
+                healing_received_multiplier=1.0,
+            ),
+        )
+    ]
+    action = SurvivalAction(
+        sort_key=(0.0, 1.0, 0, 0, 0, "target", "heal", "Sundered Sky"),
+        time=0.0,
+        phase=1.0,
+        kind=ActionKind.HEAL,
+        subject=0,
+        attacker=0,
+        aidx=0,
+        amount=50.0,
+        overheal_to_temporary_health=True,
+        temporary_health_duration=2.0,
+        source_key="heal",
+        source="Sundered Sky (Lightshield Strike)",
+        event_id="heal",
+        sequence=0,
     )
-    rows, applied = _compiled_survival_walk(
-        [action], 1, [100.0], [(0.0, 0.0, 0.0)], 5.0, [1.0]
+    states = build_states(combatants)
+    ledger = ScoreLedger(1)
+    ctx = TransitionContext(
+        duration=5.0,
+        states=states,
+        combatants=combatants,
+        index_of={"target": 0},
+        ledger=ledger,
     )
-    assert applied == [0.0]
-    assert rows[0]["temporary_health_received"] == 50.0
-    assert rows[0]["temporary_health_expired_at"] == 2.0
-    assert rows[0]["max_health"] == 100.0
-    assert rows[0]["ending_health"] == 100.0
+    run_survival_walk([action], ctx)
+    finalize_states(states, 5.0)
+    rows = assemble_survival_rows(states, combatants)
+    assert ledger.applied == [0.0]
+    assert rows["target"]["temporary_health_received"] == 50.0
+    assert rows["target"]["temporary_health_expired_at"] == 2.0
+    assert rows["target"]["max_health"] == 100.0
+    assert rows["target"]["ending_health"] == 100.0
 
 
 def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():

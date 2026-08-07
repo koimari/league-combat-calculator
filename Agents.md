@@ -5,7 +5,7 @@ Module map and pipeline: see `architecture.md`.
 ## Important Rules
 
 1. **vendor/lolstaticdata/ is external code** — Don't refactor or restructure it. Minimal, targeted bug fixes are OK when they block functionality (e.g., parser crashes on specific champions).
-2. **Always use the caching layer** — `data_fetcher.py` reads from `data/`. Never bypass it or add network calls to it. Data updates go through `data_updater.py`.
+2. **Always use the caching layer** — `data_fetcher.py` reads from `data/` and is read-only. Never bypass it or add network calls to it. The tracked caches (champions/items/runes.json) are written only by `data_updater.py` through the atomic `data_registry.write_runtime_cache` (with provenance). Research/verification downloads must write to their named evidence roots with explicit CLI paths (see `data_registry.WRITERS` and `tests/test_data_writer_inventory.py`); never use cwd-relative `Path("data/...")` defaults, and never write the tracked caches directly.
 3. **All calculation functions must have corresponding tests.**
 4. **Run tests before considering any task complete.**
 5. **No item numbers outside `item_effects.py`** — All numeric item values come from `item_effects` typed accessors, with NO literal fallbacks at call sites (a `.get(key, stale_literal)` silently wins when the parser breaks — that exact failure hid a 3× Statikk Shiv overstatement). Missing keys must raise, naming the item and key.
