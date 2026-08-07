@@ -148,6 +148,9 @@ EXCLUDED_ATTRIBUTES = {
     "data-review-action",
     "data-review-field",
     "data-review-index",
+    # #155: a read-only key tying an event-ledger timeline lane to its table
+    # row. It carries no input and drives no payload field.
+    "data-event-index",
     # Removed quick mode (2026-08-06): the data-quick-* attrs survive only in
     # dead JS retained for rollback safety; no quick control is mounted.
     "data-quick-pick",
@@ -185,6 +188,9 @@ CONTROL_IDS = {
     "bis": ("controls", "best_in_slot"),
     "bisClose": ("controls", "best_in_slot"),
     "addPracticeEnemy": ("controls", "roster_membership"),
+    # #152: the shortcut out of the blocked Best-in-slot state; it delegates
+    # to #addEnemy, so it belongs to the same capability.
+    "bisAddEnemy": ("controls", "roster_membership"),
     "economicsGold": ("controls", "purchase_optimize"),
     "economicsOptimize": ("controls", "purchase_optimize"),
     "economicsSell": ("controls", "purchase_optimize"),

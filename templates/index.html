@@ -118,7 +118,10 @@
 <body>
   <div class="map-wash" aria-hidden="true"></div>
   <header class="topbar">
-    <a class="brand" href="https://scryglass.xyz/" aria-label="Scryglass home"><span class="brand-mark" aria-hidden="true">◈</span><span>Scryglass</span></a>
+    <!-- Root-relative on purpose (#148): the brand returns to this app's
+         canonical home from nested and shared-build URLs alike. It used to
+         point at the retired external marketing site. -->
+    <a class="brand" href="/" aria-label="Scryglass home"><span class="brand-mark" aria-hidden="true">◈</span><span>Scryglass</span></a>
     <div class="topbar-meta"><span class="live-dot"></span><span>26.15</span>{% if auth_user %}<span class="signed-in">Signed in as <strong>{{ auth_user }}</strong></span><a class="quiet-button" href="/auth/logout">Log out</a>{% endif %}</div>
   </header>
 
@@ -135,9 +138,18 @@
       <h1>Item calculator</h1>
       <section class="scenario-rail" aria-label="Scenario controls">
         <div class="scenario-block state-block">
-          <span class="micro-label">Game state</span>
-          <button class="state-button active" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true">Theory</button>
-          <button class="state-button" id="stateLive" type="button" data-game-state="live" aria-pressed="false">Snapshot lens</button>
+          <span class="micro-label" id="gameStateLabel">Game state</span>
+          <div class="state-options" role="group" aria-labelledby="gameStateLabel">
+            <button class="state-button active" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true" aria-describedby="stateTheoryHelp">Theory</button>
+            <button class="state-button" id="stateLive" type="button" data-game-state="live" aria-pressed="false" aria-describedby="stateLiveHelp">Snapshot lens</button>
+          </div>
+          <!-- One home for the mode copy (#150). These descriptions are what
+               assistive technology announces on each button before selection;
+               renderScenarioRail mirrors the active one into #gameStateHelp so
+               sighted users read the same sentence. Do not restate them in JS. -->
+          <span id="stateTheoryHelp" class="sr-only">Theory: the unconstrained comparison state. Builds are scored exactly as you assemble them, with no check that the gold, timing, or purchase order they would require is achievable in a real game.</span>
+          <span id="stateLiveHelp" class="sr-only">Snapshot lens: reads the scenario as one moment in a game. The champion level, role quest, and legal inventory you have selected are the constraints the comparison is judged under, and the Window controls set the time slice it is measured over.</span>
+          <p class="state-help" id="gameStateHelp" role="status" aria-live="polite"></p>
         </div>
         <div class="objective-block">
           <span class="micro-label">Objective</span>
@@ -159,7 +171,7 @@
             <div class="champion-card">
               <div class="champion-identity">
                 <button class="champion-portrait champion-portrait-button is-empty" id="championPicker" type="button" data-picker="champion" data-path="attacker.champion" aria-label="Choose champion"><img id="championImage" src="/static/img/rift-illustration-4k.webp" alt="" hidden /></button>
-                <div><div class="eyebrow">Main champion</div><h2 id="championName">Choose a champion</h2><p id="championTitle">Start with the champion you want to compare.</p><div class="identity-controls"><label class="role-control">Role <select id="roleSelect" aria-label="Role"><option value="top">Top</option><option value="jungle">Jungle</option><option value="mid" selected>Mid</option><option value="bottom">Bottom</option><option value="support">Support</option></select></label><div class="level-stepper"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1" aria-label="Decrease level">−</button><output id="levelOutput">1</output><button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button><input id="levelInput" type="number" min="1" max="18" value="1" aria-label="Level" /></div><button class="outline-button" id="questToggle" type="button" aria-pressed="false">Quest off</button><button class="outline-button active-outline" id="bootsToggle" type="button" aria-pressed="true">Boots on</button></div></div>
+                <div><div class="eyebrow">Main champion</div><h2 id="championName">Choose a champion</h2><p id="championTitle">Start with the champion you want to compare.</p><div class="identity-controls"><label class="role-control">Role <select id="roleSelect" aria-label="Role"><option value="top">Top</option><option value="jungle">Jungle</option><option value="mid" selected>Mid</option><option value="bottom">Bottom</option><option value="support">Support</option></select></label><div class="level-stepper"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1" aria-label="Decrease level">−</button><output id="levelOutput" aria-live="polite">1</output><button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button><input id="levelInput" type="number" min="1" max="18" value="1" aria-label="Level" /></div><button class="outline-button" id="questToggle" type="button" aria-pressed="false">Quest off</button><button class="outline-button active-outline" id="bootsToggle" type="button" aria-pressed="true">Boots on</button></div></div>
               </div>
               <div class="stats-grid" id="statsGrid"></div>
             </div>
@@ -167,7 +179,8 @@
 
           <section class="abilities-section section-rule"><div class="section-heading"><span class="micro-label">Abilities</span><span class="section-note">Ranks · casts</span></div><div class="ability-row" id="abilityRow"></div><div id="championOptionsRow"></div></section>
 
-          <section class="builds-section section-rule"><div class="section-heading"><span class="micro-label">Builds</span><span class="section-note">6 slots · compare</span><button class="text-button share-build-button" id="shareAnalystButton" type="button">Share this build</button></div><div class="build-grid"><article class="build-card build-a" data-build="a"><header class="build-header"><div><span class="build-kicker">Build A</span><strong id="buildAScore">—</strong></div><button class="text-button" type="button" data-copy="b">Copy B → A</button></header><div class="build-caption">baseline</div><div class="slot-grid" id="slotsA"></div></article><article class="build-card build-b" data-build="b"><header class="build-header"><div><span class="build-kicker">Build B</span><strong id="buildBScore">—</strong></div><button class="text-button" type="button" data-copy="a">Copy A → B</button></header><div class="build-caption winner-caption" id="winnerCaption">comparison off</div><div class="slot-grid" id="slotsB"></div></article></div><button class="compare-link" id="bisButton" type="button"><span>+</span> Find best item for a slot</button>
+          <section class="builds-section section-rule"><div class="section-heading"><span class="micro-label">Builds</span><span class="section-note">6 slots · compare</span><button class="text-button share-build-button" id="shareAnalystButton" type="button">Share this build</button></div><div class="build-grid"><article class="build-card build-a" data-build="a"><header class="build-header"><div><span class="build-kicker">Build A</span><strong id="buildAScore">—</strong></div><button class="text-button" type="button" data-copy="b">Copy B → A</button></header><div class="build-caption">baseline</div><div class="slot-grid" id="slotsA"></div></article><article class="build-card build-b" data-build="b"><header class="build-header"><div><span class="build-kicker">Build B</span><strong id="buildBScore">—</strong></div><button class="text-button" type="button" data-copy="a">Copy A → B</button></header><div class="build-caption winner-caption" id="winnerCaption">comparison off</div><div class="slot-grid" id="slotsB"></div></article></div><button class="compare-link" id="bisButton" type="button" aria-describedby="bisPrerequisite"><span>+</span> Find best item for a slot</button>
+        <p class="bis-prerequisite" id="bisPrerequisite" hidden><span id="bisPrerequisiteText"></span><button class="bis-add-enemy" id="bisAddEnemy" type="button">+ Add enemy</button></p>
         <div class="economics-bar"><div><strong>Best buy</strong><span>Best item, component set, recipe combine, or sell pivot for your gold.</span></div><label for="economicsGold">Available gold<input id="economicsGold" type="number" min="1" max="30000" step="50" inputmode="numeric" placeholder="e.g. 1250" /></label><label class="economics-sell" for="economicsSell"><input id="economicsSell" type="checkbox" /> Allow selling (pivot)</label><button id="economicsOptimize" type="button">Find best buy</button><small>Buys at list price · combines charge the recipe fee · sells refund the sourced 70% value (40% for starters/support/consumables).</small></div></section>
 
           <section class="roster-section section-rule"><div class="section-heading"><span class="micro-label">Roster</span><span class="section-note"><span id="enemyCount">0</span> enemies · <span id="allyCount">0</span> allies</span></div><div class="roster-grid"><div class="roster-group"><div class="roster-label"><span>Enemies</span><button class="add-button" id="addEnemy" type="button">+ Add</button><button class="add-button practice-target-button" id="addPracticeEnemy" type="button">vs practice target</button></div><div id="enemies" class="roster-list"></div></div><div class="roster-group"><div class="roster-label"><span>Allies</span><button class="add-button" id="addAlly" type="button">+ Add</button></div><div id="allies" class="roster-list"></div></div></div></section>
