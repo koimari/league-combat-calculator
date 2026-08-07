@@ -14,7 +14,8 @@ backup verification, validation-corpus bias scan, feedback triage.
 | 4 | Validation-corpus bias scan | `curl https://<beta-host>/api/validation/champions`, `curl "https://<beta-host>/api/validation?champion=<name>"` | `flagged: true` entries — n >= 5 receipts with \|bias\| > 15% — open a tracking issue and note it in the next announcement | 5 min |
 | 5 | Feedback triage | `curl "https://<beta-host>/api/feedback?limit=50"` (+ `?champion=` for flagged champions) | unmatched receipts (`matched: false`), new champions users are testing, recurring notes | 5 min |
 | 6 | Staleness sanity | `curl https://<beta-host>/api/staleness` | report exists; `patch` matches the live game patch (`cdtb versions game -a`) | 2 min |
-| 7 | Log & decide | — | file findings, update the tracking issue, decide whether a mid-patch data refresh is needed (patch-day runbook Steps 2-5) | 3 min |
+| 7 | Beta scorecard | `vercel env run --scope koidevelopments -e production -- .venv/bin/python scripts/beta_metrics.py --beta-start <UTC-START> --weeks 2 --json` | activation ≥60%, 7-day retention ≥25%, receipts ≥20/week, and no stale flag >72h; record `PENDING`/`FAIL` without fabricating data | 5 min |
+| 8 | Log & decide | — | file findings, update the tracking issue, decide whether a mid-patch data refresh is needed (patch-day runbook Steps 2-5); distribute no access until the recorded gate permits it | 3 min |
 
 ## Notes
 
