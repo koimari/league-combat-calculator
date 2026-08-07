@@ -2,15 +2,19 @@
   "audit": "item_umbrella_runtime_coverage",
   "counts": {
     "attacker_blocked": 0,
+    "failed": 0,
     "manual_items_and_boots": 202,
     "optimizer_items_and_boots": 130,
     "ordinary_source_items": 209,
+    "passed": 209,
     "path_mismatches": 0,
     "review_pending": 0,
     "runtime_items": 202,
     "target_blocked": 0,
+    "total": 209,
     "unexplained_blocks": 0,
-    "unresolved_source_conflicts": 0
+    "unresolved_source_conflicts": 0,
+    "withheld": 0
   },
   "entries": [
     {
@@ -1769,7 +1773,7 @@
         ],
         "reason": "Noxian Gait's Riot-only movement branch remains explicitly out of scope because its magnitude and spacing input are not sourced; the boot's attack-speed and life-steal stats are still applied.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_effect"
       },
       "manual": true,
       "name": "Gunmetal Greaves",
@@ -2638,9 +2642,9 @@
           "cleanse",
           "movement"
         ],
-        "reason": "Quicksilver cleanses crowd control and grants movement speed.",
+        "reason": "Damage-relevant effects are represented by the fight model.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_effect"
       },
       "manual": true,
       "name": "Mercurial Scimitar",
@@ -4471,9 +4475,9 @@
         "name": "Vampiric Scepter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "reason": "Damage-relevant effects are represented by the fight model.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_effect"
       },
       "manual": true,
       "name": "Vampiric Scepter",
@@ -4858,9 +4862,12 @@
       }
     }
   ],
+  "failures": [],
+  "matrix": "item_umbrella_runtime_coverage",
   "passed": true,
   "path_mismatches": [],
   "review_pending": [],
+  "schema_version": 1,
   "source_complete": true,
   "unexplained_blocks": [],
   "unresolved_source_conflicts": []

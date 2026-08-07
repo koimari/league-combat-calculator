@@ -86,7 +86,7 @@
       "module": "ahri",
       "name": "Ahri",
       "registration": "reviewed_module",
-      "review_status": null,
+      "review_status": "reviewed_module",
       "slot_coverage": [
         {
           "issue_refs": [],
@@ -1517,7 +1517,7 @@
       "module": "briar",
       "name": "Briar",
       "registration": "reviewed_module",
-      "review_status": null,
+      "review_status": "reviewed_module",
       "slot_coverage": [
         {
           "issue_refs": [],
@@ -13762,9 +13762,13 @@
     "champion_modules_review_pending": 0,
     "champions_expected": 173,
     "entries_audited": 410,
+    "failed": 0,
     "items_expected": 237,
+    "passed": 583,
     "ready": 410,
-    "review_pending": 0
+    "review_pending": 0,
+    "total": 583,
+    "withheld": 0
   },
   "entries": [
     {
@@ -14381,7 +14385,7 @@
           "ready": true,
           "reason": "Full parent entry plus passive/Q/W/E/R source receipts are required by the reviewed champion module.",
           "registration": "reviewed_module",
-          "review_status": null,
+          "review_status": "reviewed_module",
           "slot_coverage": [
             {
               "issue_refs": [],
@@ -19610,7 +19614,7 @@
                 {
                   "description_count": 4,
                   "descriptions": [
-                    "Active: Bel'Veth dashes in the designated direction, though not through terrain, dealing physical damage to enemies she passes through. Against the first target, Void Surge can critically strike for (200% + 30%) damage and applies on-hit effects, with on-hit damage reduced to 75…",
+                    "Active: Bel'Veth dashes in the designated direction, though not through terrain, dealing physical damage to enemies she passes through. Against the first target, Void Surge can critically strike for (200% + 30%) damage and applies on-hit effects and life steal.",
                     "Void Surge deals 70 bonus physical damage to monsters.",
                     "Void Surge can be cast only within a cardinal direction that is off cooldown, and incurs a cooldown between casts. Each cardinal direction has a unique cooldown that is reduced equivalent to 0.2 ability haste per 1% bonus attack speed. These cooldowns reset upon respawning.",
                     "Void Surge resets Bel'Veth's basic attack timer."
@@ -19664,8 +19668,8 @@
                     "Passive: Bel'Veth's basic attacks on-hit apply a mark to the target for 5 seconds, refreshing on subsequent hits. Every attack on-hit against the marked target deals bonus true damage and generates a stack of Endless Banquet that increases this damage by the same value. This eff…",
                     "Passive: When Bel'Veth scores a takedown against an enemy champion or epic monster while alive, a Void Coral is spawned from their corpse for 15 seconds. Baron Nashor, the pit Rift Herald, and Voidgrubs (once per spawn group) spawn an Enhanced Void Coral.",
                     "Active: Bel'Veth dashes to the target Void Coral to consume it over the cast time, slowing nearby enemies by 25% : 96% (based on seconds elapsed) for the duration. She then creates an explosion at the location to deal true damage to enemies within, capped at 1500 versus monsters…",
-                    "True Form: Bel'Veth evolves into a monster, gaining bonus health , bonus attack range, increased size, as well as increased total attack speed. Void Surge can dash through terrain. Consuming a Void Coral refreshes the duration of True Form and heals Bel'Veth. Enhanced Void Coral…",
-                    "A nearby Void Coral is required to cast this ability. The on-hit modifiers from Death in Lavender, Void Surge and Royal Maelstrom affect the bonus true damage applied by Endless Banquet's passive. See Pets for details about Void Remora and Void Corals."
+                    "True Form: Bel'Veth evolves into a monster, gaining bonus health, bonus attack range, increased size, as well as increased total attack speed. Void Surge can dash through terrain. Consuming a Void Coral refreshes the duration of True Form and heals Bel'Veth. Enhanced Void Coral…",
+                    "A nearby Void Coral is required to cast this ability. The passive bonus true damage is affected by the on-hit modifier of Royal Maelstrom. See Pets for details about Void Remora and Void Corals."
                   ],
                   "effect_count": 5,
                   "name": "Endless Banquet"
@@ -19745,7 +19749,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "9e9dd65f80d4a8f761ca75fb188f936a6883a3f62d70e93b6a02dc8447e0a37e",
+        "expected_effects_sha256": "8b43ce42803b1c3a4448c88d8e48924549b8a28155a2f81e22faa1e81bf2800e",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -21272,7 +21276,7 @@
           "ready": true,
           "reason": "Full parent entry plus passive/Q/W/E/R source receipts are required by the reviewed champion module.",
           "registration": "reviewed_module",
-          "review_status": null,
+          "review_status": "reviewed_module",
           "slot_coverage": [
             {
               "issue_refs": [],
@@ -29443,7 +29447,7 @@
                   "description_count": 2,
                   "descriptions": [
                     "Active: Graves fires a smoke canister at the target location that upon impact deals magic damage to enemies within the area and slows them by 50% for 0.5 seconds.",
-                    "The canister creates a cloud of smoke for 4 seconds that applies nearsight of outside the area to all enemies within every 0.25 seconds, reducing their sight radius relative to the center."
+                    "The canister creates a cloud of smoke for 4 seconds that applies nearsight of outside the area to all enemies within every 0.25 seconds, reducing their sight radius to 250 units relative to the center."
                   ],
                   "effect_count": 2,
                   "name": "Smoke Screen"
@@ -29555,7 +29559,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "f984889d50025b269873caed0ab3f65cf485e612e64bd97935eaca9c4bcc85ed",
+        "expected_effects_sha256": "03fc70bfa6ed7e27b045ff4c469ecc6942ef89928bdeff2982c75d43c55d7321",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -49628,7 +49632,7 @@
                 {
                   "description_count": 3,
                   "descriptions": [
-                    "Active: Nocturne terrorizes all enemy champions, nearsighting them for 6 seconds. He can recast Paranoia for the same duration after 0.25 seconds.",
+                    "Active: Nocturne terrorizes all enemy champions, nearsighting them for 6 seconds, during which their sight radius is reduced by 300 units. He can recast Paranoia for the same duration after 0.25 seconds.",
                     "Recast: Nocturne dashes with displacement immunity to the target enemy champion, dealing physical damage upon arrival.",
                     "Nocturne can cast any of his abilities and item actives during the dash."
                   ],
@@ -49710,7 +49714,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "5d90a58ab27c3bd7467d55508a25ad0b4cfa1a770ea6cdb85d84982f1375643b",
+        "expected_effects_sha256": "3a19899b65ccd3c4a01eaef5d02f88377b3db5319d7be4c0e3be42ebdd1cd7dd",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -52937,7 +52941,7 @@
                   "description_count": 2,
                   "descriptions": [
                     "Active: Quinn sends Valor in the target direction who stops upon hitting an enemy, marking them with Harrier and dealing physical damage to all nearby enemies, increased to 200% against monsters.",
-                    "The primary target is nearsighted for 1.75 seconds if they are a champion, and disarmed for the same duration otherwise."
+                    "The primary target is nearsighted for 1.75 seconds if they are a champion, reducing their sight radius to 350 units. Otherwise, they are disarmed for the same duration."
                   ],
                   "effect_count": 2,
                   "name": "Blinding Assault"
@@ -53073,7 +53077,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "b31b7166686d2b41a445ce66bbc91ddfc50fad6e2756b96a5c87b84ae8ef44f2",
+        "expected_effects_sha256": "9efa2b63abc91229dbc60da4373ae31f604520640102f72a2d6e316abcc9ec8b",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -54456,7 +54460,7 @@
                   "descriptions": [
                     "Innate: Rell's basic attacks deal bonus magic damage on-hit equal to the sum of 5% of her total armor and 5% of her total magic resistance.",
                     "Innate: Rell's basic attacks on-hit and abilities against non- minions apply a stack of Break The Mold for 5 seconds, refreshing on subsequent hits and stacking up to 5 times. Each stack reduces the target's armor and magic resistance by 3% for a maximum of 15% reduction.",
-                    "Rell gains bonus armor and bonus magic resistance equal to the sum resistances reduced from all afflicted enemies.",
+                    "Rell gains bonus armor and bonus magic resistance equal to the sum of resistances reduced from all afflicted enemies.",
                     "Break the Mold will reduce the target's armor and magic resistance by a minimum of 1.5 : 3.18 (based on level)."
                   ],
                   "effect_count": 4,
@@ -54607,7 +54611,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "3e49490081c3125bf9d120541ec3663148576ddb2a6ae9597014a14e2166eb20",
+        "expected_effects_sha256": "f72f2092245548725bc97384407329a037a8d329f46502eeaa41901b38d330f6",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -59770,7 +59774,7 @@
                     "Passive: Shyvana's basic attacks on-hit will reduce Emberstrike's current cooldown by 0.5 seconds, and deal bonus magic damage equal to 1% (+ 1.1% per 100 bonus AD) of the target's maximum health. Against non-champions, this effect deals a minimum of 10 and is capped at 200.",
                     "Active: Emberstrike can be cast twice in Human Form and thrice in Dragon Form. Each cast empowers Shyvana's next basic attack within 6 seconds to have an uncancellable windup and trigger an additional exclusive effect. After 1.5 seconds of using an Emberstrike attack, or immedia…",
                     "First Cast: Shyvana slashes her claws, blasting a cone in the target's direction that deals modified physical damage to enemies hit. The damage to the primary target is affected by critical strike modifiers.",
-                    "Second Cast: Shyvana slams her tail, dealing the same damage to the target and surrounding enemies, respectively.",
+                    "Second Cast: Shyvana slams her tail, dealing the same damage to the target and surrounding enemies.",
                     "Dragon Form Bonus — Third Cast: Shyvana takes a bite out of the target, dealing modified true damage. This damage cannot critically strike.",
                     "All casts reset Shyvana's basic attack timer."
                   ],
@@ -59819,7 +59823,7 @@
                   "description_count": 4,
                   "descriptions": [
                     "Passive - Fury: Shyvana generates Dragon Fury every 0.5 seconds while in Human Form. Her basic attacks and abilities also generate 1.25 Dragon Fury for each enemy damaged, up to once per enemy per cast instance and increased[ by 200% ][ to 3.75 ]during Dragon Form. Against non-c…",
-                    "Active: Shyvana transforms into Dragon Form and flies with displacement immunity in the target direction, breathing fire in a cone along the way that deals magic damage to enemies hit and fears them for 0.75 seconds, as well as slows them by 99% for the same duration.",
+                    "Active: Shyvana transforms into Dragon Form and flies with displacement immunity to the target location, breathing fire in a cone along the way that deals magic damage to enemies hit and fears them for 0.75 seconds, as well as slows them by 99% for the same duration.",
                     "Dragon Form: Shyvana gains bonus health, bonus attack range, and increased size. Her basic abilities are empowered to apply an additional effect. She maintains Dragon Form at a recurring cost of Dragon Fury, returning to Human Form once all Dragon Fury has been depleted.",
                     "100 Dragon Fury is required to cast this ability."
                   ],
@@ -59901,7 +59905,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "497d7faf156178236c383b7925a15a2b9a79efc8d9ef207bc8279df36a55ca99",
+        "expected_effects_sha256": "235276301b80f85d40c07627e96accf1ca0c8cded9f4e1b15683f383743e3575",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -61261,7 +61265,7 @@
                 {
                   "description_count": 1,
                   "descriptions": [
-                    "Innate: Skarner's basic attacks on-hit, Shattered Earth, Upheaval, and Impale apply a stack of Quaking to enemies hit for 4 seconds, refreshing on subsequent applications and stacking up to 3 times. Enemies afflicted with 3 stacks take magic damage equal to [ 5% : 9.47% (based o…"
+                    "Innate: Skarner's basic attacks on-hit, Shattered Earth, Upheaval, and Impale apply a stack of Quaking to enemies hit for 4 seconds, refreshing on subsequent applications and stacking up to 3 times. Enemies afflicted with 3 stacks take magic damage equal to [ 5% : 9% (based on l…"
                   ],
                   "effect_count": 1,
                   "name": "Threads of Vibration"
@@ -61278,7 +61282,7 @@
                     "Active: Skarner rips a boulder from the ground, empowering up to three of his next basic attacks within 5 seconds of each other. These attacks gain 25 bonus range, bonus attack speed, and deal bonus physical damage to the target and surrounding enemies, including structures.",
                     "The final attack slams the boulder, dealing an additional 11% of each target's maximum health physical damage and slowing afflicted enemies by 40% for 1 second. The additional damage is capped against monsters and is not applied against structures.",
                     "After 0.5 seconds of the cast, Skarner gains the ability to use Upheaval during Shattered Earth.",
-                    "Casting Shattered Earth resets Skarner's basic attack timer. Shattered Earth's duration is paused during Ixtal's Impact."
+                    "Casting Shattered Earth resets Skarner's basic attack timer.Shattered Earth's duration is paused during Ixtal's Impact. Shattered Earth ends early if Skarner begins casting Recall."
                   ],
                   "effect_count": 4,
                   "name": "Shattered Earth"
@@ -61411,7 +61415,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "2e7cc3a6f81bce2ad38a882f617ba571a861e99772671e34d4583790aac359c8",
+        "expected_effects_sha256": "a2f9866e42bd99652dd09daa06149240c6cd5d0cfabc5c557fc12b86c5994d33",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -62028,7 +62032,7 @@
                   "description_count": 2,
                   "descriptions": [
                     "Active: Sona sends out bolts of sound to the two nearest visible enemies, prioritizing champions. Each bolt deals magic damage and grants sight of the area around the target for 1 second.Sona gains a stack of Accelerando for each bolt that hits an enemy champion.",
-                    "Melody Bonus: Sona and tagged allied champions deal bonus magic damage on their next basic attack within 5 seconds."
+                    "Melody Bonus: Sona and tagged allied champions deal bonus magic damage on their next attack on-hit within 5 seconds."
                   ],
                   "effect_count": 2,
                   "name": "Hymn of Valor"
@@ -62153,7 +62157,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "3e4eb746629267d39b30ff9740e13b87c748de2257284e5e4a6391f13ef9809c",
+        "expected_effects_sha256": "08d8a41136f067cecd7c203078be13a52e9d50d6c100d2a9d1f26d8c07518eaf",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -71004,8 +71008,8 @@
                   "description_count": 4,
                   "descriptions": [
                     "Innate: Whenever Viego scores an enemy champion takedown while alive and within 3 seconds of damaging them, a Mist Wraith spawns from that champion's corpse for 8 seconds. Viego can basic attack a Mist Wraith to consume it: causing him to blink to its location after winding up f…",
-                    "Possession: For 10 seconds, Viego assumes the enemy champion's form and gains their basic attacks, basic abilities, items, and base stats (based on Viego's level). He also gains a free cast of Heartbreaker, which is initially placed on a 1.5-second cooldown, and 10% bonus moveme…",
-                    "Viego cannot use item actives, consumable items, nor the shop during Possession. Casting Heartbreaker or attacking a Mist Wraith ends Possession immediately.",
+                    "Possession: For 10 seconds, Viego assumes the enemy champion's form and gains their basic attacks, basic abilities, items (excluding trinket items), and base stats (based on Viego's level). He also gains a free cast of Heartbreaker, which is initially placed on a 1.5-second cool…",
+                    "Viego cannot use the possessed champion's item actives or consumable items, and is unable to use the shop during Possession. Casting Heartbreaker or attacking a Mist Wraith ends Possession immediately.",
                     "Viego will preserve his current health percentage between transformations."
                   ],
                   "effect_count": 4,
@@ -71154,7 +71158,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "beb9d2a97f8599bac2c25babaa2101126a2e5c88edaf49855d5b202e0f2ce98c",
+        "expected_effects_sha256": "171746b4460ac3bab3b27a4acfbfb1aa570e4f52c581199a5f5268a99dd5e4be",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -74831,7 +74835,7 @@
                   "description_count": 5,
                   "descriptions": [
                     "Active: Yone dashes a fixed distance in the target direction, including through terrain, discarding his body and entering Spirit Form for 5 seconds. Yone's body is untargetable and is sent the same distance behind the cast location, though not through terrain, and is reclaimed w…",
-                    "Spirit Form: Yone becomes ghosted and gains 10% : 30% (based on seconds active) bonus movement speed. His damaging basic attacks and abilities against enemy champions apply a mark that stores a portion of the post-mitigation damage dealt to the target by his attacks and abilitie…",
+                    "Spirit Form: Yone becomes ghosted and gains 10% : 30% (based on seconds active) bonus movement speed. His damaging basic attacks and abilities against enemy champions apply a mark that stores a portion of the post-mitigation physical damage and magic damage dealt to the target b…",
                     "Activation resets Way of the Hunter's current sword state. Soul Unbound can be recast after 0.5 seconds, and automatically does so after the duration.",
                     "Recast: Yone dashes back to his body with displacement immunity, ending Spirit Form and consuming the marks on each champion to deal true damage equal to the total amount of damage stored against each of them.",
                     "The automatic recast is delayed if Yone is winding up a basic attack or is unable to recast Soul Unbound under any circumstances, which includes if he cannot move or cast abilities. Soul Unbound will also immediately recast upon death or entering resurrection."
@@ -74930,7 +74934,7 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "4d25cb0bbd2d4c8d051c6f4831f5c577f96421a9448bfb40720187524a3a047d",
+        "expected_effects_sha256": "8331988a4a3daf2317f7b73fe6821e6db95e8e14aebab68173666f84c8a211e7",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -80500,7 +80504,7 @@
             {
               "branch": "passives",
               "branch_count": 1,
-              "cooldown": 20,
+              "cooldown": "20",
               "descriptions": [
                 "Your next instance of [[ability damage]] to a champion or epic monster with a [[champion ability]] deals {{as|{{rd|50|25}} {{as|(+ {{rd|{{fd|1.5}}|{{fd|0.75}}}} per 1 lethality)}} '''bonus''' true damage}}."
               ],
@@ -80527,7 +80531,7 @@
           "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "256600b63858f1f7e74556eeac94f1f9ea6b193da61ddd1bbd61d4fef3667e43",
+        "expected_effects_sha256": "df8e92b167f7c5449a99cffb7ee97ba988439103aa160b0db6bb321acfa529e3",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -85794,9 +85798,9 @@
           ],
           "ready": true,
           "reason": "Noxian Gait's Riot-only movement branch remains explicitly out of scope because its magnitude and spacing input are not sourced; the boot's attack-speed and life-steal stats are still applied.",
-          "registry_effect_type": null,
+          "registry_effect_type": "sustain",
           "review_issue_refs": [],
-          "status": "stats_only"
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -88900,8 +88904,8 @@
                 "manual_attacker": true,
                 "optimizer": true
               },
-              "reason": "Quicksilver cleanses crowd control and grants movement speed.",
-              "verdict": "out_of_scope"
+              "reason": "Damage-relevant effects are represented by the fight model.",
+              "verdict": "modeled"
             }
           ],
           "effects": [
@@ -88922,7 +88926,7 @@
           "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "d2c7b4308f7ae465565bdf8ad6a744e0a4c669fd1763d2677518f8aa60a5be49",
+        "expected_effects_sha256": "38e96356f71c97d299ed4a8e191ccb6468973f9cc012372ff0a42a40b0e614f5",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -88933,10 +88937,10 @@
             "movement"
           ],
           "ready": true,
-          "reason": "Quicksilver cleanses crowd control and grants movement speed.",
-          "registry_effect_type": null,
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "sustain",
           "review_issue_refs": [],
-          "status": "stats_only"
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -96118,10 +96122,10 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "The item has no separate passive or active in the cached Wiki data.",
-          "registry_effect_type": null,
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "sustain",
           "review_issue_refs": [],
-          "status": "stats_only"
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -97731,6 +97735,11 @@
     }
   ],
   "failures": [],
+  "infrastructure": {
+    "ok": true,
+    "query_tool": "/Users/river/Projects/league-combat-calculator/vendor/league-wiki-query/scripts/query_league_wiki.py"
+  },
+  "matrix": "league_wiki_full_parent_entry",
   "passed": true,
   "required_champion_slots": [
     "P",
@@ -97738,5 +97747,6 @@
     "W",
     "E",
     "R"
-  ]
+  ],
+  "schema_version": 1
 }
