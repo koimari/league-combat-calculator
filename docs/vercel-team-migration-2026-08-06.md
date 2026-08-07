@@ -14,8 +14,9 @@ Read-only CLI checks confirmed:
 - `.vercel/project.json` retains the existing project ID and team org ID.
 - Production environment names/statuses include the encrypted database,
   Redis, auth, and invite configuration.
-- `SENTRY_DSN` remains intentionally absent because no legitimate DSN is
-  available; this is still a beta GO blocker.
+- `SENTRY_DSN` remains intentionally absent. Sentry is not required for this
+  beta and is explicitly waived; health and beta-metrics endpoints are the
+  monitoring sources.
 
 No environment values were pulled, decrypted, printed, or committed. Future
 team-scoped commands should use `--scope koidevelopments`; production metrics

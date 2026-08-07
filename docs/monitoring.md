@@ -2,7 +2,8 @@
 
 What to watch on the closed beta, where each signal comes from, and when to
 page someone. The deep health probe is `/api/health/deep`; the remaining
-signals come from Sentry, access logs, and `/api/cache-status`.
+signals come from application access/error logs, beta metrics, and
+`/api/cache-status`. Sentry is optional and is not required for this beta.
 
 ## Deep health probe
 
@@ -40,10 +41,10 @@ status is immediate).
 
 ## The five operational signals
 
-### 1. Error rate (Sentry + logs)
+### 1. Error rate (application logs)
 
-- **Source**: Sentry (when `SENTRY_DSN` is set; see `docs/backup-runbook.md`
-  sibling doc for env) + Gunicorn `--error-logfile`.
+- **Source**: Gunicorn `--error-logfile` and deployment access logs. Sentry is
+  optional and intentionally not configured for this beta.
 - **What to watch**: 500s per minute. The app reports every unhandled
   exception via `capture_exception` (rate-limit 429s are deliberately
   excluded). Zero 500s is the steady state; any 500 is a bug in the beta.
