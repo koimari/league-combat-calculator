@@ -803,8 +803,7 @@ class TestCannonShredDuration:
         nothing but the autos. Jayce declares his own order instead.
         """
         order = get_champion_cast_order("Jayce")
-        assert order is not None
-        assert order[0] == "R"
+        assert order == ["R", "Q", "W", "E"]
 
     def test_shredded_q_hits_harder_than_unshredded(self, jayce_data) -> None:
         """Same fight, R's shred before vs after Q: Q must feel it."""

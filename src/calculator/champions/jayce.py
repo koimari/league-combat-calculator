@@ -410,7 +410,7 @@ OPTIONS: list[dict[str, Any]] = [
 # Jayce transforms INTO a stance and only then uses its abilities, so R
 # resolves FIRST — the engine's default puts it last, where Cannon R's
 # armor/MR shred would reach the autos but none of the Q/W it precedes.
-CAST_ORDER = ["R", "Q", "Q2", "W", "E"]
+CAST_ORDER = ["R", "Q", "W", "E"]
 
 ASSUMPTIONS = [
     "Jayce is modeled in ONE stance at a time — toggle hammer_stance to "

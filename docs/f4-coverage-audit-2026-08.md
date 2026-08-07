@@ -21,13 +21,13 @@ all-champion F3 invariants, and the F4 semantic regression suite.
 | 8 | Illaoi | Certified with limitation: spirit/vessel state is outside a typed cast-slot relationship. |
 | 9 | Yasuo | Certified with limitation: Q3 and E stacks are self-generated state; Q3 is not a separate slot. |
 | 10 | Gnar | Certified with limitation: Mega/Mini is form state and R is unavailable in Mini form. |
-| 11 | Jayce, Kai'Sa, Karthus, Shen, Taliyah, Vi | Certified module orders reproduced; Jayce's unused phantom Q2 remains a documented metadata nit. |
+| 11 | Jayce, Kai'Sa, Karthus, Shen, Taliyah, Vi | Certified module orders reproduced; Jayce metadata now contains only its parsed R → Q → W → E slots. |
 | 12 | Hwei | Corrected at current head: execute metadata is scoped to the selected QW/Severing Bolt row and variant-aware rule caching; default QQ is Q → W → E → R, QW is R → Q → W → E. |
 | 13 | Seraphine | Certified: E → R → Q → W with E→Q and R→Q missing-health edges; dedicated regression pin added. |
 | 14 | Renekton, Rumble | Renekton's fury-gated enhancement remains a limitation; Rumble's base E MR shred is fixed and yields E → Q → W → R. |
 | 15 | Darius | Fixed: non-damaging E no longer becomes a passive stack applier; no false E→R stack edge. |
 | 16 | Briar | Certified: Q shred opens and W missing-health execute closes. |
-| 17 | Brand | Certified with documented seed override; Blaze detonation is passive-driven, with a cosmetic seed-label limitation. |
+| 17 | Brand | Certified with documented seed override; Blaze detonation is passive-driven and the seed no longer labels E as its consumer. |
 | 18 | Xin Zhao, Varus | Certified module coverage; Varus's R→Q seed exception is pinned, Xin's challenged prose remains outside typed edges. |
 | 19 | Nautilus, Lulu, Malphite, Poppy | Certified module coverage with honest flat orders and sourced atoms. |
 
@@ -37,6 +37,7 @@ all-champion F3 invariants, and the F4 semantic regression suite.
   attribute/prose consumers, preventing inactive form variants from creating
   false execute, mark, or stored-damage edges.
 - Hwei's `q_missing_health` option is gated to the QW/Severing Bolt packet.
+- Naafiri's Q recast is explicitly registered as same-slot self-state; Jayce's phantom Q2 metadata and Brand's E consumer label are removed.
 - Hwei derived-order caching includes the selected packet name, so QQ and QW
   cannot reuse each other's order.
 - Regression coverage includes Zed, Yone, Karma, Tristana, Darius, Nasus,

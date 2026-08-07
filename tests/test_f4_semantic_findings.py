@@ -29,6 +29,7 @@ from src.calculator.champions import (
 )
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.rotation_resolver import (
+    COMBO_TABLE,
     _CONSUME_OPTIONS,
     _resolve_option_slot,
     detect_setup_consume_edges,
@@ -193,3 +194,8 @@ def test_hwei_qw_variant_keeps_its_missing_health_execute(champion_by_name):
     edges = _edges("Hwei", data, parsed)
     assert order == ["R", "Q", "W", "E"]
     assert _has_edge(edges, "R", "Q", "execute")
+
+
+def test_brand_seed_does_not_mislabel_e_as_blaze_consumer():
+    """Brand's Blaze detonation is passive P state, not E consumption."""
+    assert COMBO_TABLE["Brand"].consume == ()

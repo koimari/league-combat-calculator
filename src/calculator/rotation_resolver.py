@@ -178,7 +178,9 @@ COMBO_TABLE: dict[str, ComboRule] = {
             "E spreads Blaze (wiki prose — utility-only in the packet)",
         ),
         setup=("Q", "R", "W"),
-        consume=("E",),
+        # Blaze's real consumer is passive P's 3-stack detonation, not E;
+        # P is not a cast slot, so no cast consumer is reported here.
+        consume=(),
         # Pillar of Flame and the Blaze spread hit every enemy; Pyroclasm
         # already bounces per the r_bounces option (one target per bounce).
         aoe={"W": 5, "E": 5},
@@ -455,6 +457,9 @@ _SELF_OPTIONS = {
     "tibbers_attacks",
     "q_target_below_half",
     "q_isolated",
+    # Naafiri's Q recast consumes Q's own bleed on the same slot; it is
+    # explicit self-state, never a cross-slot ordering edge.
+    "q_recast",
     "soul_nails",
     "mundo_missing_health_percent",
 }
