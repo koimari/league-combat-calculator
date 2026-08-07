@@ -120,11 +120,16 @@ jobs:
             | grep --quiet '"total_damage"'
 
           # Issue #144: the beta metrics scorecard must ship in the runtime
-          # package (scripts/ is excluded from the artifact); a 503
-          # "Metrics module unavailable" here means the deploy is broken.
-          curl --fail --silent --show-error \
-            http://127.0.0.1:18000/api/metrics \
-            | grep --quiet 'scorecard'
+          # package (scripts/ is excluded from the artifact).  Without a
+          # Postgres DB the endpoint returns the distinct 503 "Database
+          # unavailable"; the module-unavailable 503 is the deploy break.
+          metrics="$(curl --silent --show-error http://127.0.0.1:18000/api/metrics)"
+          if printf '%s' "$metrics" | grep --quiet 'Metrics module unavailable'; then
+            echo "metrics module missing from the runtime package (issue #144)"
+            exit 1
+          fi
+          printf '%s' "$metrics" | grep --quiet 'scorecard' \
+            || printf '%s' "$metrics" | grep --quiet 'Database unavailable'
 
           for attempt in {1..45}; do
             health="$(docker inspect --format '{{.State.Health.Status}}' lol-calculator-smoke)"
