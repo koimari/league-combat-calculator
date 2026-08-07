@@ -49,6 +49,14 @@ It returned receipts **FAIL** (0/week for both weeks) and an overall **FAIL**.
 
 Because the GO criteria are unmet, **no invites were distributed**.
 
+## Invite-gate verification
+
+The production alias was checked without exposing any configured code:
+`GET /api/auth/invite` returned HTTP 200 with `invite_required=true` and
+`configured=true`; a deliberately invalid test value returned HTTP 401. An
+unauthenticated `/api/calculate` request reached the closed-beta gate. No
+invite code or account credential is included here.
+
 ## Team-scoped deployment verification
 
 The latest semantic F4 patch (`3c11a59`) was deployed with
