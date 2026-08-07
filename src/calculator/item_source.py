@@ -496,6 +496,61 @@ def is_ordinary_sr_item(item: Mapping[str, Any]) -> bool:
     return sr_availability(item).selectable
 
 
+@dataclass(frozen=True)
+class AuditScope:
+    """Whether the full-entry release gate must review this item, and why.
+
+    The gate deliberately audits every record that is available on
+    Summoner's Rift — including quest transforms, map/system records, and
+    champion-granted items that never appear in a player shop — because
+    their Wiki entries must still be reviewed and classified.  Only
+    off-Rift and removed records are out of scope.  ``classification`` is
+    the typed reason (the ``sr_availability`` acquisition kind plus the
+    explicit removed/off-map cases) so the audit policy is visible in
+    receipts instead of being re-derived from mode keys.
+    """
+
+    in_scope: bool
+    classification: str
+    reason: str
+
+
+def audit_scope(item: Mapping[str, Any]) -> AuditScope:
+    """Classify one cached item for the full-entry audit scope.
+
+    Builds on :func:`sr_availability`; the gate never parses mode keys or
+    removal flags itself.  ``classification`` is one of ``shop``,
+    ``quest_transform``, ``map_or_system``, ``champion_granted``,
+    ``unknown_source``, ``off_map``, or ``removed``.
+    """
+    availability = sr_availability(item)
+    if not availability.on_summoners_rift:
+        # A record with no cached mode availability stays typed as
+        # unknown_source; everything else that is not on SR is off_map.
+        classification = (
+            availability.acquisition
+            if availability.acquisition == "unknown_source"
+            else "off_map"
+        )
+        return AuditScope(
+            in_scope=False,
+            classification=classification,
+            reason=availability.reason,
+        )
+    if bool(item.get("removed")):
+        return AuditScope(
+            in_scope=False,
+            classification="removed",
+            reason=f"{item.get('name') or 'item'} is a removed record with no "
+            "current Wiki entry to review.",
+        )
+    return AuditScope(
+        in_scope=True,
+        classification=availability.acquisition,
+        reason=availability.reason,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Source audit
 # ---------------------------------------------------------------------------

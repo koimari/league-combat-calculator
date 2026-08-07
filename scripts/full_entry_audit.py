@@ -228,26 +228,25 @@ def champion_names() -> list[str]:
     )
 
 
-def ordinary_sr_item_names() -> list[str]:
-    """Return every non-removed classic-SR item record in the cache.
+def audit_item_names() -> list[str]:
+    """Return every item record the full-entry gate must audit.
 
-    The audit scope is deliberately broader than the shop.  Transformed
-    records (for example Diadem of Songs and Muramana) and non-purchasable
-    system records still have Wiki entries whose mechanics must be reviewed
-    and explicitly classified before the release gate can pass.
+    The audit scope is the typed :func:`item_source.audit_scope` policy:
+    every item available on Summoner's Rift — including quest transforms
+    (Diadem of Songs, Muramana) and non-purchasable map/system records —
+    is in scope, while off-map and removed records are not.  The gate never
+    parses ``modes``/``removed`` keys itself (issue #166).
     """
+    from src.calculator.item_source import audit_scope
+
     names: set[str] = set()
     for value in _load(ITEMS_PATH).values():
         if not isinstance(value, dict):
             continue
-        modes = value.get("modes") or {}
-        name = str(value.get("name", "")).strip()
-        if (
-            name
-            and bool(modes.get("classic sr 5v5"))
-            and not bool(value.get("removed"))
-        ):
-            names.add(name)
+        if audit_scope(value).in_scope:
+            name = str(value.get("name", "")).strip()
+            if name:
+                names.add(name)
     return sorted(names)
 
 
@@ -362,68 +361,56 @@ def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any
             "runtime_gaps": ["no cached runtime record"],
         }
     if kind == "item":
+        from src.calculator.item_source import branches, effect_entries, effect_text
+
         effects: list[dict[str, Any]] = []
-        branches = []
-        for branch in ("passives", "active", "actives"):
-            values = record.get(branch) or []
-            if isinstance(values, dict):
-                values = [values]
-            if not isinstance(values, list):
+        kinds: list[str] = []
+        for branch, entry in effect_entries(record):
+            if not isinstance(entry, dict):
                 continue
-            for entry in values:
-                if not isinstance(entry, dict):
-                    continue
-                descriptions = _text_values(
-                    entry,
-                    (
-                        "description",
-                        "shortDescription",
-                        "longDescription",
-                        "effects",
-                        "branches",
-                    ),
-                )
+            prose = effect_text(entry)
+            descriptions = [prose] if prose else []
+            kinds.append(branch)
 
-                def _nonzero_stat(value: Any) -> bool:
-                    if not isinstance(value, dict):
-                        return False
-                    for field in (
-                        "flat",
-                        "percent",
-                        "perLevel",
-                        "percentPerLevel",
-                        "percentBase",
-                        "percentBonus",
-                    ):
-                        try:
-                            if float(value.get(field, 0) or 0) != 0:
-                                return True
-                        except (TypeError, ValueError):
-                            continue
+            def _nonzero_stat(value: Any) -> bool:
+                if not isinstance(value, dict):
                     return False
+                for field in (
+                    "flat",
+                    "percent",
+                    "perLevel",
+                    "percentPerLevel",
+                    "percentBase",
+                    "percentBonus",
+                ):
+                    try:
+                        if float(value.get(field, 0) or 0) != 0:
+                            return True
+                    except (TypeError, ValueError):
+                        continue
+                return False
 
-                stat_keys = sorted(
-                    str(key)
-                    for key, value in (entry.get("stats") or {}).items()
-                    if isinstance(value, dict) and _nonzero_stat(value)
-                )
-                effects.append(
-                    {
-                        "branch": branch,
-                        "name": _compact_text(entry.get("name") or branch),
-                        "descriptions": descriptions,
-                        "branch_count": len(entry.get("branches") or []),
-                        "stat_fields": stat_keys,
-                        "cooldown": entry.get("cooldown"),
-                        "range": entry.get("range"),
-                        "has_cooldown": entry.get("cooldown") is not None,
-                        "has_range": entry.get("range") is not None,
-                    }
-                )
-            branches.append(branch)
+            stat_keys = sorted(
+                str(key)
+                for key, value in (entry.get("stats") or {}).items()
+                if isinstance(value, dict) and _nonzero_stat(value)
+            )
+            effects.append(
+                {
+                    "branch": branch,
+                    "name": _compact_text(entry.get("name") or branch),
+                    "descriptions": descriptions,
+                    "branch_count": len(branches(entry)),
+                    "stat_fields": stat_keys,
+                    "cooldown": entry.get("cooldown"),
+                    "range": entry.get("range"),
+                    "has_cooldown": entry.get("cooldown") is not None,
+                    "has_range": entry.get("range") is not None,
+                }
+            )
         return {
             "source_record": "cached_item_entry",
-            "branches_present": branches,
+            "branches_present": sorted(set(kinds)),
             "effects": effects,
             "effect_count": len(effects),
         }
@@ -593,6 +580,14 @@ def audit_entry(kind: str, name: str) -> dict[str, Any]:
     runtime = _runtime_entry_receipt(kind, name)
     expected = _expected_effects(kind, _cached_record(kind, name))
     if kind == "item":
+        from src.calculator.item_source import audit_scope
+
+        scope = audit_scope(_cached_record(kind, name) or {})
+        receipt["audit_scope"] = {
+            "in_scope": scope.in_scope,
+            "classification": scope.classification,
+            "reason": scope.reason,
+        }
         status = str(runtime.get("status") or "")
         expected["effect_coverage"] = _item_effect_coverage(expected, runtime)
         expected["runtime_gaps"] = (
@@ -678,7 +673,7 @@ def audit(
         )
     QUERY_TOOL = tool
     champion_list = list(champions if champions is not None else champion_names())
-    item_list = list(items if items is not None else ordinary_sr_item_names())
+    item_list = list(items if items is not None else audit_item_names())
     entries: list[dict[str, Any]] = []
     targets = [("champion", name) for name in champion_list] + [
         ("item", name) for name in item_list
