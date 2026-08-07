@@ -46,3 +46,8 @@ data/gamefiles/
 
 # cdtb patcher storage (recreated under data/gamefiles/.cdtb)
 cdn/
+
+# Closed generated-modules lane: build_reviewed_modules.py emits regenerable
+# stubs here on patch-day runs, but the roster is registry-only (no generated/
+# lane, see .agents/skills/add-champion). The packet asset is static/reviewed-packets.json.
+src/calculator/champions/generated/
