@@ -23,6 +23,20 @@ from pathlib import Path
 import httpx
 
 API = "https://wiki.leagueoflegends.com/en-us/api.php"
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _anchored_out_root() -> Path:
+    """Resolve --out-root, refusing any path outside the repository."""
+    root = Path(OUT_ROOT) if OUT_ROOT else _REPO_ROOT / "data"
+    resolved = root.resolve()
+    if _REPO_ROOT.resolve() not in resolved.parents and resolved != _REPO_ROOT.resolve():
+        raise SystemExit(f"--out-root {root} is outside the repository ({_REPO_ROOT})")
+    return resolved
+
+
+OUT_ROOT: str = ""  # set from --out-root below
+
 INDEX_PATH = Path("data/wiki/article-index.json")
 RAW_DIR = Path("data/wiki-raw")
 UA = "Scryglass-wiki-decompose/0.1 (research)"
@@ -89,16 +103,22 @@ def main():
     ap.add_argument("--fetch", metavar="TITLE")
     ap.add_argument("--fetch-family", metavar="FAMILY")
     ap.add_argument("--limit", type=int, default=10)
+    ap.add_argument("--out-root", default="", help="data root (default <repo>/data)")
     args = ap.parse_args()
+
+    global INDEX_PATH, RAW_DIR
+    _anchored = _anchored_out_root()
+    INDEX_PATH = _anchored / "wiki" / "article-index.json"
+    RAW_DIR = _anchored / "wiki-raw"
 
     if args.index:
         n = build_index(INDEX_PATH)
         print(f"index: {n} articles -> {INDEX_PATH}")
-
+        return
     if args.fetch:
         dest = fetch_wikitext(args.fetch, RAW_DIR)
         print(f"fetched {args.fetch} -> {dest}")
-
+        return
     if args.fetch_family:
         index = json.loads(INDEX_PATH.read_text())
         members = [t for t in index if args.fetch_family.lower() in t.lower()][: args.limit]
@@ -106,6 +126,8 @@ def main():
             dest = fetch_wikitext(t, RAW_DIR)
             print(f"  {t} -> {dest}")
             time.sleep(0.35)
+        return
+    ap.print_help()
 
 
 if __name__ == "__main__":

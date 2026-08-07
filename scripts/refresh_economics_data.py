@@ -52,7 +52,13 @@ def round_half_up(value: float) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--patch", default="16.15.1")
+    parser.add_argument("--out", default=None, help="output file (default <repo>/data/economics-sourced.json)")
     args = parser.parse_args()
+
+    out_path = Path(args.out) if args.out else REPO_ROOT / "data" / "economics-sourced.json"
+    out_path = out_path.resolve()
+    if REPO_ROOT.resolve() not in out_path.parents:
+        raise SystemExit(f"--out {out_path} is outside the repository ({REPO_ROOT})")
 
     url = f"https://ddragon.leagueoflegends.com/cdn/{args.patch}/data/en_US/item.json"
     response = requests.get(url, timeout=60)
@@ -166,8 +172,15 @@ def main() -> int:
         "combine_costs": sorted(combine_costs, key=lambda row: row["id"]),
         "revisions": previous.get("revisions", {"ddragon": args.patch}),
     }
-    OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False))
-    print(f"wrote {OUT} ({len(per_item_sell)} sell rows, {len(combine_costs)} combine rows)")
+    out["provenance"] = {
+        "source_url": url,
+        "patch": args.patch,
+        "fetched_at": __import__("time").time(),
+    }
+    tmp = out_path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
+    __import__("os").replace(tmp, out_path)
+    print(f"wrote {out_path} ({len(per_item_sell)} sell rows, {len(combine_costs)} combine rows)")
     return 0
 
 

@@ -56,16 +56,23 @@ def _is_cache_valid(
 
 
 def _write_cache(data_directory: Path, filename: str, data: dict[str, Any]) -> None:
-    """Write data and metadata to the cache directory."""
-    data_directory.mkdir(parents=True, exist_ok=True)
+    """Write data and metadata to the cache directory (deprecated).
 
+    Tracked runtime caches delegate to the atomic registry write; any other
+    filename keeps the historical general behavior (tests, scratch).  New
+    callers should use ``data_registry.write_runtime_cache`` directly.
+    """
+    from .data_registry import CACHE_FILES, write_runtime_cache
+
+    if filename in CACHE_FILES:
+        write_runtime_cache(data_directory, filename, data)
+        return
+    data_directory.mkdir(parents=True, exist_ok=True)
     data_path = data_directory / filename
     meta_path = _get_cache_metadata_path(data_directory, filename)
-
     with open(data_path, "w", encoding="utf-8") as data_file:
         json.dump(data, data_file, indent=2)
     _read_json_version.cache_clear()
-
     metadata = {"fetched_at": time.time(), "filename": filename}
     with open(meta_path, "w", encoding="utf-8") as meta_file:
         json.dump(metadata, meta_file, indent=2)

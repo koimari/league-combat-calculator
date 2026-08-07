@@ -15,7 +15,7 @@ League Wiki cache
   -> app.js
 ```
 
-`src/calculator/data_updater.py` is the only network-writing path. Runtime calculations read the tracked cache through `data_fetcher.py`. `item_source.py` owns what the cache records about an item's sources — see below.
+`src/calculator/data_updater.py` is the only writer of the tracked runtime caches (champions/items/runes.json) and only through the atomic `data_registry.write_runtime_cache` API; `data_fetcher.py` is read-only. Evidence/derived writers are declared in `data_registry.WRITERS` (decompose_wiki -> data/wiki*, decompose_binaries -> data/bin, patch_regression -> data/gamefiles+staleness.json, refresh_economics_data -> economics-sourced.json); every data/ subtree has an explicit, repo-anchored owner enforced by tests/test_data_writer_inventory.py. `item_source.py` owns what the cache records about an item's sources — see below.
 
 ## Rules and ownership
 

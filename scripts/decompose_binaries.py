@@ -32,7 +32,8 @@ FINAL_DIR = GAME_DIR / "DATA/FINAL"
 HASH_URL_BASE = "https://raw.communitydragon.org/data/hashes/lol"
 HASH_FILE = Path.home() / ".local/mcp/hashes.game.txt"
 CDTB_HASH_DIR = Path.home() / ".local/share/cdragon/data/hashes/lol"
-OUT_DIR = Path("data/bin")
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+OUT_DIR = _REPO_ROOT / "data" / "bin"
 
 
 def _download(url: str, dest: Path, chunk=1 << 20) -> None:

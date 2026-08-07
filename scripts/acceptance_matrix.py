@@ -312,26 +312,39 @@ def main() -> int:
                 origin="local:test_client",
             )
 
-    report = {
-        "matrix": "issue_20_backend_acceptance",
-        "scenario_count": len(results),
-        "origin": args.base_url.rstrip("/") if args.base_url else "local:test_client",
-        "evidence_contract": [
-            "origin",
-            "request_paths",
-            "click_state",
-            "calculate_status",
-            "optimize_status",
-            "calculate_participants",
-            "calculate_coverage",
-            "optimize_coverage",
-            "build",
-            "withheld_reason",
+    from gate_receipt import build_receipt  # pylint: disable=import-outside-toplevel
+
+    successes = [result for result in results if result["success"]]
+    report = build_receipt(
+        matrix="issue_20_backend_acceptance",
+        passed=all(result["success"] for result in results),
+        passed_count=len(successes),
+        failed_count=len(results) - len(successes),
+        total_count=len(results),
+        withheld_count=sum(result["withheld"] for result in results),
+        failures=[
+            {"name": result["name"], "reason": result["withheld_reason"]}
+            for result in results
+            if not result["success"]
         ],
-        "passed": sum(result["success"] for result in results),
-        "withheld_or_partial": sum(result["withheld"] for result in results),
-        "results": results,
-    }
+        extra={
+            "scenario_count": len(results),
+            "origin": args.base_url.rstrip("/") if args.base_url else "local:test_client",
+            "evidence_contract": [
+                "origin",
+                "request_paths",
+                "click_state",
+                "calculate_status",
+                "optimize_status",
+                "calculate_participants",
+                "calculate_coverage",
+                "optimize_coverage",
+                "build",
+                "withheld_reason",
+            ],
+            "results": results,
+        },
+    )
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
