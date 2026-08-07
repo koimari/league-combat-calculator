@@ -62,7 +62,7 @@ None of this changes which builds are evaluated or how they score: cache-vs-no-c
 
 ## Public boundary
 
-`app.py` parses bounded requests and exposes stable JSON. `static/js/app.js` renders the scenario and results; it contains no champion or item formulas.
+`app.py` parses bounded requests and exposes stable JSON. `static/js/app.js` renders the scenario and results from backend receipts only: it contains no champion or item formulas, no item-id literals, and no local damage/stat engine (issue #135 retired the duplicate in-browser engine and the 175% crit fallback). Stat cards are fed by `POST /api/loadout-stats`; scores, breakdowns, BIS, and both optimizers consume `/api/calculate`, `/api/bis`, and `/api/optimize`.
 
 Reviewed champion modules are enabled as attackers. Every cached champion can be used as an ally or target for independently derived base and item stats. Missing attacker mechanics fail closed. Missing ally or defensive mechanics are disclosed as unmodeled context.
 

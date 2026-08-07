@@ -1442,8 +1442,6 @@ def test_resistance_table_surfaces_all_backend_starting_defense_receipts():
     assert "aResult.target_ending_health" in source
     assert "aResult.target_effective_max_health" in source
     assert "threshold_health_bonus_gained" in source
-    assert "function exactSupportOutputs(result)" in source
-    assert "total_amount" in source
     assert 'result.error_code === "no_complete_event_order"' in source
 
 
@@ -1527,23 +1525,33 @@ def test_stat_matrix_surfaces_backend_resource_and_critical_stat_fields():
     assert "item.critDamage" in source
 
 
-def test_frontend_applies_backend_stat_conversion_metadata():
+def test_frontend_stat_cards_consume_backend_loadout_stats_receipts():
+    # Issue #135: the stat cards must come from the backend.  The local
+    # conversion assembly (mana->AP/HP, Rabadon's literal, growth formula)
+    # was deleted; app.js now maps the /api/loadout-stats snake_case stat
+    # matrix into the stat-card display fields.
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert "item.statConversions?.bonus_mana_to_health_ratio" in source
-    assert "total.hp += total.mana * manaToHealthRatio" in source
-    assert "item.statConversions?.bonus_mana_to_ap_ratio" in source
-    assert "total.ap += total.mana * manaToApRatio" in source
-    assert "item.statConversions?.bonus_health_to_ap_ratio" in source
-    assert "total.ap += total.hp * healthToApRatio" in source
-    assert "item.statConversions?.item_bonus_health_ratio" in source
-    assert "getItem(id)?.statConversions?.base_ad_to_bonus_ad_ratio" in source
-    assert "getItem(id)?.statConversions?.bonus_health_to_ad_ratio" in source
-    assert "item.statConversions?.rapids_bonus_ap" in source
-    assert "item.statConversions?.ap_per_mana_regen_unit" in source
-    assert "bonus_attack_speed_melee" in source
-    assert "bonus_attack_speed_percent" in source
-    assert "max_mana_to_ad_ratio" in source
+    assert '"/api/loadout-stats"' in source
+    assert "function displayStatsFromBackend(" in source
+    assert "function currentLoadoutStats(" in source
+    assert "function mainParticipantBackendStats(" in source
+    assert "stats.health" in source
+    assert "stats.bonus_health" in source
+    assert "stats.max_mana" in source
+    assert "stats.attack_damage" in source
+    assert "stats.ability_power" in source
+    assert "stats.armor" in source
+    assert "stats.magic_resistance" in source
+    assert "stats.attack_speed" in source
+    assert "stats.move_speed" in source
+    assert "stats.ability_haste" in source
+    assert "stats.critical_strike_chance" in source
+    # The local assembly is gone; no champion-growth or conversion math
+    # may live in the bundle.
+    assert "attackerChampionStats" not in source
+    assert "0.7025" not in source
+    assert "0.0175" not in source
 
 
 def test_primary_participant_ledger_surfaces_backend_support_events():
@@ -1575,8 +1583,7 @@ def test_frontend_consumes_backend_calculation_defaults():
     assert "config.exclusivity_groups" in source
     assert "one_rotation_duration_seconds" in source
     assert "state.fight.duration = oneRotationDuration" in source
-    assert "function optimizerExclusiveGroups()" in source
-    assert "Object.values(engine.exclusivityGroups || {})" in source
+    assert "engine.exclusivityGroups = config.exclusivity_groups || {}" in source
 
 
 def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
@@ -1620,7 +1627,7 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
     assert "options[item.backendName || item.name] = { [spec.key]" in source
     assert "LEGACY_STACK_ITEM_NAMES" in source
     assert "specs.length === 1 && LEGACY_STACK_ITEM_NAMES.has(itemName(id))" in source
-    assert "crit_chance_per_stack_${suffix}" in source
+    assert "function itemOptionSpecs(id)" in source
     assert "bonus_attack_speed_percent" in source
     assert "on_hit_magic_damage" in source
     assert "chain_fraction" in source
@@ -1652,12 +1659,14 @@ def test_frontend_renders_typed_item_state_controls_for_roster_participants():
 def test_frontend_consumes_backend_sustain_stat_families():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert '"lifesteal", "omnivamp", "healAndShieldPower"' in source
-    assert '"healthRegen", "tenacity", "manaRegen"' in source
     assert '"Life steal"' in source
     assert '"Heal/shield power"' in source
     assert "stats.lifesteal_percent" in source
+    assert "stats.omnivamp_percent" in source
     assert "stats.heal_and_shield_power_percent" in source
+    assert "stats.health_regen_per_five" in source
+    assert "stats.tenacity_percent" in source
+    assert "stats.resource_regen_per_second" in source
 
 
 def test_frontend_consumes_ordered_item_targeting_receipts():
