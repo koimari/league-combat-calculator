@@ -80,7 +80,7 @@ def test_item_scope_includes_transformed_and_non_purchasable_records(monkeypatch
             },
         },
     )
-    assert audit.ordinary_sr_item_names() == ["One", "Three"]
+    assert audit.audit_item_names() == ["One", "Three"]
 
 
 def test_champion_module_receipts_cover_every_cached_champion():
@@ -104,7 +104,7 @@ def test_champion_module_receipts_cover_every_cached_champion():
 
 
 def test_full_item_scope_includes_transformed_records():
-    names = audit.ordinary_sr_item_names()
+    names = audit.audit_item_names()
     assert len(names) == 237
     assert "Diadem of Songs" in names
     assert "Muramana" in names
@@ -116,10 +116,10 @@ def test_expected_effects_names_every_item_branch_and_champion_slot():
         "item",
         {
             "passives": [
-                {"name": "Passive", "description": "Deals damage.", "stats": {}}
+                {"name": "Passive", "branches": ["Deals damage."], "stats": {}}
             ],
             "active": [
-                {"name": "Active", "description": "Grants a shield.", "stats": {}}
+                {"name": "Active", "branches": ["Grants a shield."], "stats": {}}
             ],
         },
     )
@@ -165,10 +165,9 @@ def test_item_effect_receipt_keeps_each_branch_and_runtime_path_visible():
             "passives": [
                 {
                     "name": "Cleave",
-                    "description": "Hits nearby enemies.",
                     "branches": [
-                        {"description": "Primary"},
-                        {"description": "Secondary"},
+                        "Primary: hits nearby enemies.",
+                        "Secondary: also slows.",
                     ],
                     "stats": {},
                 }
