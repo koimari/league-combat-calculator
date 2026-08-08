@@ -27,6 +27,14 @@ from .item_coverage import (
 from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
 from .pipeline import FightParams
+from .practice_dummy import (
+    PRACTICE_DUMMY_KIND,
+    PRACTICE_DUMMY_LEVEL,
+    PRACTICE_DUMMY_NAME,
+    apply_stat_overrides,
+    parse_stat_overrides,
+    practice_dummy_data,
+)
 from .role_quests import require_level_within_cap, validate_role
 from .request_parsing import (
     request_int as _request_int,
@@ -119,6 +127,7 @@ class ChampionLoadout:
 
     champion: str
     level: int
+    kind: str = "champion"
     items: tuple[str, ...] = ()
     boots: str = ""
     item_options: dict[str, dict[str, int]] = dataclass_field(default_factory=dict)
@@ -128,6 +137,12 @@ class ChampionLoadout:
     ability_ranks: dict[str, int] = dataclass_field(default_factory=dict)
     champion_options: dict[str, Any] = dataclass_field(default_factory=dict)
     cast_order: list[str] | None = None
+    target_stats: dict[str, float] = dataclass_field(default_factory=dict)
+
+    @property
+    def is_practice_dummy(self) -> bool:
+        """Return whether this loadout is the passive Practice Tool dummy."""
+        return self.kind == PRACTICE_DUMMY_KIND
 
     @classmethod
     def from_request(cls, value: object, *, field: str) -> "ChampionLoadout":
@@ -135,10 +150,24 @@ class ChampionLoadout:
         if not isinstance(value, Mapping):
             raise ValueError(f"{field} must be an object")
 
+        kind = _short_string(value.get("kind", "champion"), f"{field}.kind")
+        if kind not in {"champion", PRACTICE_DUMMY_KIND}:
+            raise ValueError(
+                f"{field}.kind must be 'champion' or '{PRACTICE_DUMMY_KIND}'"
+            )
+        is_practice_dummy = kind == PRACTICE_DUMMY_KIND
         champion = _short_string(
-            value.get("champion", ""), f"{field}.champion", required=True
+            value.get("champion", PRACTICE_DUMMY_NAME if is_practice_dummy else ""),
+            f"{field}.champion",
+            required=True,
         )
-        level = value.get("level", 1)
+        if is_practice_dummy and champion.casefold() != PRACTICE_DUMMY_NAME.casefold():
+            raise ValueError(
+                f"{field}.champion must be '{PRACTICE_DUMMY_NAME}' for a practice dummy"
+            )
+        if is_practice_dummy:
+            champion = PRACTICE_DUMMY_NAME
+        level = value.get("level", PRACTICE_DUMMY_LEVEL if is_practice_dummy else 1)
         if isinstance(level, bool) or not isinstance(level, int):
             raise ValueError(f"{field}.level must be an integer")
         if not 1 <= level <= MAX_LEVEL:
@@ -156,6 +185,8 @@ class ChampionLoadout:
             for item in raw_items
         )
         boots = _short_string(value.get("boots", ""), f"{field}.boots")
+        if is_practice_dummy and boots:
+            raise ValueError(f"{field}.boots is not available for a practice dummy")
         item_options = validate_item_input_options(value.get("item_options"))
         role = validate_role(value.get("role", ""))
         role_quest_complete = value.get("role_quest_complete", False)
@@ -166,14 +197,29 @@ class ChampionLoadout:
         require_level_within_cap(
             level, role, role_quest_complete, field=f"{field}.level"
         )
+        if is_practice_dummy and (role or role_quest_complete):
+            raise ValueError(f"{field} practice dummies do not use a role or quest")
+        target_stats = parse_stat_overrides(
+            value.get("target_stats"), field=f"{field}.target_stats"
+        )
+        if not is_practice_dummy and value.get("target_stats") is not None:
+            raise ValueError(
+                f"{field}.target_stats is only available for a practice dummy"
+            )
         # Historical requests omitted this field; keep sourced ally effects
         # active for compatibility.  The browser sends an explicit false when
         # the user turns the opt-in toggle off.
-        ally_effects_enabled = value.get("ally_effects_enabled", True)
+        ally_effects_enabled = value.get(
+            "ally_effects_enabled", False if is_practice_dummy else True
+        )
         if not isinstance(ally_effects_enabled, bool):
             raise ValueError(f"{field}.ally_effects_enabled must be true or false")
+        if is_practice_dummy and ally_effects_enabled:
+            raise ValueError(f"{field} practice dummies cannot apply ally effects")
 
         raw_ranks = value.get("ability_ranks")
+        if is_practice_dummy and raw_ranks:
+            raise ValueError(f"{field} practice dummies have no abilities")
         if raw_ranks is None:
             ability_ranks = {}
         elif not isinstance(raw_ranks, Mapping):
@@ -194,10 +240,20 @@ class ChampionLoadout:
                     )
                 ability_ranks[slot] = rank
 
-        champion_options = _validate_champion_options(
-            value.get("champion_options"), champion, field=f"{field}.champion_options"
+        if is_practice_dummy and value.get("champion_options"):
+            raise ValueError(f"{field} practice dummies have no champion options")
+        champion_options = (
+            {}
+            if is_practice_dummy
+            else _validate_champion_options(
+                value.get("champion_options"),
+                champion,
+                field=f"{field}.champion_options",
+            )
         )
         cast_order = value.get("cast_order")
+        if is_practice_dummy and cast_order is not None:
+            raise ValueError(f"{field} practice dummies have no cast order")
         if cast_order is not None:
             if not isinstance(cast_order, list) or any(
                 not isinstance(slot, str) for slot in cast_order
@@ -217,6 +273,7 @@ class ChampionLoadout:
         return cls(
             champion=champion,
             level=level,
+            kind=kind,
             items=items,
             boots=boots,
             item_options=item_options,
@@ -226,17 +283,23 @@ class ChampionLoadout:
             ability_ranks=ability_ranks,
             champion_options=champion_options,
             cast_order=list(cast_order) if cast_order is not None else None,
+            target_stats=target_stats,
         )
 
     def resolve(self) -> "ResolvedLoadout":
         """Resolve cached Wiki data and calculate the complete stat matrix."""
-        champion_data = get_champion(self.champion)
-        _validate_ability_ranks(
-            champion_data,
-            self.level,
-            self.ability_ranks,
-            field="loadout.ability_ranks",
+        champion_data = (
+            practice_dummy_data()
+            if self.is_practice_dummy
+            else get_champion(self.champion)
         )
+        if not self.is_practice_dummy:
+            _validate_ability_ranks(
+                champion_data,
+                self.level,
+                self.ability_ranks,
+                field="loadout.ability_ranks",
+            )
         ordinary_items = tuple(get_item_by_name(name) for name in self.items)
         boots_data = get_item_by_name(self.boots) if self.boots else None
         validate_resolved_loadout(
@@ -254,6 +317,8 @@ class ChampionLoadout:
             role=self.role,
             role_quest_complete=self.role_quest_complete,
         )
+        if self.is_practice_dummy:
+            stats = apply_stat_overrides(stats, self.target_stats)
         return ResolvedLoadout(
             request=self,
             champion_data=champion_data,
@@ -279,10 +344,17 @@ class ResolvedLoadout:
     stats: dict[str, float]
     defenses: StartingDefenses
 
+    @property
+    def is_practice_dummy(self) -> bool:
+        """Return whether this resolved participant is the passive dummy."""
+        return self.request.is_practice_dummy
+
     def public_summary(self) -> dict[str, Any]:
         """Return the UI-safe identity, source images, build, and stat matrix."""
         return {
             "champion": self.champion_data["name"],
+            "kind": self.request.kind,
+            "is_practice_dummy": self.request.is_practice_dummy,
             "icon": self.champion_data.get("icon", ""),
             "level": self.request.level,
             "items": [item["name"] for item in self.item_data],
@@ -298,6 +370,7 @@ class ResolvedLoadout:
                 if self.request.cast_order is not None
                 else None
             ),
+            "target_stats": dict(self.request.target_stats),
             "stats": dict(self.stats),
             "starting_defenses": self.defenses.public_summary(),
             "target_model_coverage": target_build_coverage(list(self.item_data)),
@@ -368,6 +441,8 @@ def parse_roster(
         ChampionLoadout.from_request(value, field=f"{key}[{index}]")
         for index, value in enumerate(raw_roster)
     )
+    if key != "enemies" and any(entry.is_practice_dummy for entry in roster):
+        raise ValueError("Practice Dummy is only available as an enemy target")
     names = [entry.champion.casefold() for entry in roster]
     if len(set(names)) != len(names):
         raise ValueError(f"{key} must not contain duplicate champions")

@@ -26,6 +26,7 @@ class Combatant:  # pylint: disable=too-many-instance-attributes
     stats: dict[str, float]
     defenses: Any
     request: Any = None
+    is_practice_dummy: bool = False
 
 
 def require_roster_fight_window_support(
@@ -37,6 +38,8 @@ def require_roster_fight_window_support(
     """Reject a fight window a selected roster member cannot join."""
     for side, roster in (("Enemy", enemies), ("Ally", allies)):
         for loadout in roster:
+            if loadout.is_practice_dummy:
+                continue
             name = str(loadout.champion_data.get("name", ""))
             try:
                 require_fight_mode_support(params, name)
@@ -93,6 +96,7 @@ def from_loadout(
         stats=loadout.stats,
         defenses=loadout.defenses,
         request=loadout.request,
+        is_practice_dummy=bool(getattr(loadout.request, "is_practice_dummy", False)),
     )
 
 

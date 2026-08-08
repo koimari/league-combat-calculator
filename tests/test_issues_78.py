@@ -104,6 +104,8 @@ CONTROL_ATTRIBUTES = {
         ("enemy", "item_options"),
         ("ally", "item_options"),
     ],
+    "data-dummy-stat": [("enemy", "target_stats")],
+    "data-reset-dummy-stats": [("enemy", "target_stats")],
     # scenario controls (legacy fight controls keep the same descriptors)
     "data-fight": [("scenario", "rotations"), ("scenario", "window")],
     "data-fight-range": [("scenario", "window"), ("scenario", "auto_attack_uptime")],
