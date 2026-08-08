@@ -294,6 +294,17 @@ def test_practice_target_is_the_passive_dummy_with_exact_stat_inputs():
     assert (ROOT / "static" / "img" / "practice-dummy-enemy.png").is_file()
 
 
+def test_ability_variant_buttons_write_the_declared_backend_option():
+    source = _source()
+    assert 'data-ability-variant="${ability.slot}"' in source
+    assert (
+        'abilityOptionBinding(ability.slot, "ability_variants") === option.key'
+        in source
+    )
+    assert "options[option.key] = abilityInput(variantAbility.slot).variant" in source
+    assert "input.variant = Number(abilityVariantButton.dataset.value)" in source
+
+
 def test_quick_to_analyst_bridge_is_wired():
     """Quick mode, its Open-in-Analyst bridge and the whole view-switching
     layer were removed; share links load directly into the analyst view."""

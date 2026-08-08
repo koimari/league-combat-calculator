@@ -1368,25 +1368,22 @@ function stackControl(path, id, compact = false) {
 }
 
 
-const ABILITY_BOUND_CHAMPION_OPTIONS = new Set([
-  "passive_procs",
-  "mines_hit",
-  "r_sweet_spot",
-]);
-
 function abilityBindsChampionOption(key) {
   const abilities = activeAbilityKit();
   if (key === "passive_procs") return abilities.some((ability) => ability.slot === "P");
   if (key === "mines_hit") return abilities.some((ability) => ability.slot === "E" && Number(ability.maxHits) > 1);
   if (key === "r_sweet_spot") return abilities.some((ability) => ability.slot === "R" && ability.variants?.length > 1);
-  return false;
+  return abilities.some((ability) =>
+    ability.variants?.length > 1
+      && abilityOptionBinding(ability.slot, "ability_variants") === key
+  );
 }
 
 function renderChampionOptions() {
   const capability = championOptionCapability("main", state.attacker.champion);
   const optionAttributes = capabilityDescriptorAttributes("champion_options", capability);
   const definitions = (engine.championOptions[state.attacker.champion]?.options || [])
-    .filter((option) => !ABILITY_BOUND_CHAMPION_OPTIONS.has(option.key) || !abilityBindsChampionOption(option.key));
+    .filter((option) => !abilityBindsChampionOption(option.key));
   if (!definitions.length) return "";
   const controls = definitions.map((option) => {
     const value = state.attacker.championOptions[option.key] ?? option.default;
@@ -1561,6 +1558,11 @@ function engineChampionOptions() {
     } else if (option.key === "r_sweet_spot" && abilityBindsChampionOption(option.key)) {
       options[option.key] = abilityInput("R").variant === 0;
     }
+    const variantAbility = activeAbilityKit().find((ability) =>
+      ability.variants?.length > 1
+        && abilityOptionBinding(ability.slot, "ability_variants") === option.key
+    );
+    if (variantAbility) options[option.key] = abilityInput(variantAbility.slot).variant;
   });
   return options;
 }
