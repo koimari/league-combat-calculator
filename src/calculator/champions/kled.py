@@ -26,22 +26,18 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "dismount/remount cycle is a revive-boundary pattern (like Aatrox's "
     "ghost atom) and is not modeled — the E8a grey-health primitive "
     "authors no Skaarl heal.",
-    "Q Grievous Wounds: the dismounted Pocket Pistol applies Grievous "
-    "Wounds (e8-interactions worklist; the wound strength/duration are "
-    "the engine's 40%-for-3s constants).  The module's Q slot prices the "
-    "mounted Bear Trap on a Rope, so the Pocket Pistol wound rides the "
-    "same Q damage receipts — a dismounted Q hit wounds the target for "
-    "the patch-wide window, refreshed per hit.",
+    "Q Grievous Wounds: REMOVED — Pocket Pistol's wound was deleted in "
+    "V25.14 (the e8-interactions worklist entry is stale; the wiki cache "
+    "carries no Grievous Wounds on either Q entry), so the module declares "
+    "no wound source.",
 ]
 
-# HARDCODED: verify on patch updates — the e8-interactions worklist
-# (data/worklists/e8-interactions.json) pins Kled's Q (Pocket Pistol) as
-# a Grievous Wounds source; the strength/duration are the engine
-# constants (GRIEVOUS_WOUNDS_FACTOR/DURATION), not module numbers.
-GRIEVOUS_WOUNDS_SOURCES = frozenset({"Q"})
-# The slot's first cached entry is the mounted Bear Trap; the wounding
-# ability is the dismounted Pocket Pistol (Q[1]).
-GRIEVOUS_WOUNDS_SOURCE_LABELS = {"Q": "Pocket Pistol"}
+# HARDCODED: verify on patch updates.  Kled's Grievous Wounds (historically
+# on the Bear Trap on a Rope pull) was REMOVED in V25.14 — the e8-interactions
+# worklist entry is stale and the wiki cache carries no wound on either Q
+# entry (autoresearch pass 11, 2026-08-07).  Empty declaration = no wound.
+GRIEVOUS_WOUNDS_SOURCES = frozenset()
+GRIEVOUS_WOUNDS_SOURCE_LABELS = {}
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")

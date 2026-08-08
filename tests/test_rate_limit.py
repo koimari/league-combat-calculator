@@ -1,5 +1,7 @@
 """Cross-worker abuse-control contracts."""
 
+import sqlite3
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from src.rate_limit import TokenBucketStore
@@ -75,3 +77,34 @@ def test_token_bucket_rejects_invalid_policy(tmp_path) -> None:
             pass
         else:
             raise AssertionError((capacity, refill))
+
+
+def test_store_init_survives_a_sibling_worker_holding_the_write_lock(
+    tmp_path,
+) -> None:
+    """A worker must boot while another worker is mid-``consume``.
+
+    Gunicorn workers construct the store at import time against one shared
+    file.  The production container died (gunicorn exit 3, "Worker failed
+    to boot") because a sibling's ``BEGIN IMMEDIATE`` write lock made the
+    booting worker's ``PRAGMA journal_mode=WAL`` raise ``database is
+    locked`` instantly — the WAL switch does not consult the busy-timeout
+    handler.  Init must instead wait out a short-lived lock like every
+    other statement does.
+    """
+    database = tmp_path / "rate-limits.sqlite3"
+    # check_same_thread=False: the release timer fires on another thread.
+    sibling = sqlite3.connect(str(database), check_same_thread=False)
+    sibling.execute("BEGIN IMMEDIATE")
+    releaser = threading.Timer(0.5, sibling.rollback)
+    releaser.start()
+    try:
+        store = TokenBucketStore(database)
+    finally:
+        releaser.cancel()
+        try:
+            sibling.rollback()
+        except sqlite3.Error:
+            pass
+        sibling.close()
+    assert store.consume("calculate", capacity=1, refill_per_second=1, now=0)[0]
