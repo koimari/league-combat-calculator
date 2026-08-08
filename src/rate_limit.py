@@ -17,8 +17,18 @@ class TokenBucketStore:
 
     def __init__(self, database: str | Path) -> None:
         self._database = str(database)
+        # No journal-mode pragma here, deliberately: every worker runs this
+        # at import time against the shared file, and ``PRAGMA
+        # journal_mode=WAL`` raises ``database is locked`` IMMEDIATELY —
+        # without consulting the busy-timeout handler — whenever a sibling
+        # worker holds the write lock (its own init, or any in-flight
+        # ``consume``).  That killed a booting gunicorn worker and took the
+        # whole container down (arbiter exit 3, "Worker failed to boot").
+        # WAL would buy nothing anyway: every access is a write transaction,
+        # so writers serialize identically in rollback-journal mode, and
+        # ``CREATE TABLE`` honors the busy timeout like every normal
+        # statement.
         with self._connect() as connection:
-            connection.execute("PRAGMA journal_mode=WAL")
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS token_buckets (
                     scope TEXT PRIMARY KEY,
