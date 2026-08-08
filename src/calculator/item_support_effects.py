@@ -207,6 +207,45 @@ def _selected_teammate(attacker: Any, teammates: list[Any]) -> Any | None:
     return teammates[index]
 
 
+# Items whose cross-participant packets are derived by scanning the
+# holder's damage/takedown event stream below (Phage's Rage autos, Black
+# Cleaver Carve stacks, Bloodletter's Curse, Bloodsong's Expose Weakness,
+# Cryptbloom's takedown nova).  The optimizer's score-only tuple ledger
+# carries positional rows the scan cannot read, so the pipeline's tuple
+# predicate consults this set and keeps dict rows for these holders
+# (issue #169).  Every new branch below that reads ``damage_events`` or
+# ``takedown_events`` must add its item here, or a score-only fight will
+# silently starve its scan.
+EVENT_SCAN_SUPPORT_ITEMS = frozenset(
+    {
+        "Black Cleaver",
+        "Bloodletter's Curse",
+        "Bloodsong",
+        "Cryptbloom",
+        "Phage",
+    }
+)
+
+
+def has_event_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
+    """Whether any held item derives support packets from the event stream."""
+    return any(str(item.get("name", "")) in EVENT_SCAN_SUPPORT_ITEMS for item in items)
+
+
+# The subset whose trigger is the takedown stream: the receipt composition
+# synthesizes ``takedown_events`` from the pair fight's one-pair shield
+# outcome (``target_ending_health``), so a score-only fight for these
+# holders must keep that outcome instead of skipping it (issue #169).
+TAKEDOWN_SCAN_SUPPORT_ITEMS = frozenset({"Cryptbloom"})
+
+
+def has_takedown_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
+    """Whether any held item derives support packets from takedowns."""
+    return any(
+        str(item.get("name", "")) in TAKEDOWN_SCAN_SUPPORT_ITEMS for item in items
+    )
+
+
 def derive_item_support_effects(
     attacker: Any,
     result: Mapping[str, Any],

@@ -130,7 +130,10 @@ def test_compiler_fails_closed_on_overheal_to_shield():
     assert exc.value.invariant is False
 
 
-def test_compiler_fails_closed_on_vamp_heal():
+def test_compiler_carries_vamp_healing_category():
+    """A vamp heal compiles with its category intact (issue #169), so the
+    kernel's carve-outs — the received-healing multiplier exemption and the
+    ichor conversion — read the same field either adapter supplies."""
     compiler = _WalkCompiler()
     result = {
         "damage_events": [],
@@ -143,20 +146,20 @@ def test_compiler_fails_closed_on_vamp_heal():
             }
         ],
     }
-    with pytest.raises(UncompilableActionError) as exc:
-        compiler.add_engine_result(
-            result,
-            "main",
-            0,
-            "enemy:X",
-            1,
-            {},
-            10.0,
-            {},
-            [],
-            0,
-        )
-    assert exc.value.receipt == "healing_category=vamp"
+    compiler.add_engine_result(
+        result,
+        "main",
+        0,
+        "enemy:X",
+        1,
+        {},
+        10.0,
+        {},
+        [],
+        0,
+    )
+    heal = next(action for action in compiler.actions if action.kind.name == "HEAL")
+    assert heal.healing_category == "vamp"
 
 
 def test_compiler_fails_closed_on_timed_support_shield():
@@ -233,9 +236,10 @@ def test_compiler_fails_closed_on_execute_threshold_damage():
 
 def test_uncompilable_roster_poisons_context_and_falls_back():
     """A roster actor whose build the compiled kernel cannot represent
-    (active Warmog's Armor) poisons the context: the first evaluation falls
-    back to the receipt walk, later evaluations skip the compiled path
-    entirely, and every score receipt deep-equals the legacy one."""
+    (Death's Dance deferral, authored by the receipt walk) poisons the
+    context: the first evaluation falls back to the receipt walk, later
+    evaluations skip the compiled path entirely, and every score receipt
+    deep-equals the legacy one."""
     champion = get_champion("Cassiopeia")
     params = FightParams.from_request(
         {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
@@ -246,7 +250,7 @@ def test_uncompilable_roster_poisons_context_and_falls_back():
             level=18,
             role="top",
             boots="Plated Steelcaps",
-            items=("Warmog's Armor", "Heartsteel", "Randuin's Omen"),
+            items=("Death's Dance", "Heartsteel", "Randuin's Omen"),
         ).resolve(),
     ]
     items = [get_item_by_name("Rabadon's Deathcap")]

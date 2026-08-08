@@ -132,6 +132,7 @@ from . import item_effects
 from . import rune_effects
 from . import shield_ledger
 from .ability_spec import DamagePart
+from .item_support_effects import has_takedown_scan_support_items
 from .resistance import (
     apply_resistance,
     apply_magic_penetration,
@@ -1306,6 +1307,13 @@ def _ordered_damage_events(
             }
             if raw_damage is not None:
                 event["raw_damage"] = raw_damage
+            # Vamp eligibility is a pricing input, not display: the
+            # lifesteal/omnivamp derivations and the item support scan read
+            # these markers off score-only rows too (issue #169).
+            if basic_attack:
+                event["basic_attack"] = True
+            if basic_attack or source_key.startswith(("auto_attacks", "on_hit_")):
+                event["omnivamp_effectiveness"] = 1.0
         else:
             event = {
                 "source_key": source_key,
@@ -9739,12 +9747,17 @@ def calculate_fight_damage(
             if isinstance(event, dict):
                 event["execute_threshold_ratio"] = execute_ratio
                 event["execute_source"] = state.damage_effects.execute.item_name
-    if score_only and config.target_threshold_health_heal <= 0:
+    if (
+        score_only
+        and config.target_threshold_health_heal <= 0
+        and not has_takedown_scan_support_items(items)
+    ):
         # Score-mode consumers replay shields inside the coupled survival
-        # walk and never read the one-pair shield outcome.  The only
-        # engine-side consumer is the Protoplasm coverage downgrade below,
-        # which requires a positive threshold heal — so this skip cannot
-        # change any value the caller reads.
+        # walk and never read the one-pair shield outcome.  The remaining
+        # engine-side consumers are the Protoplasm coverage downgrade below
+        # (requires a positive threshold heal) and the takedown-scanning
+        # support items, whose ``takedown_events`` synthesis reads
+        # ``target_ending_health`` (issue #169) — both keep the outcome.
         shield_outcome: dict[str, float] = {}
     else:
         shield_outcome = _resolve_starting_shield_outcome(state, config, damage_events)

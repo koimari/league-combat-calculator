@@ -28,6 +28,7 @@ from .damage import (
 from . import item_effects
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
+from .item_support_effects import has_event_scan_support_items
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
     AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
@@ -471,6 +472,22 @@ def _has_item_self_healing(
     )
 
 
+def _has_item_health_regen(stats: Mapping[str, Any]) -> bool:
+    """Whether items contribute health regeneration to this build.
+
+    Item flat/percent regen authors timestamped ``Health regeneration``
+    ticks in ``_item_self_healing_events``; the score-only tuple ledger
+    would silently drop them (issue #169).  Champion base regeneration
+    alone authors nothing, so equality means the tuple ledger stays safe.
+    """
+    try:
+        total = float(stats.get("health_regen_per_five", 0.0) or 0.0)
+        base = float(stats.get("base_health_regen_per_five", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        return True
+    return math.isfinite(total) and math.isfinite(base) and total > base
+
+
 def _has_lifesteal_stat(stats: Mapping[str, Any]) -> bool:
     """Return whether the fight needs the full ledger for life-steal events."""
     value = stats.get("lifesteal_percent", 0.0)
@@ -911,6 +928,7 @@ def run_fight(
         and params.target_threshold_health_heal <= 0
         and champion_data.get("name", "") not in HEALING_RULE_CHAMPIONS
         and not _has_item_self_healing(item_damage_effects, items)
+        and not _has_item_health_regen(fight_stats)
         and not _has_lifesteal_stat(fight_stats)
         and not _has_omnivamp_stat(fight_stats)
         and not _has_riftmaker_max_stack_omnivamp(
@@ -927,6 +945,16 @@ def run_fight(
             for ability in ability_damages.values()
             if isinstance(ability, dict)
         )
+        # Items that derive support packets by scanning the damage/takedown
+        # stream (Black Cleaver Carve, Phage Rage, ...) cannot read the
+        # positional tuple rows; keep dict rows so their scan sees the same
+        # events the receipt path enriches (issue #169).
+        and not has_event_scan_support_items(items)
+        # The Collector's execute rides per-event threshold stamps that the
+        # tuple schema cannot carry; the engine stays fail-closed for the
+        # item by keeping dict rows, whose stamps the compiled walk then
+        # rejects with a named receipt (issue #169).
+        and item_damage_effects.execute is None
     )
     result = calculate_fight_damage(
         fight_stats,
