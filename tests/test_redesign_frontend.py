@@ -537,6 +537,21 @@ def test_the_rift_illustration_is_the_page_background(soup: BeautifulSoup, css: 
     assert re.search(r"background-color:\s*#[0-9a-f]{6}", block.group(1))
 
 
+def test_panel_language_keeps_the_wash_visible_and_uses_godya(css: str):
+    """The shared panel layer is translucent, and the bundled display font
+    stays local so the visual system does not depend on a third-party request.
+    """
+    tokens = re.search(r":root\s*\{([^}]*)\}", css)
+    assert tokens is not None
+    assert re.search(r"--panel-alpha:\s*\.67", tokens.group(1))
+    assert "--paper-panel: rgba(246, 242, 223, var(--panel-alpha))" in tokens.group(1)
+    assert "--rail-panel: rgba(10, 23, 18, var(--panel-alpha))" in tokens.group(1)
+    assert 'font-family: "Godya Display"' in css
+    assert "GodyaDisplayBalinese-Regular.otf" in css
+    assert re.search(r"\.app-card\s*\{[^}]*background: var\(--paper-panel\)", css)
+    assert re.search(r"\.rail\s*\{[^}]*background: var\(--rail-panel\)", css)
+
+
 def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):
     """The constraints shape every calculation, so they sit as a command bar
     directly under the verdict strip — not at the bottom of the rail."""
@@ -555,7 +570,7 @@ def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):
     assert toggles == ["gold", "objective", "window", "state", "enemyHits"]
     assert bar.select_one("#economicsOptimize") is not None
     block = re.search(r"\.constraints-bar \{([^}]*)\}", css)
-    assert block is not None and "var(--rail)" in block.group(1)
+    assert block is not None and "var(--rail-panel)" in block.group(1)
 
 
 def test_pre_duel_editing_happens_centre_canvas(source: str, soup: BeautifulSoup):

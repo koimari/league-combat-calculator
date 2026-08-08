@@ -230,7 +230,7 @@ def test_the_map_wash_is_decorative_only(css: str, page: str):
     """The Rift illustration returned as the page background (user decision
     2026-08-08), but #149's criterion survives: nothing readable sits on the
     wash. It is aria-hidden, pointer-inert, behind everything, and keeps an
-    opaque base colour; every text surface has its own opaque background."""
+    opaque base colour; each panel carries its own translucent layer and blur."""
     assert 'class="map-wash" aria-hidden="true"' in page
     block = rule_block(css, ".map-wash")
     assert "z-index: -1" in block
@@ -377,7 +377,7 @@ def test_best_buy_controls_live_in_the_constraints_block(soup: BeautifulSoup):
 
     The whole economics bar lives in the CONSTRAINTS surface (now the banner
     under the verdict strip): gold, the sell pivot and the action. The
-    criteria below are the same ones — an opaque surface, legible ink, a
+    criteria below are the same ones: a translucent surface, legible ink, a
     legible disabled state and a layout that does not collapse into one
     inline sentence.
     """
@@ -389,13 +389,13 @@ def test_best_buy_controls_live_in_the_constraints_block(soup: BeautifulSoup):
         assert node.find_parent(id="railConstraints") is not None, control_id
 
 
-def test_constraints_block_sits_on_an_opaque_surface(css: str):
-    """The constraints banner's background is a flat opaque colour, never a
-    wash — same bar the rail uses."""
+def test_constraints_block_uses_shared_panel_transparency(css: str):
+    """The constraints banner uses the same translucent dark panel layer as
+    the rail."""
     block = rule_block(css, ".constraints-bar")
-    assert "background: var(--rail)" in block
+    assert "background: var(--rail-panel)" in block
     tokens = rule_block(css, ":root")
-    assert re.search(r"--rail:\s*#[0-9a-f]{6}", tokens)
+    assert re.search(r"--panel-alpha:\s*\.67", tokens)
 
 
 def test_constraints_copy_uses_readable_ink(css: str):
