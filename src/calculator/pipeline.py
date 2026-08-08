@@ -67,6 +67,7 @@ PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
     "target_health": (1.0, 10_000.0),
     "target_bonus_health": (0.0, 10_000.0),
     "target_armor": (0.0, 500.0),
+    "target_bonus_armor": (0.0, 500.0),
     "target_mr": (0.0, 500.0),
 }
 _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_only"})
@@ -532,8 +533,17 @@ def _has_riftmaker_max_stack_omnivamp(
     )
 
 
-def _bounded_request_float(data: Mapping[str, Any], key: str, default: float) -> float:
+def _bounded_request_float(
+    data: Mapping[str, Any],
+    key: str,
+    default: float | None,
+    *,
+    allow_none: bool = False,
+) -> float | None:
     """Parse one finite public number inside its UI-supported range."""
+    value = data.get(key, default)
+    if allow_none and value is None:
+        return None
     minimum, maximum = PUBLIC_INPUT_LIMITS[key]
     return request_number(data, key, default, minimum, maximum)
 
@@ -633,6 +643,9 @@ class FightParams(FightConfig):
             ),
             target_armor=_bounded_request_float(
                 data, "target_armor", DEFAULT_TARGET["armor"]
+            ),
+            target_bonus_armor=_bounded_request_float(
+                data, "target_bonus_armor", None, allow_none=True
             ),
             target_magic_resistance=_bounded_request_float(
                 data, "target_mr", DEFAULT_TARGET["mr"]

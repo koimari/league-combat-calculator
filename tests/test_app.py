@@ -1792,6 +1792,7 @@ def test_config_exposes_all_request_defaults():
         "target_health": [1.0, 10_000.0],
         "target_bonus_health": [0.0, 10_000.0],
         "target_armor": [0.0, 500.0],
+        "target_bonus_armor": [0.0, 500.0],
         "target_mr": [0.0, 500.0],
     }
     assert data["item_options"]["Dark Seal"]["options"]["glory_stacks"]["max"] == 10

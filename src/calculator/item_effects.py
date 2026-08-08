@@ -1820,9 +1820,9 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Bonus damage scales 0-50 based on crit chance
         "crit_bonus_max": 50.0,
         # Manaflow restores half of Spellblade's damage formula: 62.5% base
-        # AD plus up to 25% of bonus AD at 100% crit chance.
+        # AD plus 0.25 mana per 1% critical strike chance.
         "mana_restore_base_ad_ratio": 0.625,
-        "mana_restore_crit_ratio": 0.25,
+        "mana_restore_crit_ratio": 25.0,
         "cooldown": 1.5,
         "weave_delay": 1.5,  # CD starts after empowered attack
     },
@@ -2718,9 +2718,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "reduced_crit_ratio": 0.80,
         "cooldown": 10.0,
         # Lightshield Strike also heals the attacker for base AD plus 6% of
-        # missing health.  The latter is evaluated against the live
-        # participant state when the ordered ledger is replayed.
+        # missing health (wiki {{rd|100%|50%}}: melee 100% bAD, ranged 50% bAD).
+        # The latter is evaluated against the live participant state when the
+        # ordered ledger is replayed.
         "heal_base_ad_ratio": 1.0,
+        "heal_base_ad_ratio_ranged": 0.5,
         "heal_missing_health_ratio": 0.06,
         # Excess Lightshield Strike healing becomes bonus health for 8 seconds.
         "temporary_health_duration": 8.0,
@@ -3089,9 +3091,16 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Sundered Sky": frozenset(
         {
             "heal_base_ad_ratio",
+            "heal_base_ad_ratio_ranged",
             "heal_missing_health_ratio",
             "temporary_health_duration",
         }
+    ),
+    # The parser reports 0.25 for Manaflow's "per 1% critical strike"
+    # wording.  The typed accessor consumes a 0..1 critical fraction, so the
+    # equivalent coefficient is 25.0.  Keep this unit conversion code-owned.
+    "Essence Reaver": frozenset(
+        {"mana_restore_base_ad_ratio", "mana_restore_crit_ratio"}
     ),
     # The cached item packet does not carry Actualizer's active cooldown;
     # the full Wiki entry is the source receipt for this code-owned value.
@@ -3654,6 +3663,7 @@ class FirstAutoCritEffect:
     item_name: str
     reduced_crit_ratio: float
     heal_base_ad_ratio: float = 0.0
+    heal_base_ad_ratio_ranged: float = 0.0
     heal_missing_health_ratio: float = 0.0
     temporary_health_duration: float = 0.0
 
@@ -4937,6 +4947,13 @@ def _resolve_damage_effects_uncached(
                 heal_base_ad_ratio=(
                     _RequiredValues(item_name, values).number("heal_base_ad_ratio")
                     if "heal_base_ad_ratio" in values
+                    else 0.0
+                ),
+                heal_base_ad_ratio_ranged=(
+                    _RequiredValues(item_name, values).number(
+                        "heal_base_ad_ratio_ranged"
+                    )
+                    if "heal_base_ad_ratio_ranged" in values
                     else 0.0
                 ),
                 heal_missing_health_ratio=(

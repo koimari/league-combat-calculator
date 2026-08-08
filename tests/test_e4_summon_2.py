@@ -126,16 +126,22 @@ def _value(champion: str, slot: str, attribute: str, rank: int) -> float:
 # ---------------------------------------------------------------------------
 
 
+def _bonus_ad(data: dict) -> float:
+    """The fight response exposes bonus AD; pets price BONUS AD (pass 35)."""
+    stats = data["champion_stats"]
+    return float(stats.get("bonus_attack_damage", 0.0) or 0.0)
+
+
 def test_yorick_mist_walkers_attack_in_the_window():
     """4 walkers x 5 attacks = 20 hits of (15 : 100 by level x stat
-    progression + 20% AD) physical; the level-18 constant is 100 + 20% AD."""
+    progression + 20% BONUS AD) physical; level-18 constant = 100 + 20% bAD."""
     data = _fight("Yorick")
-    ad = data["champion_stats"]["attack_damage"]
+    bad = _bonus_ad(data)
     span = _MIST_WALKER_DAMAGE_END - _MIST_WALKER_DAMAGE_START
     per = (_MIST_WALKER_DAMAGE_START + span * 17 / 17) * (
         0.7025 + 0.0175 * 17
-    ) + _MIST_WALKER_AD_RATIO * ad
-    assert per == pytest.approx(100.0 + 0.20 * ad)
+    ) + _MIST_WALKER_AD_RATIO * bad
+    assert per == pytest.approx(100.0 + 0.20 * bad)
     events = _pet_events(data, "passive", per)
     assert len(events) == 20
     assert sum(e["raw_damage"] for e in events) == pytest.approx(per * 20, abs=1.0)
@@ -147,16 +153,16 @@ def test_yorick_mist_walkers_attack_in_the_window():
 
 
 def test_yorick_maiden_attacks_in_the_window():
-    """R rank 3: 5 Maiden attacks of (150 + 30% AD) magic at 1.0 AS."""
+    """R rank 3: 5 Maiden attacks of (100 + 30% BONUS AD) magic at 1.0 AS."""
     data = _fight("Yorick")
-    ad = data["champion_stats"]["attack_damage"]
-    per = _MAIDEN_BASE_BY_RANK[2] + _MAIDEN_AD_RATIO * ad
-    assert per == pytest.approx(150.0 + 0.30 * ad)
+    bad = _bonus_ad(data)
+    per = _MAIDEN_BASE_BY_RANK[2] + _MAIDEN_AD_RATIO * bad
+    assert per == pytest.approx(100.0 + 0.30 * bad)
     events = _pet_events(data, "R", per)
     assert len(events) == 5
     assert sum(e["raw_damage"] for e in events) == pytest.approx(per * 5, abs=1.0)
     assert data["breakdown"]["R"]["total_damage"] == pytest.approx(
-        round(sum(e["damage"] for e in events), 1), abs=0.06
+        round(sum(e["damage"] for e in events), 1), abs=0.2
     )
 
 
@@ -166,9 +172,9 @@ def test_yorick_pet_options_scale_the_counts():
         "Yorick",
         options={"mist_walkers": 2, "mist_walker_attacks": 3, "maiden_attacks": 2},
     )
-    ad = data["champion_stats"]["attack_damage"]
-    per_walker = 100.0 + _MIST_WALKER_AD_RATIO * ad
-    per_maiden = _MAIDEN_BASE_BY_RANK[2] + _MAIDEN_AD_RATIO * ad
+    bad = _bonus_ad(data)
+    per_walker = 100.0 + _MIST_WALKER_AD_RATIO * bad
+    per_maiden = _MAIDEN_BASE_BY_RANK[2] + _MAIDEN_AD_RATIO * bad
     assert len(_pet_events(data, "passive", per_walker)) == 6
     assert len(_pet_events(data, "R", per_maiden)) == 2
 

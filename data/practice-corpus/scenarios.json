@@ -127,7 +127,7 @@
   {
    "id": "e9-e1-aatrox-umbral-dash-heal",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E1",
    "setup": {
     "champion": "Aatrox",
@@ -174,7 +174,7 @@
   {
    "id": "e9-e2-malzahar-malefic-visions",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E2",
    "setup": {
     "champion": "Malzahar",
@@ -210,7 +210,7 @@
   {
    "id": "e9-e3-varus-blight-detonation",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E3",
    "setup": {
     "champion": "Varus",
@@ -250,7 +250,7 @@
   {
    "id": "e9-e3-nasus-siphoning-stacks",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E3",
    "setup": {
     "champion": "Nasus",
@@ -289,7 +289,7 @@
   {
    "id": "e9-e4-zyra-plant-attacks",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E4",
    "setup": {
     "champion": "Zyra",
@@ -327,7 +327,7 @@
   {
    "id": "e9-e4-yorick-mist-walkers",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E4",
    "setup": {
     "champion": "Yorick",
@@ -357,19 +357,19 @@
    "expected": {
     "kind": "breakdown_source",
     "source": "Mist Walkers",
-    "total_damage": 1348.0,
-    "raw_damage": 2588.0,
+    "total_damage": 1041.7,
+    "raw_damage": 2000.0,
     "attack_count": 20,
-    "per_attack_raw": 129.4,
-    "formula": "4 Mist Walkers x 5 attacks = 20 attacks of 129.4 raw physical each = 2588 raw; post-mitigation 67.4 each vs 92 armor = 1348",
+    "per_attack_raw": 100.0,
+    "formula": "4 Mist Walkers x 5 attacks = 20 attacks of 100.0 raw physical each (15:100 by level x stat progression + 20% BONUS AD; no items) = 2000 raw; post-mitigation 52.08 each vs 92 armor = 1041.7",
     "damage_type": "physical"
    },
-   "practice_tool_steps": "Load Yorick, buy nothing. Level 18. Practice Tool: raise 4 Mist Walkers and send them at a practice dummy; over a 5s window they land 20 attacks of 129.4 physical damage each (combat log), before the dummy's armor."
+   "practice_tool_steps": "Load Yorick, buy nothing. Level 18. Practice Tool: raise 4 Mist Walkers and send them at a practice dummy; over a 5s window they land 20 attacks of 100.0 physical damage each (combat log), before the dummy's armor."
   },
   {
    "id": "e9-e5-zed-death-mark",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E5",
    "setup": {
     "champion": "Zed",
@@ -405,7 +405,7 @@
   {
    "id": "e9-e5-veigar-primordial-burst",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E5",
    "setup": {
     "champion": "Veigar",
@@ -441,7 +441,7 @@
   {
    "id": "e9-e5-sion-decimating-smash",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E5",
    "setup": {
     "champion": "Sion",
@@ -477,7 +477,7 @@
   {
    "id": "e9-e8-rengar-battle-roar-grey",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E8",
    "setup": {
     "champion": "Rengar",
@@ -525,7 +525,7 @@
   {
    "id": "e9-e8-annie-molten-shield",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -564,7 +564,7 @@
   {
    "id": "e9-e8-anivia-rebirth",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E8",
    "setup": {
     "champion": "Anivia",
@@ -604,7 +604,7 @@
   {
    "id": "e9-e8-morellonomicon-grievous",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E8",
    "setup": {
     "champion": "Aatrox",
@@ -671,7 +671,7 @@
   {
    "id": "e9-e8-serpents-fang-shield-cut",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -720,7 +720,7 @@
   {
    "id": "e9-item-serpents-fang-venom",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "item",
    "setup": {
     "champion": "Katarina",
@@ -769,7 +769,7 @@
   {
    "id": "e9-item-fimbulwinter-everlasting",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "item",
    "setup": {
     "champion": "Ahri",
@@ -808,7 +808,7 @@
   {
    "id": "e9-item-steraks-lifeline",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "item",
    "setup": {
     "champion": "Darius",
@@ -860,7 +860,7 @@
   {
    "id": "e9-item-bloodthirster-lifesteal",
    "tier": "local",
-   "sha": "e02721af205f048c1c39c3317ce876cf2fb9e64b",
+   "sha": "b9c1a5a771ba4eab56a6ab02c5f8805fd19a9817",
    "workstream": "item",
    "setup": {
     "champion": "Ashe",

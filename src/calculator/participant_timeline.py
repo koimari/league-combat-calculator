@@ -1901,6 +1901,20 @@ def _simulate_survival(
                                     or 0.0
                                 )
                                 / 100.0,
+                                float(
+                                    source.stats.get(
+                                        "armor_penetration_bonus_percent", 0.0
+                                    )
+                                    or 0.0
+                                )
+                                / 100.0,
+                                float(target.stats.get("bonus_armor", 0.0) or 0.0)
+                                + float(
+                                    states[target.participant_id].get(
+                                        "dynamic_bonus_armor", 0.0
+                                    )
+                                    or 0.0
+                                ),
                             )
                         elif damage_type == "magic":
                             effective = apply_magic_penetration(
