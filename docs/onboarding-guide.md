@@ -1,62 +1,55 @@
 # Scryglass — 5-Minute Onboarding Guide (P1a)
 
 For invited beta users. Everything you need to get a trustworthy answer from
-Scryglass in five minutes. This is the guide the first-run overlay points to
+Scryglass in five minutes. This is the companion to the first-run overlay
 (`docs/onboarding-guide.md`); the overlay itself is three steps and never
 blocks.
 
-## 1. The quick mode 3-click path
+## 1. The fastest path to an answer
 
-Quick mode is the landing page and the fastest way to an answer. It takes
-exactly three clicks:
+The analyst view is the app, and a next-item answer takes four clicks:
 
-1. **Pick your champion** — start typing in *Your champion*, then tap the
-   champion when it appears.
-2. **Pick your role** — the segmented control (Top / Jungle / Mid / Bottom /
+1. **Pick your champion** — the *Main champion* card up top; tap it and
+   start typing.
+2. **Pick your role** — the Role selector (Top / Jungle / Mid / Bottom /
    Support) defaults to Mid; set it to your real game.
-3. **Press “Best next item”** — that's it.
+3. **Add an enemy** — “+ Add” a real enemy champion, or press *vs practice
+   target* for a default dummy (ranking needs an enemy roster).
+4. **Press “Find best item for a slot”** — that's it.
 
-Two optional refinements between steps 2 and 3, if you want a closer answer:
+One optional refinement, if you want a closer answer:
 
-- **Enemy** (optional) — search a real enemy champion instead of the default
-  practice target.
-- **Items you already own** (optional) — add your current build so the
-  recommendation fills the *next* slot instead of starting from zero.
+- **Items you already own** — fill your build slots first so the ranking
+  fills the *next* slot instead of starting from zero.
 
-The “Quick” tab hint says *3 clicks* because champion, role, and the run
-button are the only required steps.
+## 2. Reading the ranked candidates
 
-## 2. Reading the top-3 cards
+“Find best item for a slot” scores every legal candidate into the selected
+team-fight scenario and lists them best-first:
 
-“Best next item” simulates each candidate in the slot against your current
-build and shows the three best as cards, ranked 1-3:
+- **Rank + item icon + name** — what to buy, with its sourced stat line.
+- **Score + metric** — the candidate's value under the selected objective
+  (the “Rank by” filter switches objectives).
+- **Component line** — where the score comes from, per source.
+- **“Use”** — applies the candidate to the slot you ranked.
+- **Summary line** above the list: how many candidates were certified, the
+  coverage note, and how many were withheld.
 
-- **Rank + item icon + name + gold** — what to buy and what it costs.
-- **TDD delta** — how much total damage the item adds to your rotation,
-  relative to your current build (green `+`, red `-`).
-- **eHP delta** — how much effective health it adds against your selected
-  enemy (durability / survival).
-- **The “why” line** — a plain-language reason: e.g. *“Bypasses the enemy's
-  heavy magic resistance”*, *“Biggest single-slot damage gain (+1234 TDD)”*,
-  *“Adds durability — your current build is fragile here”*.
-- **Baseline line** under the cards: your current build's TDD and eHP before
-  adding an item, so the deltas have context.
-
-If a candidate list carries a `PARTIAL` chip (coupled multi-enemy rosters),
-the event order is only partially certified — treat the scores as estimates
-until the roster is re-certified.
+Candidates whose event order is only partially certified appear as
+**Withheld · partial event order** rows — they are never ranked; treat the
+mechanic as unscored until its coverage is completed.
 
 ## 3. Certainty chips legend
 
-Every number in Scryglass carries a trust chip. The legend appears in both
-modes (quick after-row and analyst result column):
+Every number in Scryglass carries a trust chip. The legend appears in the
+analyst result column:
 
 | Chip | Meaning | Example |
 |---|---|---|
 | `EXACT` | Fully sourced formula, no player-controlled options | Q damage from a wiki/game-file formula |
 | `ESTIMATE` | Uses a defaulted player-controlled option | Something priced with an assumed setting |
 | `BOUNDARY` | Documented but not computed mechanic | A mechanic named but deliberately not priced |
-| `PARTIAL` | Coupled-roster event order only partially certified (quick mode) | 4v4 preset scores |
+| `Withheld` | Event order only partially certified — never ranked | Best-in-slot “partial event order” rows |
 
 The model fails closed: unmodelled mechanics are *named*, never silently
 zeroed. If you see a chip you don't understand, hover it for the tooltip.
@@ -77,9 +70,8 @@ What to do:
 
 ## 5. Share links
 
-- **Quick mode:** after a result, “Share this build” → a permanent read-only
-  link anyone with access can open (sharing is permanent).
-- **Analyst:** “Share this build” in the Builds section works the same way.
+- **Sharing:** “Share this build” in the Builds section → a permanent
+  read-only link anyone with access can open (sharing is permanent).
 - **Reading a shared link:** `?share=<token>` renders the build read-only
   with a banner; “Open in editor” loads it back into the full calculator.
 
@@ -114,8 +106,8 @@ flagged champions (≥5 receipts, >±15% bias) open a tracking issue.
 
 | I want to… | Do this |
 |---|---|
-| Get a next-item answer fast | Quick mode: champion → role → Best next item |
-| Compare two full builds | Analyst tab → builds A/B → compare |
+| Get a next-item answer fast | Champion → role → enemy → Find best item for a slot |
+| Compare two full builds | Builds section → builds A/B → compare |
 | See exactly why a number is what it is | Analyst → Open event ledger → per-source rows with chips |
 | Check if a number is current | Look for the STALE badge / certainty chips |
 | Share a build | Share this build → copy the permanent link |

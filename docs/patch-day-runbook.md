@@ -109,14 +109,14 @@ What `run` does:
      (`APPROVED_BRANCH_REMOVALS` / `ACKNOWLEDGED_SOURCE_CONFLICTS` /
      `OPEN_SOURCE_CONFLICTS`).
 4. **Rebuilds the static catalogues** the UI fetches at runtime
-   (`scripts/build_ability_catalog.py`, `scripts/build_effect_catalog.py`).
+   (`scripts/build_ability_catalog.py`, `scripts/build_effect_catalog.py`,
+   `scripts/build_receipts.py`).
    `static/bis-profiles.json` is NOT rebuilt by the script — it needs the
-   Axword Meraki sibling repo (`lol-strength-analysis`); rebuild by hand if
-   its wiki inputs moved:
-   ```bash
-   python scripts/build_bis_profiles.py
-   ```
-5. **Runs the gates**: pytest, golden compare (diffs printed — expected
+   Axword Meraki sibling repo (`lol-strength-analysis`); rebuild by hand
+   (`python scripts/build_bis_profiles.py`) if its wiki inputs moved.
+5. **Runs the gates**: reviewed-packet freshness, the full-entry audit, and
+   the staleness gate (`patch_regression check`) — each fails closed and
+   aborts the run — then pytest, golden compare (diffs printed — expected
    after a real patch), and re-captures the golden baseline ONLY if pytest is
    green. If pytest is red, hand-validated expectations drifted — fix them
    first (Step 4).
@@ -247,8 +247,8 @@ python scripts/golden_snapshot.py capture scripts/golden_baseline.json
 2. Full gates:
    ```bash
    pytest -q
-   pylint src/ --fail-under=9        # any code change
-   black --check src/ tests/         # any code change
+   pylint src/ --fail-under=9         # any code change
+   black --check src/ tests/ scripts/ # any code change
    git diff --check
    ```
 3. Commit data + code + golden together, e.g.

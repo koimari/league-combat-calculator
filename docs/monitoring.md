@@ -31,7 +31,7 @@ stale/missing/degraded, `error` when any check failed.
 | Check | Fails when | Meaning |
 | --- | --- | --- |
 | `db` | `SELECT 1` fails | Persistence is down — every save/share/feedback path breaks. **Page.** |
-| `cache` | counters unreadable (Redis/DB error) | The result cache backend is down; requests fail closed (503) rather than serve stale data. **Page.** |
+| `cache` | counters unreadable (Redis/DB error) | The result cache backend is down; cache reads fail closed rather than serve stale data. **Page.** |
 | `golden` | `staleness.json` age ≥ 14 days (`stale`), or missing | The data cache has not been re-validated against the current patch. **Alert; run patch regression.** |
 | `engine` | registered champion count is 0 (`degraded`) | Champion modules failed to load — the certified engine is empty. **Page.** |
 
@@ -43,8 +43,8 @@ status is immediate).
 
 ### 1. Error rate (Sentry + logs)
 
-- **Source**: Sentry (when `SENTRY_DSN` is set; see `docs/backup-runbook.md`
-  sibling doc for env) + Gunicorn `--error-logfile`.
+- **Source**: Sentry (when `SENTRY_DSN` is set; `SENTRY_ENVIRONMENT`
+  optional) + Gunicorn `--error-logfile`.
 - **What to watch**: 500s per minute. The app reports every unhandled
   exception via `capture_exception` (rate-limit 429s are deliberately
   excluded). Zero 500s is the steady state; any 500 is a bug in the beta.
@@ -57,8 +57,8 @@ status is immediate).
 - **Source**: access logs (`status=429`) or a log aggregation query on the
   `Retry-After` header.
 - **What to watch**: 429s are the token bucket doing its job — expected
-  during UI bursts, bad when sustained. Budgets: `/api/calculate` 40 req /
-  20s refill; `/api/optimize` 2 req / 10s refill.
+  during UI bursts, bad when sustained. Budgets: `/api/calculate` 40-burst /
+  20 req/s refill; `/api/optimize` 2-burst / 1 per 10 s refill.
 - **Threshold**: sustained > 5% of API requests returning 429 over 15
   minutes → check for a runaway client or an attack; the same pattern with
   `Retry-After` climbing is a legitimate overload signal → scale workers.
@@ -75,8 +75,8 @@ status is immediate).
 
 ### 4. Cache hit ratio
 
-- **Source**: `/api/cache-status` (`hits`, `misses`, `hit_ratio`,
-  `cached_entries`); also surfaced in `/api/health/deep` → `checks.cache`.
+- **Source**: `/api/cache-status` (`hits`, `misses`, `cached_entries`);
+  `hit_ratio` is computed in `/api/health/deep` → `checks.cache`.
 - **What to watch**: steady-state ratio below ~0.9 means the UI is generating
   many distinct loadouts (normal for a research tool) or the cache is being
   flushed too often (patch updates clear it — expect a dip right after).
@@ -114,9 +114,10 @@ python scripts/load_sanity.py --url http://127.0.0.1:8000
 
 ## Incident response shortcuts
 
-- **Cache backend down**: requests fail closed with 503 + `Retry-After: 1`.
-  Restart/repair Redis; the cache self-heals under load (no data loss — it is
-  derived).
+- **Cache backend down**: cache reads raise `CacheUnavailable` —
+  `/api/cache-status` 503s and cached endpoints error rather than serve stale
+  data. Restart/repair Redis; the cache self-heals under load (no data loss —
+  it is derived).
 - **Golden stale**: run `scripts/patch_update.py run`, commit the refreshed
   `data/`, deploy. The badge (`/api/staleness`) and `checks.golden` flip back
   to ok automatically once the new report is live.

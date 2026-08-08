@@ -9,7 +9,7 @@ Module map and pipeline: see `architecture.md`.
 3. **All calculation functions must have corresponding tests.**
 4. **Run tests before considering any task complete.**
 5. **No item numbers outside `item_effects.py`** — All numeric item values come from `item_effects` typed accessors, with NO literal fallbacks at call sites (a `.get(key, stale_literal)` silently wins when the parser breaks — that exact failure hid a 3× Statikk Shiv overstatement). Missing keys must raise, naming the item and key.
-6. **Only module champions are trusted** — a champion without a `src/calculator/champions/<name>.py` module runs the unvalidated generic path; treat its numbers as estimates, never cite them as correct. The record so far: every champion analyzed has needed a module (Aurora's generic parse misread her passive's monster cap as a flat 200 on-hit and missed the Q recast entirely).
+6. **Named champion modules are the only runtime path** — every attacker must resolve to a validated `src/calculator/champions/<name>.py` contract; unknown names fail closed. The generic parser exists only for explicit synthetic/development fixtures — never route production champions through it (the record so far: every champion analyzed has needed a module; Aurora's generic parse misread her passive's monster cap as a flat 200 on-hit and missed the Q recast entirely).
 
 ## Domain Knowledge
 
@@ -30,7 +30,7 @@ These LoL-specific facts affect calculations and must be correct:
 ```bash
 pytest                # Run all tests
 pytest --cov=src      # Run tests with coverage
-black src/ tests/     # Format code
+black src/ tests/ scripts/     # Format code
 pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 python scripts/patch_update.py run    # Patch day: re-pull wiki data, audit, gates (see /patch-update skill)

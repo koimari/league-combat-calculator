@@ -50,7 +50,7 @@ suffix.
 | `views` | integer | incremented atomically per `GET /api/share/<token>` |
 | `created_at` | timestamp | |
 
-### `cached_results` — /api/calculate + /api/bis result cache
+### `cached_results` — /api/calculate + /api/bis + /api/optimize result cache
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -60,9 +60,9 @@ suffix.
 | `created_at` | timestamp | |
 | `expires_at` | timestamp | `created_at + TTL`; expired rows are lazily deleted on lookup |
 
-Consulted only when `DATABASE_URL` is configured **and** the app is not in
-`TESTING`.  `/api/update-data` calls `cache_delete_all()` after a successful
-data refresh.
+Consulted only when `DATABASE_URL` or `REDIS_URL` is configured **and** the
+app is not in `TESTING` (Redis holds the entries when `REDIS_URL` is set).
+`/api/update-data` calls `cache_delete_all()` after a successful data refresh.
 
 ### `validation_feedback` — validation loop observations
 
@@ -116,7 +116,7 @@ is a random first-party cookie id, never an account identifier.  See
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | integer PK | |
-| `event` | varchar(50) | indexed; whitelisted (`quick_complete` today) |
+| `event` | varchar(50) | indexed; whitelisted (`quick_complete`, `page_view`) |
 | `session_id` | varchar(100) null | indexed; the `scryglass_anon` cookie value |
 | `took_ms` | integer null | wall-clock duration of the instrumented flow |
 | `payload` | JSON | optional bounded extras |
@@ -140,4 +140,4 @@ step.
 | `GET /api/share/<token>` | build payload + `share` block; increments `views` |
 | `POST /api/feedback` | record validation feedback → `{"feedback_id": …}` (201) |
 | `GET /api/feedback?champion=&source=&limit=` | recent feedback, newest first (limit ≤ 200, default 50) |
-| `GET /api/cache-status` | `{hits, misses, cached_entries, cache_enabled, database_configured, database}` |
+| `GET /api/cache-status` | `{hits, misses, cached_entries, cache_enabled, cache_backend, database_configured, database}` |

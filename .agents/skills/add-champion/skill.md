@@ -27,8 +27,13 @@ If the module uses `build_packet_module()`, pass champion-specific tick
 counts, parser overrides, event certification, timings, and assumptions from
 that champion file. Pin the accepted packet declaration with the module's
 `PACKET_SHA256`; changed generated evidence must fail closed until the named
-module reviews and accepts the new digest. Never add a champion-name exception
-table to the shared packet compiler.
+module reviews and accepts the new digest. Print the digest a module must pin:
+
+```bash
+python -c "from src.calculator.champions.packet_module import _packet_specs, packet_spec_sha256; print(packet_spec_sha256(_packet_specs()['Ahri']))"
+```
+
+Never add a champion-name exception table to the shared packet compiler.
 
 Register the module once in `_CUSTOM_CHAMPION_MODULES`. The registry,
 `/api/config`, receipts, and audits derive their public view from the

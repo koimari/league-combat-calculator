@@ -171,7 +171,7 @@ Agent tool:
 ```
 
 **Critical rules for the prompt you pass to the agent:**
-- Say which triage tier you expect (generic path / archetype slot map / custom slot fns) — every champion analyzed so far has needed a module (kits are unique enough that a clean generic parse is the exception), so expect tier 2–3; still verify the generic path first to scope what actually needs custom handling
+- Say which slot shapes you expect (archetype slot map / custom slot fns). To scope what needs custom handling, you may run the synthetic Wiki parser (`parse_synthetic_champion_abilities`) over the cached kit — it is a development scoping tool only, never a runtime lane (issue #161): every champion ships as a named module
 - Include the exact JSON `attribute` names for each damage value (e.g., "use `Total Physical Damage` attribute, not `Physical Damage`")
 - Specify damage types explicitly
 - For stat buffs: specify a BUFF-phase `stat_buff` slot (with `apply_to=` when the stat scales other abilities at parse time)

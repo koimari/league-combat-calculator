@@ -15,7 +15,7 @@ Contents:
 - `characters/<name>.bin.json` — 203 CharacterRecords (base stats, spell data,
   buff data) parsed from `Champions/<name>.wad.client`.
 - `decompose-receipt.json` — extraction receipt (counts, sizes) — tracked.
-- `characters/aatrox.bin.json` — tracked sample for reference.
+- `characters/aatrox.bin.json.sample`, `behavior-index.json` (per-champion heal/shield name index) — tracked.
 
 Cross-validation: binary values match `data/champions.json` exactly
 (e.g. Ahri HP 590/+104, AD 53/+3, Armor 21/+4.2, MR 30/+1.3, MS 330, Range 550).

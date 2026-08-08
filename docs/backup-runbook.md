@@ -30,13 +30,14 @@ Behavior by backend:
 - **Postgres** (`DATABASE_URL` starts with `postgres://`/`postgresql://`):
   `pg_dump --no-owner --no-privileges --file=backups/scryglass-db-<ts>.sql <url>`.
   Plain-SQL logical format — portable across providers and restoreable with
-  `psql` or `pg_restore`. It does not need database downtime.
+  `psql`. It does not need database downtime.
 - **SQLite** (no `DATABASE_URL`, or a `sqlite:///` URL): the `sqlite3`
   `.backup` command, which is the *online* backup mechanism — safe against a
-  live database in WAL mode (the app runs `PRAGMA journal_mode=WAL`).
+  live database.
   Backing up the file with `cp` while the app is writing can produce a
   corrupt copy; always use `.backup`.
-- **Redis** (`--include-redis` with `REDIS_URL` set): runs
+- **Redis** (`--include-redis` with `REDIS_URL` set, SQLite backend runs
+  only — the `pg_dump` path skips the Redis SAVE): runs
   `redis-cli -u <url> SAVE` so the local server writes its RDB snapshot.
   Managed providers (Upstash, etc.) run their own snapshot schedule — check
   their console instead of issuing SAVE yourself. Note printed by the script:
@@ -71,7 +72,7 @@ region, a local machine) — a provider outage should not take the backups with 
 
 ```bash
 # target a fresh database
-createdb "$DATABASE_URL"        # or create via the provider console
+createdb scryglass_restore      # or create via the provider console
 psql "$DATABASE_URL" -f backups/scryglass-db-20260806-023000.sql
 ```
 

@@ -38,7 +38,7 @@ The product is part of Scryglass. Existing content uses the Scryglass name, patc
 
 - Incumbent route: `templates/index.html`, `static/css/style.css`, and `static/js/app.js`.
 - Existing damage-breakdown prototypes: `prototypes/damage-breakdown/`.
-- Representative event data in the incumbent JavaScript includes Akali as the main participant and Orianna as an enemy participant.
+- Representative event data in the damage-breakdown prototypes includes Akali as the main participant and Orianna as an enemy participant.
 
 ## Product Principles
 

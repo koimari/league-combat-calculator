@@ -13,11 +13,11 @@ A roster-aware League of Legends damage and build calculator. Choose one attacke
 
 The public attacker picker enables only champion modules with reviewed formulas. All 173 cached champions remain available as allies or enemies because base stats and item stats are calculated separately. Unmodeled attacker kits fail closed; unmodeled ally or defensive effects are shown as assumptions instead of being presented as zero.
 
-The optimizer withholds any candidate whose damage-relevant passive, active, or state is not yet modelled. The API names each withheld item and the missing mechanic; the interface labels the result `Best modelled` rather than silently treating that item as a plain stat block.
+The optimizer withholds any candidate whose damage-relevant passive, active, or state is not yet modelled. The API names each withheld item and the missing mechanic; the interface labels the result a certified subset rather than silently treating that item as a plain stat block.
 
 ## Run locally
 
-Requires Python 3.12. After starting the app, open `http://127.0.0.1:5000`.
+Requires Python 3.14. After starting the app, open `http://127.0.0.1:5000`.
 
 ```bash
 python -m venv .venv

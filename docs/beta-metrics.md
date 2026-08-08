@@ -97,7 +97,7 @@ retention = sessions whose first observed activity is followed by another
   scorecard at each week boundary: a champion is **flagged** when it has
   `n >= 5` receipts and `|mean(observed - predicted) / predicted| > 15%`.
   Threshold: **≤ 2 flagged champions**.  A flag is a triage signal (see
-  `docs/beta-operations.md` step 4), and the receipts criterion fails when
+  `docs/beta-operations.md` step 4), and the bias criterion fails when
   the flagged count exceeds 2 for 2 weeks running.
 
 ### Staleness SLA (P0d)
@@ -118,7 +118,7 @@ verified.  The SLA is **no flag older than 72 h**, which is exactly
 
 ## The 2-weeks-running gate
 
-`scripts/beta_metrics.compute_scorecard` evaluates every criterion over the
+`src/metrics.compute_scorecard` evaluates every criterion over the
 last two complete 7-day windows of the beta:
 
 - **2 misses** in the last two complete weeks → criterion `fail`.
@@ -139,8 +139,8 @@ Overall gate:
 | `fail` | any criterion missed 2 weeks running (or a cohort/SLA criterion failed at its single evaluation) |
 
 An empty database fails `receipts` (0 < 20 in both weeks) and leaves
-`activation`/`retention` `insufficient_data` → gate `fail`/`pending`
-depending on staleness.  Operators should therefore start the clock with
+`activation`/`retention` `insufficient_data` → gate `fail` (any criterion
+failing 2 weeks running fails the gate).  Operators should start the clock with
 `--beta-start` at the real beta launch instead of the default (14 days
 before the run).
 

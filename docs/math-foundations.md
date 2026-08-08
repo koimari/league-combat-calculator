@@ -11,16 +11,16 @@ the generic parser is restricted to explicit synthetic/development fixtures.
 This document states, for every modeling family, the mathematical identity the
 engine instantiates, the theorem that justifies it, the cases where the engine
 is exact versus approximate, and — where a formula deviates from the game — the
-edge case and the recommended resolution. arXiv identifiers are the primary
-literature anchors (free toolkit: `~/.local/mcp/helpers.py`, no paid APIs).
+edge case and the recommended resolution, with arXiv literature anchors.
 
 ---
 
 ## 0. Semantics of the deterministic single number
 
-The engine runs with `deterministic=True` in every public path (API, optimizer,
-golden corpus). In that mode **every stochastic draw is replaced by its
-expectation**: crits are blended at their probability-weighted mean, procs fire
+The engine runs with `deterministic=True` in every scoring path (optimizer,
+BIS, golden corpus); `/api/calculate` alone still rolls natural crits. In that
+mode **every stochastic draw is replaced by its expectation**: crits are
+blended at their probability-weighted mean, procs fire
 on their deterministic cadence, and health-dependent terms are evaluated along
 the expected damage path. The output is a single number
 
@@ -374,8 +374,8 @@ climbing local search** for full builds.
 The greedy phase fills slots one at a time, each time picking the
 highest-marginal item; three seeds (none, top-AD, top-AP) give multi-start
 diversity; the hill-climb phase swaps one item (or the boots) at a time,
-accepting strictly improving moves, for up to 10 iterations. The search is a
-classic **local search / hill climbing** heuristic:
+accepting strictly improving moves, for up to 10 iterations (3 when coupled).
+The search is a classic **local search / hill climbing** heuristic:
 
 - If `f` were monotone submodular, greedy would carry the
   `(1 − 1/e)` approximation guarantee (Nemhauser–Wolsey–Fisher). It is not:
@@ -416,10 +416,10 @@ It claims nothing about:
   variance are averaged away. Two builds whose scores differ by less than the
   unmodeled variance are statistically indistinguishable — the engine's
   `1e-9` tiebreak is a *deterministic* total order, not a statistical claim.
-- **Model error**: unmodeled mechanics (generic-parser champions, coarse
-  event ordering, vision boundaries such as Pyke's out-of-vision grey-health
-  consume) fail closed or are disclosed; the number is only as good as the
-  reviewed module set.
+- **Model error**: unmodeled mechanics (champions without named modules,
+  coarse event ordering, vision boundaries such as Pyke's out-of-vision
+  grey-health consume) fail closed or are disclosed; the number is only as
+  good as the reviewed module set.
 - **Distributional shape**: no quantiles, no worst-case, no "will this kill
   at level 6" probability. Execute thresholds are boundaries, not
   probabilities (Section 1.3).
