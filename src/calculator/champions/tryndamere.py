@@ -67,3 +67,9 @@ OPTIONS: list[dict[str, Any]] = []
 
 parse_abilities = build_parser(SLOTS, "Tryndamere")
 REVIEW_STATUS = "reviewed_module"
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Tryndamere")
