@@ -42,8 +42,6 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing_reduction import (
-    GRIEVOUS_WOUNDS_DURATION,
-    GRIEVOUS_WOUNDS_FACTOR,
     champion_grievous_wound_sources,
 )
 

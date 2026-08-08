@@ -24,6 +24,7 @@ hardcoded.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
@@ -76,27 +77,6 @@ def _pick_a_card(ctx: SlotCtx) -> dict[str, Any] | None:
     return _CARDS[index](ctx)
 
 
-def _no_damage(slot: str, reason: str):
-    """Emit an explicit zero-damage entry for a non-damaging slot."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
-        return {
-            "name": ability.get("name", f"Ability {slot}"),
-            "rank": ctx.rank_for(),
-            "cooldown": 0.0,
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
-
-    parse.phase = "damage"
-    return parse
-
-
 ASSUMPTIONS = [
     "W (Pick a Card) prices exactly one selected card; the default is the "
     "Gold Card (stun).  The other two cards are selectable via the w_card "
@@ -109,14 +89,14 @@ ASSUMPTIONS = [
 SOURCES = list(load_champion_sources("Twisted Fate"))
 
 SLOTS = {
-    "P": _no_damage(
+    "P": no_damage_parser(
         "P",
         "Loaded Dice is a gold/utility passive; no enemy damage.",
     ),
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "W": _pick_a_card,
     "E": simple_damage(attr="Bonus Magic Damage", dmg_type="magic"),
-    "R": _no_damage(
+    "R": no_damage_parser(
         "R",
         "Destiny reveals and teleports; no enemy damage.",
     ),

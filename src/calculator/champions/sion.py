@@ -30,30 +30,10 @@ hardcoded.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
-
-
-def _no_damage(slot: str, reason: str):
-    """Emit an explicit zero-damage entry for a non-damaging slot."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
-        return {
-            "name": ability.get("name", f"Ability {slot}"),
-            "rank": ctx.rank_for(),
-            "cooldown": 0.0,
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
-
-    parse.phase = "damage"
-    return parse
 
 
 def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -134,7 +114,7 @@ ASSUMPTIONS = [
 SOURCES = list(load_champion_sources("Sion"))
 
 SLOTS = {
-    "P": _no_damage(
+    "P": no_damage_parser(
         "P",
         "Glory in Death is a post-death reanimation state; no enemy damage.",
     ),

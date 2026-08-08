@@ -13,9 +13,7 @@ Each domain maps one cached data family to Atom records:
 
 from __future__ import annotations
 
-import json
 import re
-from pathlib import Path
 from typing import Any
 
 from .atomizer import Atomizer, number_and_unit, split_effect_fragments
@@ -138,7 +136,7 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
             "total",
             [float(prices["total"])],
             ["gold"],
-            [f"shop.prices.total"],
+            ["shop.prices.total"],
         )
     # passives and actives as per-effect fragments
     for effect_kind, effects in (

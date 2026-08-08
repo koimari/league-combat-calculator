@@ -15,6 +15,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
@@ -504,27 +505,6 @@ def _ticked_wiki_attribute_parser(spec: dict[str, Any], fix: dict[str, Any]):
     return parse
 
 
-def _no_formula_parser(
-    slot: str, *, reason: str = "No enemy damage is listed for this ability."
-):
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
-        return {
-            "name": ability.get("name", f"Ability {slot}"),
-            "rank": ctx.rank_for(),
-            "cooldown": 0.0,
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
-
-    parse.phase = "damage"
-    return parse
-
-
 def build_packet_module(
     champion_name: str,
     packet_sha256: str,
@@ -596,7 +576,7 @@ def build_packet_module(
                     )
                 else:
                     parsers.append(
-                        _no_formula_parser(
+                        no_damage_parser(
                             slot,
                             reason=str(
                                 variant.get(
@@ -661,14 +641,14 @@ def build_packet_module(
                 )
             )
         elif spec.get("kind") == "no_damage":
-            slots[slot] = _no_formula_parser(
+            slots[slot] = no_damage_parser(
                 slot,
                 reason=str(
                     spec.get("reason", "No enemy damage is listed for this ability.")
                 ),
             )
         else:
-            slots[slot] = _no_formula_parser(slot)
+            slots[slot] = no_damage_parser(slot)
     parser = build_parser(slots, champion_name)
 
     def parse_abilities(*args, **kwargs):

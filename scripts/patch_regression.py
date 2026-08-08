@@ -71,7 +71,6 @@ import re
 import shutil
 import subprocess
 import sys
-import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -929,14 +928,6 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
         "items": items,
     }
     return document, pending
-
-
-def _any_stale(document):
-    return any(
-        entry.get("stale")
-        for entry in list(document["champions"].values())
-        + list(document["items"].values())
-    )
 
 
 # ---------------------------------------------------------------------------

@@ -34,7 +34,6 @@ from .slotlib import (
     extract_named,
     find_named_leveling,
     resolve_scaling,
-    sum_modifiers,
 )
 
 # HARDCODED: verify on patch updates — wiki Q prose, not JSON:

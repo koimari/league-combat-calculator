@@ -36,7 +36,6 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_from_directory,
     url_for,
 )
 
@@ -50,7 +49,6 @@ from src.calculator.certainty import (
 from src.calculator.data_fetcher import (
     fetch_champion_data,
     get_champion,
-    get_item_by_name,
 )
 from src.calculator.item_effects import (
     item_input_options_meta,
@@ -74,8 +72,6 @@ from src.calculator.champions import (
     get_champion_module_meta,
     get_supported_fight_modes,
     get_unsupported_fight_mode_reason,
-    registered_engine_champion_names,
-    reviewed_champion_names,
 )
 from src.calculator.champion_coverage import attacker_availability
 from src.calculator.capabilities import public_capability_contract
@@ -94,8 +90,12 @@ from src.calculator.public_response import (
     public_loadout_summary,
 )
 from src.calculator.scenario import (
+    ENGINE_CHAMPIONS as _ENGINE_CHAMPIONS,
+    VERIFIED_CHAMPIONS as _VERIFIED_CHAMPIONS,
     ChampionLoadout,
+    load_public_champion as _load_public_champion,
     parse_scenario_request,
+    resolve_named_item as _resolve_named_item,
     resolve_scenario,
 )
 from src.calculator.role_quests import (
@@ -234,8 +234,6 @@ _OPERATION_POLICY = {
     "bis": {"rate_limit_scope": "calculate", "cache_namespace": "bis"},
     "optimize": {"rate_limit_scope": "optimize", "cache_namespace": "optimize"},
 }
-_VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
-_ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
 
 
 _DEV_UPDATE_COOKIE = "lol_calc_dev_update"
@@ -585,27 +583,6 @@ def _json_object() -> dict:
     return data
 
 
-def _resolve_named_item(name: str, *, kind: str = "Item") -> dict:
-    """Resolve one item name and translate data misses into a public 404."""
-    try:
-        return get_item_by_name(name)
-    except KeyError as exc:
-        raise LookupError(f"{kind} '{name}' not found") from exc
-
-
-def _load_public_champion(name: str) -> dict:
-    """Load one champion that the public UI and engine both support."""
-    try:
-        champion = get_champion(name)
-    except KeyError as exc:
-        raise LookupError(f"Champion '{name}' not found") from exc
-    if champion["name"] not in _ENGINE_CHAMPIONS:
-        availability = attacker_availability(champion, _VERIFIED_CHAMPIONS)
-        reason = availability["blockers"][0]["label"]
-        raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
-    return champion
-
-
 def _public_loadout_summary(loadout) -> dict:
     """Sanitize one resolved loadout for the browser."""
     return public_loadout_summary(loadout, _VERIFIED_CHAMPIONS)
@@ -624,26 +601,6 @@ def _dev_mode() -> bool:
 def _local_dev_request() -> bool:
     """Require both local dev mode and a loopback network peer."""
     if not _dev_mode() or not request.remote_addr:
-        return False
-    try:
-        peer_is_loopback = ipaddress.ip_address(request.remote_addr).is_loopback
-        host = urlsplit(f"//{request.host}").hostname
-        host_is_local = host == "localhost" or (
-            host is not None and ipaddress.ip_address(host).is_loopback
-        )
-        return peer_is_loopback and host_is_local
-    except ValueError:
-        return False
-
-
-def _prototype_local_request() -> bool:
-    """Keep the visual prototype available to loopback browsers only.
-
-    The prototype intentionally uses illustrative client-side data. It is a
-    useful design surface for local interaction review, but it must never be
-    mistaken for the calculator's production data path or be publicly served.
-    """
-    if not request.remote_addr:
         return False
     try:
         peer_is_loopback = ipaddress.ip_address(request.remote_addr).is_loopback
@@ -804,24 +761,6 @@ def index():
         input_limits=PUBLIC_INPUT_LIMITS,
         auth_user=session.get("username") if session else None,
     )
-
-
-@app.route("/prototype/manrope-blackwhite/")
-def manrope_prototype_index():
-    """Serve the local-only visual prototype without replacing the calculator."""
-    if not _prototype_local_request():
-        return Response(status=404)
-    root = Path(__file__).resolve().parent.parent / "prototypes" / "manrope-blackwhite"
-    return send_from_directory(root, "index.html")
-
-
-@app.route("/prototype/manrope-blackwhite/<path:asset_path>")
-def manrope_prototype_asset(asset_path: str):
-    """Serve prototype assets only to a loopback browser session."""
-    if not _prototype_local_request():
-        return Response(status=404)
-    root = Path(__file__).resolve().parent.parent / "prototypes" / "manrope-blackwhite"
-    return send_from_directory(root, asset_path)
 
 
 @app.route("/healthz")
@@ -1855,7 +1794,7 @@ def api_metrics():
     try:
         # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
         from src.metrics import compute_scorecard
-    except ImportError as exc:
+    except ImportError:
         app.logger.exception("Failed to import the beta metrics scorecard")
         return jsonify({"error": "Metrics module unavailable"}), 503
     try:

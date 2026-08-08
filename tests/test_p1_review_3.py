@@ -27,7 +27,6 @@ from src import app as app_module
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.data_fetcher import get_champion
-from src.calculator.stats import calculate_total_stats
 
 _DATA = json.loads(
     Path(__file__).resolve().parents[1].joinpath("data", "champions.json").read_text()

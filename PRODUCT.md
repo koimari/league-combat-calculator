@@ -28,7 +28,6 @@ Users configure one main champion, allies, enemies, levels, ability ranks, roles
 - Missing or uncertified event order must remain visibly unavailable rather than silently becoming a heuristic.
 - The interface must keep a compact answer-first summary while preserving an optional audit trail.
 - All numeric outputs are patch-pinned and must retain their source or modeling boundary.
-- The current scope is a damage-result and survivability presentation pass; calculation behavior is out of scope unless a prototype exposes a blocking UI defect.
 
 ## Brand Commitments
 
@@ -37,8 +36,6 @@ The product is part of Scryglass. Content uses the Scryglass name, patch context
 ## Evidence on Hand
 
 - Incumbent route: `templates/index.html`, `static/css/style.css`, and `static/js/app.js`.
-- Existing damage-breakdown prototypes: `prototypes/damage-breakdown/`.
-- Representative event data in the damage-breakdown prototypes includes Akali as the main participant and Orianna as an enemy participant.
 
 ## Product Principles
 

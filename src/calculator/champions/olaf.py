@@ -28,7 +28,6 @@ PACKET_SPEC = SLOTS.packet_spec
 # the full-health floor; the missing-health term is documented.
 TOUGH_IT_OUT_SHIELD_DURATION_SECONDS = 2.5
 TOUGH_IT_OUT_MISSING_HEALTH_RATIO = 0.175
-TOUGH_IT_OUT_MISSING_HEALTH_CAP = 0.70
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Tough It Out) shields Olaf for the sourced 10/40/70/100/130 + "

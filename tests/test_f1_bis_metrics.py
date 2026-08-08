@@ -313,8 +313,8 @@ def test_frontend_kill_time_never_displays_zero_and_shows_surviving_hp():
     # The old formatting that rendered a defeat as "0 s" is gone: every
     # kill-time label now routes through killTimeLabel().
     assert (
-        'if (state.ui.objective === "kill") return killTimeLabel(value) || "Unavailable";'
-        in source
+        'return metric.lower ? (killTimeLabel(value) || alive || "—") : fmt(value);'
+        in label
     )
 
 

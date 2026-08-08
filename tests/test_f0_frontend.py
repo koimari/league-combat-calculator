@@ -1,7 +1,6 @@
 """F0 ground-up frontend review contract tests.
 
-These tests pin the F0 redesign (see docs/frontend-review-findings.md and
-docs/frontend-design.md) without a browser:
+These tests pin the F0 redesign without a browser:
 
 * the analyst builder exists exactly once — no duplicate template ids, one
   ``.content-grid``, quick view is the visible default

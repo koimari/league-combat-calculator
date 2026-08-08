@@ -7,12 +7,11 @@ caches may only be written by data_updater through write_runtime_cache.
 
 import ast
 import json
-import os
 from pathlib import Path
 
 import pytest
 
-from src.calculator.data_registry import CACHE_FILES, WRITERS, write_runtime_cache
+from src.calculator.data_registry import CACHE_FILES, write_runtime_cache
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -69,14 +68,6 @@ def _data_writes(tree: ast.AST) -> list[str]:
 
 def test_every_data_write_site_maps_to_the_registry_allowlist():
     """Every literal data/ path belongs to a declared writer module."""
-    owned = set()
-    for key, modules in WRITERS.items():
-        for module in modules:
-            owned.add(module)
-    allowed_modules = owned | {
-        # test fixtures may write under tmp_path only
-        "tests",
-    }
     problems = []
     for path in _iter_python_files():
         rel = path.relative_to(ROOT).as_posix()

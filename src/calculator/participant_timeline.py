@@ -1373,20 +1373,6 @@ def _grey_leveling_values(ability: Mapping[str, Any], attribute: str) -> list[fl
     return []
 
 
-def _grey_rank_ratio(
-    ability: Mapping[str, Any],
-    attribute: str,
-    rank: int,
-    default: float = 0.0,
-) -> float:
-    """One rank-indexed sourced percentage (a row of 5 values)."""
-    values = _grey_leveling_values(ability, attribute)
-    if not values:
-        return default
-    index = min(max(int(rank), 1) - 1, len(values) - 1)
-    return float(values[index]) / 100.0
-
-
 def _grey_level_ratio(ability: Mapping[str, Any], attribute: str, level: int) -> float:
     """One level-indexed sourced percentage (an 18+ entry row)."""
     values = _grey_leveling_values(ability, attribute)

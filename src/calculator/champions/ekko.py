@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage, source_row
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
 

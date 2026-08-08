@@ -106,7 +106,7 @@ def test_app_js_analyst_fallback_returns_unavailable_never_local_estimates():
     # The null-response branch must surface "Unavailable" instead of
     # computing local numbers, and the result renderer must only ever
     # consume backend receipts.
-    assert 'if (value == null) return "Unavailable";' in SOURCE
+    assert 'if (element) element.textContent = "Unavailable";' in SOURCE
     assert "renderPrototypeResult(engine.responses?.a || null" in SOURCE
     assert "clearAnalystScores()" in SOURCE
     assert "calculateBuild" not in SOURCE

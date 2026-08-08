@@ -20,7 +20,6 @@
 
   var MOUNT_ID = "feedbackWidget";
   var RESULT_AREA_SELECTOR = ".canvas";
-  var SLOT_LETTERS = ["P", "Q", "W", "E", "R"];
   var STATE = {
     action: null,
     loadout: null,
@@ -68,7 +67,7 @@
       try {
         var captured = window.scryglass.getCurrentLoadout();
         if (captured && typeof captured === "object") return captured;
-      } catch (error) {
+      } catch {
         // Fall through to DOM capture; never let the hook break the widget.
       }
     }

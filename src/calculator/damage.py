@@ -4871,18 +4871,6 @@ def _add_stacking_dot_damage(state: FightState) -> None:
     state.total_damage += total
 
 
-def _shaped_charge_proc_times(
-    state: FightState,
-    rotation: RotationResult,
-    cooldown: float,
-) -> list[float] | None:
-    """Return cooldown-gated times for the next damaging ability instances."""
-    receipts = _shaped_charge_proc_receipts(state, rotation, cooldown)
-    if receipts is None:
-        return None
-    return [float(receipt["time"]) for receipt in receipts]
-
-
 def _shaped_charge_proc_receipts(
     state: FightState,
     rotation: RotationResult,
@@ -5152,7 +5140,6 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     crit_multiplier = state.crit_multiplier
     basic_amp = state.basic_amp
     deterministic = state.deterministic
-    effective_armor = resists.effective_armor
 
     attack_damage = state.champion_stats["attack_damage"]
 
@@ -6244,7 +6231,6 @@ class SpellbladeResult:
     expose_weakness_ranged: float = 0.0
     mana_restored: float = 0.0
     self_healing: float = 0.0
-    empowered_attack_speed_percent: float = 0.0
 
 
 def _spellblade_proc_times(
@@ -6424,7 +6410,6 @@ def _add_spellblade_damage(
         result.item = effect.source.item_name
         result.expose_weakness_melee = effect.expose_weakness_melee
         result.expose_weakness_ranged = effect.expose_weakness_ranged
-        result.empowered_attack_speed_percent = effect.bonus_attack_speed_percent
 
     # A spellblade charge is consumed by any basic attack — the auto
     # stream when one exists, plus attacks forced by empowered-auto

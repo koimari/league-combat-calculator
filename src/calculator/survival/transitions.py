@@ -255,13 +255,6 @@ class TransitionContext:
         """The subject's cached per-event defense constants."""
         return self._defense_profiles[subject]
 
-    def venom_for(self, attacker: int) -> tuple[float, float] | None:
-        if self.venom_profiles is None or not (
-            0 <= attacker < len(self.venom_profiles)
-        ):
-            return None
-        return self.venom_profiles[attacker]
-
     def reductions_for(self, attacker: int) -> tuple[Any, ...]:
         if self.reduction_profiles is None or not (
             0 <= attacker < len(self.reduction_profiles)

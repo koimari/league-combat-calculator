@@ -43,8 +43,6 @@ sourced 100/(100 + resist) mitigation):
   AD portion.
 """
 
-import json
-
 import pytest
 
 from src.app import app

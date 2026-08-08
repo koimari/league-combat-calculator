@@ -378,30 +378,6 @@ def _process_items() -> dict[str, Any] | None:
     return None
 
 
-def refresh_item_sources(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
-    """Re-read the source tables into the tracked item cache.
-
-    Maintenance path for ingestion fixes, the item counterpart of
-    ``reparse_cached_rune_effects``: it re-merges mode availability, champion
-    restriction, acquisition, and the complete effect branches without
-    regenerating the whole cache, so an ingestion change reaches ``data/``
-    without dragging unrelated patch churn along with it.
-    """
-    merged = merge_item_sources(
-        _read_cache(data_dir, "items.json"),
-        _wiki_item_table(),
-        _riot_item_descriptions(),
-    )
-    write_runtime_cache(
-        data_dir,
-        "items.json",
-        merged,
-        source_version=latest_version,
-        source_url="https://wiki.leagueoflegends.com/en-us/Item",
-    )
-    return merged
-
-
 def _rune_icon_map(latest_version: str) -> dict[str, str]:
     """Map rune names to Data Dragon icon URLs; icons are non-critical."""
     try:
@@ -447,28 +423,6 @@ def _process_runes(
             "current": index,
             "total": len(KEYSTONE_NAMES),
         }
-    return runes
-
-
-def update_rune_data() -> dict[str, Any]:
-    """Runes-only refresh for maintenance (wiki rune-template fixes).
-
-    Not wired to any route — patch day goes through ``update_data``,
-    which covers runes alongside champions and items.
-    """
-    rune_generator = _process_runes(get_latest_patch_version())
-    while True:
-        try:
-            next(rune_generator)
-        except StopIteration as stop:
-            runes = stop.value or {}
-            break
-    write_runtime_cache(
-        DEFAULT_DATA_DIR,
-        "runes.json",
-        runes,
-        source_url="https://wiki.leagueoflegends.com/en-us/Rune",
-    )
     return runes
 
 

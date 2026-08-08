@@ -312,24 +312,6 @@ def _compact_text(value: Any, limit: int = 280) -> str:
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
 
 
-def _text_values(entry: dict[str, Any], keys: tuple[str, ...]) -> list[str]:
-    """Collect source prose without dropping branch arrays from the cache."""
-    values: list[str] = []
-    for key in keys:
-        value = entry.get(key)
-        if isinstance(value, list):
-            for row in value:
-                if isinstance(row, dict):
-                    for nested in ("description", "text", "value"):
-                        if row.get(nested):
-                            values.append(_compact_text(row[nested]))
-                elif row:
-                    values.append(_compact_text(row))
-        elif value:
-            values.append(_compact_text(value))
-    return [value for value in values if value]
-
-
 def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any]:
     """Summarise what the cached source says the runtime must account for.
 

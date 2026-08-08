@@ -99,7 +99,7 @@ def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["dot_duration"] = _W_PASSIVE_DURATION
     entry["detail"] = (
         "Active trident damage rides the next basic attack; the sourced "
-        f"6-tick passive burn trails the empowered hit (post-kill refund "
+        "6-tick passive burn trails the empowered hit (post-kill refund "
         "remains explicit state)."
     )
     return entry

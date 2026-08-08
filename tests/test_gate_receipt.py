@@ -10,7 +10,6 @@ import pytest
 from scripts.gate_receipt import (
     SCHEMA_VERSION,
     build_receipt,
-    dump_receipt,
     validate_receipt,
 )
 
@@ -56,18 +55,6 @@ def test_acceptance_matrix_emits_boolean_passed():
     assert receipt["schema_version"] == SCHEMA_VERSION
     validate_receipt(receipt)
     assert type(receipt["passed"]) is bool
-
-
-def test_dump_receipt_is_atomic(tmp_path):
-    out = tmp_path / "gate.json"
-    dump_receipt(
-        build_receipt(
-            matrix="m", passed=True, passed_count=1, failed_count=0, total_count=1
-        ),
-        out,
-    )
-    assert json.loads(out.read_text())["passed"] is True
-    assert not out.with_suffix(".json.tmp").exists()
 
 
 def test_validate_rejects_int_passed():

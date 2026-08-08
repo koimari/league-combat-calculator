@@ -1152,7 +1152,6 @@ def _parse_rod_timeless(text: str) -> dict[str, Any]:
 
 def _parse_swiftmarch_fervor(text: str) -> dict[str, Any]:
     """Parse Swiftmarch's total-movement-speed adaptive-force conversion."""
-    text_resolved = _resolve_simple_templates(text)
     match = re.search(
         r"adaptive\s+force\}\}\s+equal\s+to\s+\{\{as\|(\d+(?:\.\d+)?)%\s+of\s+your\s+'''total'''\s+movement\s+speed",
         text,
@@ -2337,15 +2336,6 @@ def _parse_unending_despair(text: str) -> dict[str, Any]:
         )
 
     return result
-
-
-def _parse_terminus_juxtaposition_pen(text: str) -> dict[str, Any]:
-    """Parse Terminus Juxtaposition for per-stack armor/magic penetration.
-
-    Already handled by _parse_terminus_pen for dark_pen_per_stack and
-    dark_max_stacks. This is the same parser — kept as alias.
-    """
-    return _parse_terminus_pen(text)
 
 
 def _parse_yun_tal_flurry(text: str) -> dict[str, Any]:

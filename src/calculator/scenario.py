@@ -382,24 +382,24 @@ def parse_roster(
 # messages (ValueError -> 400, LookupError -> 404) and run the same item
 # coverage gates.  See tests/test_endpoint_parity.py.
 
-_ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
-_VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
+ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
+VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
 
 
-def _load_public_champion(name: str) -> dict[str, Any]:
+def load_public_champion(name: str) -> dict[str, Any]:
     """Load one champion that the public UI and engine both support."""
     try:
         champion = get_champion(name)
     except KeyError as exc:
         raise LookupError(f"Champion '{name}' not found") from exc
-    if champion["name"] not in _ENGINE_CHAMPIONS:
-        availability = attacker_availability(champion, _VERIFIED_CHAMPIONS)
+    if champion["name"] not in ENGINE_CHAMPIONS:
+        availability = attacker_availability(champion, VERIFIED_CHAMPIONS)
         reason = availability["blockers"][0]["label"]
         raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
     return champion
 
 
-def _resolve_named_item(name: str, *, kind: str = "Item") -> dict[str, Any]:
+def resolve_named_item(name: str, *, kind: str = "Item") -> dict[str, Any]:
     """Resolve one item name and translate data misses into a public 404."""
     try:
         return get_item_by_name(name)
@@ -485,7 +485,7 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
     fight params.  Raises LookupError (->404) for missing champion/item data
     and ValueError (->400) for every validation failure.
     """
-    champion_data = _load_public_champion(request.champion)
+    champion_data = load_public_champion(request.champion)
     request.fight_params.validate_for_champion(champion_data["name"], request.level)
     # The main champion's options use the same module-declared contract as
     # every roster member's.  Validate against the canonical cached display
@@ -498,9 +498,9 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
         field="champion_options",
     )
     resolved_boots = (
-        _resolve_named_item(request.boots, kind="Boots") if request.boots else None
+        resolve_named_item(request.boots, kind="Boots") if request.boots else None
     )
-    ordinary_items = [_resolve_named_item(name) for name in request.items]
+    ordinary_items = [resolve_named_item(name) for name in request.items]
     validate_resolved_loadout(
         ordinary_items,
         boots=resolved_boots,

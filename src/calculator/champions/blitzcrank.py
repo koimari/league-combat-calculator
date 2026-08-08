@@ -54,7 +54,6 @@ OVERDRIVE_DURATION_SECONDS = 5.0
 # the cached wiki value at the last data pull (patch 25.22).
 MANA_BARRIER_SHIELD_RATIO = 0.35  # 35% of maximum mana
 MANA_BARRIER_DURATION_SECONDS = 10.0
-MANA_BARRIER_COOLDOWN_SECONDS = 90.0
 
 
 def _overdrive(ctx: SlotCtx) -> dict[str, Any] | None:

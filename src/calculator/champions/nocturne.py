@@ -5,7 +5,6 @@ E2 DoT fix: E (Unspeakable Horror) prices 4 sourced 0.5s tether ticks
 """
 
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "0ce5c515d925ee81726b3430bfa9068b01a64a9901b67361a7f8da766fd561b8"
 

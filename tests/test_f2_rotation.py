@@ -17,7 +17,7 @@ Covers the combo layer (src/calculator/rotation_resolver.py) end to end:
 
 import pytest
 
-from src.calculator.damage import DEFAULT_CAST_ORDER, calculate_fight_damage
+from src.calculator.damage import DEFAULT_CAST_ORDER
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
 from src.calculator.rotation_resolver import (

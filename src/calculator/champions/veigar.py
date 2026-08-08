@@ -26,6 +26,7 @@ hardcoded.
 from typing import Any, Callable
 
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
@@ -34,27 +35,6 @@ from ..ability_spec import DamagePart
 # at 33% health and the target at 0 health ("increased by 0% : 100% (based
 # on target's missing health)"; the Maximum row == 2x the Minimum row).
 _EXECUTE_MISSING_RATIO_START = 2.0 / 3.0
-
-
-def _no_damage(slot: str, reason: str):
-    """Emit an explicit zero-damage entry for a non-damaging slot."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
-        return {
-            "name": ability.get("name", f"Ability {slot}"),
-            "rank": ctx.rank_for(),
-            "cooldown": 0.0,
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
-
-    parse.phase = "damage"
-    return parse
 
 
 def _primordial_burst_scaled(base: float) -> Callable[[float], float]:
@@ -112,13 +92,13 @@ ASSUMPTIONS = [
 SOURCES = list(load_champion_sources("Veigar"))
 
 SLOTS = {
-    "P": _no_damage(
+    "P": no_damage_parser(
         "P",
         "Phenomenal Evil Power is a stacking AP passive; no enemy damage.",
     ),
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "E": _no_damage(
+    "E": no_damage_parser(
         "E",
         "Event Horizon is a stun cage; no enemy damage.",
     ),
