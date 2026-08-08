@@ -40,6 +40,13 @@ const state = {
   ui: {
     objective: "overall",
     gameState: "theory",
+    // Rail disclosure. At most one setup step and one constraints row are
+    // open at a time; opening a step widens the rail and dims the canvas
+    // (target-2b). `activeStep` is the step the canvas is currently
+    // answering for, marked ACTIVE in the collapsed rail (target-2a).
+    expandedStep: null,
+    expandedConstraint: null,
+    activeStep: "builds",
   },
   attacker: {
     champion: null,
@@ -140,6 +147,25 @@ function mergeAbilityCatalog(catalog) {
   });
 }
 
+// Display-only numeric fields the patch snapshot carries and /api/items
+// currently zeroes. The coverage endpoint answers "is this item modelled",
+// not "what does it give you", so a 0 there means "not reported", never
+// "the item lost this stat" — merging it verbatim blanked every item's stat
+// line and price in the UI.
+const SNAPSHOT_NUMERIC_FIELDS = [
+  "price", "ap", "ad", "hp", "mana", "armor", "mr", "haste", "pen", "percentPen",
+  "lethality", "percentArmorPen", "attackSpeed", "crit", "critDamage", "lifesteal",
+  "omnivamp", "healAndShieldPower", "healthRegen", "manaRegen", "goldPer10",
+  "tenacity", "moveSpeed", "tier",
+];
+
+function preferReportedNumbers(snapshotItem, metadata) {
+  return Object.fromEntries(SNAPSHOT_NUMERIC_FIELDS.map((field) => [
+    field,
+    Number(metadata[field]) ? metadata[field] : snapshotItem[field],
+  ]));
+}
+
 function mergeItemCoverage(catalog) {
   if (!Array.isArray(catalog) || !catalog.length || !Array.isArray(DATA?.items)) return;
   const byId = new Map(catalog.map((entry) => [Number(entry.id), entry]).filter(([id]) => id));
@@ -150,9 +176,7 @@ function mergeItemCoverage(catalog) {
     return {
       ...item,
       ...metadata,
-      // /api/items reports price 0 in this cache generation; keep the patch
-      // snapshot's real gold so quick-mode cards can show "cheapest slot".
-      price: Number(metadata.price) > 0 ? metadata.price : item.price,
+      ...preferReportedNumbers(item, metadata),
       backendName: metadata.name,
       backendAvailable: true,
       modelCoverage: metadata.model_coverage || null,
@@ -370,14 +394,13 @@ function maybeInitConsentAnalytics() {
   const banner = document.createElement("div");
   banner.className = "consent-banner";
   banner.setAttribute("role", "dialog");
+  banner.setAttribute("aria-label", "Analytics consent");
+  // The look lives in static/css/style.css (.consent-banner) with the rest of
+  // the design language; this only owns the copy and the two answers.
   banner.innerHTML =
     '<span>Allow anonymous usage stats to improve Scryglass? No personal data is collected.</span>' +
     '<button type="button" id="consentYes">Yes</button>' +
     '<button type="button" id="consentNo">No</button>';
-  banner.style.cssText =
-    "position:fixed;bottom:12px;left:12px;right:12px;z-index:99;display:flex;gap:10px;align-items:center;" +
-    "flex-wrap:wrap;padding:12px 16px;background:var(--paper,#f6f2df);color:var(--ink,#181818);" +
-    "border:1px solid var(--line,#c9c2a8);border-radius:8px;font:14px/1.4 system-ui,sans-serif;";
   banner.querySelector("#consentYes").addEventListener("click", () => {
     localStorage.setItem("scryglass_analytics_consent", "true");
     banner.remove();
@@ -1531,6 +1554,9 @@ function scheduleEngineCalculation() {
         }
         if (status) status.classList.remove("calculating");
         hideEngineError();
+        // Clear the in-flight flag before rendering: the verdict strip reads
+        // it to decide between RECALCULATING and the settled delta.
+        engine.pending = false;
         engine.responses = { a: results[0], b: results[1] || null };
         renderPrototypeBuilder();
         renderPrototypeResult(engine.responses.a, engine.responses.b);
@@ -1567,30 +1593,159 @@ function scenarioSentence() {
   return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${keystoneText}${compareText}${targetText} · ${escapeHtml(objectiveLabel)} · ${stateLabel} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s each · ${Math.round(state.fight.aaUptime * 100)}% auto uptime${allyText}.`;
 }
 
-function scenarioViewModel() {
+// ---------------------------------------------------------------------------
+// Setup rail
+//
+// The rail is a three-step wizard that is always visible. Collapsed
+// (target-2a) each step shows a read-only brief; opening one (target-2b)
+// widens the rail into that step's editor and dims the duel canvas behind it.
+// Every function below only reads `state` and backend receipts.
+// ---------------------------------------------------------------------------
+
+const STEP_IDS = ["champion", "roster", "builds"];
+
+/**
+ * List-price total of one side's build.
+ *
+ * Prices are ingested catalogue data from the patch snapshot — the same field
+ * the item picker already shows — not a modeled number, so summing them here
+ * does not break the receipts-only contract (no formula, no item-id literal).
+ */
+function buildListPrice(side) {
+  return buildIdsForSide(side).reduce((total, id) => total + Number(getItem(id)?.price || 0), 0);
+}
+
+function championBriefMeta() {
+  if (!state.attacker.champion) return "Choose a champion to begin";
+  const parts = [state.attacker.role ? state.attacker.role.toUpperCase() : "NO ROLE", `LV ${state.attacker.level}`];
+  parts.push(includeBootsForSide("A") ? "BOOTS ON" : "BOOTS OFF");
+  if (state.attacker.roleQuestComplete) parts.push("QUEST");
+  return parts.join(" · ");
+}
+
+function renderChampionBrief() {
   const champion = getChampion(state.attacker.champion);
-  const role = state.attacker.role ? state.attacker.role.toUpperCase() : "ROLE NOT SET";
-  const objective = OBJECTIVES[state.ui.objective] || OBJECTIVES.overall;
-  return {
-    champion: champion?.name || "Choose champion",
-    role,
-    level: state.attacker.level,
-    objective: objective.label,
-    gameState: state.ui.gameState === "live" ? "Snapshot" : "Theory",
-    roster: state.targets.filter((target) => target.champion).length,
-    comparison: Boolean(state.attacker.comparisonEnabled),
-  };
+  const portrait = $("championBriefPortrait");
+  if (portrait) {
+    portrait.innerHTML = champion
+      ? `<img src="${championImage(champion.name)}" alt="" />`
+      : "";
+  }
+  const name = $("championBriefName");
+  if (name) name.textContent = champion?.name || "No champion";
+  const meta = $("championBriefMeta");
+  if (meta) meta.textContent = championBriefMeta();
+  const chips = $("championBriefChips");
+  if (chips) {
+    chips.innerHTML = activeAbilityKit().map((ability) => {
+      const input = abilityInput(ability.slot);
+      const rank = ability.slot === "P" ? "—" : String(Number(input.rank) || 0);
+      return `<div class="brief-chip"><b>${escapeHtml(ability.slot)}</b><span>${escapeHtml(rank)}·${Number(input.casts) || 0}</span></div>`;
+    }).join("");
+  }
+  const summary = $("championSummary");
+  if (summary) summary.textContent = champion ? `${champion.name} · ${championBriefMeta()}` : "";
+}
+
+function briefCardHtml(loadout, team) {
+  const champion = getChampion(loadout.champion);
+  const label = team === "enemy" ? "enemy" : "ally";
+  return `<div class="brief-card ${team === "ally" ? "is-ally" : ""}">
+    <span class="brief-card-portrait">${champion ? `<img src="${championImage(champion.name)}" alt="" />` : ""}</span>
+    <b>${escapeHtml(champion?.name || `Choose ${label}`)}</b>
+    <span class="brief-card-meta">LV ${Number(loadout.level) || 1} · ${escapeHtml(label.toUpperCase())}</span>
+  </div>`;
+}
+
+function renderRosterBrief() {
+  const host = $("rosterBriefList");
+  const rows = [
+    ...state.targets.map((loadout) => briefCardHtml(loadout, "enemy")),
+    ...state.allies.map((loadout) => briefCardHtml(loadout, "ally")),
+  ];
+  if (host) {
+    host.innerHTML = rows.join("") || `<p class="brief-empty">+ Add an enemy to start the coupled timeline</p>`;
+  }
+  const summary = $("rosterSummary");
+  if (summary) {
+    summary.textContent = `${state.targets.length} ${plural(state.targets.length, "ENEMY", "ENEMIES")} · ${state.allies.length} ${plural(state.allies.length, "ALLY", "ALLIES")}`;
+  }
+}
+
+function renderBuildsBrief() {
+  const priceA = buildListPrice("A");
+  const priceB = buildListPrice("B");
+  const line = state.attacker.comparisonEnabled
+    ? `A ${fmt(priceA)}g · B ${fmt(priceB)}g`
+    : priceA > 0 ? `A ${fmt(priceA)}g · comparison off` : "No build yet";
+  const brief = $("buildsBriefLine");
+  if (brief) brief.textContent = line;
+  const summary = $("buildsSummary");
+  if (summary) summary.textContent = line;
+}
+
+function windowSummary() {
+  const uptime = state.fight.aaUptimeMode === "calculated"
+    ? "AA calc"
+    : `${Math.round(state.fight.aaUptime * 100)}% AA`;
+  return `${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s · ${uptime}`;
+}
+
+function renderConstraintSummaries() {
+  const gold = $("goldValue");
+  if (gold) gold.textContent = state.optimizer.availableGold > 0 ? fmt(state.optimizer.availableGold) : "—";
+  const objective = $("objectiveValue");
+  if (objective) objective.textContent = (OBJECTIVES[state.ui.objective] || OBJECTIVES.overall).label;
+  const windowValue = $("windowValue");
+  if (windowValue) windowValue.textContent = windowSummary();
+  const stateValue = $("stateValue");
+  if (stateValue) stateValue.textContent = state.ui.gameState === "live" ? "Snapshot lens" : "Theory";
+}
+
+/**
+ * Apply the open/closed disclosure state to the rail and the canvas.
+ *
+ * One step at a time: the grid widens, the other two steps drop to one-line
+ * rows, and the canvas stays live but dimmed and inert so a stale click
+ * cannot land on numbers that are about to change.
+ */
+function applyRailDisclosure() {
+  const grid = $("appGrid");
+  const editing = Boolean(state.ui.expandedStep);
+  if (grid) grid.classList.toggle("is-editing", editing);
+  const canvas = $("canvas");
+  if (canvas) {
+    canvas.inert = editing;
+    canvas.setAttribute("aria-hidden", String(editing));
+  }
+  STEP_IDS.forEach((step) => {
+    const section = $(`step${step[0].toUpperCase()}${step.slice(1)}`);
+    if (!section) return;
+    const open = state.ui.expandedStep === step;
+    section.classList.toggle("is-open", open);
+    section.classList.toggle("is-active", !editing && state.ui.activeStep === step);
+    const toggle = section.querySelector("[data-step-toggle]");
+    if (toggle) toggle.setAttribute("aria-expanded", String(open));
+    const body = section.querySelector(".step-body");
+    if (body) body.hidden = !open;
+    const action = section.querySelector(".step-action");
+    if (action) action.textContent = open ? "Editing" : (!editing && state.ui.activeStep === step ? "Active" : "Edit");
+  });
+  document.querySelectorAll("[data-constraint-toggle]").forEach((toggle) => {
+    const open = state.ui.expandedConstraint === toggle.dataset.constraintToggle;
+    toggle.setAttribute("aria-expanded", String(open));
+    const body = document.getElementById(toggle.getAttribute("aria-controls") || "");
+    if (body) body.hidden = !open;
+  });
+  const patch = $("railPatch");
+  if (patch && editing) {
+    patch.textContent = `SETUP · STEP ${STEP_IDS.indexOf(state.ui.expandedStep) + 1} OF 3`;
+  } else if (patch) {
+    patch.textContent = "26.15";
+  }
 }
 
 function renderScenarioRail() {
-  const model = scenarioViewModel();
-  const championButton = $("scenarioChampion");
-  if (championButton) {
-    championButton.textContent = model.champion;
-    championButton.setAttribute("aria-label", `${model.champion}; choose champion`);
-  }
-  const role = $("scenarioRole");
-  if (role) role.textContent = model.role;
   const roleSelect = $("roleSelect");
   if (roleSelect) {
     roleSelect.value = state.attacker.role || "";
@@ -1599,11 +1754,19 @@ function renderScenarioRail() {
     roleSelect.title = capabilityTitle(roleCapability);
     roleSelect.dataset.capabilityField = "role";
   }
+  renderChampionBrief();
+  renderRosterBrief();
+  renderBuildsBrief();
+  renderConstraintSummaries();
+  applyRailDisclosure();
+
   const stateReadout = $("stateReadout");
-  if (stateReadout) stateReadout.textContent = `${model.gameState} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
+  if (stateReadout) {
+    stateReadout.textContent = `${state.ui.gameState === "live" ? "Snapshot lens" : "Theory state"} · ${windowSummary()}`;
+  }
   document.querySelectorAll("[data-objective]").forEach((button) => {
     const selected = button.dataset.objective === state.ui.objective;
-    button.classList.toggle("active", selected);
+    button.classList.toggle("is-on", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
   // Every game-state button carries its own description for assistive tech
@@ -1612,7 +1775,7 @@ function renderScenarioRail() {
   const summary = $("gameStateHelp");
   document.querySelectorAll("[data-game-state]").forEach((button) => {
     const selected = button.dataset.gameState === state.ui.gameState;
-    button.classList.toggle("active", selected);
+    button.classList.toggle("is-on", selected);
     button.setAttribute("aria-pressed", String(selected));
     const description = document.getElementById(button.getAttribute("aria-describedby") || "");
     if (description) {
@@ -1733,14 +1896,14 @@ function bisTrigger(path, compact = false) {
   return `<button class="bis-trigger${compact ? " compact" : ""}" type="button" data-bis-path="${path}" title="${escapeHtml(title)}" aria-label="Best item for this slot" ${ready ? "" : "disabled"}>BIS</button>`;
 }
 
-function prototypeItemSlot(id, path, side) {
+function prototypeItemSlot(id, path) {
   const item = getItem(id);
   const field = path.includes("questBoot") ? "boots" : "items";
   const kind = participantKindForPath(path);
   const emptyTitle = capabilityTitle(capabilityFor(kind, field));
   const controlAttrs = capabilityAttributes(kind, field);
   const title = item ? escapeHtml(itemStatsLine(item)) : escapeHtml(emptyTitle);
-  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}"${title ? ` title="${title}"` : ""}>${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}${item ? itemOptionControls(path, id) : ""}${bisTrigger(path)}</div>`;
+  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}"${title ? ` title="${title}"` : ""}>${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}${item ? itemOptionControls(path, id) : ""}${bisTrigger(path)}</div>`;
 }
 
 function prototypeRosterItemSlot(root, index, loadout, slot) {
@@ -1765,8 +1928,8 @@ function prototypeBuildSlots(side) {
   // slot from the user.
   const visibleCount = Math.max(6, count + (includeBootsForSide(sideUpper) ? 1 : 0));
   for (let index = 0; index < visibleCount; index += 1) {
-    if (index < count) slots.push(prototypeItemSlot(ids[index], `attacker.build${sideUpper}.${index}`, sideUpper));
-    else if (includeBootsForSide(sideUpper) && index === count) slots.push(prototypeItemSlot(state.attacker[`questBoot${sideUpper}`], questBootPath(sideUpper), sideUpper));
+    if (index < count) slots.push(prototypeItemSlot(ids[index], `attacker.build${sideUpper}.${index}`));
+    else if (includeBootsForSide(sideUpper) && index === count) slots.push(prototypeItemSlot(state.attacker[`questBoot${sideUpper}`], questBootPath(sideUpper)));
     else slots.push(`<span class="slot empty-slot slot-locked" aria-hidden="true"><span>·</span></span>`);
   }
   return `${slots.join("")}${keystoneSlot(sideUpper)}`;
@@ -1903,7 +2066,7 @@ function renderPrototypeChampion() {
     portraitImage.removeAttribute("src");
     portraitImage.alt = "";
   }
-  document.querySelector(".champion-identity")?.classList.toggle("is-empty", !champion);
+  document.querySelector(".editor-identity")?.classList.toggle("is-empty", !champion);
   const roleSelect = $("roleSelect");
   const roleCapability = capabilityFor("main", "role");
   if (roleSelect) {
@@ -1928,12 +2091,14 @@ function renderPrototypeChampion() {
   const questCapability = capabilityFor("main", "role_quest_complete");
   $("questToggle").textContent = state.attacker.roleQuestComplete ? "Quest on" : "Quest off";
   $("questToggle").setAttribute("aria-pressed", String(state.attacker.roleQuestComplete));
+  $("questToggle").classList.toggle("is-on", Boolean(state.attacker.roleQuestComplete));
   $("questToggle").disabled = questCapability.supported === false || !state.attacker.role;
   $("questToggle").title = capabilityTitle(questCapability);
   $("questToggle").dataset.capabilityField = "role_quest_complete";
   const bootsCapability = capabilityFor("main", "include_boots");
   $("bootsToggle").textContent = includeBootsForSide("A") ? "Boots on" : "Boots off";
   $("bootsToggle").setAttribute("aria-pressed", String(includeBootsForSide("A")));
+  $("bootsToggle").classList.toggle("is-on", includeBootsForSide("A"));
   $("bootsToggle").disabled = bootsCapability.supported === false;
   $("bootsToggle").title = capabilityTitle(bootsCapability);
   $("bootsToggle").dataset.capabilityField = "include_boots";
@@ -1973,9 +2138,13 @@ function renderPrototypeRoster(kind) {
     const effectToggle = kind === "allies"
       ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" ${effectsCapability} data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
       : "";
-    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
-  }).join("") || `<p class="roster-empty">Add ${kind === "targets" ? "a target" : "an ally"} to the coupled timeline.</p>`;
-  $(kind === "targets" ? "enemyCount" : "allyCount").textContent = entries.length;
+    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><p class="roster-strip-label">Items · affects your BIS</p><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
+  }).join("") || `<p class="roster-empty">${kind === "targets" ? "No enemies yet — the coupled timeline needs at least one." : "No allies in context."}</p>`;
+  // The 2b mock shows a "…pushes your best fifth slot from X to Y" callout
+  // here. No backend receipt produces that sentence today, and the renderer
+  // never invents prose, so the callout stays out until one does.
+  // The roster counts have one home: renderRosterBrief() writes the step
+  // summary and the collapsed brief from the same state.
 }
 
 function renderPrototypeBuilder() {
@@ -1991,8 +2160,14 @@ function renderPrototypeBuilder() {
   const bValue = state.attacker.comparisonEnabled ? objectiveMetric(engine.responses?.b, null) : null;
   const outcome = objectiveWinner(aValue, bValue);
   $("winnerCaption").textContent = !state.attacker.comparisonEnabled ? "comparison off" : outcome.winner === "B" ? "winner · selected objective" : outcome.winner === "A" ? "lead · selected objective" : outcome.winner === "tie" ? "tie · selected objective" : "awaiting reviewed output";
-  document.querySelector(".build-a")?.classList.toggle("is-winner", outcome.winner === "A");
-  document.querySelector(".build-b")?.classList.toggle("is-winner", outcome.winner === "B");
+  document.querySelector('[data-build="a"]')?.classList.toggle("is-winner", outcome.winner === "A");
+  document.querySelector('[data-build="b"]')?.classList.toggle("is-winner", outcome.winner === "B");
+  const compareToggle = $("compareToggle");
+  if (compareToggle) {
+    compareToggle.textContent = state.attacker.comparisonEnabled ? "Build B enabled" : "Enable Build B";
+    compareToggle.classList.toggle("is-on", Boolean(state.attacker.comparisonEnabled));
+    compareToggle.setAttribute("aria-pressed", String(Boolean(state.attacker.comparisonEnabled)));
+  }
   renderPrototypeRoster("targets");
   renderPrototypeRoster("allies");
   $("rotationOutput").textContent = state.fight.rotations;
@@ -2078,17 +2253,107 @@ function renderEventTimeline(combatEvents, duration, eventLabel) {
     <small class="timeline-note">${escapeHtml(note)}</small>`;
 }
 
-function prototypeMetricRow(label, a, b, lower = false, unit = "value", aAlive = "", bAlive = "") {
-  const winner = objectiveWinner(a, b).winner;
-  // Kill-time rows carry their own formatting: a live build shows the enemy
-  // HP it failed to remove (or "—" when the result is missing), a defeated
-  // build shows the real timeline time-to-death (never "0 s").
-  const format = (value, alive) => value == null
-    ? (alive || "—")
-    : lower
-      ? (killTimeLabel(value) || alive || "—")
-      : `${fmt(value)} ${unit}`;
-  return `<div class="metric-row"><span>${label}</span><strong class="metric-a">${format(a, aAlive)}</strong><strong class="metric-b">${format(b, bAlive)}</strong><b>${winner === "A" || winner === "B" ? winner : "—"}</b></div>`;
+// ---------------------------------------------------------------------------
+// Duel canvas
+//
+// Three stacked bands read left-to-right as the answer: the verdict strip,
+// the mirrored builds around a delta spine, and the fight timeline. Every
+// number here comes from an /api/calculate receipt; nothing is derived.
+// ---------------------------------------------------------------------------
+
+const SPINE_METRICS = [
+  { key: "overall", label: "Overall", unit: "TDD", lower: false },
+  { key: "kill", label: "Kill time", unit: "s", lower: true },
+  { key: "survival", label: "Survival", unit: "eHP", lower: false },
+  { key: "damage", label: "Damage", unit: "TDD", lower: false },
+  { key: "utility", label: "Utility", unit: "", lower: false },
+];
+
+const OBJECTIVE_UNITS = { overall: "TDD", damage: "TDD", survival: "eHP", kill: "", utility: "value" };
+
+function metricValueLabel(metric, value, alive = "") {
+  if (value == null) return alive || "—";
+  return metric.lower ? (killTimeLabel(value) || alive || "—") : fmt(value);
+}
+
+/**
+ * Build B's signed divergence from Build A for one metric.
+ *
+ * The bar always reads as "what B does to A": it grows right in green when B
+ * is ahead and left in red when B is behind, whichever direction is better
+ * for that metric. The ×4 display gain means a 25% divergence saturates the
+ * half-bar, so ordinary single-item swings stay visible instead of
+ * collapsing to a hairline (it matches the approved mock's bar lengths).
+ */
+function spineDivergence(metric, aValue, bValue) {
+  if (aValue == null || bValue == null) return { percent: 0, favours: null };
+  const scale = Math.max(Math.abs(aValue), Math.abs(bValue));
+  if (!scale) return { percent: 0, favours: "tie" };
+  const raw = Number(bValue) - Number(aValue);
+  const percent = Math.min(100, (Math.abs(raw) / scale) * 400);
+  if (percent < 0.5) return { percent: 0, favours: "tie" };
+  return { percent, favours: (metric.lower ? raw < 0 : raw > 0) ? "b" : "a" };
+}
+
+function spineRowHtml(metric, aValue, bValue, comparing, aAlive = "", bAlive = "") {
+  // A kill-time row with no death shows a short "alive" token; the full
+  // remaining-health receipt rides along as the cell's title and in the
+  // row's accessible name, so the column stays 52px and still says why.
+  const aLabel = metricValueLabel(metric, aValue, aAlive && "alive");
+  const bLabel = metricValueLabel(metric, bValue, bAlive && "alive");
+  const aTitle = aValue == null && aAlive ? ` title="${escapeHtml(aAlive)}"` : "";
+  const bTitle = bValue == null && bAlive ? ` title="${escapeHtml(bAlive)}"` : "";
+  const spoken = (label, alive) => (label === "alive" && alive ? alive : label);
+  if (!comparing) {
+    return `<div class="spine-row is-solo" role="group" aria-label="${escapeHtml(metric.label)}: ${escapeHtml(spoken(aLabel, aAlive))}${metric.unit ? ` ${metric.unit}` : ""}">
+      <p class="spine-label">${escapeHtml(metric.label)}</p>
+      <p class="spine-solo-value"${aTitle}>${escapeHtml(aLabel)}${aValue == null || !metric.unit ? "" : `<small>${escapeHtml(metric.unit)}</small>`}</p>
+    </div>`;
+  }
+  const divergence = spineDivergence(metric, aValue, bValue);
+  const verdict = divergence.favours === "b"
+    ? "Build B ahead"
+    : divergence.favours === "a"
+      ? "Build A ahead"
+      : divergence.favours === "tie" ? "level" : "not available";
+  const loseWidth = divergence.favours === "a" ? divergence.percent : 0;
+  const winWidth = divergence.favours === "b" ? divergence.percent : 0;
+  return `<div class="spine-row" role="group" aria-label="${escapeHtml(metric.label)}: Build A ${escapeHtml(spoken(aLabel, aAlive))}, Build B ${escapeHtml(spoken(bLabel, bAlive))} — ${verdict}">
+    <p class="spine-label">${escapeHtml(metric.label)}</p>
+    <div class="spine-bars">
+      <span class="spine-value is-a"${aTitle}>${escapeHtml(aLabel)}</span>
+      <span class="spine-half is-a"><span class="spine-bar is-lose" style="width:${loseWidth.toFixed(1)}%"></span></span>
+      <span class="spine-axis"></span>
+      <span class="spine-half is-b"><span class="spine-bar is-win" style="width:${winWidth.toFixed(1)}%"></span></span>
+      <span class="spine-value is-b"${bTitle}>${escapeHtml(bLabel)}</span>
+    </div>
+  </div>`;
+}
+
+/** One mirrored item row on the duel canvas — read-only; step 3 edits them. */
+function duelRowHtml(id) {
+  const item = getItem(id);
+  if (!item) {
+    return `<div class="duel-row is-empty"><span class="item-icon item-slot"></span><span class="duel-row-copy"><strong>Empty slot</strong><small>open step 3 to fill it</small></span></div>`;
+  }
+  const price = Number(item.price) > 0 ? ` · ${fmt(item.price)}g` : "";
+  return `<div class="duel-row"><span class="item-icon item-slot" aria-label="Change ${escapeHtml(itemName(id))}"><img src="${itemImage(id)}" alt="" /><small class="visually-hidden">${escapeHtml(itemName(id))}</small></span><span class="duel-row-copy"><strong>${escapeHtml(itemName(id))}</strong><small>${escapeHtml(itemStatsLine(item))}${price}</small></span></div>`;
+}
+
+function renderDuelSide(side) {
+  const host = $(side === "A" ? "duelA" : "duelB");
+  if (!host) return;
+  const ids = buildIdsForSide(side);
+  const keystone = getKeystone(state.attacker[`keystone${side}`]);
+  if (!ids.length && !keystone) {
+    host.innerHTML = `<p class="roster-empty">Build ${side} has no items yet — open step 3 to fill it.</p>`;
+    return;
+  }
+  const keystoneRow = keystone
+    ? `<div class="duel-row is-keystone"><span class="item-icon"><img src="${escapeHtml(keystone.icon)}" alt="" /></span><span class="duel-row-copy"><strong>${escapeHtml(keystone.name)}</strong><small>${escapeHtml(keystone.path || "")} keystone</small></span></div>`
+    : "";
+  const price = buildListPrice(side);
+  host.innerHTML = `${ids.map(duelRowHtml).join("")}${keystoneRow}<p class="duel-foot">${ids.length} ${plural(ids.length, "item")} · ${fmt(price)}g list price</p>`;
 }
 
 function prototypeParticipants(result) {
@@ -2126,6 +2391,189 @@ function enemyOverkill(result, totalDamage) {
   return Math.max(exact, formula);
 }
 
+/** Cumulative main-attacker damage from the ordered event ledger. */
+function mainDamageSeries(result) {
+  const rows = (result?.combat?.events || [])
+    .filter((event) => event.attacker === "main" && Number(event.damage || 0) > 0)
+    .map((event) => ({ time: eventTime(event), damage: Number(event.damage) }))
+    .filter((row) => row.time !== null)
+    .sort((a, b) => a.time - b.time);
+  const points = [{ time: 0, total: 0 }];
+  let running = 0;
+  rows.forEach((row) => {
+    running += row.damage;
+    points.push({ time: row.time, total: running });
+  });
+  return { points, total: running };
+}
+
+/** Ability and auto-attack casts the main attacker landed, in event order. */
+const CHART_MARK_LIMIT = 8;
+function castMarkers(result) {
+  // Casts that land on the same timestamp share one marker: two ticks at the
+  // same x would overlap into an unreadable smear.
+  const byTime = new Map();
+  (result?.combat?.events || []).forEach((event) => {
+    if (event.attacker !== "main") return;
+    const time = eventTime(event);
+    if (time === null) return;
+    const label = event.source === "auto_attacks" ? "AA" : (ABILITY_SLOTS.includes(event.source) ? event.source : "");
+    if (!label) return;
+    const labels = byTime.get(time) || [];
+    if (!labels.includes(label)) labels.push(label);
+    byTime.set(time, labels);
+  });
+  return [...byTime.entries()]
+    .sort(([a], [b]) => a - b)
+    .slice(0, CHART_MARK_LIMIT)
+    .map(([time, labels]) => ({ time, label: labels.join(" "), ultimate: labels.includes("R") }));
+}
+
+/** Round an axis top up to a readable 1/2/5-family value. */
+function niceCeiling(value) {
+  if (!(Number(value) > 0)) return 1;
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  const step = [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10].find((factor) => value <= factor * magnitude);
+  return (step || 10) * magnitude;
+}
+
+function polylinePoints(series, duration, top) {
+  const last = series.points.at(-1);
+  // Carry the final total flat to the end of the window: the curve is
+  // cumulative, so stopping at the last event would read as damage vanishing.
+  const points = last && last.time < duration
+    ? [...series.points, { time: duration, total: last.total }]
+    : series.points;
+  return points
+    .map((point) => `${((point.time / duration) * 1000).toFixed(1)},${(200 - (point.total / top) * 200).toFixed(1)}`)
+    .join(" ");
+}
+
+/**
+ * Draw the fight timeline: cumulative damage polylines for both builds,
+ * cast markers at their real event timestamps, and each build's end value.
+ */
+function renderFightChart(aResult, bResult) {
+  const host = $("timelineChart");
+  const title = $("timelineTitle");
+  if (!host) return;
+  const seriesA = aResult ? mainDamageSeries(aResult) : null;
+  const seriesB = bResult ? mainDamageSeries(bResult) : null;
+  const hasCurve = (seriesA?.points.length || 0) > 1 || (seriesB?.points.length || 0) > 1;
+  if (!hasCurve) {
+    if (title) title.textContent = "Fight timeline";
+    host.innerHTML = `<p class="chart-empty">The fight timeline appears once the reviewed engine returns an ordered event ledger.</p>`;
+    return;
+  }
+  const times = [...(seriesA?.points || []), ...(seriesB?.points || [])].map((point) => point.time);
+  const duration = Math.max(
+    Number(aResult?.combat?.duration || 0),
+    Number(bResult?.combat?.duration || 0),
+    ...times,
+    1,
+  );
+  const aTotal = mainTotalDamage(aResult);
+  const bTotal = bResult ? mainTotalDamage(bResult) : null;
+  const top = niceCeiling(Math.max(seriesA?.total || 0, seriesB?.total || 0, aTotal || 0, bTotal || 0, 1));
+  if (title) title.textContent = `Fight timeline · 0 → ${one(duration)} s`;
+
+  const lineB = seriesB ? `<polyline points="${polylinePoints(seriesB, duration, top)}" fill="none" stroke="#1f6f4e" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>` : "";
+  const lineA = seriesA ? `<polyline points="${polylinePoints(seriesA, duration, top)}" fill="none" stroke="#3c6558" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>` : "";
+  const marks = castMarkers(aResult).map((mark) => `<span class="chart-mark ${mark.ultimate ? "is-ult" : ""}" style="left:${((mark.time / duration) * 100).toFixed(2)}%"><i></i><b>${escapeHtml(mark.label)}</b><span>${one(mark.time)}s</span></span>`).join("");
+  const ends = [
+    bTotal == null ? "" : `<div class="chart-end is-b"><strong>${fmt(bTotal)}</strong><span>Build B</span></div>`,
+    aTotal == null ? "" : `<div class="chart-end"><strong>${fmt(aTotal)}</strong><span>Build A</span></div>`,
+  ].join("");
+  // The curve is drawn from ordered events; a coarse source contributes to
+  // TDD without an authored timestamp, so say when the two disagree rather
+  // than letting the curve imply it covered everything.
+  const uncovered = aTotal == null || !seriesA ? 0 : Math.max(0, aTotal - seriesA.total);
+  const note = uncovered > 0.5
+    ? `<p class="chart-note">Curve covers ${fmt(seriesA.total)} of Build A's ${fmt(aTotal)} TDD; ${fmt(uncovered)} comes from sources without an authored timestamp.</p>`
+    : "";
+  host.innerHTML = `<div class="chart-frame">
+    <div class="chart-axis"><span>${fmt(top)}</span><span>${fmt(top / 2)}</span><span>0</span></div>
+    <div class="chart-plot">
+      <svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+        <line x1="0" y1="100" x2="1000" y2="100" stroke="rgba(22,72,58,.16)" stroke-width="1"></line>
+        ${lineA}${lineB}
+      </svg>
+      ${marks}
+    </div>
+    <div class="chart-ends">${ends}</div>
+  </div>${note}`;
+}
+
+// ---------------------------------------------------------------------------
+// Optimizer receipt band
+//
+// The gap ledger's home for every optimizer outcome: a canvas takeover band
+// under the verdict strip, never a toast. `state.optimizer.summary` carries
+// the structured receipt; this renders it verbatim, including the notes that
+// say a search was withheld or not exhaustive.
+// ---------------------------------------------------------------------------
+
+function optimizerReceiptRows(summary) {
+  return (summary.lines || [])
+    .filter((line) => line && line.value)
+    .map((line) => `<div class="buy-line"><span>${escapeHtml(line.label)}</span><strong>${escapeHtml(line.value)}</strong></div>`)
+    .join("");
+}
+
+function renderBuyBand() {
+  const host = $("buyBand");
+  if (!host) return;
+  if (state.optimizer.running) {
+    host.hidden = false;
+    host.innerHTML = `<header class="band-head"><p class="band-title">Optimizer</p><p class="band-note" role="status">Searching…</p></header>
+      <p class="buy-headline">Scoring legal builds against the coupled event timeline.</p>`;
+    return;
+  }
+  const summary = state.optimizer.summary;
+  if (!summary) {
+    host.hidden = true;
+    host.innerHTML = "";
+    return;
+  }
+  const notes = (summary.notes || []).filter(Boolean)
+    .map((note) => `<p class="buy-note">${escapeHtml(note)}</p>`).join("");
+  const search = [
+    summary.tested ? `${fmt(summary.tested)} ${plural(summary.tested, "candidate")} evaluated` : "",
+    summary.elapsedMs ? `${one(summary.elapsedMs / 1000)}s` : "",
+  ].filter(Boolean).join(" · ");
+  host.hidden = false;
+  host.innerHTML = `<header class="band-head">
+      <p class="band-title">${escapeHtml(summary.title || "Optimizer result")}</p>
+      <p class="band-note">${escapeHtml(summary.applied ? `Applied to ${summary.scope}` : "Nothing applied")}</p>
+    </header>
+    <p class="buy-headline">${escapeHtml(summary.headline || "")}</p>
+    <div class="buy-lines">${optimizerReceiptRows(summary)}</div>
+    ${notes}
+    <div class="buy-actions">
+      ${search ? `<span class="buy-search mono">${escapeHtml(search)}</span>` : ""}
+      <button class="buy-dismiss" id="buyDismiss" type="button">Dismiss receipt</button>
+    </div>`;
+}
+
+function mainTotalDamage(result) {
+  if (!result) return null;
+  const row = (result.combat?.breakdown || []).find((entry) => entry.participant_id === "main");
+  const total = Number(row?.total_damage ?? result.total_damage ?? 0);
+  return Number.isFinite(total) ? total : null;
+}
+
+function heroValue(value, objectiveKey) {
+  if (value == null) return "—";
+  if (objectiveKey === "kill") return escapeHtml(killTimeLabel(value) || "—");
+  const unit = OBJECTIVE_UNITS[objectiveKey] || "";
+  return `${fmt(value)}${unit ? `<span class="unit">${escapeHtml(unit)}</span>` : ""}`;
+}
+
+function signedGold(delta) {
+  if (!delta) return "0g";
+  return `${delta > 0 ? "+" : "−"}${fmt(Math.abs(delta))}g`;
+}
+
 function renderPrototypeResult(aResult = null, bResult = null) {
   const aTotal = aResult ? Number(aResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? aResult.total_damage ?? 0) : null;
   const bTotal = bResult ? Number(bResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? bResult.total_damage ?? 0) : null;
@@ -2133,6 +2581,8 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   const bValues = bResult ? exactObjectiveMetric(bResult, bTotal) : { overall: null, damage: null, kill: null, survival: null, utility: null };
   const aValue = aValues[state.ui.objective];
   const bValue = bValues[state.ui.objective];
+  // Layout follows the compare toggle; numbers follow whatever came back.
+  const duelling = Boolean(state.attacker.comparisonEnabled);
   const comparing = Boolean(bResult);
   const selectedAvailable = aResult && aValue != null;
   const outcome = comparing
@@ -2146,44 +2596,98 @@ function renderPrototypeResult(aResult = null, bResult = null) {
     state.fight.aaUptime = Number(autoPolicy.uptime || 0);
   }
   const coverage = aResult?.timeline_coverage || {};
-  $("resultStatus").textContent = !aResult
-    ? "waiting"
-    : coverage.complete === false || autoPolicy.status === "unknown" ? "qualified" : "reviewed";
+
+  // --- verdict strip -------------------------------------------------------
+  const qualified = Boolean(aResult) && (coverage.complete === false || autoPolicy.status === "unknown");
+  // The middle column of the verdict strip names what it is showing: a delta
+  // between two builds, one build's selected objective, or why neither is
+  // final yet. "qualified" is the timeline-coverage signal — the not-modeled
+  // disclosure below carries the separate mechanics one.
+  $("resultStatus").textContent = engine.pending
+    ? (duelling ? "recalculating" : "calculating")
+    : !aResult
+      ? "waiting"
+      : qualified ? "qualified" : duelling ? "delta" : "objective";
   $("resultObjective").textContent = objective.label;
   $("winnerLetter").textContent = outcome.winner === "A" ? "A" : outcome.winner === "B" ? "B" : "—";
   $("winnerLabel").textContent = outcome.winner === "tie" ? "tie" : comparing && outcome.winner ? "wins" : selectedAvailable ? "selected" : aResult ? "unavailable" : "waiting";
-  $("resultDelta").textContent = outcome.delta == null ? "—" : state.ui.objective === "kill" ? `+${one(outcome.delta)}s` : `+${fmt(outcome.delta)}`;
+  const delta = $("resultDelta");
+  delta.textContent = outcome.delta == null
+    ? (selectedAvailable && !duelling ? objective.label : "—")
+    : state.ui.objective === "kill" ? `+${one(outcome.delta)}s` : `+${fmt(outcome.delta)}`;
+  delta.classList.toggle("is-tie", outcome.winner === "tie" || outcome.delta == null);
+  const goldDelta = buildListPrice("B") - buildListPrice("A");
+  const share = comparing && outcome.delta && aValue ? Math.abs(outcome.delta / aValue) * 100 : null;
+  $("verdictLine").textContent = !comparing
+    ? (selectedAvailable ? "SINGLE BUILD · NO CHALLENGER" : "")
+    : outcome.winner === "tie"
+      ? "LEVEL ON THE SELECTED OBJECTIVE"
+      : outcome.winner
+        ? `${outcome.winner} WINS${share == null ? "" : ` · ${percent(share)}`} · ${signedGold(goldDelta)}`
+        : "OBJECTIVE UNAVAILABLE";
+  $("scoreA").innerHTML = heroValue(aValue, state.ui.objective);
+  $("scoreB").innerHTML = heroValue(bValue, state.ui.objective);
+  const sideSummary = (side) => {
+    const ids = buildIdsForSide(side);
+    return ids.length ? `${ids.length} ${plural(ids.length, "ITEM")} · ${fmt(buildListPrice(side))}g` : "NO ITEMS";
+  };
+  $("verdictSubA").textContent = sideSummary("A");
+  $("verdictSubB").textContent = duelling ? sideSummary("B") : "";
+  document.querySelector(".verdict")?.classList.toggle("is-solo", !duelling);
+
   $("resultSummary").textContent = !aResult
     ? "Choose a complete scenario to receive a reviewed comparison."
     : !comparing
       ? selectedAvailable
-        ? "Build A is the selected build for this scenario. Enable Build B to compare a second build."
+        ? "Build A is the selected build for this scenario. Enable Build B in step 3 to compare a second build."
         : `${objective.label} is unavailable until the reviewed event ledger supplies that outcome.`
-      : outcome.winner
-        ? `${outcome.winner === "A" ? "Build A" : outcome.winner === "B" ? "Build B" : "Neither build"} carries the strongest ${objective.label.toLowerCase()} package against this roster.`
-        : "The selected objective is unavailable for this comparison.";
-  $("scoreA").textContent = objectiveFormat(aValue);
-  $("scoreB").textContent = objectiveFormat(bValue);
+      : outcome.winner === "tie"
+        ? `Build A and Build B are level on ${objective.label.toLowerCase()} against this roster.`
+        : outcome.winner
+          ? `${outcome.winner === "A" ? "Build A" : "Build B"} carries the strongest ${objective.label.toLowerCase()} package against this roster.`
+          : "The selected objective is unavailable for this comparison.";
+
+  // --- mirrored builds and delta spine -------------------------------------
+  document.querySelector(".duel")?.classList.toggle("is-solo", !duelling);
+  renderDuelSide("A");
+  if (duelling) renderDuelSide("B");
   const aAlive = enemyHealthRemaining(aResult);
   const bAlive = bResult ? enemyHealthRemaining(bResult) : "";
-  $("metricList").innerHTML = [
-    prototypeMetricRow("Overall", aValues.overall, bValues.overall, false, "TDD"),
-    prototypeMetricRow("Kill time", aValues.kill, bValues.kill, true, "s", aAlive, bAlive),
-    prototypeMetricRow("Survival", aValues.survival, bValues.survival, false, "eHP"),
-    prototypeMetricRow("Damage", aValues.damage, bValues.damage, false, "TDD"),
-    prototypeMetricRow("Utility", aValues.utility, bValues.utility, false, "value"),
-  ].join("");
+  $("metricList").innerHTML = SPINE_METRICS
+    .map((metric) => spineRowHtml(
+      metric,
+      aValues[metric.key],
+      bValues[metric.key],
+      duelling,
+      metric.key === "kill" ? aAlive : "",
+      metric.key === "kill" ? bAlive : "",
+    ))
+    .join("");
+  $("metricLegend").textContent = duelling
+    ? "Bars read Build B against Build A — green ahead, red behind. Higher is better except Kill time."
+    : "Absolute values for Build A. Higher is better except Kill time.";
+  $("spineFoot").textContent = duelling && comparing && outcome.winner && outcome.winner !== "tie" && outcome.delta != null
+    ? `Gold delta ${signedGold(goldDelta)} · Build ${outcome.winner} leads ${objective.label} by ${state.ui.objective === "kill" ? `${one(outcome.delta)}s` : fmt(outcome.delta)}.`
+    : "";
+
+  // --- team-fight health ---------------------------------------------------
   const participants = prototypeParticipants(aResult);
   $("healthRows").innerHTML = participants.map((person) => {
     const survival = person.survival || {};
     const max = Number(survival.max_health || survival.effective_health || person.stats?.health || person.health || 0);
-    const explicitHealth = survival.health_remaining ?? survival.current_health;
+    const explicitHealth = survival.ending_health ?? survival.health_remaining ?? survival.current_health;
     const incoming = Number(survival.health_damage ?? survival.incoming_damage ?? 0);
-    const health = explicitHealth != null ? Math.max(0, Number(explicitHealth)) : Math.max(0, max - incoming);
+    // A participant the ledger says did not survive the window ends at zero,
+    // whatever the last recorded health sample was.
+    const health = survival.survived_window === false
+      ? 0
+      : explicitHealth != null ? Math.max(0, Number(explicitHealth)) : Math.max(0, max - incoming);
     const pct = max > 0 ? Math.max(0, Math.min(100, health / max * 100)) : 0;
-    const status = survival.survived_window === false ? "defeated" : max > 0 ? `${Math.round(pct)}%` : incoming > 0 ? `-${fmt(incoming)} dmg` : "alive";
-    return `<div class="health-row"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${status}</b></div>`;
+    const status = survival.survived_window === false ? "defeated" : max > 0 ? `${fmt(health)} · ${Math.round(pct)}%` : incoming > 0 ? `−${fmt(incoming)} dmg` : "alive";
+    const enemy = person.team === "enemy" || String(person.participant_id || "").startsWith("enemy:");
+    return `<div class="health-row ${enemy ? "is-enemy" : ""}"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${escapeHtml(status)}</b></div>`;
   }).join("") || `<p class="roster-empty">Participant health appears after the reviewed engine returns.</p>`;
+  renderFightChart(aResult, bResult);
   const participantLabels = new Map((aResult?.combat?.participants || []).map((person) => [person.participant_id, person.champion || person.participant_id]));
   const combatEvents = Array.isArray(aResult?.combat?.events) ? aResult.combat.events : [];
   const healingEvents = healingEventsForResult(aResult);
@@ -2247,6 +2751,7 @@ function renderPrototypeResult(aResult = null, bResult = null) {
 function render() {
   renderPrototypeBuilder();
   renderPrototypeResult(engine.responses?.a || null, engine.responses?.b || null);
+  renderBuyBand();
   renderScenarioRail();
   $("scenarioSentence").innerHTML = scenarioSentence();
   applyPrerequisiteGates();
@@ -2626,13 +3131,29 @@ async function startRosterOptimization(rootOrPath) {
     }
     const scope = paths.length === 1 ? `${changed[0]} build` : `${rootOrPath === "targets" ? "all enemy" : "all ally"} builds`;
     state.optimizer.summary = {
+      kind: "roster",
+      title: "Roster optimization",
+      scope,
+      applied: true,
       tested,
       elapsedMs: performance.now() - started,
-      label: `${scope} optimized from the coupled event timeline; Build A was rebalanced after each roster change.`,
+      headline: `${scope} optimized from the coupled event timeline.`,
+      lines: [{ label: "Rebalanced", value: "Build A was re-solved after each roster change" }],
+      notes: [],
     };
   } catch (error) {
     if (activePath) state.optimizer.rosterErrors[activePath] = error.message;
-    state.optimizer.summary = { tested, elapsedMs: performance.now() - started, label: `Optimization stopped: ${error.message}` };
+    state.optimizer.summary = {
+      kind: "roster",
+      title: "Roster optimization · stopped",
+      scope: "Roster",
+      applied: false,
+      tested,
+      elapsedMs: performance.now() - started,
+      headline: `Optimization stopped: ${error.message}`,
+      lines: [],
+      notes: ["Earlier slots that already resolved keep their applied items."],
+    };
   } finally {
     state.optimizer.running = false;
     state.optimizer.scope = null;
@@ -2669,10 +3190,18 @@ async function optimizeMainBuildFromBackend() {
         ? ` ${withheldCount} candidate${withheldCount === 1 ? "" : "s"} withheld${firstWithheld?.reason ? ` (${firstWithheld.reason.replaceAll("_", " ")})` : ""}.`
         : "";
       state.optimizer.summary = {
+        kind: "build",
+        title: "Full build search · withheld",
+        scope: "Build A",
+        applied: false,
         tested: Number(result.evaluations || 0),
         elapsedMs: Number(result.optimization_time_ms || 0),
-        withheld: true,
-        label: `BIS withheld — no build applied. ${result.search_timeline_coverage?.note || "Event-order coverage is incomplete."}${withheldDetail}`,
+        headline: "Best in slot withheld — no build applied.",
+        lines: [],
+        notes: [
+          result.search_timeline_coverage?.note || "Event-order coverage is incomplete.",
+          withheldDetail.trim(),
+        ].filter(Boolean),
       };
       return result;
     }
@@ -2682,11 +3211,24 @@ async function optimizeMainBuildFromBackend() {
     state.attacker.buildAItemOptions = [{}, {}, {}, {}, {}, {}];
     state.attacker.questBootA = findItemByBackendName(result.boots)?.id || 0;
     state.optimizer.summary = {
+      kind: "build",
+      title: "Full build search",
+      scope: "Build A",
+      applied: true,
       tested: Number(result.evaluations || 0),
       elapsedMs: Number(result.optimization_time_ms || 0),
-      label: result.selection_certification === "event_ordered_local_search"
-        ? "Event-ordered local-search build applied; coarse candidates were excluded and TTD stops at death."
-        : "Coupled event-ordered BIS: TTD is counted only while the champion is alive.",
+      headline: (result.items || []).join(" + ") || "Build applied",
+      lines: [
+        { label: "Boots", value: result.boots || "" },
+        { label: "Gold cost", value: result.gold_cost ? `${fmt(result.gold_cost)}g` : "" },
+        { label: "Search guarantee", value: String(result.selection_certification || "").replaceAll("_", " ") },
+      ],
+      notes: [
+        result.selection_certification === "event_ordered_local_search"
+          ? "Event-ordered local-search build applied; coarse candidates were excluded and time-to-death stops at death."
+          : "Coupled event-ordered best in slot: time-to-death is counted only while the champion is alive.",
+        result.search_timeline_coverage?.note,
+      ].filter(Boolean),
     };
     return result;
 }
@@ -2720,18 +3262,32 @@ async function startPurchaseOptimize() {
     if (!response.ok || result.error) throw new Error(result.error || "Best-buy search unavailable");
     if (result.recommendation_type === "no_affordable_purchase") {
       state.optimizer.summary = {
+        kind: "purchase",
+        title: "Best buy",
+        scope: "Build A",
+        applied: false,
         tested: 0,
         elapsedMs: performance.now() - started,
-        label: `No legal modeled purchase fits ${fmt(state.optimizer.availableGold)} gold.`,
+        headline: `No legal modeled purchase fits ${fmt(state.optimizer.availableGold)} gold.`,
+        lines: [{ label: "Available gold", value: `${fmt(state.optimizer.availableGold)}g` }],
+        notes: [result.coverage?.note].filter(Boolean),
       };
       return;
     }
     if (!result.is_certified_best || !result.winner_event_order_certified) {
       state.optimizer.summary = {
+        kind: "purchase",
+        title: "Best buy · withheld",
+        scope: "Build A",
+        applied: false,
         tested: Number(result.evaluations || 0),
         elapsedMs: Number(result.optimization_time_ms || performance.now() - started),
-        withheld: true,
-        label: "Best buy withheld because the exhaustive candidate set is not fully event-order certified.",
+        headline: "Best buy withheld because the exhaustive candidate set is not fully event-order certified.",
+        lines: [{ label: "Available gold", value: `${fmt(state.optimizer.availableGold)}g` }],
+        notes: [
+          result.search_timeline_coverage?.note,
+          "No build was applied — an uncertified candidate set is a receipt, not a recommendation.",
+        ].filter(Boolean),
       };
       return;
     }
@@ -2750,18 +3306,40 @@ async function startPurchaseOptimize() {
     state.attacker.buildAItemOptions = state.attacker.buildA.map((id) => previous.get(itemName(id))?.options || {});
     state.attacker.questBootA = findItemByBackendName(result.boots)?.id || 0;
     const purchase = (result.purchase_items || []).join(" + ");
-    const sold = soldNames.size ? ` · sell ${[...soldNames].join(" + ")}` : "";
-    const pivot = result.recommendation_type === "sell_pivot" ? " · pivot" : "";
     state.optimizer.summary = {
+      kind: "purchase",
+      title: result.recommendation_type === "sell_pivot" ? "Best buy · sell pivot" : "Best buy",
+      scope: "Build A",
+      applied: true,
       tested: Number(result.evaluations || result.candidate_count || 0),
       elapsedMs: Number(result.optimization_time_ms || performance.now() - started),
-      label: `Buy ${purchase}${sold}${pivot} · ${fmt(result.spent_gold)} spent${result.sell_refund ? ` · ${fmt(result.sell_refund)} from sells` : ""} · ${fmt(result.remaining_gold)} remaining. ${result.exhaustive_within_scope ? "Exhaustive purchase search within your gold." : "Best evaluated plan; the full space was truncated."}`,
+      headline: purchase ? `Buy ${purchase}` : "Rebalance the current inventory",
+      lines: [
+        { label: "Sell", value: soldNames.size ? [...soldNames].join(" + ") : "" },
+        { label: "Combines", value: (result.combine_items || []).join(" + ") },
+        { label: "Gold spent", value: `${fmt(result.spent_gold)}g` },
+        { label: "Sell refund", value: result.sell_refund ? `${fmt(result.sell_refund)}g` : "" },
+        { label: "Gold remaining", value: `${fmt(result.remaining_gold)}g` },
+        { label: "Boots", value: result.boots || "" },
+      ],
+      notes: [
+        result.exhaustive_within_scope
+          ? "Exhaustive purchase search within your gold."
+          : "Best evaluated plan; the full purchase space was truncated, so a better buy may exist.",
+        result.search_timeline_coverage?.note,
+      ].filter(Boolean),
     };
   } catch (error) {
     state.optimizer.summary = {
+      kind: "purchase",
+      title: "Best buy · stopped",
+      scope: "Build A",
+      applied: false,
       tested: 0,
       elapsedMs: performance.now() - started,
-      label: `Best-buy search stopped: ${error.message}`,
+      headline: `Best-buy search stopped: ${error.message}`,
+      lines: [],
+      notes: ["No build was applied."],
     };
   } finally {
     state.optimizer.running = false;
@@ -2778,7 +3356,17 @@ async function startOptimizeBuild() {
   try {
     await optimizeMainBuildFromBackend();
   } catch (error) {
-    state.optimizer.summary = { tested: 0, elapsedMs: 0, withheld: true, label: `Optimization stopped — no build applied. ${error.message}` };
+    state.optimizer.summary = {
+      kind: "build",
+      title: "Full build search · stopped",
+      scope: "Build A",
+      applied: false,
+      tested: 0,
+      elapsedMs: 0,
+      headline: `Optimization stopped — no build applied. ${error.message}`,
+      lines: [],
+      notes: [],
+    };
   } finally {
     state.optimizer.running = false;
     render();
@@ -2808,6 +3396,35 @@ function updateDamagePackage() {
 }
 
 document.addEventListener("click", (event) => {
+  const stepToggle = event.target.closest("[data-step-toggle]");
+  if (stepToggle) {
+    const step = stepToggle.dataset.stepToggle;
+    const next = STEP_IDS.includes(step) && state.ui.expandedStep !== step ? step : null;
+    state.ui.expandedStep = next;
+    if (next) {
+      state.ui.activeStep = next;
+      state.ui.expandedConstraint = null;
+    }
+    applyRailDisclosure();
+    if (next) {
+      document.getElementById(stepToggle.getAttribute("aria-controls") || "")?.querySelector("button, select, input, a")?.focus();
+    } else {
+      document.querySelector(`#step${state.ui.activeStep[0].toUpperCase()}${state.ui.activeStep.slice(1)} [data-step-toggle]`)?.focus();
+    }
+    return;
+  }
+  if (event.target.closest("#buyDismiss")) {
+    state.optimizer.summary = null;
+    renderBuyBand();
+    return;
+  }
+  const constraintToggle = event.target.closest("[data-constraint-toggle]");
+  if (constraintToggle) {
+    const row = constraintToggle.dataset.constraintToggle;
+    state.ui.expandedConstraint = state.ui.expandedConstraint === row ? null : row;
+    applyRailDisclosure();
+    return;
+  }
   if (event.target.closest("#uptimeModeToggle")) {
     invalidateOptimization();
     if (state.fight.aaUptimeMode === "calculated") {
@@ -3493,10 +4110,14 @@ function renderTrustPanels() {
   const quickPanel = document.getElementById("quickNotModeled");
   const items = NOT_MODELED_STATE.items || [];
   if (panel) {
-    panel.hidden = !champion;
-    document.getElementById("notModeledList").innerHTML = items.length
-      ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
-      : `<li class="not-modeled-empty">Nothing — every modeled item for ${escapeHtml(champion)} is included in calculations.</li>`;
+    // Product principle 6: the qualified-result marker is visible *when
+    // relevant*. A permanent band saying "nothing is unmodeled" trains the
+    // reader to ignore it, so the marker only exists when the list does.
+    panel.hidden = !champion || !items.length;
+    if (panel.hidden) panel.open = false;
+    document.getElementById("notModeledList").innerHTML = items
+      .map((item) => `<li>${escapeHtml(item)}</li>`)
+      .join("");
   }
   if (quickPanel) {
     quickPanel.hidden = !champion;
@@ -4029,7 +4650,7 @@ function showShareError(message) {
     host = document.createElement("p");
     host.id = "shareError";
     host.className = "engine-error";
-    const column = document.querySelector(".result-column");
+    const column = document.getElementById("banners") || document.querySelector(".canvas");
     if (!column) return;
     column.prepend(host);
   }
@@ -4040,7 +4661,7 @@ function showShareError(message) {
 function setSharedReadOnly(readOnly) {
   const analyst = document.getElementById("analystView");
   if (analyst) analyst.classList.toggle("is-shared", readOnly);
-  const builder = document.querySelector(".builder-column");
+  const builder = document.querySelector(".rail-steps");
   if (builder) builder.inert = readOnly;
 }
 

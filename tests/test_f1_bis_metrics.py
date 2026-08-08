@@ -295,10 +295,20 @@ def test_frontend_kill_time_never_displays_zero_and_shows_surviving_hp():
     assert 'seconds < 0.05 ? "<1 s" :' in source
     assert "function enemyHealthRemaining(result)" in source
     assert "alive · ${fmt(ending)} HP" in source
-    assert (
-        'prototypeMetricRow("Kill time", aValues.kill, bValues.kill, true, "s", aAlive, bAlive)'
-        in source
-    )
+    # The delta spine feeds the surviving-HP receipt into the kill-time row
+    # for both builds (it replaced prototypeMetricRow in the redesign).
+    spine = source.split('$("metricList").innerHTML = SPINE_METRICS')[1].split(
+        '.join("")'
+    )[0]
+    assert 'metric.key === "kill" ? aAlive : ""' in spine
+    assert 'metric.key === "kill" ? bAlive : ""' in spine
+    row = source.split("function spineRowHtml(")[1].split("\nfunction ")[0]
+    assert "metricValueLabel(metric, aValue, aAlive" in row
+    # The receipt is never lost to the 52px column: it rides as the cell's
+    # title and in the row's accessible name.
+    assert "title=" in row and "aria-label=" in row
+    label = source.split("function metricValueLabel(")[1].split("\nfunction ")[0]
+    assert "killTimeLabel(value)" in label
     # The old formatting that rendered a defeat as "0 s" is gone: every
     # kill-time label now routes through killTimeLabel().
     assert (

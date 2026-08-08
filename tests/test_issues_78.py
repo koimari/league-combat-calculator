@@ -157,6 +157,11 @@ EXCLUDED_ATTRIBUTES = {
     "data-quick-role",
     "data-quick-preset",
     "data-quick-remove",
+    # Redesign disclosure controls. They open and close a setup step or a
+    # constraints row in the rail; they carry no input and drive no payload
+    # field, so there is nothing for the capability contract to gate.
+    "data-step-toggle",
+    "data-constraint-toggle",
 }
 
 # Interactive control ids in the template (buttons, selects, inputs, dialogs),
@@ -194,6 +199,10 @@ CONTROL_IDS = {
     "economicsGold": ("controls", "purchase_optimize"),
     "economicsOptimize": ("controls", "purchase_optimize"),
     "economicsSell": ("controls", "purchase_optimize"),
+    # Redesign: comparison is turned on from step 3 and from the empty
+    # challenger side of the verdict strip. Both write the same build state.
+    "compareToggle": ("main", "items"),
+    "enableBuildB": ("main", "items"),
 }
 
 

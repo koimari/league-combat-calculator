@@ -163,16 +163,23 @@ def test_analyst_view_is_touch_first_and_has_no_hover_dependency():
     assert soup.select_one("#levelInput") is not None
 
 
-def test_mobile_css_stacks_quick_cards_vertically():
+def test_mobile_css_stacks_the_duel_vertically():
+    """Quick mode's card grid is gone; the same criterion now applies to the
+    duel canvas — on a phone the three-column duel becomes one column, the
+    picker grid becomes one column, and nothing is hover-only."""
     css = CSS.read_text(encoding="utf-8")
-    mobile = re.search(r"@media \(max-width: 480px\)\s*\{(.*?)\n\}", css, re.S)
-    assert mobile is not None, "missing 480px media query"
-    block = mobile.group(1)
-    assert ".quick-pick-grid" in block and "1fr" in block
-    assert ".quick-card" in block
-    assert ".quick-preset-row" in block
-    # The top-3 cards must not depend on hover to be readable.
-    assert ".quick-card:hover" not in css
+    narrow = css.split("@media (max-width: 860px)")[1].split("@media")[0]
+    assert ".duel" in narrow and "grid-template-columns: minmax(0, 1fr)" in narrow
+    assert ".verdict" in narrow
+    assert ".app-grid" in narrow
+
+    phone = css.split("@media (max-width: 520px)")[1]
+    assert ".picker-grid" in phone and "minmax(0, 1fr)" in phone
+    assert "min-height: 40px" in phone, "touch targets must stay reachable"
+
+    # Nothing the reader needs may depend on hover.
+    for selector in (".duel-row:hover", ".spine-row:hover", ".health-row:hover"):
+        assert selector not in css
 
 
 # ---------------------------------------------------------------------------

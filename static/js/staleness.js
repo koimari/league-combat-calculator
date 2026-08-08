@@ -10,6 +10,7 @@
   "use strict";
 
   var CHAMPION_BADGE_SELECTOR = ".stale-badge--champion";
+  var CHAMPION_HEADING_IDS = ["championName", "championBriefName"];
   var ITEM_BADGE_SELECTOR = ".stale-badge--item";
   var SLOT_SELECTOR = ".item-slot, .roster-item-slot";
   var ITEM_ID_PATTERN = /\/item\/(\d+)\.png/;
@@ -56,18 +57,24 @@
   }
 
   function renderChampionBadge() {
-    var heading = document.getElementById("championName");
-    if (!heading) return;
-    var existing = heading.parentNode.querySelector(CHAMPION_BADGE_SELECTOR);
+    // Two homes for the champion name in the redesigned rail: the always
+    // visible collapsed brief and the heading inside the expanded step-1
+    // editor. Badge both, or a stale champion is invisible until you open
+    // the editor that would have warned you.
     var name = championName();
-    var isStale = name && staleChampion(name);
-    if (isStale && !existing) {
-      heading.parentNode.insertBefore(
-        makeBadge("stale-badge--champion", name + " differs from the " + (report ? report.patch : "") + " game files"),
-        heading.nextSibling
-      );
-    } else if (!isStale && existing) {
-      existing.parentNode.removeChild(existing);
+    var isStale = Boolean(name) && staleChampion(name);
+    for (var i = 0; i < CHAMPION_HEADING_IDS.length; i += 1) {
+      var heading = document.getElementById(CHAMPION_HEADING_IDS[i]);
+      if (!heading || !heading.parentNode) continue;
+      var existing = heading.parentNode.querySelector(CHAMPION_BADGE_SELECTOR);
+      if (isStale && !existing) {
+        heading.parentNode.insertBefore(
+          makeBadge("stale-badge--champion", name + " differs from the " + (report ? report.patch : "") + " game files"),
+          heading.nextSibling
+        );
+      } else if (!isStale && existing) {
+        existing.parentNode.removeChild(existing);
+      }
     }
   }
 

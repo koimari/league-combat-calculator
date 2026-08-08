@@ -32,7 +32,7 @@ Users configure one main champion, allies, enemies, levels, ability ranks, roles
 
 ## Brand Commitments
 
-The product is part of Scryglass. Existing content uses the Scryglass name, patch context, champion and item imagery, and a dark calculator surface. The user explicitly asked for ten materially different visual directions rather than small variations on the current red-and-black treatment.
+The product is part of Scryglass. Content uses the Scryglass name, patch context, and champion and item imagery. The approved direction is one committed look — a dark setup rail beside a cream duel canvas — replacing the earlier red-and-black treatment. `docs/redesign/design-language.md` is the written system and `docs/redesign/target-2a.html` / `target-2b.html` are the pixel targets.
 
 ## Evidence on Hand
 
@@ -57,4 +57,4 @@ The web surface must remain keyboard navigable, preserve visible focus, maintain
 
 ## Open Decisions
 
-The ten directions in this request are exploratory prototypes. No visual direction is approved for production until the user selects one.
+The visual direction is settled: option 2a/2b is approved and implemented. The four decisions it locked in — rebuild the template and stylesheet to the new IA, a dedicated single-build layout when comparison is off, one theme, desktop-first — are recorded in `docs/redesign/gap-ledger.md`.

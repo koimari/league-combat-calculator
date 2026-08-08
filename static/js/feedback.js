@@ -19,7 +19,7 @@
   "use strict";
 
   var MOUNT_ID = "feedbackWidget";
-  var RESULT_AREA_SELECTOR = ".result-column";
+  var RESULT_AREA_SELECTOR = ".canvas";
   var SLOT_LETTERS = ["P", "Q", "W", "E", "R"];
   var STATE = {
     action: null,
@@ -193,31 +193,8 @@
    * Rendering
    * ------------------------------------------------------------------ */
 
-  function injectStyles() {
-    if (byId("feedbackWidgetStyles")) return;
-    var style = document.createElement("style");
-    style.id = "feedbackWidgetStyles";
-    style.textContent =
-      ".feedback-widget{margin-top:14px;padding:12px 14px;border:1px solid #2d2d2d;" +
-      "border-radius:10px;background:#161616;color:#e8e4d8;font:12px/1.45 system-ui,sans-serif}" +
-      ".feedback-widget summary{cursor:pointer;font-weight:700;letter-spacing:.02em}" +
-      ".feedback-widget .feedback-context{margin:8px 0;color:#a9a49a}" +
-      ".feedback-widget .feedback-context b{color:#f1eddf}" +
-      ".feedback-widget .feedback-actions{display:flex;gap:8px;flex-wrap:wrap}" +
-      ".feedback-widget button{border:1px solid #3a3a3a;background:#222;color:#e8e4d8;" +
-      "padding:5px 12px;border-radius:8px;cursor:pointer;font:inherit}" +
-      ".feedback-widget button:hover,.feedback-widget button:focus-visible{border-color:#8f8a7c}" +
-      ".feedback-widget button[aria-pressed=\"true\"]{border-color:#c5120b;background:#3a1715}" +
-      ".feedback-widget .feedback-fields{display:grid;gap:8px;margin-top:10px}" +
-      ".feedback-widget label{display:flex;gap:8px;align-items:center;color:#a9a49a;flex-wrap:wrap}" +
-      ".feedback-widget input[type=\"number\"],.feedback-widget select,.feedback-widget textarea{" +
-      "background:#202020;border:1px solid #3a3a3a;color:#f1eddf;border-radius:6px;padding:4px 6px;font:inherit}" +
-      ".feedback-widget textarea{width:100%;box-sizing:border-box;resize:vertical}" +
-      ".feedback-widget .feedback-paste{margin-top:10px}" +
-      ".feedback-widget .feedback-status{margin:8px 0 0;color:#c9c3b4}" +
-      ".feedback-widget .feedback-status.is-error{color:#ff8f87}";
-    document.head.appendChild(style);
-  }
+  // The widget's look lives in static/css/style.css with the rest of the
+  // design language; this module owns behaviour only.
 
   function statusMarkup() {
     var context;
@@ -260,7 +237,6 @@
     var mount = byId(MOUNT_ID);
     if (!mount) mount = one(RESULT_AREA_SELECTOR);
     if (!mount) return null; // results area absent — stay silent
-    injectStyles();
     STATE.loadout = captureLoadout();
     if (!mount.classList.contains("feedback-widget")) {
       mount.classList.add("feedback-widget");

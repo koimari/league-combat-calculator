@@ -74,6 +74,6 @@ Validated named champion modules are the only attacker path. Every cached champi
 - `pytest` covers calculations and API contracts.
 - `pylint` enforces source quality.
 - `scripts/golden_snapshot.py` detects numerical drift across full-pipeline scenarios.
-- browser verification covers empty start, selection, level changes, roster builds, A/B comparison, optimization, sharing, themes, and responsive layout.
+- browser verification covers empty start, selection, level changes, roster builds, A/B comparison, optimization, sharing, the single committed look (the dark/light toggle is retired — see `docs/redesign/gap-ledger.md` decision 3), and responsive layout.
 
 Expected numerical changes require a sourced explanation and a reviewed golden-baseline update.
