@@ -10,6 +10,8 @@ cross-check, and the real-data regression.
 """
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -261,3 +263,33 @@ def test_main_completes_on_real_data_and_matches_manifest(tmp_path, monkeypatch)
     receipt = br.item_receipt("1001", {"name": "Boots"})
     assert receipt["atoms"]["count"] == len(objects["1001"]) > 0
     assert receipt["atoms"]["effects"], "Boots should carry non-stat atoms"
+
+
+def test_script_entrypoint_bootstraps_repo_import_path(tmp_path):
+    """Direct execution from outside the repo can import the calculator package."""
+    probe = """
+import runpy
+import sys
+from pathlib import Path
+
+script = Path(sys.argv[1]).resolve()
+sys.path = [str(script.parent)] + [
+    entry for entry in sys.path if entry not in ("", str(script.parent.parent))
+]
+namespace = runpy.run_path(str(script), run_name="receipt_probe")
+receipt = namespace["champion_receipt"]("Aatrox", {"abilities": {}}, {})
+assert receipt["champion"] == "Aatrox"
+"""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            probe,
+            str(Path(br.__file__).resolve()),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
