@@ -11,6 +11,7 @@ from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.app import app
+import src.calculator.bis as bis_module
 from src.calculator.bis import enemy_bis_rank_key, role_scoped_bis_candidates
 from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.optimizer import get_eligible_legendaries
@@ -1935,7 +1936,8 @@ def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch)
 
     candidates = [get_item_by_name("Luden's Echo"), get_item_by_name("Warmog's Armor")]
     monkeypatch.setattr(
-        "src.app.bis_candidate_pool",
+        bis_module,
+        "bis_candidate_pool",
         lambda *_args, **_kwargs: candidates,
     )
 
@@ -1963,7 +1965,7 @@ def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch)
             },
         }
 
-    monkeypatch.setattr("src.app.build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
     response = app.test_client().post("/api/bis", json=_bis_request("main"))
 
     assert response.status_code == 200
@@ -1987,7 +1989,8 @@ def test_bis_excludes_audited_item_timing_before_ranking(monkeypatch):
         get_item_by_name("Warmog's Armor"),
     ]
     monkeypatch.setattr(
-        "src.app.bis_candidate_pool",
+        bis_module,
+        "bis_candidate_pool",
         lambda *_args, **_kwargs: candidates,
     )
 
@@ -2016,7 +2019,7 @@ def test_bis_excludes_audited_item_timing_before_ranking(monkeypatch):
             },
         }
 
-    monkeypatch.setattr("src.app.build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
     response = app.test_client().post("/api/bis", json=_bis_request("main"))
 
     assert response.status_code == 200
@@ -2090,7 +2093,7 @@ def test_enemy_bis_prioritizes_event_survival_before_outgoing_threat(monkeypatch
             },
         }
 
-    monkeypatch.setattr("src.app.build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
 
     assert response.status_code == 200
@@ -2107,7 +2110,8 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
     """A live damage item beats pure health, but an early death does not."""
 
     monkeypatch.setattr(
-        "src.app.bis_candidate_pool",
+        bis_module,
+        "bis_candidate_pool",
         lambda *_args, **_kwargs: [
             {"name": "Luden's Echo", "icon": "", "stats": {}},
             {"name": "Warmog's Armor", "icon": "", "stats": {}},
@@ -2146,7 +2150,7 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
             },
         }
 
-    monkeypatch.setattr("src.app.build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
 
     assert response.status_code == 200
@@ -2167,7 +2171,7 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
             result["objective"]["focus_damage_before_death"] = 5_000.0
         return result
 
-    monkeypatch.setattr("src.app.build_participant_timeline", glass_cannon_timeline)
+    monkeypatch.setattr(bis_module, "build_participant_timeline", glass_cannon_timeline)
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
     assert response.status_code == 200
     assert response.get_json()["candidates"][0]["name"] == "Warmog's Armor"

@@ -10,8 +10,64 @@ silently disappear from the other (see tests/test_endpoint_parity.py).
 
 import math
 from collections.abc import Mapping
+from urllib.parse import urlsplit
+
+from .champions import engine_registration_kind
 
 from .timeline_coverage import combine_timeline_coverages
+
+ICON_HOSTS = frozenset(
+    {
+        "cdn.communitydragon.org",
+        "ddragon.leagueoflegends.com",
+        "raw.communitydragon.org",
+    }
+)
+
+
+def https_icon(url: str) -> str:
+    """Return one allow-listed HTTPS icon URL or an empty public value."""
+    if not isinstance(url, str):
+        return ""
+    if url.startswith("http://"):
+        url = "https://" + url[len("http://") :]
+    parsed = urlsplit(url)
+    try:
+        port = parsed.port
+    except ValueError:
+        return ""
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname not in ICON_HOSTS
+        or parsed.username is not None
+        or parsed.password is not None
+        or port is not None
+    ):
+        return ""
+    return url
+
+
+def public_engine_mode(champion_name: str) -> str:
+    """Expose the public certification mode for one registered engine."""
+    registration = engine_registration_kind(champion_name)
+    if registration == "reviewed_module":
+        return "reviewed_event_order"
+    if registration == "generated_packet":
+        return "generated_packet"
+    return "unregistered"
+
+
+def public_loadout_summary(loadout, verified_champions: frozenset[str]) -> dict:
+    """Sanitize one resolved loadout for the stable browser response."""
+    summary = loadout.public_summary()
+    summary["icon"] = https_icon(summary["icon"])
+    summary["item_icons"] = [https_icon(icon) for icon in summary["item_icons"]]
+    summary["verified_attacker"] = summary["champion"] in verified_champions
+    registration = engine_registration_kind(summary["champion"])
+    summary["engine_registered"] = registration is not None
+    summary["engine_registration"] = registration
+    return summary
+
 
 # One combine policy per public key, shared by both serializers.
 # ``primary`` keeps the first target's value (the primary target), ``sum``

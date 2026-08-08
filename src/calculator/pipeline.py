@@ -38,6 +38,11 @@ from .auto_attack_policy import (
     resolve_auto_attack_policy,
 )
 from .role_quests import max_champion_level, validate_role
+from .request_parsing import (
+    request_bool as _request_bool,
+    request_int as _request_int,
+    request_number,
+)
 from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats, get_item_stats
 
@@ -528,40 +533,8 @@ def _has_riftmaker_max_stack_omnivamp(
 
 def _bounded_request_float(data: Mapping[str, Any], key: str, default: float) -> float:
     """Parse one finite public number inside its UI-supported range."""
-    value = data.get(key, default)
-    if isinstance(value, bool):
-        raise ValueError(f"{key} must be a number")
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"{key} must be a number") from exc
-    if not math.isfinite(parsed):
-        raise ValueError(f"{key} must be finite")
-
     minimum, maximum = PUBLIC_INPUT_LIMITS[key]
-    if not minimum <= parsed <= maximum:
-        raise ValueError(f"{key} must be between {minimum:g} and {maximum:g}")
-    return parsed
-
-
-def _request_bool(data: Mapping[str, Any], key: str, default: bool) -> bool:
-    """Parse a JSON boolean without treating non-empty strings as true."""
-    value = data.get(key, default)
-    if not isinstance(value, bool):
-        raise ValueError(f"{key} must be true or false")
-    return value
-
-
-def _request_int(
-    data: Mapping[str, Any], key: str, default: int, minimum: int, maximum: int
-) -> int:
-    """Parse a bounded public integer without accepting booleans."""
-    value = data.get(key, default)
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"{key} must be an integer")
-    if not minimum <= value <= maximum:
-        raise ValueError(f"{key} must be between {minimum} and {maximum}")
-    return value
+    return request_number(data, key, default, minimum, maximum)
 
 
 @dataclass(frozen=True)

@@ -1,27 +1,40 @@
-"""Best-in-slot domain policy (objective definitions and candidate scoring).
+"""Best-in-slot application boundary and domain policy.
 
 The BIS endpoint (/api/bis) is an objective selector over the coupled
 participant event timeline, not a second stat-only optimizer.  Keeping the
-objective contract and candidate-scoring rules in this module (instead of the
-web layer) means the API receipt and any future consumer cannot silently
-disagree about direction or units.  The Flask route in ``src/app.py`` owns
-request parsing, per-candidate orchestration, sorting, and response assembly.
+objective contract, candidate orchestration, sorting, and receipt assembly in
+this module means the API and any future consumer cannot silently disagree.
+Flask owns only HTTP decoding, cache/rate policy, and error translation.
 """
 
 from dataclasses import replace
 import math
 from collections.abc import Mapping
-from typing import Any
 
-from .loadout_rules import role_quest_legal_items, role_scoped_shop_items
+from .item_effects import validate_item_input_options
+from .loadout_rules import (
+    required_boots_tier,
+    role_quest_legal_items,
+    role_scoped_shop_items,
+)
 from .optimizer import (
     get_eligible_boots,
     get_eligible_legendaries,
     optimizer_supported_items,
 )
 from .pipeline import DEFAULT_FIGHT_DURATION
-from .scenario import MAX_LOADOUT_ITEMS, ChampionLoadout, ScenarioRequest
+from .participant_timeline import build_participant_timeline
+from .public_response import https_icon
+from .request_parsing import request_int, request_string
+from .scenario import (
+    MAX_LOADOUT_ITEMS,
+    ChampionLoadout,
+    ScenarioRequest,
+    parse_scenario_request,
+    resolve_scenario,
+)
 from .item_coverage import target_build_coverage
+from .timeline_coverage import applicability_exclusion_sources
 
 
 def bis_main_request(
@@ -438,3 +451,339 @@ def bis_objective_score(
         "support_shield_received": support_shield,
     }
     return score, metric, components, None
+
+
+def _withheld_candidate(
+    candidate: Mapping[str, object],
+    *,
+    reason: str,
+    detail: str | None,
+    timeline_coverage: Mapping[str, object],
+    **extra: object,
+) -> dict[str, object]:
+    """Build one stable receipt for a candidate excluded from ranking."""
+    receipt = {
+        "name": candidate["name"],
+        "icon": https_icon(candidate.get("icon", "")),
+        "reason": reason,
+        "timeline_coverage": dict(timeline_coverage),
+        **extra,
+    }
+    if detail is not None:
+        receipt["detail"] = detail
+    return receipt
+
+
+def _bis_coverage_receipt(
+    certified_ranked: list[dict],
+    partial_ranked: list[dict],
+    withheld_candidates: list[dict[str, object]],
+    target_coverage_filtered: list[dict[str, object]],
+) -> tuple[dict[str, object], str, list[dict[str, object]]]:
+    """Classify exhaustive coverage and return its public explanation."""
+    timing_excluded = [
+        row
+        for row in withheld_candidates
+        if row.get("reason") == "candidate_excluded_unresolved_timing"
+    ]
+    blocking_withheld = [
+        row
+        for row in withheld_candidates
+        if row.get("reason") != "candidate_excluded_unresolved_timing"
+    ]
+    complete = bool(certified_ranked) and not partial_ranked and not blocking_withheld
+    target_note = ""
+    if target_coverage_filtered:
+        first = target_coverage_filtered[0]
+        target_note = (
+            f"Target-side coverage filtered {len(target_coverage_filtered)} candidate "
+            f"receipts; {first['champion']} · {first['name']}: {first['reason']}"
+        )
+    certification = (
+        "bis_event_order_certified_with_exclusions"
+        if complete and timing_excluded
+        else (
+            "bis_event_order_certified"
+            if complete
+            else (
+                "bis_certified_subset_not_exhaustive"
+                if certified_ranked
+                else "bis_no_certified_candidates"
+            )
+        )
+    )
+    if complete:
+        note = "Every candidate has complete sourced event order."
+    elif certified_ranked:
+        note = (
+            "Certified candidates are available, but exhaustive BIS is withheld "
+            "because one or more candidates were not fully evaluated or still "
+            "have partial event order."
+        )
+    else:
+        note = (
+            "No candidate has complete sourced event order; BIS is withheld and "
+            "only partial or pre-timeline receipts are shown."
+        )
+    if timing_excluded:
+        note += (
+            f" {len(timing_excluded)} candidate timing receipt(s) were excluded "
+            "before ranking."
+        )
+    if target_note:
+        note += f" {target_note}"
+    return (
+        {"complete": complete, "certification": certification, "note": note},
+        target_note,
+        timing_excluded,
+    )
+
+
+# The public interface stays deliberately small; the internal orchestration
+# mirrors one candidate through every coverage and scoring gate.
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def bis_payload(data: Mapping[str, object]) -> dict:
+    """Rank one slot and return the complete JSON-safe BIS receipt."""
+    request = parse_scenario_request(data, deterministic=True, parse_crossover=False)
+    subject_team = request_string(data, "subject_team", "main")
+    if subject_team not in {"main", "ally", "enemy"}:
+        raise ValueError("subject_team must be main, ally, or enemy")
+    slot_index = request_int(data, "slot_index", 0, 0, MAX_LOADOUT_ITEMS - 1)
+    slot_kind = request_string(data, "slot_kind", "item")
+    if slot_kind not in {"item", "boots"}:
+        raise ValueError("slot_kind must be item or boots")
+    subject_index = request_int(data, "subject_index", 0, 0, 4)
+    objective_meta = bis_objective_meta(request_string(data, "objective", "overall"))
+    objective_key = objective_meta["key"]
+    if subject_team == "ally" and subject_index >= len(request.allies):
+        raise ValueError("subject_index is outside the selected ally roster")
+    if subject_team == "enemy" and subject_index >= len(request.enemies):
+        raise ValueError("subject_index is outside the selected enemy roster")
+
+    resolved = resolve_scenario(request)
+    main_request = bis_main_request(request, data)
+    main_loadout = main_request.resolve()
+    candidate_item_options = validate_item_input_options(
+        data.get("candidate_item_options")
+    )
+    enemies = list(resolved.enemies)
+    allies = list(resolved.allies)
+    subject_base = (
+        main_request
+        if subject_team == "main"
+        else (
+            request.allies[subject_index]
+            if subject_team == "ally"
+            else request.enemies[subject_index]
+        )
+    )
+    if subject_team != "main" and not subject_base.role:
+        raise ValueError(
+            f"{subject_team} role is required before roster BIS can be scored"
+        )
+    subject_id = (
+        "main" if subject_team == "main" else f"{subject_team}:{subject_base.champion}"
+    )
+    role = subject_base.role
+    candidates = bis_candidate_pool(
+        slot_kind,
+        boots_tier=required_boots_tier(role, subject_base.role_quest_complete),
+        role=role,
+        role_quest_complete=subject_base.role_quest_complete,
+    )
+    equipped_slot_item = (
+        subject_base.boots
+        if slot_kind == "boots"
+        else (
+            subject_base.items[slot_index]
+            if slot_index < len(subject_base.items)
+            else ""
+        )
+    )
+    if equipped_slot_item:
+        candidates = [
+            candidate
+            for candidate in candidates
+            if candidate.get("name") != equipped_slot_item
+        ]
+
+    ranked: list[dict] = []
+    withheld: list[dict[str, object]] = []
+    target_filtered: list[dict[str, object]] = []
+    fight_params = resolved.fight_params
+    for candidate in candidates:
+        try:
+            candidate_params = fight_params
+            candidate_options = candidate_item_options.get(candidate["name"])
+            if candidate_options:
+                candidate_params = replace(
+                    fight_params,
+                    item_options={
+                        **(fight_params.item_options or {}),
+                        candidate["name"]: candidate_options,
+                    },
+                )
+            candidate_request = bis_replaced_loadout(
+                subject_base,
+                slot_index=slot_index,
+                slot_kind=slot_kind,
+                candidate_name=candidate["name"],
+                candidate_item_options=candidate_options,
+            )
+            resolved_subject = candidate_request.resolve()
+            candidate_main = (
+                resolved_subject if subject_team == "main" else main_loadout
+            )
+            candidate_enemies = list(enemies)
+            candidate_allies = list(allies)
+            if subject_team == "enemy":
+                candidate_enemies[subject_index] = resolved_subject
+            elif subject_team == "ally":
+                candidate_allies[subject_index] = resolved_subject
+            blocked_targets = roster_target_coverage(
+                [*candidate_enemies, *candidate_allies]
+            )
+            if blocked_targets:
+                target_filtered.extend(blocked_targets)
+                withheld.append(
+                    _withheld_candidate(
+                        candidate,
+                        reason="target_coverage_blocked",
+                        detail=None,
+                        timeline_coverage={
+                            "complete": False,
+                            "certification": "target_coverage_blocked",
+                            "exact_sources": [],
+                            "coarse_sources": [],
+                            "note": (
+                                "Candidate was not evaluated because a selected "
+                                "roster item is outside the sourced target model."
+                            ),
+                        },
+                        target_coverage=blocked_targets,
+                    )
+                )
+                continue
+            focus_id = "main" if subject_team == "main" else subject_id
+            combat = build_participant_timeline(
+                candidate_main.champion_data,
+                candidate_main.request.level,
+                list(candidate_main.item_data),
+                candidate_params,
+                main_stats=candidate_main.stats,
+                main_defenses=candidate_main.defenses,
+                enemies=candidate_enemies,
+                allies=candidate_allies,
+                focus_participant_id=focus_id,
+            )
+            coverage = combat.get("timeline_coverage", {})
+            timing_exclusions = applicability_exclusion_sources(coverage)
+            if timing_exclusions:
+                names = ", ".join(timing_exclusions)
+                withheld.append(
+                    _withheld_candidate(
+                        candidate,
+                        reason="candidate_excluded_unresolved_timing",
+                        exclusion_type="applicability",
+                        excluded_sources=timing_exclusions,
+                        detail=(
+                            "Candidate was excluded before BIS ranking because "
+                            f"{names} has no sourced hit boundary for this rotation."
+                        ),
+                        timeline_coverage=coverage,
+                    )
+                )
+                continue
+            objective = combat["objective"]
+            focus = next(
+                row
+                for row in combat["participants"]
+                if row["participant_id"] == focus_id
+            )
+            score, metric, components, rank_key = bis_objective_score(
+                objective_key,
+                subject_team=subject_team,
+                focus_id=focus_id,
+                combat=combat,
+                objective=objective,
+                focus=focus,
+            )
+            ranked.append(
+                {
+                    "name": candidate["name"],
+                    "icon": https_icon(candidate.get("icon", "")),
+                    "score": round(score, 1),
+                    "objective_value": round(score, 3),
+                    "metric": metric,
+                    "components": components,
+                    "stats": candidate.get("stats", {}),
+                    "survival": focus["survival"],
+                    "defensive_effect_receipt": bis_defensive_effect_receipt(
+                        candidate["name"], focus["survival"]
+                    ),
+                    "timeline_coverage": coverage,
+                    "_sort_score": score,
+                    **({"_rank_key": rank_key} if rank_key is not None else {}),
+                }
+            )
+        except (KeyError, ValueError) as exc:
+            withheld.append(
+                _withheld_candidate(
+                    candidate,
+                    reason="candidate_loadout_unavailable",
+                    detail=str(exc),
+                    timeline_coverage={
+                        "complete": False,
+                        "certification": "candidate_not_evaluated",
+                        "exact_sources": [],
+                        "coarse_sources": [],
+                        "note": "Candidate was withheld before timeline evaluation.",
+                    },
+                )
+            )
+
+    if objective_key == "overall" and subject_team == "enemy":
+        ranked.sort(key=lambda row: row["_rank_key"], reverse=True)
+    else:
+        ranked.sort(
+            key=lambda row: row["_sort_score"],
+            reverse=objective_meta["direction"] == "higher",
+        )
+    for row in ranked:
+        row.pop("_rank_key", None)
+        row.pop("_sort_score", None)
+    partial = [
+        row for row in ranked if not row["timeline_coverage"].get("complete", False)
+    ]
+    certified = [
+        row for row in ranked if row["timeline_coverage"].get("complete", False)
+    ]
+    coverage_receipt, target_note, timing_excluded = _bis_coverage_receipt(
+        certified, partial, withheld, target_filtered
+    )
+    return {
+        "objective": objective_meta,
+        "defensive_effects": {
+            "certified": BIS_CERTIFIED_DEFENSIVE_EFFECTS,
+            "withheld": BIS_UNMODELED_DEFENSIVE_EFFECTS,
+        },
+        "subject_team": subject_team,
+        "subject_index": subject_index,
+        "slot_index": slot_index,
+        "slot_kind": slot_kind,
+        "excluded_equipped_item": equipped_slot_item or None,
+        "candidate_scope": (
+            f"role-tagged:{role}" if role and slot_kind != "boots" else "all-supported"
+        ),
+        "candidates": certified,
+        "partial_candidates": partial,
+        "candidate_count": len(candidates),
+        "certified_candidate_count": len(certified),
+        "partial_candidate_count": len(partial),
+        "withheld_candidate_count": len(withheld),
+        "withheld_candidates": withheld,
+        "coverage": coverage_receipt,
+        "target_coverage_filtered": len(target_filtered),
+        "target_coverage_note": target_note,
+        "timing_excluded_candidate_count": len(timing_excluded),
+    }

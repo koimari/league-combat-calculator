@@ -28,6 +28,11 @@ from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
 from .pipeline import FightParams
 from .role_quests import require_level_within_cap, validate_role
+from .request_parsing import (
+    request_int as _request_int,
+    request_string as _request_string,
+    request_string_list as _request_string_list,
+)
 from .stats import MAX_LEVEL, calculate_total_stats
 from .champions.skill_orders import get_ability_rank
 
@@ -379,77 +384,6 @@ def parse_roster(
 
 _ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
 _VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
-
-
-def _request_string(
-    data: Mapping[str, object],
-    key: str,
-    default: str = "",
-    *,
-    required: bool = False,
-) -> str:
-    """Read a short request string without coercing objects into names."""
-    value = data.get(key, default)
-    if not isinstance(value, str):
-        raise ValueError(f"{key} must be a string")
-    value = value.strip()
-    if required and not value:
-        raise ValueError(f"{key} is required")
-    if len(value) > 100:
-        raise ValueError(f"{key} must be at most 100 characters")
-    return value
-
-
-def _request_int(
-    data: Mapping[str, object],
-    key: str,
-    default: int,
-    minimum: int,
-    maximum: int,
-) -> int:
-    """Read one bounded integer without accepting booleans or decimals."""
-    value = data.get(key, default)
-    if isinstance(value, bool):
-        raise ValueError(f"{key} must be an integer")
-    if isinstance(value, int):
-        parsed = value
-    elif isinstance(value, str):
-        try:
-            parsed = int(value)
-        except ValueError as exc:
-            raise ValueError(f"{key} must be an integer") from exc
-    else:
-        raise ValueError(f"{key} must be an integer")
-    if not minimum <= parsed <= maximum:
-        raise ValueError(f"{key} must be between {minimum} and {maximum}")
-    return parsed
-
-
-def _request_string_list(
-    data: Mapping[str, object],
-    key: str,
-    *,
-    maximum: int,
-) -> list[str]:
-    """Read a bounded list of unique short names."""
-    value = data.get(key, [])
-    if not isinstance(value, list):
-        raise ValueError(f"{key} must be a list")
-    if len(value) > maximum:
-        raise ValueError(f"{key} may contain at most {maximum} entries")
-
-    names = []
-    for entry in value:
-        if not isinstance(entry, str):
-            raise ValueError(f"{key} entries must be strings")
-        name = entry.strip()
-        if len(name) > 100:
-            raise ValueError(f"{key} entries must be at most 100 characters")
-        if name:
-            names.append(name)
-    if len(set(names)) != len(names):
-        raise ValueError(f"{key} must not contain duplicates")
-    return names
 
 
 def _load_public_champion(name: str) -> dict[str, Any]:

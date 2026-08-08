@@ -10,6 +10,8 @@ import pytest
 from bs4 import BeautifulSoup
 
 import src.app as app_module
+import src.calculator.calculate as calculate_module
+import src.calculator.scenario as scenario_module
 from src.calculator.bis import bis_main_request
 from src.calculator.public_response import serialize_fight_result
 from src.calculator.scenario import parse_scenario_request
@@ -147,7 +149,7 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
     captured = {}
     champion_data = {"name": "Ahri"}
 
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: champion_data)
+    monkeypatch.setattr(scenario_module, "get_champion", lambda _name: champion_data)
 
     def fake_run_fight(data, level, items, params):
         captured["calculate"] = params
@@ -167,7 +169,7 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
         captured["optimize"] = fight_params
         return {"items": [], "total_damage": 0.0}
 
-    monkeypatch.setattr(app_module, "run_fight", fake_run_fight)
+    monkeypatch.setattr(calculate_module, "run_fight", fake_run_fight)
     monkeypatch.setattr(app_module, "optimize_build", fake_optimize_build)
 
     payload = {
@@ -836,7 +838,7 @@ def test_public_post_routes_accept_all_dedicated_champion_modules(
 
 
 def test_optimizer_global_bucket_returns_json_429(monkeypatch, tmp_path):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+    monkeypatch.setattr(scenario_module, "get_champion", lambda _name: {"name": "Ahri"})
     monkeypatch.setattr(
         app_module,
         "optimize_build",
@@ -2639,7 +2641,7 @@ class TestBreakdownProcRowShape:
 
 def test_attacker_above_level_18_requires_completed_top_quest(monkeypatch):
     """Levels 19-20 are top-quest rewards; every other role caps at 18."""
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+    monkeypatch.setattr(scenario_module, "get_champion", lambda _name: {"name": "Ahri"})
 
     def fake_run_fight(data, level, items, params):
         return {
@@ -2654,7 +2656,7 @@ def test_attacker_above_level_18_requires_completed_top_quest(monkeypatch):
             "notes": [],
         }
 
-    monkeypatch.setattr(app_module, "run_fight", fake_run_fight)
+    monkeypatch.setattr(calculate_module, "run_fight", fake_run_fight)
     monkeypatch.setattr(
         app_module,
         "optimize_build",
