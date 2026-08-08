@@ -207,6 +207,73 @@ def _selected_teammate(attacker: Any, teammates: list[Any]) -> Any | None:
     return teammates[index]
 
 
+# Items whose cross-participant packets are derived by scanning the
+# holder's damage/takedown event stream below (Phage's Rage autos, Black
+# Cleaver Carve stacks, Bloodletter's Curse, Bloodsong's Expose Weakness,
+# Cryptbloom's takedown nova).  The optimizer's score-only tuple ledger
+# carries positional rows the scan cannot read, so the pipeline's tuple
+# predicate consults this set and keeps dict rows for these holders
+# (issue #169).  Every new branch below that reads ``damage_events`` or
+# ``takedown_events`` must add its item here, or a score-only fight will
+# silently starve its scan.
+EVENT_SCAN_SUPPORT_ITEMS = frozenset(
+    {
+        "Black Cleaver",
+        "Bloodletter's Curse",
+        "Bloodsong",
+        "Cryptbloom",
+        "Phage",
+    }
+)
+
+
+def has_event_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
+    """Whether any held item derives support packets from the event stream."""
+    return any(str(item.get("name", "")) in EVENT_SCAN_SUPPORT_ITEMS for item in items)
+
+
+# The subset whose trigger is the takedown stream: the receipt composition
+# synthesizes ``takedown_events`` from the pair fight's one-pair shield
+# outcome (``target_ending_health``), so a score-only fight for these
+# holders must keep that outcome instead of skipping it (issue #169).
+TAKEDOWN_SCAN_SUPPORT_ITEMS = frozenset({"Cryptbloom"})
+
+
+def has_takedown_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
+    """Whether any held item derives support packets from takedowns."""
+    return any(
+        str(item.get("name", "")) in TAKEDOWN_SCAN_SUPPORT_ITEMS for item in items
+    )
+
+
+# The holders that consume each pre-scanned trigger stream below.  The
+# streams are built lazily from these sets: every consumer branch in
+# ``derive_item_support_effects`` is gated on its item name, so a holder
+# with none of a stream's items can skip that scan entirely.  A new branch
+# that reads ``cc_events``/``damage_events`` must add its item here, or
+# its stream will arrive empty.
+CC_TRIGGER_ITEMS = frozenset(
+    {"Fimbulwinter", "Bandlepipes", "Solstice Sleigh", "Imperial Mandate"}
+)
+DAMAGE_TRIGGER_ITEMS = frozenset({"Bloodsong", "Black Cleaver", "Bloodletter's Curse"})
+
+# Every holder whose scan reads the per-event view at all (``target`` /
+# ``_event_id`` enrichment, the takedown synthesis, or a raw damage sum).
+# The optimizer's compiled path builds that enriched per-event view only
+# for these holders; everyone else scans the plain engine result.
+EVENT_VIEW_SUPPORT_ITEMS = (
+    EVENT_SCAN_SUPPORT_ITEMS
+    | TAKEDOWN_SCAN_SUPPORT_ITEMS
+    | CC_TRIGGER_ITEMS
+    | frozenset({"Echoes of Helia"})
+)
+
+
+def has_event_view_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
+    """Whether any held item scans the per-event damage/takedown view."""
+    return any(str(item.get("name", "")) in EVENT_VIEW_SUPPORT_ITEMS for item in items)
+
+
 def derive_item_support_effects(
     attacker: Any,
     result: Mapping[str, Any],
@@ -222,9 +289,13 @@ def derive_item_support_effects(
     teammates = _teammates(attacker, all_actors)
     packets: list[dict[str, Any]] = []
     triggers = _support_triggers(trigger_effects, attacker)
-    cc_events = _cc_triggers(result)
-    takedown_events = _takedown_triggers(result)
-    damage_events = _damage_triggers(result)
+    # Each stream scans the full event ledger, so it is built only when a
+    # held item consumes it (the registries above own that knowledge).
+    cc_events = _cc_triggers(result) if names & CC_TRIGGER_ITEMS else []
+    takedown_events = (
+        _takedown_triggers(result) if names & TAKEDOWN_SCAN_SUPPORT_ITEMS else []
+    )
+    damage_events = _damage_triggers(result) if names & DAMAGE_TRIGGER_ITEMS else []
 
     # Reap is a progression/economy branch, not a guessed combat bonus.  The
     # authored minion-kill count is bounded by its sourced 100-kill quest and

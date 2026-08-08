@@ -13,7 +13,8 @@ from collections import defaultdict
 from dataclasses import dataclass, replace
 import math
 from operator import itemgetter
-from typing import Any, Iterable, Mapping, MutableMapping
+from collections.abc import Iterable, Mapping, MutableMapping
+from typing import Any
 
 from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
@@ -23,6 +24,7 @@ from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
     derive_item_support_effects,
+    has_event_view_support_items,
     schedule_knights_vow,
 )
 from .champions.skill_orders import get_ability_rank
@@ -113,9 +115,14 @@ class Combatant:
 def _coalesce_darius_q_heals(
     healing: MutableMapping[str, list[dict[str, Any]]],
 ) -> None:
-    """Combine Darius Q pair receipts into one live heal per cast."""
+    """Combine Darius Q pair receipts into one live heal per cast.
+
+    The kept copy is replaced, never mutated in place: a packet-cached
+    typed action is keyed by the original dict's identity (issue #169),
+    so an in-place formula swap would let a stale cached conversion win.
+    """
     for events in healing.values():
-        groups: dict[tuple[float, int], tuple[dict[str, Any], int]] = {}
+        groups: dict[tuple[float, int], tuple[int, int]] = {}
         kept: list[dict[str, Any]] = []
         for event in events:
             marker = event.get("_darius_q_group")
@@ -125,16 +132,20 @@ def _coalesce_darius_q_heals(
             key = (float(marker[0]), int(marker[1]))
             first = groups.get(key)
             if first is None:
-                groups[key] = (event, 1)
+                groups[key] = (len(kept), 1)
                 kept.append(event)
             else:
                 groups[key] = (first[0], first[1] + 1)
-        for event, count in groups.values():
-            event["amount_formula"] = (
-                lambda current_health, maximum_health, count=count: (
-                    max(0.0, maximum_health - current_health) * min(0.51, 0.17 * count)
-                )
-            )
+        for index, count in groups.values():
+            kept[index] = {
+                **kept[index],
+                "amount_formula": (
+                    lambda current_health, maximum_health, count=count: (
+                        max(0.0, maximum_health - current_health)
+                        * min(0.51, 0.17 * count)
+                    )
+                ),
+            }
         events[:] = kept
 
 
@@ -403,6 +414,19 @@ def _pair_packet(
     champion_wound_by_source = {
         str(packet.get("source_key", "")): packet for packet in champion_wounds
     }
+    # The engine exposes the final effective resistances for this pair.
+    # Preserve them on every packet so an ordered target state can re-price
+    # the same post-mitigation event after adding its sourced resistance
+    # delta.  A missing value is deliberately left absent: the survival
+    # walk then refuses to invent a mitigation ratio for that packet.
+    baseline_fields = []
+    for field in ("effective_armor", "effective_mr"):
+        try:
+            baseline = float(result[field])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if math.isfinite(baseline):
+            baseline_fields.append((f"_baseline_{field}", baseline))
     for index, event in enumerate(result.get("damage_events", [])):
         if "sequence" not in event:
             # See _action_key: pair-local event ids stay order-irrelevant
@@ -412,6 +436,8 @@ def _pair_packet(
                 "has no sequence; the walk's tie-break order would depend on "
                 "event-id numbering"
             )
+        source_key = str(event.get("source_key", ""))
+        time_key = round(float(event.get("time", 0.0)), 9)
         enriched = {
             **event,
             "attacker": attacker_id,
@@ -424,9 +450,7 @@ def _pair_packet(
         # the damaging event as the same wound receipt the survival walks
         # consume: the patch-wide factor and a 3-second window, refreshed by
         # every hit (each Death Lotus dagger), sourced to the ability label.
-        wound_packet = champion_wound_by_source.get(
-            str(event.get("source_key", "")), None
-        )
+        wound_packet = champion_wound_by_source.get(source_key)
         if wound_packet is not None and float(event.get("damage", 0.0) or 0.0) > 0.0:
             enriched["grievous_duration"] = float(wound_packet.get("duration", 0.0))
             enriched["_wound_source"] = str(
@@ -436,37 +460,21 @@ def _pair_packet(
         # same target-allocation receipt onto each ordered packet so the
         # coupled timeline can prove which roster slot received it instead of
         # displaying an unexplained aggregate secondary hit.
-        source_row = result_breakdown.get(str(event.get("source_key", "")), {})
+        source_row = result_breakdown.get(source_key, {})
         if isinstance(source_row, Mapping) and isinstance(
             source_row.get("targeting"), Mapping
         ):
             enriched["targeting"] = dict(source_row["targeting"])
-        # The engine exposes the final effective resistances for this pair.
-        # Preserve them on every packet so an ordered target state can re-price
-        # the same post-mitigation event after adding its sourced resistance
-        # delta.  A missing value is deliberately left absent: the survival
-        # walk then refuses to invent a mitigation ratio for that packet.
-        for field in ("effective_armor", "effective_mr"):
-            try:
-                baseline = float(result[field])
-            except (KeyError, TypeError, ValueError):
-                continue
-            if math.isfinite(baseline):
-                enriched[f"_baseline_{field}"] = baseline
+        for baseline_key, baseline in baseline_fields:
+            enriched[baseline_key] = baseline
         enriched["_sk"] = _action_key(
             float(event.get("time", 0.0)), 0.0, defender_id, enriched
         )
         events.append(enriched)
-        event_ids_by_key[
-            (
-                str(event.get("source_key", "")),
-                round(float(event.get("time", 0.0)), 9),
-                int(event.get("sequence", 0) or 0),
-            )
-        ] = enriched["_event_id"]
-        event_ids_by_source_time[
-            (str(event.get("source_key", "")), round(float(event.get("time", 0.0)), 9))
-        ].append(enriched["_event_id"])
+        event_ids_by_key[(source_key, time_key, int(event.get("sequence", 0) or 0))] = (
+            enriched["_event_id"]
+        )
+        event_ids_by_source_time[(source_key, time_key)].append(enriched["_event_id"])
     heals: list[dict[str, Any]] = []
     for heal_index, event in enumerate(result.get("self_healing_events", [])):
         original_event_id = event.get("_event_id")
@@ -540,6 +548,101 @@ def _pair_packet(
             if isinstance(entry, Mapping)
         },
     }
+
+
+def _packet_typed_actions(
+    packet: dict[str, Any], index_of: Mapping[str, int]
+) -> dict[int, SurvivalAction]:
+    """The packet's events and heals as typed actions, compiled once.
+
+    Issue #169: a cached pair packet serves every evaluation of a search,
+    so its typed-action conversion happens here once and rides the packet
+    (like the precomputed ``_sk`` sort keys) instead of being re-derived
+    from the event dicts on every walk.  The map is keyed by template
+    identity; consumers pair each cached action with that template's
+    per-evaluation copy via ``_replace(event=...)``, which reproduces the
+    per-event conversion exactly while the copy's contents are unchanged —
+    and every composition step that changes an action-relevant field
+    replaces the dict, which makes the lookup miss and the conversion run
+    fresh.  The participant-index token is re-verified on every use (the
+    ``resolve_damage_effects`` pattern), so a different roster order can
+    never serve stale indices.
+    """
+    token = tuple(index_of.items())
+    cached = packet.get("_typed")
+    if cached is not None and cached[0] == token:
+        return cached[1]
+    by_template: dict[int, SurvivalAction] = {}
+    for template in packet["events"]:
+        subject_id = str(template.get("target", ""))
+        subject = index_of.get(subject_id)
+        if subject is None:
+            continue
+        by_template[id(template)] = survival_action_from_event(
+            template, 0.0, subject, index_of, subject_id=subject_id
+        )._replace(event=None)
+    for template in packet["heals"]:
+        subject_id = str(template.get("attacker", ""))
+        subject = index_of.get(subject_id)
+        if subject is None:
+            continue
+        by_template[id(template)] = survival_action_from_event(
+            template, 1.0, subject, index_of, subject_id=subject_id
+        )._replace(event=None)
+    packet["_typed"] = (token, by_template)
+    return by_template
+
+
+def _warmog_heart_tick_events(
+    combatant: Combatant, duration: float
+) -> list[dict[str, Any]]:
+    """Author an active Warmog's Heart holder's regen tick events.
+
+    Warmog's Heart is a live combat-state gate.  Each tick's amount is based
+    on the current maximum health at the moment it lands, while the no-damage
+    window is checked inside the survival walk against the last applied
+    incoming packet.  The 2,000 bonus-health threshold is sourced from the
+    item's full Wiki entry and is intentionally not guessed for an
+    unqualified loadout.  Both walks author through this one function: the
+    receipt composition schedules the events per call, and the compiled base
+    panel converts them into typed actions once per search (issue #169).
+    """
+    if not any(
+        str(item.get("name", "")) == "Warmog's Armor" for item in combatant.items
+    ):
+        return []
+    threshold = sustain_effect_value("Warmog's Armor", "heart_bonus_health_threshold")
+    if float(combatant.stats.get("bonus_health", 0.0)) < threshold:
+        return []
+    ratio = sustain_effect_value("Warmog's Armor", "heart_max_health_ratio_per_tick")
+    tick = sustain_effect_value("Warmog's Armor", "heart_tick_interval")
+    gate = sustain_effect_value("Warmog's Armor", "heart_champion_damage_cooldown")
+    if ratio <= 0.0 or tick <= 0.0:
+        return []
+    events: list[dict[str, Any]] = []
+    time_value = tick
+    sequence = 0
+    while time_value <= duration + 1e-9:
+        events.append(
+            {
+                "time": round(time_value, 6),
+                "amount": 0.0,
+                "amount_formula": (
+                    lambda _current_health, maximum_health, ratio=ratio: (
+                        maximum_health * ratio
+                    )
+                ),
+                "source": "Warmog's Armor (Warmog's Heart)",
+                "kind": "regen",
+                "actor_wide": True,
+                "requires_damage_free_seconds": gate,
+                "_event_id": f"{combatant.participant_id}:warmog:{sequence}",
+                "sequence": sequence,
+            }
+        )
+        sequence += 1
+        time_value += tick
+    return events
 
 
 def _actor_params(base: FightParams, actor: Combatant) -> FightParams:
@@ -739,8 +842,12 @@ def _support_effect_templates(
                     "_source_event_id": applied_self_id,
                 }
             )
-    item_result = dict(result)
-    if damage_events is not None:
+    if damage_events is None:
+        # No per-event override: the item scan reads the engine result as-is
+        # (it never mutates it), so skip the per-candidate dict copy.
+        item_result: Mapping[str, Any] = result
+    else:
+        item_result = dict(result)
         item_result["damage_events"] = list(damage_events)
         if (
             target_id
@@ -1600,6 +1707,7 @@ def _simulate_survival(
     duration: float,
     annotate: bool = True,
     receipt_events: MutableMapping[str, list[dict[str, Any]]] | None = None,
+    typed_actions: Mapping[int, SurvivalAction] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Resolve damage, shields, healing, and death for every participant.
 
@@ -1610,6 +1718,10 @@ def _simulate_survival(
     ``receipt_events`` is an optional outgoing ledger used only by receipt
     callers; when supplied, stateful redirect/deferred clones are mirrored
     beside their source packet without changing score-only inputs.
+    ``typed_actions`` maps an event dict's identity to its packet-compiled
+    :class:`SurvivalAction` (issue #169); a hit pairs the cached action
+    with the live dict instead of re-deriving every typed field, and any
+    event the expansion replaced or authored converts fresh.
     """
     combatant_list = list(combatants)
     combatant_by_id = {
@@ -1645,8 +1757,16 @@ def _simulate_survival(
     expanded_incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
     expanded_healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     redirect_children: dict[str, dict[str, Any]] = {}
+    typed_lookup = dict(typed_actions) if typed_actions else None
     for participant_id, events in healing.items():
-        expanded_healing[participant_id].extend(dict(event) for event in events)
+        bucket = expanded_healing[participant_id]
+        for event in events:
+            clone = dict(event)
+            if typed_lookup is not None:
+                cached_action = typed_lookup.get(id(event))
+                if cached_action is not None:
+                    typed_lookup[id(clone)] = cached_action
+            bucket.append(clone)
 
     def _insert_receipt_clone(
         source_event: dict[str, Any], clone: dict[str, Any]
@@ -1681,16 +1801,30 @@ def _simulate_survival(
             index += 1
         bucket.insert(index + 1, clone)
 
+    # Only a Death's Dance holder can stamp deferral metadata; resolving the
+    # holders once keeps the per-event loop below to plain marker checks.
+    deferral_holders = {
+        participant_id: combatant
+        for participant_id, combatant in combatant_by_id.items()
+        if float(getattr(combatant.defenses, "damage_deferral_fraction", 0.0) or 0.0)
+        > 0.0
+    }
     for participant_id, events in incoming.items():
         for original in events:
             event = original
             target_id = str(event.get("target", participant_id))
-            try:
-                redirect_fraction = float(event.get("redirect_fraction", 0.0) or 0.0)
-            except (TypeError, ValueError):
+            if "redirect_fraction" not in event:
                 redirect_fraction = 0.0
-            redirect_fraction = max(0.0, min(1.0, redirect_fraction))
-            redirect_target = str(event.get("redirect_target", ""))
+                redirect_target = ""
+            else:
+                try:
+                    redirect_fraction = float(
+                        event.get("redirect_fraction", 0.0) or 0.0
+                    )
+                except (TypeError, ValueError):
+                    redirect_fraction = 0.0
+                redirect_fraction = max(0.0, min(1.0, redirect_fraction))
+                redirect_target = str(event.get("redirect_target", ""))
             if redirect_fraction > 0.0 and redirect_target in states:
                 original_amount = max(0.0, float(event.get("damage", 0.0)))
                 # Knight's Vow redirects pre-mitigation damage.  A pair event
@@ -1895,17 +2029,14 @@ def _simulate_survival(
             # packets.  Apply its typed defense metadata here, before the
             # shared split logic, so every authored source (abilities, autos,
             # item procs, and reactive packets) follows the same path.
-            target_defenses = combatant_by_id.get(target_id)
+            target_defenses = (
+                deferral_holders.get(target_id) if deferral_holders else None
+            )
             if (
                 target_defenses is not None
                 and not event.get("_deferred")
                 and str(event.get("damage_type", "")) in {"physical", "magic"}
                 and float(event.get("damage", 0.0) or 0.0) > 0.0
-                and float(
-                    getattr(target_defenses.defenses, "damage_deferral_fraction", 0.0)
-                    or 0.0
-                )
-                > 0.0
                 and "deferred_fraction" not in event
             ):
                 event["deferred_fraction"] = float(
@@ -1922,12 +2053,19 @@ def _simulate_survival(
             # represented only when the packet provides all timing fields.
             # It is split into deterministic equal true-damage ticks; no
             # hidden item-specific duration is introduced here.
-            try:
-                deferred_fraction = float(event.get("deferred_fraction", 0.0) or 0.0)
-                deferred_duration = float(event.get("deferred_duration", 0.0) or 0.0)
-                deferred_ticks = int(event.get("deferred_ticks", 0) or 0)
-            except (TypeError, ValueError):
+            if "deferred_fraction" not in event:
                 deferred_fraction, deferred_duration, deferred_ticks = 0.0, 0.0, 0
+            else:
+                try:
+                    deferred_fraction = float(
+                        event.get("deferred_fraction", 0.0) or 0.0
+                    )
+                    deferred_duration = float(
+                        event.get("deferred_duration", 0.0) or 0.0
+                    )
+                    deferred_ticks = int(event.get("deferred_ticks", 0) or 0)
+                except (TypeError, ValueError):
+                    deferred_fraction, deferred_duration, deferred_ticks = 0.0, 0.0, 0
             if (
                 deferred_fraction > 0.0
                 and deferred_duration > 0.0
@@ -2046,52 +2184,11 @@ def _simulate_survival(
         if isinstance(healing, MutableMapping):
             healing[participant_id] = expanded_healing[participant_id]
 
-    # Warmog's Heart is a live combat-state gate.  Its amount is based on the
-    # current maximum health at the moment each tick lands, while the
-    # no-damage window is checked inside the ordered simulator against the
-    # last applied incoming packet.  The 2,000 bonus-health threshold is
-    # sourced from the item's full Wiki entry and is intentionally not
-    # guessed for an unqualified loadout.
+    # Warmog's Heart is a live combat-state gate; the shared author below
+    # builds the exact tick events for any active holder.
     for combatant in combatant_list:
-        if not any(
-            str(item.get("name", "")) == "Warmog's Armor" for item in combatant.items
-        ):
-            continue
-        threshold = sustain_effect_value(
-            "Warmog's Armor", "heart_bonus_health_threshold"
-        )
-        if float(combatant.stats.get("bonus_health", 0.0)) < threshold:
-            continue
-        ratio = sustain_effect_value(
-            "Warmog's Armor", "heart_max_health_ratio_per_tick"
-        )
-        tick = sustain_effect_value("Warmog's Armor", "heart_tick_interval")
-        gate = sustain_effect_value("Warmog's Armor", "heart_champion_damage_cooldown")
-        if ratio <= 0.0 or tick <= 0.0:
-            continue
-        time_value = tick
-        sequence = 0
-        while time_value <= duration + 1e-9:
-            _append_ordered_heal(
-                combatant.participant_id,
-                {
-                    "time": round(time_value, 6),
-                    "amount": 0.0,
-                    "amount_formula": (
-                        lambda _current_health, maximum_health, ratio=ratio: (
-                            maximum_health * ratio
-                        )
-                    ),
-                    "source": "Warmog's Armor (Warmog's Heart)",
-                    "kind": "regen",
-                    "actor_wide": True,
-                    "requires_damage_free_seconds": gate,
-                    "_event_id": f"{combatant.participant_id}:warmog:{sequence}",
-                    "sequence": sequence,
-                },
-            )
-            sequence += 1
-            time_value += tick
+        for event in _warmog_heart_tick_events(combatant, duration):
+            _append_ordered_heal(combatant.participant_id, event)
 
     actions: list[SurvivalAction] = []
     for participant_id, events in support_effects.items():
@@ -2129,27 +2226,39 @@ def _simulate_survival(
     # timestamp, while shields remain before damage above. Reactive
     # strike-back damage (Thorns) resolves after the strikes that
     # triggered it but still before same-timestamp healing.  Pair packets
-    # carry their precomputed key (``_sk``); events authored outside a
-    # packet (thorns strike-backs) compute theirs here.
+    # carry their precomputed key (``_sk``) and their typed actions
+    # (issue #169) — a cached conversion pairs with the live dict here;
+    # events authored outside a packet (thorns strike-backs, redirect and
+    # deferred clones, revive candidates) convert fresh.
     for participant_id, events in incoming.items():
+        subject = index_of[participant_id]
         for event in events:
+            cached = typed_lookup.get(id(event)) if typed_lookup is not None else None
+            if cached is not None:
+                actions.append(cached._replace(event=event))
+                continue
             phase = 0.5 if event.get("_reactive") else 0.0
             actions.append(
                 survival_action_from_event(
                     event,
                     phase,
-                    index_of[participant_id],
+                    subject,
                     index_of,
                     subject_id=participant_id,
                 )
             )
     for participant_id, events in healing.items():
+        subject = index_of[participant_id]
         for event in events:
+            cached = typed_lookup.get(id(event)) if typed_lookup is not None else None
+            if cached is not None:
+                actions.append(cached._replace(event=event))
+                continue
             actions.append(
                 survival_action_from_event(
                     event,
                     1.0,
-                    index_of[participant_id],
+                    subject,
                     index_of,
                     subject_id=participant_id,
                 )
@@ -2222,6 +2331,9 @@ class CoupledSearchContext:
         "base_sorted",
         "base_heal_dedup",
         "validated_roster_window",
+        # The main champion's wound-declaring sources are champion-fixed;
+        # derived once per search instead of once per evaluation.
+        "main_champion_wounds",
         # Issue #137: set when search-invariant compilation (roster pairs or
         # a signature panel) hit an unrepresentable transition; the compiled
         # path is then skipped for the rest of the search.
@@ -2244,6 +2356,7 @@ class CoupledSearchContext:
         self.base_sorted: list[tuple[Any, ...]] = []
         self.base_heal_dedup: dict[int, dict[tuple[str, float], float]] = {}
         self.validated_roster_window = False
+        self.main_champion_wounds: dict[str, Any] | None = None
 
 
 class _SignaturePanel:
@@ -2305,10 +2418,14 @@ def _context_setup(
     # kernel cannot represent poisons the whole context.  Checked BEFORE any
     # pair fight runs so the fallback costs nothing beyond the capability
     # scan.  (Defense fields are already excluded by the dispatch
-    # pre-check; this covers walk-authored item mechanics.)
+    # pre-check; this covers walk-authored item mechanics.)  Warmog's Heart
+    # is exempt: the roster holder's ticks compile into the base panel
+    # below (issue #169).
     for loadout in (*enemies, *allies):
         item_receipt = _uncompilable_item_receipt(
-            loadout.item_data, loadout_stats=loadout.stats
+            loadout.item_data,
+            loadout_stats=loadout.stats,
+            warmog_ticks_compiled=True,
         )
         if item_receipt is not None:
             raise UncompilableActionError(
@@ -2357,10 +2474,18 @@ def _context_setup(
         ),
     )
     context.actor_params["main"] = main_params
-    for defender in enemy_actors:
+    # Every pair fight carries its legacy roster-target allocation: the
+    # ordered defender lists are [*enemies] for main/ally attackers and
+    # [main, *allies] for enemy attackers, exactly like the receipt
+    # composition's attack groups.  Secondary-target item branches
+    # (cleaves, actives) price against these fields, and both paths share
+    # one pair cache, so the params must be identical (issue #169).
+    for defender_index, defender in enumerate(enemy_actors):
         pair_params = replace(
             main_params,
             enforce_resource_limits=True,
+            roster_target_index=defender_index,
+            roster_target_count=len(enemy_actors),
             **_target_overrides(defender),
         )
         pair_params.validate_for_champion(champion_name, level)
@@ -2370,13 +2495,23 @@ def _context_setup(
         attacker_params.validate_for_champion(
             str(attacker.champion_data.get("name", "")), attacker.level
         )
-        defenders = enemy_actors if attacker.team == "ally" else ally_actors
-        for defender in defenders:
+        if attacker.team == "ally":
+            ordered_defenders = list(enumerate(enemy_actors))
+            defender_count = len(enemy_actors)
+        else:
+            ordered_defenders = [
+                (1 + position, defender)
+                for position, defender in enumerate(ally_actors)
+            ]
+            defender_count = 1 + len(ally_actors)
+        for defender_index, defender in ordered_defenders:
             context.roster_pair_params[
                 (attacker.participant_id, defender.participant_id)
             ] = replace(
                 attacker_params,
                 enforce_resource_limits=True,
+                roster_target_index=defender_index,
+                roster_target_count=defender_count,
                 **_target_overrides(defender),
             )
 
@@ -2432,6 +2567,12 @@ def _context_setup(
             context.grievous_packs[attacker_i],
             params.fight_duration_seconds,
             context.base_heal_dedup[attacker_i],
+            # An enemy attacker's ordered pair list is [main, *allies], so
+            # the legacy dedup always keeps its main-pair copy — which
+            # lives in the signature panel, not here.  Skip the ally-pair
+            # copies; the engine may price them differently per defender
+            # (issue #169, Dr. Mundo's Maximum Dosage).
+            suppress_actor_wide_heals=attacker.team == "enemy",
         )
         if attacker.team == "ally" and attacker.participant_id not in support_attached:
             support_templates = packet.get("support")
@@ -2466,6 +2607,22 @@ def _context_setup(
                 params.fight_duration_seconds,
                 "base",
             )
+    # A roster holder's active Warmog's Heart ticks are search-invariant:
+    # author the same events the receipt walk schedules and convert them
+    # through the same typed-action constructor, once per search (issue
+    # #169).  The candidate's own Warmog still falls back per evaluation.
+    for actor in context.roster_actors:
+        actor_i = context.index_of[actor.participant_id]
+        for event in _warmog_heart_tick_events(actor, params.fight_duration_seconds):
+            base.actions.append(
+                survival_action_from_event(
+                    event,
+                    1.0,
+                    actor_i,
+                    context.index_of,
+                    subject_id=actor.participant_id,
+                )
+            )
     context.base_compiler = base
     context.base_sorted = sorted(base.actions, key=itemgetter(0))
 
@@ -2492,6 +2649,7 @@ def _build_signature_panel(
     sig = _WalkCompiler(base.next_aidx)
     roster = context.roster_actors or []
     enemy_actors = [actor for actor in roster if actor.team == "enemy"]
+    ally_count = sum(1 for actor in roster if actor.team == "ally")
     for attacker in enemy_actors:
         cache_key = (attacker.participant_id, "main", signature)
         packet = pair_result_cache.get(cache_key)
@@ -2504,6 +2662,10 @@ def _build_signature_panel(
                     replace(
                         context.actor_params[attacker.participant_id],
                         enforce_resource_limits=True,
+                        # The legacy attack group's ordered defenders for an
+                        # enemy attacker are [main, *allies] (issue #169).
+                        roster_target_index=0,
+                        roster_target_count=1 + ally_count,
                         **_target_overrides(main),
                     ),
                     validated=True,
@@ -2514,10 +2676,11 @@ def _build_signature_panel(
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
-        # Actor-wide heals must dedup across this attacker's base pairs
-        # too, but a sig build may never grow the shared base sets: a key
-        # recorded by one signature would silently drop another
-        # signature's only copy of that heal.
+        # This main-pair packet carries the attacker's legacy-kept
+        # actor-wide heal copies (the ally-pair copies were suppressed in
+        # the base panel).  The dedup map is a per-signature copy: a sig
+        # build may never grow the shared base sets, or a key recorded by
+        # one signature would silently drop another signature's only copy.
         sig.add_packet(
             packet,
             attacker_i,
@@ -2649,10 +2812,13 @@ def _score_with_search_context(
         damage_type: _grievous_pack(main_profiles, damage_type)
         for damage_type in ("physical", "magic", "true")
     }
-    main_champion_wounds = {
-        str(packet.get("source_key", "")): packet
-        for packet in champion_grievous_wound_sources(main.champion_data)
-    }
+    main_champion_wounds = context.main_champion_wounds
+    if main_champion_wounds is None:
+        main_champion_wounds = {
+            str(packet.get("source_key", "")): packet
+            for packet in champion_grievous_wound_sources(main.champion_data)
+        }
+        context.main_champion_wounds = main_champion_wounds
     reusable_stats = main.stats if reuse_main_stats else None
     heal_dedup: dict[tuple[str, float], float] = {}
     first_result = None
@@ -2683,11 +2849,40 @@ def _score_with_search_context(
             champion_wounds=main_champion_wounds,
         )
     if first_result is not None:
-        fresh.add_support_templates(
-            _support_effect_templates(main, first_result, all_actors),
-            0,
-            context.index_of,
-        )
+        # The item support scan reads per-event target/id fields that only
+        # pair enrichment adds (Black Cleaver Carve, Bloodsong), plus the
+        # first pair's takedown synthesis.  Give it the same view the
+        # receipt composition passes — a template it authors either
+        # compiles or fails closed, never silently vanishes (issue #169).
+        # A tuple-ledger fight needs none of this: the pipeline's tuple
+        # predicate excludes every event-scanning holder.
+        if first_result.get("damage_events_tuple") or not has_event_view_support_items(
+            main.items
+        ):
+            # Tuple-ledger fights carry no scannable rows by construction,
+            # and a holder with no event-view item never reads the enriched
+            # per-event copy — both scan the plain engine result.
+            support_templates = _support_effect_templates(
+                main, first_result, all_actors
+            )
+        else:
+            first_defender_id = context.main_pair_params[0][0].participant_id
+            support_scan_events = [
+                {
+                    **event,
+                    "target": first_defender_id,
+                    "_event_id": f"main:{first_defender_id}:{index}",
+                }
+                for index, event in enumerate(first_result.get("damage_events", []))
+            ]
+            support_templates = _support_effect_templates(
+                main,
+                first_result,
+                all_actors,
+                damage_events=support_scan_events,
+                target_id=first_defender_id,
+            )
+        fresh.add_support_templates(support_templates, 0, context.index_of)
     # Thorns from this candidate's fresh strikes (enemy wearers), then the
     # candidate's own thorns items struck by the invariant roster autos.
     for defender in enemy_actors:
@@ -3014,18 +3209,13 @@ def build_participant_timeline(
         # Issue #137: the dispatch no longer names items and no longer scans
         # defense objects — the kernel is one implementation, so a defense-
         # armed mechanic (threshold lifelines, reactive shields, stasis,
-        # FoN/Jak'Sho stacks, deferral/Defy, ...) now rides the compiled
-        # walk exactly like the receipt walk.  The Grievous-Wounds profiles
-        # pre-check stays as a cheap capability hint (the panel compiles
-        # their packs, but the hint keeps those builds on the receipt path
-        # unchanged); every other unrepresentable mechanic fails closed
-        # INSIDE the compiler, which raises UncompilableActionError and
-        # falls back below.
-        and not healing_reduction_profiles(items)
-        and not any(
-            healing_reduction_profiles(loadout.item_data) for loadout in enemies
-        )
-        and not any(healing_reduction_profiles(loadout.item_data) for loadout in allies)
+        # FoN/Jak'Sho stacks, deferral/Defy, ...) rides the compiled walk
+        # exactly like the receipt walk.  Grievous Wounds builds ride it too
+        # (issue #169): the panel compiles the candidate's and the roster's
+        # packs from the same ``resolve_grievous`` the receipt walk resolves
+        # per event.  Every unrepresentable mechanic fails closed INSIDE the
+        # compiler, which raises UncompilableActionError and falls back
+        # below.
     ):
         try:
             return _score_with_search_context(
@@ -3066,6 +3256,11 @@ def build_participant_timeline(
         for loadout in allies
     ]
     all_actors = [main, *ally_actors, *enemy_actors]
+    # Cached packets carry their typed actions (issue #169); the copies
+    # composed below map back to them by identity so the survival walk
+    # reuses each conversion instead of re-deriving it per evaluation.
+    index_of = {actor.participant_id: i for i, actor in enumerate(all_actors)}
+    typed_actions: dict[int, SurvivalAction] = {}
     outgoing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
     healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -3164,10 +3359,17 @@ def build_participant_timeline(
                 # so this one only takes copies (the walk mutates its rows).
                 # A single-use packet's rows are appended directly.
                 copy_templates = cacheable and pair_result_cache is not None
+                packet_typed = (
+                    _packet_typed_actions(packet, index_of) if copy_templates else None
+                )
                 attacker_outgoing = outgoing[attacker.participant_id]
                 defender_incoming = incoming[defender.participant_id]
                 for template in packet["events"]:
                     enriched = dict(template) if copy_templates else template
+                    if packet_typed is not None:
+                        cached_action = packet_typed.get(id(template))
+                        if cached_action is not None:
+                            typed_actions[id(enriched)] = cached_action
                     attacker_outgoing.append(enriched)
                     defender_incoming.append(enriched)
                     shield_payload = enriched.get("self_shield")
@@ -3222,9 +3424,12 @@ def build_participant_timeline(
                         )
                         if duplicate:
                             continue
-                    attacker_healing.append(
-                        dict(template) if copy_templates else template
-                    )
+                    heal_copy = dict(template) if copy_templates else template
+                    if packet_typed is not None:
+                        cached_action = packet_typed.get(id(template))
+                        if cached_action is not None:
+                            typed_actions[id(heal_copy)] = cached_action
+                    attacker_healing.append(heal_copy)
                 if attacker.participant_id not in support_attached:
                     support_templates = packet.get("support")
                     if support_templates is None:
@@ -3428,6 +3633,7 @@ def build_participant_timeline(
         params.fight_duration_seconds,
         annotate=include_receipt,
         receipt_events=outgoing if include_receipt else None,
+        typed_actions=typed_actions,
     )
     if grey_summary.get("source"):
         survival["main"]["grey_health_stored"] = round(

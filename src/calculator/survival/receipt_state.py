@@ -10,15 +10,57 @@ public timeline serializes and schedules walk-authored recovery packets.
 
 from __future__ import annotations
 
-from typing import Any, Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any
 
 from .actions import SurvivalAction, action_key, survival_action_from_event
 from .transitions import participant_pools
 from ..item_effects import sustain_effect_value
 
+# The optimizer rebuilds every participant's state once per candidate
+# evaluation, but the construction below derives only from the combatant's
+# fixed defenses/stats/items.  The prototype memo is identity-keyed with a
+# strong reference (the same recycling guard as the item-stats memo) and
+# bounded because candidate combatants churn per evaluation.  Container
+# keys are derived from the prototype itself, so a new mutable field can
+# never be silently shared between clones.
+_STATE_PROTO_MEMO: dict[int, tuple[Any, dict[str, Any], list[str]]] = {}
+_STATE_PROTO_MEMO_LIMIT = 512
+
 
 def build_state(combatant: Any) -> dict[str, Any]:
     """One participant's canonical survival state (issue #137).
+
+    Clones the memoized prototype for this combatant: fresh shield pools,
+    fresh containers, shared scalars — field-for-field identical to an
+    uncached construction (issue #171).
+    """
+    memo = _STATE_PROTO_MEMO.get(id(combatant))
+    if memo is None or memo[0] is not combatant:
+        proto = _build_state_uncached(combatant)
+        container_keys = [
+            key for key, value in proto.items() if value.__class__ in (list, set, dict)
+        ]
+        if len(_STATE_PROTO_MEMO) > _STATE_PROTO_MEMO_LIMIT:
+            _STATE_PROTO_MEMO.clear()
+        _STATE_PROTO_MEMO[id(combatant)] = (combatant, proto, container_keys)
+    else:
+        proto, container_keys = memo[1], memo[2]
+    # The prototype itself is never handed out: the walk mutates its state,
+    # so every caller gets a clone with its own pools and containers.
+    pools = participant_pools(combatant)
+    state = dict(proto)
+    state["pools"] = pools
+    state["starting_shield"] = sum(
+        (pools.magic_shield, pools.physical_shield, pools.general_shield)
+    )
+    for key in container_keys:
+        state[key] = proto[key].copy()
+    return state
+
+
+def _build_state_uncached(combatant: Any) -> dict[str, Any]:
+    """The canonical state construction the prototype memo clones.
 
     Ported verbatim from the former authoritative walk's state
     initialisation; the score adapter arms the same shape so both adapters
@@ -202,6 +244,7 @@ class ReceiptLedger:
 
     __slots__ = (
         "annotating",
+        "records_annotations",
         "damage_event_status",
         "actions",
         "current_index",
@@ -210,6 +253,11 @@ class ReceiptLedger:
         "healing",
         "annotations_written",
     )
+
+    # Event writes always persist on this adapter; annotations only when
+    # the receipt was requested (``records_annotations`` mirrors
+    # ``annotating`` so the kernel can skip building dropped kwargs).
+    records_event_fields = True
 
     def __init__(
         self,
@@ -221,6 +269,7 @@ class ReceiptLedger:
         healing: MutableMapping[str, list[dict[str, Any]]] | None = None,
     ) -> None:
         self.annotating = annotating
+        self.records_annotations = annotating
         self.damage_event_status: dict[str, str] = {}
         self.actions = actions
         self.current_index = -1
@@ -331,34 +380,30 @@ def assemble_survival_rows(
         threshold_shield = pools.threshold_shield
         threshold_health = pools.threshold_health
         result[participant_id] = {
-            "max_health": round(state["pools"].max_health, 1),
-            "ending_health": round(state["pools"].health, 1),
+            "max_health": round(pools.max_health, 1),
+            "ending_health": round(pools.health, 1),
             "ending_health_ratio": round(
-                (
-                    state["pools"].health / state["pools"].max_health
-                    if state["pools"].max_health > 0.0
-                    else 0.0
-                ),
+                (pools.health / pools.max_health if pools.max_health > 0.0 else 0.0),
                 6,
             ),
-            "damage_taken": round(state["pools"].damage_taken, 1),
-            "overkill": round(state["pools"].overkill, 1),
-            "health_damage": round(state["pools"].health_damage, 1),
-            "shield_absorbed": round(state["pools"].shield_absorbed, 1),
+            "damage_taken": round(pools.damage_taken, 1),
+            "overkill": round(pools.overkill, 1),
+            "health_damage": round(pools.health_damage, 1),
+            "shield_absorbed": round(pools.shield_absorbed, 1),
             "healing_received": round(state["healing_received"], 1),
             "overhealing": round(state["overhealing"], 1),
             "healing_reduced": round(state["healing_reduced"], 1),
             "support_shield_received": round(state["support_shield_received"], 1),
-            "support_shield_expired": round(state["pools"].shield_expired, 1),
+            "support_shield_expired": round(pools.shield_expired, 1),
             "temporary_health_received": round(state["temporary_health_received"], 1),
             "temporary_health_until": round(state["temporary_health_until"], 3),
             "temporary_health_expired_at": state["temporary_health_expired_at"],
             "temporary_health_source": state["temporary_health_source"],
             "effective_health": round(
-                state["pools"].max_health
+                pools.max_health
                 + state["starting_shield"]
                 + state["support_shield_received"]
-                - state["pools"].shield_expired
+                - pools.shield_expired
                 + state["healing_received"],
                 1,
             ),
@@ -371,7 +416,7 @@ def assemble_survival_rows(
                 for event in state["healing_reduction_events"]
             ],
             "venom_until": round(state["venom_until"], 3),
-            "venom_factor": round(state["pools"].venom_factor, 6),
+            "venom_factor": round(pools.venom_factor, 6),
             "venom_events": [
                 {"recipient": participant_id, **event}
                 for event in state["venom_events"]

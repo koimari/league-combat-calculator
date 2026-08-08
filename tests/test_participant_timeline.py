@@ -4410,6 +4410,138 @@ def test_shared_pair_cache_replays_identical_coupled_receipts():
     assert cache, "the pair cache was never populated"
 
 
+def test_pair_packets_carry_reused_typed_actions():
+    """Issue #169: a cached pair packet compiles its typed actions once and
+    every later evaluation reuses them — the composition pairs each cached
+    action with that evaluation's event copy, and results stay identical to
+    a fresh no-cache computation."""
+    timeline = _coupled_fixture()
+    cache: dict = {}
+    items = [get_item_by_name("Rabadon's Deathcap")]
+    first = timeline(items, pair_result_cache=cache)
+    typed_maps = [packet["_typed"] for packet in cache.values() if packet.get("_typed")]
+    assert typed_maps, "cached packets carry no compiled typed actions"
+    assert any(by_template for _token, by_template in typed_maps)
+    second = timeline(items, pair_result_cache=cache)
+    assert second == first
+    assert timeline(items) == first
+    # The maps were compiled once: the same tuple objects are still on the
+    # packets after the second evaluation.
+    for packet, typed in zip(cache.values(), typed_maps):
+        assert packet["_typed"] is typed
+
+
+def test_typed_action_reuse_survives_redirect_expansion():
+    """Knight's Vow rewrites incoming packets during the survival
+    composition; issue #169's cached typed actions must miss on every
+    replaced dict and the cached receipts must stay byte-identical."""
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.scenario import ChampionLoadout
+    from src.calculator.stats import calculate_total_stats
+
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 12,
+            "role": "mid",
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+    champion = get_champion("Ahri")
+    enemies = [ChampionLoadout(champion="Janna", level=18, role="support").resolve()]
+    allies = [
+        ChampionLoadout(
+            champion="Ashe", level=18, role="bottom", items=("Knight's Vow",)
+        ).resolve()
+    ]
+    items = [get_item_by_name("Infinity Edge")]
+    stats = calculate_total_stats(champion, 18, items, role="mid")
+    defenses = resolve_starting_defenses("Ahri", 18, stats, items)
+
+    def timeline(**kwargs):
+        return build_participant_timeline(
+            champion,
+            18,
+            items,
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=allies,
+            **kwargs,
+        )
+
+    fresh = timeline()
+    cache: dict = {}
+    assert timeline(pair_result_cache=cache) == fresh
+    assert timeline(pair_result_cache=cache) == fresh
+
+
+def test_packet_typed_actions_match_fresh_conversion():
+    """The cached conversion is the per-event conversion: pairing a cached
+    action with its template must reproduce ``survival_action_from_event``
+    field-for-field."""
+    from src.calculator.participant_timeline import _packet_typed_actions
+    from src.calculator.survival import survival_action_from_event
+
+    timeline = _coupled_fixture()
+    cache: dict = {}
+    timeline([get_item_by_name("Rabadon's Deathcap")], pair_result_cache=cache)
+    index_of = {"main": 0, "enemy:Alistar": 1, "enemy:Dr. Mundo": 2}
+    checked = 0
+    for packet in cache.values():
+        typed = _packet_typed_actions(packet, index_of)
+        for template in packet["events"]:
+            cached = typed.get(id(template))
+            if cached is None:
+                continue
+            fresh = survival_action_from_event(
+                template,
+                0.0,
+                index_of[str(template["target"])],
+                index_of,
+                subject_id=str(template["target"]),
+            )
+            assert cached._replace(event=template) == fresh
+            checked += 1
+        for template in packet["heals"]:
+            cached = typed.get(id(template))
+            if cached is None:
+                continue
+            fresh = survival_action_from_event(
+                template,
+                1.0,
+                index_of[str(template["attacker"])],
+                index_of,
+                subject_id=str(template["attacker"]),
+            )
+            assert cached._replace(event=template) == fresh
+            checked += 1
+    assert checked > 0
+
+
+def test_packet_typed_actions_revalidate_on_index_change():
+    """A packet compiled under one participant order must recompile when the
+    composition's indices differ (the resolve_damage_effects re-verify
+    pattern), never serve stale subject indices."""
+    from src.calculator.participant_timeline import _packet_typed_actions
+
+    timeline = _coupled_fixture()
+    cache: dict = {}
+    timeline([get_item_by_name("Rabadon's Deathcap")], pair_result_cache=cache)
+    packet = next(packet for packet in cache.values() if packet["events"])
+    first_order = {"main": 0, "enemy:Alistar": 1, "enemy:Dr. Mundo": 2}
+    swapped_order = {"main": 0, "enemy:Alistar": 2, "enemy:Dr. Mundo": 1}
+    first = _packet_typed_actions(packet, first_order)
+    swapped = _packet_typed_actions(packet, swapped_order)
+    assert packet["_typed"][0] == tuple(swapped_order.items())
+    template = next(iter(packet["events"]))
+    if str(template["target"]) in ("enemy:Alistar", "enemy:Dr. Mundo"):
+        assert first[id(template)].subject != swapped[id(template)].subject
+
+
 def test_score_only_receipt_matches_full_receipt_numbers():
     """include_receipt=False must change shape only, never a number."""
     timeline = _coupled_fixture()

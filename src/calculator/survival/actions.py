@@ -16,7 +16,8 @@ composition and the score compiler build the same keys.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 # ---------------------------------------------------------------------------
 # Action kinds
@@ -197,6 +198,77 @@ def participant_order(participant_id: Any) -> tuple[int, str]:
     return (3, text)
 
 
+# --- Fast compiled-damage construction (issue #171) ------------------------
+# The optimizer compiles tens of thousands of damage actions per request;
+# the generated NamedTuple ``__new__`` costs ~1.5 us parsing 60+ keyword
+# defaults per call.  Copying a default row and assigning the compiler's
+# sixteen damage fields by index builds the identical tuple in under half
+# that.  The indices derive from ``_fields`` at import time, so reordering
+# or extending the NamedTuple cannot desynchronize them.
+_ACTION_DEFAULT_ROW = list(SurvivalAction())
+_INDEX = SurvivalAction._fields.index
+_I_SORT_KEY = _INDEX("sort_key")
+_I_TIME = _INDEX("time")
+_I_KIND = _INDEX("kind")
+_I_SUBJECT = _INDEX("subject")
+_I_ATTACKER = _INDEX("attacker")
+_I_AIDX = _INDEX("aidx")
+_I_AMOUNT = _INDEX("amount")
+_I_DAMAGE_TYPE = _INDEX("damage_type")
+_I_RAW_FORMULA = _INDEX("raw_formula")
+_I_RAW_DAMAGE = _INDEX("raw_damage")
+_I_GRIEVOUS = _INDEX("grievous")
+_I_WOUND = _INDEX("wound")
+_I_SOURCE_KEY = _INDEX("source_key")
+_I_SOURCE = _INDEX("source")
+_I_EVENT_ID = _INDEX("event_id")
+_I_SEQUENCE = _INDEX("sequence")
+
+
+def compiled_damage_action(
+    sort_key: tuple,
+    time: float,
+    kind: ActionKind,
+    subject: int,
+    attacker: int,
+    aidx: int,
+    amount: float,
+    damage_type: str,
+    raw_formula: Any,
+    raw_damage: float,
+    grievous: Any,
+    wound: tuple | None,
+    source_key: str,
+    source: str,
+    event_id: str,
+    sequence: Any,
+) -> SurvivalAction:
+    """Build a compiler damage action without keyword-default parsing.
+
+    Exactly ``SurvivalAction(**those sixteen fields)``: every other field
+    keeps its class default (``phase=0.0`` and ``reactive=False`` included,
+    matching what the compiler always passes for damage packets).
+    """
+    row = _ACTION_DEFAULT_ROW.copy()
+    row[_I_SORT_KEY] = sort_key
+    row[_I_TIME] = time
+    row[_I_KIND] = kind
+    row[_I_SUBJECT] = subject
+    row[_I_ATTACKER] = attacker
+    row[_I_AIDX] = aidx
+    row[_I_AMOUNT] = amount
+    row[_I_DAMAGE_TYPE] = damage_type
+    row[_I_RAW_FORMULA] = raw_formula
+    row[_I_RAW_DAMAGE] = raw_damage
+    row[_I_GRIEVOUS] = grievous
+    row[_I_WOUND] = wound
+    row[_I_SOURCE_KEY] = source_key
+    row[_I_SOURCE] = source
+    row[_I_EVENT_ID] = event_id
+    row[_I_SEQUENCE] = sequence
+    return tuple.__new__(SurvivalAction, row)
+
+
 def action_key(
     event_time: float,
     phase: float,
@@ -247,34 +319,41 @@ def _classify_heal(event: Mapping[str, Any]) -> ActionKind:
     return ActionKind.HEAL
 
 
-def classify_event_kind(event: Mapping[str, Any], phase: float) -> ActionKind:
-    """Map one receipt event (dict + phase) to its typed action kind.
+# The fixed-kind dispatch table for classification; the phase-gated and
+# damage-path branches below cannot ride a flat lookup.
+_STANDALONE_KINDS = {
+    "revive": ActionKind.REVIVE,
+    "stasis": ActionKind.STASIS,
+    "invulnerability": ActionKind.INVULNERABLE,
+    "untargetable": ActionKind.UNTARGETABLE,
+    "spell_shield": ActionKind.SPELL_SHIELD,
+    "shield": ActionKind.SHIELD,
+    "stat_buff": ActionKind.STAT_BUFF,
+    "damage_modifier": ActionKind.DAMAGE_MODIFIER,
+    "on_hit_magic": ActionKind.ON_HIT_MAGIC,
+    "movement": ActionKind.UTILITY,
+    "cleanse": ActionKind.UTILITY,
+    "slow": ActionKind.UTILITY,
+    "economy": ActionKind.UTILITY,
+    "vision": ActionKind.UTILITY,
+}
 
-    Mirrors the authoritative walk's dispatch precedence exactly: revive,
-    combat-state transitions, spell shield, shield, stat buff, damage
-    modifier, utility kinds, then the phase-gated recovery branches, then
-    damage (with execute/deferred/redirect markers and the plain-damage
-    fast-branch classification).
-    """
-    kind = str(event.get("kind", ""))
-    if kind == "revive":
-        return ActionKind.REVIVE
-    if kind == "stasis":
-        return ActionKind.STASIS
-    if kind == "invulnerability":
-        return ActionKind.INVULNERABLE
-    if kind == "untargetable":
-        return ActionKind.UNTARGETABLE
-    if kind == "spell_shield":
-        return ActionKind.SPELL_SHIELD
-    if kind == "shield":
-        return ActionKind.SHIELD
-    if kind == "stat_buff":
-        return ActionKind.STAT_BUFF
-    if kind == "damage_modifier":
-        return ActionKind.DAMAGE_MODIFIER
-    if kind in _UTILITY_KINDS:
-        return ActionKind.ON_HIT_MAGIC if kind == "on_hit_magic" else ActionKind.UTILITY
+
+def _classify_prefetched(
+    event: Mapping[str, Any],
+    phase: float,
+    kind: str,
+    execute_ratio_raw: Any,
+    deferred_raw: Any,
+    redirected_raw: Any,
+    raw_formula: Any,
+    raw_damage: float,
+    grievous_duration: float,
+) -> ActionKind:
+    """The one classification implementation, over prefetched hot fields."""
+    standalone = _STANDALONE_KINDS.get(kind)
+    if standalone is not None:
+        return standalone
     if phase == -1 and kind == "temporary_health":
         return ActionKind.TEMP_HEALTH
     if phase == -1 and kind in _HEAL_KINDS:
@@ -292,22 +371,38 @@ def classify_event_kind(event: Mapping[str, Any], phase: float) -> ActionKind:
         return ActionKind.UTILITY
     # Damage path.  The plain-damage marker mirrors the compiler: no live
     # health formula, no Grievous pack, no wound.
-    if event.get("execute_threshold_ratio") is not None:
+    if execute_ratio_raw is not None:
         return ActionKind.EXECUTE
-    if event.get("_deferred"):
+    if deferred_raw:
         return ActionKind.DEFER
-    if event.get("_redirected"):
+    if redirected_raw:
         return ActionKind.REDIRECT
-    raw_formula = event.get("raw_formula")
-    live_formula = (
-        raw_formula
-        if callable(raw_formula) and float(event.get("raw_damage", 0.0) or 0.0) > 0
-        else None
-    )
-    wound_duration = float(event.get("grievous_duration", 0.0) or 0.0)
-    if live_formula is None and wound_duration <= 0.0:
+    if grievous_duration <= 0.0 and not (callable(raw_formula) and raw_damage > 0):
         return ActionKind.PLAIN_DAMAGE
     return ActionKind.DAMAGE
+
+
+def classify_event_kind(event: Mapping[str, Any], phase: float) -> ActionKind:
+    """Map one receipt event (dict + phase) to its typed action kind.
+
+    Mirrors the authoritative walk's dispatch precedence exactly: revive,
+    combat-state transitions, spell shield, shield, stat buff, damage
+    modifier, utility kinds, then the phase-gated recovery branches, then
+    damage (with execute/deferred/redirect markers and the plain-damage
+    fast-branch classification).
+    """
+    get = event.get
+    return _classify_prefetched(
+        event,
+        phase,
+        str(get("kind", "")),
+        get("execute_threshold_ratio"),
+        get("_deferred"),
+        get("_redirected"),
+        get("raw_formula"),
+        float(get("raw_damage", 0.0) or 0.0),
+        float(get("grievous_duration", 0.0) or 0.0),
+    )
 
 
 def survival_action_from_event(
@@ -329,126 +424,128 @@ def survival_action_from_event(
     target field).  Missing optional metadata fails closed to the field's
     neutral value, never to a guessed number.
     """
-    kind = classify_event_kind(event, phase)
-    attacker_id = event.get("attacker")
+    get = event.get
+    kind_str = str(get("kind", ""))
+    execute_ratio_raw = get("execute_threshold_ratio")
+    deferred_raw = get("_deferred")
+    redirected_raw = get("_redirected")
+    raw_formula = get("raw_formula")
+    raw_damage = float(get("raw_damage", 0.0) or 0.0)
+    grievous_duration = float(get("grievous_duration", 0.0) or 0.0)
+    kind = _classify_prefetched(
+        event,
+        phase,
+        kind_str,
+        execute_ratio_raw,
+        deferred_raw,
+        redirected_raw,
+        raw_formula,
+        raw_damage,
+        grievous_duration,
+    )
+    attacker_id = get("attacker")
     attacker_index = index_of.get(str(attacker_id), -1) if attacker_id else -1
-    event_id = event.get("_event_id")
+    event_id = get("_event_id")
+    time_value = float(get("time", 0.0))
+    trigger_id = get("_trigger_event_id")
+    batch_id = get("_deferred_batch_id")
+    defy_id = get("_defy_trigger_id")
+    baseline_armor = get("_baseline_effective_armor")
+    baseline_mr = get("_baseline_effective_mr")
+    cc_kind = str(get("cc_kind", ""))
     return SurvivalAction(
-        sort_key=event.get("_sk")
+        sort_key=get("_sk")
         or action_key(
-            float(event.get("time", 0.0)),
+            time_value,
             phase,
-            subject_id or str(event.get("target", "") or ""),
+            subject_id or str(get("target", "") or ""),
             event,
         ),
-        time=float(event.get("time", 0.0)),
+        time=time_value,
         phase=phase,
         kind=kind,
         subject=subject_index,
         attacker=attacker_index,
         aidx=aidx,
         trigger=-1,
-        trigger_event_id=(
-            str(event["_trigger_event_id"]) if event.get("_trigger_event_id") else None
-        ),
+        trigger_event_id=str(trigger_id) if trigger_id else None,
         event=event,
-        amount=max(0.0, float(event.get("damage", event.get("amount", 0.0)) or 0.0)),
-        damage_type=str(event.get("damage_type", "")),
-        raw_formula=event.get("raw_formula"),
-        raw_damage=float(event.get("raw_damage", 0.0) or 0.0),
+        amount=max(0.0, float(get("damage", get("amount", 0.0)) or 0.0)),
+        damage_type=str(get("damage_type", "")),
+        raw_formula=raw_formula,
+        raw_damage=raw_damage,
         wound=(
-            (
-                float(event.get("grievous_duration", 0.0) or 0.0),
-                str(event.get("_wound_source", "Grievous Wounds")),
-            )
-            if float(event.get("grievous_duration", 0.0) or 0.0) > 0.0
+            (grievous_duration, str(get("_wound_source", "Grievous Wounds")))
+            if grievous_duration > 0.0
             else None
         ),
-        reactive=bool(event.get("_reactive")),
-        execute_threshold_ratio=max(
-            0.0, float(event.get("execute_threshold_ratio", 0.0) or 0.0)
-        ),
-        execute_source=str(event.get("execute_source", "The Collector")),
-        deferred=bool(event.get("_deferred")),
-        deferred_batch_id=(
-            str(event["_deferred_batch_id"])
-            if event.get("_deferred_batch_id")
-            else None
-        ),
-        redirected=bool(event.get("_redirected")),
+        reactive=bool(get("_reactive")),
+        execute_threshold_ratio=max(0.0, float(execute_ratio_raw or 0.0)),
+        execute_source=str(get("execute_source", "The Collector")),
+        deferred=bool(deferred_raw),
+        deferred_batch_id=str(batch_id) if batch_id else None,
+        redirected=bool(redirected_raw),
         redirect_holder_health_ratio=max(
-            0.0, float(event.get("redirect_holder_health_ratio", 0.0) or 0.0)
+            0.0, float(get("redirect_holder_health_ratio", 0.0) or 0.0)
         ),
         redirect_original_damage=max(
-            0.0, float(event.get("_redirect_original_damage", 0.0) or 0.0)
+            0.0, float(get("_redirect_original_damage", 0.0) or 0.0)
         ),
-        redirect_cancelled=bool(event.get("_redirect_cancelled")),
-        is_ability=bool(event.get("is_ability")),
-        basic_attack=bool(event.get("basic_attack")),
-        ability_instance=event.get("ability_instance"),
-        source_key=str(event.get("source_key", "")),
-        source=str(event.get("source", event.get("source_key", ""))),
+        redirect_cancelled=bool(get("_redirect_cancelled")),
+        is_ability=bool(get("is_ability")),
+        basic_attack=bool(get("basic_attack")),
+        ability_instance=get("ability_instance"),
+        source_key=str(get("source_key", "")),
+        source=str(get("source", get("source_key", ""))),
         event_id=str(event_id) if event_id is not None else None,
-        sequence=event.get("sequence"),
+        sequence=get("sequence"),
         immobilized=bool(
-            event.get("immobilized")
-            or event.get("crowd_control")
-            or event.get("hard_cc")
-            or str(event.get("cc_kind", "")).lower()
+            get("immobilized")
+            or get("crowd_control")
+            or get("hard_cc")
+            or cc_kind.lower()
             in {"immobilize", "stun", "root", "knockup", "suppression"}
         ),
-        cc_kind=str(event.get("cc_kind", "")),
+        cc_kind=cc_kind,
         baseline_effective_armor=(
-            float(event["_baseline_effective_armor"])
-            if event.get("_baseline_effective_armor") is not None
-            else None
+            float(baseline_armor) if baseline_armor is not None else None
         ),
-        baseline_effective_mr=(
-            float(event["_baseline_effective_mr"])
-            if event.get("_baseline_effective_mr") is not None
-            else None
-        ),
-        healing_category=str(event.get("healing_category", "")),
-        amount_formula=event.get("amount_formula"),
+        baseline_effective_mr=(float(baseline_mr) if baseline_mr is not None else None),
+        healing_category=str(get("healing_category", "")),
+        amount_formula=get("amount_formula"),
         requires_holder_health_ratio=max(
-            0.0, float(event.get("requires_holder_health_ratio", 0.0) or 0.0)
+            0.0, float(get("requires_holder_health_ratio", 0.0) or 0.0)
         ),
         requires_damage_free_seconds=max(
-            0.0, float(event.get("requires_damage_free_seconds", 0.0) or 0.0)
+            0.0, float(get("requires_damage_free_seconds", 0.0) or 0.0)
         ),
-        overheal_to_temporary_health=bool(event.get("overheal_to_temporary_health")),
+        overheal_to_temporary_health=bool(get("overheal_to_temporary_health")),
         temporary_health_duration=max(
-            0.0, float(event.get("temporary_health_duration", 0.0) or 0.0)
+            0.0, float(get("temporary_health_duration", 0.0) or 0.0)
         ),
-        overheal_to_shield=bool(event.get("overheal_to_shield")),
-        overheal_shield_cap=max(
-            0.0, float(event.get("overheal_shield_cap", 0.0) or 0.0)
-        ),
+        overheal_to_shield=bool(get("overheal_to_shield")),
+        overheal_shield_cap=max(0.0, float(get("overheal_shield_cap", 0.0) or 0.0)),
         overheal_shield_duration=max(
-            0.0, float(event.get("overheal_shield_duration", 0.0) or 0.0)
+            0.0, float(get("overheal_shield_duration", 0.0) or 0.0)
         ),
-        defy_trigger_id=(
-            str(event["_defy_trigger_id"]) if event.get("_defy_trigger_id") else None
-        ),
-        duration=max(0.0, float(event.get("duration", 0.0) or 0.0)),
-        health_ratio=max(0.0, float(event.get("health_ratio", 0.0) or 0.0)),
-        bonus_attack_speed_percent=float(
-            event.get("bonus_attack_speed_percent", 0.0) or 0.0
-        ),
-        ability_power=float(event.get("ability_power", 0.0) or 0.0),
-        ability_haste=float(event.get("ability_haste", 0.0) or 0.0),
-        on_hit_magic_damage=float(event.get("on_hit_magic_damage", 0.0) or 0.0),
-        persistent=bool(event.get("persistent")),
-        multiplier=float(event.get("multiplier", 1.0) or 1.0),
-        damage_reduction=bool(event.get("damage_reduction")),
-        next_event_only=bool(event.get("next_event_only")),
-        armor_reduction_percent=float(event.get("armor_reduction_percent", 0.0) or 0.0),
-        mr_reduction_percent=float(event.get("mr_reduction_percent", 0.0) or 0.0),
-        resistance_type=str(event.get("resistance_type", "")),
-        owner=str(event.get("owner", "")),
+        defy_trigger_id=str(defy_id) if defy_id else None,
+        duration=max(0.0, float(get("duration", 0.0) or 0.0)),
+        health_ratio=max(0.0, float(get("health_ratio", 0.0) or 0.0)),
+        bonus_attack_speed_percent=float(get("bonus_attack_speed_percent", 0.0) or 0.0),
+        ability_power=float(get("ability_power", 0.0) or 0.0),
+        ability_haste=float(get("ability_haste", 0.0) or 0.0),
+        on_hit_magic_damage=float(get("on_hit_magic_damage", 0.0) or 0.0),
+        persistent=bool(get("persistent")),
+        multiplier=float(get("multiplier", 1.0) or 1.0),
+        damage_reduction=bool(get("damage_reduction")),
+        next_event_only=bool(get("next_event_only")),
+        armor_reduction_percent=float(get("armor_reduction_percent", 0.0) or 0.0),
+        mr_reduction_percent=float(get("mr_reduction_percent", 0.0) or 0.0),
+        resistance_type=str(get("resistance_type", "")),
+        owner=str(get("owner", "")),
         utility_kind=kind if kind in _UTILITY_KINDS else "",
-        gold_amount=float(event.get("gold_amount", 0.0) or 0.0),
-        ward_uses=float(event.get("ward_uses", 0.0) or 0.0),
+        gold_amount=float(get("gold_amount", 0.0) or 0.0),
+        ward_uses=float(get("ward_uses", 0.0) or 0.0),
         duration_set="duration" in event,
     )
 

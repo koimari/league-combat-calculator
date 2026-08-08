@@ -42,7 +42,8 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any, Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any, NamedTuple
 
 from .actions import ActionKind, SurvivalAction
 from .. import shield_ledger
@@ -129,6 +130,65 @@ def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
     )
 
 
+class SubjectDefenseProfile(NamedTuple):
+    """Per-event defense constants for one participant (issue #171).
+
+    The kernel consults these on every damage packet; they are fixed for a
+    walk, so the context caches one profile per subject instead of walking
+    a ``getattr`` chain and an item scan ~100 times per participant.
+    """
+
+    jak_interval: float
+    jak_max: int
+    jak_bonus_multiplier: float
+    force_interval: float
+    force_duration: float
+    force_max: int
+    force_immobilize_stacks: int
+    force_bonus_magic_resistance: float
+    has_stack_items: bool
+    has_dorans_shield: bool
+
+
+def _subject_defense_profile(combatant: Any) -> SubjectDefenseProfile:
+    """Extract one participant's fixed combat-state defense constants."""
+    defenses = combatant.defenses
+    jak_interval = max(
+        0.0, float(getattr(defenses, "jaksho_stack_interval", 0.0) or 0.0)
+    )
+    jak_max = max(0, int(getattr(defenses, "jaksho_max_stacks", 0) or 0))
+    force_interval = max(
+        0.0, float(getattr(defenses, "force_stack_interval", 0.0) or 0.0)
+    )
+    force_duration = max(
+        0.0, float(getattr(defenses, "force_stack_duration", 0.0) or 0.0)
+    )
+    force_max = max(0, int(getattr(defenses, "force_max_stacks", 0) or 0))
+    return SubjectDefenseProfile(
+        jak_interval=jak_interval,
+        jak_max=jak_max,
+        jak_bonus_multiplier=float(
+            getattr(defenses, "jaksho_bonus_resistance_multiplier", 0.0) or 0.0
+        ),
+        force_interval=force_interval,
+        force_duration=force_duration,
+        force_max=force_max,
+        force_immobilize_stacks=int(
+            getattr(defenses, "force_immobilize_stacks", 0) or 0
+        ),
+        force_bonus_magic_resistance=float(
+            getattr(defenses, "force_bonus_magic_resistance", 0.0) or 0.0
+        ),
+        has_stack_items=bool(
+            (jak_interval > 0.0 and jak_max > 0)
+            or (force_interval > 0.0 and force_max > 0)
+        ),
+        has_dorans_shield=any(
+            str(item.get("name", "")) == "Doran's Shield" for item in combatant.items
+        ),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Transition context — everything cross-participant the kernel reads
 # ---------------------------------------------------------------------------
@@ -156,6 +216,44 @@ class TransitionContext:
     redirect_children: MutableMapping[str, Any] = field(default_factory=dict)
     redirect_gate_checked: set[str] = field(default_factory=set)
     redirect_cancelled: set[str] = field(default_factory=set)
+    # Derived per-walk speed fields (issue #171).  The ledger capability
+    # flags let the kernel skip building kwargs a no-op adapter would drop
+    # (missing attributes conservatively keep full observation), and
+    # ``_defense_profiles`` lazily caches each subject's per-event defense
+    # constants so the hot loop never repeats a getattr chain or item scan.
+    records_annotations: bool = field(init=False)
+    records_event_fields: bool = field(init=False)
+    record_defy_damage: bool = field(init=False)
+    stack_flags: list[bool] = field(init=False, repr=False)
+    dorans_flags: list[bool] = field(init=False, repr=False)
+    _defense_profiles: list["SubjectDefenseProfile"] = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.records_annotations = bool(
+            getattr(self.ledger, "records_annotations", True)
+        )
+        self.records_event_fields = bool(
+            getattr(self.ledger, "records_event_fields", True)
+        )
+        # ``damage_records`` feeds only Defy (Death's Dance) takedown
+        # attribution; with no defy holder in the fight the per-event
+        # record append is dead weight and is skipped entirely.
+        self.record_defy_damage = any(
+            float(getattr(combatant.defenses, "defy_window", 0.0) or 0.0) > 0.0
+            for combatant in self.combatants
+        )
+        # Per-event gates read these plain lists directly (a method call per
+        # damage packet is measurable at ~100k packets per request).
+        profiles = [
+            _subject_defense_profile(combatant) for combatant in self.combatants
+        ]
+        self._defense_profiles = profiles
+        self.stack_flags = [profile.has_stack_items for profile in profiles]
+        self.dorans_flags = [profile.has_dorans_shield for profile in profiles]
+
+    def defense_profile(self, subject: int) -> "SubjectDefenseProfile":
+        """The subject's cached per-event defense constants."""
+        return self._defense_profiles[subject]
 
     def venom_for(self, attacker: int) -> tuple[float, float] | None:
         if self.venom_profiles is None or not (
@@ -199,6 +297,11 @@ def update_combat_state(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
     """Advance sourced combat-state item stacks before one damage packet."""
+    profile = ctx.defense_profile(action.subject)
+    if not profile.has_stack_items:
+        # Neither Jak'Sho nor Force of Nature is armed: no stack can ever
+        # accrue, so the dynamic resistance bonuses stay at their inert zero.
+        return
     participant_id = ctx.combatants[action.subject].participant_id
     source_id = (
         ctx.combatants[action.attacker].participant_id
@@ -212,14 +315,11 @@ def update_combat_state(
     if action.amount <= 0.0:
         return
     target_state = state
-    defenses = ctx.combatants[action.subject].defenses
 
     # Jak'Sho is combat-time state: one stack per second, capped at the
     # sourced maximum. It multiplies bonus resistances only at cap.
-    jak_interval = max(
-        0.0, float(getattr(defenses, "jaksho_stack_interval", 0.0) or 0.0)
-    )
-    jak_max = max(0, int(getattr(defenses, "jaksho_max_stacks", 0) or 0))
+    jak_interval = profile.jak_interval
+    jak_max = profile.jak_max
     if jak_interval > 0.0 and jak_max > 0:
         stacks = min(jak_max, max(0, int(math.floor(action.time / jak_interval))))
         if stacks != target_state["jaksho_stacks"]:
@@ -232,13 +332,9 @@ def update_combat_state(
     # Force of Nature counts incoming champion magic-damage cast instances.
     # The packet may carry an immobilisation marker from a reviewed module;
     # absent that marker we do not guess the two-stack branch.
-    force_interval = max(
-        0.0, float(getattr(defenses, "force_stack_interval", 0.0) or 0.0)
-    )
-    force_duration = max(
-        0.0, float(getattr(defenses, "force_stack_duration", 0.0) or 0.0)
-    )
-    force_max = max(0, int(getattr(defenses, "force_max_stacks", 0) or 0))
+    force_interval = profile.force_interval
+    force_duration = profile.force_duration
+    force_max = profile.force_max
     if action.damage_type == "magic" and force_interval > 0.0 and force_max > 0:
         last_time = target_state["force_last_stack_time"]
         if (
@@ -260,12 +356,7 @@ def update_combat_state(
         )
         if not same_cast and elapsed + 1e-9 >= force_interval:
             increment = (
-                max(
-                    1,
-                    int(getattr(defenses, "force_immobilize_stacks", 0) or 0),
-                )
-                if action.immobilized
-                else 1
+                max(1, profile.force_immobilize_stacks) if action.immobilized else 1
             )
             target_state["force_stacks"] = min(
                 force_max, target_state["force_stacks"] + increment
@@ -288,10 +379,9 @@ def update_combat_state(
     if (
         jak_max > 0
         and target_state["jaksho_stacks"] >= jak_max
-        and float(getattr(defenses, "jaksho_bonus_resistance_multiplier", 0.0) or 0.0)
-        > 0.0
+        and profile.jak_bonus_multiplier > 0.0
     ):
-        multiplier = float(defenses.jaksho_bonus_resistance_multiplier)
+        multiplier = profile.jak_bonus_multiplier
         target_state["dynamic_bonus_armor"] += target_state["bonus_armor"] * multiplier
         target_state["dynamic_bonus_magic_resistance"] += (
             target_state["bonus_magic_resistance"] * multiplier
@@ -299,11 +389,11 @@ def update_combat_state(
     if (
         force_max > 0
         and target_state["force_stacks"] >= force_max
-        and float(getattr(defenses, "force_bonus_magic_resistance", 0.0) or 0.0) > 0.0
+        and profile.force_bonus_magic_resistance > 0.0
     ):
-        target_state["dynamic_bonus_magic_resistance"] += float(
-            defenses.force_bonus_magic_resistance
-        )
+        target_state[
+            "dynamic_bonus_magic_resistance"
+        ] += profile.force_bonus_magic_resistance
 
 
 def reprice_dynamic_resistance(
@@ -455,16 +545,15 @@ def schedule_doran_shield_recovery(
     shield; only health damage starts the recovery window (the caller
     supplies the applied-to-health amount through the action's event).
     """
-    applied_to_health = float(
-        (action.event or {}).get("_applied_to_health", 0.0) or 0.0
+    if not ctx.defense_profile(action.subject).has_dorans_shield:
+        return
+    event = action.event
+    applied_to_health = (
+        float(event.get("_applied_to_health", 0.0) or 0.0) if event is not None else 0.0
     )
     if applied_to_health <= 0.0:
         return
     combatant = ctx.combatants[action.subject]
-    if not any(
-        str(item.get("name", "")) == "Doran's Shield" for item in combatant.items
-    ):
-        return
     total_melee = sustain_effect_value("Doran's Shield", "enduring_focus_total_melee")
     total_reduced = sustain_effect_value(
         "Doran's Shield", "enduring_focus_total_reduced"
@@ -699,16 +788,17 @@ def grant_reactive_shield(
     state["reactive_shield_cooldown_until"] = (
         event_time + state["reactive_shield_cooldown"]
     )
-    ctx.ledger.annotate(
-        action,
-        reactive_shield_triggered={
-            "amount": round(shield_amount, 6),
-            "damage_type": reactive_type,
-            "source": state["reactive_shield_source"],
-            "expires_at": round(expires_at, 3),
-            "cooldown_until": round(state["reactive_shield_cooldown_until"], 3),
-        },
-    )
+    if ctx.records_annotations:
+        ctx.ledger.annotate(
+            action,
+            reactive_shield_triggered={
+                "amount": round(shield_amount, 6),
+                "damage_type": reactive_type,
+                "source": state["reactive_shield_source"],
+                "expires_at": round(expires_at, 3),
+                "cooldown_until": round(state["reactive_shield_cooldown_until"], 3),
+            },
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -923,24 +1013,31 @@ def _apply_heal(
     the sourced excess conversions (temporary health, ichorshield,
     Severum overheal shield)."""
     event_time = action.time
+    pools = state["pools"]
     if (
         action.requires_holder_health_ratio > 0.0
-        and state["pools"].max_health > 0.0
-        and state["pools"].health
-        <= state["pools"].max_health * action.requires_holder_health_ratio + 1e-9
+        and pools.max_health > 0.0
+        and pools.health
+        <= pools.max_health * action.requires_holder_health_ratio + 1e-9
     ):
         ctx.ledger.skip(action, "holder_health_gate")
         return
-    if recovery_is_gated(state, action, event_time):
+    if action.requires_damage_free_seconds > 0.0 and recovery_is_gated(
+        state, action, event_time
+    ):
         ctx.ledger.skip(action, "damage_free_window_not_ready")
         return
     amount = max(0.0, action.amount)
     amount_formula = action.amount_formula
     if callable(amount_formula):
-        amount = max(
-            0.0, float(amount_formula(state["pools"].health, state["pools"].max_health))
-        )
-    amount *= recovery_multiplier(state, action)
+        amount = max(0.0, float(amount_formula(pools.health, pools.max_health)))
+    if (
+        state["healing_received_multiplier"] != 1.0
+        or state["immortal_path_below_half_healing_multiplier"]
+    ):
+        # With no received-healing modifier armed, the multiplier is exactly
+        # 1.0 for every category and the multiply is skipped bit-for-bit.
+        amount *= recovery_multiplier(state, action)
     reduction_factor = (
         1.0
         if event_time >= state["healing_reduction_until"]
@@ -950,7 +1047,7 @@ def _apply_heal(
     state["healing_reduced"] += max(0.0, amount - reduced_amount)
     received = min(
         reduced_amount,
-        max(0.0, state["pools"].max_health - state["pools"].health),
+        max(0.0, pools.max_health - pools.health),
     )
     excess = max(0.0, reduced_amount - received)
     temporary_duration = max(0.0, action.temporary_health_duration)
@@ -961,22 +1058,27 @@ def _apply_heal(
         and excess > 0.0
         else 0.0
     )
-    ichor_converted = apply_ichorshield(ctx, state, action, excess - temporary_health)
-    shield_converted = apply_overheal_shield(
-        ctx,
-        state,
-        action,
-        excess - temporary_health - ichor_converted,
-        event_time,
-    )
+    leftover_excess = excess - temporary_health
+    if leftover_excess > 0.0:
+        ichor_converted = apply_ichorshield(ctx, state, action, leftover_excess)
+        shield_converted = apply_overheal_shield(
+            ctx,
+            state,
+            action,
+            leftover_excess - ichor_converted,
+            event_time,
+        )
+    else:
+        ichor_converted = 0.0
+        shield_converted = 0.0
     state["overhealing"] += (
         excess - temporary_health - ichor_converted - shield_converted
     )
-    state["pools"].health += received
+    pools.health += received
     state["healing_received"] += received
     if temporary_health > 0.0:
-        state["pools"].max_health += temporary_health
-        state["pools"].health += temporary_health
+        pools.max_health += temporary_health
+        pools.health += temporary_health
         state["temporary_health_received"] += temporary_health
         state["temporary_health_amount"] += temporary_health
         state["temporary_health_until"] = max(
@@ -990,20 +1092,21 @@ def _apply_heal(
             temporary_health=round(temporary_health, 6),
             temporary_health_expires_at=round(event_time + temporary_duration, 3),
         )
-    ctx.ledger.annotate(
-        action,
-        raw_amount=round(amount, 6),
-        reduced_amount=round(reduced_amount, 6),
-        healing_reduction_factor=round(reduction_factor, 6),
-        overheal=round(
-            excess - temporary_health - ichor_converted - shield_converted, 6
-        ),
-        **(
-            {"overheal_shield": round(shield_converted, 6)}
-            if shield_converted > 0.0
-            else {}
-        ),
-    )
+    if ctx.records_annotations:
+        ctx.ledger.annotate(
+            action,
+            raw_amount=round(amount, 6),
+            reduced_amount=round(reduced_amount, 6),
+            healing_reduction_factor=round(reduction_factor, 6),
+            overheal=round(
+                excess - temporary_health - ichor_converted - shield_converted, 6
+            ),
+            **(
+                {"overheal_shield": round(shield_converted, 6)}
+                if shield_converted > 0.0
+                else {}
+            ),
+        )
     ctx.ledger.write(action, applied_amount=round(received, 6))
     if action.defy_trigger_id is not None:
         state["defy_heal_received"] += received
@@ -1024,17 +1127,75 @@ def _apply_live_packet_chain(
     # the event: the Knight's Vow holder gate restores the direct share on
     # the event before this chain runs, exactly like the legacy walk
     # re-read ``event.get("damage")`` here.
-    amount = max(0.0, float((action.event or {}).get("damage", action.amount) or 0.0))
-    if action.kind in _DAMAGE_KINDS:
+    event = action.event
+    raw_amount = action.amount if event is None else event.get("damage", action.amount)
+    amount = max(0.0, float(raw_amount or 0.0))
+    if action.kind in _DAMAGE_KINDS and ctx.stack_flags[action.subject]:
         update_combat_state(ctx, action, state)
-    repriced = reprice_dynamic_resistance(ctx, action, state)
-    if repriced is not None:
-        amount = repriced
+    if state.get("dynamic_bonus_armor") or state.get("dynamic_bonus_magic_resistance"):
+        # Only a combat-state stack holder ever arms a dynamic delta; the
+        # reprice call is skipped while both deltas are absent or zero.
+        repriced = reprice_dynamic_resistance(ctx, action, state)
+        if repriced is not None:
+            amount = repriced
     # Live cross-participant modifiers apply after the pair engine's
     # sourced mitigation and before shields/health.  Flat Dream Maker
     # reduction is post-mitigation; Imperial-style all-source modifiers
     # multiply the remaining packet.  Both consume only an authored
     # duration/trigger and therefore never become permanent item stats.
+    # No armed modifiers is the overwhelmingly common walk state; skip the
+    # per-packet list rebuild entirely then.
+    if state["active_damage_modifiers"]:
+        amount = _apply_cross_participant_modifiers(ctx, action, state, amount)
+    attacker = action.attacker
+    states = ctx.states
+    source_state = states[attacker] if 0 <= attacker < len(states) else None
+    if source_state is not None and source_state["active_on_hit_magic"]:
+        amount = _apply_source_on_hit_magic(action, source_state, amount)
+    # Celestial Opposition's Blessed reduction is a target-state modifier,
+    # not a basic-attack modifier.  Apply it to authored champion damage
+    # after the pair engine's resistance math and refresh the exact
+    # lingering window from the hit timestamp.  Reactive item packets are
+    # excluded so a shield or thorns return cannot manufacture a new
+    # champion-hit window.
+    if (
+        state["incoming_damage_multiplier"] < 1.0
+        and action.phase >= 0
+        and 0 <= attacker < len(ctx.combatants)
+        and attacker != action.subject
+        and not action.reactive
+        and action.damage_type in {"physical", "magic", "true"}
+        and action.time < state["incoming_damage_until"]
+    ):
+        reduction = state["incoming_damage_multiplier"]
+        original_incoming = max(0.0, amount)
+        amount = original_incoming * reduction
+        if ctx.records_annotations:
+            ctx.ledger.annotate(
+                action,
+                incoming_damage_multiplier=round(reduction, 6),
+                incoming_damage_source=state["incoming_damage_source"],
+                incoming_damage_reduction=round(original_incoming - amount, 6),
+            )
+        if state["incoming_damage_linger"] > 0.0:
+            state["incoming_damage_until"] = (
+                action.time + state["incoming_damage_linger"]
+            )
+        if state["incoming_damage_cooldown"] > 0.0:
+            state["incoming_damage_cooldown_until"] = max(
+                state["incoming_damage_cooldown_until"],
+                action.time + state["incoming_damage_cooldown"],
+            )
+    return amount
+
+
+def _apply_cross_participant_modifiers(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: dict[str, Any],
+    amount: float,
+) -> float:
+    """Apply the armed cross-participant damage modifiers to one packet."""
     active_modifiers = [
         modifier
         for modifier in state["active_damage_modifiers"]
@@ -1130,19 +1291,20 @@ def _apply_live_packet_chain(
                     "multiplier": round(factor, 6),
                 },
             )
-    source_state = (
-        ctx.states[action.attacker] if 0 <= action.attacker < len(ctx.states) else None
-    )
+    return amount
+
+
+def _apply_source_on_hit_magic(
+    action: SurvivalAction, source_state: dict[str, Any], amount: float
+) -> float:
+    """Add the attacker's armed on-hit magic bonuses to one packet."""
     active_on_hit = [
         bonus
-        for bonus in (source_state["active_on_hit_magic"] if source_state else [])
+        for bonus in source_state["active_on_hit_magic"]
         if float(bonus.get("until", 0.0)) > action.time
     ]
-    if source_state is not None:
-        source_state["active_on_hit_magic"] = active_on_hit
-    if source_state is not None and (
-        action.basic_attack or action.source_key == "auto_attacks" or action.is_ability
-    ):
+    source_state["active_on_hit_magic"] = active_on_hit
+    if action.basic_attack or action.source_key == "auto_attacks" or action.is_ability:
         for bonus in list(active_on_hit):
             raw_bonus = max(0.0, float(bonus.get("amount", 0.0) or 0.0))
             if raw_bonus <= 0.0:
@@ -1160,39 +1322,6 @@ def _apply_live_packet_chain(
                 )
             if bonus.get("next_event_only"):
                 active_on_hit.remove(bonus)
-    # Celestial Opposition's Blessed reduction is a target-state modifier,
-    # not a basic-attack modifier.  Apply it to authored champion damage
-    # after the pair engine's resistance math and refresh the exact
-    # lingering window from the hit timestamp.  Reactive item packets are
-    # excluded so a shield or thorns return cannot manufacture a new
-    # champion-hit window.
-    if (
-        action.phase >= 0
-        and 0 <= action.attacker < len(ctx.combatants)
-        and action.attacker != action.subject
-        and not action.reactive
-        and action.damage_type in {"physical", "magic", "true"}
-        and state["incoming_damage_multiplier"] < 1.0
-        and action.time < state["incoming_damage_until"]
-    ):
-        reduction = state["incoming_damage_multiplier"]
-        original_incoming = max(0.0, amount)
-        amount = original_incoming * reduction
-        ctx.ledger.annotate(
-            action,
-            incoming_damage_multiplier=round(reduction, 6),
-            incoming_damage_source=state["incoming_damage_source"],
-            incoming_damage_reduction=round(original_incoming - amount, 6),
-        )
-        if state["incoming_damage_linger"] > 0.0:
-            state["incoming_damage_until"] = (
-                action.time + state["incoming_damage_linger"]
-            )
-        if state["incoming_damage_cooldown"] > 0.0:
-            state["incoming_damage_cooldown_until"] = max(
-                state["incoming_damage_cooldown_until"],
-                action.time + state["incoming_damage_cooldown"],
-            )
     return amount
 
 
@@ -1206,8 +1335,10 @@ def _apply_damage(
     wound."""
     event_time = action.time
     event_id = action.event_id
+    ledger = ctx.ledger
+    pools = state["pools"]
     amount = _apply_live_packet_chain(ctx, action, state)
-    ctx.ledger.mark_applied(action)
+    ledger.mark_applied(action)
     if action.deferred:
         batch_id = str(action.deferred_batch_id or "")
         if batch_id in state["deferred_batches"]:
@@ -1223,56 +1354,63 @@ def _apply_damage(
     if action.kind is not ActionKind.PLAIN_DAMAGE:
         raw_formula = action.raw_formula
         raw_damage = action.raw_damage
-        if callable(raw_formula) and raw_damage > 0 and state["pools"].max_health > 0:
+        if callable(raw_formula) and raw_damage > 0 and pools.max_health > 0:
             # The one-attacker engine prices a target-health formula against
             # that pair's full-health target.  Re-price only the sourced
             # health-dependent component here; all typed mitigation and item
             # amplifiers remain represented by the original damage/raw ratio.
             missing_ratio = max(
                 0.0,
-                min(1.0, 1.0 - state["pools"].health / state["pools"].max_health),
+                min(1.0, 1.0 - pools.health / pools.max_health),
             )
             try:
                 live_raw = evaluate_live_raw_formula(
-                    raw_formula, missing_ratio, state["pools"].max_health
+                    raw_formula, missing_ratio, pools.max_health
                 )
             except (TypeError, ValueError):
                 live_raw = raw_damage
             amount *= live_raw / raw_damage
-    ctx.ledger.annotate(
-        action,
-        pair_damage=round(original_amount, 6),
-        live_damage=round(amount, 6),
-    )
+    if ctx.records_annotations:
+        ctx.ledger.annotate(
+            action,
+            pair_damage=round(original_amount, 6),
+            live_damage=round(amount, 6),
+        )
     # Serpent's Fang venom rides every damaging hit: it applies before
     # any shield the same hit grants (threshold lifeline, reactive
     # barriers) and refreshes the window on each successive hit.
-    venom_profile = ctx.venom_for(action.attacker)
+    venom_profiles = ctx.venom_profiles
+    venom_profile = (
+        venom_profiles[action.attacker]
+        if venom_profiles is not None and 0 <= action.attacker < len(venom_profiles)
+        else None
+    )
     if venom_profile is not None and amount > 0.0:
         venom_keep, venom_duration = venom_profile
         state["venom_until"] = max(
             state["venom_until"], float(event_time) + venom_duration
         )
-        state["pools"].venom_factor = min(state["pools"].venom_factor, venom_keep)
+        pools.venom_factor = min(pools.venom_factor, venom_keep)
         state["venom_events"].append(
             {
                 "time": round(float(event_time), 3),
                 "until": round(state["venom_until"], 3),
-                "factor": round(state["pools"].venom_factor, 6),
+                "factor": round(pools.venom_factor, 6),
             }
         )
-        ctx.ledger.annotate(
-            action,
-            venom={
-                "factor": round(state["pools"].venom_factor, 6),
-                "until": round(state["venom_until"], 6),
-            },
-        )
+        if ctx.records_annotations:
+            ctx.ledger.annotate(
+                action,
+                venom={
+                    "factor": round(pools.venom_factor, 6),
+                    "until": round(state["venom_until"], 6),
+                },
+            )
     damage_type = action.damage_type
     # Absorption order, Lifeline arming, and the health transition are owned
     # by ``shield_ledger`` (issue #159); this kernel supplies the storage and
     # the ledger annotations, never a second copy of the semantics.
-    outcome = shield_ledger.absorb(state["pools"], amount, damage_type, event_time)
+    outcome = shield_ledger.absorb(pools, amount, damage_type, event_time)
     event_absorbed = outcome.absorbed
     applied_to_health = outcome.applied_to_health
     if outcome.threshold_shield_triggered:
@@ -1294,24 +1432,35 @@ def _apply_damage(
         # walk has no over-time author for the remainder.
         state["healing_received"] += outcome.threshold_health_healed
         ctx.ledger.write(action, threshold_health_triggered=True)
-    ctx.ledger.annotate(action, overkill=round(outcome.overkill, 6))
+    if ctx.records_annotations:
+        ctx.ledger.annotate(action, overkill=round(outcome.overkill, 6))
     # The packet's post-mitigation value is replaced with the amount that
     # actually consumed the target's shield/health.  Keep ``pair_damage``
     # and ``live_damage`` above for diagnostics without letting overkill
     # inflate team-fight TTD or BIS scores.
     event_damage = round(event_absorbed + applied_to_health, 6)
-    ctx.ledger.write(
-        action,
-        damage=event_damage,
-        _applied_to_health=round(applied_to_health, 6),
-    )
+    if ctx.records_event_fields:
+        ledger.write(
+            action,
+            damage=event_damage,
+            _applied_to_health=round(applied_to_health, 6),
+        )
+    else:
+        ledger.write(action, damage=event_damage)
     if event_damage > 0.0:
         state["last_damage_time"] = float(event_time)
-        schedule_doran_shield_recovery(ctx, action, state)
-    schedule_maw_omnivamp_heal(ctx, action, event_time, event_damage)
-    grant_reactive_shield(ctx, action, state, event_time, event_damage)
+        if ctx.dorans_flags[action.subject]:
+            schedule_doran_shield_recovery(ctx, action, state)
+        if (
+            action.attacker >= 0
+            and ctx.states[action.attacker]["maw_lifeline_omnivamp_active"]
+        ):
+            schedule_maw_omnivamp_heal(ctx, action, event_time, event_damage)
+        if state["reactive_shield_amount"] > 0.0:
+            grant_reactive_shield(ctx, action, state, event_time, event_damage)
     if (
-        0 <= action.attacker < len(ctx.combatants)
+        ctx.record_defy_damage
+        and 0 <= action.attacker < len(ctx.combatants)
         and action.attacker != action.subject
         and not action.deferred
         and event_damage > 0.0
@@ -1329,11 +1478,10 @@ def _apply_damage(
     if (
         action.execute_threshold_ratio > 0.0
         and applied_to_health > 0.0
-        and state["pools"].health > 0.0
-        and state["pools"].health
-        <= state["pools"].max_health * action.execute_threshold_ratio
+        and pools.health > 0.0
+        and pools.health <= pools.max_health * action.execute_threshold_ratio
     ):
-        state["pools"].health = 0.0
+        pools.health = 0.0
         state["execute_time"] = float(event_time)
         state["execute_source"] = str(action.execute_source or "The Collector")
         state["death_time"] = min(float(ctx.duration), float(event_time))
@@ -1342,7 +1490,7 @@ def _apply_damage(
             action,
             execute_triggered=True,
             execute_threshold=round(
-                state["pools"].max_health * action.execute_threshold_ratio, 6
+                pools.max_health * action.execute_threshold_ratio, 6
             ),
         )
         if state["first_death_time"] is None:
@@ -1372,14 +1520,15 @@ def _apply_damage(
         )
         for label in labels:
             state["healing_reduction_sources"].add(label)
-        ctx.ledger.annotate(
-            action,
-            healing_reduction={
-                "factor": round(state["healing_reduction_factor"], 6),
-                "until": round(state["healing_reduction_until"], 6),
-                "sources": sorted(state["healing_reduction_sources"]),
-            },
-        )
+        if ctx.records_annotations:
+            ctx.ledger.annotate(
+                action,
+                healing_reduction={
+                    "factor": round(state["healing_reduction_factor"], 6),
+                    "until": round(state["healing_reduction_until"], 6),
+                    "sources": sorted(state["healing_reduction_sources"]),
+                },
+            )
         state["healing_reduction_events"].append(
             {
                 "time": round(event_time, 3),
@@ -1402,14 +1551,15 @@ def _apply_damage(
             GRIEVOUS_WOUNDS_FACTOR,
         )
         state["healing_reduction_sources"].add(wound_label)
-        ctx.ledger.annotate(
-            action,
-            healing_reduction={
-                "factor": round(state["healing_reduction_factor"], 6),
-                "until": round(state["healing_reduction_until"], 6),
-                "sources": sorted(state["healing_reduction_sources"]),
-            },
-        )
+        if ctx.records_annotations:
+            ctx.ledger.annotate(
+                action,
+                healing_reduction={
+                    "factor": round(state["healing_reduction_factor"], 6),
+                    "until": round(state["healing_reduction_until"], 6),
+                    "sources": sorted(state["healing_reduction_sources"]),
+                },
+            )
         state["healing_reduction_events"].append(
             {
                 "time": round(event_time, 3),
@@ -1418,7 +1568,7 @@ def _apply_damage(
                 "sources": sorted(state["healing_reduction_sources"]),
             }
         )
-    if state["pools"].health <= 0.0 and state["death_time"] is None:
+    if pools.health <= 0.0 and state["death_time"] is None:
         if state["first_death_time"] is None:
             state["first_death_time"] = float(event_time)
         trigger_defy(
@@ -1505,13 +1655,14 @@ def run_survival_walk(
     states = ctx.states
     ledger = ctx.ledger
     duration = ctx.duration
+    # The receipt ledger inserts walk-authored recovery packets beside
+    # the action being processed (``current_index`` is its slot).
+    tracks_index = hasattr(ledger, "current_index")
     action_index = 0
     while action_index < len(actions):
         action = actions[action_index]
         action_index += 1
-        # The receipt ledger inserts walk-authored recovery packets beside
-        # the action being processed (``current_index`` is its slot).
-        if hasattr(ledger, "current_index"):
+        if tracks_index:
             ledger.current_index = action_index - 1
         event_time = action.time
         phase = action.phase
@@ -1525,7 +1676,9 @@ def run_survival_walk(
             ledger.skip(action, "outside_window", damage_phase=phase >= 0)
             continue
 
-        shield_ledger.expire_timed(state["pools"], event_time)
+        pools = state["pools"]
+        if pools.timed:
+            shield_ledger.expire_timed(pools, event_time)
         if (
             state["healing_reduction_until"] > 0.0
             and event_time >= state["healing_reduction_until"]
@@ -1537,8 +1690,9 @@ def run_survival_walk(
         if state["venom_until"] > 0.0 and event_time >= state["venom_until"]:
             # A new venom application after expiry starts a fresh window;
             # expired venom must not keep cutting shields.
-            state["pools"].venom_factor = 1.0
-        expire_temporary_health(state, event_time)
+            pools.venom_factor = 1.0
+        if state["temporary_health_amount"] > 0.0:
+            expire_temporary_health(state, event_time)
 
         kind = action.kind
         # Revive is a state transition rather than healing: it is allowed to
@@ -1562,10 +1716,14 @@ def run_survival_walk(
         ):
             ledger.skip(action, "defy_not_triggered")
             continue
-        if not ledger.trigger_applied(action):
+        if (
+            action.trigger >= 0 or action.trigger_event_id is not None
+        ) and not ledger.trigger_applied(action):
             # An effect whose trigger packet was skipped (its target or
             # attacker was already dead) must not survive on its own —
-            # neither a recovery tick nor a reactive strike-back.
+            # neither a recovery tick nor a reactive strike-back.  An action
+            # with no trigger linkage at all passes both adapters trivially,
+            # so the ledger is only consulted when a link exists.
             ledger.skip(action, "trigger_event_skipped", damage_phase=phase < 1)
             continue
         if action.redirect_cancelled or (
@@ -1579,7 +1737,7 @@ def run_survival_walk(
         # direct share is expanded above so its recipient can be repriced; if
         # the holder is already at or below the threshold, cancel that child
         # and restore the unredirected packet on the Worthy target.
-        if not action.redirected:
+        if ctx.redirect_children and not action.redirected:
             child = ctx.redirect_children.get(str(action.event_id or ""))
             if child is not None and (
                 action.event_id is None
@@ -1644,26 +1802,30 @@ def run_survival_walk(
         ):
             ledger.skip(action, "target_state_blocked", damage_phase=True)
             continue
-        cast_identity = action.ability_instance
-        if not cast_identity:
-            cast_identity = f"{action.source_key}:" f"{round(float(event_time), 9)}"
-        cast_key = (str(cast_identity),)
-        same_blocked_cast = state["spell_shield_blocked_cast"] == cast_key
         if (
             phase >= 0
             and action.is_ability
             and state["spell_shield_until"] > event_time
-            and (not state["spell_shield_used"] or same_blocked_cast)
         ):
-            if not state["spell_shield_used"]:
-                state["spell_shield_used"] = True
-                state["spell_shield_blocked_cast"] = cast_key
-            ledger.mark_blocked(action)
-            ctx.ledger.annotate(
-                action, spell_shield_source=state["spell_shield_source"]
-            )
-            ledger.skip(action, "spell_shield", damage_phase=True)
-            continue
+            # The cast identity is only priced when a spell shield is
+            # actually armed for this packet's window.
+            cast_identity = action.ability_instance
+            if not cast_identity:
+                cast_identity = f"{action.source_key}:" f"{round(float(event_time), 9)}"
+            cast_key = (str(cast_identity),)
+            if (
+                not state["spell_shield_used"]
+                or state["spell_shield_blocked_cast"] == cast_key
+            ):
+                if not state["spell_shield_used"]:
+                    state["spell_shield_used"] = True
+                    state["spell_shield_blocked_cast"] = cast_key
+                ledger.mark_blocked(action)
+                ctx.ledger.annotate(
+                    action, spell_shield_source=state["spell_shield_source"]
+                )
+                ledger.skip(action, "spell_shield", damage_phase=True)
+                continue
         if (
             phase >= 0
             and 0 <= action.attacker < len(states)

@@ -33,6 +33,12 @@ class ScoreLedger:
 
     __slots__ = ("n_actions", "applied", "status")
 
+    # Ledger capability flags (issue #171): the kernel's hot loop skips
+    # building annotate()/event-field kwargs entirely when the ledger
+    # would drop them, instead of paying for round() calls a no-op absorbs.
+    records_annotations = False
+    records_event_fields = False
+
     def __init__(self, n_actions: int) -> None:
         self.n_actions = n_actions
         self.applied: list[float] = [0.0] * n_actions

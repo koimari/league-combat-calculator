@@ -939,7 +939,7 @@ def input_option_crit_chance(
     values; this adapter only converts its fractional result to the percent
     units used by the public stat bundle.
     """
-    if "Yun Tal Wildarrows" not in _item_names(items) or not item_options:
+    if not item_options or not has_item(items, "Yun Tal Wildarrows"):
         return 0.0
     options = item_options.get("Yun Tal Wildarrows")
     if not options:
@@ -959,7 +959,7 @@ def input_option_value(
     option_name: str,
 ) -> int:
     """Return one validated bounded state value for an equipped item."""
-    if not item_options or item_name not in _item_names(items):
+    if not item_options or not has_item(items, item_name):
         return 0
     options = item_options.get(item_name) or {}
     return int(options.get(option_name, 0) or 0)
@@ -3346,8 +3346,12 @@ def _item_names(items: list[dict[str, Any]]) -> set[str]:
 
 
 def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
-    """Return whether a resolved build contains one canonical item name."""
-    return item_name in _item_names(items)
+    """Return whether a resolved build contains one canonical item name.
+
+    Allocation-free on purpose: the fight engine asks this dozens of times
+    per optimizer evaluation, so it must not build a name set per call.
+    """
+    return any(item.get("name", "") == item_name for item in items)
 
 
 def requires_authored_control_event(items: Sequence[Mapping[str, Any]]) -> bool:

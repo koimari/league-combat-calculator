@@ -124,6 +124,10 @@ _ITEMS = {
         "Rabadon's Deathcap",
         "The Collector",
         "Death's Dance",
+        "Bloodthirster",
+        "Hextech Gunblade",
+        "Spirit Visage",
+        "Morellonomicon",
     )
 }
 
@@ -400,12 +404,56 @@ def test_aphelios_severum_score_path_matches_receipt():
         )
 
 
-def test_active_warmog_poisons_context_and_falls_back():
-    """Warmog's Heart ticks are authored only by the receipt walk; the
-    compile-stage capability report poisons the context and the score
-    receipt deep-equals the receipt."""
+def test_roster_warmog_heart_rides_compiled_walk():
+    """A roster actor's active Warmog's Heart compiles once per search
+    (issue #169): the base panel authors the same gated, live max-health
+    ticks the receipt walk authors, and the score receipt deep-equals it.
+    Constant pressure keeps every tick behind the damage-free gate; a
+    sparse-caster window lets later ticks through it."""
+    warmog_mundo = _roster(
+        "Dr. Mundo",
+        level=18,
+        items=("Warmog's Armor", "Heartsteel", "Randuin's Omen"),
+        role="top",
+    )
     _assert_contract(
-        "warmog-gate",
+        "warmog-roster-gated",
+        "Cassiopeia",
+        [_ITEMS["Rabadon's Deathcap"]],
+        FightParams.from_request(
+            {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+        ),
+        [warmog_mundo],
+        level=13,
+    )
+    _assert_contract(
+        "warmog-roster-tick-mix",
+        "Janna",
+        [],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 20,
+                "role": "support",
+                "include_auto_attacks": False,
+                "auto_attack_uptime": 0.0,
+            },
+            deterministic=True,
+        ),
+        [warmog_mundo],
+        role="support",
+    )
+
+
+def test_enemy_actor_wide_heal_keeps_main_pair_copy_with_allies():
+    """An enemy attacker's actor-wide heal copies may be priced differently
+    per pair fight (Dr. Mundo's Maximum Dosage); the legacy dedup keeps the
+    main-pair copy because an enemy's ordered defenders are [main, *allies].
+    The compiled walk must replicate that precedence — the ally-pair copies
+    are suppressed in the base panel — and deep-equal the receipt (issue
+    #169's five-champion regression shape)."""
+    _assert_contract(
+        "enemy-actor-wide-precedence",
         "Cassiopeia",
         [_ITEMS["Rabadon's Deathcap"]],
         FightParams.from_request(
@@ -413,15 +461,119 @@ def test_active_warmog_poisons_context_and_falls_back():
         ),
         [
             _roster(
+                "Alistar",
+                level=13,
+                items=("Randuin's Omen", "Bramble Vest"),
+                role="support",
+            ),
+            _roster(
                 "Dr. Mundo",
-                level=18,
-                items=("Warmog's Armor", "Heartsteel", "Randuin's Omen"),
+                level=13,
+                items=("Kaenic Rookern", "Warmog's Armor", "Spirit Visage"),
                 role="top",
-            )
+            ),
+        ],
+        [_roster("Alistar", level=13, items=("Dead Man's Plate",), role="support")],
+        level=13,
+    )
+
+
+def test_secondary_target_allocation_matches_receipt_composition():
+    """Every compiled pair fight must carry the same ordered roster-target
+    allocation the receipt composition sets (issue #169): a cleave item's
+    secondary-target branch prices against the second enemy identically on
+    both paths.  Ravenous Hydra also holds omnivamp, so this pins the
+    allocation together with compiled vamp healing."""
+    _assert_contract(
+        "cleave-secondary-target",
+        "Dr. Mundo",
+        [get_item_by_name("Ravenous Hydra")],
+        FightParams.from_request(
+            {"fight_mode": "one_rotation", "role": "top"}, deterministic=True
+        ),
+        [
+            _roster(
+                "Cassiopeia",
+                level=13,
+                items=("Rabadon's Deathcap", "Void Staff"),
+                role="mid",
+            ),
+            _roster(
+                "Vayne",
+                level=13,
+                items=("Kraken Slayer", "Phantom Dancer"),
+                role="bottom",
+            ),
         ],
         level=13,
-        compiled=False,
-        invariant=True,
+        role="top",
+    )
+
+
+def test_vamp_candidate_rides_compiled_walk():
+    """Lifesteal/omnivamp builds compile (issue #169): compiled heal actions
+    carry ``healing_category`` so the vamp carve-outs — the received-healing
+    multiplier exemption and Bloodthirster's ichor conversion — match the
+    receipt walk exactly."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "role": "mid",
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+    # Full-health lifesteal converts its overheal into the ichor shield.
+    _assert_contract(
+        "bloodthirster-ichor",
+        "Ahri",
+        [_ITEMS["Bloodthirster"], _ITEMS["Infinity Edge"]],
+        params,
+        [_roster("Cassiopeia")],
+    )
+    # Omnivamp beside Spirit Visage: the received-healing multiplier must
+    # keep exempting vamp heals on the compiled path.
+    _assert_contract(
+        "omnivamp-spirit-visage",
+        "Ahri",
+        [_ITEMS["Hextech Gunblade"], _ITEMS["Spirit Visage"]],
+        params,
+        [_roster("Cassiopeia")],
+    )
+
+
+def test_grievous_builds_ride_compiled_walk():
+    """Grievous Wounds builds compile end-to-end (issue #169, replacing the
+    routing hint): the candidate's own wound pack prices enemy healing, and a
+    roster wound prices the candidate's vamp healing."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "role": "mid",
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+    # Candidate Morellonomicon wounds a self-healing enemy.
+    _assert_contract(
+        "morello-candidate",
+        "Ahri",
+        [_ITEMS["Morellonomicon"], _ITEMS["Rabadon's Deathcap"]],
+        params,
+        [_roster("Dr. Mundo", items=("Spirit Visage", "Kaenic Rookern"), role="top")],
+    )
+    # Roster Morellonomicon + Vampiric Scepter: the enemy's wound reduces the
+    # vamp candidate's healing, and the enemy's own vamp heals compile too.
+    _assert_contract(
+        "morello-roster",
+        "Ahri",
+        [_ITEMS["Bloodthirster"], _ITEMS["Infinity Edge"]],
+        params,
+        [_roster("Cassiopeia", items=("Morellonomicon", "Vampiric Scepter"))],
     )
 
 

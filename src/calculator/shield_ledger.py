@@ -223,6 +223,8 @@ def grant(
 
 def expire_timed(pools: ShieldPools, event_time: float) -> float:
     """Drop timed grants whose window closed at or before ``event_time``."""
+    if not pools.timed:
+        return 0.0
     surviving: list[TimedShield] = []
     expired_total = 0.0
     for shield in pools.timed:
@@ -248,6 +250,24 @@ def absorb(
     and whatever is left reaches health -- damage past health being overkill
     rather than more effective HP.
     """
+    if (
+        not pools.timed
+        and pools.threshold_shield is None
+        and pools.threshold_health is None
+        and pools.magic_shield == 0.0
+        and pools.physical_shield == 0.0
+        and pools.general_shield == 0.0
+    ):
+        # Nothing can absorb and no Lifeline can arm: the transition is the
+        # bare health subtraction, bit-identical to the full path below with
+        # every pool at zero.  This is the optimizer walk's dominant state.
+        pools.damage_taken += damage
+        applied_to_health = min(damage, pools.health)
+        overkill = max(0.0, damage - applied_to_health)
+        pools.health = max(0.0, pools.health - applied_to_health)
+        pools.health_damage += applied_to_health
+        pools.overkill += overkill
+        return Absorption(0.0, applied_to_health, overkill)
     timed = pools.timed
     if timed:
         expire_timed(pools, event_time)

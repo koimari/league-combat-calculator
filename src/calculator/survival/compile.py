@@ -14,17 +14,18 @@ the transition (Phase 1's contract, kept verbatim).
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from .actions import (
     ActionKind,
     SurvivalAction,
     action_key,
+    compiled_damage_action,
     event_sequence,
     participant_order,
 )
 from ..item_effects import sustain_effect_value
-from ..stats import get_item_stats
 
 
 class UncompilableActionError(ValueError):
@@ -60,6 +61,10 @@ class UncompilableActionError(ValueError):
 # shields, Force of Nature / Jak'Sho dynamic-resistance repricing).  The
 # kernel implements all of them for the receipt adapter; the score
 # adapter fails closed until their storage is representable.
+#
+# Warmog's Armor is not listed: its dedicated branch below owns the item
+# (issue #169 — a search-invariant roster holder's Heart ticks compile
+# into the base panel, so only the per-candidate scan still reports it).
 COMPILED_WALK_UNREPRESENTABLE_ITEMS = frozenset(
     {
         "Banshee's Veil",  # Annul spell shield needs cast metadata
@@ -78,7 +83,6 @@ COMPILED_WALK_UNREPRESENTABLE_ITEMS = frozenset(
         "Knight's Vow",  # Worthy redirect authored by the receipt scheduler
         "Maw of Malmortius",  # Lifeline omnivamp state transition
         "Verdant Barrier",  # Annul spell shield needs cast metadata
-        "Warmog's Armor",  # Warmog's Heart ticks authored in the event walk
     }
 )
 
@@ -87,27 +91,32 @@ def uncompilable_item_receipt(
     items: Iterable[Mapping[str, Any]],
     *,
     loadout_stats: Mapping[str, float] | None = None,
+    warmog_ticks_compiled: bool = False,
 ) -> str | None:
     """Return a named receipt when a build cannot ride the compiled walk.
 
     Item mechanics the score kernel cannot stage either (a) are authored
     inside the authoritative event walk (Warmog's Heart, Doran's Shield
     Enduring Focus) or (b) ride a legacy-only receipt pass (Catalyst's
-    Eternity resource restores).  Lifesteal/omnivamp stats are reported
-    here too: their heals carry ``healing_category: vamp`` and would
-    diverge under Spirit Visage in the compiled walk; the packet-level
-    check in :class:`WalkCompiler` is the backstop for champion-authored
-    vamp.
+    Eternity resource restores).  Lifesteal/omnivamp builds are not
+    reported here: compiled heal actions carry ``healing_category``, so
+    the vamp carve-outs (received-healing multiplier exemption, ichor
+    conversion) ride the shared kernel identically (issue #169).
 
     ``loadout_stats`` is the actor's resolved stats.  It is required for
     Warmog's Armor so the check mirrors the receipt walk's own gate: the
     Heart ticks are only authored once the bonus-health threshold is met,
     so an inactive Warmog is numerically identical in both walks (the
     legacy ``_has_active_warmog`` precision).  ``None`` fails closed.
+    ``warmog_ticks_compiled`` is the search-invariant caller's claim that
+    it authors the holder's Heart ticks itself (the roster scan; issue
+    #169), so an active Warmog stops being a reason to fall back.
     """
     for item in items:
         name = str(item.get("name", ""))
         if name == "Warmog's Armor":
+            if warmog_ticks_compiled:
+                continue
             if loadout_stats is None:
                 return f"item_mechanic={name}"
             try:
@@ -121,27 +130,19 @@ def uncompilable_item_receipt(
             continue
         if name in COMPILED_WALK_UNREPRESENTABLE_ITEMS:
             return f"item_mechanic={name}"
-        try:
-            stats = get_item_stats(dict(item))
-        except (TypeError, ValueError, KeyError):
-            # A malformed cached item must not become compilable by
-            # accident; the normal path surfaces its source/schema error.
-            return f"item_stats_unreadable={name}"
-        if (
-            float(stats.get("lifesteal_percent", 0.0) or 0.0) > 0.0
-            or float(stats.get("omnivamp_percent", 0.0) or 0.0) > 0.0
-        ):
-            return "item_stat=lifesteal_or_omnivamp"
     return None
 
 
 def unrepresentable_heal_receipt(event: Mapping[str, Any]) -> str | None:
     """Return a named receipt when a heal packet carries a transition the
-    compiled score kernel cannot stage, else None."""
+    compiled score kernel cannot stage, else None.
+
+    ``healing_category`` is not a rejection: every compiled heal action
+    carries the field, so the kernel's vamp carve-outs (received-healing
+    multiplier exemption, ichor conversion) apply identically (issue #169).
+    """
     if event.get("overheal_to_shield"):
         return "overheal_to_shield"
-    if event.get("healing_category"):
-        return f"healing_category={event.get('healing_category')}"
     if event.get("requires_holder_health_ratio"):
         return "requires_holder_health_ratio"
     if event.get("requires_damage_free_seconds"):
@@ -340,6 +341,13 @@ def coalesce_darius_q_heals(
     coalesces the flat actions after building them — same semantics over
     the typed representation.
     """
+    if isinstance(actions, list) and not any(
+        action.kind is ActionKind.HEAL and action.source == "Decimate"
+        for action in actions
+    ):
+        # No Decimate heal compiled: nothing to coalesce, keep the caller's
+        # own per-evaluation list instead of rebuilding it.
+        return actions
     groups: dict[tuple[int, float, int, str], tuple[int, int]] = {}
     kept: list[SurvivalAction] = []
     for action in actions:
@@ -414,11 +422,20 @@ class WalkCompiler:
         grievous_by_dtype: Mapping[str, Any],
         duration: float,
         heal_dedup: dict[tuple[str, float], float],
+        *,
+        suppress_actor_wide_heals: bool = False,
     ) -> None:
         """Compile one pair packet's damage events and self-heals.
 
         ``heal_dedup`` spans the attacker's packets, replaying the legacy
         actor-wide heal deduplication across that attacker's pair fights.
+        ``suppress_actor_wide_heals`` marks a packet whose actor-wide copies
+        are never the legacy-kept copy: an enemy attacker's ordered pair
+        list is ``[main, *allies]``, so the receipt walk always keeps the
+        main-pair copy and this compiler must skip the ally-pair copies —
+        the engine may price them differently per defender (issue #169,
+        Dr. Mundo's Maximum Dosage).  Trigger-linked actor-wide heals still
+        fail closed before the skip.
         """
         actions_append = self.actions.append
         order_append = self.damage_order[attacker_i].append
@@ -523,10 +540,12 @@ class WalkCompiler:
                     # Cross-pair dedup below keeps the copy that compiled
                     # first; a trigger link would make copies
                     # pair-dependent, so fail closed instead of guessing.
-                    raise ValueError(
-                        "actor-wide self-heal carries a trigger link; "
-                        "the panel compiler cannot deduplicate it"
+                    raise UncompilableActionError(
+                        receipt="actor_wide_heal_trigger_link",
+                        source=str(event.get("source", "")),
                     )
+                if suppress_actor_wide_heals:
+                    continue
                 dedup_key = (
                     str(event.get("source", "")),
                     float(event.get("time", 0.0)),
@@ -537,9 +556,11 @@ class WalkCompiler:
                     if kept != amount:
                         # The dedup keeps one copy per (source, time); that
                         # is only sound while every copy is value-identical.
-                        raise ValueError(
-                            "actor-wide self-heal copies disagree across "
-                            "pair fights; the compiled dedup cannot keep one"
+                        # Fail closed onto the receipt walk, which owns the
+                        # legacy keep-first precedence.
+                        raise UncompilableActionError(
+                            receipt="actor_wide_heal_copies_disagree",
+                            source=str(event.get("source", "")),
                         )
                     continue
                 heal_dedup[dedup_key] = amount
@@ -558,6 +579,7 @@ class WalkCompiler:
                     aidx=aidx,
                     amount=max(0.0, float(event.get("amount", 0.0))),
                     amount_formula=event.get("amount_formula"),
+                    healing_category=str(event.get("healing_category", "")),
                     temporary_health_duration=(
                         max(
                             0.0,
@@ -636,10 +658,14 @@ class WalkCompiler:
                     raw_formula if callable(raw_formula) and raw_damage > 0 else None
                 )
                 grievous = grievous_by_dtype.get(row[2])
-                wound = champion_wound_tuple(champion_wounds, source_key, row[1])
+                wound = (
+                    champion_wound_tuple(champion_wounds, source_key, row[1])
+                    if champion_wounds
+                    else None
+                )
                 actions_append(
-                    SurvivalAction(
-                        sort_key=(
+                    compiled_damage_action(
+                        (
                             time_value,
                             0.0,
                             key[3],
@@ -649,29 +675,27 @@ class WalkCompiler:
                             event_id,
                             source_key,
                         ),
-                        time=time_value,
-                        phase=0.0,
-                        kind=(
+                        time_value,
+                        (
                             ActionKind.PLAIN_DAMAGE
                             if live_formula is None
                             and grievous is None
                             and wound is None
                             else ActionKind.DAMAGE
                         ),
-                        subject=defender_i,
-                        attacker=attacker_i,
-                        aidx=aidx,
-                        amount=row[1],
-                        damage_type=row[2],
-                        raw_formula=live_formula,
-                        raw_damage=raw_damage,
-                        grievous=grievous,
-                        wound=wound,
-                        reactive=False,
-                        source_key=source_key,
-                        source=source_key,
-                        event_id=event_id,
-                        sequence=key[3],
+                        defender_i,
+                        attacker_i,
+                        aidx,
+                        row[1],
+                        row[2],
+                        live_formula,
+                        raw_damage,
+                        grievous,
+                        wound,
+                        source_key,
+                        source_key,
+                        event_id,
+                        key[3],
                     )
                 )
                 if time_value <= duration:
@@ -726,10 +750,15 @@ class WalkCompiler:
                     receipt=damage_receipt,
                     source=str(event.get("source", source_key)),
                 )
-            wound = champion_wound_tuple(champion_wounds, source_key, damage)
+            wound = (
+                champion_wound_tuple(champion_wounds, source_key, damage)
+                if champion_wounds
+                else None
+            )
+            source = str(event.get("source", source_key))
             actions_append(
-                SurvivalAction(
-                    sort_key=(
+                compiled_damage_action(
+                    (
                         time_value,
                         0.0,
                         sequence,
@@ -737,36 +766,35 @@ class WalkCompiler:
                         order_b,
                         defender_id,
                         event_id,
-                        str(event.get("source", source_key)),
+                        source,
                     ),
-                    time=time_value,
-                    phase=0.0,
-                    kind=(
+                    time_value,
+                    (
                         ActionKind.PLAIN_DAMAGE
                         if live_formula is None and grievous is None and wound is None
                         else ActionKind.DAMAGE
                     ),
-                    subject=defender_i,
-                    attacker=attacker_i,
-                    aidx=aidx,
-                    amount=damage if damage > 0.0 else 0.0,
-                    damage_type=damage_type,
-                    raw_formula=live_formula,
-                    raw_damage=raw_damage,
-                    grievous=grievous,
-                    wound=wound,
-                    reactive=False,
-                    source_key=source_key,
-                    source=str(event.get("source", source_key)),
-                    event_id=event_id,
-                    sequence=sequence,
+                    defender_i,
+                    attacker_i,
+                    aidx,
+                    damage if damage > 0.0 else 0.0,
+                    damage_type,
+                    live_formula,
+                    raw_damage,
+                    grievous,
+                    wound,
+                    source_key,
+                    source,
+                    event_id,
+                    sequence,
                 )
             )
             if time_value <= duration:
                 order_append((aidx, time_value))
             if aidx_by_key is not None:
-                aidx_by_key[(source_key, round(time_value, 9), sequence)] = aidx
-                aidx_by_source_time[(source_key, round(time_value, 9))].append(aidx)
+                time_key = round(time_value, 9)
+                aidx_by_key[(source_key, time_key, sequence)] = aidx
+                aidx_by_source_time[(source_key, time_key)].append(aidx)
             if source_key == "auto_attacks" or event.get("basic_attack"):
                 strikes_append((aidx, time_value, sequence, attacker_i))
             aidx += 1
@@ -795,9 +823,9 @@ class WalkCompiler:
             if event.get("actor_wide"):
                 if "_trigger_source" in event:
                     # Same invariant as add_packet's dedup above.
-                    raise ValueError(
-                        "actor-wide self-heal carries a trigger link; "
-                        "the panel compiler cannot deduplicate it"
+                    raise UncompilableActionError(
+                        receipt="actor_wide_heal_trigger_link",
+                        source=str(event.get("source", "")),
                     )
                 dedup_key = (
                     str(event.get("source", "")),
@@ -807,9 +835,10 @@ class WalkCompiler:
                 kept = heal_dedup.get(dedup_key)
                 if kept is not None:
                     if kept != amount:
-                        raise ValueError(
-                            "actor-wide self-heal copies disagree across "
-                            "pair fights; the compiled dedup cannot keep one"
+                        # Same fail-closed fallback as add_packet's dedup.
+                        raise UncompilableActionError(
+                            receipt="actor_wide_heal_copies_disagree",
+                            source=str(event.get("source", "")),
                         )
                     continue
                 heal_dedup[dedup_key] = amount
@@ -850,6 +879,7 @@ class WalkCompiler:
                     aidx=aidx,
                     amount=amount,
                     amount_formula=event.get("amount_formula"),
+                    healing_category=str(event.get("healing_category", "")),
                     temporary_health_duration=(
                         max(
                             0.0,
@@ -915,6 +945,7 @@ class WalkCompiler:
                     attacker=attacker_i,
                     aidx=aidx,
                     amount=max(0.0, float(template.get("amount", 0.0))),
+                    healing_category=str(template.get("healing_category", "")),
                     source_key=str(template.get("source_key", "")),
                     source=str(template.get("source", "")),
                     event_id=str(template.get("_event_id", "")),
