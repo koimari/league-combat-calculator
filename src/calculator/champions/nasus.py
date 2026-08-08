@@ -236,10 +236,39 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Nasus self-healing events from its authored packet."""
+    healing = []
+    nasus_level = max(1, int(champion_stats.get("level", 18) or 18))
+    soul_eater_ratio = (
+        0.24 if nasus_level >= 13 else (0.18 if nasus_level >= 7 else 0.12)
+    )
+    for event in damage_events:
+        source = _healing._event_source(event)
+        if source != "auto_attacks" and not source.startswith("on_hit_"):
+            continue
+        if event.get("damage_type") != "physical":
+            continue
+        amount = max(0.0, float(event.get("damage", 0.0))) * soul_eater_ratio
+        _healing._heal_from_damage(healing, event, amount, "Soul Eater")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Nasus")
+SELF_HEALING_RULE = declare_healing_rule("Nasus", derive_self_healing)
 
 SOURCES = load_champion_sources("Nasus")

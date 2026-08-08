@@ -133,8 +133,47 @@ SOURCES = [
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Karma self-healing events from its authored packet."""
+    healing = []
+    if str(ability_damages.get("W", {}).get("name", "")) == "Renewal":
+        ap = float(champion_stats.get("ability_power", 0.0) or 0.0)
+        ratio = 0.17 + ap / 10000.0
+
+        def _renewal_heal(current_health: float, maximum_health: float) -> float:
+            return max(0.0, maximum_health - current_health) * ratio
+
+        for cast in cast_timeline or []:
+            if cast.get("slot") != "W":
+                continue
+            cast_time = float(cast.get("time", 0.0))
+            for offset in (0.0, 2.0):
+                healing.append(
+                    {
+                        "time": cast_time + offset,
+                        "amount": 0.0,
+                        "amount_formula": _renewal_heal,
+                        "source": "Renewal",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Karma")
+SELF_HEALING_RULE = declare_healing_rule("Karma", derive_self_healing)

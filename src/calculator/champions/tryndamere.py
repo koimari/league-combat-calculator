@@ -68,8 +68,39 @@ OPTIONS: list[dict[str, Any]] = []
 parse_abilities = build_parser(SLOTS, "Tryndamere")
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Tryndamere self-healing events from its authored packet."""
+    healing = []
+    q_rank = _healing._rank(ability_damages, "Q")
+    amount = _healing.extract_named(
+        _healing._ability(champion_data, "Q"), "Minimum Heal", q_rank, champion_stats
+    )
+    for cast_time in _healing._cast_slot_times(cast_timeline, "Q"):
+        healing.append(
+            {
+                "time": cast_time,
+                "amount": amount,
+                "source": "Bloodlust",
+                "kind": "champion_ability",
+                "actor_wide": True,
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Tryndamere")
+SELF_HEALING_RULE = declare_healing_rule("Tryndamere", derive_self_healing)

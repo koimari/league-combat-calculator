@@ -234,8 +234,44 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Udyr self-healing events from its authored packet."""
+    healing = []
+    w_rank = _healing._rank(ability_damages, "W")
+    per_tick = _healing.extract_named(
+        _healing._ability(champion_data, "W"), "Heal per Tick", w_rank, champion_stats
+    )
+    if per_tick > 0.0:
+        for cast in cast_timeline or []:
+            if cast.get("slot") != "W":
+                continue
+            start = float(cast.get("time", 0.0))
+            for index in range(1, 17):
+                healing.append(
+                    {
+                        "time": start + index * 0.25,
+                        "amount": float(per_tick),
+                        "source": "Iron Mantle",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Udyr")
+SELF_HEALING_RULE = declare_healing_rule("Udyr", derive_self_healing)

@@ -103,8 +103,53 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Zaahen self-healing events from its authored packet."""
+    healing = []
+    q_rank = _healing._rank(ability_damages, "Q")
+    q_heal_pct = _healing._leveling_value(
+        _healing._ability(champion_data, "Q"), "Champion Healing", q_rank
+    )
+    q_heal = q_heal_pct / 100.0 * float(champion_stats.get("health", 0.0))
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "Q"
+    ):
+        _healing._heal_from_damage(
+            healing, event, q_heal, "The Darkin Glaive", link_to_damage=False
+        )
+    # Grim Deliverance (R): flat heal per champion hit
+    # ("Healing per Champion hit": 82.5 / 132 / 181.5 (+ 66% bonus
+    # AD)); the 1v1 pair fight sees exactly one hit per R cast.
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(
+        _healing._ability(champion_data, "R"),
+        "Healing per Champion hit",
+        r_rank,
+        champion_stats,
+        {},
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "R"
+    ):
+        _healing._heal_from_damage(
+            healing, event, r_heal, "Grim Deliverance", link_to_damage=False
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Zaahen")
+SELF_HEALING_RULE = declare_healing_rule("Zaahen", derive_self_healing)

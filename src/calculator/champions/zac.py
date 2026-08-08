@@ -128,8 +128,51 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Zac self-healing events from its authored packet."""
+    healing = []
+    p = _healing._ability(champion_data, "P")
+    level = int(champion_stats.get("level", 18) or 18)
+    chunk_pct = _healing.extract_named(
+        p, "Max Health Damage", level, champion_stats, {}
+    )
+
+    def cell_division_heal(
+        _current_health: float,
+        maximum_health: float,
+        pct: float = chunk_pct,
+    ) -> float:
+        return maximum_health * pct / 100.0
+
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
+    ):
+        healing.append(
+            {
+                "time": float(event.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": cell_division_heal,
+                "source": "Cell Division",
+                "kind": "champion_passive",
+                **_healing._trigger_fields(event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Zac")
+SELF_HEALING_RULE = declare_healing_rule("Zac", derive_self_healing)

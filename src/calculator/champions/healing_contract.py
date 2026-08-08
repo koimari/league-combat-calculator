@@ -24,20 +24,11 @@ class ChampionHealingRule:
         fight_duration_seconds: float | None = None,
     ) -> list[dict[str, Any]]:
         """Resolve this declaration through the shared rule interface."""
-        if self.resolver is not None:
-            return self.resolver(
-                champion_data,
-                champion_stats,
-                ability_damages,
-                damage_events,
-                cast_timeline,
-                fight_duration_seconds,
+        if self.resolver is None:
+            raise RuntimeError(
+                f"{self.champion_name} has no champion-local healing resolver"
             )
-
-        from .healing_rules import derive_rule
-
-        return derive_rule(
-            self.champion_name,
+        return self.resolver(
             champion_data,
             champion_stats,
             ability_damages,
