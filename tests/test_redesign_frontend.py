@@ -89,6 +89,23 @@ def test_opening_a_step_widens_the_rail_and_dims_the_live_canvas(css: str):
     assert "opacity: .55" in dim.group(1)
 
 
+def test_onboarding_followup_copy_stays_in_the_text_column(soup: BeautifulSoup):
+    inline_css = "\n".join(style.get_text() for style in soup.select("head style"))
+    assert ".onboarding-step > p" in inline_css
+    assert "grid-column: 2" in inline_css
+
+
+def test_roster_slots_keep_a_fixed_size_when_the_boots_slot_wraps(css: str):
+    block = css[css.index(".roster-slot-wrap {") : css.index(".roster-slot-label {")]
+    assert "flex: 0 0 34px;" in block
+    assert "width: 34px;" in block
+    assert "max-width: 34px;" in block
+
+    phone = css[css.index("@media (max-width: 520px)") :]
+    assert "flex-basis: 40px;" in phone
+    assert ".roster-item-slot { height: 40px; }" in phone
+
+
 def test_a_dimmed_canvas_is_also_inert(source: str):
     """Dimming without inerting would leave stale numbers clickable. Only
     rail-mode editing dims — centre-mode editing lives inside the canvas."""
