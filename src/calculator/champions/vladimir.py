@@ -17,9 +17,29 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module, repeat_damage_parser
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Vladimir")
+PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Vladimir",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Sanguine Pool prices all 4 pool ticks (Magic Damage Per Tick x 4 "
+        "== Total Magic Damage) at 0.5-second intervals over 2 seconds.",
+    ),
+    slot_parsers={
+        "W": repeat_damage_parser(
+            attr="Magic Damage Per Tick",
+            dmg_type="magic",
+            count=4,
+            time_offset=0.5,
+            hit_interval=0.5,
+            dot_duration=2.0,
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON
 # leveling rows.  Hemoplague: "increasing the damage they take from all

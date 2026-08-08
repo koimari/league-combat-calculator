@@ -24,12 +24,15 @@ E3 additions over the CP10.7 packet module:
 from typing import Any
 
 from .engine import BUFF, SlotCtx, build_parser
-from .reviewed_batch_07 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits, attach_self_shield, extract_named, extract_value
 
+PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Senna")
+    build_packet_module("Senna", PACKET_SHA256)
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Mist's per-stack values (0.75 AD,
 # 20 range and 10% crit per 20 stacks) are wiki prose; the JSON only

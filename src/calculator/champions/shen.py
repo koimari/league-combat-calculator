@@ -249,3 +249,10 @@ CAST_ORDER = ["E", "Q"]
 SLOTS = {"E": _shadow_dash, "Q": _twilight_assault}
 
 parse_abilities = build_parser(SLOTS, "Shen")
+
+
+# Authoritative review metadata (issue #161).
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

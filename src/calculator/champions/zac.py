@@ -16,10 +16,32 @@ reviewed bounce packet pricing is unchanged.
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_10 import build_batch_module
+from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Zac")
+PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zac",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Let's Bounce! prices the initial bounce plus 3 reduced bounces "
+        "(Magic Damage Per Hit + 3 x Reduced Damage Per Hit == Total Magic "
+        "Damage).",
+    ),
+    slot_parsers={
+        "R": full_plus_reduced_parser(
+            full_attr="Magic Damage Per Hit",
+            reduced_attr="Reduced Damage Per Hit",
+            dmg_type="magic",
+            reduced_count=3,
+            time_offset=1.0,
+            hit_interval=1.0,
+            dot_duration=3.0,
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # E8d: sourced Cell Division revive values.  Cached passive prose (data/
 # champions.json, Zac P Cell Division): "enters resurrection for 8 / 7 / 6 /

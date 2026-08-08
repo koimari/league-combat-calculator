@@ -1,13 +1,32 @@
 """Renekton — CP10.6 full-entry-reviewed packet module.
 
 E2 DoT fix: W (Ruthless Predator) prices 2 strikes; R (Dominus) prices
-30 sourced 0.5s ticks (packet_module _PACKET_TICK_FIXES).
+30 sourced 0.5s ticks (this module's packet timing declaration).
 """
 
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Renekton")
+PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Renekton",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Ruthless Predator": {
+            "count": 2,
+            "first_tick": 0.0,
+            "tick_interval": 0.2,
+        },
+        "Dominus": {
+            "count": 30,
+            "first_tick": 0.5,
+            "tick_interval": 0.5,
+            "dot_duration": 15.0,
+        },
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 _ON_HIT_SPECS: dict[str, dict] = {
     "W": {"effectiveness": 1.0, "hits": 2, "triggers": ("on_hit",)},
 }

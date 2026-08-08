@@ -20,7 +20,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -29,9 +29,12 @@ from .slotlib import (
     proc_damage,
 )
 
+PACKET_SHA256 = "9d82bf325e3fbc81b2fed62c53b2501f2bb7aa95228e266e6daeb24e5e7392d6"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Urgot")
+    build_packet_module("Urgot", PACKET_SHA256)
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Purge "autonomously fir[es] at the
 # nearest enemy at a fixed 3.0 attack speed" for 4 seconds (cached W

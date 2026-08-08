@@ -168,3 +168,14 @@ MODULE_COVERAGE = {
 REVIEW_STATUS = "reviewed_module"
 
 parse_abilities = build_parser(SLOTS, "Ahri")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+        "revision_id": 4047800,
+        "revision_timestamp": "2026-07-31T01:16:52Z",
+    }
+]

@@ -13,11 +13,16 @@ is a documented no-damage row instead of being collapsed into a bolt.
 """
 
 from ..ability_spec import DamagePart
-from .reviewed_batch_11 import build_batch_module
+from .packet_module import build_packet_module
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Zoe")
+PACKET_SHA256 = "254423a49d0d309eafb437ffdb27709166a149f7ea2bc6aa1f21cf01f1b747a8"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zoe", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # Wheeeee fires three bolts; the "Total Magic Damage" row is exactly
 # 3 x "Magic Damage Per Bolt" at every rank (45/3 == 15, ..., 165/3 == 55).

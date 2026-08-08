@@ -232,13 +232,12 @@ def _slot_certainty(
             f"damage rows; {slot} inherits the estimate."
         )
 
-    # 5. Generated packets are deterministic wiki parses, not reviewed
-    #    modules; their numbers stay estimates until the exact review gate.
+    # 5. Unknown/synthetic champions have no validated named-module contract.
     if registration != "reviewed_module":
         return CERTAINTY_ESTIMATE, (
             f"No player-controlled defaults or documented boundaries for "
-            f"{slot}, but the module is a generated packet (wiki parse "
-            f"without exact review) — treat numbers as estimates."
+            f"{slot}, but the champion has no validated named module — treat "
+            f"numbers as estimates."
         )
 
     return CERTAINTY_EXACT, (

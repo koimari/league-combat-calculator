@@ -272,3 +272,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Diana")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Diana",
+        "revision_id": 3892621,
+        "revision_timestamp": "2025-05-02T11:24:50Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

@@ -26,7 +26,7 @@ hardcoded.
 from typing import Any, Callable
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_09 import _full_entry_sources
+from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
 
@@ -109,7 +109,7 @@ ASSUMPTIONS = [
     "P and E deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(_full_entry_sources("Veigar"))
+SOURCES = list(load_champion_sources("Veigar"))
 
 SLOTS = {
     "P": _no_damage(

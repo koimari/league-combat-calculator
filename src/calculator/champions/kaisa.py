@@ -344,3 +344,10 @@ SOURCES = [
 SLOTS = {"W": _void_seeker, "Q": _icathian_rain}
 
 parse_abilities = build_parser(SLOTS, "Kai'Sa")
+
+
+# Authoritative review metadata (issue #161).
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

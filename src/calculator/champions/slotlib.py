@@ -932,7 +932,7 @@ def on_hit_auto(source: tuple[str, int] | None = None) -> SlotParser:
 def with_item_on_hits(parser, *, effectiveness, hits=1, triggers=("on_hit",)):
     """Wrap a slot parser so its entry declares item on-hit application.
 
-    Used by reviewed batch wrappers to add wiki-sourced
+    Used by named champion modules to add wiki-sourced
     ``applies_item_on_hits`` metadata to abilities that apply item on-hits
     (spellblade charges, on-hit items) without rewriting the packet parser.
     """

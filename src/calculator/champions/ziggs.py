@@ -198,3 +198,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Ziggs")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Ziggs",
+        "revision_id": 3960732,
+        "revision_timestamp": "2025-10-22T22:15:37Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

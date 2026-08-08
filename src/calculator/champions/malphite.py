@@ -35,7 +35,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -43,7 +43,12 @@ from .slotlib import (
     extract_named,
 )
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Malphite")
+PACKET_SHA256 = "486c8deb9501df4c594a7d0e7c89daa625c864c627339407758da466dfc7c1e1"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Malphite", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — Granite Shield's 10% ratio and
 # until-broken lifetime are prose-only in the cached passive description

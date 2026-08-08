@@ -35,8 +35,8 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import rank
-from .reviewed_batch_04 import build_batch_module
+from .module_helpers import rank
+from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -239,7 +239,12 @@ def _nether_grasp(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Malzahar")
+PACKET_SHA256 = "914a2a28fdee65829d311570f62107c1b9c39d397b2782c147e5bdbe894a4f8f"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Malzahar", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 # Override the packet DoT rows with the full-total tick pricing above and
 # the packet's single-attack W with the sourced voidling swarm, then
 # rebuild the parser so the module's parse_abilities sees them.

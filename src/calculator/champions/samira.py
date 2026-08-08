@@ -20,12 +20,32 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage
-from .reviewed_batch_07 import _full_entry_sources, build_batch_module
+from .module_helpers import no_damage
+from .packet_module import build_packet_module
+from .source_receipts import load_champion_sources
+
+PACKET_SHA256 = "26e75628def53875687d8141eb419c4f2d3a2adb6e68ee714cd39cb4e446ad4e"
 
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Samira")
+    build_packet_module(
+        "Samira",
+        PACKET_SHA256,
+        packet_tick_fixes={
+            "Blade Whirl": {
+                "count": 2,
+                "first_tick": 0.0,
+                "tick_interval": 0.75,
+            },
+            "Inferno Trigger": {
+                "count": 10,
+                "first_tick": 0.0,
+                "tick_interval": 0.2,
+                "dot_duration": 2.013,
+            },
+        },
+    )
 )
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
 _STYLE_MAX = 6
 # Style bonus movement speed per stack by level bracket (wiki prose:
 # 2.75% / 3% / 3.25% / 3.5% at levels 1 / 6 / 11 / 16).
@@ -115,7 +135,7 @@ ASSUMPTIONS = [
     "sourced 0.2s shots)",
 ]
 
-SOURCES = _full_entry_sources("Samira")
+SOURCES = load_champion_sources("Samira")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "R"} else "out_of_scope") for slot in "PQWER"
 }

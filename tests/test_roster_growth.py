@@ -123,8 +123,9 @@ def test_api_config_counts_match_the_live_registry():
     )
     assert engine["registered_count"] == len(registered_champion_names())
     assert engine["reviewed_count"] == len(registered_champion_names())
-    assert engine["generated_count"] == 0
-    assert engine["unreviewed_count"] == 0
+    assert "generated_count" not in engine
+    assert "unreviewed_count" not in engine
+    assert "generic_enabled" not in engine
 
 
 def test_full_entry_audit_derives_from_the_cache(monkeypatch, tmp_path):

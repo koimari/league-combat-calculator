@@ -28,8 +28,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage
-from .reviewed_batch_03 import build_batch_module
+from .module_helpers import no_damage, typed_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -37,10 +36,30 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Kindred")
-)
+
+def _dance_of_arrows(ctx: SlotCtx) -> dict[str, Any] | None:
+    result = typed_damage(ctx, "Physical Damage", "physical")
+    if result:
+        result["detail"] = (
+            f"Dance of Arrows; {int(ctx.options.get('marks', 0))} Mark of "
+            "the Kindred stacks grant the sourced attack-speed state."
+        )
+    return result
+
+
+_BASE_SLOTS = {
+    "Q": _dance_of_arrows,
+    "R": lambda ctx: no_damage(
+        ctx,
+        name="Lamb's Respite",
+        reason=(
+            "The minimum-health zone and end heal are defensive/utility "
+            "state, not enemy damage."
+        ),
+    ),
+}
 _MARK_MAX = 25
 _E_STACK_MAX = 3
 
@@ -228,11 +247,11 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = {
     "P": _mark_of_the_kindred,
-    "Q": _BATCH_SLOTS["Q"],
+    "Q": _BASE_SLOTS["Q"],
     "W": _wolfs_frenzy,
     "W_vigor": _hunters_vigor,
     "E": _mounting_dread,
-    "R": _BATCH_SLOTS["R"],
+    "R": _BASE_SLOTS["R"],
 }
 parse_abilities = build_parser(SLOTS, "Kindred")
 
@@ -292,7 +311,7 @@ ASSUMPTIONS = [
     "R (Lamb's Respite) is the reviewed no-damage packet",
 ]
 
-SOURCES = _BATCH_SOURCES
+SOURCES = load_champion_sources("Kindred")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "W", "E"} else "out_of_scope") for slot in "PQWER"
 }

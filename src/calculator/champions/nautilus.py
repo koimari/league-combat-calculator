@@ -23,7 +23,7 @@ P1-2 fixes:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .reviewed_batch_05 import build_batch_module
+from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
@@ -32,7 +32,12 @@ from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 # carries no timing).
 _W_SECOND_INSTANCE_DELAY = 1.25
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Nautilus")
+PACKET_SHA256 = "66ae84d11488386be94ff6ac41a99478d1d5d6394c98003813b547dbda249172"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Nautilus", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _staggering_blow(ctx: SlotCtx):

@@ -12,11 +12,29 @@ so the passive is an on-hit entry priced at the per-level flat value.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Poppy")
+PACKET_SHA256 = "1a31e4f033cd7f636b093e6398b78eaa559462a22552cb2fe1cc48b46f618be5"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Poppy",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Poppy Q's sourced Hammer Shock field ruptures 1 second after impact; "
+        "the packet emits both physical hits.",
+    ),
+    packet_part_timings={
+        "Q": {
+            "count": 2,
+            "time_offset": 0.0,
+            "hit_interval": 1.0,
+            "total_multiplier": 2.0,
+        }
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _iron_ambassador(ctx: SlotCtx):

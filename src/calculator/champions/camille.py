@@ -308,3 +308,18 @@ SLOTS = dict(SLOTS)
 _packet_w = SLOTS["W"]
 SLOTS["W"] = _tactical_sweep_with_shield
 parse_abilities = build_parser(SLOTS, "Camille")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Camille",
+        "revision_id": 4002624,
+        "revision_timestamp": "2026-03-27T01:51:45Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

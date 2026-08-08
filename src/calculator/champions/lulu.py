@@ -16,7 +16,7 @@ sourced per-bolt row exact.
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import extract_named, on_hit_entry
 
 # HARDCODED: verify on patch updates — the 3-bolt barrage and each bolt's
@@ -25,7 +25,12 @@ from .slotlib import extract_named, on_hit_entry
 _PIX_BOLTS_DEFAULT = 3
 _PIX_BOLT_AP_RATIO = 0.05
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Lulu")
+PACKET_SHA256 = "2dcdd74eafe747d8fbd7233f3202b76fca9be9d6250a336ce0fe7f8ef2f2f1e1"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Lulu", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _pix_bolts(ctx: SlotCtx) -> dict[str, Any] | None:

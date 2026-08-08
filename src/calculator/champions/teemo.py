@@ -5,7 +5,7 @@ PLUS the full 4-second poison DoT.  The packet priced only the
 "Magic Damage On-Hit" row; the cached JSON's "Magic Damage per Tick"
 (6-30 + 2.5% bonus AD + 10% AP) and "Total Poison Damage"
 (24-120 + 10% bonus AD + 40% AP) rows are now expressed as 4 ticks at
-1-second intervals (packet_module _PACKET_TICK_FIXES).
+1-second intervals (this module's packet timing declaration).
 
 E4 summon: R (Noxious Trap) is a summoned trap.  The E2-3 tick fix
 already prices one shroom detonation as the full 4-second poison (4
@@ -34,7 +34,7 @@ import dataclasses
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_08 import build_batch_module
+from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import extract_value
 
 # Sourced cadence for one Noxious Trap detonation (cache + wiki):
@@ -87,7 +87,40 @@ def _noxious_trap(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Teemo")
+PACKET_SHA256 = "82f4b06f86d7d9d576a27f3e9e4e639261e0bb5f50c969cd0592a0ff8459a2f4"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Teemo",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Noxious Trap prices the full 4-second poison: 4 ticks of Magic "
+        "Damage per Tick (== Total Magic Damage) at 1-second intervals.",
+    ),
+    packet_tick_fixes={
+        "Toxic Shot": {
+            "initial_tick": 0.0,
+            "extra_part": {
+                "attribute": "Magic Damage per Tick",
+                "count": 4,
+                "damage_type": "magic",
+                "first_tick": 1.0,
+                "tick_interval": 1.0,
+                "dot_duration": 4.0,
+            },
+        }
+    },
+    slot_parsers={
+        "R": repeat_damage_parser(
+            attr="Magic Damage per Tick",
+            dmg_type="magic",
+            count=4,
+            time_offset=1.0,
+            hit_interval=1.0,
+            dot_duration=4.0,
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 _R_SLOT = SLOTS["R"]
 SLOTS["R"] = _noxious_trap
 parse_abilities = build_parser(SLOTS, "Teemo")
@@ -99,7 +132,7 @@ ASSUMPTIONS.extend(
         "the poison duration and never stack.",
         "E (Toxic Shot) prices the on-hit PLUS the full 4-second poison: "
         "4 ticks of Magic Damage per Tick (== Total Poison Damage) at "
-        "1-second intervals (packet_module _PACKET_TICK_FIXES); the "
+        "1-second intervals (this module's packet timing declaration); the "
         "poison refreshes rather than stacks (wiki note).",
         "The shroom slow (30/40/50% by R rank for 4 seconds) and reveal "
         "are crowd-control/vision utility the fight model does not price.",

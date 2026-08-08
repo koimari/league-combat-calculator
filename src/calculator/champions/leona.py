@@ -14,9 +14,88 @@ E8c addition over the reviewed module:
 Option key consumed by the shared parser: "p_marks".
 """
 
-from .reviewed_batch_03 import build_batch_module
+from typing import Any
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Leona")
+from .engine import ONHIT, SlotCtx, build_parser
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS
+from .slotlib import (
+    ability_on_hit_entry,
+    extract_cooldown,
+    extract_named,
+    proc_damage,
+    simple_damage,
+)
+from .source_receipts import load_champion_sources
+
+
+def _sunlight(ctx: SlotCtx) -> dict[str, Any] | None:
+    result = proc_damage(
+        lambda current, ability: extract_named(
+            ability,
+            "Per-Level Scaling",
+            current.level,
+            current.stats,
+            current.target,
+        ),
+        "magic",
+        count_option="p_marks",
+        default_count=1,
+        name="Sunlight (ally detonation)",
+        phase_order_events=True,
+    )(ctx)
+    if result:
+        result["detail"] = (
+            "One sourced ally-triggered Sunlight detonation per marked target; "
+            "marking is ordered state."
+        )
+    return result
+
+
+def _shield_of_daybreak(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    value = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
+    result = ability_on_hit_entry(
+        ability.get("name", "Shield of Daybreak"),
+        rank,
+        "magic",
+        {
+            "name": "Shield of Daybreak",
+            "damage_per_hit": value,
+            "damage_type": "magic",
+        },
+        extract_cooldown(ability, rank),
+    )
+    result["empowers_next_auto"] = True
+    result["detail"] = "One empowered basic attack; the stun is control state."
+    return result
+
+
+_sunlight.phase = ONHIT
+
+
+SLOTS = {
+    "P": _sunlight,
+    "Q": _shield_of_daybreak,
+    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+}
+OPTIONS = [
+    {
+        "key": "p_marks",
+        "type": "int",
+        "default": 1,
+        "min": 0,
+        "max": 6,
+        "label": "Sunlight ally detonations",
+    }
+]
+ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
+SOURCES = load_champion_sources("Leona")
+parse_abilities = build_parser(SLOTS, "Leona")
 
 # HARDCODED: verify on patch updates — Eclipse's defense rows are cached
 # leveling data (data/champions.json, Leona W): Flat Damage Reduction

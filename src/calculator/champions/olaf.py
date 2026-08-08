@@ -11,9 +11,14 @@ E8c addition over the reviewed packet:
   carries the flat component only.
 """
 
-from .reviewed_batch_05 import build_batch_module
+from .packet_module import build_packet_module
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Olaf")
+PACKET_SHA256 = "abc0765ed94d66999d26bc7fe98c41c49c3d5e3631c4cca2a96a59de1ba776eb"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Olaf", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — Tough It Out's 2.5s shield
 # duration and 17.5% missing-health ratio are prose/cached leveling

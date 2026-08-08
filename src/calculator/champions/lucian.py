@@ -2,7 +2,7 @@
 
 E9-1 closes the two remaining audit gaps over the CP10.4 packet:
 - R (The Culling) prices the FULL 3-second channel: 22 shots of the
-  "Physical Damage Per Shot" packet (packet_module _PACKET_TICK_FIXES)
+  "Physical Damage Per Shot" packet (this module's packet timing declaration)
   at the sourced ~3s cadence instead of ONE shot.  The wiki cache
   carries only the per-shot row and the prose shot count ("up to 22
   shots ... over the duration"), so per-shot x 22 is the sourced
@@ -25,7 +25,7 @@ remains a documented no-damage dash.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 
 # HARDCODED: verify on patch updates — the second shot's AD ratio is
 # level-banded.  The cached P JSON carries only the prose "50% / 55% /
@@ -65,7 +65,21 @@ def _lightslinger(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Lucian")
+PACKET_SHA256 = "3fe0c536a453a203c13c7bb713274cbc217785ea29e4723c090c474b7607b9e6"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Lucian",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "The Culling": {
+            "count": 22,
+            "first_tick": 0.0,
+            "tick_interval": 0.1364,
+            "dot_duration": 3.0,
+        }
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 SLOTS["P"] = _lightslinger
 parse_abilities = build_parser(SLOTS, "Lucian")
 

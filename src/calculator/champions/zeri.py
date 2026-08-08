@@ -14,12 +14,31 @@ deals no damage.  Secondary targets ("Burst Fire Secondary Target
 Damage" 80-100%) are outside this single-target model.
 """
 
-from .reviewed_batch_10 import build_batch_module
+from .packet_module import build_packet_module, repeat_damage_parser
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Zeri")
+PACKET_SHA256 = "f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c055"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zeri",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Burst Fire prices all 7 rounds (Physical Damage per Hit x 7 == "
+        "Total Physical Damage).",
+    ),
+    slot_parsers={
+        "Q": repeat_damage_parser(
+            attr="Physical Damage per Hit",
+            dmg_type="physical",
+            count=7,
+            time_offset=0.0,
+            hit_interval=0.0,
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # Burst Fire fires 7 rounds (Total Physical Damage / per-hit on Q,
 # locked by tests/test_e2_dot_3.py); Lightning Rounds empowers each

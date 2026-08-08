@@ -21,7 +21,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 # Sourced storm cadence (wiki W): "take magic damage on-cast and every
@@ -123,7 +123,12 @@ def _soul_siphon(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Morgana")
+PACKET_SHA256 = "5cc8fcb312de2d1d31c8b63157dac32a85424fa0decca7a8f1ac4ac94d689a9d"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Morgana", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 SLOTS["W"] = _tormented_shadow
 SLOTS["R"] = _soul_shackles
 SLOTS["P"] = _soul_siphon

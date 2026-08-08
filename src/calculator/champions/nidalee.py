@@ -1,7 +1,7 @@
 """Nidalee — CP10.5 full-entry-reviewed packet module.
 
 E2 DoT fix: W Bushwhack (human-form trap) prices 4 sourced 1s ticks
-(packet_module _PACKET_TICK_FIXES); the Pounce variant is untouched.
+(this module's packet timing declaration); the Pounce variant is untouched.
 
 E4 summon: W Bushwhack is a summoned trap.  The E2 pricing already
 models one sprung trap's full 4-second DoT; ``w_traps`` (default 1,
@@ -25,7 +25,7 @@ import dataclasses
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_05 import build_batch_module
+from .packet_module import build_packet_module
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be
 # active at once" — 10 at level 18 (the test level).
@@ -54,7 +54,21 @@ def _bushwhack_traps(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Nidalee")
+PACKET_SHA256 = "96b6e873251ff23f700da4de3600cae2000d53929d77f7f315a48a227ac81d3d"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Nidalee",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Bushwhack": {
+            "count": 4,
+            "first_tick": 1.0,
+            "tick_interval": 1.0,
+            "dot_duration": 4.0,
+        }
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 # The packet builder consumes these two explicit form selectors at parse time.
 VARIANT_OPTION_KEYS = ("q_variant", "w_variant")
 _W_SLOT = SLOTS["W"]

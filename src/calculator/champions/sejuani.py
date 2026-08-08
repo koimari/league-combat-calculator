@@ -16,7 +16,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_07 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -24,7 +24,12 @@ from .slotlib import (
     sum_modifiers,
 )
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Sejuani")
+PACKET_SHA256 = "ea21bda8a36a602ed96aad725ac6f585d0e3db982035f7c61a78ebc50db90152"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sejuani", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:

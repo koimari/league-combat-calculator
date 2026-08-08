@@ -7,12 +7,10 @@ archetype registration in the reviewed surface.
 """
 
 import importlib
-import json
-from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
 from .generic import GENERIC_SLOTS, parse_abilities as parse_generic_abilities
+from .module_contract import ChampionModuleContract, contract_from_module
 
 # Map display name -> module name within this package.  This is the single
 # explicit roster manifest: every cached champion has a reviewed module and
@@ -207,65 +205,22 @@ _CHAMPION_MODULES: dict[str, str] = _ENGINE_CHAMPION_MODULES
 # Resolved module ``parse_abilities`` callables — the import system already
 # caches modules, but the coupled optimizer dispatches thousands of parses
 # per request, so skip even the ``import_module`` lookup after the first.
-_MODULE_PARSERS: dict[str, Any] = {}
+_MODULE_CONTRACTS: dict[str, ChampionModuleContract] = {}
 
 
-@lru_cache(maxsize=1)
-def _reviewed_packet_sources() -> dict[str, tuple[dict[str, Any], ...]]:
-    """Load revision receipts from the tracked reviewed-packet manifest.
+def get_champion_module_contract(champion_name: str) -> ChampionModuleContract:
+    """Import and validate the authoritative module for *champion_name*."""
 
-    Hand-authored modules may carry their own ``SOURCES`` rows.  The checked-in
-    packet manifest is the authoritative fallback for modules that do not: it
-    is local, patch-pinned data and must never trigger a network request.  A
-    malformed or unavailable manifest fails closed to an empty mapping.
-    """
-    path = Path(__file__).resolve().parents[3] / "static" / "reviewed-packets.json"
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, TypeError, ValueError, json.JSONDecodeError):
-        return {}
-    champions = payload.get("champions") if isinstance(payload, dict) else None
-    if not isinstance(champions, dict):
-        return {}
-
-    result: dict[str, tuple[dict[str, Any], ...]] = {}
-    for name, entry in champions.items():
-        if not isinstance(name, str) or not isinstance(entry, dict):
-            continue
-        rows = entry.get("sources")
-        if not isinstance(rows, list):
-            continue
-        valid: list[dict[str, Any]] = []
-        for row in rows:
-            if not isinstance(row, dict):
-                continue
-            label = row.get("label")
-            url = row.get("url")
-            revision_id = row.get("revision_id")
-            revision_timestamp = row.get("revision_timestamp")
-            if (
-                not isinstance(label, str)
-                or not label
-                or not isinstance(url, str)
-                or not url
-                or isinstance(revision_id, bool)
-                or not isinstance(revision_id, int)
-                or revision_id <= 0
-                or not isinstance(revision_timestamp, str)
-                or not revision_timestamp
-            ):
-                continue
-            valid.append(
-                {
-                    "label": label,
-                    "url": url,
-                    "revision_id": revision_id,
-                    "revision_timestamp": revision_timestamp,
-                }
-            )
-        if valid:
-            result[name] = tuple(valid)
-    return result
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        raise KeyError(f"no registered champion module for {champion_name!r}")
+    cached = _MODULE_CONTRACTS.get(champion_name)
+    if cached is not None and cached.module_name == module_name:
+        return cached
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    contract = contract_from_module(champion_name, module_name, module)
+    _MODULE_CONTRACTS[champion_name] = contract
+    return contract
 
 
 # Option keys owned by the pipeline — never user input, never a module
@@ -293,9 +248,9 @@ def parse_abilities(
 ) -> dict[str, dict[str, Any]]:
     """Parse abilities for any champion.
 
-    Dispatches to a dedicated reviewed module. Unknown synthetic fixtures keep
-    the legacy generic parser contract, but cached champions never fall back
-    to it.
+    Dispatches to a dedicated reviewed module. Unknown names fail closed;
+    synthetic fixtures must call :func:`parse_synthetic_champion_abilities`
+    explicitly.
 
     Args:
         champion_name: Display name of the champion (e.g., "Ahri").
@@ -311,26 +266,30 @@ def parse_abilities(
     Returns:
         Ability damage dictionary keyed by Q/W/E/R.
     """
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    # A few internal pipeline fixtures intentionally rename the display name;
-    # keep their legacy generic behavior without promoting fixture names to
-    # the public registration manifest.
-    if module_name is None:
-        return parse_generic_abilities(
-            champion_data,
-            level,
-            total_ability_power,
-            ability_ranks=ability_ranks,
-            champion_options=champion_options,
-            champion_stats=champion_stats,
-            target_stats=target_stats,
-        )
-    module_parse = _MODULE_PARSERS.get(module_name)
-    if module_parse is None:
-        module = importlib.import_module(f".{module_name}", package=__name__)
-        module_parse = module.parse_abilities
-        _MODULE_PARSERS[module_name] = module_parse
-    return module_parse(
+    contract = get_champion_module_contract(champion_name)
+    return contract.parse_abilities(
+        champion_data,
+        level,
+        total_ability_power,
+        ability_ranks=ability_ranks,
+        champion_options=champion_options,
+        champion_stats=champion_stats,
+        target_stats=target_stats,
+    )
+
+
+def parse_synthetic_champion_abilities(
+    champion_data: dict[str, Any],
+    level: int,
+    total_ability_power: float,
+    ability_ranks: dict[str, int] | None = None,
+    champion_stats: dict[str, float] | None = None,
+    target_stats: dict[str, float] | None = None,
+    champion_options: dict[str, Any] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Run the explicitly synthetic/development Wiki parser."""
+
+    return parse_generic_abilities(
         champion_data,
         level,
         total_ability_power,
@@ -381,10 +340,10 @@ def get_champion_cast_order(champion_name: str) -> list[str] | None:
         The declared order, or ``None`` when the champion has no module
         or does not override the default.
     """
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    try:
+        module = get_champion_module_contract(champion_name).module
+    except KeyError:
         return None
-    module = importlib.import_module(f".{module_name}", package=__name__)
     declared = getattr(module, "CAST_ORDER", None)
     return list(declared) if declared else None
 
@@ -404,17 +363,15 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
         (JSON-safe). A source row contains ``label``, ``url``,
         ``revision_id``, and ``revision_timestamp``.
     """
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    try:
+        contract = get_champion_module_contract(champion_name)
+    except KeyError:
         return {"options": [], "assumptions": [], "sources": []}
-    module = importlib.import_module(f".{module_name}", package=__name__)
-    module_sources = list(getattr(module, "SOURCES", []))
-    if not module_sources:
-        module_sources = list(_reviewed_packet_sources().get(champion_name, ()))
+    module = contract.module
     result: dict[str, Any] = {
-        "options": list(module.OPTIONS),
-        "assumptions": list(module.ASSUMPTIONS),
-        "sources": module_sources,
+        "options": list(contract.options),
+        "assumptions": list(contract.assumptions),
+        "sources": list(contract.sources),
     }
     supported_modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
     if supported_modes is not None:
@@ -798,12 +755,12 @@ def get_champion_option_rotation(
         OPTIONS entries.  Unknown synthetic fixtures without a module
         return ``{}``.
     """
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    try:
+        contract = get_champion_module_contract(champion_name)
+    except KeyError:
         return {}
-    module = importlib.import_module(f".{module_name}", package=__name__)
     result: dict[str, dict[str, Any] | None] = {}
-    for opt in getattr(module, "OPTIONS", []):
+    for opt in contract.options:
         key = str(opt.get("key", ""))
         inline = opt.get("rotation")
         if isinstance(inline, dict) and inline.get("role") in _ROTATION_ROLES:
@@ -835,8 +792,9 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
         "slots": [...], "coverage": {...}, "review_status": str,
         "registration": str}`` — all JSON-safe.
     """
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    try:
+        contract = get_champion_module_contract(champion_name)
+    except KeyError:
         return {
             "options": [],
             "assumptions": [],
@@ -846,55 +804,50 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
             "review_status": "unregistered",
             "registration": "unregistered",
         }
-    module = importlib.import_module(f".{module_name}", package=__name__)
-    coverage = getattr(module, "MODULE_COVERAGE", None)
     result = get_champion_options_meta(champion_name)
-    result["slots"] = list(getattr(module, "SLOTS", {}))
-    result["coverage"] = dict(coverage) if isinstance(coverage, dict) else {}
-    review_status = str(getattr(module, "REVIEW_STATUS", "")).strip() or "unregistered"
-    result["review_status"] = review_status
-    # Every registered module is a reviewed module; the generated-packet
-    # registration branch was removed with the generated lane (issue #136).
-    result["registration"] = "reviewed_module"
+    result["slots"] = list(contract.slots)
+    result["coverage"] = dict(contract.coverage)
+    result["review_status"] = contract.review_status
+    result["registration"] = contract.review_status
     return result
 
 
 def get_comparison_curve_unavailable_reason(champion_name: str) -> str | None:
     """Why timed crossover windows are withheld for a champion, if at all."""
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    try:
+        module = get_champion_module_contract(champion_name).module
+    except KeyError:
         return None
-    module = importlib.import_module(f".{module_name}", package=__name__)
     reason = getattr(module, "COMPARISON_CURVE_UNAVAILABLE_REASON", None)
     return str(reason) if reason else None
 
 
 def get_supported_fight_modes(champion_name: str) -> tuple[str, ...] | None:
     """Return a module's certified public fight modes, when restricted."""
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    try:
+        module = get_champion_module_contract(champion_name).module
+    except KeyError:
         return None
-    module = importlib.import_module(f".{module_name}", package=__name__)
     modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
     return tuple(str(mode) for mode in modes) if modes is not None else None
 
 
 def get_unsupported_fight_mode_reason(champion_name: str) -> str | None:
     """Return the sourced fail-closed explanation for restricted modes."""
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    try:
+        module = get_champion_module_contract(champion_name).module
+    except KeyError:
         return None
-    module = importlib.import_module(f".{module_name}", package=__name__)
     reason = getattr(module, "UNSUPPORTED_FIGHT_MODE_REASON", None)
     return str(reason) if reason else None
 
 
 def get_custom_cast_order_unavailable_reason(champion_name: str) -> str | None:
     """Explain why a module's certified cast sequence cannot be reordered."""
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    try:
+        module = get_champion_module_contract(champion_name).module
+    except KeyError:
         return None
-    module = importlib.import_module(f".{module_name}", package=__name__)
     reason = getattr(module, "CUSTOM_CAST_ORDER_UNAVAILABLE_REASON", None)
     return str(reason) if reason else None
 
@@ -949,16 +902,16 @@ def engine_registration_kind(champion_name: str) -> str | None:
     Every registered module is a reviewed module (the generated-packet lane
     was removed with issue #136); unknown names return ``None``.
     """
-    if champion_name in _CUSTOM_CHAMPION_MODULES:
-        return "reviewed_module"
-    return None
+    if champion_name not in _CUSTOM_CHAMPION_MODULES:
+        return None
+    return get_champion_module_contract(champion_name).review_status
 
 
 def is_champion_supported(champion_name: str) -> bool:
     """Check whether a champion has ability damage implemented.
 
-    Returns True only for cached champions with a dedicated module. Unknown
-    synthetic fixtures may still use the legacy fallback in ``parse_abilities``
-    but are not advertised as supported.
+    Returns True only for cached champions with a dedicated module. Explicit
+    synthetic/development fixtures use ``parse_synthetic_champion_abilities``
+    and are not advertised as supported.
     """
     return champion_name in _CHAMPION_MODULES

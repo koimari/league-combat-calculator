@@ -10,11 +10,14 @@ as a non-damaging state-only slot; the engine's cast timeline still
 schedules the W cast that arms the recast.
 """
 
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module(
-    "Mordekaiser"
+PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d228"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Mordekaiser", PACKET_SHA256
 )
+PACKET_SPEC = SLOTS.packet_spec
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Indestructible) stores 45% of post-mitigation damage dealt and "
     "7.5% of pre-mitigation damage taken as Potential Shield (capped at "

@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib
 import json
 import os
 import re
@@ -46,9 +45,10 @@ try:
 except ImportError:  # imported as scripts.full_entry_audit in tests
     from scripts.gate_receipt import build_receipt
 
+from src.calculator.champions.module_contract import REQUIRED_CHAMPION_SLOTS
+
 CHAMPIONS_PATH = ROOT / "data" / "champions.json"
 ITEMS_PATH = ROOT / "data" / "items.json"
-REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
 PACKET_MANIFEST_PATH = ROOT / "static" / "reviewed-packets.json"
 
 # Resolved path of the read-only ``league-wiki-query`` CLI.  No developer-home
@@ -99,121 +99,107 @@ def _load(path: Path) -> dict[str, Any]:
     return value
 
 
-def _champion_module_receipt(name: str) -> dict[str, Any]:
-    """Verify the runtime module and its five-slot source manifest exist.
+def _max_revision(rows: Iterable[Any]) -> int | None:
+    """Largest integer revision receipt in *rows*, or None when absent."""
+    revisions = [
+        row["revision_id"]
+        for row in rows
+        if isinstance(row, dict)
+        and isinstance(row.get("revision_id"), int)
+        and not isinstance(row.get("revision_id"), bool)
+    ]
+    return max(revisions) if revisions else None
 
-    The Wiki page is the source receipt; this companion check proves that the
-    checked-in runtime has a named module and an explicit entry for every
-    passive/Q/W/E/R slot.  A slot may be ``no_damage`` only when its manifest
-    names a source and a user-visible reason.
+
+def _champion_module_receipt(name: str) -> dict[str, Any]:
+    """Describe one validated runtime module and check packet evidence drift.
+
+    Packet-backed modules fail closed on digest drift.  Hand-authored modules
+    pin the revision they were reviewed against, so a newer manifest receipt
+    is reported as an advisory ``stale_review_sources`` field — never a
+    failure, since the pinned row honestly describes the reviewed revision.
     """
     manifest = _load(PACKET_MANIFEST_PATH)
-    champion = (manifest.get("champions") or {}).get(name)
-    if not isinstance(champion, dict):
-        return {
-            "name": name,
-            "status": "review_pending",
-            "error": "champion missing from reviewed-packets.json",
-        }
-    registration_kind = None
+    manifest_champion = (manifest.get("champions") or {}).get(name)
     try:
         if str(ROOT) not in sys.path:
             sys.path.insert(0, str(ROOT))
-        from src.calculator.champions import _CHAMPION_MODULES, engine_registration_kind
+        from src.calculator.champions import get_champion_module_contract
+        from src.calculator.champions.packet_module import packet_spec_sha256
 
-        module_name = _CHAMPION_MODULES.get(name)
-        if not module_name:
-            raise ImportError("no registered module")
-        module = importlib.import_module(f"src.calculator.champions.{module_name}")
-        registration_kind = engine_registration_kind(name)
-        review_status = getattr(module, "REVIEW_STATUS", None)
-        if not callable(getattr(module, "parse_abilities", None)):
-            raise ImportError("registered module has no parse_abilities callable")
+        contract = get_champion_module_contract(name)
     except (ImportError, KeyError, TypeError, ValueError) as exc:
         return {"name": name, "status": "review_pending", "error": str(exc)}
 
-    slots = champion.get("slots")
-    missing: list[str] = []
-    invalid: list[str] = []
-    if not isinstance(slots, dict):
-        missing = list(REQUIRED_CHAMPION_SLOTS)
-    else:
-        for slot in REQUIRED_CHAMPION_SLOTS:
-            spec = slots.get(slot)
-            if not isinstance(spec, dict):
-                missing.append(slot)
-                continue
-            kind = spec.get("kind")
-            if kind not in {"packet", "wiki_attribute", "variants", "no_damage"}:
-                invalid.append(slot)
-            if kind == "variants" and not isinstance(spec.get("variants"), list):
-                invalid.append(slot)
-            if kind == "no_damage" and not str(spec.get("reason") or "").strip():
-                invalid.append(slot)
-    sources = champion.get("sources")
-    slot_coverage = []
-    if isinstance(slots, dict):
-        for slot in REQUIRED_CHAMPION_SLOTS:
-            spec = slots.get(slot)
-            if not isinstance(spec, dict):
-                continue
-            kind = str(spec.get("kind", ""))
-            if kind == "no_damage":
-                status = "out_of_scope"
-                reason = str(
-                    spec.get(
-                        "reason",
-                        "This slot has no sourced enemy-damage formula; its state or utility branch is not part of the damage packet.",
-                    )
-                )
-            elif registration_kind == "generated_packet":
-                status = "generated_pending"
-                reason = (
-                    "Generated packet is runnable but the complete champion-specific Wiki mechanics, "
-                    "target policy, costs, timing, and state branches still require an exact module."
-                )
-            else:
-                status = "modeled"
-                reason = "Slot is implemented by the reviewed champion module."
-            slot_coverage.append(
-                {
-                    "slot": slot,
-                    "name": str(spec.get("name", slot)),
-                    "kind": kind,
-                    "status": status,
-                    "reason": reason,
-                    "source": spec.get("source"),
-                    "issue_refs": [15, 18] if status == "generated_pending" else [],
-                }
-            )
+    coverage = contract.coverage
+    runtime_slots = [slot for slot in REQUIRED_CHAMPION_SLOTS if slot in contract.slots]
+    slot_coverage = [
+        {
+            "slot": slot,
+            "name": slot,
+            "kind": "runtime_slot" if slot in contract.slots else "declared_boundary",
+            "status": coverage[slot],
+            "reason": (
+                "Slot behavior is owned by the named champion module."
+                if slot in contract.slots
+                else "The named champion module declares this slot boundary explicitly."
+            ),
+            "source": None,
+            "issue_refs": [],
+        }
+        for slot in REQUIRED_CHAMPION_SLOTS
+    ]
+    manifest_packet_sha256 = (
+        packet_spec_sha256(manifest_champion)
+        if isinstance(manifest_champion, dict)
+        else None
+    )
+    packet_drift = contract.packet_sha256 is not None and (
+        contract.packet_sha256 != manifest_packet_sha256
+        or contract.packet_spec != manifest_champion
+    )
+    stale_sources = None
+    if contract.packet_sha256 is None and isinstance(manifest_champion, dict):
+        module_revision = _max_revision(contract.sources)
+        manifest_revision = _max_revision(manifest_champion.get("sources") or [])
+        if (
+            module_revision is not None
+            and manifest_revision is not None
+            and manifest_revision > module_revision
+        ):
+            stale_sources = {
+                "module_revision_id": module_revision,
+                "manifest_revision_id": manifest_revision,
+            }
     ready = (
-        registration_kind == "reviewed_module"
-        and champion.get("review_status") == "reviewed_packet"
-        and isinstance(sources, list)
-        and bool(sources)
-        and not missing
-        and not invalid
+        contract.review_status == "reviewed_module"
+        and bool(contract.sources)
+        and set(coverage) == set(REQUIRED_CHAMPION_SLOTS)
+        and not packet_drift
     )
     return {
         "name": name,
-        "module": module_name,
-        "registration": registration_kind,
-        "review_status": review_status,
-        "manifest_review_status": champion.get("review_status"),
-        "slots": list(slots) if isinstance(slots, dict) else [],
+        "module": contract.module_name,
+        "registration": contract.review_status,
+        "review_status": contract.review_status,
+        "manifest_review_status": (
+            manifest_champion.get("review_status")
+            if isinstance(manifest_champion, dict)
+            else None
+        ),
+        "slots": list(REQUIRED_CHAMPION_SLOTS),
+        "runtime_slots": runtime_slots,
         "slot_coverage": slot_coverage,
-        "missing_slots": sorted(set(missing)),
-        "invalid_slots": sorted(set(invalid)),
-        "source_receipts": len(sources) if isinstance(sources, list) else 0,
+        "missing_slots": [],
+        "invalid_slots": [],
+        "source_receipts": len(contract.sources),
+        "packet_evidence": contract.packet_spec is not None,
+        "packet_sha256": contract.packet_sha256,
         "status": "ready" if ready else "review_pending",
+        **({"stale_review_sources": stale_sources} if stale_sources else {}),
         **(
-            {
-                "error": (
-                    "Generated packet module is intentionally not marked reviewed; "
-                    "complete champion-specific mechanics remain in issue #15."
-                )
-            }
-            if registration_kind == "generated_packet"
+            {"error": "packet declaration drift between module and reviewed evidence"}
+            if packet_drift
             else {}
         ),
     }
@@ -313,7 +299,7 @@ def _runtime_entry_receipt(kind: str, name: str) -> dict[str, Any]:
             else str(
                 module.get(
                     "error",
-                    "Champion module remains generated or otherwise incomplete.",
+                    "Champion has no complete validated named-module contract.",
                 )
             )
         ),

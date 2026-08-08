@@ -21,7 +21,7 @@ P1-2 fixes:
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module, initial_plus_ticks_parser
 from .slotlib import (
     attach_self_shield,
     extract_named,
@@ -36,7 +36,28 @@ from .slotlib import (
 _Q_SHIELD_DURATION_SECONDS = 2.5
 _Q_DISCHARGE_WINDOW_SECONDS = 4.0
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Viktor")
+PACKET_SHA256 = "542116107f7a930a0dbae3ed0dfb602d84d0b90cb6bf86f2b4832bae1c8ad13f"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Viktor",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Arcane Storm prices the impact plus the full 6.5-second storm "
+        "(Magic Damage + 6 x Magic Damage Per Tick == Total Magic Damage).",
+    ),
+    slot_parsers={
+        "R": initial_plus_ticks_parser(
+            initial_attr="Magic Damage",
+            tick_attr="Magic Damage Per Tick",
+            dmg_type="magic",
+            tick_count=6,
+            time_offset=1.0,
+            hit_interval=1.0,
+            dot_duration=6.5,
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _siphon_shield(ctx: SlotCtx) -> float:

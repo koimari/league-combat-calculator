@@ -7,6 +7,7 @@ inspect attributes or choose an archetype at runtime.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from functools import lru_cache
 from pathlib import Path
@@ -14,6 +15,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -24,307 +26,36 @@ from .slotlib import (
 _ROOT = Path(__file__).resolve().parents[3]
 _PACKET_PATH = _ROOT / "static" / "reviewed-packets.json"
 
-# Packet JSON stays generator-owned.  These narrowly scoped state boundaries
-# are runtime metadata for generated modules whose cached numeric packet is
-# valid but whose sibling mechanic needs an explicit scenario state.
-_PACKET_ASSUMPTION_OVERRIDES: dict[str, tuple[str, ...]] = {
-    "Viego": (
-        "Viego Q's mark-consuming second strike requires a prior damaging "
-        "ability and the next marked basic attack; that stateful rider is not "
-        "modeled by the single-target packet.",
-    ),
-    "Warwick": (
-        "Warwick Q's sourced 0.264-second bite delay is applied to the hit "
-        "event without inventing a channel lockout.",
-    ),
-    "Poppy": (
-        "Poppy Q's sourced Hammer Shock field ruptures 1 second after impact; "
-        "the packet emits both physical hits.",
-    ),
-    # E2-3: DoT/channel tick counts are priced per the wiki's Total rows.
-    "Skarner": (
-        "Shattered Earth prices all three empowered basic attacks "
-        "(Bonus Physical Damage per Hit x 3 == Total Bonus Physical Damage).",
-    ),
-    "Teemo": (
-        "Noxious Trap prices the full 4-second poison: 4 ticks of Magic "
-        "Damage per Tick (== Total Magic Damage) at 1-second intervals.",
-    ),
-    "Trundle": (
-        "Subjugate prices the full 4-second drain: Magic Damage Per Second "
-        "x 8 == Total Magic Damage / Total Healing at every rank.",
-    ),
-    "Udyr": (
-        "Wingborne Storm prices all 8 blizzard ticks (Magic Damage per Tick "
-        "x 8 == Total Magic Damage) at 0.5-second intervals over 4 seconds.",
-    ),
-    "Viktor": (
-        "Arcane Storm prices the impact plus the full 6.5-second storm "
-        "(Magic Damage + 6 x Magic Damage Per Tick == Total Magic Damage).",
-    ),
-    "Vladimir": (
-        "Sanguine Pool prices all 4 pool ticks (Magic Damage Per Tick x 4 "
-        "== Total Magic Damage) at 0.5-second intervals over 2 seconds.",
-    ),
-    "Xayah": (
-        "Double Daggers prices both daggers (Physical Damage Per Hit x 2 "
-        "== Total Physical Damage).",
-    ),
-    "Yuumi": (
-        "Final Chapter prices all 5 waves (Magic Damage per Hit + 4 x "
-        "Reduced Damage per Hit == Total Magic Damage).",
-    ),
-    "Zaahen": (
-        "The Darkin Glaive prices both strikes (Physical Damage per Hit x 2 "
-        "== Total Physical Damage).",
-    ),
-    "Zac": (
-        "Let's Bounce! prices the initial bounce plus 3 reduced bounces "
-        "(Magic Damage Per Hit + 3 x Reduced Damage Per Hit == Total Magic "
-        "Damage).",
-    ),
-    "Zeri": (
-        "Burst Fire prices all 7 rounds (Physical Damage per Hit x 7 == "
-        "Total Physical Damage).",
-    ),
-}
-
-# These packets are authored as one target hit, including their dynamic
-# target-health term.  Keep the certification list explicit: a generic
-# packet must not become exact merely because it happens to have one part.
-_SINGLE_HIT_EVENT_PACKETS = {
-    ("Hwei", "Q"),
-    ("Viego", "Q"),
-    ("Warwick", "Q"),
-    ("Garen", "R"),
-    ("Gragas", "W"),
-    ("Jax", "E"),
-    ("Jinx", "R"),
-    ("Singed", "E"),
-    ("Sion", "W"),
-    ("Volibear", "E"),
-    ("Xin Zhao", "R"),
-    ("Yone", "W"),
-    ("Rek'Sai", "R"),
-}
-
-# E2 DoT/channel tick-count fixes: a packet whose ``base``/``ratios`` price
-# ONE tick/hit of a multi-tick ability, so the fight previously priced a
-# fraction of the ability.  Every count below is the implied
-# Total/PerTick ratio from the E2 worklist (``data/worklists/e2-dot-ticks.json``)
-# re-verified against the ``data/champions.json`` leveling rows; the
-# cadences come from the ability descriptions in the same cache.  The keys
-# are ``(champion display name, packet name)`` so variant packets (Nidalee W
-# Bushwhack) are fixed without touching their sibling variants.
-#
-# Fields:
-#   ``count``         — how many ticks/hits one cast prices.
-#   ``first_tick``    — authored seconds from cast start to the first hit.
-#   ``tick_interval`` — authored seconds between repeated hits.
-#   ``base``/``ratios`` — override the packet's per-tick row when the pinned
-#       packet picked the wrong leveling entry (Nunu E).
-#   ``extra_part``    — a second typed part read from a different leveling
-#       attribute (initial-hit abilities whose DoT lives in its own row):
-#       ``{attribute, count, damage_type, first_tick, tick_interval}``.
-#   ``dot_duration``  — total seconds of zone/channel damage past the cast
-#       (keeps item burns refreshed, Cassiopeia's Q/W convention).
-_PACKET_TICK_FIXES: dict[tuple[str, str], dict[str, Any]] = {
-    # Lucian R — The Culling: "channels for up to 3 seconds, rapidly
-    # firing up to 22 shots in the target direction over the duration"
-    # (wiki prose; the cache carries no Total row).  The packet priced
-    # ONE shot of "Physical Damage Per Shot"; the fix prices all 22 at
-    # the uniform 3.0/22 cadence of the sourced channel.  The wiki's
-    # crit-chance-scaled extra shots ("+ 0 : 6 (based on critical
-    # strike chance)") are zero at 0% crit and not modeled.
-    ("Lucian", "The Culling"): {
-        "count": 22,
-        "first_tick": 0.0,
-        "tick_interval": 0.1364,
-        "dot_duration": 3.0,
-    },
-    # Miss Fortune E — "for 2 seconds ... dealing magic damage every 0.25
-    # seconds": 8 ticks; "Magic Damage Per Tick" x8 == "Total Magic Damage".
-    ("Miss Fortune", "Make It Rain"): {
-        "count": 8,
-        "first_tick": 0.25,
-        "tick_interval": 0.25,
-        "dot_duration": 2.0,
-    },
-    # Naafiri Q — initial hit ("Initial Physical Damage") + a bleed that
-    # "deals bonus physical damage every 0.5 seconds over 5 seconds":
-    # 10 ticks; "Bleed Physical Damage per Tick" x10 ==
-    # "Total Bleed Physical Damage".
-    ("Naafiri", "Darkin Daggers"): {
-        "initial_tick": 0.0,
-        "extra_part": {
-            "attribute": "Bleed Physical Damage per Tick",
-            "count": 10,
-            "damage_type": "physical",
-            "first_tick": 0.5,
-            "tick_interval": 0.5,
-            "dot_duration": 5.0,
-        },
-    },
-    # Nami E — "empowering their next 3 basic attacks or abilities":
-    # 3 hits; "Bonus Magic Damage Per Hit" x3 == "Total Bonus Magic
-    # Damage".  The buff rides the next three attacks; a nominal 1-second
-    # cadence approximates that schedule in the fixed packet ledger.
-    ("Nami", "Tidecaller's Blessing"): {
-        "count": 3,
-        "first_tick": 0.5,
-        "tick_interval": 1.0,
-    },
-    # Nasus E — initial hit ("Magic Damage", after the sourced 0.264s
-    # delay) + a 5-second zone ("Magic Damage Per Tick" x10 == "Total
-    # Magic Damage", 10 ticks at 0.5s).
-    ("Nasus", "Spirit Fire"): {
-        "initial_tick": 0.264,
-        "extra_part": {
-            "attribute": "Magic Damage Per Tick",
-            "count": 10,
-            "damage_type": "magic",
-            "first_tick": 0.764,
-            "tick_interval": 0.5,
-            "dot_duration": 5.0,
-        },
-    },
-    # Nidalee W Bushwhack — the sprung trap "deal[s] magic damage every
-    # second over 4 seconds": 4 ticks; "Magic Damage Per Tick" x4 ==
-    # "Total Magic Damage".
-    ("Nidalee", "Bushwhack"): {
-        "count": 4,
-        "first_tick": 1.0,
-        "tick_interval": 1.0,
-        "dot_duration": 4.0,
-    },
-    # Nilah R — "whirls her whip-blade over 1 second, dealing physical
-    # damage to nearby enemies every 0.25 seconds": 4 ticks;
-    # "Physical Damage per Tick" x4 == "Total Physical Damage".
-    ("Nilah", "Apotheosis"): {
-        "count": 4,
-        "first_tick": 0.25,
-        "tick_interval": 0.25,
-        "dot_duration": 1.0,
-    },
-    # Nocturne E — "forming a tether ... for 2 seconds": 4 ticks at 0.5s;
-    # "Magic Damage per Tick" x4 == "Total Magic Damage".
-    ("Nocturne", "Unspeakable Horror"): {
-        "count": 4,
-        "first_tick": 0.5,
-        "tick_interval": 0.5,
-        "dot_duration": 2.0,
-    },
-    # Nunu E — "throws a volley of 3 snowballs ... over 0.4 seconds":
-    # 3 hits; "Magic Damage Per Hit" x3 == "Total Magic Damage".  The
-    # pinned packet priced the Snowbound root row instead, so the per-hit
-    # base/ratio are overridden from the same ability entry.
-    ("Nunu & Willump", "Snowball Barrage"): {
-        "base": [15.0, 22.5, 30.0, 37.5, 45.0],
-        "ratios": [{"stat": "ap", "values": [0.12, 0.12, 0.12, 0.12, 0.12]}],
-        "count": 3,
-        "first_tick": 0.0,
-        "tick_interval": 0.2,
-    },
-    # Rell R — "creating a gravitational field around her for [2 seconds]":
-    # 8 ticks at 0.25s; "Magic Damage Per Tick" x8 == "Total Magic Damage".
-    ("Rell", "Magnet Storm"): {
-        "count": 8,
-        "first_tick": 0.25,
-        "tick_interval": 0.25,
-        "dot_duration": 2.0,
-    },
-    # Renekton W — empowered double strike: "Physical Damage Per Hit" x2
-    # == "Total Physical Damage" (the Reign of Anger three-strike row is a
-    # separate 50+ Fury branch, deliberately not the default packet).
-    ("Renekton", "Ruthless Predator"): {
-        "count": 2,
-        "first_tick": 0.0,
-        "tick_interval": 0.2,
-    },
-    # Renekton R — "empowers himself for 15 seconds ... deals magic damage
-    # every 0.5 seconds": 30 ticks; "Magic Damage Per Tick" x30 == "Total
-    # Magic Damage".
-    ("Renekton", "Dominus"): {
-        "count": 30,
-        "first_tick": 0.5,
-        "tick_interval": 0.5,
-        "dot_duration": 15.0,
-    },
-    # Rumble R — The Equalizer: enemies hit by the impact or inside the
-    # field are marked Burning, "taking magic damage every 0.25 seconds
-    # ... for up to 5 seconds, for a total of 20 instances of its
-    # effect"; "Magic Damage per Tick" x20 == "Maximum Magic Damage".
-    # The packet priced ONE tick (30/50/70 + 8.75% AP).
-    ("Rumble", "The Equalizer"): {
-        "count": 20,
-        "first_tick": 0.25,
-        "tick_interval": 0.25,
-        "dot_duration": 5.0,
-    },
-    # Samira W — "slashes twice during Blade Whirl"; "the first slash
-    # occurs immediately and the second one occurs after the duration"
-    # (0.75s spin): "Physical Damage per Hit" x2 == "Total Physical
-    # Damage".
-    ("Samira", "Blade Whirl"): {
-        "count": 2,
-        "first_tick": 0.0,
-        "tick_interval": 0.75,
-    },
-    # Samira R — "shooting ... in 0.2-second intervals each (up to 10
-    # times per enemy)": 10 shots; "Physical Damage Per Shot" x10 ==
-    # "Total Physical Damage".  The minion row ("Minion Damage Per Shot"
-    # x10 == "Total Minion Damage") is the 75%-reduced minion branch and
-    # does not apply to a champion duel.
-    ("Samira", "Inferno Trigger"): {
-        "count": 10,
-        "first_tick": 0.0,
-        "tick_interval": 0.2,
-        "dot_duration": 2.013,
-    },
-    # Teemo E — Toxic Shot: the on-hit packet ("Magic Damage On-Hit")
-    # plus the poison it inflicts, "magic damage every second over 4
-    # seconds": 4 ticks of "Magic Damage per Tick" == "Total Poison
-    # Damage" at every rank.  The packet priced only the on-hit.
-    ("Teemo", "Toxic Shot"): {
-        "initial_tick": 0.0,
-        "extra_part": {
-            "attribute": "Magic Damage per Tick",
-            "count": 4,
-            "damage_type": "magic",
-            "first_tick": 1.0,
-            "tick_interval": 1.0,
-            "dot_duration": 4.0,
-        },
-    },
-}
-
-# The same E2 fix for ``wiki_attribute`` slots (no packet base): read the
-# per-tick attribute directly and multiply by the sourced count.  Nasus R
-# (Fury of the Sands) ticks 30 times at 0.5s over its 15-second duration.
-_WIKI_ATTRIBUTE_TICK_FIXES: dict[tuple[str, str], dict[str, Any]] = {
-    ("Nasus", "R"): {
-        "count": 30,
-        "first_tick": 0.5,
-        "tick_interval": 0.5,
-        "dot_duration": 15.0,
-    },
-}
-
-# ---------------------------------------------------------------------------
-# E2-3: sourced DoT/channel tick counts (per-tick x ticks == "Total ...").
-#
-# Each cached packet below carries the wiki's PER-TICK / PER-HIT value and
-# the fight used to price ONE tick.  The wiki cache carries a matching
-# "Total ..." leveling row, and the tick count is the sourced
-# Total/per-tick ratio at every rank (data/champions.json leveling rows,
-# locked by tests/test_e2_dot_3.py).  Where the ability is a channel with a
-# stated cadence, tick timing comes from the ability's own description text
-# ("every 0.5 seconds over the duration", "every second over the next 4
-# seconds", "5 magical waves" over a 3.5-second channel, ...).
-# ---------------------------------------------------------------------------
+_FULL_ENTRY_ASSUMPTIONS = (
+    "The complete parent Wiki entry was read before certifying this module.",
+    "Passive plus Q/W/E/R entries are represented by explicit packet or "
+    "no-damage slot declarations.",
+    "Rank arrays, cooldowns, typed target-health terms, and packet variants "
+    "remain sourced from the local reviewed-packet asset.",
+    "Non-damaging shields, buffs, movement, and utility branches remain "
+    "explicit state/out-of-scope rows rather than invented damage.",
+)
 
 
-def _repeat_damage_parser(
+def packet_spec_sha256(packet_spec: dict[str, Any]) -> str:
+    """Canonical digest pinned by the named module that accepts this evidence."""
+
+    payload = json.dumps(
+        packet_spec, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+class PacketSlotMap(dict[str, Any]):
+    """Resolved slot parsers plus the evidence declaration they compile."""
+
+    def __init__(self, packet_spec: dict[str, Any], packet_sha256: str):
+        super().__init__()
+        self.packet_spec = packet_spec
+        self.packet_sha256 = packet_sha256
+
+
+def repeat_damage_parser(
     *,
     attr: str,
     dmg_type: str,
@@ -374,7 +105,7 @@ def _repeat_damage_parser(
     return parse
 
 
-def _initial_plus_ticks_parser(
+def initial_plus_ticks_parser(
     *,
     initial_attr: str,
     tick_attr: str,
@@ -425,7 +156,7 @@ def _initial_plus_ticks_parser(
     return parse
 
 
-def _full_plus_reduced_parser(
+def full_plus_reduced_parser(
     *,
     full_attr: str,
     reduced_attr: str,
@@ -477,148 +208,6 @@ def _full_plus_reduced_parser(
     return parse
 
 
-# Packet-kind slots replaced by their E2-3 tick parsers.  Key: (champion,
-# slot).  Values are traced to data/champions.json leveling rows; the
-# counts are the sourced Total/per-tick ratios (see the worklist rows in
-# tests/test_e2_dot_3.py).
-_E2_PACKET_TICK_PARSERS: dict[tuple[str, str], Any] = {
-    # Teemo R — Noxious Trap: "takes magic damage every second over 4
-    # seconds" -> 4 ticks; Total Magic Damage 200/325/450 == 4 x per tick.
-    ("Teemo", "R"): _repeat_damage_parser(
-        attr="Magic Damage per Tick",
-        dmg_type="magic",
-        count=4,
-        time_offset=1.0,
-        hit_interval=1.0,
-        dot_duration=4.0,
-    ),
-    # Vladimir W — Sanguine Pool: "magic damage every 0.5 seconds over
-    # the duration" (2 seconds) -> 4 ticks; Total == 4 x per tick.
-    ("Vladimir", "W"): _repeat_damage_parser(
-        attr="Magic Damage Per Tick",
-        dmg_type="magic",
-        count=4,
-        time_offset=0.5,
-        hit_interval=0.5,
-        dot_duration=2.0,
-    ),
-    # Udyr R — Wingborne Storm: "for 4 seconds ... every 0.5 seconds" ->
-    # 8 ticks; the cached packet base was stale, so the per-tick leveling
-    # row is read live; Total Magic Damage 80..400 == 8 x per tick.
-    ("Udyr", "R"): _repeat_damage_parser(
-        attr="Magic Damage per Tick",
-        dmg_type="magic",
-        count=8,
-        time_offset=0.5,
-        hit_interval=0.5,
-        dot_duration=4.0,
-    ),
-    # Xayah Q — Double Daggers: "barrages two Feathers"; Total Physical
-    # Damage 90..210 == 2 x Physical Damage Per Hit.  The second feather
-    # trails the first by the sourced 0.1s cast-time second segment.
-    ("Xayah", "Q"): _repeat_damage_parser(
-        attr="Physical Damage Per Hit",
-        dmg_type="physical",
-        count=2,
-        time_offset=0.0,
-        hit_interval=0.1,
-    ),
-    # Zaahen Q — The Darkin Glaive: "strikes the target twice"; Total
-    # Physical Damage 15..75 == 2 x Physical Damage per Hit.  The cached
-    # packet base was the recast's Bonus Physical Damage, not the base
-    # cast, so the per-hit leveling row is read live.
-    ("Zaahen", "Q"): _repeat_damage_parser(
-        attr="Physical Damage per Hit",
-        dmg_type="physical",
-        count=2,
-        time_offset=0.0,
-        hit_interval=0.0,
-    ),
-    # Zeri Q — Burst Fire: "fires a burst of 7 rounds"; Total Physical
-    # Damage 22..38 == 7 x Physical Damage per Hit (7.01/7.01/6.99/7.0/7.0
-    # sourced ratios, the wiki's rounding of 7 rounds).
-    ("Zeri", "Q"): _repeat_damage_parser(
-        attr="Physical Damage per Hit",
-        dmg_type="physical",
-        count=7,
-        time_offset=0.0,
-        hit_interval=0.0,
-    ),
-    # Viktor R — Arcane Storm: impact + "a bolt ... every second" for the
-    # 6.5-second storm -> 6 bolts; Total Magic Damage 490/805/1120 ==
-    # Magic Damage (impact) + 6 x Magic Damage Per Tick.
-    ("Viktor", "R"): _initial_plus_ticks_parser(
-        initial_attr="Magic Damage",
-        tick_attr="Magic Damage Per Tick",
-        dmg_type="magic",
-        tick_count=6,
-        time_offset=1.0,
-        hit_interval=1.0,
-        dot_duration=6.5,
-    ),
-    # Zac R — Let's Bounce!: "bounces 3 additional times each second over
-    # 3 seconds", "ones beyond the first deal 50% damage"; Total Magic
-    # Damage 300/475/650 == Per Hit + 3 x Reduced Damage Per Hit.
-    ("Zac", "R"): _full_plus_reduced_parser(
-        full_attr="Magic Damage Per Hit",
-        reduced_attr="Reduced Damage Per Hit",
-        dmg_type="magic",
-        reduced_count=3,
-        time_offset=1.0,
-        hit_interval=1.0,
-        dot_duration=3.0,
-    ),
-    # Yuumi R — Final Chapter: "launch 5 magical waves" over the 3.5s
-    # channel; "Subsequent waves against enemies hit deal 25% damage";
-    # Total Magic Damage 150/250/350 == per Hit + 4 x Reduced Damage per
-    # Hit (5 waves at 0.7-second intervals).
-    ("Yuumi", "R"): _full_plus_reduced_parser(
-        full_attr="Magic Damage per Hit",
-        reduced_attr="Reduced Damage per Hit",
-        dmg_type="magic",
-        reduced_count=4,
-        time_offset=0.7,
-        hit_interval=0.7,
-        dot_duration=3.5,
-    ),
-}
-
-# Plain wiki-attribute slots replaced by their E2-3 tick parsers.
-# Key: (champion, slot).
-_E2_WIKI_ATTR_TICK_PARSERS: dict[tuple[str, str], Any] = {
-    # Trundle R — Subjugate: the drain lasts 4 seconds; the wiki's "Magic
-    # Damage Per Second" display value times 8 equals Total Magic Damage
-    # 20/25/30 (% max HP) at every rank (the cached packet priced only the
-    # "Initial Magic Damage" half).  The drain is priced as 8 half-second
-    # ticks spanning the sourced 4-second window.
-    ("Trundle", "R"): _repeat_damage_parser(
-        attr="Magic Damage Per Second",
-        dmg_type="magic",
-        count=8,
-        time_offset=0.5,
-        hit_interval=0.5,
-        dot_duration=4.0,
-        name="Subjugate",
-    ),
-}
-
-# Wiki-attribute variants replaced by their E2-3 tick parsers.  Key:
-# (champion, slot, variant index).
-_E2_VARIANT_TICK_PARSERS: dict[tuple[str, str, int], Any] = {
-    # Skarner Q — Shattered Earth (variant 0): "empowering up to three of
-    # his next basic attacks"; Total Bonus Physical Damage 30..150 == 3 x
-    # Bonus Physical Damage per Hit.
-    ("Skarner", "Q", 0): _repeat_damage_parser(
-        attr="Bonus Physical Damage per Hit",
-        dmg_type="physical",
-        count=3,
-        time_offset=0.0,
-        hit_interval=0.0,
-        name="Shattered Earth",
-    ),
-}
-
-
 @lru_cache(maxsize=1)
 def _packet_specs() -> dict[str, dict[str, Any]]:
     try:
@@ -639,7 +228,14 @@ def _ranked(values: list[float], rank: int) -> float:
     return float(values[min(max(rank, 1) - 1, len(values) - 1)])
 
 
-def _packet_parser(spec: dict[str, Any], slot: str, champion_name: str):
+def _packet_parser(
+    spec: dict[str, Any],
+    slot: str,
+    *,
+    single_hit_certified: bool = False,
+    tick_fix: dict[str, Any] | None = None,
+    part_timing: dict[str, Any] | None = None,
+):
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         ability = ctx.ability()
         if ability is None:
@@ -700,53 +296,20 @@ def _packet_parser(spec: dict[str, Any], slot: str, champion_name: str):
         )
         entry["parts"] = parts
         entry["total_raw"] = total_raw
-        # Hammer Shock hits on impact and again when its one-second field
-        # ruptures.  The cached source exposes both the single-hit damage
-        # and the doubled total, so keep the two authored events explicit
-        # instead of certifying the packet as a single cast-boundary hit.
-        if champion_name == "Poppy" and slot == "Q":
+        if part_timing is not None:
             entry["parts"] = tuple(
                 DamagePart(
                     part.damage_type,
                     amount=part.amount,
-                    count=2,
+                    count=int(part_timing.get("count", part.count)),
                     hp_scaled_damage=part.hp_scaled_damage,
-                    time_offset=0.0,
-                    hit_interval=1.0,
-                )
-                for part in parts
-            )
-            entry["total_raw"] = total_raw * 2
-        # Warwick's bite lands 0.264 seconds after the cast starts.  The
-        # cached ability notes source this fixed bite delay even though the
-        # cast-time field is ``none``; keep the packet's damage event on the
-        # bite boundary without inventing a channel lockout.
-        if champion_name == "Warwick" and slot == "Q":
-            entry["parts"] = tuple(
-                DamagePart(
-                    part.damage_type,
-                    amount=part.amount,
-                    count=part.count,
-                    hp_scaled_damage=part.hp_scaled_damage,
-                    time_offset=0.264,
-                    hit_interval=part.hit_interval,
+                    time_offset=part_timing.get("time_offset", part.time_offset),
+                    hit_interval=part_timing.get("hit_interval", part.hit_interval),
                 )
                 for part in entry["parts"]
             )
-        # Hwei's Devastating Fire has a sourced 0.25-second cast time; the
-        # packet's single hit lands at that boundary rather than at cast
-        # start.
-        if champion_name == "Hwei" and slot == "Q":
-            entry["parts"] = tuple(
-                DamagePart(
-                    part.damage_type,
-                    amount=part.amount,
-                    count=part.count,
-                    hp_scaled_damage=part.hp_scaled_damage,
-                    time_offset=0.25,
-                    hit_interval=part.hit_interval,
-                )
-                for part in entry["parts"]
+            entry["total_raw"] = total_raw * float(
+                part_timing.get("total_multiplier", 1.0)
             )
         # A packet can certify a dynamic-health cast when the authored
         # packet is exactly one hit.  The damage engine still evaluates the
@@ -754,9 +317,7 @@ def _packet_parser(spec: dict[str, Any], slot: str, champion_name: str):
         # intra-cast ordering left to guess.  Multi-hit packets deliberately
         # keep the conservative cast-boundary marker until their hit timing
         # is sourced separately.
-        if (champion_name, slot) in _SINGLE_HIT_EVENT_PACKETS and int(
-            spec.get("count", 1)
-        ) == 1:
+        if single_hit_certified and int(spec.get("count", 1)) == 1:
             entry["event_order_certified"] = "single_hit"
         if spec.get("cast_time") is not None:
             entry["cast_time"] = float(spec["cast_time"])
@@ -770,9 +331,8 @@ def _packet_parser(spec: dict[str, Any], slot: str, champion_name: str):
                 )
                 for part in parts
             )
-        fix = _PACKET_TICK_FIXES.get((champion_name, str(spec.get("name", ""))))
-        if fix is not None:
-            entry = _apply_packet_tick_fix(ctx, entry, spec, fix)
+        if tick_fix is not None:
+            entry = _apply_packet_tick_fix(ctx, entry, spec, tick_fix)
         return entry
 
     parse.phase = "damage"
@@ -965,12 +525,38 @@ def _no_formula_parser(
     return parse
 
 
-def build_packet_module(champion_name: str):
-    """Return the explicit parser and metadata for one generated champion."""
+def build_packet_module(
+    champion_name: str,
+    packet_sha256: str,
+    *,
+    assumption_overrides: tuple[str, ...] = (),
+    single_hit_slots: frozenset[str] = frozenset(),
+    packet_tick_fixes: dict[str, dict[str, Any]] | None = None,
+    wiki_attribute_tick_fixes: dict[str, dict[str, Any]] | None = None,
+    slot_parsers: dict[str, Any] | None = None,
+    variant_parsers: dict[tuple[str, int], Any] | None = None,
+    packet_part_timings: dict[str, dict[str, Any]] | None = None,
+):
+    """Compile one named module's reviewed packet declaration.
+
+    Champion-specific timing, parser, and assumption choices are passed by
+    the named champion module.  This compiler contains no champion switchboard.
+    """
     champion = _packet_specs().get(champion_name)
     if champion is None:
         raise KeyError(f"No reviewed packet specification for {champion_name!r}")
-    slots = {}
+    actual_sha256 = packet_spec_sha256(champion)
+    if actual_sha256 != packet_sha256:
+        raise RuntimeError(
+            f"{champion_name} packet evidence drifted: named module pins "
+            f"{packet_sha256}, manifest provides {actual_sha256}"
+        )
+    packet_tick_fixes = packet_tick_fixes or {}
+    wiki_attribute_tick_fixes = wiki_attribute_tick_fixes or {}
+    slot_parsers = slot_parsers or {}
+    variant_parser_overrides = variant_parsers or {}
+    packet_part_timings = packet_part_timings or {}
+    slots = PacketSlotMap(champion, packet_sha256)
     options: list[dict[str, Any]] = []
     for slot in ("Q", "W", "E", "R", "P"):
         spec = champion.get("slots", {}).get(slot)
@@ -978,15 +564,13 @@ def build_packet_module(champion_name: str):
             continue
         variants = spec.get("variants") if spec.get("kind") == "variants" else None
         if variants:
-            variant_parsers = []
+            parsers = []
             for variant_index, variant in enumerate(variants):
-                custom = _E2_VARIANT_TICK_PARSERS.get(
-                    (champion_name, slot, variant_index)
-                )
+                custom = variant_parser_overrides.get((slot, variant_index))
                 if custom is not None:
-                    variant_parsers.append(custom)
+                    parsers.append(custom)
                 elif variant.get("kind") == "wiki_attribute":
-                    variant_parsers.append(
+                    parsers.append(
                         simple_damage(
                             attr=str(variant["attribute"]),
                             dmg_type=str(variant.get("damage_type", "auto")),
@@ -999,9 +583,19 @@ def build_packet_module(champion_name: str):
                         )
                     )
                 elif variant.get("kind") == "packet":
-                    variant_parsers.append(_packet_parser(variant, slot, champion_name))
+                    parsers.append(
+                        _packet_parser(
+                            variant,
+                            slot,
+                            single_hit_certified=slot in single_hit_slots,
+                            tick_fix=packet_tick_fixes.get(
+                                str(variant.get("name", ""))
+                            ),
+                            part_timing=packet_part_timings.get(slot),
+                        )
+                    )
                 else:
-                    variant_parsers.append(
+                    parsers.append(
                         _no_formula_parser(
                             slot,
                             reason=str(
@@ -1016,7 +610,7 @@ def build_packet_module(champion_name: str):
 
             def select_variant(
                 ctx: SlotCtx,
-                parsers=variant_parsers,
+                parsers=tuple(parsers),
                 key=option_key,
                 default=spec.get("default", 0),
             ):
@@ -1027,7 +621,7 @@ def build_packet_module(champion_name: str):
                 index = max(0, min(index, len(parsers) - 1))
                 return parsers[index](ctx)
 
-            select_variant.phase = getattr(variant_parsers[0], "phase", "damage")
+            select_variant.phase = getattr(parsers[0], "phase", "damage")
             slots[slot] = select_variant
             options.append(
                 {
@@ -1040,8 +634,8 @@ def build_packet_module(champion_name: str):
                 }
             )
         elif spec.get("kind") == "wiki_attribute":
-            tick_fix = _WIKI_ATTRIBUTE_TICK_FIXES.get((champion_name, slot))
-            custom = _E2_WIKI_ATTR_TICK_PARSERS.get((champion_name, slot))
+            tick_fix = wiki_attribute_tick_fixes.get(slot)
+            custom = slot_parsers.get(slot)
             if tick_fix is not None:
                 slots[slot] = _ticked_wiki_attribute_parser(spec, tick_fix)
             elif custom is not None:
@@ -1054,11 +648,17 @@ def build_packet_module(champion_name: str):
                     source=tuple(spec["source"]) if spec.get("source") else None,
                 )
         elif spec.get("kind") == "packet":
-            custom = _E2_PACKET_TICK_PARSERS.get((champion_name, slot))
+            custom = slot_parsers.get(slot)
             slots[slot] = (
                 custom
                 if custom is not None
-                else _packet_parser(spec, slot, champion_name)
+                else _packet_parser(
+                    spec,
+                    slot,
+                    single_hit_certified=slot in single_hit_slots,
+                    tick_fix=packet_tick_fixes.get(str(spec.get("name", ""))),
+                    part_timing=packet_part_timings.get(slot),
+                )
             )
         elif spec.get("kind") == "no_damage":
             slots[slot] = _no_formula_parser(
@@ -1083,6 +683,9 @@ def build_packet_module(champion_name: str):
         return result
 
     assumptions = list(champion.get("assumptions", []))
-    assumptions.extend(_PACKET_ASSUMPTION_OVERRIDES.get(champion_name, ()))
-    sources = list(champion.get("sources", []))
+    assumptions.extend(assumption_overrides)
+    assumptions.extend(_FULL_ENTRY_ASSUMPTIONS)
+    sources = load_champion_sources(champion_name)
+    parse_abilities.packet_spec = champion
+    parse_abilities.packet_sha256 = packet_sha256
     return parse_abilities, slots, assumptions, sources, options

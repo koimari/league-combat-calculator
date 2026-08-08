@@ -2,8 +2,7 @@
 
 Option keys consumed by this module's parsers: "p_daggers" (spin
 count, read by the P proc resolver below) and "r_daggers" (Death
-Lotus dagger count, consumed by the shared batch R parser from
-reviewed_batch_03).
+Lotus dagger count, consumed by this module's R parser).
 
 E3 fix over the CP10.3 packet module:
 - P (Voracity / Sinister Steel) already procs per dagger retrieval, but
@@ -21,12 +20,93 @@ from typing import Any, Callable
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_03 import build_batch_module
-from .slotlib import with_item_on_hits, extract_value, proc_damage
-
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Katarina")
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .slotlib import (
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    proc_damage,
+    simple_damage,
+    with_item_on_hits,
 )
+from .source_receipts import load_champion_sources
+
+
+def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    daggers = max(1, min(15, int(ctx.options.get("r_daggers", 15))))
+    physical = extract_named(
+        ability, "Physical Damage Per Dagger", rank, ctx.stats, ctx.target
+    )
+    magic = extract_named(
+        ability, "Magic Damage Per Dagger", rank, ctx.stats, ctx.target
+    )
+    interval = 2.5 / daggers
+    return {
+        "name": ability.get("name", "Death Lotus"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "damage_type": "mixed",
+        "total_raw": (physical + magic) * daggers,
+        "parts": (
+            DamagePart(
+                "physical",
+                physical,
+                count=daggers,
+                time_offset=0.166,
+                hit_interval=interval,
+            ),
+            DamagePart(
+                "magic",
+                magic,
+                count=daggers,
+                time_offset=0.166,
+                hit_interval=interval,
+            ),
+        ),
+        "detail": (
+            f"{daggers} sourced daggers at 0.166-second cadence; "
+            "on-hit/Grievous Wounds are ordered state."
+        ),
+        "event_order_certified": True,
+    }
+
+
+_packet_slots = {
+    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": lambda ctx: no_damage(
+        ctx,
+        name="Preparation",
+        reason="Dagger toss, movement speed and landing location are utility state.",
+    ),
+    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": _death_lotus,
+}
+_packet_assumptions = list(REVIEWED_MODULE_ASSUMPTIONS)
+_packet_sources = load_champion_sources("Katarina")
+_packet_options = [
+    {
+        "key": "p_daggers",
+        "type": "int",
+        "default": 1,
+        "min": 0,
+        "max": 6,
+        "label": "Dagger retrieval procs",
+    },
+    {
+        "key": "r_daggers",
+        "type": "int",
+        "default": 15,
+        "min": 1,
+        "max": 15,
+        "label": "Death Lotus daggers",
+    },
+]
 
 # HARDCODED: verify on patch updates — Sinister Steel's AP ratio is
 # level-banded (70%/80%/90%/100% at 1-5/6-10/11-15/16+); the JSON only

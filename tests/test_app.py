@@ -1190,9 +1190,10 @@ def test_config_exposes_the_champion_review_boundary():
 
     assert engine["registered_count"] == len(registered_champion_names())
     assert engine["reviewed_count"] == len(registered_champion_names())
-    assert engine["generated_count"] == 0
-    assert engine["unreviewed_count"] == 0
-    assert engine["module_contract"] == "full_entry_wiki_receipt"
+    assert "generated_count" not in engine
+    assert "unreviewed_count" not in engine
+    assert "generic_enabled" not in engine
+    assert engine["module_contract"] == "champion_module_v1"
 
 
 def test_capability_contract_has_a_frontend_control_and_serialization_for_every_supported_field():

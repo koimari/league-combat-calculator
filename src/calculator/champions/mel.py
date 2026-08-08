@@ -23,7 +23,7 @@ E5-2 fixes:
 """
 
 from ..ability_spec import DamagePart
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 from .engine import SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
@@ -32,7 +32,12 @@ from .slotlib import (
     extract_value,
 )
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Mel")
+PACKET_SHA256 = "4729cb0ee938dd410196bc3e6ea901bac4caf07fbe25859ce9532c9bf6648aea"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Mel", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # Default Overwhelm stacks the blast detonates in a one-rotation combo.
 # P prose: "Mel's basic attacks and abilities apply a stack of Overwhelm

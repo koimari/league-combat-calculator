@@ -1,7 +1,7 @@
 """Rell — CP10.6 full-entry-reviewed packet module.
 
 E2 DoT fix: R (Magnet Storm) prices 8 sourced 0.25s ticks
-(packet_module _PACKET_TICK_FIXES).
+(this module's packet timing declaration).
 
 P1-2 fixes:
 - P (Break the Mold) is now an ONHIT slot: each basic attack deals
@@ -20,7 +20,7 @@ P1-2 fixes:
 
 from typing import Any
 
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import on_hit_entry
 
@@ -31,7 +31,21 @@ from .slotlib import on_hit_entry
 _BREAK_THE_MOLD_ARMOR_RATIO = 0.05
 _BREAK_THE_MOLD_MR_RATIO = 0.05
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Rell")
+PACKET_SHA256 = "c88088e022b4afb695def1471bb4068ad40512c06c50d5a43cd479eebd11445a"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Rell",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Magnet Storm": {
+            "count": 8,
+            "first_tick": 0.25,
+            "tick_interval": 0.25,
+            "dot_duration": 2.0,
+        }
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 VARIANT_OPTION_KEYS = ("w_variant",)
 
 

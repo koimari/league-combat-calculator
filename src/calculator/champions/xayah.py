@@ -22,12 +22,31 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
+PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Xayah")
+    build_packet_module(
+        "Xayah",
+        PACKET_SHA256,
+        assumption_overrides=(
+            "Double Daggers prices both daggers (Physical Damage Per Hit x 2 "
+            "== Total Physical Damage).",
+        ),
+        slot_parsers={
+            "Q": repeat_damage_parser(
+                attr="Physical Damage Per Hit",
+                dmg_type="physical",
+                count=2,
+                time_offset=0.0,
+                hit_interval=0.1,
+            )
+        },
+    )
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Clean Cuts' stack bookkeeping
 # (3 stacks per cast, 5 cap, 8-second window) and the 35/45/55% AD

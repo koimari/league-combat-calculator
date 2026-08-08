@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Generate explicit champion packet modules from the pinned local sources.
+"""Generate reviewed champion packet evidence from pinned local sources.
 
-The generated modules are deliberately explicit: every cached ability slot is
+The generated evidence is deliberately explicit: every cached ability slot is
 represented either by a numeric Wiki/Axword packet or by a sourced no-damage
-entry.  A missing numeric row is never replaced with an archetype estimate.
+entry. Runtime modules consume or supersede this evidence; this script never
+writes executable champion modules.
 
 Source supply contract (issue #134): the Wiki index and the Axword Meraki kit
 source resolve repo-relative by default (``data/wiki/league-wiki.sqlite3`` and
@@ -23,13 +24,9 @@ import os
 import re
 import sqlite3
 import sys
-from functools import cache
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
-
-import black
-from black.files import find_pyproject_toml, parse_pyproject_toml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -423,65 +420,13 @@ def _axword_spec(ability: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-@cache
-def _black_mode() -> black.Mode:
-    """Format generated source the same way the repo's own `black` run would.
-
-    Reads [tool.black] from the project pyproject so the line length lives in
-    exactly one place; falls back to black's defaults if it is ever absent.
-    Cached because every rendered module asks for the same mode.
-    """
-    config_path = find_pyproject_toml((str(Path(__file__).resolve().parents[1]),), None)
-    config = parse_pyproject_toml(config_path) if config_path else {}
-    line_length = config.get("line_length")
-    return black.Mode(line_length=line_length) if line_length else black.Mode()
-
-
-def _format(source: str) -> str:
-    """Run generated source through black so regeneration cannot dirty the tree."""
-    return black.format_str(source, mode=_black_mode())
-
-
-def _slug(name: str) -> str:
-    """Map a champion name to its generated module filename stem."""
-    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
-
-
-def _option_keys(slots: dict[str, Any]) -> list[str]:
-    """List the packet option keys a champion's variant slots expose."""
-    return sorted(
-        {
-            f"{slot.lower()}_variant"
-            for slot, spec in slots.items()
-            if spec.get("kind") == "variants"
-        }
-    )
-
-
-def _render_module(name: str, option_keys: list[str]) -> str:
-    """Render one champion's generated packet module, black-formatted."""
-    option_comment = (
-        f"# Packet option keys consumed by packet_module: {json.dumps(option_keys)}\n"
-        if option_keys
-        else ""
-    )
-    return _format(
-        f'"""Generated packet module for {name}."""\n\n'
-        f"from ..packet_module import build_packet_module\n\n"
-        f"{option_comment}"
-        f"parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module({name!r})\n"
-        "REVIEW_STATUS = 'generated_packet'\n"
-    )
-
-
 def build(
     source: Path,
     axword_source: Path,
     output: Path,
-    modules: Path,
     wiki_db: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Generate the reviewed-packet asset and its explicit champion modules.
+    """Generate the reviewed-packet evidence asset.
 
     Fail closed (issue #134): every source is pre-flighted before any output
     is written, and a champion is only ever labeled ``reviewed_packet`` when
@@ -602,18 +547,9 @@ def build(
         encoding="utf-8",
     )
 
-    modules.mkdir(parents=True, exist_ok=True)
-    (modules / "__init__.py").write_text(
-        _format('"""Generated explicit champion packet modules."""\n'), encoding="utf-8"
-    )
-    for name, entry in champions.items():
-        (modules / f"{_slug(name)}.py").write_text(
-            _render_module(name, _option_keys(entry["slots"])), encoding="utf-8"
-        )
     return {
         "champion_count": len(champions),
         "output": str(output),
-        "modules": str(modules),
     }
 
 
@@ -646,18 +582,12 @@ def main() -> None:
     parser.add_argument(
         "--output", type=Path, default=root / "static" / "reviewed-packets.json"
     )
-    parser.add_argument(
-        "--modules",
-        type=Path,
-        default=root / "src" / "calculator" / "champions" / "generated",
-    )
     args = parser.parse_args()
     try:
         result = build(
             args.source.resolve(),
             resolve_axword_source(args.axword_source).resolve(),
             args.output.resolve(),
-            args.modules.resolve(),
             wiki_db=resolve_wiki_db(args.wiki_db).resolve(),
         )
     except RuntimeError as exc:

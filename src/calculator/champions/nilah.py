@@ -1,7 +1,7 @@
 """Nilah — CP10.5 full-entry-reviewed packet module.
 
 E2 DoT fix: R (Apotheosis) prices 4 sourced 0.25s ticks
-(packet_module _PACKET_TICK_FIXES).
+(this module's packet timing declaration).
 
 E5-2 fix — Formless Blade (Q): the reviewed packet pinned the crit-MAX
 "Maximum Physical Damage" row (0-76.4 + 191% AD) as the flat damage, so
@@ -16,11 +16,25 @@ between.  The test fights (no items) sit at 0% crit and price exactly
 the minimum row.
 """
 
-from .reviewed_batch_05 import build_batch_module
+from .packet_module import build_packet_module
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Nilah")
+PACKET_SHA256 = "95ce830b00c9c829930974899e20cda18a55eb0bb6ab1cc16360b57113671fe5"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Nilah",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Apotheosis": {
+            "count": 4,
+            "first_tick": 0.25,
+            "tick_interval": 0.25,
+            "dot_duration": 1.0,
+        }
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # Q's damage "increased by 0% : 70% (+ 0% : 21%) (based on critical
 # strike chance)": the Maximum row is the Minimum row x 1.91

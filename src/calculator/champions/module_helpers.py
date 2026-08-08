@@ -1,9 +1,10 @@
-"""Small, typed helpers shared by the first exact champion batch.
+"""Small, typed helpers shared by named champion modules.
 
 The helpers deliberately accept the cached ability JSON instead of carrying a
 second table of values.  That keeps rank, level, resource and cooldown values
 on the revision-pinned Wiki packet and makes a missing source field fail
-closed in the same place as the other reviewed modules.
+closed in the same place as the other reviewed modules.  This module owns no
+champion membership or champion-specific formulas.
 """
 
 from __future__ import annotations
@@ -18,6 +19,81 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
+
+REVIEWED_MODULE_ASSUMPTIONS = (
+    "Every passive/Q/W/E/R slot was reviewed against the complete parent Wiki "
+    "entry and its five namespace-10 template receipts.",
+    "Only the explicit one-rotation target/variant options are priced; utility, "
+    "control, movement, healing and defensive state remain named rather than "
+    "guessed.",
+    "All numeric rank/level values are read from the cached source JSON through typed extractors.",
+)
+
+
+def typed_damage(
+    ctx: SlotCtx,
+    attribute: str,
+    damage_type: str,
+    *,
+    count: int = 1,
+    time_offset: float | None = None,
+    hit_interval: float | None = None,
+    rank_override: int | None = None,
+    source_slot: str | None = None,
+) -> dict[str, Any] | None:
+    """Build one explicitly named typed packet from cached champion data."""
+
+    slot = source_slot or ctx.slot
+    ability = ctx.ability(slot)
+    if ability is None:
+        return None
+    selected = rank_override if rank_override is not None else ctx.rank_for(slot)
+    if slot == "P" and rank_override is None:
+        selected = ctx.level
+    if selected < 1:
+        return None
+    value = extract_named(ability, attribute, selected, ctx.stats, ctx.target)
+    entry = damage_entry(
+        str(ability.get("name", slot)),
+        selected,
+        extract_cooldown(ability, selected),
+        value * max(1, count),
+        damage_type,
+    )
+    entry["parts"] = (
+        DamagePart(
+            damage_type,
+            value,
+            count=max(1, count),
+            time_offset=time_offset,
+            hit_interval=hit_interval,
+        ),
+    )
+    return entry
+
+
+def mixed_damage(
+    _ctx: SlotCtx,
+    name: str,
+    rank_value: int,
+    cooldown: float,
+    magic: float,
+    true_damage: float,
+    *,
+    detail: str,
+) -> dict[str, Any]:
+    """Build an explicitly split magic/true damage receipt."""
+
+    parts = (DamagePart("magic", magic), DamagePart("true", true_damage))
+    return {
+        "name": name,
+        "rank": rank_value,
+        "cooldown": cooldown,
+        "damage_type": "mixed",
+        "total_raw": magic + true_damage,
+        "parts": parts,
+        "detail": detail,
+    }
 
 
 def rank(ctx: SlotCtx) -> int:
@@ -155,16 +231,6 @@ def no_damage(
         "detail": reason,
     }
     return entry
-
-
-def stamp_review_metadata(
-    *,
-    sources: list[dict[str, Any]],
-    coverage: dict[str, str],
-) -> tuple[list[dict[str, Any]], dict[str, str]]:
-    """Keep source/coverage declarations immutable at module import time."""
-
-    return list(sources), dict(coverage)
 
 
 def source_row(

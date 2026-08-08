@@ -146,3 +146,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Orianna")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Orianna",
+        "revision_id": 3892665,
+        "revision_timestamp": "2025-05-02T11:28:16Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

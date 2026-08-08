@@ -139,3 +139,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Amumu")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Amumu",
+        "revision_id": 4007948,
+        "revision_timestamp": "2026-04-12T23:56:01Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

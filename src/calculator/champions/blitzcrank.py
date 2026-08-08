@@ -216,3 +216,18 @@ SLOTS = dict(SLOTS)
 _packet_q = SLOTS["Q"]
 SLOTS["Q"] = _rocket_grab
 parse_abilities = build_parser(SLOTS, "Blitzcrank")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
+        "revision_id": 4047544,
+        "revision_timestamp": "2026-07-29T20:05:52Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

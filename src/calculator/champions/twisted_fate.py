@@ -24,7 +24,7 @@ hardcoded.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_08 import _full_entry_sources
+from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -106,7 +106,7 @@ ASSUMPTIONS = [
     "P and R deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(_full_entry_sources("Twisted Fate"))
+SOURCES = list(load_champion_sources("Twisted Fate"))
 
 SLOTS = {
     "P": _no_damage(

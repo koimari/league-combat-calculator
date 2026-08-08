@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -101,15 +100,9 @@ def champion_receipt(name: str, champ: dict, audits: dict) -> dict:
     atoms_file = ATOMS_DIR / f"{name.lower()}.atoms.json"
     if atoms_file.exists():
         atoms = json.loads(atoms_file.read_text())
-    module_path = ROOT / "src/calculator/champions" / f"{name.lower()}.py"
-    module_coverage = {}
-    if module_path.exists():
-        m = re.search(r"MODULE_COVERAGE\s*=\s*(\{.*?\})", module_path.read_text(), re.S)
-        if m:
-            try:
-                module_coverage = json.loads(m.group(1).replace("'", '"'))
-            except Exception:
-                pass
+    from src.calculator.champions import get_champion_module_contract
+
+    module_coverage = get_champion_module_contract(name).coverage
     audit = audits.get(name, {})
     return {
         "champion": name,
@@ -199,8 +192,9 @@ def build() -> dict:
 
     # Compute and validate every entity BEFORE any output is published.
     champion_records: dict[str, dict] = {}
-    for name, champ in champs.items():
-        champion_records[name] = champion_receipt(name, champ, audits)
+    for cache_key, champ in champs.items():
+        display_name = str(champ.get("name") or cache_key)
+        champion_records[cache_key] = champion_receipt(display_name, champ, audits)
     item_records: dict[str, dict] = {}
     for item_id, item in items.items():
         item_records[item_id] = item_receipt(

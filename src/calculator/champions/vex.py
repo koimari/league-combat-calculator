@@ -30,10 +30,15 @@ P1 addition over the reviewed packet:
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, extract_named, on_hit_entry
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Vex")
+PACKET_SHA256 = "02fdfcd1fd65f629f446626879f993ab3308ec7eefb4e974ab8f4a026f43dd15"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Vex", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — Personal Space's shield duration is
 # prose in the cached ability description ("granting herself a shield for

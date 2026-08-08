@@ -16,10 +16,15 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_10 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Xerath")
+PACKET_SHA256 = "3bd191171432197d87f1d33ec2ab9bf3f483d15f73f892c373a32c249fd764db"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Xerath", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — the 0.627-second barrage cadence is
 # prose in the cached R description ("Each cast has a static cooldown of

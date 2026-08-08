@@ -9,9 +9,14 @@ reply for the missing hook.  R (Cosmic Radiance) is invulnerability state
 (2.5s), documented as such, not a heal/shield.
 """
 
-from .reviewed_batch_08 import build_batch_module
+from .packet_module import build_packet_module
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Taric")
+PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb4"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Taric", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"E"} else "out_of_scope") for slot in "PQWER"
 }

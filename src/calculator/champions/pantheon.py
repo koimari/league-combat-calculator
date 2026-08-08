@@ -23,12 +23,15 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
+PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Pantheon")
+    build_packet_module("Pantheon", PACKET_SHA256)
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose on Q: the Mortal Will
 # empowered term is "20 : 265.88 (based on level) (+ 115% bonus AD)"; the

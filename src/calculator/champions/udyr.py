@@ -1,7 +1,7 @@
 """Udyr — CP10.9 full-entry-reviewed packet module.
 
 E1/E2: W Iron Mantle heal streams and R Wingborne Storm 8-tick total are
-modeled (healing.py + packet_module _PACKET_TICK_FIXES); the W shield is
+modeled (healing.py + this module's packet timing declaration); the W shield is
 emitted by the ally-support scanner from the cached Shield Strength row.
 
 P1-2 fix — Q (Wilding Claw) becomes a modeled ONHIT slot.  The stance
@@ -28,7 +28,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     ability_on_hit_entry,
     extract_named,
@@ -44,7 +44,27 @@ _Q_EMPOWERED_ATTACKS_DEFAULT = 2
 _Q_LIGHTNING_STRIKES_PER_ATTACK = 6
 _Q_LIGHTNING_HIT_INTERVAL = 0.2
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Udyr")
+PACKET_SHA256 = "468fd3bf2d2dd7e836b89c0ae6eff50d844990c0c03442f7f864a2032525dd9c"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Udyr",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Wingborne Storm prices all 8 blizzard ticks (Magic Damage per Tick "
+        "x 8 == Total Magic Damage) at 0.5-second intervals over 4 seconds.",
+    ),
+    slot_parsers={
+        "R": repeat_damage_parser(
+            attr="Magic Damage per Tick",
+            dmg_type="magic",
+            count=8,
+            time_offset=0.5,
+            hit_interval=0.5,
+            dot_duration=4.0,
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _target_max_health_percent(

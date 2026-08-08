@@ -17,6 +17,7 @@ from .champions import (
     get_supported_fight_modes,
     get_unsupported_fight_mode_reason,
     parse_champion_abilities,
+    parse_synthetic_champion_abilities,
 )
 from .rotation_resolver import build_rotation_receipt, resolve_cast_order
 from .champions.skill_orders import get_ability_rank
@@ -796,6 +797,7 @@ def run_fight(
     precomputed_stats: dict[str, float] | None = None,
     validated: bool = False,
     score_only: bool = False,
+    synthetic: bool = False,
 ) -> dict[str, Any]:
     """Run stats, champion ability parsing, and fight damage as one pipeline.
 
@@ -817,6 +819,9 @@ def run_fight(
     returned ``damage_events`` are the engine's light ledger rows
     (``damage_events_tuple`` is set) — same events, same order, no dict
     per event; only the scoring fast path consumes that shape.
+
+    ``synthetic=True`` is reserved for explicit engine/development fixtures.
+    Production callers omit it and must resolve a validated named module.
     """
     if not validated:
         params.validate_for_champion(champion_data.get("name", ""), level)
@@ -856,7 +861,10 @@ def run_fight(
     item_damage_effects = resolve_damage_effects(items)
     parse_stats["crit_damage_bonus"] = item_damage_effects.crit_damage_bonus
 
-    ability_damages = parse_champion_abilities(
+    parse_kit = (
+        parse_synthetic_champion_abilities if synthetic else parse_champion_abilities
+    )
+    ability_damages = parse_kit(
         champion_data,
         level,
         champion_stats["ability_power"],
@@ -918,7 +926,7 @@ def run_fight(
             # the pre-resolution placeholder zero.
             champion_options["fight_duration_seconds"] = params.fight_duration_seconds
             champion_options["auto_attack_uptime"] = resolved_uptime
-            ability_damages = parse_champion_abilities(
+            ability_damages = parse_kit(
                 champion_data,
                 level,
                 champion_stats["ability_power"],
@@ -1017,11 +1025,15 @@ def run_fight(
         "expected_autos_per_rotation": round(auto_total / rotation_count, 6),
         "expected_autos_total": auto_total,
         "window_seconds": round(params.fight_duration_seconds, 3),
-        "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
+        "semantics": (
+            "sequential timed window; cooldowns, resources, cast lockouts, and "
+            "item events follow the engine ledger"
+        ),
     }
     if auto_attack_policy.get("status") == "unknown":
         result.setdefault("notes", []).append(
-            "Auto attacks withheld: calculated uptime is unavailable for one or more cast-time sources."
+            "Auto attacks withheld: calculated uptime is unavailable for one or "
+            "more cast-time sources."
         )
     if _has_riftmaker_max_stack_omnivamp(
         items,

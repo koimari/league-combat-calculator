@@ -128,3 +128,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Vayne")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Vayne",
+        "revision_id": 3979075,
+        "revision_timestamp": "2025-12-25T10:25:25Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

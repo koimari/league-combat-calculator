@@ -359,3 +359,14 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Briar")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Briar",
+        "revision_id": 4046069,
+        "revision_timestamp": "2026-07-27T13:03:08Z",
+    }
+]

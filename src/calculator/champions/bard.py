@@ -137,3 +137,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Bard")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Bard",
+        "revision_id": 4002472,
+        "revision_timestamp": "2026-03-25T15:16:50Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

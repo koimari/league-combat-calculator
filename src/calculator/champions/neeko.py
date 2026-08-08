@@ -21,7 +21,7 @@ P1-3 closures:
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_05 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -29,7 +29,12 @@ from .slotlib import (
     extract_named,
 )
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Neeko")
+PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Neeko", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — game-file-sourced R shield rows
 # (the cached wiki page omits the shield; neeko.bin.json NeekoR mSpell

@@ -30,13 +30,16 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage
-from .reviewed_batch_10 import build_batch_module
+from .module_helpers import no_damage
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
 
+PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f5"
+
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Yorick")
+    build_packet_module("Yorick", PACKET_SHA256)
 )
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — pet stats are not scraped into
 # data/champions.json (the ability text points to "See Pets for more

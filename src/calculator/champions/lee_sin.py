@@ -20,12 +20,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_03 import build_batch_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
-
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Lee Sin")
-)
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the recast lands ~0.5s after the
 # wave (Sonic Wave's 0.25s cast time plus the recast reaction); the
@@ -89,8 +86,21 @@ def _sonic_wave_and_resonating_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["Q"] = _sonic_wave_and_resonating_strike
+SLOTS = {
+    "P": lambda ctx: no_damage(
+        ctx,
+        name="Flurry",
+        reason="Two-attack haste and energy restoration are attack-timeline state.",
+    ),
+    "Q": _sonic_wave_and_resonating_strike,
+    "W": lambda ctx: no_damage(
+        ctx,
+        name="Safeguard",
+        reason="Ally dash and shield are defensive/team state.",
+    ),
+    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": simple_damage(attr="Physical Damage", dmg_type="physical"),
+}
 parse_abilities = build_parser(SLOTS, "Lee Sin")
 
 OPTIONS: list[dict[str, Any]] = [
@@ -102,7 +112,7 @@ OPTIONS: list[dict[str, Any]] = [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS) + [
     "Q is the two-stage combo: Sonic Wave (Physical Damage row) plus the "
     "Resonating Strike recast, which reads Q[1]'s Minimum/Maximum "
     "Physical Damage rows and interpolates by the target's missing-health "
@@ -116,7 +126,7 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "is authored by the E8c support scanner.",
 ]
 
-SOURCES = list(_packet_sources)
+SOURCES = load_champion_sources("Lee Sin")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "no_damage") for slot in "PQWER"
 }

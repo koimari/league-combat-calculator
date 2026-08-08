@@ -1,5 +1,7 @@
 """Tests for the read-only full Wiki parent-entry audit."""
 
+from copy import deepcopy
+
 from scripts import full_entry_audit as audit
 
 
@@ -101,6 +103,72 @@ def test_champion_module_receipts_cover_every_cached_champion():
     assert all(
         set(receipt["slots"]) == {"P", "Q", "W", "E", "R"} for receipt in receipts
     )
+
+
+def test_jayce_audit_receipt_comes_from_his_named_module_contract():
+    """Jayce's runtime slots/coverage cannot be borrowed from the manifest."""
+    receipt = audit._champion_module_receipt("Jayce")
+
+    assert receipt["status"] == "ready"
+    assert receipt["registration"] == "reviewed_module"
+    assert receipt["runtime_slots"] == ["Q", "W", "E", "R"]
+    assert {row["slot"]: row["status"] for row in receipt["slot_coverage"]} == {
+        "P": "out_of_scope",
+        "Q": "modeled",
+        "W": "modeled",
+        "E": "modeled",
+        "R": "modeled",
+    }
+
+
+def test_packet_backed_module_audit_fails_if_evidence_manifest_drifts(monkeypatch):
+    """Resolved packet declarations are pinned in the module contract."""
+    original_load = audit._load
+    manifest = deepcopy(original_load(audit.PACKET_MANIFEST_PATH))
+    manifest["champions"]["Singed"]["slots"]["E"]["kind"] = "no_damage"
+
+    def fake_load(path):
+        if path == audit.PACKET_MANIFEST_PATH:
+            return manifest
+        return original_load(path)
+
+    monkeypatch.setattr(audit, "_load", fake_load)
+    receipt = audit._champion_module_receipt("Singed")
+
+    assert receipt["status"] == "review_pending"
+    assert "packet declaration drift" in receipt["error"]
+
+
+def test_hand_authored_module_stale_sources_are_advisory(monkeypatch):
+    """A newer manifest revision flags hand-authored receipts without failing.
+
+    Packet-backed modules fail closed on digest drift; hand-authored modules
+    pin the revision they were reviewed against.  When a patch re-pull bumps
+    the manifest receipt, the audit reports the stale review instead of
+    silently letting the pinned row look current.
+    """
+    assert "stale_review_sources" not in audit._champion_module_receipt("Aatrox")
+
+    original_load = audit._load
+    manifest = deepcopy(original_load(audit.PACKET_MANIFEST_PATH))
+    rows = manifest["champions"]["Aatrox"]["sources"]
+    reviewed_revision = max(row["revision_id"] for row in rows)
+    for row in rows:
+        row["revision_id"] = reviewed_revision + 1
+
+    def fake_load(path):
+        if path == audit.PACKET_MANIFEST_PATH:
+            return manifest
+        return original_load(path)
+
+    monkeypatch.setattr(audit, "_load", fake_load)
+    receipt = audit._champion_module_receipt("Aatrox")
+
+    assert receipt["status"] == "ready"
+    assert receipt["stale_review_sources"] == {
+        "module_revision_id": reviewed_revision,
+        "manifest_revision_id": reviewed_revision + 1,
+    }
 
 
 def test_full_item_scope_includes_transformed_records():

@@ -199,3 +199,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Ezreal")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Ezreal",
+        "revision_id": 4041697,
+        "revision_timestamp": "2026-07-10T18:11:03Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

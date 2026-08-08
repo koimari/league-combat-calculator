@@ -1,70 +1,68 @@
 ---
 name: add-champion
-description: Step-by-step guide for adding a new LoL champion to the calculator (post-#136: registry-only, no generated scaffolding). Use when creating a champion module, registering it, or writing champion ability tests.
+description: Add or update a named LoL champion module, its source evidence, registry entry, and tests.
 ---
 
-# Add a New Champion
+# Add a Champion
 
-The roster is **registry-only** (`src/calculator/champions/__init__.py` ->
-`_CUSTOM_CHAMPION_MODULES`, the single manifest; `registered_champion_names()`
-is the public view). There is no generated/ stubs lane, no `_GENERATED_*`
-registry, and no literal champion count anywhere — counts derive from
-`len(registry)` / `len(data/champions.json)`. `tests/test_roster_growth.py`
-proves a 174th champion adapts with zero literal edits; keep it that way.
+Every runtime champion has one authoritative home:
+`src/calculator/champions/<name>.py`. There is no reviewed-batch or
+implicit generic runtime lane. The generic parser is only for explicit
+synthetic/development fixtures.
 
-## Two implementation lanes
+## Module contract
 
-1. **Reviewed packet (fast lane).** Champions without a dedicated module run
-   the packet path from `static/reviewed-packets.json` (86 batch champions
-   today). Add the champion's slots there by rebuilding:
-   `LCC_WIKI_DB=<scryglass wiki db> LCC_AXWORD_SOURCE=<meraki kit> \
-   python scripts/build_reviewed_modules.py` — this writes packet rows with
-   per-champion wiki revision receipts + source hashes into
-   `static/reviewed-packets.json` (all 173 entries must stay byte-identical
-   except the new champion, or the commit explains the diff).
-2. **Dedicated module (slow lane).** `src/calculator/champions/<name>.py`
-   exposing `parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS`,
-   `MODULE_COVERAGE` (modeled/no_damage/out_of_scope per slot), and
-   `REVIEW_STATUS = "reviewed_module"`, registered in `_CUSTOM_CHAMPION_MODULES`.
+The named module must publish the fields validated by
+`ChampionModuleContract` in `module_contract.py`:
 
-## Every new champion must also
+- `parse_abilities` and the local `SLOTS` parser map.
+- `OPTIONS` and `ASSUMPTIONS`, including every scenario boundary.
+- `SOURCES`, loaded through `source_receipts.load_champion_sources()` when
+  they come from generated full-entry evidence.
+- `MODULE_COVERAGE` with exactly P/Q/W/E/R, each classified as
+  `modeled`, `no_damage`, or `out_of_scope`.
+- `REVIEW_STATUS = "reviewed_module"`.
 
-- **Spellblade / on-hit contract**: if any ability applies item on-hits
-  (wiki: "applies on-hit effects"), declare `applies_item_on_hits` with
-  effectiveness/triggers and add the row to
-  `tests/test_spellblade_on_hit_matrix.py`'s REVIEWED table (a missing
-  declaration fails the matrix contract).
-- **Rotation options**: every `OPTIONS` key must be classified in
-  `_ROTATION_CLASSIFICATIONS` (setup/consume/self_state/execute/irrelevant/
-  unsupported + slot/condition) or `get_champion_option_rotation()`
-  contract test fails.
-- **Atomizer**: run `python scripts/atomize.py abilities stats` and confirm
-  the champion's numerical rows atomize (the unified Atomizer is the only
-  allowed extractor).
-- **Catalogues/gates**: `build_ability_catalog.py`, `build_bis_profiles.py`,
-  `champion_optimizer_matrix.py`, `full_entry_audit.py` all derive counts
-  from the registry — a new champion must pass `champion_optimizer_matrix.py`
-  (173/173 certified) and the full pytest suite.
+If the module uses `build_packet_module()`, pass champion-specific tick
+counts, parser overrides, event certification, timings, and assumptions from
+that champion file. Pin the accepted packet declaration with the module's
+`PACKET_SHA256`; changed generated evidence must fail closed until the named
+module reviews and accepts the new digest. Never add a champion-name exception
+table to the shared packet compiler.
+
+Register the module once in `_CUSTOM_CHAMPION_MODULES`. The registry,
+`/api/config`, receipts, and audits derive their public view from the
+validated module contract.
+
+## Evidence and behavior
+
+Build or refresh `static/reviewed-packets.json` and the named source receipt
+asset with `scripts/build_reviewed_modules.py`; generated files are evidence,
+not executable champion modules. A rebuild must leave unrelated champions
+byte-identical or the change must explain every difference.
+
+Also:
+
+- Declare sourced item on-hit behavior and update
+  `tests/test_spellblade_on_hit_matrix.py` when applicable.
+- Classify every option in `_ROTATION_CLASSIFICATIONS`.
+- Use `scripts/atomize.py abilities stats` for numerical extraction.
+- Add focused parser and fight tests for every calculation.
+- Confirm `scripts/full_entry_audit.py` reports the module contract and
+  catches packet-evidence drift when packet evidence is used.
 
 ## Verify
 
-```python
-import json
-from src.calculator.data_fetcher import get_champion
-from src.calculator.champions import parse_champion_abilities
-champ = get_champion("ChampionName")
-stats = {"attack_damage": 150.0, "bonus_attack_damage": 50.0, "ability_power": 200.0}
-print(json.dumps(parse_champion_abilities(champ, 13, 200.0,
-    champion_stats=stats,
-    target_stats={"target_max_health": 2500.0}), indent=2))
+Run the focused champion tests, then:
+
+```powershell
+python scripts/atomize.py abilities stats
+pytest
+pylint src/
+python scripts/golden_snapshot.py compare scripts/golden_baseline.json
+python scripts/champion_optimizer_matrix.py
 ```
 
-Cross-check `total_raw` / `damage_type` / `cooldown` per slot against the
-wiki, then run: the focused champion tests, the spellblade matrix, the
-rotation-semantics contract, the atomizer, and the full suite.
-
-## Environment (patch-day prerequisites)
-
-- `LCC_WIKI_DB=/Users/river/Projects/scryglass/data/lol/knowledge/league-wiki.sqlite3`
-- `LCC_WIKI_QUERY=<repo>/vendor/league-wiki-query/scripts/query_league_wiki.py`
-- `LCC_AXWORD_SOURCE=/Users/river/Projects/lol-strength-analysis/src/data/generated/merakiAbilityKits.ts`
+When evidence inputs are available, set `LCC_WIKI_DB`,
+`LCC_WIKI_QUERY`, and `LCC_AXWORD_SOURCE` to explicit local paths. Do not
+add machine-specific defaults to repository code or documentation.

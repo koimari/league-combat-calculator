@@ -274,3 +274,18 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "base (50 : 320 by level) + 150% bonus AD for 1.5s; the shield absorbs "
     "incoming damage in the participant ledger.",
 ]
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Ambessa",
+        "revision_id": 4043663,
+        "revision_timestamp": "2026-07-15T17:40:27Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

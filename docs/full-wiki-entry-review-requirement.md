@@ -26,14 +26,13 @@ reason for each manual-attacker, enemy-target, ally-roster, optimizer, API,
 and frontend path. A clean unit test without this full-entry receipt does not
 authorize promotion or issue closure.
 
-Generated champion packet modules are deliberately not certification evidence.
-They may remain importable so the backend can return a deterministic,
-fail-closed explanation, but `/api/champions` must expose them as
-`generated_packet` and unavailable for reviewed champion options until an exact
-module has passed this requirement. After CP10.5 the baseline is 237 ordinary
-items audited, 111 exact champion modules, and 62 generated champion packets;
-the release gate remains open until the latter 62 are replaced by exact
-modules or an explicitly sourced, tested out-of-scope classification.
+Generated packet files are evidence, never executable champion modules. Every
+runtime attacker resolves to one named module whose validated
+`ChampionModuleContract` owns its parser, slots, options, assumptions, sources,
+P/Q/W/E/R coverage, and reviewed status. Packet-backed modules may compile
+generated evidence, but any champion-specific timing or parser override stays
+local to that module and the full-entry audit fails when the resolved packet
+declaration drifts from the checked-in evidence manifest.
 
 For every item effect, the receipt must retain the full parent-page evidence
 even when the runtime currently withholds the branch. A branch may not be

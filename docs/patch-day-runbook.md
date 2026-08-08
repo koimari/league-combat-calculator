@@ -101,8 +101,8 @@ What `run` does:
      update (verify by hand against the new wiki text).
    - **Shop delta** — net-new / removed items; removed IMPLEMENTED items are
      flagged `** IMPLEMENTED — code must be updated **`.
-   - **Roster delta** — new champions (the generic path handles them; only
-     relevant if the user cares about that champion).
+   - **Roster delta** — new champions block runtime promotion until a named,
+     tested champion module and full-entry evidence are added.
    - **Item source completeness** — `BLOCKING` when an effect branch
      disappeared or an unreviewed Riot-declared effect is missing from the
      wiki; the run stops there until each entry is recorded in `item_source`
@@ -241,7 +241,7 @@ python scripts/golden_snapshot.py capture scripts/golden_baseline.json
 
 1. Explain every golden diff in the commit message — trace each to a wiki
    change (use `python scripts/patch_update.py detail <name>` for
-   generic-path champions that appear). Also verify surprising *absences*
+   affected named modules). Also verify surprising *absences*
    (a buff that didn't move the baseline because the snapshot has 0 AP /
    0% crit / the ability sits at rank 1 at the snapshot level).
 2. Full gates:

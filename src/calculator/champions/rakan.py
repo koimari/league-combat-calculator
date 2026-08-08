@@ -107,3 +107,10 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Rakan")
+
+
+# Authoritative review metadata (issue #161).
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

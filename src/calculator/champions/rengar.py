@@ -28,8 +28,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage
-from .reviewed_batch_06 import _full_entry_sources, build_batch_module
+from .module_helpers import no_damage
+from .packet_module import build_packet_module
+from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -38,9 +39,12 @@ from .slotlib import (
     sum_modifiers,
 )
 
+PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
+
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Rengar")
+    build_packet_module("Rengar", PACKET_SHA256)
 )
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
 _FEROCITY_MAX = 4
 
 
@@ -243,7 +247,7 @@ ASSUMPTIONS = [
     "reduction and leap bonus are target/state effects",
 ]
 
-SOURCES = _full_entry_sources("Rengar")
+SOURCES = load_champion_sources("Rengar")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
     for slot in "PQWER"
