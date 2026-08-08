@@ -370,3 +370,9 @@ SOURCES = [
         "revision_timestamp": "2026-07-27T13:03:08Z",
     }
 ]
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Briar")

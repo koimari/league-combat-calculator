@@ -4937,20 +4937,25 @@ def test_support_attributes_match_the_profile_lookup_source():
 
 
 def test_healing_rule_champions_matches_the_dispatch_source():
-    """The scoring fast path skips heal derivation via HEALING_RULE_CHAMPIONS.
+    """Every healing name has a declaration in its champion module.
 
-    A heal rule added to ``derive_self_healing``'s name dispatch without
-    extending that set would be silently skipped in scoring, so the set is
-    pinned to the dispatch branches actually present in the source.
+    The scoring fast path reads the same exported set as the public healing
+    entrypoint. A missing local declaration would make the import fail before
+    a fight can silently skip the rule.
     """
-    import inspect
-    import re as re_module
+    import importlib
 
     from src.calculator import healing
+    from src.calculator.champions import _CHAMPION_MODULES
+    from src.calculator.champions.healing_contract import ChampionHealingRule
 
-    source = inspect.getsource(healing.derive_self_healing)
-    dispatched = set(re_module.findall(r'name == "([^"]+)"', source))
-    assert dispatched == set(healing.HEALING_RULE_CHAMPIONS)
+    for name in healing.HEALING_RULE_CHAMPIONS:
+        module = importlib.import_module(
+            f"src.calculator.champions.{_CHAMPION_MODULES[name]}"
+        )
+        declaration = getattr(module, "SELF_HEALING_RULE", None)
+        assert isinstance(declaration, ChampionHealingRule)
+        assert declaration.champion_name == name
 
 
 def test_search_context_walk_matches_receipts_with_thorns_support_and_heals():
