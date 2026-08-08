@@ -74,6 +74,17 @@ _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_on
 _NONSTANDARD_RANK_CHAMPIONS = frozenset({"Elise", "Jayce", "Karma", "Nidalee", "Udyr"})
 
 
+def rank_allocation_contract() -> dict[str, object]:
+    """Return the backend-owned rank allocation modes for public clients."""
+    return {
+        "default": "manual",
+        "by_champion": {
+            champion: "level_derived"
+            for champion in sorted(_NONSTANDARD_RANK_CHAMPIONS)
+        },
+    }
+
+
 def _item_self_healing_events(
     result: Mapping[str, Any],
     items: list[Mapping[str, Any]] | None = None,

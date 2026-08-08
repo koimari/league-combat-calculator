@@ -83,7 +83,7 @@ from src.calculator.optimizer import (
 )
 from src.calculator.stats import MAX_LEVEL
 from src.calculator.stats import get_item_stats
-from src.calculator.bis import bis_payload
+from src.calculator.bis import bis_objective_contract, bis_payload
 from src.calculator.public_response import (
     ICON_HOSTS as _ICON_HOSTS,
     https_icon as _https_icon,
@@ -100,6 +100,7 @@ from src.calculator.scenario import (
 )
 from src.calculator.role_quests import (
     boot_upgrade_contract,
+    role_quest_domain_contract,
     support_quest_item_contract,
     support_quest_item_stage,
 )
@@ -112,6 +113,7 @@ from src.calculator.pipeline import (
     ONE_ROTATION_DURATION,
     MAX_ROTATIONS,
     PUBLIC_INPUT_LIMITS,
+    rank_allocation_contract,
 )
 from src.calculator.request_parsing import (
     request_int as _request_int,
@@ -1126,6 +1128,11 @@ def api_config():
             "role_quest": {
                 "support_item": support_quest_item_contract(),
                 "boot_upgrades": boot_upgrade_contract(),
+            },
+            "domain_contract": {
+                "role_quest": role_quest_domain_contract(),
+                "rank_allocation": rank_allocation_contract(),
+                "bis_objectives": bis_objective_contract(),
             },
             "capabilities": public_capability_contract(
                 input_limits=PUBLIC_INPUT_LIMITS,

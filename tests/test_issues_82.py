@@ -201,11 +201,8 @@ class TestMidQuestBootTierContract:
         ) in source
 
         # The picker only offers the tier the current quest state allows.
-        assert (
-            'return state.attacker.role === "mid" && state.attacker.roleQuestComplete\n'
-            "    ? TIER_THREE_BOOTS\n"
-            "    : TIER_TWO_BOOTS;"
-        ) in source
+        assert "return bootIdsForTier(" in source
+        assert "roleBootsTier(state.attacker.role" in source
 
         # The level handler clamps against the role cap but never rewrites
         # the quest boot (level changes must keep the selected pair).
