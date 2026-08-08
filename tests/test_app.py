@@ -38,23 +38,19 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
     # at the retired external marketing site; tests/test_frontend_qa_147_157.py
     # owns the full contract.
     assert 'class="brand" href="/"' in page
-    assert "<h1>Item calculator</h1>" in page
-    # F0: the analyst builder exists exactly once and its proof surfaces ride
-    # in the visible result column — the legacy hidden DOM is gone.
-    assert len(soup.select(".content-grid")) == 1
-    assert len(soup.select("#slotsA")) == 1
-    assert (
-        soup.select_one("#damageBreakdown").find_parent(class_="result-column")
-        is not None
-    )
-    assert (
-        soup.select_one("#defenseReceipts").find_parent(class_="result-column")
-        is not None
-    )
-    assert (
-        soup.select_one("#feedbackWidget").find_parent(class_="result-column")
-        is not None
-    )
+    # The redesign has no visible page title — the rail header carries the
+    # brand — so the H1 is a screen-reader landmark.
+    heading = soup.select_one("h1")
+    assert heading is not None and "calculator" in heading.get_text(strip=True).lower()
+    # The setup rail and duel canvas each exist exactly once and the proof
+    # surfaces ride in the visible canvas — the legacy hidden DOM is gone.
+    assert len(soup.select(".app-grid")) == 1
+    # Build A is edited on the duel canvas, not in a rail step.
+    assert len(soup.select("#duelA")) == 1
+    assert soup.select_one("#duelA").find_parent(class_="canvas") is not None
+    assert soup.select_one("#damageBreakdown").find_parent(class_="canvas") is not None
+    assert soup.select_one("#defenseReceipts").find_parent(class_="canvas") is not None
+    assert soup.select_one("#feedbackWidget").find_parent(class_="canvas") is not None
     for removed_id in (
         "builder",
         "winnerVisual",
@@ -124,7 +120,10 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     assert "Signed in as <strong>LSAccessAccount</strong>" in body
     assert "/auth/logout" in body
     assert "Articles" not in body and "Ratings" not in body and "Matches" not in body
-    assert 'data-theme="dark"' in body
+    # Locked decision 3: one committed look (cream canvas + dark rail). The
+    # theme toggle and its data-theme plumbing are retired, so the served
+    # page must not carry a theme attribute at all.
+    assert "data-theme" not in body
 
     client = app_module.app.test_client()
     koi = client.post(
@@ -976,19 +975,31 @@ def test_frontend_level_controls_routable_contract_uses_data_level_delta():
 
 
 def test_frontend_layout_keeps_main_identity_controls_hit_area():
+    """The champion identity block must never overflow or clip its controls.
+
+    Redesign note: the identity block moved from a wide two-column champion
+    card (``.champion-identity`` / ``.identity-controls``) into step 1 of the
+    setup rail (``.editor-identity`` / ``.field-row``). The criterion — the
+    row constrains itself so the role select and level stepper stay whole and
+    clickable in a 404px rail — is unchanged.
+    """
     source = Path("static/css/style.css").read_text(encoding="utf-8")
-    identity_block_start = source.index(".champion-identity {")
+    identity_block_start = source.index(".editor-identity {")
     identity_block_end = source.index(".champion-portrait {")
     identity_block = source[identity_block_start:identity_block_end]
+    assert "display: flex;" in identity_block
+    assert "align-items: center;" in identity_block
 
-    assert "position: relative;" in identity_block
-    assert "z-index: 2;" in identity_block
-    assert "min-width: 0;" in identity_block
+    copy_block = source[
+        source.index(".editor-identity-copy {") : source.index(".field-label {")
+    ]
+    assert "min-width: 0;" in copy_block
 
-    controls_block_start = source.index(".identity-controls {")
-    controls_block_end = source.index(".identity-controls label {")
-    controls_block = source[controls_block_start:controls_block_end]
-    assert "max-width: 100%;" in controls_block
+    controls_block = source[
+        source.index(".field-row {") : source.index(".field select,")
+    ]
+    assert "display: flex;" in controls_block
+    assert "min-width: 0;" in controls_block
 
 
 def test_frontend_layout_separates_item_option_rows():
@@ -1010,9 +1021,18 @@ def test_frontend_layout_separates_item_option_rows():
     assert "min-width: 0;" in label_block
     assert "overflow-wrap: anywhere;" in label_block
     assert "white-space: normal;" in label_block
-    assert ".slot-wrap > .item-option-controls," in source
-    assert "margin-top: 4px;" in source
-    assert "width: 100%;" in source
+    # The option rows must sit clear of the slot they belong to. On the duel
+    # canvas that comes from the controls wrapper's own flex gap instead of a
+    # margin rule on each child, so a slot, its stack control and its option
+    # rows can never collide however many of them an item declares.
+    wrap_block = source[
+        source.index(".duel-slot-controls {") : source.index(
+            ".duel-b .duel-slot-controls {"
+        )
+    ]
+    assert "display: flex;" in wrap_block
+    assert "flex-wrap: wrap;" in wrap_block
+    assert "gap: 6px 10px;" in wrap_block
 
 
 def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_effect():
@@ -1226,8 +1246,8 @@ def test_live_builder_surfaces_backend_item_state_controls_for_all_participants(
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
     assert "function stackControl(path, id, compact = false)" in source
-    assert "item && stackSpec(id) ? stackControl(path, id)" in source
-    assert "item && stackSpec(id) ? stackControl(path, id, true)" in source
+    # Main build slots (duel canvas) and roster slots both mount the control.
+    assert source.count("item && stackSpec(id) ? stackControl(path, id, true)") == 2
     assert 'data-stack-path="${path}"' in source
     assert "function setStackValue(path, value)" in source
     assert "engineItemOptions(itemIds, itemStacks)" in source
@@ -2102,6 +2122,23 @@ class TestChampionVerifiedFlags:
             "blockers": [],
         }
         assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
+
+    def test_fight_mode_restrictions_are_published(self):
+        """A module certifying a fight-mode subset publishes it with its
+        sourced reason, so the interface can request a supported mode (the
+        timed recast window by default) instead of failing closed."""
+        champs = app_module.app.test_client().get("/api/champions").get_json()
+        by_name = {champion["name"]: champion for champion in champs}
+
+        # Unrestricted module: every public fight mode is certified.
+        assert by_name["Ahri"]["supported_fight_modes"] is None
+        assert by_name["Ahri"]["unsupported_fight_mode_reason"] is None
+
+        # Restricted module: modes and the sourced reason ride together.
+        assert by_name["Karthus"]["supported_fight_modes"] == ["one_rotation"]
+        assert "time-based" in (
+            by_name["Karthus"]["unsupported_fight_mode_reason"].lower()
+        )
 
     def test_verified_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()

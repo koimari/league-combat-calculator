@@ -147,7 +147,7 @@ def test_index_renders_the_analyst_view_surface():
         "championPicker",
         "roleSelect",
         "levelInput",
-        "slotsA",
+        "duelA",
     ):
         assert soup.select_one(f"#{required_id}") is not None, required_id
 
@@ -163,16 +163,29 @@ def test_analyst_view_is_touch_first_and_has_no_hover_dependency():
     assert soup.select_one("#levelInput") is not None
 
 
-def test_mobile_css_stacks_quick_cards_vertically():
+def test_mobile_css_stacks_the_duel_vertically():
+    """Quick mode's card grid is gone; the same criterion now applies to the
+    duel canvas — on a phone the three-column duel becomes one column, the
+    picker grid becomes one column, and nothing is hover-only."""
     css = CSS.read_text(encoding="utf-8")
-    mobile = re.search(r"@media \(max-width: 480px\)\s*\{(.*?)\n\}", css, re.S)
-    assert mobile is not None, "missing 480px media query"
-    block = mobile.group(1)
-    assert ".quick-pick-grid" in block and "1fr" in block
-    assert ".quick-card" in block
-    assert ".quick-preset-row" in block
-    # The top-3 cards must not depend on hover to be readable.
-    assert ".quick-card:hover" not in css
+    narrow = css.split("@media (max-width: 860px)")[1].split("@media")[0]
+    assert ".duel" in narrow and "grid-template-columns: minmax(0, 1fr)" in narrow
+    assert ".verdict" in narrow
+    assert ".app-grid" in narrow
+
+    phone = css.split("@media (max-width: 520px)")[1]
+    assert ".picker-grid" in phone and "minmax(0, 1fr)" in phone
+    assert "min-height: 40px" in phone, "touch targets must stay reachable"
+
+    # Nothing the reader needs may depend on hover. Read-only rows carry no
+    # hover styles at all; .duel-row is a real <button> since the duel became
+    # editable in place, so its hover is affordance feedback — but it may only
+    # restyle, never reveal (no display/visibility/content changes).
+    for selector in (".spine-row:hover", ".health-row:hover"):
+        assert selector not in css
+    for match in re.finditer(r"\.duel-row[^{]*:hover[^{]*\{([^}]*)\}", css):
+        for revealing in ("display", "visibility", "content"):
+            assert revealing not in match.group(1)
 
 
 # ---------------------------------------------------------------------------
@@ -476,22 +489,25 @@ def test_trust_panels_render_not_modeled_list():
     assert 'id="notModeledList"' in page
 
 
-def test_app_js_wires_the_quick_flow_endpoints():
+def test_app_js_wires_the_share_endpoints_and_carries_no_quick_layer():
+    """Quick mode's DOM left in 2026-08; its render/wiring layer is gone too.
+    The share flow it grew is analyst functionality and stays wired."""
     source = APP_JS.read_text(encoding="utf-8")
     for needle in (
-        'postJson("/api/calculate"',
-        'postJson("/api/bis"',
-        'fetch("/api/optimize"',
         'postJson("/api/builds"',
         'postJson("/api/share"',
-        'fetch("/static/quick-presets.json")',
         "window.location.origin}/?share=",
-        "data-quick-preset",
-        'getElementById("quickRun")',
-        'getElementById("quickShareButton")',
         'getElementById("shareAnalystButton")',
     ):
         assert needle in source, needle
+    for gone in (
+        'fetch("/static/quick-presets.json")',
+        "data-quick-preset",
+        'getElementById("quickRun")',
+        'getElementById("quickShareButton")',
+        "QUICK_STATE",
+    ):
+        assert gone not in source, gone
 
 
 def test_node_check_passes_for_app_js():

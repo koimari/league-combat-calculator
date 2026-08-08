@@ -72,6 +72,8 @@ from src.calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
     get_champion_module_meta,
+    get_supported_fight_modes,
+    get_unsupported_fight_mode_reason,
     registered_engine_champion_names,
     reviewed_champion_names,
 )
@@ -1004,6 +1006,11 @@ def api_champions():
             ability_slots[slot] = {
                 key: ability[key] for key in ("slot", "name", "icon", "ingested")
             }
+        # A module that certifies only a subset of fight modes publishes that
+        # restriction (and its sourced reason) so the interface can request a
+        # supported mode instead of failing closed at calculation time. None
+        # means unrestricted: every public fight mode is certified.
+        supported_modes = get_supported_fight_modes(champ_data["name"])
         result.append(
             {
                 "name": champ_data["name"],
@@ -1012,6 +1019,12 @@ def api_champions():
                 "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
                 "engine_registration": engine_registration_kind(champ_data["name"]),
                 "engine_backend_enabled": (champ_data["name"] in _ENGINE_CHAMPIONS),
+                "supported_fight_modes": (
+                    list(supported_modes) if supported_modes is not None else None
+                ),
+                "unsupported_fight_mode_reason": get_unsupported_fight_mode_reason(
+                    champ_data["name"]
+                ),
                 "availability": availability,
                 "patch_last_changed": champ_data.get("patchLastChanged"),
                 "abilities": ability_slots,
@@ -1342,7 +1355,11 @@ def api_optimize():
         )
         if optimization_scope == "purchase" and available_gold is None:
             raise ValueError("available_gold is required for purchase optimization")
-        max_purchase_items = _request_int(data, "max_purchase_items", 2, 1, 2)
+        max_purchase_items = (
+            _request_int(data, "max_purchase_items", 0, 1, 7)
+            if data.get("max_purchase_items") not in (None, "")
+            else None
+        )
         allow_sell = data.get("allow_sell", False)
         if not isinstance(allow_sell, bool):
             raise ValueError("allow_sell must be true or false")

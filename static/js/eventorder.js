@@ -16,7 +16,6 @@
   "use strict";
 
   var MOUNT_ID = "eventOrderPanel";
-  var STYLE_ID = "scryglass-event-order-style";
   var latest = null;
 
   function byId(id) {
@@ -38,45 +37,8 @@
     return (Math.round(number * 100) / 100).toFixed(2).replace(/\.?0+$/, "") + "s";
   }
 
-  /* ------------------------------------------------------------------ *
-   * Minimal self-contained styles (no static/css edits).
-   * ------------------------------------------------------------------ */
-
-  function installStyle() {
-    if (byId(STYLE_ID)) return;
-    var style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent =
-      "#eventOrderPanel{display:block;margin:14px 0 0;padding:14px 16px;" +
-      "border:1px solid rgba(127,127,127,.25);border-radius:12px;" +
-      "background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));}" +
-      "#eventOrderPanel[hidden]{display:none;}" +
-      ".event-order-head{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}" +
-      ".event-order-head .micro-label{font-size:11px;letter-spacing:.08em;" +
-      "text-transform:uppercase;color:rgba(235,235,235,.55);}" +
-      ".event-order-head .event-order-mode{margin-left:auto;font-size:11px;" +
-      "color:rgba(235,235,235,.45);}" +
-      ".event-order-rail{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}" +
-      ".event-order-chip{display:inline-flex;align-items:center;gap:5px;" +
-      "padding:4px 9px;border-radius:999px;font-size:12px;line-height:1;" +
-      "background:rgba(127,127,127,.14);border:1px solid rgba(127,127,127,.22);}" +
-      ".event-order-chip b{font-weight:700;letter-spacing:.02em;}" +
-      ".event-order-chip small{color:rgba(235,235,235,.5);}" +
-      ".event-order-chip.setup{border-color:rgba(120,200,255,.5);" +
-      "background:rgba(120,200,255,.12);}" +
-      ".event-order-chip.consume{border-color:rgba(255,180,120,.5);" +
-      "background:rgba(255,180,120,.12);}" +
-      ".event-order-why{margin:0;font-size:13px;line-height:1.55;" +
-      "color:rgba(235,235,235,.85);}" +
-      ".event-order-why .why-label{display:block;font-size:11px;" +
-      "letter-spacing:.08em;text-transform:uppercase;" +
-      "color:rgba(235,235,235,.5);margin-bottom:4px;}" +
-      ".event-order-sources{margin:8px 0 0;padding:8px 10px 0;border-top:" +
-      "1px dashed rgba(127,127,127,.3);font-size:11px;line-height:1.5;" +
-      "color:rgba(235,235,235,.45);}" +
-      ".event-order-sources li{margin:0 0 2px;}";
-    (document.head || document.documentElement).appendChild(style);
-  }
+  /* The panel's look lives in static/css/style.css with the rest of the
+   * design language; this module owns behaviour only. */
 
   /* ------------------------------------------------------------------ *
    * Rendering
@@ -206,7 +168,7 @@
    * ------------------------------------------------------------------ */
 
   function installObserver() {
-    var target = document.querySelector(".result-column") || document.body;
+    var target = document.querySelector(".canvas") || document.body;
     if (!window.MutationObserver) return;
     var mountEl = document.getElementById("eventOrderPanel");
     var observer = new MutationObserver(function (records) {
@@ -222,7 +184,6 @@
     observer.observe(target, { childList: true, subtree: true });
   }
 
-  installStyle();
   installFetchCapture();
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {

@@ -910,6 +910,55 @@ def test_coupled_akali_orianna_receipt_is_bidirectional():
     )
 
 
+def test_enemy_hits_off_composes_zero_enemy_damage():
+    """enemies_attack=false is the Enemy Hits constraint unchecked: the
+    coupled receipt carries no enemy-authored event at all — pair fights,
+    autos, and Thornmail strike-backs included — while the main champion's
+    own output is composed exactly as before."""
+    app.config["TESTING"] = True
+    payload = {
+        "champion": "Akali",
+        "level": 12,
+        "role": "mid",
+        "fight_mode": "time_based",
+        "fight_duration": 6,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 0.5,
+        "ability_ranks": {"Q": 3, "W": 1, "E": 2, "R": 1},
+        "enemies": [
+            {
+                "champion": "Orianna",
+                "level": 12,
+                "role": "mid",
+                "items": ["Thornmail"],
+                "ability_ranks": {"Q": 3, "W": 1, "E": 2, "R": 1},
+            }
+        ],
+    }
+    client = app.test_client()
+    on = client.post("/api/calculate", json=payload).get_json()["combat"]
+    off = client.post(
+        "/api/calculate", json={**payload, "enemies_attack": False}
+    ).get_json()["combat"]
+
+    assert any(event["attacker"] == "enemy:Orianna" for event in on["events"])
+    assert all(event["attacker"] != "enemy:Orianna" for event in off["events"])
+
+    # A never-attacking enemy either has no breakdown row at all or a zero
+    # one; it must still exist as a participant (it is being fought).
+    assert all(
+        row["total_damage"] == 0.0
+        for row in off["breakdown"]
+        if row["participant_id"] == "enemy:Orianna"
+    )
+    assert any(row["participant_id"] == "enemy:Orianna" for row in off["participants"])
+    main_row = next(row for row in off["breakdown"] if row["participant_id"] == "main")
+    assert main_row["total_damage"] > 0.0
+    main = next(row for row in off["participants"] if row["participant_id"] == "main")
+    assert main["survival"]["damage_taken"] == 0.0
+    assert main["survival"]["survived_window"] is True
+
+
 def test_coupled_tank_vs_tank_receipt_keeps_both_survival_rows():
     """A tank-vs-tank fight exposes outgoing and incoming state for both sides."""
     app.config["TESTING"] = True

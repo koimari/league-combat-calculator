@@ -157,6 +157,15 @@ EXCLUDED_ATTRIBUTES = {
     "data-quick-role",
     "data-quick-preset",
     "data-quick-remove",
+    # Redesign disclosure controls. They open and close a setup step or a
+    # constraints row in the rail; they carry no input and drive no payload
+    # field, so there is nothing for the capability contract to gate.
+    "data-step-toggle",
+    "data-constraint-toggle",
+    # Read-only hover affordances: the wiki-style item card anchor and the
+    # fight-timeline build spotlight. They display receipts, never input.
+    "data-item-tooltip",
+    "data-chart-focus",
 }
 
 # Interactive control ids in the template (buttons, selects, inputs, dialogs),
@@ -174,6 +183,7 @@ CONTROL_IDS = {
     "durationRange": ("scenario", "window"),
     "uptimeRange": ("scenario", "auto_attack_uptime"),
     "uptimeModeToggle": ("scenario", "auto_attack_uptime_mode"),
+    "enemyHitsToggle": ("scenario", "enemies_attack"),
     "stateTheory": ("controls", "game_state"),
     "stateLive": ("controls", "game_state"),
     "shareAnalystButton": ("controls", "share"),
@@ -194,6 +204,11 @@ CONTROL_IDS = {
     "economicsGold": ("controls", "purchase_optimize"),
     "economicsOptimize": ("controls", "purchase_optimize"),
     "economicsSell": ("controls", "purchase_optimize"),
+    # Redesign: comparison toggles live on the verdict strip only — enable on
+    # the empty challenger side, disable from the live duel. Both write the
+    # same build state.
+    "enableBuildB": ("main", "items"),
+    "disableBuildB": ("main", "items"),
 }
 
 

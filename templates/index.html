@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#f6f2df" />
+  <meta name="theme-color" content="#eae6d6" />
   <meta name="description" content="Compare League of Legends builds against a complete event-ordered roster." />
   <title>Scryglass — Item calculator</title>
   <link rel="icon" href="/static/img/summoners-rift-bg.png" type="image/png" />
   <link rel="preconnect" href="https://ddragon.leagueoflegends.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
   <style>
     /* P1a first-run onboarding overlay.
@@ -33,30 +33,30 @@
     .onboarding-overlay[hidden] { display: none !important; }
     body.onboarding-locked { overflow: hidden; }
     .onboarding-card {
-      width: min(580px, 100%);
+      width: min(560px, 100%);
       max-height: min(660px, calc(100dvh - 40px));
       overflow-y: auto;
       padding: 26px 28px 22px;
-      border: 1px solid rgba(255, 253, 243, .35);
-      border-radius: 16px;
+      border: 1px solid var(--line-3);
+      border-radius: var(--radius);
       background: var(--paper);
       color: var(--ink);
-      box-shadow: var(--shadow);
+      box-shadow: var(--card-shadow);
       animation: onboarding-rise 240ms ease-out;
     }
     .onboarding-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
-    .onboarding-eyebrow { margin: 0; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-    .onboarding-head h2 { margin: 5px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.05em; }
+    .onboarding-eyebrow { margin: 0; color: var(--ink-muted); font: 800 9.5px var(--font); letter-spacing: .14em; text-transform: uppercase; }
+    .onboarding-head h2 { margin: 6px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.03em; }
     .onboarding-close {
-      width: 34px; height: 34px; flex: none;
-      border: 1px solid var(--line-dark); border-radius: 50%;
-      background: transparent; color: var(--ink); font-size: 18px; line-height: 1; cursor: pointer;
+      width: 30px; height: 30px; flex: none;
+      border: 1px solid var(--line-3); border-radius: var(--radius);
+      background: transparent; color: var(--ink); font-size: 17px; line-height: 1; cursor: pointer;
     }
-    .onboarding-close:hover { background: var(--black); color: var(--white); }
+    .onboarding-close:hover { background: var(--band); color: var(--paper); }
     .onboarding-steps { margin-top: 20px; }
     .onboarding-step {
       display: grid;
-      grid-template-columns: 34px minmax(0, 1fr);
+      grid-template-columns: 28px minmax(0, 1fr);
       gap: 4px 12px;
       align-items: start;
     }
@@ -64,35 +64,35 @@
     .onboarding-step-mark {
       grid-row: 1 / span 2;
       display: grid; place-items: center;
-      width: 34px; height: 34px;
-      border: 1px solid var(--ink); border-radius: 50%;
-      font: 800 14px/1 var(--mono);
+      width: 28px; height: 28px;
+      border: 1px solid var(--ink);
+      font: 700 11px/1 var(--mono);
       color: var(--ink);
     }
     .onboarding-step.is-active .onboarding-step-mark { background: var(--ink); color: var(--paper); }
-    .onboarding-step h3 { margin: 5px 0 0; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
-    .onboarding-step p { margin: 6px 0 0; color: var(--ink-soft); font-size: 13.5px; line-height: 1.55; }
+    .onboarding-step h3 { margin: 4px 0 0; font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+    .onboarding-step p { margin: 6px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.55; }
     .onboarding-step p.onboarding-chip-row { display: flex; gap: 8px; align-items: center; margin: 10px 0 0; }
     .onboarding-progress {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line);
+      margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line-2);
     }
-    .onboarding-counter { color: var(--muted); font: 800 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .onboarding-counter { color: var(--ink-muted); font: 700 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
     .onboarding-dots { display: flex; gap: 6px; }
-    .onboarding-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-dark); opacity: .45; }
+    .onboarding-dots span { width: 6px; height: 6px; background: var(--line-4); opacity: .45; }
     .onboarding-dots span.is-active { background: var(--ink); opacity: 1; }
     .onboarding-actions { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
     .onboarding-actions-spacer { flex: 1; }
     .onboarding-back, .onboarding-skip {
-      min-height: 40px; padding: 0 14px; border: 1px solid transparent; border-radius: 8px;
-      background: transparent; color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer;
+      min-height: 36px; padding: 0 14px; border: 1px solid transparent; border-radius: var(--radius);
+      background: transparent; color: var(--ink-muted); font-size: 12px; font-weight: 800; cursor: pointer;
     }
     .onboarding-back:hover, .onboarding-skip:hover { color: var(--ink); }
     .onboarding-next {
-      min-height: 42px; padding: 0 20px; border: 0; border-radius: 8px;
-      background: var(--black); color: var(--white); font-size: 13px; font-weight: 800; cursor: pointer;
+      min-height: 38px; padding: 0 20px; border: 0; border-radius: var(--radius);
+      background: var(--band); color: var(--paper); font-size: 12.5px; font-weight: 800; cursor: pointer;
     }
-    .onboarding-next:hover { background: #0c2c23; }
+    .onboarding-next:hover { background: #17362c; }
     .onboarding-next:focus-visible, .onboarding-back:focus-visible, .onboarding-skip:focus-visible, .onboarding-close:focus-visible {
       outline: 3px solid var(--ink); outline-offset: 2px;
     }
@@ -117,114 +117,382 @@
 </head>
 <body>
   <div class="map-wash" aria-hidden="true"></div>
-  <header class="topbar">
-    <!-- Root-relative on purpose (#148): the brand returns to this app's
-         canonical home from nested and shared-build URLs alike. It used to
-         point at the retired external marketing site. -->
-    <a class="brand" href="/" aria-label="Scryglass home"><span class="brand-mark" aria-hidden="true">◈</span><span>Scryglass</span></a>
-    <div class="topbar-meta"><span class="live-dot"></span><span>26.15</span>{% if auth_user %}<span class="signed-in">Signed in as <strong>{{ auth_user }}</strong></span><a class="quiet-button" href="/auth/logout">Log out</a>{% endif %}</div>
-  </header>
+  <h1 class="visually-hidden">Scryglass — item calculator</h1>
 
-  <main class="app-shell">
-    <!-- Product decision (2026-08-06): the analyst view is the app. Quick mode removed as a landing; per-slot BIS covers "best next item". -->
-<div id="shareBanner" class="share-banner" hidden>
-      <span class="share-banner-mark" aria-hidden="true">🔗</span>
-      <span id="shareBannerText">Viewing a shared build.</span>
-      <button id="shareOpenEditor" class="share-banner-button" type="button">Open in editor</button>
-      <button id="shareDismiss" class="share-banner-button" type="button" aria-label="Dismiss share banner" title="Dismiss">×</button>
-    </div>
-    <!-- Quick mode removed (product decision 2026-08-06): the analyst view is the app. -->
-<div id="analystView">
-      <h1>Item calculator</h1>
-      <section class="scenario-rail" aria-label="Scenario controls">
-        <div class="scenario-block state-block">
-          <span class="micro-label" id="gameStateLabel">Game state</span>
-          <div class="state-options" role="group" aria-labelledby="gameStateLabel">
-            <button class="state-button active" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true" aria-describedby="stateTheoryHelp">Theory</button>
-            <button class="state-button" id="stateLive" type="button" data-game-state="live" aria-pressed="false" aria-describedby="stateLiveHelp">Snapshot lens</button>
-          </div>
-          <!-- One home for the mode copy (#150). These descriptions are what
-               assistive technology announces on each button before selection;
-               renderScenarioRail mirrors the active one into #gameStateHelp so
-               sighted users read the same sentence. Do not restate them in JS. -->
-          <span id="stateTheoryHelp" class="sr-only">Theory: the unconstrained comparison state. Builds are scored exactly as you assemble them, with no check that the gold, timing, or purchase order they would require is achievable in a real game.</span>
-          <span id="stateLiveHelp" class="sr-only">Snapshot lens: reads the scenario as one moment in a game. The champion level, role quest, and legal inventory you have selected are the constraints the comparison is judged under, and the Window controls set the time slice it is measured over.</span>
-          <p class="state-help" id="gameStateHelp" role="status" aria-live="polite"></p>
-        </div>
-        <div class="objective-block">
-          <span class="micro-label">Objective</span>
-          <div class="objective-list" role="group" aria-label="Objective">
-            <button class="objective active" data-objective="overall" aria-pressed="true" type="button">Overall</button>
-            <button class="objective" data-objective="kill" aria-pressed="false" type="button">Kill</button>
-            <button class="objective" data-objective="survival" aria-pressed="false" type="button">Survival</button>
-            <button class="objective" data-objective="damage" aria-pressed="false" type="button">Damage</button>
-            <button class="objective" data-objective="utility" aria-pressed="false" type="button">Utility</button>
-          </div>
-        </div>
-        <p id="scenarioSentence" class="scenario-summary" aria-live="polite"></p>
-      </section>
+  <main class="app-card" id="analystView">
+    <div class="app-grid" id="appGrid">
 
-      <div class="content-grid">
-        <section class="builder-column" aria-label="Scenario builder">
-          <section class="champion-section section-rule">
-            <div class="section-heading"><span class="micro-label">Champion</span><span id="stateReadout" class="section-note">Theory state</span></div>
-            <div class="champion-card">
-              <div class="champion-identity">
-                <button class="champion-portrait champion-portrait-button is-empty" id="championPicker" type="button" data-picker="champion" data-path="attacker.champion" aria-label="Choose champion"><img id="championImage" src="/static/img/rift-illustration-4k.webp" alt="" hidden /></button>
-                <div><div class="eyebrow">Main champion</div><h2 id="championName">Choose a champion</h2><p id="championTitle">Start with the champion you want to compare.</p><div class="identity-controls"><label class="role-control">Role <select id="roleSelect" aria-label="Role"><option value="top">Top</option><option value="jungle">Jungle</option><option value="mid" selected>Mid</option><option value="bottom">Bottom</option><option value="support">Support</option></select></label><div class="level-stepper"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1" aria-label="Decrease level">−</button><output id="levelOutput" aria-live="polite">1</output><button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button><input id="levelInput" type="number" min="1" max="18" value="1" aria-label="Level" /></div><button class="outline-button" id="questToggle" type="button" aria-pressed="false">Quest off</button><button class="outline-button active-outline" id="bootsToggle" type="button" aria-pressed="true">Boots on</button></div></div>
+      <!-- ================= SETUP RAIL ================= -->
+      <div class="rail" id="rail">
+        <div class="rail-head">
+          <!-- Root-relative on purpose (#148): the brand returns to this app's
+               canonical home from nested and shared-build URLs alike. -->
+          <a class="brand" href="/" aria-label="Scryglass home">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span class="brand-word">Scryglass</span>
+          </a>
+          <span class="rail-patch" id="railPatch">26.15</span>
+        </div>
+
+        <p class="rail-label" id="setupLabel">Setup</p>
+
+        <div class="rail-steps" role="group" aria-labelledby="setupLabel">
+
+          <!-- ---- Step 1 · Champion ---- -->
+          <section class="step" id="stepChampion">
+            <h2 class="step-head">
+              <button class="step-toggle" type="button" data-step-toggle="champion" aria-expanded="false" aria-controls="stepChampionBody">
+                <span class="step-index" aria-hidden="true">1</span>
+                <span class="step-title">Champion</span>
+                <span class="step-summary" id="championSummary"></span>
+                <span class="step-action">Edit</span>
+              </button>
+            </h2>
+
+            <!-- The whole brief card is a pointer target for its step; the
+                 step-head button above stays the keyboard/AT control. -->
+            <div class="step-brief" id="championBrief" data-step-toggle="champion">
+              <div class="brief-identity">
+                <span class="brief-portrait" id="championBriefPortrait" aria-hidden="true"></span>
+                <span class="brief-copy">
+                  <b id="championBriefName">No champion</b>
+                  <span class="mono" id="championBriefMeta">Choose a champion to begin</span>
+                </span>
               </div>
+              <div class="brief-chips" id="championBriefChips" aria-label="Ability ranks and casts"></div>
+            </div>
+
+            <div class="step-body" id="stepChampionBody" hidden>
+              <div class="editor-identity">
+                <button class="champion-portrait" id="championPicker" type="button" data-picker="champion" data-path="attacker.champion" aria-label="Choose champion">
+                  <img id="championImage" src="/static/img/rift-illustration-4k.webp" alt="" hidden />
+                </button>
+                <div class="editor-identity-copy">
+                  <h3 id="championName">Choose a champion</h3>
+                  <p id="championTitle">Start with the champion you want to compare.</p>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <label class="field" for="roleSelect">
+                  <span class="field-label">Role</span>
+                  <select id="roleSelect" aria-label="Role">
+                    <option value="top">Top</option>
+                    <option value="jungle">Jungle</option>
+                    <option value="mid" selected>Mid</option>
+                    <option value="bottom">Bottom</option>
+                    <option value="support">Support</option>
+                  </select>
+                </label>
+                <div class="field">
+                  <span class="field-label" id="levelFieldLabel">Level</span>
+                  <div class="stepper" role="group" aria-labelledby="levelFieldLabel">
+                    <button type="button" data-level-path="attacker.level" data-level-delta="-1" aria-label="Decrease level">−</button>
+                    <output id="levelOutput" aria-live="polite">1</output>
+                    <button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button>
+                  </div>
+                  <input id="levelInput" class="visually-hidden" type="number" min="1" max="18" value="1" aria-label="Level" />
+                </div>
+              </div>
+
+              <div class="toggle-row">
+                <button class="toggle" id="questToggle" type="button" aria-pressed="false">Quest off</button>
+                <button class="toggle is-on" id="bootsToggle" type="button" aria-pressed="true">Boots on</button>
+              </div>
+
+              <p class="field-label">Abilities · ranks &amp; casts</p>
+              <div class="ability-row" id="abilityRow"></div>
+              <div id="championOptionsRow"></div>
+
+              <p class="field-label">Resolved stats</p>
               <div class="stats-grid" id="statsGrid"></div>
+
+              <button class="rail-primary" type="button" data-step-toggle="none">Done · back to the duel</button>
             </div>
           </section>
 
-          <section class="abilities-section section-rule"><div class="section-heading"><span class="micro-label">Abilities</span><span class="section-note">Ranks · casts</span></div><div class="ability-row" id="abilityRow"></div><div id="championOptionsRow"></div></section>
+          <!-- ---- Step 2 · Roster ---- -->
+          <section class="step" id="stepRoster">
+            <h2 class="step-head">
+              <button class="step-toggle" type="button" data-step-toggle="roster" aria-expanded="false" aria-controls="stepRosterBody">
+                <span class="step-index" aria-hidden="true">2</span>
+                <span class="step-title">Roster</span>
+                <span class="step-summary" id="rosterSummary"></span>
+                <span class="step-action">Edit</span>
+              </button>
+            </h2>
 
-          <section class="builds-section section-rule"><div class="section-heading"><span class="micro-label">Builds</span><span class="section-note">6 slots · compare</span><button class="text-button share-build-button" id="shareAnalystButton" type="button">Share this build</button></div><div class="build-grid"><article class="build-card build-a" data-build="a"><header class="build-header"><div><span class="build-kicker">Build A</span><strong id="buildAScore">—</strong></div><button class="text-button" type="button" data-copy="b">Copy B → A</button></header><div class="build-caption">baseline</div><div class="slot-grid" id="slotsA"></div></article><article class="build-card build-b" data-build="b"><header class="build-header"><div><span class="build-kicker">Build B</span><strong id="buildBScore">—</strong></div><button class="text-button" type="button" data-copy="a">Copy A → B</button></header><div class="build-caption winner-caption" id="winnerCaption">comparison off</div><div class="slot-grid" id="slotsB"></div></article></div><button class="compare-link" id="bisButton" type="button" aria-describedby="bisPrerequisite"><span>+</span> Find best item for a slot</button>
-        <p class="bis-prerequisite" id="bisPrerequisite" hidden><span id="bisPrerequisiteText"></span><button class="bis-add-enemy" id="bisAddEnemy" type="button">+ Add enemy</button></p>
-        <div class="economics-bar"><div><strong>Best buy</strong><span>Best item, component set, recipe combine, or sell pivot for your gold.</span></div><label for="economicsGold">Available gold<input id="economicsGold" type="number" min="1" max="30000" step="50" inputmode="numeric" placeholder="e.g. 1250" /></label><label class="economics-sell" for="economicsSell"><input id="economicsSell" type="checkbox" /> Allow selling (pivot)</label><button id="economicsOptimize" type="button">Find best buy</button><small>Buys at list price · combines charge the recipe fee · sells refund the sourced 70% value (40% for starters/support/consumables).</small></div></section>
+            <div class="step-brief" id="rosterBrief" data-step-toggle="roster">
+              <div class="brief-roster" id="rosterBriefList"></div>
+            </div>
 
-          <section class="roster-section section-rule"><div class="section-heading"><span class="micro-label">Roster</span><span class="section-note"><span id="enemyCount">0</span> enemies · <span id="allyCount">0</span> allies</span></div><div class="roster-grid"><div class="roster-group"><div class="roster-label"><span>Enemies</span><button class="add-button" id="addEnemy" type="button">+ Add</button><button class="add-button practice-target-button" id="addPracticeEnemy" type="button">vs practice target</button></div><div id="enemies" class="roster-list"></div></div><div class="roster-group"><div class="roster-label"><span>Allies</span><button class="add-button" id="addAlly" type="button">+ Add</button></div><div id="allies" class="roster-list"></div></div></div></section>
+            <div class="step-body" id="stepRosterBody" hidden>
+              <div class="roster-list" id="enemies" aria-label="Enemies"></div>
+              <div class="roster-list" id="allies" aria-label="Allies"></div>
+              <div class="add-row">
+                <button class="add-button" id="addEnemy" type="button">+ Add enemy</button>
+                <button class="add-button" id="addAlly" type="button">+ Add ally</button>
+              </div>
+              <button class="add-button add-button-wide" id="addPracticeEnemy" type="button">vs practice target</button>
+              <button class="rail-primary" type="button" data-step-toggle="none">Done · back to the duel</button>
+            </div>
+          </section>
 
-          <section class="window-section section-rule"><div class="section-heading"><span class="micro-label">Window</span><span class="section-note">Timing &amp; attack uptime</span></div><div class="window-controls"><label class="range-control"><span>Rotations</span><output id="rotationOutput">1</output><input id="rotationRange" type="range" min="1" max="6" value="1" data-proto-range="rotations" aria-label="Rotations" /></label><label class="range-control"><span>Window per rotation</span><output id="durationOutput">10s</output><input id="durationRange" type="range" min="1" max="30" step="0.5" value="10" data-proto-range="duration" aria-label="Window per rotation" /></label><label class="range-control"><span>Auto uptime <button class="inline-mode-button" id="uptimeModeToggle" type="button" aria-pressed="true">Use explicit</button></span><output id="uptimeOutput">CALCULATED</output><input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" aria-label="Auto attack uptime percent" disabled /></label></div></section>
-        </section>
+          <!-- Builds are not a rail step: the duel panel on the canvas is the
+               one place a build is edited (slots, stacks, item options, BIS,
+               copy, share). renderDuelSide owns that markup. -->
+        </div>
 
-        <aside class="result-column" aria-label="Comparison result"><section class="result-card"><div class="result-top"><span class="micro-label">Result</span><span class="result-status" id="resultStatus">waiting</span></div><div class="result-hero"><div class="result-overline" id="resultObjective">Overall</div><div class="result-answer"><strong id="winnerLetter">—</strong><div><span id="winnerLabel">waiting</span><b id="resultDelta">—</b></div></div><p id="resultSummary">Choose a champion, a complete build, and an enemy roster.</p></div><div class="score-compare"><div class="score-col score-a"><span>Build A</span><strong id="scoreA">—</strong></div><div class="score-divider"></div><div class="score-col score-b"><span>Build B</span><strong id="scoreB">—</strong></div></div><div class="metric-legend" id="metricLegend">A / B · higher is better except Kill time</div><div class="metric-list" id="metricList"></div><div class="health-ledger"><div class="ledger-heading"><span>Team fight</span><span>HP at end</span></div><div id="healthRows"></div></div><details class="proof-details"><summary><span>Open event ledger</span><span>↘</span></summary><div class="timeline" id="timeline"></div><div class="ledger-table" id="ledgerTable"></div></details><section class="breakdown-panel" id="damageBreakdown" hidden aria-hidden="true"></section><section class="breakdown-panel" id="defenseReceipts" hidden aria-hidden="true"></section>
-          <div class="engine-error" id="engineError" role="alert" hidden></div></section>
-          <details class="not-modeled-panel" id="notModeledPanel" hidden>
-            <summary>What is not modeled for this champion</summary>
-            <ul id="notModeledList"></ul>
-          </details>
-          <div class="trust-legend analyst-trust-legend" id="trustLegend" hidden>
-            <span class="trust-legend-title">Number certainty</span>
-            <span class="certainty-chip certainty-exact" title="Fully sourced formula, no player-controlled options">EXACT</span>
-            <span class="certainty-chip certainty-estimate" title="Uses a defaulted player-controlled option">ESTIMATE</span>
-            <span class="certainty-chip certainty-boundary" title="Documented but not computed mechanic">BOUNDARY</span>
-            <span class="trust-legend-note" hidden></span>
-          </div>
-          <div class="result-note"><span class="note-mark">i</span><span>Live engine output · incomplete mechanics remain visibly qualified.</span></div>
-      <!-- F2 event-order panel mount. eventorder.js renders the optimal
-         rotation (cast chips + combo rationale) into this hook from the
-         /api/calculate rotation receipt; it stays hidden when the receipt
-         is absent. -->
-    <div id="eventOrderPanel" hidden></div>
-      <!-- P7 feedback widget mount. feedback.js renders into this hook; if it is
-         removed, the widget falls back to .result-column and stays silent when
-         neither exists. P5: optionally expose window.scryglass.getCurrentLoadout()
-         (returns the current /api/calculate payload) for a more faithful loadout
-         snapshot; feedback.js falls back to DOM capture without it. -->
-    <div id="feedbackWidget"></div></aside>
+        <div class="rail-foot">
+          <span class="rail-foot-note" id="stateReadout">Theory state</span>
+          {% if auth_user %}<span class="rail-foot-user">Signed in as <strong>{{ auth_user }}</strong></span><a class="rail-foot-link" href="/auth/logout">Log out</a>{% endif %}
+        </div>
       </div>
 
+      <!-- ================= DUEL CANVAS ================= -->
+      <div class="canvas" id="canvas">
+        <div class="banners" id="banners">
+          <div id="shareBanner" class="banner banner-share" hidden>
+            <span id="shareBannerText">Viewing a shared build.</span>
+            <button id="shareOpenEditor" class="banner-button" type="button">Open in editor</button>
+            <button id="shareDismiss" class="banner-button banner-close" type="button" aria-label="Dismiss share banner" title="Dismiss">×</button>
+          </div>
+          <div class="banner banner-error" id="engineError" role="alert" hidden></div>
+        </div>
 
+        <div class="verdict" id="verdict">
+          <div class="verdict-side verdict-a">
+            <p class="verdict-kicker">Build A · baseline</p>
+            <p class="verdict-number"><span id="scoreA">—</span></p>
+            <p class="verdict-sub" id="verdictSubA"></p>
+          </div>
+          <div class="verdict-mid">
+            <p class="verdict-kicker" id="resultStatus">waiting</p>
+            <p class="verdict-delta" id="resultDelta">—</p>
+            <p class="verdict-line mono" id="verdictLine"></p>
+            <p class="visually-hidden"><span id="winnerLetter">—</span> <span id="winnerLabel">waiting</span> · <span id="resultObjective">Overall</span></p>
+          </div>
+          <div class="verdict-side verdict-b">
+            <p class="verdict-kicker">Build B · challenger</p>
+            <p class="verdict-number"><span id="scoreB">—</span></p>
+            <p class="verdict-sub" id="verdictSubB"></p>
+            <button class="verdict-enable" id="enableBuildB" type="button" data-toggle-compare>Enable Build B</button>
+            <button class="verdict-disable" id="disableBuildB" type="button" data-toggle-compare>Disable Build B · solo view</button>
+          </div>
+        </div>
+
+        <!-- ---- Constraints banner ----
+             These directly shape every calculation, so they ride directly
+             under the verdict as a command bar rather than hiding at the
+             bottom of the rail. One row expands at a time below the bar. -->
+        <section class="constraints-bar" id="railConstraints" aria-label="Constraints">
+          <div class="constraints-row">
+            <span class="constraints-kicker" id="constraintsLabel">Constraints</span>
+            <button class="constraint-row" type="button" data-constraint-toggle="gold" aria-expanded="false" aria-controls="constraintGoldBody">
+              <span class="constraint-name">Available gold</span>
+              <span class="constraint-value" id="goldValue">—</span>
+            </button>
+            <button class="constraint-row" type="button" data-constraint-toggle="objective" aria-expanded="false" aria-controls="constraintObjectiveBody">
+              <span class="constraint-name">Objective</span>
+              <span class="constraint-value" id="objectiveValue">Overall</span>
+            </button>
+            <button class="constraint-row" type="button" data-constraint-toggle="window" aria-expanded="false" aria-controls="constraintWindowBody">
+              <span class="constraint-name">Window</span>
+              <span class="constraint-value" id="windowValue">1 rotation</span>
+            </button>
+            <button class="constraint-row" type="button" data-constraint-toggle="state" aria-expanded="false" aria-controls="constraintStateBody">
+              <span class="constraint-name" id="gameStateLabel">State</span>
+              <span class="constraint-value" id="stateValue">Theory</span>
+            </button>
+            <button class="constraint-row" type="button" data-constraint-toggle="enemyHits" aria-expanded="false" aria-controls="constraintEnemyHitsBody">
+              <span class="constraint-name">Enemy hits</span>
+              <span class="constraint-value" id="enemyHitsValue">On</span>
+            </button>
+            <button class="rail-primary constraints-action" id="economicsOptimize" type="button">Find best buy</button>
+          </div>
+
+          <div class="constraint-body" id="constraintGoldBody" hidden>
+            <label class="field constraint-gold-field" for="economicsGold">
+              <span class="field-label">Gold in hand</span>
+              <input id="economicsGold" type="number" min="1" max="30000" step="50" inputmode="numeric" placeholder="e.g. 1250" />
+            </label>
+            <label class="checkbox" for="economicsSell">
+              <input id="economicsSell" type="checkbox" /> <span>Allow selling (pivot)</span>
+            </label>
+            <p class="constraint-note">Buys at list price · combines charge the recipe fee · sells refund the sourced 70% value (40% for starters, support and consumables).</p>
+          </div>
+
+          <div class="constraint-body" id="constraintObjectiveBody" hidden>
+            <div class="segmented" role="group" aria-label="Objective">
+              <button class="segment is-on" data-objective="overall" aria-pressed="true" type="button">Overall</button>
+              <button class="segment" data-objective="kill" aria-pressed="false" type="button">Kill</button>
+              <button class="segment" data-objective="survival" aria-pressed="false" type="button">Survival</button>
+              <button class="segment" data-objective="damage" aria-pressed="false" type="button">Damage</button>
+              <button class="segment" data-objective="utility" aria-pressed="false" type="button">Utility</button>
+            </div>
+          </div>
+
+          <div class="constraint-body" id="constraintWindowBody" hidden>
+            <label class="range-field">
+              <span class="field-label">Rotations <output id="rotationOutput">1</output></span>
+              <input id="rotationRange" type="range" min="1" max="6" value="1" data-proto-range="rotations" aria-label="Rotations" />
+            </label>
+            <label class="range-field">
+              <span class="field-label">Window per rotation <output id="durationOutput">10s</output></span>
+              <input id="durationRange" type="range" min="1" max="30" step="0.5" value="10" data-proto-range="duration" aria-label="Window per rotation" />
+            </label>
+            <label class="range-field">
+              <span class="field-label">Auto uptime <output id="uptimeOutput">CALCULATED</output></span>
+              <input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" aria-label="Auto attack uptime percent" disabled />
+            </label>
+            <button class="toggle" id="uptimeModeToggle" type="button" aria-pressed="true">Use explicit</button>
+            <!-- Shown only for champions whose module certifies one_rotation
+                 fights exclusively: the sourced reason the timed window (and
+                 its cooldown recasts) is withheld. renderRail owns it. -->
+            <p class="constraint-note" id="windowModeNote" hidden></p>
+          </div>
+
+          <div class="constraint-body" id="constraintStateBody" hidden>
+            <div class="segmented" role="group" aria-labelledby="gameStateLabel">
+              <button class="segment is-on" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true" aria-describedby="stateTheoryHelp">Theory</button>
+              <button class="segment" id="stateLive" type="button" data-game-state="live" aria-pressed="false" aria-describedby="stateLiveHelp">Snapshot lens</button>
+            </div>
+            <!-- One home for the mode copy (#150). These descriptions are what
+                 assistive technology announces on each button before selection;
+                 renderRail mirrors the active one into #gameStateHelp so sighted
+                 users read the same sentence. Do not restate them in JS. -->
+            <span id="stateTheoryHelp" class="visually-hidden">Theory: the unconstrained comparison state. Builds are scored exactly as you assemble them, with no check that the gold, timing, or purchase order they would require is achievable in a real game.</span>
+            <span id="stateLiveHelp" class="visually-hidden">Snapshot lens: reads the scenario as one moment in a game. The champion level, role quest, and legal inventory you have selected are the constraints the comparison is judged under, and the Window controls set the time slice it is measured over.</span>
+            <p class="constraint-note" id="gameStateHelp" role="status" aria-live="polite"></p>
+          </div>
+
+          <div class="constraint-body" id="constraintEnemyHitsBody" hidden>
+            <label class="checkbox" for="enemyHitsToggle">
+              <input id="enemyHitsToggle" type="checkbox" checked /> <span>Enemies deal damage</span>
+            </label>
+            <p class="constraint-note">Unchecked, every enemy deals exactly zero damage — no casts, autos, or item retaliation (thorns) — a pure target-dummy reading. Survival and kill time follow accordingly.</p>
+          </div>
+        </section>
+
+        <p class="verdict-summary" id="resultSummary" role="status">Choose a champion, a complete build, and an enemy roster.</p>
+
+        <!-- Start checklist: shown until the scenario has a champion, an
+             enemy and Build A items (renderStartBand). Each row opens the
+             rail step it names through the shared data-step-toggle handler. -->
+        <section class="start-band" id="startBand" hidden aria-label="Scenario checklist"></section>
+
+        <!-- Centre editing host: while the scenario is not yet ready, an
+             open step's .step-body is moved here so setup happens on the
+             canvas's empty middle instead of the narrow rail
+             (applyRailDisclosure owns the relocation both ways). -->
+        <div class="start-editor" id="startEditor" hidden>
+          <p class="start-editor-head" id="startEditorHead"></p>
+        </div>
+
+        <details class="qualified" id="notModeledPanel" hidden>
+          <summary>Qualified result · what is not modeled for this champion</summary>
+          <ul id="notModeledList"></ul>
+        </details>
+
+        <section class="buy-band" id="buyBand" hidden aria-label="Best buy result"></section>
+
+        <div class="duel" id="duel">
+          <div class="duel-side duel-a" id="duelA" aria-label="Build A items"></div>
+          <div class="spine" id="spine">
+            <div class="spine-rows" id="metricList"></div>
+            <p class="spine-note" id="metricLegend">A / B · higher is better except Kill time</p>
+            <p class="spine-foot" id="spineFoot"></p>
+          </div>
+          <div class="duel-side duel-b" id="duelB" aria-label="Build B items"></div>
+        </div>
+
+        <!-- ---- Build actions ----
+             The whole-build moves that no single slot row owns. They sit with
+             the duel panel because that is where a build is edited; the
+             per-slot moves (pick, stacks, item options, BIS) ride their row. -->
+        <section class="build-actions" id="buildActions" aria-label="Build actions">
+          <button class="build-action" id="bisButton" type="button" aria-describedby="bisPrerequisite">Find best item for a slot</button>
+          <button class="build-action" id="shareAnalystButton" type="button">Share this build</button>
+          <p class="prerequisite" id="bisPrerequisite" hidden>
+            <span id="bisPrerequisiteText"></span>
+            <button class="link-button" id="bisAddEnemy" type="button">+ Add enemy</button>
+          </p>
+        </section>
+
+        <section class="hp-band" id="hpBand" aria-label="Team fight health at window end">
+          <header class="band-head">
+            <p class="band-title">Team fight</p>
+            <p class="band-note">HP at end</p>
+          </header>
+          <div id="healthRows"></div>
+        </section>
+
+        <section class="timeline-band" id="timelineBand" aria-label="Fight timeline">
+          <header class="band-head">
+            <p class="band-title" id="timelineTitle">Fight timeline</p>
+            <p class="band-note">Cumulative damage</p>
+          </header>
+          <div class="chart" id="timelineChart"></div>
+        </section>
+
+        <details class="ledger-band" id="ledgerBand">
+          <summary class="ledger-summary">
+            <span class="chart-legend">
+              <span class="legend-key legend-a">Build A</span>
+              <span class="legend-key legend-b">Build B</span>
+            </span>
+            <span class="ledger-open">Open event ledger</span>
+          </summary>
+          <div class="ledger-body">
+            <div class="trust-legend" id="trustLegend" hidden>
+              <span class="trust-legend-title">Number certainty</span>
+              <span class="certainty-chip certainty-exact" title="Fully sourced formula, no player-controlled options">EXACT</span>
+              <span class="certainty-chip certainty-estimate" title="Uses a defaulted player-controlled option">ESTIMATE</span>
+              <span class="certainty-chip certainty-boundary" title="Documented but not computed mechanic">BOUNDARY</span>
+              <span class="trust-legend-note" hidden></span>
+            </div>
+            <div class="timeline" id="timeline"></div>
+            <div class="ledger-table" id="ledgerTable"></div>
+            <!-- F2 event-order panel mount. eventorder.js renders the optimal
+                 rotation (cast chips + combo rationale) into this hook from the
+                 /api/calculate rotation receipt; it stays hidden when the
+                 receipt is absent. -->
+            <div id="eventOrderPanel" hidden></div>
+            <section class="breakdown-panel" id="damageBreakdown" hidden aria-hidden="true"></section>
+            <section class="breakdown-panel" id="defenseReceipts" hidden aria-hidden="true"></section>
+          </div>
+        </details>
+
+        <!-- P7 feedback widget mount. feedback.js renders into this hook; if it
+             is removed, the widget falls back to .canvas and stays silent when
+             neither exists. P5: optionally expose
+             window.scryglass.getCurrentLoadout() (returns the current
+             /api/calculate payload) for a more faithful loadout snapshot;
+             feedback.js falls back to DOM capture without it. -->
+        <div id="feedbackWidget"></div>
+
+        <p id="scenarioSentence" class="visually-hidden" aria-live="polite"></p>
+      </div>
     </div>
 
-    <div class="share-panel" id="sharePanel" hidden>
-      <div class="share-panel-head"><strong>Build link</strong><button class="share-panel-close" id="sharePanelClose" type="button" aria-label="Close share panel">×</button></div>
-      <p class="share-panel-note">Anyone with this link can view the build read-only. Sharing is permanent.</p>
-      <div class="share-url-row"><input id="shareUrl" type="text" readonly aria-label="Share URL" /><button id="shareCopy" class="share-copy-button" type="button">Copy</button></div>
-      <p class="share-status" id="shareStatus" role="status"></p>
-    </div>
+    <footer class="site-footer">
+      <span class="site-footer-brand"><span aria-hidden="true">◈</span> Scryglass</span>
+      <nav class="site-footer-links" aria-label="Legal">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/riot-disclaimer">Riot disclaimer</a>
+      </nav>
+      <span class="site-footer-note">Not endorsed by Riot Games · League Wiki (CC-BY-SA) + game-file data · no Riot API.</span>
+    </footer>
   </main>
+
+  <div class="share-panel" id="sharePanel" hidden>
+    <div class="share-panel-head"><strong>Build link</strong><button class="share-panel-close" id="sharePanelClose" type="button" aria-label="Close share panel">×</button></div>
+    <p class="share-panel-note">Anyone with this link can view the build read-only. Sharing is permanent.</p>
+    <div class="share-url-row"><input id="shareUrl" type="text" readonly aria-label="Share URL" /><button id="shareCopy" class="share-copy-button" type="button">Copy</button></div>
+    <p class="share-status" id="shareStatus" role="status"></p>
+  </div>
+
   <!-- P1a first-run onboarding overlay.
        Shown once per browser (localStorage "scryglass_onboarded"), driven by
        the self-contained initOnboardingOverlay block in static/js/app.js.
@@ -235,7 +503,7 @@
     <div class="onboarding-card">
       <header class="onboarding-head">
         <div>
-          <p class="onboarding-eyebrow">First run · about 5 minutes</p>
+          <p class="onboarding-eyebrow">First run · about a minute</p>
           <h2 id="onboardingTitle">Welcome to Scryglass</h2>
         </div>
         <button class="onboarding-close" type="button" aria-label="Close welcome tour">×</button>
@@ -243,18 +511,19 @@
       <div class="onboarding-steps" id="onboardingSteps">
         <section class="onboarding-step is-active">
           <span class="onboarding-step-mark" aria-hidden="true">1</span>
-          <h3>Pick your champion + role</h3>
-          <p>Quick mode is the landing page: search a champion, tap it, choose your role. Enemy and current items are optional — that's the whole setup for a recommendation.</p>
+          <h3>Set the scenario in the rail</h3>
+          <p>Two numbered steps on the left: <em>Champion</em> and <em>Roster</em>. A step opens in place and the duel stays live behind it, so you always see what your edit changed. Constraints — gold, objective, window, game state — ride the banner above the duel.</p>
+          <p>Builds are not a rail step: you assemble them on the duel panel itself.</p>
         </section>
         <section class="onboarding-step" hidden>
           <span class="onboarding-step-mark" aria-hidden="true">2</span>
-          <h3>Press Best next item</h3>
-          <p>You get the top 3 picks with <em>why</em> — each card shows the damage (TDD) and survival (eHP) delta against your current build plus a plain-language reason.</p>
+          <h3>Build and read the duel</h3>
+          <p>The strip along the top answers first: Build A, the delta, Build B. Below it the two builds mirror around a delta spine — each bar reads Build B against Build A, green ahead and red behind — and every slot row on either side is a button, so you fill and tune a build right where you read it.</p>
         </section>
         <section class="onboarding-step" hidden>
           <span class="onboarding-step-mark" aria-hidden="true">3</span>
-          <h3>Dig deeper in Analyst</h3>
-          <p>Open a build in Analyst and every number carries a certainty chip:</p>
+          <h3>Open the receipts</h3>
+          <p><em>Open event ledger</em> under the timeline expands the timestamped events, damage breakdown and defense receipts. Every number carries a certainty chip:</p>
           <p class="onboarding-chip-row" aria-label="Certainty chips legend">
             <span class="certainty-chip certainty-exact">EXACT</span>
             <span class="certainty-chip certainty-estimate">ESTIMATE</span>
@@ -276,19 +545,29 @@
     </div>
   </div>
 
-  <dialog id="picker" class="picker"><div class="picker-shell"><header><div><p class="eyebrow" id="pickerKind">Choose</p><h2 id="pickerTitle">Select</h2></div><button class="picker-close" id="pickerClose" type="button" aria-label="Close picker">×</button></header><label class="search-box"><span aria-hidden="true">⌕</span><input id="pickerSearch" type="search" autocomplete="off" placeholder="Search" aria-label="Search choices" /></label><div id="pickerGrid" class="picker-grid"></div></div></dialog>
-  <dialog id="bis" class="picker bis-dialog"><div class="picker-shell"><header><div><p class="eyebrow">Best in slot · scenario</p><h2 id="bisTitle">Rank this slot</h2></div><button class="picker-close" id="bisClose" type="button" aria-label="Close Best in Slot">×</button></header><nav class="bis-objective-filter" aria-label="Best in Slot objective"><span>Rank by</span><div id="bisObjectiveFilter"></div></nav><div class="bis-intro"><strong id="bisSummary"></strong><span>Every candidate is scored into the selected scenario context.</span></div><div id="bisList" class="bis-list"></div></div></dialog>
-  <footer class="site-footer">
-    <div class="site-footer-inner">
-      <span class="site-footer-brand"><span aria-hidden="true">◈</span> Scryglass</span>
-      <nav class="site-footer-links" aria-label="Legal">
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-        <a href="/riot-disclaimer">Riot disclaimer</a>
-      </nav>
-      <span class="site-footer-note">Not endorsed by Riot Games · League Wiki (CC-BY-SA) + game-file data · no Riot API.</span>
+  <dialog id="picker" class="dialog picker">
+    <div class="dialog-shell">
+      <header class="dialog-head">
+        <div><p class="dialog-kicker" id="pickerKind">Choose</p><h2 id="pickerTitle">Select</h2></div>
+        <button class="dialog-close" id="pickerClose" type="button" aria-label="Close picker">×</button>
+      </header>
+      <label class="search-box"><span aria-hidden="true">⌕</span><input id="pickerSearch" type="search" autocomplete="off" placeholder="Search" aria-label="Search choices" /></label>
+      <div id="pickerGrid" class="picker-grid"></div>
     </div>
-  </footer>
+  </dialog>
+
+  <dialog id="bis" class="dialog bis-dialog">
+    <div class="dialog-shell">
+      <header class="dialog-head">
+        <div><p class="dialog-kicker">Best in slot · scenario</p><h2 id="bisTitle">Rank this slot</h2></div>
+        <button class="dialog-close" id="bisClose" type="button" aria-label="Close Best in Slot">×</button>
+      </header>
+      <nav class="bis-objective-filter" aria-label="Best in Slot objective"><span>Rank by</span><div id="bisObjectiveFilter"></div></nav>
+      <p class="bis-intro" id="bisSummary"></p>
+      <div id="bisList" class="bis-list"></div>
+    </div>
+  </dialog>
+
   <script src="/static/js/eventorder.js"></script>
   <script src="/static/js/app.js"></script>
   <script src="/static/js/staleness.js"></script>

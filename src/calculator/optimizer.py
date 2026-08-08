@@ -11,6 +11,17 @@ from typing import Any
 
 from .application_errors import NoCompleteEventOrder
 from .data_fetcher import fetch_item_data, get_item_by_name
+from .economy import (
+    PurchasePlan,
+    apply_purchase_plan,
+    combine_candidates,
+    is_purchasable,
+    is_stackable,
+    item_total,
+    plan_incomplete_combine,
+    recipe_demand,
+    _item_by_id,
+)
 from .item_coverage import (
     optimizer_candidate_coverage,
     optimizer_supported_items,
@@ -393,11 +404,14 @@ def _evaluate_build_uncached(
             primary_score = float(main_row.get("total_damage", 0.0))
 
         # Equal-damage coupled builds still need a deterministic, sourced
-        # decision.  Use the timeline's own effective-health receipt as an
-        # infinitesimal tie-break only; it cannot change a material damage
-        # ordering or the public rounded score.  This prevents an unrelated
-        # AP item from winning merely because it appeared earlier in the
-        # candidate list when the target was already dead at the first event.
+        # decision.  Damage is capped by a kill, so every build that clears
+        # the roster inside the window deals the same total; rank those by
+        # how much window remains after each enemy death (faster kill first)
+        # and only then by the buyer's effective health.  Both terms are
+        # infinitesimal against the 0.1-damage receipt rounding, and the
+        # kill term dominates the health term — otherwise the tie-break
+        # elects tank items on a mage the moment every candidate build
+        # secures the kill (the Warmog's-on-Syndra regression).
         if timeline_audit is not None:
             main_survival = next(
                 (
@@ -410,7 +424,14 @@ def _evaluate_build_uncached(
             effective_health = max(
                 0.0, float(main_survival.get("effective_health", 0.0))
             )
-            return primary_score + effective_health * 1e-9
+            duration = base_params.fight_duration_seconds
+            kill_margin = sum(
+                duration - float(row["survival"]["death_time"])
+                for row in combat.get("participants", [])
+                if row.get("team") == "enemy"
+                and row.get("survival", {}).get("death_time") is not None
+            )
+            return primary_score + kill_margin * 1e-4 + effective_health * 1e-9
         return primary_score
     results: list[dict[str, Any]] = []
     for target_params in targets:
@@ -810,7 +831,7 @@ def _required_item_gold(item: dict[str, Any]) -> int:
 
 
 def get_purchase_items(role: str = "") -> list[dict[str, Any]]:
-    """Return ordinary modeled singles for the one/two-purchase search.
+    """Return ordinary modeled singles for the purchase search.
 
     Components (BASIC/EPIC) plus role-scoped legendaries.  Boots stay in a
     separate pool and transformation items are excluded by ``is_purchasable``
@@ -835,6 +856,439 @@ def get_purchase_items(role: str = "") -> list[dict[str, Any]]:
     return components + legendaries
 
 
+class _PurchaseSearch:
+    """Prices and scores candidate purchase plans for one optimization run.
+
+    Pricing goes through the real shop model (component credit, combine
+    cascade, sell refund) plus loadout legality, and scoring goes through the
+    same event-ordered fight evaluation as every other optimizer.  ``record``
+    keeps the best plan per distinct final loadout, so the exhaustive and
+    local-search regimes rank from one shared candidate table.
+    """
+
+    # A search context is a deliberate value bag; splitting it would spread
+    # one run's state across parallel argument lists.
+    # pylint: disable=too-many-instance-attributes,too-many-arguments
+    # pylint: disable=too-many-positional-arguments,too-many-locals
+
+    def __init__(
+        self,
+        champion_data: dict[str, Any],
+        level: int,
+        owned: list[dict[str, Any]],
+        owned_boots: dict[str, Any] | None,
+        available_gold: int,
+        max_buys: int,
+        combine_policy: str,
+        role: str,
+        role_quest_complete: bool,
+        params: FightParams | tuple[FightParams, ...],
+        objective: str,
+        timeline_audit: dict[str, Any],
+        require_complete_timeline: bool,
+        combat_context: dict[str, Any] | None,
+        deadline: float,
+        capacity: int,
+        reserve_boot_slot: bool,
+    ) -> None:
+        self.champion_data = champion_data
+        self.level = level
+        self.owned = owned
+        self.owned_boots = owned_boots
+        self.available_gold = available_gold
+        self.max_buys = max_buys
+        self.combine_policy = combine_policy
+        self.role = role
+        self.role_quest_complete = role_quest_complete
+        self.params = params
+        self.objective = objective
+        self.timeline_audit = timeline_audit
+        self.require_complete_timeline = require_complete_timeline
+        self.combat_context = combat_context
+        self.deadline = deadline
+        self.capacity = capacity
+        self.reserve_boot_slot = reserve_boot_slot
+        self.evaluations = 0
+        self.candidates: dict[
+            tuple[tuple[str, ...], str | None],
+            tuple[float, PurchasePlan, int],
+        ] = {}
+        self._score_memo: dict[tuple[tuple[str, ...], str | None], float] = {}
+
+    def expired(self) -> bool:
+        """Whether the shared time budget for this search has run out."""
+        return time.perf_counter() > self.deadline
+
+    def price(
+        self,
+        sell: dict[str, Any] | None,
+        buys: list[dict[str, Any]],
+        combines: list[dict[str, Any]] | None = None,
+    ) -> PurchasePlan | None:
+        """Price one plan through the shop model, or None if illegal.
+
+        Every rejection reason — gold, slots, duplicates, exclusivity,
+        boots — is monotone in added buys, so callers may prune a whole
+        subtree when a prefix fails.
+        """
+        non_boots = [item for item in buys if "BOOTS" not in item.get("rank", [])]
+        if len(non_boots) > self.max_buys:
+            return None
+        try:
+            plan = apply_purchase_plan(
+                self.owned,
+                self.owned_boots,
+                buys,
+                self.available_gold,
+                sell_items=[sell] if sell else None,
+                combine_items=combines,
+                combine_policy=self.combine_policy,
+                role=self.role,
+                role_quest_complete=self.role_quest_complete,
+                # Receipt-only shop scan, recomputed for the winner.
+                flag_incomplete_combine=False,
+            )
+            # A recommendation must be a loadout the rest of the app accepts:
+            # manual builds and /api/calculate validate with the strict rules
+            # (no duplicates, even reviewed-stackable components), so the
+            # search prices against that same gate — one legality authority.
+            validate_resolved_loadout(
+                plan.final_items,
+                boots=plan.final_boots,
+                role=self.role,
+                role_quest_complete=self.role_quest_complete,
+            )
+        except (KeyError, ValueError, LookupError):
+            return None
+        if (
+            self.reserve_boot_slot
+            and plan.final_boots is None
+            and len(plan.final_items) > self.capacity - 1
+        ):
+            # Boots are enabled, so the interface holds a slot for them; a
+            # plan may not spend that slot on a sixth ordinary item.
+            return None
+        return plan
+
+    def score_plan(self, plan: PurchasePlan) -> float:
+        """Score a plan's resolved final loadout, once per distinct loadout."""
+        key = _plan_key(plan)
+        hit = self._score_memo.get(key)
+        if hit is not None:
+            return hit
+        build_items = (
+            [plan.final_boots] if plan.final_boots else []
+        ) + plan.final_items
+        score = _evaluate_build(
+            self.champion_data,
+            self.level,
+            build_items,
+            fight_params=self.params,
+            objective=self.objective,
+            timeline_audit=self.timeline_audit,
+            require_complete_timeline=self.require_complete_timeline,
+            combat_context=self.combat_context,
+        )
+        self.evaluations += 1
+        self._score_memo[key] = score
+        return score
+
+    def record(self, plan: PurchasePlan, score: float) -> None:
+        """Remember the best-scoring, then cheapest, plan per final loadout."""
+        if not math.isfinite(score):
+            return
+        key = _plan_key(plan)
+        previous = self.candidates.get(key)
+        if (
+            previous is None
+            or score > previous[0]
+            or (score == previous[0] and plan.spend < previous[2])
+        ):
+            self.candidates[key] = (score, plan, plan.spend)
+
+    def evaluate(
+        self,
+        sell: dict[str, Any] | None,
+        buys: list[dict[str, Any]],
+        combines: list[dict[str, Any]] | None = None,
+    ) -> float | None:
+        """Price, score, and record one plan; None when the plan is illegal."""
+        plan = self.price(sell, buys, combines)
+        if plan is None:
+            return None
+        score = self.score_plan(plan)
+        self.record(plan, score)
+        return score
+
+    def ranked(self) -> list[tuple[float, PurchasePlan, int]]:
+        """All recorded candidates, best damage first, cheapest tie-break."""
+        return sorted(
+            self.candidates.values(),
+            key=lambda row: (-row[0], row[2], _plan_key(row[1])),
+        )
+
+
+def _enumerate_affordable_shapes(
+    search: _PurchaseSearch,
+    sell: dict[str, Any] | None,
+    buyables: list[dict[str, Any]],
+    cap: int,
+    counted: int,
+) -> tuple[list[list[dict[str, Any]]], bool]:
+    """Depth-first walk of every priceable buy list, in pool order.
+
+    A prefix that fails to price prunes its whole subtree (failure reasons
+    are monotone in added buys), and any final loadout reachable through a
+    buy-components-then-complete route is also reachable by buying the
+    completed items directly, so pruning redundant routes loses no loadout.
+    Returns (shapes, complete); complete is False when the cap stopped the
+    walk before it finished.
+    """
+    shapes: list[list[dict[str, Any]]] = [[]]
+    complete = True
+
+    # O(1) affordability floor per child, checked before full shop pricing:
+    # a buy can never cost less than its list price minus the credit its
+    # recipe could draw, and the inventory can never credit more than its
+    # own component value.  This keeps the walk's cost linear in *kept*
+    # shapes instead of attempted children (full pricing per attempt burned
+    # the whole time budget at low gold).  The floor only prunes plans full
+    # pricing would also reject, so exhaustive certification is unaffected.
+    by_id = _item_by_id()
+    totals = [item_total(item) for item in buyables]
+    recipe_values = [
+        sum(
+            item_total(by_id[component_id]) * count
+            for component_id, count in recipe_demand(item).items()
+            if component_id in by_id
+        )
+        for item in buyables
+    ]
+    component_ranks = {"BASIC", "EPIC"}
+    credit_start = sum(
+        item_total(item)
+        for item in search.owned
+        if component_ranks.intersection(item.get("rank", []))
+    )
+    if sell is not None and component_ranks.intersection(sell.get("rank", [])):
+        # Selling removes exactly one copy from the creditable inventory.
+        credit_start -= item_total(sell)
+    base_plan = search.price(sell, [])
+
+    def walk(
+        start: int,
+        prefix: list[dict[str, Any]],
+        remaining: int,
+        credit_pool: int,
+    ) -> None:
+        nonlocal complete
+        for index in range(start, len(buyables)):
+            if not complete:
+                return
+            if search.expired():
+                # Enumeration must never eat the scoring budget; an
+                # incomplete walk degrades to the local-search regime.
+                complete = False
+                return
+            if totals[index] - min(recipe_values[index], credit_pool) > remaining:
+                continue
+            candidate = buyables[index]
+            trial = [*prefix, candidate]
+            plan = search.price(sell, trial)
+            if plan is None:
+                continue
+            if counted + len(shapes) >= cap:
+                complete = False
+                return
+            shapes.append(trial)
+            # A consumed component would shrink the pool; keeping it is a
+            # valid upper bound and stays conservative.
+            grown_pool = credit_pool + (
+                totals[index]
+                if component_ranks.intersection(candidate.get("rank", []))
+                else 0
+            )
+            walk(
+                index if is_stackable(candidate) else index + 1,
+                trial,
+                plan.remaining,
+                grown_pool,
+            )
+
+    walk(
+        0,
+        [],
+        base_plan.remaining if base_plan is not None else search.available_gold,
+        credit_start,
+    )
+    return shapes, complete
+
+
+def _greedy_purchase_chain(
+    search: _PurchaseSearch,
+    sell: dict[str, Any] | None,
+    buyables: list[dict[str, Any]],
+    per_gold: bool,
+    start: list[dict[str, Any]] | None = None,
+) -> tuple[list[dict[str, Any]], float] | None:
+    """Add the best affordable buy one slot at a time until nothing improves.
+
+    ``per_gold`` ranks each step by marginal damage per gold spent instead
+    of raw marginal damage — the start that prefers four efficient cheap
+    items over three expensive ones.
+    """
+    chain = list(start or [])
+    plan = search.price(sell, chain)
+    if plan is None:
+        return None
+    best_score = search.score_plan(plan)
+    search.record(plan, best_score)
+    best_spend = plan.spend
+    # Like the exhaustive loop, the deadline never blanks the search: the
+    # first fill step always completes a full argmax scan, so an expired
+    # clock degrades to the best single buy — never to the first pool item
+    # that happened to beat the baseline.
+    first_step = True
+    while first_step or not search.expired():
+        full_scan = first_step
+        first_step = False
+        step_metric = 0.0
+        step_score = 0.0
+        step_spend = 0
+        step_candidate: dict[str, Any] | None = None
+        for candidate in buyables:
+            if not full_scan and search.expired() and step_candidate is not None:
+                break
+            trial_plan = search.price(sell, [*chain, candidate])
+            if trial_plan is None:
+                continue
+            score = search.score_plan(trial_plan)
+            search.record(trial_plan, score)
+            if not score > best_score:
+                continue
+            gain = score - best_score if math.isfinite(best_score) else score
+            metric = gain / max(1, trial_plan.spend - best_spend) if per_gold else gain
+            if step_candidate is None or metric > step_metric:
+                step_metric, step_score = metric, score
+                step_spend, step_candidate = trial_plan.spend, candidate
+        if step_candidate is None:
+            break
+        chain.append(step_candidate)
+        best_score, best_spend = step_score, step_spend
+    return chain, best_score
+
+
+def _improve_purchase_chain(
+    search: _PurchaseSearch,
+    sell: dict[str, Any] | None,
+    buyables: list[dict[str, Any]],
+    chain: list[dict[str, Any]],
+    best_score: float,
+    *,
+    max_rounds: int = 3,
+) -> tuple[list[dict[str, Any]], float]:
+    """Hill-climb a purchase chain: swap single buys, then respend leftovers."""
+    # pylint: disable=too-many-arguments  # one climb needs its whole context
+    for _ in range(max_rounds):
+        improved = False
+        for index in range(len(chain)):
+            for candidate in buyables:
+                if search.expired():
+                    return chain, best_score
+                trial = [*chain[:index], candidate, *chain[index + 1 :]]
+                plan = search.price(sell, trial)
+                if plan is None:
+                    continue
+                score = search.score_plan(plan)
+                search.record(plan, score)
+                if score > best_score:
+                    chain, best_score = trial, score
+                    improved = True
+                    break
+            if improved:
+                break
+        extended = _greedy_purchase_chain(
+            search, sell, buyables, per_gold=False, start=chain
+        )
+        if extended is not None and extended[1] > best_score:
+            chain, best_score = extended
+            improved = True
+        if not improved:
+            break
+    return chain, best_score
+
+
+def _score_exhaustive_purchase_plans(
+    search: _PurchaseSearch,
+    shape_rows: list[tuple[dict[str, Any] | None, list[dict[str, Any]]]],
+    pool_names: set[str],
+) -> bool:
+    """Score every enumerated shape plus its combine completions.
+
+    Returns whether the deadline truncated scoring.  The deadline never
+    blanks the result: at least one real purchase plan is scored before
+    truncation is honored, so the caller always gets a best-found plan
+    instead of an empty error.
+    """
+    raw_plans: list[
+        tuple[dict[str, Any] | None, list[dict[str, Any]], dict[str, Any] | None]
+    ] = []
+    by_id = _item_by_id()
+    for sell, buys in shape_rows:
+        raw_plans.append((sell, buys, None))
+        # Combine completions for every inventory reachable by a shape.
+        # A combine is gold-identical to a credited direct buy except where
+        # the sourced combine table disagrees with cache arithmetic — that
+        # divergence is why this pass exists.
+        inventory: dict[int, int] = {}
+        for item in search.owned:
+            if sell is not None and item["name"] == sell["name"]:
+                continue
+            inventory[int(item["id"])] = inventory.get(int(item["id"]), 0) + 1
+        for buy in buys:
+            if "BOOTS" in {str(r).upper() for r in buy.get("rank", []) or []}:
+                continue
+            inventory[int(buy["id"])] = inventory.get(int(buy["id"]), 0) + 1
+        for combine_id, _demand, _fee in combine_candidates(inventory, by_id):
+            combine = by_id[combine_id]
+            if combine["name"] not in pool_names:
+                continue
+            raw_plans.append((sell, buys, combine))
+    progressed = False
+    for sell, buys, combine in raw_plans:
+        if search.expired() and progressed:
+            return True
+        score = search.evaluate(sell, buys, [combine] if combine else None)
+        if score is not None and math.isfinite(score) and (buys or sell):
+            progressed = True
+    return False
+
+
+def _run_purchase_local_search(
+    search: _PurchaseSearch,
+    sell_options: list[dict[str, Any] | None],
+    buyables: list[dict[str, Any]],
+) -> bool:
+    """Greedy-fill each sell pivot from two angles, then climb the best.
+
+    Returns whether the deadline truncated the search.
+    """
+    best_sell: dict[str, Any] | None = None
+    best_chain: list[dict[str, Any]] | None = None
+    best_score = float("-inf")
+    for sell in sell_options:
+        for per_gold in (False, True):
+            outcome = _greedy_purchase_chain(search, sell, buyables, per_gold)
+            if outcome is None:
+                continue
+            chain, chain_score = outcome
+            if best_chain is None or chain_score > best_score:
+                best_sell, best_chain, best_score = sell, chain, chain_score
+    if best_chain is not None:
+        _improve_purchase_chain(search, best_sell, buyables, best_chain, best_score)
+    return search.expired()
+
+
 def optimize_purchase(
     champion_data: dict[str, Any],
     level: int,
@@ -844,48 +1298,40 @@ def optimize_purchase(
     objective: str = "total_damage",
     locked_items: list[str] | None = None,
     locked_boots: str | None = None,
-    max_purchase_items: int = 2,
+    max_purchase_items: int | None = None,
     target_fight_params: tuple[FightParams, ...] | None = None,
     boots_tier: int = 2,
     require_complete_timeline: bool = True,
     enemy_loadouts: list[Any] | None = None,
     ally_loadouts: list[Any] | None = None,
     include_boots: bool = True,
-    candidate_cap: int = 2500,
+    candidate_cap: int = 2000,
     allow_sell: bool = False,
     max_sell_items: int = 1,
     combine_policy: str = "shop_combine",
     include_starters: bool = False,
     time_budget_ms: int = 12_000,
 ) -> dict[str, Any]:
-    """Rank real-shop purchase plans (buy / combine / sell) by combat value.
+    """Fill the empty inventory slots with the available gold.
 
-    Every plan is priced by the shop model (list-price buys, explicit
-    combine fees, 40%-refund-era exceptions replaced by the sourced 70% sell
-    table) and scored on its *resolved final loadout* through the existing
-    event-order-certified fight pipeline.  Owned items are preserved unless a
-    plan sells them.
+    Every plan is priced by the shop model (list-price buys with component
+    credit, explicit combine fees, the sourced 70% sell table) and scored on
+    its *resolved final loadout* through the existing event-order-certified
+    fight pipeline.  Owned items are preserved unless a plan sells them, and
+    a plan may buy as many items as the empty slots and the gold allow
+    (``max_purchase_items`` optionally caps the buy count).
 
-    Certification is scoped honestly: ``exhaustive_within_scope`` is true
-    only when every generated plan was evaluated and both model and timeline
-    coverage are complete; otherwise the claim downgrades to
-    ``best_evaluated_plan``.
+    Two regimes, certified honestly: when every affordable plan fits under
+    ``candidate_cap`` the search is exhaustive and ``is_certified_best`` is
+    true; a larger plan space falls back to a budget-aware local search
+    (greedy fill by marginal damage and by marginal damage per gold, then
+    hill climbing) whose winner is still returned, labeled
+    ``purchase_local_search``.
     """
-    from .economy import (
-        apply_purchase_plan,
-        combine_candidates,
-        is_purchasable,
-        is_stackable,
-        item_sell_value,
-        item_total,
-        validate_economy_loadout,
-        _item_by_id,
-    )
-
     if available_gold < 1:
         raise ValueError("available_gold must be at least 1")
-    if max_purchase_items not in (1, 2):
-        raise ValueError("max_purchase_items must be 1 or 2")
+    if max_purchase_items is not None and not 1 <= max_purchase_items <= 7:
+        raise ValueError("max_purchase_items must be between 1 and 7")
     if max_sell_items not in (0, 1):
         raise ValueError("max_sell_items must be 0 or 1")
     if objective not in ("total_damage", "physical_damage", "magic_damage"):
@@ -958,9 +1404,6 @@ def optimize_purchase(
         if is_purchasable(item, include_starters=include_starters)
         and item["name"] not in owned_names
     ]
-    component_pool = [
-        item for item in pool if {"BASIC", "EPIC"}.intersection(item.get("rank", []))
-    ]
     boot_pool = []
     if include_boots and owned_boots is None:
         boot_pool = [
@@ -969,126 +1412,22 @@ def optimize_purchase(
             if is_purchasable(item) and item["name"] not in owned_names
         ]
 
-    # ---- plan shapes -------------------------------------------------------
-    # (sell_name | None, buys: list[str], combine_name | None)
-    sell_options: list[str | None] = [None]
+    def completed_first(item: dict[str, Any]) -> int:
+        ranks = set(item.get("rank", []))
+        return 0 if "LEGENDARY" in ranks else (1 if "EPIC" in ranks else 2)
+
+    # Completed items before their components: the shop model always
+    # credits a buy's recipe from the inventory, so a component bought
+    # before its legendary would be force-consumed and the hold-both
+    # loadout would silently drop out of the exhaustive walk.
+    buyables = [*sorted(pool, key=completed_first), *boot_pool]
+
+    # Sell pivots: at most one owned piece may be sold to fund the plan.
+    sell_options: list[dict[str, Any] | None] = [None]
     if allow_sell and max_sell_items >= 1:
-        sell_options.extend(item["name"] for item in owned)
+        sell_options.extend(owned)
         if owned_boots is not None:
-            sell_options.append(owned_boots["name"])
-
-    buy_shapes: list[list[str]] = [[]]
-    if max_purchase_items >= 1:
-        buy_shapes.extend([item["name"]] for item in pool)
-        buy_shapes.extend([boot["name"]] for boot in boot_pool)
-    if max_purchase_items >= 2:
-        for left_index, left in enumerate(component_pool):
-            for right_index, right in enumerate(component_pool):
-                if right_index < left_index:
-                    continue
-                if left_index == right_index and not is_stackable(left):
-                    continue
-                buy_shapes.append([left["name"], right["name"]])
-        for item in pool:
-            for boot in boot_pool:
-                buy_shapes.append([item["name"], boot["name"]])
-
-    raw_plans: list[tuple[str | None, list[str], str | None]] = []
-    for sell_name in sell_options:
-        for buys in buy_shapes:
-            raw_plans.append((sell_name, buys, None))
-    # Add combine completion plans for every inventory reachable by a shape.
-    extended: list[tuple[str | None, list[str], str | None]] = []
-    by_name = {item["name"]: item for item in [*owned, *pool, *boot_pool]}
-    for sell_name, buys, _combine in raw_plans:
-        extended.append((sell_name, buys, None))
-        inventory = {}
-        for item in owned:
-            if item["name"] == sell_name:
-                continue
-            inventory[int(item["id"])] = inventory.get(int(item["id"]), 0) + 1
-        for buy_name in buys:
-            buy = by_name.get(buy_name)
-            if buy is None:
-                continue
-            if "BOOTS" in {str(r).upper() for r in buy.get("rank", []) or []}:
-                continue
-            inventory[int(buy["id"])] = inventory.get(int(buy["id"]), 0) + 1
-        for combine_id, _demand, _fee in combine_candidates(inventory, _item_by_id()):
-            combine_name = _item_by_id()[combine_id]["name"]
-            if combine_name not in {item["name"] for item in pool}:
-                continue
-            extended.append((sell_name, buys, combine_name))
-    raw_plans = extended
-
-    # ---- apply the shop model to every raw plan ----------------------------
-    by_name_full = {item["name"]: item for item in [*owned, *pool, *boot_pool]}
-    plan_rows: list[tuple[Any, int]] = []  # (plan, spend)
-    for sell_name, buys, combine_name in raw_plans:
-        sells = [by_name_full[sell_name]] if sell_name else None
-        purchase_objs = [by_name_full[name] for name in buys if name in by_name_full]
-        combine_objs = [by_name_full[combine_name]] if combine_name else None
-        try:
-            plan = apply_purchase_plan(
-                owned,
-                owned_boots,
-                purchase_objs,
-                available_gold,
-                sell_items=sells,
-                combine_items=combine_objs,
-                combine_policy=combine_policy,
-                role=role,
-                role_quest_complete=role_quest_complete,
-            )
-        except (KeyError, ValueError, LookupError):
-            continue
-        try:
-            validate_economy_loadout(
-                plan,
-                role=role,
-                role_quest_complete=role_quest_complete,
-            )
-        except ValueError:
-            continue
-        plan_rows.append((plan, plan.spend))
-
-    plan_rows.sort(key=lambda row: (row[1], _plan_key(row[0])))
-    truncated = len(plan_rows) > candidate_cap
-    plan_rows = plan_rows[:candidate_cap]
-
-    if not plan_rows:
-        return {
-            "optimization_scope": "purchase",
-            "items": [item["name"] for item in owned],
-            "boots": owned_boots["name"] if owned_boots else None,
-            "purchase_items": [],
-            "sell_items": [],
-            "recommendation_type": "no_affordable_purchase",
-            "spent_gold": 0,
-            "sell_refund": 0,
-            "remaining_gold": available_gold,
-            "inventory_gold": _build_gold(
-                ([owned_boots] if owned_boots else []) + owned
-            ),
-            "ranked_purchases": [],
-            "candidate_count": 0,
-            "evaluations": 0,
-            "optimization_time_ms": round((time.perf_counter() - started) * 1000, 1),
-            "searched_space": "no affordable legal plan",
-            "exhaustive_within_scope": True,
-            "truncated": False,
-            "certification": {
-                "event_order": True,
-                "economy": True,
-                "legality": True,
-                "claim": "no_affordable_purchase",
-            },
-            "winner_event_order_certified": True,
-            "is_certified_best": True,
-            "search_guarantee": "exhaustive_purchase_scope",
-            "available_gold": available_gold,
-            "objective": objective,
-        }
+            sell_options.append(owned_boots)
 
     timeline_audit = {
         "evaluations": 0,
@@ -1114,52 +1453,65 @@ def optimize_purchase(
             }
         )
 
+    search = _PurchaseSearch(
+        champion_data,
+        level,
+        owned,
+        owned_boots,
+        available_gold,
+        max_buys=max_purchase_items or capacity,
+        combine_policy=combine_policy,
+        role=role,
+        role_quest_complete=role_quest_complete,
+        params=params,
+        objective=objective,
+        timeline_audit=timeline_audit,
+        require_complete_timeline=require_complete_timeline,
+        combat_context=combat_context,
+        deadline=started + time_budget_ms / 1000,
+        capacity=capacity,
+        reserve_boot_slot=include_boots and owned_boots is None,
+    )
+
     def current_loadout_score() -> float | None:
         current_items = ([owned_boots] if owned_boots else []) + owned
         if not current_items:
             return None
+        # The current loadout is a comparison baseline, not a candidate;
+        # keep it out of the candidate-evaluation audit.
         return _evaluate_build(
             champion_data,
             level,
             current_items,
             fight_params=params,
             objective=objective,
-            timeline_audit=timeline_audit,
+            timeline_audit=None,
             require_complete_timeline=require_complete_timeline,
             combat_context=combat_context,
         )
 
     current_score = current_loadout_score()
 
-    scored: list[tuple[float, Any, int]] = []
-    memo: dict[tuple[tuple[str, ...], str | None], float] = {}
-    evaluations = 0
-    for plan, spend in plan_rows:
-        if time.perf_counter() - started > time_budget_ms / 1000:
-            truncated = True
+    # ---- choose the regime: exhaustive when the affordable plan space is
+    # small enough to score completely, budget-aware local search otherwise.
+    pool_names = {item["name"] for item in pool}
+    shape_rows: list[tuple[dict[str, Any] | None, list[dict[str, Any]]]] = []
+    exhaustive_complete = True
+    for sell in sell_options:
+        shapes, sell_complete = _enumerate_affordable_shapes(
+            search, sell, buyables, candidate_cap, len(shape_rows)
+        )
+        shape_rows.extend((sell, shape) for shape in shapes)
+        if not sell_complete:
+            exhaustive_complete = False
             break
-        key = _plan_key(plan)
-        if key in memo:
-            score = memo[key]
-        else:
-            build_items = (
-                [plan.final_boots] if plan.final_boots else []
-            ) + plan.final_items
-            score = _evaluate_build(
-                champion_data,
-                level,
-                build_items,
-                fight_params=params,
-                objective=objective,
-                timeline_audit=timeline_audit,
-                require_complete_timeline=require_complete_timeline,
-                combat_context=combat_context,
-            )
-            evaluations += 1
-            memo[key] = score
-        if math.isfinite(score):
-            scored.append((score, plan, spend))
-    if not scored:
+
+    if exhaustive_complete:
+        truncated = _score_exhaustive_purchase_plans(search, shape_rows, pool_names)
+    else:
+        truncated = _run_purchase_local_search(search, sell_options, buyables)
+
+    if not search.candidates:
         message = "No complete legal purchase fits the selected constraints"
         if require_complete_timeline:
             raise NoCompleteEventOrder(
@@ -1167,19 +1519,84 @@ def optimize_purchase(
                 champion=champion_data["name"],
             )
         raise ValueError(message)
-    scored.sort(key=lambda row: (-row[0], row[2], _plan_key(row[1])))
+    scored = search.ranked()
+    best_score, best_plan, best_spend = scored[0]
 
-    coverage_pool = [
-        item for item in [*pool, *boot_pool] if item["name"] not in owned_names
-    ]
-    candidate_coverage = optimizer_candidate_coverage(coverage_pool)
+    bought_nothing = (
+        not best_plan.purchases and not best_plan.sell_items and best_plan.spend == 0
+    )
+    if (
+        exhaustive_complete
+        and not truncated
+        and len(search.candidates) == 1
+        and bought_nothing
+    ):
+        # Literally nothing was affordable: the empty plan is the only
+        # candidate that priced and scored.  Any weaker state falls through
+        # — a local-search or truncated run may not certify this claim, and
+        # affordable-but-non-improving buys are reported as keep_gold, not
+        # as "no affordable purchase".
+        return {
+            "optimization_scope": "purchase",
+            "items": [item["name"] for item in owned],
+            "boots": owned_boots["name"] if owned_boots else None,
+            "purchase_items": [],
+            "sell_items": [],
+            "recommendation_type": "no_affordable_purchase",
+            "spent_gold": 0,
+            "sell_refund": 0,
+            "remaining_gold": available_gold,
+            "inventory_gold": _build_gold(
+                ([owned_boots] if owned_boots else []) + owned
+            ),
+            "ranked_purchases": [],
+            "candidate_count": len(search.candidates),
+            "evaluations": search.evaluations,
+            "optimization_time_ms": round((time.perf_counter() - started) * 1000, 1),
+            "searched_space": "no affordable legal plan",
+            "exhaustive_within_scope": True,
+            "truncated": False,
+            "certification": {
+                "event_order": True,
+                "economy": True,
+                "legality": True,
+                "claim": "no_affordable_purchase",
+            },
+            "winner_event_order_certified": True,
+            "is_certified_best": True,
+            "search_guarantee": "exhaustive_purchase_scope",
+            "available_gold": available_gold,
+            "objective": objective,
+        }
+
+    # Search pricing skipped the shop-wide recipe scan; restore the winner's
+    # incomplete_combine receipt before it is serialized.
+    best_plan.incomplete_combine = combine_policy == "shop_combine" and (
+        plan_incomplete_combine(best_plan)
+    )
+
+    candidate_coverage = optimizer_candidate_coverage(buyables)
     search_coverage = _public_search_timeline_coverage(timeline_audit)
     exhaustive_within_scope = (
-        not truncated and candidate_coverage["complete"] and search_coverage["complete"]
+        exhaustive_complete
+        and not truncated
+        and candidate_coverage["complete"]
+        and search_coverage["complete"]
     )
-    event_order_certified = search_coverage["complete"]
-
-    best_score, best_plan, best_spend = scored[0]
+    # With require_complete_timeline a candidate can only rank when its own
+    # timeline is complete, so the winner is event-ordered by construction;
+    # an incomplete aggregate only means some *other* candidate was partial.
+    winner_event_order_certified = bool(
+        require_complete_timeline or search_coverage["complete"]
+    )
+    if exhaustive_complete:
+        search_guarantee = (
+            "best_evaluated_plan_truncated"
+            if truncated
+            else "exhaustive_purchase_scope"
+        )
+    else:
+        search_guarantee = "purchase_local_search"
     rank_count = min(3, len(scored))
     public_ranked = []
     for rank, (score, plan, spend) in enumerate(scored[:rank_count], start=1):
@@ -1219,11 +1636,14 @@ def optimize_purchase(
         if current_score is not None and math.isfinite(current_score)
         else None
     )
-    searched_space = (
-        f"{'truncated ' if truncated else 'exhaustive '}"
-        f"{{1-2 buys | 1 combine | {1 if allow_sell else 0} sell}} "
-        f"within {available_gold:,} gold"
-    )
+    if exhaustive_complete:
+        searched_space = (
+            f"{'truncated ' if truncated else 'exhaustive '}"
+            f"{{slot-filling buys | combines | {1 if allow_sell else 0} sell}} "
+            f"within {available_gold:,} gold"
+        )
+    else:
+        searched_space = f"budget-aware local search within {available_gold:,} gold"
     return {
         "optimization_scope": "purchase",
         "items": [item["name"] for item in best_plan.final_items],
@@ -1243,29 +1663,29 @@ def optimize_purchase(
         "price_rows": [row.to_dict() for row in best_plan.price_rows],
         "incomplete_combine": best_plan.incomplete_combine,
         "ranked_purchases": public_ranked,
-        "candidate_count": len(plan_rows),
-        "evaluations": evaluations,
+        "candidate_count": len(search.candidates),
+        "evaluations": search.evaluations,
         "optimization_time_ms": round((time.perf_counter() - started) * 1000, 1),
         "searched_space": searched_space,
         "exhaustive_within_scope": exhaustive_within_scope,
         "truncated": truncated,
         "certification": {
-            "event_order": event_order_certified,
+            "event_order": winner_event_order_certified,
             "economy": True,
             "legality": True,
             "claim": (
                 "certified_best_purchase_within_scope"
                 if exhaustive_within_scope
-                else "best_evaluated_plan"
+                else (
+                    "best_found_local_search"
+                    if not exhaustive_complete
+                    else "best_evaluated_plan"
+                )
             ),
         },
-        "winner_event_order_certified": event_order_certified,
+        "winner_event_order_certified": winner_event_order_certified,
         "is_certified_best": exhaustive_within_scope,
-        "search_guarantee": (
-            "exhaustive_purchase_scope"
-            if not truncated
-            else "best_evaluated_plan_truncated"
-        ),
+        "search_guarantee": search_guarantee,
         "candidate_coverage": candidate_coverage,
         "search_timeline_coverage": search_coverage,
         "available_gold": available_gold,
@@ -1290,6 +1710,10 @@ def _plan_type(plan: Any) -> str:
     ]
     if combined:
         return "recipe_completion"
+    if not plan.purchases:
+        # The search ran and doing nothing won: buys exist but none improve
+        # the objective.
+        return "keep_gold"
     if len(plan.purchases) == 1:
         boots = plan.final_boots and not plan.final_items
         return "boots" if boots else "single_item"

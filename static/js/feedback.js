@@ -19,7 +19,7 @@
   "use strict";
 
   var MOUNT_ID = "feedbackWidget";
-  var RESULT_AREA_SELECTOR = ".result-column";
+  var RESULT_AREA_SELECTOR = ".canvas";
   var SLOT_LETTERS = ["P", "Q", "W", "E", "R"];
   var STATE = {
     action: null,
@@ -85,11 +85,13 @@
     var roleSelect = byId("roleSelect");
     var role = roleSelect ? String(roleSelect.value || "") : "";
 
+    // Build A is edited on the duel canvas: one .duel-row per slot, the item
+    // name on the icon's alt text and the slot path on the row itself.
     var items = [];
     var boots = "";
-    var slots = byId("slotsA");
+    var slots = byId("duelA");
     if (slots) {
-      var slotButtons = slots.querySelectorAll("button.slot:not(.empty-slot)");
+      var slotButtons = slots.querySelectorAll("button.duel-row:not(.is-empty):not(.is-keystone)");
       Array.prototype.forEach.call(slotButtons, function (button) {
         var image = one("img", button);
         var name = image ? String(image.getAttribute("alt") || "").trim() : "";
@@ -147,9 +149,9 @@
     uptime = explicitUptime ? uptime / 100 : 0;
 
     var keystone = "";
-    var keystoneSlot = one("#slotsA .keystone-slot");
+    var keystoneSlot = one("#duelA .duel-row.is-keystone:not(.is-empty)");
     if (keystoneSlot) {
-      var keystoneName = textOf(one("small", keystoneSlot));
+      var keystoneName = textOf(one("strong", keystoneSlot));
       if (keystoneName && keystoneName !== "Add keystone") keystone = keystoneName;
     }
 
@@ -183,7 +185,13 @@
 
   function captureLoadout() {
     var loadout = hookLoadout() || captureFromDom();
-    if (!loadout) return null;
+    if (!loadout) {
+      // No capturable scenario: clear the stale identity so the widget can
+      // fall silent again instead of validating a champion that left.
+      STATE.champion = null;
+      STATE.level = null;
+      return null;
+    }
     STATE.champion = loadout.champion;
     STATE.level = loadout.level;
     return loadout;
@@ -193,51 +201,30 @@
    * Rendering
    * ------------------------------------------------------------------ */
 
-  function injectStyles() {
-    if (byId("feedbackWidgetStyles")) return;
-    var style = document.createElement("style");
-    style.id = "feedbackWidgetStyles";
-    style.textContent =
-      ".feedback-widget{margin-top:14px;padding:12px 14px;border:1px solid #2d2d2d;" +
-      "border-radius:10px;background:#161616;color:#e8e4d8;font:12px/1.45 system-ui,sans-serif}" +
-      ".feedback-widget summary{cursor:pointer;font-weight:700;letter-spacing:.02em}" +
-      ".feedback-widget .feedback-context{margin:8px 0;color:#a9a49a}" +
-      ".feedback-widget .feedback-context b{color:#f1eddf}" +
-      ".feedback-widget .feedback-actions{display:flex;gap:8px;flex-wrap:wrap}" +
-      ".feedback-widget button{border:1px solid #3a3a3a;background:#222;color:#e8e4d8;" +
-      "padding:5px 12px;border-radius:8px;cursor:pointer;font:inherit}" +
-      ".feedback-widget button:hover,.feedback-widget button:focus-visible{border-color:#8f8a7c}" +
-      ".feedback-widget button[aria-pressed=\"true\"]{border-color:#c5120b;background:#3a1715}" +
-      ".feedback-widget .feedback-fields{display:grid;gap:8px;margin-top:10px}" +
-      ".feedback-widget label{display:flex;gap:8px;align-items:center;color:#a9a49a;flex-wrap:wrap}" +
-      ".feedback-widget input[type=\"number\"],.feedback-widget select,.feedback-widget textarea{" +
-      "background:#202020;border:1px solid #3a3a3a;color:#f1eddf;border-radius:6px;padding:4px 6px;font:inherit}" +
-      ".feedback-widget textarea{width:100%;box-sizing:border-box;resize:vertical}" +
-      ".feedback-widget .feedback-paste{margin-top:10px}" +
-      ".feedback-widget .feedback-status{margin:8px 0 0;color:#c9c3b4}" +
-      ".feedback-widget .feedback-status.is-error{color:#ff8f87}";
-    document.head.appendChild(style);
+  // The widget's look lives in static/css/style.css with the rest of the
+  // design language; this module owns behaviour only.
+
+  function contextHtml() {
+    var snapshot = (STATE.loadout && STATE.loadout._snapshot) || {};
+    var parts = [
+      "Lv " + (STATE.level || "—"),
+      (snapshot.itemCount != null ? snapshot.itemCount : (STATE.loadout && STATE.loadout.items ? STATE.loadout.items.length : 0)) + " items",
+      "loadout snapshot",
+    ];
+    if (snapshot.enemyCount > 0) {
+      parts.push("multi-target roster — receipt uses the solo default target");
+    }
+    return "Recording validation for <b>" + escapeHtml(STATE.champion) + "</b> (" + parts.join(" · ") + ")";
   }
 
   function statusMarkup() {
-    var context;
-    if (!STATE.champion) {
-      context = "Choose a champion and complete a build to record a game receipt.";
-    } else {
-      var snapshot = (STATE.loadout && STATE.loadout._snapshot) || {};
-      var parts = [
-        "Lv " + (STATE.level || "—"),
-        (snapshot.itemCount != null ? snapshot.itemCount : (STATE.loadout && STATE.loadout.items ? STATE.loadout.items.length : 0)) + " items",
-        "loadout snapshot",
-      ];
-      if (snapshot.enemyCount > 0) {
-        parts.push("multi-target roster — receipt uses the solo default target");
-      }
-      context = "Recording validation for <b>" + escapeHtml(STATE.champion) + "</b> (" + parts.join(" · ") + ")";
-    }
     return (
-      '<p class="feedback-context">' + context + "</p>" +
+      '<details class="feedback-disclosure">' +
+      "<summary>Validate against a real game</summary>" +
+      '<div class="feedback-body">' +
+      '<p class="feedback-context">' + contextHtml() + "</p>" +
       '<div class="feedback-actions">' +
+      "<span>Did this match your game?</span> " +
       '<button type="button" data-fb-action="yes">Yes</button>' +
       '<button type="button" data-fb-action="no">No</button>' +
       '<button type="button" data-fb-action="off">Off by %</button>' +
@@ -252,7 +239,8 @@
       '<details class="feedback-paste"><summary>Paste a combat log instead</summary>' +
       '<label><textarea id="fbPaste" rows="4" placeholder="Q 347.2&#10;W 154&#10;total 997"></textarea></label>' +
       '<button type="button" data-fb-paste-submit>Import paste</button></details>' +
-      '<p class="feedback-status" role="status" hidden></p>'
+      '<p class="feedback-status" role="status" hidden></p>' +
+      "</div></details>"
     );
   }
 
@@ -260,13 +248,14 @@
     var mount = byId(MOUNT_ID);
     if (!mount) mount = one(RESULT_AREA_SELECTOR);
     if (!mount) return null; // results area absent — stay silent
-    injectStyles();
     STATE.loadout = captureLoadout();
     if (!mount.classList.contains("feedback-widget")) {
       mount.classList.add("feedback-widget");
     }
     mount.setAttribute("data-feedback-widget", "1");
-    mount.innerHTML = statusMarkup();
+    // No champion means nothing to validate: stay silent instead of leading
+    // the canvas with Yes/No buttons about a scenario that does not exist.
+    mount.innerHTML = STATE.champion ? statusMarkup() : "";
     return mount;
   }
 
@@ -275,10 +264,15 @@
     if (!mount || !mount.hasAttribute("data-feedback-widget")) return;
     STATE.loadout = captureLoadout();
     var context = one(".feedback-context", mount);
-    if (!context) return;
-    context.innerHTML = statusMarkup().match(
-      /<p class="feedback-context">[\s\S]*?<\/p>/
-    )[0];
+    var hasWidget = Boolean(context);
+    if (Boolean(STATE.champion) !== hasWidget) {
+      // Presence changed (champion picked or cleared): rebuild the widget.
+      render();
+      return;
+    }
+    // Same presence: update the context line in place so an open disclosure
+    // and any half-typed fields survive the refresh.
+    if (context) context.innerHTML = contextHtml();
   }
 
   /* ------------------------------------------------------------------ *
@@ -478,8 +472,10 @@
     var mount = byId(MOUNT_ID);
     if (!mount && !one(RESULT_AREA_SELECTOR)) return; // no results area — never break
     render();
-    document.addEventListener("click", onDocumentClick);
-    document.addEventListener("click", function () {
+    document.addEventListener("click", function (event) {
+      onDocumentClick(event);
+      // The scenario may have changed with any click (champion picked,
+      // items added); keep the context line honest.
       refreshContext();
     });
   }

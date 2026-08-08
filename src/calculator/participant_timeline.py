@@ -3220,6 +3220,10 @@ def build_participant_timeline(
         and not include_receipt
         and pair_result_cache is not None
         and enemies
+        # The Enemy Hits constraint is enforced by the receipt walk's
+        # composition gates; rather than teach the compiled panels a second
+        # copy of that rule, flag-off scoring takes the receipt walk.
+        and params.enemies_attack
         # Issue #137: the dispatch no longer names items and no longer scans
         # defense objects — the kernel is one implementation, so a defense-
         # armed mechanic (threshold lifelines, reactive shields, stasis,
@@ -3299,7 +3303,9 @@ def build_participant_timeline(
     attack_groups = (
         ("main", [*enemy_actors]),
         ("ally", [*enemy_actors]),
-        ("enemy", [main, *ally_actors]),
+        # The Enemy Hits constraint: with enemies_attack off, the enemy team
+        # gets no defenders, so none of its pair fights are ever composed.
+        ("enemy", [main, *ally_actors] if params.enemies_attack else []),
     )
     for attacker_team, defenders in attack_groups:
         attackers = teams[attacker_team]
@@ -3550,6 +3556,20 @@ def build_participant_timeline(
     _coalesce_darius_q_heals(healing)
     _schedule_thorns_events(all_actors, incoming, outgoing)
     _schedule_authored_reactive_events(incoming, outgoing)
+
+    if not params.enemies_attack:
+        # The Enemy Hits constraint promises exactly zero enemy damage. Enemy
+        # pair fights were never composed above; this sweep also drops every
+        # event an enemy authors reactively off our own strikes — thorns
+        # strike-backs, authored reactive packets, redirect retaliation.
+        enemy_ids = {actor.participant_id for actor in enemy_actors}
+        for ledger in (incoming, outgoing):
+            for participant_id, events in list(ledger.items()):
+                ledger[participant_id] = [
+                    event
+                    for event in events
+                    if str(event.get("attacker", "")) not in enemy_ids
+                ]
 
     # Grey-health receipts (E8a): when the main is the defender and is a
     # grey-health champion, the incoming ledger accumulates the sourced %
