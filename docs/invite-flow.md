@@ -55,13 +55,13 @@ The invitee journey, end to end:
    next item* → *Dig deeper in Analyst*. It is dismissible (Skip / × /
    Escape) and never blocks. The full walkthrough is in
    `docs/onboarding-guide.md`.
-4. **The calculator** — the invitee lands on quick mode (the 3-click path)
-   with the Analyst tab available for deeper work.
+4. **The calculator** — the invitee lands in the analyst view (the app;
+   per-slot Best-in-slot covers "best next item").
 
 The pre-auth surface stays public by design: `/healthz`, `/api/health/*`,
-`/privacy`, `/terms`, `/riot-disclaimer`, `/api/auth/invite`, and all
-`/auth/*` routes. Everything else is gated (302 → login) until the session
-exists.
+`/privacy`, `/terms`, `/riot-disclaimer`, `/api/auth/invite`,
+`/api/metrics/event`, and all `/auth/*` routes. Everything else is gated
+(302 → login) until the session exists.
 
 ## 3. Invite rotation
 

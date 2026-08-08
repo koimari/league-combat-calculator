@@ -14,7 +14,7 @@ description: Guide for adding item passive/active effects to the LoL calculator.
 
 `_OFFLINE_ITEM_EFFECTS` is a complete last-known-good snapshot, but it is used only when cache loading or the whole parser fails. A successful partial parse never borrows a missing numeric value from it; missing required keys fail loudly.
 
-When the user clicks "Update to latest patch", calling `refresh_item_effects()` re-parses and updates `ITEM_EFFECTS` in place.
+When wiki data is re-pulled (the dev-only `/api/update-data` endpoint, or patch day), calling `refresh_item_effects()` re-parses and updates `ITEM_EFFECTS` in place.
 
 ## Step-by-Step: Adding a New Item Effect
 
@@ -126,12 +126,12 @@ Items that modify stats beyond their flat values (AP multipliers, mana→AP, hea
 
 **Data flow:** `passive_parser.py` → `ITEM_EFFECTS` registry → `stats.py` looks up values at calculation time.
 
-**Important:** `stats.py` must **never hardcode** numeric item values — and neither `stats.py` nor the accessors use literal fallbacks in `.get()` calls. A missing key is a parser/schema bug that must fail loudly (see `_required_effect_value()`), not silently borrow a stale offline value.
+**Important:** `stats.py` must **never hardcode** numeric item values — and neither `stats.py` nor the accessors use literal fallbacks in `.get()` calls. A missing key is a parser/schema bug that must fail loudly (see `required_effect_value()`), not silently borrow a stale offline value.
 
 ### Where stat passives live
 
-- **`item_effects.py` stat-passive accessors** (section "Stat-modifying passives") — own the lookup and numeric semantics: `get_ap_multiplier()` (Rabadon's, Blackfire — additive), `get_mana_to_ap_bonus()`, `get_dawncore_bonus_ap()`, `get_flowing_water_bonus_ap()`, `get_passive_attack_speed_bonus()`, `get_muramana_bonus_ad()`, `get_bloodmail_bonus_ad()`, `get_steraks_bonus_ad()`, `get_terminus_max_stack_bonuses()`, `get_basic_ability_haste()`.
-- **`calculate_total_stats()` in `stats.py`** — orchestration only: decides when to apply each accessor's result and how it interacts with other stats. No item names paired with magic numbers.
+- **`item_effects.py` stat-passive accessors** (section "Stat-modifying passives") — own the lookup and numeric semantics: `ap_multiplier()` (Rabadon's, Blackfire — additive), `mana_to_ap_bonus()`, `dawncore_bonus_ap()`, `flowing_water_bonus_ap()`, `passive_attack_speed_bonus()`, `muramana_bonus_ad()`, `bloodmail_bonus_ad()`, `steraks_bonus_ad()`, `terminus_max_stack_bonuses()`, `basic_ability_haste()`.
+- **`resolve_stat_effects()` in `item_effects.py`** — bundles every accessor into one `StatBonuses` record; `calculate_total_stats()` in `stats.py` consumes the bundle (orchestration only — no item names paired with magic numbers, and no new `stats.py` import per item).
 
 ### Step-by-Step: Adding a Stat-Granting Passive
 
@@ -204,27 +204,27 @@ Add the complete entry to `_OFFLINE_ITEM_EFFECTS`; classify its structural and u
 
 For items that already have damage entries (e.g. Muramana has on-hit damage AND a stat conversion), add the stat-conversion key to the **existing** entry rather than creating a new one.
 
-#### Step 4: Add an accessor in `item_effects.py`, call it from `stats.py`
+#### Step 4: Add an accessor in `item_effects.py`, wire it into `resolve_stat_effects()`
 
-Add (or extend) an accessor in the "Stat-modifying passives" section of `item_effects.py` using `_required_effect_value()`, then call it from `calculate_total_stats()`:
+Add (or extend) an accessor in the "Stat-modifying passives" section of `item_effects.py` using `required_effect_value()`, then fold it into the `StatBonuses` bundle inside `resolve_stat_effects()`:
 
 ```python
 # item_effects.py
-def get_my_item_bonus_ap(items: list[dict[str, Any]], bonus_mana: float) -> float:
+def my_item_bonus_ap(items: list[dict[str, Any]], bonus_mana: float) -> float:
     """My Item passive: bonus mana as AP."""
     if "My Item" not in _item_names(items):
         return 0.0
-    return _required_effect_value("My Item", "bonus_mana_to_ap_ratio") * bonus_mana
+    return required_effect_value("My Item", "bonus_mana_to_ap_ratio") * bonus_mana
 
-# stats.py — orchestration only
-raw_ability_power += get_my_item_bonus_ap(items, total_item_stats["mana"])
+# resolve_stat_effects() — the ONLY item-side wiring; stats.py is untouched
+permanent_bonus_ap += my_item_bonus_ap(items, bonus_mana)
 ```
 
-For AP multipliers, extend `get_ap_multiplier()` instead.
+For AP multipliers, extend `ap_multiplier()` instead.
 
 **Key rules:**
 - The accessor owns the `ITEM_EFFECTS` lookup and the numeric semantics; `stats.py` never touches `ITEM_EFFECTS` directly
-- **No literal fallbacks** — `_required_effect_value()` raises a KeyError naming the item and key if live parsing or static schema is incomplete. `_OFFLINE_ITEM_EFFECTS` is whole-system recovery, not a per-key fallback
+- **No literal fallbacks** — `required_effect_value()` raises a KeyError naming the item and key if live parsing or static schema is incomplete. `_OFFLINE_ITEM_EFFECTS` is whole-system recovery, not a per-key fallback
 - AP multipliers stack **additively** (Rabadon's 30% + Blackfire 4% = 34% total, not 1.30 × 1.04)
 
 #### Step 5: Test

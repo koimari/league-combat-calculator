@@ -30,7 +30,7 @@ the P7 `+-15% / n>=5` rule).
 | Saved builds | 20 |
 | Share links | 5 active |
 | Comparisons | A/B only |
-| Roster | current limits (max 3 enemies / 3 allies) |
+| Roster | current limits (max 5 enemies / 4 allies) |
 | Validation dashboard | read-only, per-champion you submit to |
 | Certainty / not-modeled labels | yes — free trust is the funnel |
 
@@ -205,4 +205,4 @@ Phases:
 - No purchase-driven bias: receipts, flags, and certainty are computed the
   same for free and Pro users.
 - No "premium items" or content-gated game data: the wiki cache and pinned
-  formulas stay fully open (AGENTS.md pipeline rules unchanged).
+  formulas stay fully open (`Agents.md` pipeline rules unchanged).

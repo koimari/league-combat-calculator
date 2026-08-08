@@ -119,20 +119,7 @@ golden baseline when any of these are missing/stale:
 - the patch-regression staleness check (`CDTB_BIN` or `--patch`).
 
 Environment: set `LCC_WIKI_DB` (wiki sqlite), `LCC_AXWORD_SOURCE` (Meraki
-kit sibling repo), `LCC_WIKI_QUERY`, and `CDTB_BIN` in the runbook; every
-path resolves repo-relative/env/CLI with an actionable error.
-
-## Working environment (verified 2026-08-07)
-
-- Wiki sqlite DB: `/Users/river/Projects/scryglass/data/lol/knowledge/league-wiki.sqlite3`
-  (730MB, built 2026-08-01, 311k cataloged pages). Set `LCC_WIKI_DB` or pass
-  `--wiki-db`; `build_reviewed_modules.py` embeds per-champion revision
-  receipts + source hashes in `static/reviewed-packets.json`.
-- Wiki query tool: vendored at `vendor/league-wiki-query/scripts/query_league_wiki.py`
-  (from the codex skill); `LCC_WIKI_QUERY` overrides. `full_entry_audit.py`
-  resolves PATH > vendor/ by default.
-- Meraki axword kit: `/Users/river/Projects/lol-strength-analysis/src/data/generated/merakiAbilityKits.ts`
-  (`--axword-source` / `LCC_AXWORD_SOURCE`).
-- cdtb toolchain (game-file exports for `decompose_binaries.py`/`patch_regression.py`):
-  NOT installed on this machine — those paths fail with actionable errors until
-  cdtb + `league_tools` are available.
+kit in the `lol-strength-analysis` sibling repo), `LCC_WIKI_QUERY` (the query
+CLI, vendored fallback at `vendor/league-wiki-query/scripts/`), and
+`CDTB_BIN` (game-file exports) per the runbook; every path resolves
+repo-relative/env/CLI with an actionable error when missing.

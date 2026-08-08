@@ -251,8 +251,8 @@ def test_onboarding_guide_exists_with_required_sections():
     assert GUIDE_DOC.is_file()
     text = GUIDE_DOC.read_text(encoding="utf-8")
     for required in (
-        "## 1. The quick mode 3-click path",
-        "## 2. Reading the top-3 cards",
+        "## 1. The fastest path to an answer",
+        "## 2. Reading the ranked candidates",
         "## 3. Certainty chips legend",
         "## 4. The STALE badge",
         "## 5. Share links",
@@ -261,9 +261,8 @@ def test_onboarding_guide_exists_with_required_sections():
     ):
         assert required in text, required
     for phrase in (
-        "Best next item",
-        "TDD",
-        "eHP",
+        "Find best item for a slot",
+        "+ Add",
         "EXACT",
         "ESTIMATE",
         "BOUNDARY",

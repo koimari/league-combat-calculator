@@ -1,3 +1,8 @@
+> Historical worklist (completed E9.5 wave). Architecture references below
+> predate issue #161: the shared `packet_module` exception tables
+> (`_PACKET_TICK_FIXES`) have since been dissolved into the named
+> champion modules.
+
 You are fixing the FINAL genuine gaps found by the E9 re-audit (E9.5 gap-fix wave) in a League of Legends combat calculator.
 
 YOUR WORKTREE: /Users/river/Projects/lcc-e9-fix-1 (branch codex/e9-fix-1). Work ONLY here. Python: /Users/river/Projects/league-combat-calculator-audit/.venv/bin/python.

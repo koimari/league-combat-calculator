@@ -32,5 +32,5 @@ backup verification, validation-corpus bias scan, feedback triage.
   runbook immediately (detection SLA: < 4h).
 - **Gate rule**: any finding that changes calculation code triggers the full
   gate set per `Agents.md` (`pytest -q`, `pylint src/`, golden compare,
-  `black --check src/ tests/`); docs-only findings commit without engine
-  gates.
+  `black --check src/ tests/ scripts/`); docs-only findings commit without
+  engine gates.

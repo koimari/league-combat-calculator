@@ -42,7 +42,7 @@ Rules (enforced by `src/calculator/atomizer.py` + tests):
 | runes | data/runes.json | atomizer_domains.atomize_rune_catalogue |
 | economics | data/economics-sourced.json | atomizer_domains.atomize_economics |
 | stats | data/champions.json | atomizer_domains.atomize_stats |
-| champions | specialist extract_atoms.py | delegated (atomizer_domains.atomize_champions) |
+| champions | data/champions.json | atomize.py delegates to specialist scripts/extract_atoms.py |
 
 ## When to use
 

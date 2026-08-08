@@ -214,7 +214,7 @@ def champion_audit_lines(old_champs, new_champs):
 
     added, removed = name_delta(old_champs, new_champs)
     if added or removed:
-        lines.append("== Roster delta (generic path handles new champions) ==")
+        lines.append("== Roster delta (new champions need a named module) ==")
         for name in added:
             lines.append(f"  + {name}")
         for name in removed:

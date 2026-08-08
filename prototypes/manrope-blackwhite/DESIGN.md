@@ -22,4 +22,4 @@ The builder and result become a single readable column below 800px. The result r
 
 ## Environment plate
 
-`assets/rift-illustration-blender-4k.png` is the product background: a custom illustrated Rift vista mastered as a 3840×2160 Blender image-plane render from a model-super-resolved source. It is downsampled cleanly on 1920×1080 displays; the browser never enlarges a small plate. The earlier native Blender blockout and 1600×1000 vista remain only as experiments and are not part of the product surface. Sections use translucent tinted surfaces with backdrop blur so the map remains present while text stays legible.
+`assets/rift-illustration-blender-4k.webp` is the product background: a custom illustrated Rift vista mastered as a 3840×2160 Blender image-plane render from a model-super-resolved source. It is downsampled cleanly on 1920×1080 displays; the browser never enlarges a small plate. The earlier native Blender blockout and 1600×1000 vista remain only as experiments and are not part of the product surface. Sections use translucent tinted surfaces with backdrop blur so the map remains present while text stays legible.

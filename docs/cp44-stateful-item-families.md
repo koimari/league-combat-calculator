@@ -31,9 +31,9 @@ Swiftmarch 4030448, and Yun Tal Wildarrows 4046569. The requirement and its
 fail-closed rule are documented in
 `docs/full-wiki-entry-review-requirement.md`.
 
-The full-entry audit currently records 410 audited pages: 290 ready and 120
-review-pending generated champion packets. Those 120 are the known #15/#18
-blocker, not an item-source omission; the release gate therefore remains open.
+The full-entry audit currently records 410 audited pages, all ready with zero
+review-pending entries: the 120 review-pending generated champion packets that
+were the #15/#18 blocker have since been dissolved into named modules (#161).
 
 ## Local evidence
 
