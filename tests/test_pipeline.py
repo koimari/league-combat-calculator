@@ -376,7 +376,8 @@ def test_sundered_sky_first_attack_heal_is_materialized(ahri_data):
     ]
     assert len(item_events) == 1
     assert item_events[0]["time"] == pytest.approx(0.0)
-    assert item_events[0]["amount"] == pytest.approx(104.0)
+    # Ahri is ranged: Lightshield Strike heals 50% base AD (pass 17).
+    assert item_events[0]["amount"] == pytest.approx(52.0)
 
 
 def test_starting_magic_shield_splits_tdd_from_health_damage(ahri_data):

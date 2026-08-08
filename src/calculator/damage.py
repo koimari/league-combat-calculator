@@ -218,6 +218,11 @@ class Resists:
     malignance_mr_reduction: float
     bc_reduction: float  # Black Cleaver % armor reduction
     mr_reduction_effect: item_effects.StackingReductionEffect | None
+    # Percent BONUS armor penetration (Last Whisper family, K'Sante All
+    # Out) and the target's base/bonus armor split (None = split unknown;
+    # the legacy quick-scenario total-pen reading applies).
+    armor_pen_bonus_percent: float = 0.0
+    target_bonus_armor: float | None = None
     # Resolved values (recomputed by the resolve/shred methods below)
     ability_armor_pen_percent: float = 0.0
     ability_magic_pen_percent: float = 0.0
@@ -269,7 +274,11 @@ class Resists:
             self.target_armor, self.bc_reduction * 100.0
         )
         self.effective_armor = apply_armor_penetration(
-            self.reduced_armor, self.flat_armor_pen, self.ability_armor_pen_percent
+            self.reduced_armor,
+            self.flat_armor_pen,
+            self.ability_armor_pen_percent,
+            self.armor_pen_bonus_percent,
+            self.target_bonus_armor,
         )
 
     def _resolve_mr_from_target(self) -> None:
@@ -325,7 +334,11 @@ class Resists:
         on-hits, item procs) uses the auto-attack pen variants.
         """
         self.effective_armor = apply_armor_penetration(
-            self.reduced_armor, self.flat_armor_pen, self.auto_armor_pen_percent
+            self.reduced_armor,
+            self.flat_armor_pen,
+            self.auto_armor_pen_percent,
+            self.armor_pen_bonus_percent,
+            self.target_bonus_armor,
         )
         self.effective_mr_pre_ult = apply_magic_penetration(
             self.base_mr, self.magic_pen_flat, self.auto_magic_pen_percent
@@ -364,6 +377,9 @@ class FightConfig:
     target_magic_resistance: float
     fight_duration_seconds: float
     target_bonus_health: float = 0.0
+    # None = split unknown; the legacy quick-scenario total-pen reading
+    # applies to percent BONUS penetration (LDR family).
+    target_bonus_armor: float | None = None
     auto_attack_uptime: float = 0.0
     auto_attack_uptime_mode: str = "legacy"
     rotation_count: int = 1
@@ -2048,6 +2064,9 @@ def _resolve_combat_state(
 
     # Armor penetration: percent pen + lethality (flat)
     armor_pen_percent = champion_stats.get("armor_penetration_percent", 0.0) / 100.0
+    armor_pen_bonus_percent = (
+        champion_stats.get("armor_penetration_bonus_percent", 0.0) / 100.0
+    )
     flat_armor_pen = champion_stats.get("flat_armor_penetration", 0.0)
 
     as_ratio = champion_stats["attack_speed_ratio"]
@@ -2150,7 +2169,9 @@ def _resolve_combat_state(
         magic_pen_flat=magic_pen_flat,
         magic_pen_percent=magic_pen_percent,
         armor_pen_percent=armor_pen_percent,
+        armor_pen_bonus_percent=armor_pen_bonus_percent,
         flat_armor_pen=flat_armor_pen,
+        target_bonus_armor=config.target_bonus_armor,
         has_terminus=has_terminus,
         terminus_stat_pen=terminus_stat_pen,
         terminus_avg_pen=terminus_avg_pen,
@@ -2273,6 +2294,11 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         if "armor_penetration_percent" in stat_buff:
             resists.armor_pen_percent = (
                 stats.get("armor_penetration_percent", 0.0) / 100.0
+            )
+            resists.resolve_armor()
+        if "armor_penetration_bonus_percent" in stat_buff:
+            resists.armor_pen_bonus_percent = (
+                stats.get("armor_penetration_bonus_percent", 0.0) / 100.0
             )
             resists.resolve_armor()
         # Bonus health raises max health, and items converting bonus
@@ -8942,7 +8968,14 @@ def _add_first_auto_healing(state: FightState) -> None:
     except (KeyError, TypeError, ValueError):
         return
     base_ad = float(state.champion_stats.get("base_attack_damage", 0.0))
-    base_amount = effect.heal_base_ad_ratio * base_ad
+    # Lightshield Strike heals 100% bAD (melee) / 50% bAD (ranged) — the
+    # ranged variant is sourced from the wiki's {{rd|100%|50%}} (pass 17).
+    heal_ratio = (
+        effect.heal_base_ad_ratio_ranged
+        if getattr(state, "is_melee", True) is False
+        else effect.heal_base_ad_ratio
+    )
+    base_amount = heal_ratio * base_ad
     if base_amount <= 0.0:
         return
 
@@ -9375,6 +9408,8 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
                 state.resists.reduced_armor,
                 state.resists.flat_armor_pen + extra_lethality,
                 percent_pen,
+                state.resists.armor_pen_bonus_percent,
+                state.resists.target_bonus_armor,
             )
             new_multiplier = apply_resistance(1.0, new_armor)
             if not math.isfinite(new_multiplier) or new_multiplier <= 0.0:

@@ -20,10 +20,14 @@ def test_level_14_rengar_ldr_against_ambessa_target_context() -> None:
 
     rengar_stats = calculate_total_stats(rengar, 14, rengar_items)
     ambessa_stats = calculate_total_stats(ambessa, 14, ambessa_items)
+    # LDR's 35% is BONUS armor penetration (autoresearch pass 30): it only
+    # cuts Ambessa's BONUS armor, so the fight needs her base/bonus split.
+    base_armor = ambessa_stats["armor"] - ambessa_stats["bonus_armor"]
     params = FightParams(
         target_health=ambessa_stats["health"],
         target_bonus_health=ambessa_stats["bonus_health"],
         target_armor=ambessa_stats["armor"],
+        target_bonus_armor=ambessa_stats["bonus_armor"],
         target_magic_resistance=ambessa_stats["magic_resistance"],
         target_basic_damage_multiplier=0.90,
         fight_duration_seconds=6.0,
@@ -39,7 +43,10 @@ def test_level_14_rengar_ldr_against_ambessa_target_context() -> None:
     assert amplifier["total_damage"] == pytest.approx(
         result["total_damage"] * 0.085 / 1.085
     )
-    assert result["effective_armor"] == pytest.approx(119.0 * 0.65)
+    # base armor untouched + bonus armor x 0.65
+    assert result["effective_armor"] == pytest.approx(
+        base_armor + ambessa_stats["bonus_armor"] * 0.65
+    )
     assert {event["damage_type"] for event in amplifier["damage_events"]} == {
         "physical",
         "magic",

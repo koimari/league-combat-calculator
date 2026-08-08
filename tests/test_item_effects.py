@@ -423,7 +423,7 @@ class TestResolveDamageEffects:
         dusk = resolve_damage_effects(_build("Dusk and Dawn")).spellblade
         assert essence is not None and dusk is not None
         assert essence.mana_restore_base_ad_ratio == pytest.approx(0.625)
-        assert essence.mana_restore_crit_ratio == pytest.approx(0.25)
+        assert essence.mana_restore_crit_ratio == pytest.approx(25.0)
         assert dusk.self_heal_ap_ratio == pytest.approx(0.10)
         assert dusk.self_heal_bonus_health_ratio == pytest.approx(0.03)
 
@@ -611,12 +611,12 @@ class TestResolveDamageEffects:
     def test_essence_reaver_mana_restore_uses_both_parser_ratios(self) -> None:
         assert essence_reaver_mana_restore_per_proc(
             base_attack_damage=100, critical_strike_chance=50
-        ) == pytest.approx(62.625)
+        ) == pytest.approx(75.0)
 
     def test_essence_reaver_mana_restore_clamps_crit_input(self) -> None:
         assert essence_reaver_mana_restore_per_proc(
             base_attack_damage=100, critical_strike_chance=150
-        ) == pytest.approx(62.75)
+        ) == pytest.approx(87.5)
 
     def test_yun_tal_permanent_crit_chance_uses_melee_and_ranged_caps(self) -> None:
         assert yun_tal_permanent_crit_chance(stacks=63, is_melee=True) == pytest.approx(

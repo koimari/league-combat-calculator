@@ -213,9 +213,14 @@ def test_ksante_all_out_omnivamp_heals_twenty_percent_of_attack_packets():
     attack_damage = sum(
         e.get("damage", 0.0) for e in _main_damage_events(combat, "auto_attacks")
     )
-    assert sum(h["amount"] for h in heals) == pytest.approx(0.20 * attack_damage)
+    # Per-packet heals are rounded to 0.1, so the summed heal can differ
+    # from the exact 20% by a fraction of a point (autoresearch pass 30
+    # changed the R bonus-pen channel, shifting the packet mix).
+    assert sum(h["amount"] for h in heals) == pytest.approx(
+        0.20 * attack_damage, abs=0.25
+    )
     survival = _main_survival(combat)
-    assert survival["healing_received"] == pytest.approx(0.20 * attack_damage)
+    assert survival["healing_received"] == pytest.approx(0.20 * attack_damage, abs=0.25)
 
 
 def test_ksante_without_all_out_authors_no_omnivamp():

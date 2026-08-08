@@ -103,7 +103,7 @@ def _primordial_burst(ctx: SlotCtx) -> dict[str, Any] | None:
 
 ASSUMPTIONS = [
     "R (Primordial Burst) prices the Minimum Magic Damage row and ramps to "
-    "the Maximum row (+100%) as the target drops below 33% health "
+    "the Maximum row (+100%) as the target's missing health reaches 66.66% "
     "('increased by 0% : 100% based on target's missing health').",
     "Q and W price one enemy-champion hit each.",
     "P and E deal no enemy damage and are explicit no-damage slots.",

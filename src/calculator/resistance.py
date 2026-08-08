@@ -99,6 +99,8 @@ def apply_armor_penetration(
     target_armor: float,
     flat_penetration: float,
     percent_penetration: float,
+    percent_bonus_penetration: float = 0.0,
+    bonus_armor: float | None = None,
 ) -> float:
     """Calculate effective armor after penetration and lethality.
 
@@ -108,10 +110,19 @@ def apply_armor_penetration(
     armor. Only armor *reduction* effects can take armor negative, and
     those apply before this function.
 
+    Percent BONUS armor penetration (the Last Whisper family and K'Sante's
+    All Out) applies only to the target's BONUS armor: with
+    ``percent_bonus_penetration > 0`` and a supplied ``bonus_armor`` split,
+    ``effective = base*(1 - p) + bonus*(1 - p)*(1 - p_bonus)``.  When the
+    split is unknown (legacy quick-scenario targets that only declare total
+    armor), the total-pen reading is preserved.
+
     Args:
         target_armor: Target's armor after any reduction effects.
         flat_penetration: Flat armor penetration (from lethality).
         percent_penetration: Percent armor penetration as decimal.
+        percent_bonus_penetration: Percent BONUS armor penetration as decimal.
+        bonus_armor: Target's bonus armor (None = split unknown).
 
     Returns:
         Effective armor (minimum 0), or the target's own already-negative
@@ -121,6 +132,13 @@ def apply_armor_penetration(
         # Already below zero from a REDUCTION effect (Corki E's flat
         # shred) — penetration neither deepens nor undoes that.
         return target_armor
-    effective = target_armor * (1.0 - percent_penetration)
+    if percent_bonus_penetration > 0.0 and bonus_armor is not None:
+        bonus = min(max(0.0, bonus_armor), target_armor)
+        base = target_armor - bonus
+        effective = base * (1.0 - percent_penetration) + bonus * (
+            1.0 - percent_penetration
+        ) * (1.0 - percent_bonus_penetration)
+    else:
+        effective = target_armor * (1.0 - percent_penetration)
     effective = effective - flat_penetration
     return max(0.0, effective)

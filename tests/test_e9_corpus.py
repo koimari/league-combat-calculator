@@ -223,7 +223,8 @@ def _assert_breakdown_source(data: dict, expected: dict) -> None:
         events = [
             e
             for e in _main_events(data["combat"])
-            if e.get("raw_damage", 0.0)
+            if e.get("damage_type") == expected.get("damage_type")
+            and e.get("raw_damage", 0.0)
             == pytest.approx(expected["per_attack_raw"], abs=0.06)
         ]
         assert len(events) == expected["attack_count"]

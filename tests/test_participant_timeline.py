@@ -446,8 +446,10 @@ def test_sundered_sky_heal_uses_live_missing_health_in_both_walks():
     # already-healed live health: 118.0 before the E9-2 passive fix,
     # 112.3 with it.  F2: the enemy Annie now opens with her optimal
     # E (shield) -> R burst, which shifts her damage timing and leaves
-    # Ahri with less missing health at the heal: 121.6.
-    assert heal["raw_amount"] == pytest.approx(121.6)
+    # Ahri with less missing health at the heal: 121.6.  Pass 17: Ahri
+    # is RANGED, so Lightshield Strike heals 50% base AD (the melee
+    # 100% variant is not used) -> 69.6.
+    assert heal["raw_amount"] == pytest.approx(69.6)
     assert fast["participants"] == legacy["participants"]
     assert fast["breakdown"] == legacy["breakdown"]
 
