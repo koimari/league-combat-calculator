@@ -17,7 +17,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
 
@@ -62,9 +62,21 @@ def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module(
-    "Miss Fortune"
+PACKET_SHA256 = "3c5d28681b774a275e1c2b8bfd6150c08bad192051ac56c0a49c6a96462ad2f7"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Miss Fortune",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Make It Rain": {
+            "count": 8,
+            "first_tick": 0.25,
+            "tick_interval": 0.25,
+            "dot_duration": 2.0,
+        }
+    },
 )
+PACKET_SPEC = SLOTS.packet_spec
 SLOTS["R"] = _bullet_time
 parse_abilities = build_parser(SLOTS, "Miss Fortune")
 

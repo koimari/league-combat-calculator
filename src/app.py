@@ -234,7 +234,6 @@ _OPERATION_POLICY = {
 }
 _VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
 _ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
-_GENERATED_CHAMPIONS = _ENGINE_CHAMPIONS - _VERIFIED_CHAMPIONS
 
 
 _DEV_UPDATE_COOKIE = "lol_calc_dev_update"
@@ -267,11 +266,6 @@ _SECURITY_HEADERS = {
 _rate_limiter = TokenBucketStore(
     Path(tempfile.gettempdir()) / "lol-calculator-rate-limits.sqlite3"
 )
-
-
-def _generic_engine_enabled() -> bool:
-    """Compatibility flag retained for old clients; no generic lane exists."""
-    return False
 
 
 def _auth_enabled() -> bool:
@@ -932,7 +926,7 @@ def _health_engine_check() -> dict:
         "status": "ok" if _ENGINE_CHAMPIONS else "degraded",
         "registered": len(_ENGINE_CHAMPIONS),
         "reviewed": len(_VERIFIED_CHAMPIONS),
-        "generated": len(_GENERATED_CHAMPIONS),
+        "module_contract": "champion_module_v1",
     }
 
 
@@ -1190,10 +1184,7 @@ def api_config():
             "champion_engine": {
                 "registered_count": len(_ENGINE_CHAMPIONS),
                 "reviewed_count": len(_VERIFIED_CHAMPIONS),
-                "generated_count": len(_GENERATED_CHAMPIONS),
-                "unreviewed_count": len(_GENERATED_CHAMPIONS),
-                "module_contract": "full_entry_wiki_receipt",
-                "generic_enabled": _generic_engine_enabled(),
+                "module_contract": "champion_module_v1",
             },
             "keystones": keystone_catalog(),
             "dev_mode": local_dev,

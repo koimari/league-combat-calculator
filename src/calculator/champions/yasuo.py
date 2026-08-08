@@ -23,8 +23,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage
-from .reviewed_batch_10 import _full_entry_sources, build_batch_module
+from .module_helpers import no_damage
+from .packet_module import build_packet_module
+from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -32,9 +33,12 @@ from .slotlib import (
     extract_value,
 )
 
+PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606ac"
+
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Yasuo")
+    build_packet_module("Yasuo", PACKET_SHA256)
 )
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 
 # P prose-sourced constants (data/champions.json, Yasuo P): "Yasuo's total
@@ -216,7 +220,7 @@ ASSUMPTIONS = [
     "CP10.10 packet pricing",
 ]
 
-SOURCES = _full_entry_sources("Yasuo")
+SOURCES = load_champion_sources("Yasuo")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
 }

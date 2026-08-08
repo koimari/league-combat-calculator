@@ -16,8 +16,6 @@ Why each slot is non-generic:
   knockback/stun is CC only.
 """
 
-import json
-from pathlib import Path
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -28,6 +26,7 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the 4-stack cap is wiki prose
 # ("stacking up to 4 times for a maximum 100% increase"); the damage
@@ -145,26 +144,4 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
-_SOURCE_PATH = (
-    Path(__file__).resolve().parents[3] / "static" / "cp10_batch_08_sources.json"
-)
-
-
-def _load_sources(name: str) -> list[dict[str, object]]:
-    try:
-        payload = json.loads(_SOURCE_PATH.read_text(encoding="utf-8"))
-    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
-        raise RuntimeError(
-            f"CP10.8 source receipts are unavailable: {_SOURCE_PATH}"
-        ) from exc
-    rows = payload.get(name) if isinstance(payload, dict) else None
-    if (
-        not isinstance(rows, list)
-        or len(rows) != 6
-        or any(not isinstance(row, dict) or not all(row.values()) for row in rows)
-    ):
-        raise RuntimeError(f"CP10.8 source receipts for {name!r} are incomplete")
-    return rows
-
-
-SOURCES = _load_sources("Tristana")
+SOURCES = load_champion_sources("Tristana")

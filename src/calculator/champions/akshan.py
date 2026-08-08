@@ -359,3 +359,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Akshan")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Akshan",
+        "revision_id": 4007947,
+        "revision_timestamp": "2026-04-12T23:55:44Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

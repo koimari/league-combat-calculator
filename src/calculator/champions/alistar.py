@@ -154,3 +154,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Alistar")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Alistar",
+        "revision_id": 3892578,
+        "revision_timestamp": "2025-05-02T10:24:06Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

@@ -18,7 +18,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
 
 # HARDCODED: verify on patch updates — the thorns formula exists only in
@@ -29,7 +29,12 @@ _THORNS_BASE = 15.0
 _THORNS_ARMOR_RATIO = 0.10
 _THORNS_MAGIC_RESISTANCE_RATIO = 0.10
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Rammus")
+PACKET_SHA256 = "e48aa5766d5565b485a6d7fa34421f25d11f56fdcfdec5bb0c0823acc991e0f0"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Rammus", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:

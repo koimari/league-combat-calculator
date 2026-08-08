@@ -1,6 +1,6 @@
-"""Locke — full-entry reviewed CP10.3 module, plus the P1 W grey-health heal.
+"""Locke — full-entry reviewed module, plus the P1 W grey-health heal.
 
-Option keys consumed by the shared parser: "q_casts", "soul_nails", "e_dash".
+Option keys consumed by this module: "q_casts", "soul_nails", "e_dash".
 
 P1 addition over the reviewed packet:
 - W (Soul Ignition) recast heal is now authored by the E8a grey-health
@@ -16,10 +16,141 @@ P1 addition over the reviewed packet:
   pool is the sourced 100%-of-damage-taken term.
 """
 
-from .reviewed_batch_03 import build_batch_module
-from .slotlib import with_item_on_hits
+from typing import Any
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Locke")
+from ..ability_spec import DamagePart
+from .engine import SlotCtx, build_parser
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
+from .slotlib import extract_cooldown, extract_named, on_hit_entry
+from .source_receipts import load_champion_sources
+
+
+def _silver_stake(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: on-hit damage scaling linearly with target missing health."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    base = extract_named(
+        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
+    )
+    missing_ratio = float(ctx.target.get("target_missing_health", 0.0) or 0.0) / max(
+        1.0, float(ctx.target.get("target_max_health", 1.0) or 1.0)
+    )
+    value = base * (1.0 + max(0.0, min(1.0, missing_ratio)))
+    result = on_hit_entry("Silver Stake", value, "magic")
+    result["target_max_health_sensitive"] = True
+    result["detail"] = (
+        "On-hit damage doubles linearly with target missing-health ratio, "
+        "capped by the sourced bonus row."
+    )
+    return result
+
+
+def _ritual_nails(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: one to three casts plus the selected Soul Nails detonation."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    casts = max(1, min(3, int(ctx.options.get("q_casts", 3))))
+    per = extract_named(ability, "Magic Damage per Nail", rank, ctx.stats, ctx.target)
+    stacks = max(0, min(3, int(ctx.options.get("soul_nails", 0))))
+    bonus_attr = {
+        1: "One Stack Bonus Damage",
+        2: "Two Stacks Bonus Damage",
+        3: "Three Stacks Bonus Damage",
+    }.get(stacks)
+    bonus = (
+        extract_named(ability, bonus_attr, rank, ctx.stats, ctx.target)
+        if bonus_attr
+        else 0.0
+    )
+    parts = [DamagePart("magic", per, count=casts, time_offset=0.15, hit_interval=0.15)]
+    if bonus:
+        parts.append(DamagePart("magic", bonus, time_offset=0.5))
+    return {
+        "name": ability.get("name", "Ritual Nails"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "damage_type": "magic",
+        "total_raw": per * casts + bonus,
+        "parts": tuple(parts),
+        "detail": (
+            f"{casts} Ritual Nails casts; {stacks} Soul Nails stacks are "
+            "consumed by the next damaging attack."
+        ),
+    }
+
+
+def _ashen_pursuit(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: blink packet plus the optional empowered dash attack."""
+    attribute = (
+        "Total Magic Damage"
+        if bool(ctx.options.get("e_dash", True))
+        else "Blink Magic Damage"
+    )
+    result = typed_damage(ctx, attribute, "magic", time_offset=0.1)
+    if result:
+        result["detail"] = "Ashen Pursuit blink plus optional empowered dash attack."
+    return result
+
+
+def _purgatory(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: totem damage; mark refresh and execute remain target state."""
+    result = typed_damage(ctx, "Magic Damage", "magic", time_offset=0.75)
+    if result:
+        result["target_max_health_sensitive"] = True
+        result["detail"] = (
+            "Purgatory totem damage; mark refresh and execute threshold remain "
+            "explicit target state."
+        )
+    return result
+
+
+SLOTS = {
+    "P": _silver_stake,
+    "Q": _ritual_nails,
+    "W": lambda ctx: no_damage(
+        ctx,
+        name="Soul Ignition",
+        reason=(
+            "Grey health storage, attack speed, movement speed and recast healing "
+            "are self-state."
+        ),
+    ),
+    "E": _ashen_pursuit,
+    "R": _purgatory,
+}
+
+OPTIONS: list[dict[str, Any]] = [
+    {
+        "key": "q_casts",
+        "type": "int",
+        "default": 3,
+        "min": 1,
+        "max": 3,
+        "label": "Ritual Nails casts",
+    },
+    {
+        "key": "soul_nails",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 3,
+        "label": "Soul Nails stacks",
+    },
+    {
+        "key": "e_dash",
+        "type": "bool",
+        "default": True,
+        "label": "Ashen Pursuit dash",
+    },
+]
+
+ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
+SOURCES = load_champion_sources("Locke")
+parse_abilities = build_parser(SLOTS, "Locke")
+
 _ON_HIT_SPECS: dict[str, dict] = {
     "E": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
 }
@@ -43,7 +174,7 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS += [
     "W (Soul Ignition) recast heal is authored by the grey-health "
     "primitive: 100% of the post-mitigation champion damage taken during "
     "the 6s active is stored (capped by the 'Damage taken grey health "

@@ -18,7 +18,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_10 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits, damage_entry, extract_cooldown, extract_named
 
 # HARDCODED: verify on patch updates — the linger cadence (4 ticks at
@@ -31,7 +31,12 @@ _W_LINGER_TICK_INTERVAL = 0.25
 _R_ARC_OF_RUIN_BONUS_AD_RATIO = 1.20
 _R_ARC_OF_RUIN_AP_RATIO = 0.75
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Yunara")
+PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133be"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Yunara", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:

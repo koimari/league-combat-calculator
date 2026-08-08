@@ -10,9 +10,14 @@ ally-support scanner from cached leveling at the cast times; the module
 declares W/R in SLOTS so the fight rotation casts them.
 """
 
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Milio")
+PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163f"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Milio", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
     slot: ("modeled" if slot == "Q" else "out_of_scope") for slot in "PQWER"
 }

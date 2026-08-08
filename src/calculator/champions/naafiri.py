@@ -25,12 +25,31 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_05 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
+PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Naafiri")
+    build_packet_module(
+        "Naafiri",
+        PACKET_SHA256,
+        packet_tick_fixes={
+            "Darkin Daggers": {
+                "initial_tick": 0.0,
+                "extra_part": {
+                    "attribute": "Bleed Physical Damage per Tick",
+                    "count": 10,
+                    "damage_type": "physical",
+                    "first_tick": 0.5,
+                    "tick_interval": 0.5,
+                    "dot_duration": 5.0,
+                },
+            }
+        },
+    )
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — the sourced bleed tick count:
 # Total Bleed Physical Damage == Bleed Physical Damage per Tick x 10 at

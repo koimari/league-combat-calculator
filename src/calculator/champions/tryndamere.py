@@ -21,7 +21,7 @@ hardcoded.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_08 import _full_entry_sources
+from .source_receipts import load_champion_sources
 from .slotlib import simple_damage
 
 
@@ -54,7 +54,7 @@ ASSUMPTIONS = [
     "P, W, and R deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(_full_entry_sources("Tryndamere"))
+SOURCES = list(load_champion_sources("Tryndamere"))
 
 SLOTS = {
     "P": _no_damage(

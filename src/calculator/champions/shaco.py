@@ -36,7 +36,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_07 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 # Sourced box attack pattern (wiki Shaco W + "Champion summoned units"
@@ -159,7 +159,12 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Shaco")
+PACKET_SHA256 = "3a7a57f56c3c5d06404558fb69b2bdac0244775181a3b338c6cf369b8f328ffa"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Shaco", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 SLOTS["W"] = _jack_in_the_box
 SLOTS["E"] = _two_shiv_poison
 SLOTS["R"] = _hallucinate

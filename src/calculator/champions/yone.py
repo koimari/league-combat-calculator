@@ -28,8 +28,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage
-from .reviewed_batch_10 import _full_entry_sources, build_batch_module
+from .module_helpers import no_damage
+from .packet_module import build_packet_module
+from .source_receipts import load_champion_sources
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
 # HARDCODED: verify on patch updates — the 5-second Spirit Form window
@@ -39,9 +40,12 @@ from .slotlib import damage_entry, extract_cooldown, extract_named, extract_valu
 # percentage is the cached "Damage Stored" row read live.
 _E_SPIRIT_FORM_SECONDS = 5.0
 
+PACKET_SHA256 = "806d48d7af49a8e38076a40e8ab180ee25751185eb1c7a31caf2b97e338aaaf1"
+
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Yone")
+    build_packet_module("Yone", PACKET_SHA256, single_hit_slots=frozenset({"W"}))
 )
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 
 def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -174,7 +178,7 @@ ASSUMPTIONS = [
     "W (Spirit Cleave) and R (Fate Sealed) keep the reviewed CP10.10 packet pricing",
 ]
 
-SOURCES = _full_entry_sources("Yone")
+SOURCES = load_champion_sources("Yone")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
 }

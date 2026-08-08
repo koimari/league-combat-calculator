@@ -20,8 +20,6 @@ Why each slot is non-generic:
 - P (Soul Eater) and W (Wither) deal no enemy damage: zero-damage rows.
 """
 
-import json
-from pathlib import Path
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -31,6 +29,7 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
 )
+from .source_receipts import load_champion_sources
 
 # E2-sourced tick cadences (data/worklists/e2-dot-ticks.json and the
 # ability descriptions): Spirit Fire's zone ticks every 0.5s over 5s
@@ -237,26 +236,4 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
-_SOURCE_PATH = (
-    Path(__file__).resolve().parents[3] / "static" / "cp10_batch_05_sources.json"
-)
-
-
-def _load_sources(name: str) -> list[dict[str, object]]:
-    try:
-        payload = json.loads(_SOURCE_PATH.read_text(encoding="utf-8"))
-    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
-        raise RuntimeError(
-            f"CP10.5 source receipts are unavailable: {_SOURCE_PATH}"
-        ) from exc
-    rows = payload.get(name) if isinstance(payload, dict) else None
-    if (
-        not isinstance(rows, list)
-        or len(rows) != 6
-        or any(not isinstance(row, dict) or not all(row.values()) for row in rows)
-    ):
-        raise RuntimeError(f"CP10.5 source receipts for {name!r} are incomplete")
-    return rows
-
-
-SOURCES = _load_sources("Nasus")
+SOURCES = load_champion_sources("Nasus")

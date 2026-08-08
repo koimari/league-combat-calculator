@@ -12,9 +12,12 @@ from .engine import BUFF, SlotCtx, build_parser
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_value
 
+PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = (
-    build_packet_module("Jinx")
+    build_packet_module("Jinx", PACKET_SHA256, single_hit_slots=frozenset({"R"}))
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 
 def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -129,3 +132,10 @@ SOURCES = list(_packet_sources) + [
         "revision_timestamp": "2026-06-12T16:55:08Z",
     },
 ]
+
+
+# Authoritative review metadata (issue #161).
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

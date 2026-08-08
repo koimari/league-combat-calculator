@@ -23,7 +23,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import (
     with_item_on_hits,
     damage_entry,
@@ -40,7 +40,12 @@ _Q_SECOND_STRIKE_AD_RATIO = 0.20
 _Q_SECOND_STRIKE_AP_RATIO = 0.15
 _R_BASE_AD_RATIO = 1.20
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Viego")
+PACKET_SHA256 = "d0f43663666c21a592a44a6a4ee267b0e18e355d9908363bf4f8aa866160756b"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Viego", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _certified_single_hit(parser):
@@ -191,6 +196,9 @@ OPTIONS = list(OPTIONS) + [
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "Viego Q's mark-consuming second strike requires a prior damaging "
+    "ability and the next marked basic attack; that stateful rider is "
+    "option-gated by this named module.",
     "Q (Blade of the Ruined King) prices the active 'Physical Damage' row "
     "(25-85 + 70% AD); the passive 2-6% current-health on-hit (minimum "
     "10-30) rides every auto on the engine's current-health on-hit path; "

@@ -31,7 +31,7 @@ hardcoded.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_10 import _full_entry_sources
+from .source_receipts import load_champion_sources
 from .slotlib import (
     extract_cooldown,
     extract_value,
@@ -130,7 +130,7 @@ ASSUMPTIONS = [
     "P and W deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(_full_entry_sources("Zed"))
+SOURCES = list(load_champion_sources("Zed"))
 
 SLOTS = {
     "P": _no_damage(

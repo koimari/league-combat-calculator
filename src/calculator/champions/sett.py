@@ -23,8 +23,9 @@ import re
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage
-from .reviewed_batch_07 import _full_entry_sources, build_batch_module
+from .module_helpers import no_damage
+from .packet_module import build_packet_module
+from .source_receipts import load_champion_sources
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -43,9 +44,12 @@ _W_SHIELD_DURATION_SECONDS = 3.0
 _W_GRIT_OPTION = "w_grit"
 _Q_TOTAL_ATTR = "Total Bonus Physical Damage"
 
+PACKET_SHA256 = "122d6d40606b4b120f4fd94cc1ba7fa968cbda67af830338296f41fe94ca3820"
+
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Sett")
+    build_packet_module("Sett", PACKET_SHA256)
 )
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Pit Grit's Right Punch: "deal 5 : 100 (based on level) (+ 55% bonus
@@ -272,7 +276,7 @@ ASSUMPTIONS = [
     "E/R damage keep the reviewed CP10.7 packet pricing",
 ]
 
-SOURCES = _full_entry_sources("Sett")
+SOURCES = load_champion_sources("Sett")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

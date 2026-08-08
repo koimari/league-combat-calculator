@@ -14,9 +14,14 @@ missing-health-scaled heal (Minimum/Maximum Heal rows) is authored by
 ``derive_self_healing`` (test_sylas_kingslayer_heals_scaled_by_missing).
 """
 
-from .reviewed_batch_08 import build_batch_module
+from .packet_module import build_packet_module
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Sylas")
+PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sylas", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"
 }

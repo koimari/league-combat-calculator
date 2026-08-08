@@ -22,12 +22,15 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract_named
 
+PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Volibear")
+    build_packet_module("Volibear", PACKET_SHA256, single_hit_slots=frozenset({"E"}))
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — The Relentless Storm's per-stack
 # attack speed (5% + 3% per 100 AP) and the Wounded bite's increase

@@ -175,3 +175,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Jarvan IV")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Jarvan_IV",
+        "revision_id": 3977257,
+        "revision_timestamp": "2025-12-18T18:39:02Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

@@ -128,10 +128,9 @@ def test_build_fails_closed_when_wiki_db_missing(tmp_path):
     champions = _write_champions(tmp_path)
     axword = _write_axword(tmp_path)
     output = tmp_path / "out" / "reviewed-packets.json"
-    modules = tmp_path / "modules"
     missing = tmp_path / "missing.sqlite3"
     with pytest.raises(RuntimeError, match="--wiki-db|LCC_WIKI_DB"):
-        brm.build(champions, axword, output, modules, wiki_db=missing)
+        brm.build(champions, axword, output, wiki_db=missing)
     assert not output.exists(), "no output may be written on a missing wiki DB"
 
 
@@ -140,9 +139,8 @@ def test_build_aborts_on_zero_revision_receipts(tmp_path):
     axword = _write_axword(tmp_path)
     db = _write_wiki_db(tmp_path, {})
     output = tmp_path / "reviewed-packets.json"
-    modules = tmp_path / "modules"
     with pytest.raises(RuntimeError, match="zero revision receipts"):
-        brm.build(champions, axword, output, modules, wiki_db=db)
+        brm.build(champions, axword, output, wiki_db=db)
     assert not output.exists()
 
 
@@ -151,8 +149,7 @@ def test_revisionless_packets_never_labeled_reviewed(tmp_path):
     axword = _write_axword(tmp_path)
     db = _write_wiki_db(tmp_path, {"Fixture": 123})
     output = tmp_path / "reviewed-packets.json"
-    modules = tmp_path / "modules"
-    brm.build(champions, axword, output, modules, wiki_db=db)
+    brm.build(champions, axword, output, wiki_db=db)
 
     asset = json.loads(output.read_text(encoding="utf-8"))
     assert asset["champions"]["Fixture"]["review_status"] == "reviewed_packet"
@@ -171,13 +168,11 @@ def test_build_missing_axword_source_is_one_actionable_failure(tmp_path):
     champions = _write_champions(tmp_path)
     db = _write_wiki_db(tmp_path, {"Fixture": 123})
     output = tmp_path / "reviewed-packets.json"
-    modules = tmp_path / "modules"
     with pytest.raises(RuntimeError, match="axword|LCC_AXWORD_SOURCE"):
         brm.build(
             champions,
             tmp_path / "absent-merakiAbilityKits.ts",
             output,
-            modules,
             wiki_db=db,
         )
     assert not output.exists()

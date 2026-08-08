@@ -1,11 +1,8 @@
-"""Source-pinned Wiki engine module for champions without a custom model.
+"""Source-pinned Wiki parser for synthetic and development fixtures.
 
-This is an explicit registration target, not an implicit parser fallback.  It
-keeps every cached champion on the same validated slot engine while the
-champion-specific module is being reviewed.  The generic module deliberately
-does not invent state-machine behavior: it extracts the best Wiki damage
-packet available for each slot and leaves the exact certification boundary to
-the reviewed module registry.
+This utility is never a runtime registration target. It deliberately does not
+invent state-machine behavior; production dispatch requires a validated named
+champion module and fails closed for unknown names.
 """
 
 from typing import Any
@@ -13,10 +10,8 @@ from typing import Any
 from .engine import build_parser
 from .slotlib import on_hit_auto, simple_damage
 
-# Every slot is present so the backend can register and parse a complete
-# P/Q/W/E/R kit for every champion in the local Wiki snapshot.  The factories
-# still apply the shared classifier/scaling/entry validation used by reviewed
-# modules; no heuristic archetype is used to label a champion as exact.
+# Every slot is present so synthetic fixtures can exercise the shared
+# classifier/scaling/entry validation without claiming production exactness.
 GENERIC_SLOTS = {
     "Q": simple_damage(),
     "W": simple_damage(),
@@ -29,7 +24,7 @@ OPTIONS: list[dict[str, Any]] = []
 ASSUMPTIONS = [
     "Uses the champion's local Wiki damage packets and shared scaling resolver.",
     "Passive, attack-triggered, multi-stage, alternate-form, and stateful effects remain review-pending unless a custom module models them.",
-    "This registration is runnable backend coverage, not exact event-order certification.",
+    "This synthetic parser is development coverage, not runtime registration or exact event-order certification.",
 ]
 SOURCES = [
     {
@@ -37,7 +32,6 @@ SOURCES = [
         "url": "https://wiki.leagueoflegends.com/en-us/League_of_Legends_Wiki",
     }
 ]
-REGISTRATION_KIND = "wiki_generic_module"
 
 
 def parse_abilities(
@@ -49,7 +43,7 @@ def parse_abilities(
     champion_stats: dict[str, float] | None = None,
     target_stats: dict[str, float] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    """Parse one explicitly registered Wiki-backed champion kit."""
+    """Parse one explicit synthetic Wiki-backed fixture."""
     parser = build_parser(GENERIC_SLOTS, champion_data.get("name", ""))
     result = parser(
         champion_data,
@@ -61,9 +55,8 @@ def parse_abilities(
         target_stats=target_stats,
     )
     # The shared on-hit factory intentionally emits a compact payload because
-    # reviewed callers often consume it as a passive-only record.  The fight
-    # engine also walks every Q/W/E/R row and requires ``parts`` on that row,
-    # so normalize generic registrations into the full engine contract here.
+    # reviewed callers often consume it as a passive-only record. Normalize
+    # synthetic fixtures into the full engine result shape for test tooling.
     for entry in result.values():
         if "parts" in entry:
             continue

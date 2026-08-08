@@ -13,11 +13,14 @@ E3 addition over the CP10.8 packet module:
 from typing import Any
 
 from .engine import BUFF, SlotCtx, build_parser
-from .reviewed_batch_08 import build_batch_module
+from .packet_module import build_packet_module
+
+PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Thresh")
+    build_packet_module("Thresh", PACKET_SHA256)
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Damnation's per-soul values
 # (1 AP, 1 bonus armor) are wiki prose; the JSON carries no leveling

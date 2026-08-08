@@ -14,9 +14,12 @@ from .engine import BUFF, SlotCtx, build_parser
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
 
+PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = (
-    build_packet_module("Aphelios")
+    build_packet_module("Aphelios", PACKET_SHA256)
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 _WEAPON_INDEX = {
     "calibrum": 0,
@@ -232,3 +235,10 @@ SOURCES = list(_packet_sources) + [
         "revision_timestamp": "2026-05-27T00:28:15Z",
     },
 ]
+
+
+# Authoritative review metadata (issue #161).
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

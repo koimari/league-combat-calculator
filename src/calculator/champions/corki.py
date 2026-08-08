@@ -392,3 +392,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Corki")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Corki",
+        "revision_id": 4047300,
+        "revision_timestamp": "2026-07-29T13:12:25Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

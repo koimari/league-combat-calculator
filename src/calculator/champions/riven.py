@@ -24,10 +24,15 @@ AD; the amount is factored at cast and does not change (wiki note).
 """
 
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Riven")
+PACKET_SHA256 = "efecdb1959bc6c813777c1d4cf4f8b8befcb4d93093c291c8cf973464d2226b8"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Riven", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — the current R1 AD buff is a flat
 # 20% of bonus AD at every rank (riven.bin.json RivenFengShuiEngine

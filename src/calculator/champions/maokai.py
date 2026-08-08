@@ -22,12 +22,15 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
+PACKET_SHA256 = "f3732d39aae761199c06bfc606515aee50fa1cc74ea65f28a15b0ef78d02f366"
+
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Maokai")
+    build_packet_module("Maokai", PACKET_SHA256)
 )
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED cadence: the attached-sapling burn ticks every 0.75 seconds
 # over 1.5 seconds (2 ticks) — wiki description of the brush-empowered

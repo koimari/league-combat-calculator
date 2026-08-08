@@ -20,7 +20,7 @@ P1-3 closures:
 """
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_07 import build_batch_module
+from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -30,7 +30,27 @@ from .slotlib import (
     sum_modifiers,
 )
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Skarner")
+PACKET_SHA256 = "1f62c9ad3216116b491935d3b92ff91949b3bea5a6a7381af05e7b6cfcbf5577"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Skarner",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Shattered Earth prices all three empowered basic attacks (Bonus "
+        "Physical Damage per Hit x 3 == Total Bonus Physical Damage).",
+    ),
+    variant_parsers={
+        ("Q", 0): repeat_damage_parser(
+            attr="Bonus Physical Damage per Hit",
+            dmg_type="physical",
+            count=3,
+            time_offset=0.0,
+            hit_interval=0.0,
+            name="Shattered Earth",
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 VARIANT_OPTION_KEYS = ("q_variant",)
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON

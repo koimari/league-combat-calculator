@@ -50,7 +50,7 @@ Zhonya's Hourglass (stasis), Mikael's Blessing, Redemption — priced only from 
 - Verify/decide: Cryptbloom (post-takedown heal), Gluttonous Greaves (omnivamp), Lost Chapter (mana), Doran's Helm (minion-only damage), Ionian (summoner haste), Gunmetal (Riot-only branch, explicitly out of scope).
 
 ### 2.7 Wiki-known quirks — modules exist; mechanics must be verified per slot
-All 13 AGENTS.md quirk champions have modules (Aurelion Sol Stardust, Bard Chimes, Heimer turrets, K'Sante resists, Quinn P crit, Vladimir E charge, Yasuo/Yone Q3 crit conversion, Zeri P execute range, Gnar Mega). The thin `reviewed_batch_*` wrappers need per-slot verification that each quirk mechanic is actually modeled (not merely declared).
+All 13 AGENTS.md quirk champions have named modules (Aurelion Sol Stardust, Bard Chimes, Heimer turrets, K'Sante resists, Quinn P crit, Vladimir E charge, Yasuo/Yone Q3 crit conversion, Zeri P execute range, Gnar Mega). Per-slot verification must confirm each quirk mechanic is actually modeled, not merely declared.
 
 ### 2.8 Champion classes / archetype semantics
 Champion modules exist for all 173, but "class" behaviors (e.g., Vayne W true-damage stacks, Jinx rocket splash, Yasuo passive crit) are implemented per-module — the audit must confirm each is sourced, not estimated.
@@ -101,7 +101,7 @@ Registry of atomic behaviors with dual provenance (wiki page + binary field):
 damage packet types (projectile/hitscan/DoT/execute/true), shields (flat/percent/threshold), heals (self/ally/lifesteal/omnivamp/vamp), resource changes, CC types (stun/root/slow/silence/knockup/…), stacks (cap/decay/reset), transformations, resets, pet summons, vision/stealth, movement modifiers, buff/debuff instances (duration/refresh/stacking), interaction rules (target policy, simultaneous triggers, death boundaries).
 
 ### 3.4 Recompose
-Each champion/item = declared composition of atoms (data-driven), generated modules verified against the full wiki entry and the binary. Anything not composed of atoms stays visibly out-of-scope with a named reason — nothing silently partial.
+Each champion/item = declared composition of atoms (data-driven), with named champion modules verified against the full wiki entry and the binary. Anything not composed of atoms stays visibly out-of-scope with a named reason — nothing silently partial.
 
 ## 4. Delivery workstreams (order)
 

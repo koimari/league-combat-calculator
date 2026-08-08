@@ -52,8 +52,6 @@ def public_engine_mode(champion_name: str) -> str:
     registration = engine_registration_kind(champion_name)
     if registration == "reviewed_module":
         return "reviewed_event_order"
-    if registration == "generated_packet":
-        return "generated_packet"
     return "unregistered"
 
 

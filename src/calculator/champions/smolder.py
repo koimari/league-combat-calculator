@@ -24,12 +24,15 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_07 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits, extract_named
 
+PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Smolder")
+    build_packet_module("Smolder", PACKET_SHA256)
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose on Q: "increased by
 # 0% : 75% (+ 0% : 22.5%) (based on critical strike chance)" -> the

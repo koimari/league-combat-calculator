@@ -25,13 +25,16 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage
-from .reviewed_batch_11 import build_batch_module
+from .module_helpers import no_damage
+from .packet_module import build_packet_module
 from .slotlib import extract_named
 
+PACKET_SHA256 = "e34a0a227a5432c3c99a6fc6850e3c3ea23f9b2148c3690c93907949b5874b5b"
+
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_batch_module("Zyra")
+    build_packet_module("Zyra", PACKET_SHA256)
 )
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — plant attack damage is not scraped
 # into data/champions.json (the Q/E text says only "lasts for 8 seconds";

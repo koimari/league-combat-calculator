@@ -10,11 +10,16 @@ Poppy P) are modeled.  Harrier is now an on-hit entry priced at the
 per-level flat plus 40% bonus AD per marked-target auto.
 """
 
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import extract_named, on_hit_entry
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Quinn")
+PACKET_SHA256 = "a88925854e27a0548631207e5f283df6a0a369c6249f4ded272801230c801852"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Quinn", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _harrier(ctx: SlotCtx):

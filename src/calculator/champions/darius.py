@@ -385,3 +385,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Darius")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Darius",
+        "revision_id": 4022598,
+        "revision_timestamp": "2026-05-27T00:45:14Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

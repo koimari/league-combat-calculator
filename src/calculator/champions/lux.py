@@ -24,14 +24,19 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
     find_named_leveling,
     sum_modifiers,
 )
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Lux")
+PACKET_SHA256 = "2f20b99c3cd6919e7b81d1fb0cf912d9e02ea8ac475c4c4fa6381bc332407130"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Lux", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # Default Illumination procs in a one-rotation combo: Q, E and R each
 # mark the target, and the following auto/Final Spark consumes the mark.

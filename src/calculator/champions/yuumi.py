@@ -10,9 +10,30 @@ anchor transfer of E ("Affects the Anchor instead of Yuumi") is a scope
 detection the scanner does not express — see E8d reply for the missing hook.
 """
 
-from .reviewed_batch_10 import build_batch_module
+from .packet_module import build_packet_module, full_plus_reduced_parser
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Yuumi")
+PACKET_SHA256 = "1795828f6486a1da27c639b301d6ebca7047735f17a173075d41d59369c82942"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Yuumi",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Final Chapter prices all 5 waves (Magic Damage per Hit + 4 x "
+        "Reduced Damage per Hit == Total Magic Damage).",
+    ),
+    slot_parsers={
+        "R": full_plus_reduced_parser(
+            full_attr="Magic Damage per Hit",
+            reduced_attr="Reduced Damage per Hit",
+            dmg_type="magic",
+            reduced_count=4,
+            time_offset=0.7,
+            hit_interval=0.7,
+            dot_duration=3.5,
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "R"} else "out_of_scope") for slot in "PQWER"
 }

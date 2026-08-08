@@ -14,10 +14,15 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Rek'Sai")
+PACKET_SHA256 = "004116a55524cf55d387d236bcd22e8fbad9b79deb5679fc0c2be4257d364c0a"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Rek'Sai", PACKET_SHA256, single_hit_slots=frozenset({"R"})
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 
 def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:

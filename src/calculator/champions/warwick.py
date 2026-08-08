@@ -17,7 +17,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_09 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits, damage_entry, extract_cooldown, extract_named
 
 # Sourced channel (wiki R): "deal magic damage every 0.25 seconds" over
@@ -55,7 +55,19 @@ def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Warwick")
+PACKET_SHA256 = "2c91dcf27a641c6a177969744e204b672765d8fc7291214c069ecacc64511a19"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Warwick",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Warwick Q's sourced 0.264-second bite delay is applied to the hit "
+        "event without inventing a channel lockout.",
+    ),
+    single_hit_slots=frozenset({"Q"}),
+    packet_part_timings={"Q": {"time_offset": 0.264}},
+)
+PACKET_SPEC = SLOTS.packet_spec
 SLOTS["R"] = _infinite_duress
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")

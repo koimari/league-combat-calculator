@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage, source_row
+from .module_helpers import no_damage, source_row
 from .slotlib import (
     ability_on_hit_entry,
     damage_entry,

@@ -23,12 +23,15 @@ stage.
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .reviewed_batch_04 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import ability_on_hit_entry, damage_entry, extract_cooldown
 
+PACKET_SHA256 = "a6d43d11733ede3c9a2f3daa2d2f6afb754fc83e580b27dff8e8ffeb76783164"
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_batch_module("Master Yi")
+    build_packet_module("Master Yi", PACKET_SHA256)
 )
+PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Double Strike's 3-hit cadence and
 # the second strike's 50% AD are wiki prose; the JSON carries no

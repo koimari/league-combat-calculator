@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .reviewed_batch_01 import no_damage, source_row
+from .module_helpers import no_damage, source_row
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)

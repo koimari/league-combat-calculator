@@ -1,10 +1,15 @@
 """Zilean — CP10.10 full-entry-reviewed packet module."""
 
-from .reviewed_batch_10 import build_batch_module
+from .packet_module import build_packet_module
 
 from ..champions.skill_orders import get_ability_rank
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Zilean")
+PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc8233776"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zilean", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # E8d: sourced Chronoshift revive values.  Cached R leveling (data/
 # champions.json, Zilean R Chronoshift) Heal row: 600 / 850 / 1100 (+ 200% AP)

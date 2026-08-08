@@ -21,7 +21,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_08 import build_batch_module
+from .packet_module import build_packet_module
 from .slotlib import find_named_leveling, sum_modifiers
 
 # Sourced bleed cadence (wiki P): "5 : 18.97 (based on level)
@@ -108,7 +108,12 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Talon")
+PACKET_SHA256 = "7a3d30a61866ada61c6491cf4aecec11630184dd05c83eba0b177309e54647fb"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Talon", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 SLOTS["P"] = _blades_end
 SLOTS["Q"] = _certified_single_hit(SLOTS["Q"])
 SLOTS["W"] = _certified_single_hit(SLOTS["W"])

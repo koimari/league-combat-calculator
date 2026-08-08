@@ -49,9 +49,9 @@ row (not a cast slot) or because the relationship is only in prose.
 
 ## Champion modules without full atom coverage
 
-These champions' parses are generated packet modules (or sparse
-hand-authored modules) — the missing atoms above are exactly what the F4
-swarm should author while certifying the champion module:
+These named champion modules do not yet expose every mechanic as an ordering
+atom. The missing atoms above are exactly what a follow-up should author while
+deepening each champion's local contract:
 
 `Tristana, Caitlyn, Kennen, Volibear, Viego, Naafiri, Nidalee, Illaoi,
 Yasuo, Gnar, Hwei (variants), Seraphine, Renekton, Rumble, Brand

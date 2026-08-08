@@ -5,9 +5,28 @@ batch parser output (the batch parser builds its slot map at build time, so
 declarations cannot be injected into the slot dict after the fact).
 """
 
-from .reviewed_batch_10 import build_batch_module
+from .packet_module import build_packet_module, repeat_damage_parser
 
-_base_parse, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Zaahen")
+PACKET_SHA256 = "5f5796aa0364becd253cbb3b7b05939147841a3f76e41cfa061242d344ec9f63"
+
+_base_parse, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zaahen",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "The Darkin Glaive prices both strikes (Physical Damage per Hit x 2 "
+        "== Total Physical Damage).",
+    ),
+    slot_parsers={
+        "Q": repeat_damage_parser(
+            attr="Physical Damage per Hit",
+            dmg_type="physical",
+            count=2,
+            time_offset=0.0,
+            hit_interval=0.0,
+        )
+    },
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 _ON_HIT_SPECS: dict[str, dict] = {
     "Q": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},

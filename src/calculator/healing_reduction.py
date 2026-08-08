@@ -80,9 +80,8 @@ def champion_grievous_wound_sources(
     ``GRIEVOUS_WOUNDS_SOURCES`` attribute; the patch-wide 40%-for-3s rule
     supplies strength and duration, and the cached ability JSON supplies
     the display label ("Katarina · Death Lotus").  Champions without the
-    module attribute — including every generated packet module and the
-    generic path — return no packets: their numbers are estimates and must
-    never invent a wound.
+    module attribute return no packets. Synthetic/development fixtures also
+    have no production registration and must never invent a wound.
     """
     champion_name = str(champion_data.get("name", ""))
     # Resolved lazily so this module never participates in the package

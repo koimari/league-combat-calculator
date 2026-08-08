@@ -18,7 +18,8 @@ signals come from Sentry, access logs, and `/api/cache-status`.
                "cached_entries": 711},
     "golden": {"status": "ok", "patch": "16.15", "checked_at": "2026-08-06T...",
                "age_days": 0.2, "stale_threshold_days": 14},
-    "engine": {"status": "ok", "registered": 12, "reviewed": 12, "generated": 0}
+    "engine": {"status": "ok", "registered": 173, "reviewed": 173,
+               "module_contract": "champion_module_v1"}
   },
   "generated_at": "..."
 }

@@ -178,3 +178,18 @@ SLOTS = {
 }
 
 parse_abilities = build_parser(SLOTS, "Kog'Maw")
+
+
+# Authoritative review metadata (issue #161).
+SOURCES = [
+    {
+        "label": "Local League Wiki cache",
+        "url": "https://wiki.leagueoflegends.com/en-us/Kog%27Maw",
+        "revision_id": 3937121,
+        "revision_timestamp": "2025-07-28T11:17:12Z",
+    }
+]
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"

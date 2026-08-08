@@ -19,11 +19,16 @@ bAD and lethality terms.  The threshold itself is documented, not
 priced as damage — an execution is a kill boundary, not a number.
 """
 
-from .reviewed_batch_06 import build_batch_module
+from .packet_module import build_packet_module
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, find_named_leveling, sum_modifiers
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Pyke")
+PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Pyke", PACKET_SHA256
+)
+PACKET_SPEC = SLOTS.packet_spec
 
 # The non-execute damage row's scaling, from the wiki prose on R:
 # 50% of the threshold amount -> 40% bonus AD and 0.75 per 1 Lethality.

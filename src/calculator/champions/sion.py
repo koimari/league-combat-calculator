@@ -30,7 +30,7 @@ hardcoded.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .reviewed_batch_07 import _full_entry_sources
+from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
 
@@ -131,7 +131,7 @@ ASSUMPTIONS = [
     "own damage, so all later physical damage (autos, Q, R) benefits.",
 ]
 
-SOURCES = list(_full_entry_sources("Sion"))
+SOURCES = list(load_champion_sources("Sion"))
 
 SLOTS = {
     "P": _no_damage(
