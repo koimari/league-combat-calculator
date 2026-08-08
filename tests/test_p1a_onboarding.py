@@ -197,9 +197,8 @@ def test_overlay_js_is_additive():
     onboarding_block = source.split("// --- First-run onboarding overlay")[-1]
     assert "function initOnboardingOverlay()" in onboarding_block
     assert "render(" not in onboarding_block
-    assert "switchView(" not in onboarding_block
-    # The existing quick-view bootstrap is untouched.
-    assert "initQuickView();" in source
+    # The existing bootstrap is untouched.
+    assert "initShareControls();" in source
 
 
 def test_overlay_js_handles_unavailable_storage_quietly():

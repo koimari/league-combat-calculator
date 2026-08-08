@@ -113,16 +113,19 @@ def test_analyst_builder_exists_exactly_once():
 
 
 def test_every_setup_step_is_a_labelled_disclosure():
-    """Each numbered rail step opens in place, and says so to assistive tech."""
+    """Each numbered rail step opens in place, and says so to assistive tech.
+    The step-head button is the accessible disclosure; the collapsed brief
+    card carries the same data-step-toggle as a large pointer target."""
     soup = _soup()
-    toggles = soup.select("[data-step-toggle]")
-    steps = [t for t in toggles if t.get("data-step-toggle") != "none"]
-    assert [t["data-step-toggle"] for t in steps] == ["champion", "roster", "builds"]
-    for toggle in steps:
+    heads = soup.select("button.step-toggle[data-step-toggle]")
+    assert [t["data-step-toggle"] for t in heads] == ["champion", "roster", "builds"]
+    for toggle in heads:
         assert toggle.get("aria-expanded") == "false"
         controls = toggle.get("aria-controls")
         assert controls and soup.select_one(f"#{controls}") is not None
         assert soup.select_one(f"#{controls}").has_attr("hidden")
+    briefs = soup.select(".step-brief[data-step-toggle]")
+    assert [b["data-step-toggle"] for b in briefs] == ["champion", "roster", "builds"]
     # Every editor stays mounted while collapsed: the feedback widget and the
     # staleness module read #slotsA / #abilityRow whether or not it is open.
     assert soup.select_one("#slotsA").find_parent(class_="step-body") is not None
@@ -280,21 +283,21 @@ def test_practice_target_affordance_is_wired():
 
 
 def test_quick_to_analyst_bridge_is_wired():
-    """Quick mode and its Open-in-Analyst bridge were removed (2026-08-06);
-    share links load directly into the analyst view."""
+    """Quick mode, its Open-in-Analyst bridge and the whole view-switching
+    layer were removed; share links load directly into the analyst view."""
     soup = _soup()
     assert soup.select_one("#quickAnalystButton") is None
     source = _source()
-    assert 'switchView("analyst")' in source
+    assert "switchView" not in source
     assert "renderSharedBuild(shareToken)" in source
 
 
 def test_shared_link_loads_into_the_analyst_view():
     """Share tokens render directly in the analyst view (product decision
-    2026-08-06) — no quick read-only card."""
+    2026-08-06) — no quick read-only card, no view switch."""
     source = _source()
     assert "renderSharedBuild(shareToken)" in source
-    assert 'switchView("analyst")' in source
+    assert "loadSharedBuildIntoAnalyst(payload)" in source
 
 
 def test_bis_hint_when_scenario_incomplete():

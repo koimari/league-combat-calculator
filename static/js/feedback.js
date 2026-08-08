@@ -183,7 +183,13 @@
 
   function captureLoadout() {
     var loadout = hookLoadout() || captureFromDom();
-    if (!loadout) return null;
+    if (!loadout) {
+      // No capturable scenario: clear the stale identity so the widget can
+      // fall silent again instead of validating a champion that left.
+      STATE.champion = null;
+      STATE.level = null;
+      return null;
+    }
     STATE.champion = loadout.champion;
     STATE.level = loadout.level;
     return loadout;
@@ -196,25 +202,27 @@
   // The widget's look lives in static/css/style.css with the rest of the
   // design language; this module owns behaviour only.
 
-  function statusMarkup() {
-    var context;
-    if (!STATE.champion) {
-      context = "Choose a champion and complete a build to record a game receipt.";
-    } else {
-      var snapshot = (STATE.loadout && STATE.loadout._snapshot) || {};
-      var parts = [
-        "Lv " + (STATE.level || "—"),
-        (snapshot.itemCount != null ? snapshot.itemCount : (STATE.loadout && STATE.loadout.items ? STATE.loadout.items.length : 0)) + " items",
-        "loadout snapshot",
-      ];
-      if (snapshot.enemyCount > 0) {
-        parts.push("multi-target roster — receipt uses the solo default target");
-      }
-      context = "Recording validation for <b>" + escapeHtml(STATE.champion) + "</b> (" + parts.join(" · ") + ")";
+  function contextHtml() {
+    var snapshot = (STATE.loadout && STATE.loadout._snapshot) || {};
+    var parts = [
+      "Lv " + (STATE.level || "—"),
+      (snapshot.itemCount != null ? snapshot.itemCount : (STATE.loadout && STATE.loadout.items ? STATE.loadout.items.length : 0)) + " items",
+      "loadout snapshot",
+    ];
+    if (snapshot.enemyCount > 0) {
+      parts.push("multi-target roster — receipt uses the solo default target");
     }
+    return "Recording validation for <b>" + escapeHtml(STATE.champion) + "</b> (" + parts.join(" · ") + ")";
+  }
+
+  function statusMarkup() {
     return (
-      '<p class="feedback-context">' + context + "</p>" +
+      '<details class="feedback-disclosure">' +
+      "<summary>Validate against a real game</summary>" +
+      '<div class="feedback-body">' +
+      '<p class="feedback-context">' + contextHtml() + "</p>" +
       '<div class="feedback-actions">' +
+      "<span>Did this match your game?</span> " +
       '<button type="button" data-fb-action="yes">Yes</button>' +
       '<button type="button" data-fb-action="no">No</button>' +
       '<button type="button" data-fb-action="off">Off by %</button>' +
@@ -229,7 +237,8 @@
       '<details class="feedback-paste"><summary>Paste a combat log instead</summary>' +
       '<label><textarea id="fbPaste" rows="4" placeholder="Q 347.2&#10;W 154&#10;total 997"></textarea></label>' +
       '<button type="button" data-fb-paste-submit>Import paste</button></details>' +
-      '<p class="feedback-status" role="status" hidden></p>'
+      '<p class="feedback-status" role="status" hidden></p>' +
+      "</div></details>"
     );
   }
 
@@ -242,7 +251,9 @@
       mount.classList.add("feedback-widget");
     }
     mount.setAttribute("data-feedback-widget", "1");
-    mount.innerHTML = statusMarkup();
+    // No champion means nothing to validate: stay silent instead of leading
+    // the canvas with Yes/No buttons about a scenario that does not exist.
+    mount.innerHTML = STATE.champion ? statusMarkup() : "";
     return mount;
   }
 
@@ -251,10 +262,15 @@
     if (!mount || !mount.hasAttribute("data-feedback-widget")) return;
     STATE.loadout = captureLoadout();
     var context = one(".feedback-context", mount);
-    if (!context) return;
-    context.innerHTML = statusMarkup().match(
-      /<p class="feedback-context">[\s\S]*?<\/p>/
-    )[0];
+    var hasWidget = Boolean(context);
+    if (Boolean(STATE.champion) !== hasWidget) {
+      // Presence changed (champion picked or cleared): rebuild the widget.
+      render();
+      return;
+    }
+    // Same presence: update the context line in place so an open disclosure
+    // and any half-typed fields survive the refresh.
+    if (context) context.innerHTML = contextHtml();
   }
 
   /* ------------------------------------------------------------------ *
@@ -454,8 +470,10 @@
     var mount = byId(MOUNT_ID);
     if (!mount && !one(RESULT_AREA_SELECTOR)) return; // no results area — never break
     render();
-    document.addEventListener("click", onDocumentClick);
-    document.addEventListener("click", function () {
+    document.addEventListener("click", function (event) {
+      onDocumentClick(event);
+      // The scenario may have changed with any click (champion picked,
+      // items added); keep the context line honest.
       refreshContext();
     });
   }

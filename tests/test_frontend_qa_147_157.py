@@ -113,11 +113,8 @@ def test_share_controls_initialize_without_quick_view(source: str):
     for control in ("shareOpenEditor", "shareDismiss", "shareAnalystButton"):
         assert control in share_block, f"{control} is not wired by initShareControls"
 
-    quick_block = source.split("function bindQuickEvents()")[1].split("\n}\n")[0]
-    for control in ("shareOpenEditor", "shareDismiss", "shareAnalystButton"):
-        assert (
-            control not in quick_block
-        ), f"{control} is still coupled to the removed quick view"
+    # The quick-view layer the wiring was once coupled to is gone entirely.
+    assert "function bindQuickEvents()" not in source
 
 
 def test_share_token_is_read_outside_quick_view_init(source: str):
@@ -176,9 +173,10 @@ def test_shared_build_render_targets_the_analyst_view(source: str):
     assert "engine-error" in error_surface
 
 
-def test_switch_view_tolerates_a_missing_quick_view(source: str):
-    block = source.split("function switchView(view)")[1].split("\n}\n")[0]
-    assert "if (quick)" in block or "quick?." in block or "if (!quick)" in block
+def test_the_view_switching_layer_is_gone(source: str):
+    """There is one view; the guarded quick/analyst switcher was dead code
+    and left with the rest of the quick layer."""
+    assert "function switchView" not in source
 
 
 # ---------------------------------------------------------------------------

@@ -148,7 +148,9 @@
               </button>
             </h2>
 
-            <div class="step-brief" id="championBrief">
+            <!-- The whole brief card is a pointer target for its step; the
+                 step-head button above stays the keyboard/AT control. -->
+            <div class="step-brief" id="championBrief" data-step-toggle="champion">
               <div class="brief-identity">
                 <span class="brief-portrait" id="championBriefPortrait" aria-hidden="true"></span>
                 <span class="brief-copy">
@@ -219,7 +221,7 @@
               </button>
             </h2>
 
-            <div class="step-brief" id="rosterBrief">
+            <div class="step-brief" id="rosterBrief" data-step-toggle="roster">
               <div class="brief-roster" id="rosterBriefList"></div>
             </div>
 
@@ -246,7 +248,7 @@
               </button>
             </h2>
 
-            <div class="step-brief" id="buildsBrief">
+            <div class="step-brief" id="buildsBrief" data-step-toggle="builds">
               <p class="mono brief-line" id="buildsBriefLine">No build yet</p>
             </div>
 
@@ -402,10 +404,16 @@
             <p class="verdict-number"><span id="scoreB">—</span></p>
             <p class="verdict-sub" id="verdictSubB"></p>
             <button class="verdict-enable" id="enableBuildB" type="button" data-toggle-compare>Enable Build B</button>
+            <button class="verdict-disable" id="disableBuildB" type="button" data-toggle-compare>Disable Build B · solo view</button>
           </div>
         </div>
 
         <p class="verdict-summary" id="resultSummary" role="status">Choose a champion, a complete build, and an enemy roster.</p>
+
+        <!-- Start checklist: shown until the scenario has a champion, an
+             enemy and Build A items (renderStartBand). Each row opens the
+             rail step it names through the shared data-step-toggle handler. -->
+        <section class="start-band" id="startBand" hidden aria-label="Scenario checklist"></section>
 
         <details class="qualified" id="notModeledPanel" hidden>
           <summary>Qualified result · what is not modeled for this champion</summary>

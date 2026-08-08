@@ -123,9 +123,15 @@ a { color: inherit; }
    2. App card and grid
    -------------------------------------------------------------------------- */
 
+/* The mock's 1440px was its design canvas, not a product decision: the app
+   fills the viewport (capped only for ultrawide line lengths) and stands at
+   least as tall as the window, so the wash is a frame, never an ocean. */
 .app-card {
-  display: block;
-  width: min(1440px, 100%);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1840px;
+  min-height: calc(100vh - 48px);
   margin: 0 auto;
   overflow: hidden;
   border: 1px solid var(--line-3);
@@ -135,6 +141,7 @@ a { color: inherit; }
 }
 
 .app-grid {
+  flex: 1;
   display: grid;
   grid-template-columns: var(--rail-width) minmax(0, 1fr);
   align-items: stretch;
@@ -260,8 +267,13 @@ a { color: inherit; }
 }
 .step.is-active .step-action { color: var(--win-dark); }
 
-/* The collapsed rail shows summaries; the open rail shows one-line rows. */
+/* The collapsed rail shows summaries; the open rail shows one-line rows.
+   A brief is the step's big click target — the whole card opens the editor,
+   not just the Edit caption (keyboard users have the step-head button). */
 .step-brief { padding: 0 16px 9px; margin-left: 25px; }
+.step-brief[data-step-toggle] { cursor: pointer; }
+.step:not(.is-open):hover { background: var(--rail-active); }
+.step:not(.is-open):hover .step-action { color: var(--cream); }
 .is-editing .step-brief { display: none; }
 .step.is-open .step-summary { display: none; }
 .is-editing .step:not(.is-open) { box-shadow: none; border-bottom: 1px solid var(--dline-1); margin-top: 0; }
@@ -1033,7 +1045,15 @@ a { color: inherit; }
    5. Canvas — banners, verdict, buy band
    -------------------------------------------------------------------------- */
 
-.canvas { min-width: 0; background: var(--paper); }
+.canvas {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--paper);
+}
+.canvas > * { flex: none; }
+/* The start checklist is the one band that grows to centre itself. */
+.canvas > .start-band { flex: 1; }
 
 .banners:empty { display: none; }
 .banner {
@@ -1127,6 +1147,22 @@ a { color: inherit; }
 .verdict.is-solo .verdict-b .verdict-number,
 .verdict.is-solo .verdict-b .verdict-sub { display: none; }
 .verdict.is-solo .verdict-enable { display: inline-block; }
+
+/* Duelling: the way back to solo lives right where the duel began. */
+.verdict-disable {
+  margin-top: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: 600 9.5px var(--mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--cream-62);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.verdict-disable:hover { color: var(--lose-dark); }
+.verdict.is-solo .verdict-disable { display: none; }
 .verdict.is-solo .verdict-delta {
   margin-top: 6px;
   font: 800 16px var(--font);
@@ -1140,6 +1176,76 @@ a { color: inherit; }
   font: 600 11.5px/1.5 var(--font);
   color: var(--ink-soft);
 }
+
+/* --- Start state -----------------------------------------------------------
+   Until the scenario has a champion, an enemy and items there is no duel to
+   show. The canvas leads with a three-step checklist that opens the rail
+   steps directly; the duel bands stay out of the way (.canvas.is-start). */
+
+.start-band {
+  flex: 1;
+  display: grid;
+  align-content: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 26px;
+}
+.start-kicker {
+  font: 700 10px var(--font);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  text-align: center;
+}
+.start-title {
+  margin-top: 2px;
+  font: 800 24px var(--font);
+  letter-spacing: -.03em;
+  color: var(--ink);
+  text-align: center;
+}
+.start-steps { display: grid; gap: 8px; margin-top: 18px; width: min(440px, 100%); }
+.start-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line-3);
+  border-radius: var(--radius);
+  background: var(--paper);
+  text-align: left;
+}
+.start-step:hover { border-color: var(--ink-muted); background: var(--paper-tint); }
+.start-step:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.start-index {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border: 1px solid var(--ink-muted);
+  font: 700 10px var(--mono);
+  color: var(--ink-soft);
+}
+.start-step.is-done { border-color: var(--line-2); background: var(--paper-tint); }
+.start-step.is-done .start-index { border-color: var(--win); background: var(--win); color: var(--paper); }
+.start-copy { flex: 1; min-width: 0; }
+.start-copy b { display: block; font: 700 12.5px var(--font); color: var(--ink); }
+.start-copy small { display: block; margin-top: 1px; font: 500 10px var(--mono); color: var(--ink-muted); }
+.start-step .step-action { color: var(--ink-muted); }
+.start-note {
+  margin-top: 14px;
+  font: 500 10.5px/1.5 var(--mono);
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.canvas.is-start .duel { display: none; }
+.canvas.is-start .hp-band { display: none; }
+.canvas.is-start .timeline-band { display: none; }
+.canvas.is-start .ledger-band { display: none; }
+.canvas.is-start .feedback-widget { display: none; }
 
 .qualified {
   border-bottom: 1px solid var(--line-2);
@@ -1235,20 +1341,32 @@ a { color: inherit; }
 /* Solo mode (comparison off): one centred build beside its absolute metrics
    (locked decision 2) — never an empty Build B column. */
 .duel.is-solo {
-  grid-template-columns: minmax(0, 400px) minmax(200px, var(--spine-width));
+  grid-template-columns: minmax(280px, 460px) minmax(220px, var(--spine-width));
   justify-content: center;
+  column-gap: 0;
+  padding: 8px 26px;
 }
+.duel.is-solo .duel-a { border-right: 1px solid var(--line-2); padding-left: 0; }
 .duel.is-solo .duel-b { display: none; }
 
 .duel-side { min-width: 0; padding: 16px 22px; }
 
+/* Every slot row is a button into the item picker for that exact slot —
+   the duel canvas is editable, not a read-only mirror of step 3. */
 .duel-row {
   display: flex;
   align-items: center;
   gap: 11px;
+  width: 100%;
   padding: 7px 0;
+  border: 0;
   border-bottom: 1px solid var(--line-1);
+  background: transparent;
+  text-align: left;
 }
+.duel-row:hover { background: var(--paper-tint); }
+.duel-row:hover .item-icon { border-color: var(--ink-muted); }
+.duel-row:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
 .duel-b .duel-row { flex-direction: row-reverse; text-align: right; }
 
 .duel-row .item-icon {
@@ -1278,6 +1396,28 @@ a { color: inherit; }
   text-transform: uppercase;
   color: var(--ink-muted);
 }
+
+/* An empty build side invites the fix instead of narrating it. */
+.duel-empty {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 22px 14px;
+  border: 1px dashed var(--line-4);
+  border-radius: var(--radius);
+  background: transparent;
+  font: 700 12px var(--font);
+  color: var(--ink-muted);
+  text-align: center;
+}
+.duel-empty small {
+  display: block;
+  margin-top: 4px;
+  font: 500 10px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.duel-empty:hover { border-color: var(--ink-muted); color: var(--ink); }
 
 .spine {
   padding: 16px 0;
@@ -1989,6 +2129,7 @@ a { color: inherit; }
   text-transform: uppercase;
   color: var(--ink-muted);
 }
+.feedback-widget .feedback-body { margin-top: 10px; }
 .feedback-widget .feedback-context { margin-bottom: 9px; color: var(--ink-soft); }
 .feedback-widget .feedback-context b { color: var(--ink); }
 .feedback-widget .feedback-actions { display: flex; flex-wrap: wrap; gap: 8px; }

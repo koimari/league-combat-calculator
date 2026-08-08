@@ -199,10 +199,12 @@ CONTROL_IDS = {
     "economicsGold": ("controls", "purchase_optimize"),
     "economicsOptimize": ("controls", "purchase_optimize"),
     "economicsSell": ("controls", "purchase_optimize"),
-    # Redesign: comparison is turned on from step 3 and from the empty
-    # challenger side of the verdict strip. Both write the same build state.
+    # Redesign: comparison toggles from step 3 and from the verdict strip —
+    # enable on the empty challenger side, disable from the live duel. All
+    # three write the same build state.
     "compareToggle": ("main", "items"),
     "enableBuildB": ("main", "items"),
+    "disableBuildB": ("main", "items"),
 }
 
 

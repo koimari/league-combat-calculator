@@ -355,3 +355,138 @@ def test_share_panel_keeps_its_permanence_warning(soup: BeautifulSoup):
     assert note is not None
     assert "permanent" in note.get_text().lower()
     assert "read-only" in note.get_text().lower()
+
+
+# ---------------------------------------------------------------------------
+# Interaction repairs (2026-08-08): the mock is a screen, not a poster.
+# Each test below pins an affordance the first implementation pass missed.
+# ---------------------------------------------------------------------------
+
+
+def test_the_app_fills_the_viewport_not_a_floating_1440_card(css: str):
+    """The mock's 1440px was its design canvas, not a product decision: the
+    shell grows with the viewport instead of floating in dead wash."""
+    block = re.search(r"\.app-card \{([^}]*)\}", css)
+    assert block is not None
+    assert "min(1440px" not in block.group(1)
+    assert "width: 100%" in block.group(1)
+    assert "min-height" in block.group(1)
+
+
+def test_collapsed_briefs_are_click_targets_for_their_step(
+    soup: BeautifulSoup, css: str
+):
+    """The champion/roster/builds summary cards open their editor on click —
+    not just the small Edit caption in the step header."""
+    for brief_id, step in (
+        ("championBrief", "champion"),
+        ("rosterBrief", "roster"),
+        ("buildsBrief", "builds"),
+    ):
+        brief = soup.select_one(f"#{brief_id}")
+        assert brief is not None, brief_id
+        assert brief.get("data-step-toggle") == step, brief_id
+    assert re.search(r"\.step-brief\[data-step-toggle\] \{[^}]*cursor: pointer", css)
+
+
+def test_comparison_can_be_turned_off_from_the_duel_itself(
+    soup: BeautifulSoup, css: str, source: str
+):
+    """Enable Build B appears in solo; the duel must carry the way back.
+    A toggle whose label reads as a status ("Build B enabled") is not a
+    control — both affordances name the action they perform."""
+    disable = soup.select_one("#disableBuildB")
+    assert disable is not None
+    assert disable.has_attr("data-toggle-compare")
+    assert disable.find_parent(class_="verdict-b") is not None
+    # Shown in duel mode, hidden in solo (where enable takes its place).
+    assert re.search(r"\.verdict\.is-solo \.verdict-disable \{[^}]*display: none", css)
+    body = function_body(source, "function renderPrototypeBuilder()")
+    assert '"Disable Build B' in body
+    assert '"Enable Build B"' in body
+
+
+def test_duel_rows_open_the_item_picker_for_their_exact_slot(source: str):
+    """Filled or empty, a canvas slot row is a button wired into the same
+    data-picker/data-path delegation step 3 uses — the duel is editable."""
+    body = function_body(source, "function duelRowHtml(")
+    assert "<button" in body
+    assert 'data-picker="item"' in body
+    render = function_body(source, "function renderDuelSide(")
+    assert "attacker.build${side}.${index}" in render or "slotPath" in render
+    # The keystone row opens the keystone picker, not the item picker.
+    assert 'data-picker="keystone"' in render
+
+
+def test_an_empty_duel_side_is_an_invitation_not_a_dead_end(source: str):
+    """ "Open step 3 to fill it" as prose is a dead end; the empty state is a
+    button that actually opens step 3."""
+    render = function_body(source, "function renderDuelSide(")
+    assert 'data-step-toggle="builds"' in render
+    assert "roster-empty" not in render
+
+
+def test_first_run_shows_a_start_checklist_not_a_ghost_duel(
+    soup: BeautifulSoup, css: str, source: str
+):
+    """Until the scenario has a champion, an enemy and items, the canvas
+    leads with a three-step start checklist; the duel bands wait."""
+    band = soup.select_one("#startBand")
+    assert band is not None
+    canvas = soup.select_one(".canvas")
+    order = [node for node in canvas.find_all(recursive=False)]
+    assert order.index(band) < order.index(soup.select_one(".duel"))
+    for hidden_band in (".duel", ".hp-band", ".timeline-band", ".ledger-band"):
+        assert re.search(
+            r"\.canvas\.is-start "
+            + re.escape(hidden_band)
+            + r"[^{]*\{[^}]*display: none",
+            css,
+        ), hidden_band
+    body = function_body(source, "function renderStartBand(")
+    # Each checklist row opens the step it names through the shared handler.
+    assert 'data-step-toggle="${step}"' in body
+    for step in ('"champion"', '"roster"', '"builds"'):
+        assert step in body, step
+    assert 'classList.toggle("is-start"' in source
+
+
+def test_feedback_widget_is_a_collapsed_disclosure_that_waits_for_a_scenario():
+    """The validation widget stays silent without a champion and collapses
+    behind a summary otherwise — it never leads the canvas with Yes/No."""
+    feedback = (ROOT / "static" / "js" / "feedback.js").read_text(encoding="utf-8")
+    assert "<details" in feedback and "feedback-body" in feedback
+    assert "if (!STATE.champion)" in feedback
+    # The old refreshContext re-parsed its own rendered HTML with a regex.
+    assert "statusMarkup().match(" not in feedback
+
+
+def test_the_dead_quick_mode_layer_is_gone(source: str):
+    """Quick mode's DOM left in 2026-08; its render/wiring layer survived as
+    dead code addressing elements that do not exist. It is removed, while the
+    shared utilities it grew (trust labels, share, practice targets) stay."""
+    for gone in (
+        "QUICK_STATE",
+        "renderQuickView",
+        "bindQuickEvents",
+        "initQuickView",
+        "switchView",
+        'getElementById("quickRun")',
+    ):
+        assert gone not in source, gone
+    for kept in (
+        "PRACTICE_TARGETS",
+        "function loadTrustLabels(",
+        "function certaintyChipHtml(",
+        "function initShareControls(",
+    ):
+        assert kept in source, kept
+
+
+def test_engine_ready_is_dispatched_by_render_not_a_monkey_patch(source: str):
+    """The old bootstrap reassigned render()/renderPrototypeChampion at the
+    bottom of the file to bolt on an event and trust-label loads."""
+    assert "__scryglassEngineReadyHook" not in source
+    assert "_originalRenderPrototypeChampion" not in source
+    body = function_body(source, "function render()")
+    assert 'dispatchEvent(new Event("scryglass:engine-ready"))' in body

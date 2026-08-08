@@ -2164,7 +2164,9 @@ function renderPrototypeBuilder() {
   document.querySelector('[data-build="b"]')?.classList.toggle("is-winner", outcome.winner === "B");
   const compareToggle = $("compareToggle");
   if (compareToggle) {
-    compareToggle.textContent = state.attacker.comparisonEnabled ? "Build B enabled" : "Enable Build B";
+    // A control names the action it performs, not the state it left behind —
+    // "Build B enabled" read as a status and hid the only way back to solo.
+    compareToggle.textContent = state.attacker.comparisonEnabled ? "Disable Build B · back to solo" : "Enable Build B";
     compareToggle.classList.toggle("is-on", Boolean(state.attacker.comparisonEnabled));
     compareToggle.setAttribute("aria-pressed", String(Boolean(state.attacker.comparisonEnabled)));
   }
@@ -2330,30 +2332,38 @@ function spineRowHtml(metric, aValue, bValue, comparing, aAlive = "", bAlive = "
   </div>`;
 }
 
-/** One mirrored item row on the duel canvas — read-only; step 3 edits them. */
-function duelRowHtml(id) {
+/**
+ * One slot row on the duel canvas — a button into the item picker for that
+ * exact slot. The duel is editable in place; step 3 remains the full editor
+ * (stacks, item options, per-slot BIS).
+ */
+function duelRowHtml(id, path) {
   const item = getItem(id);
   if (!item) {
-    return `<div class="duel-row is-empty"><span class="item-icon item-slot"></span><span class="duel-row-copy"><strong>Empty slot</strong><small>open step 3 to fill it</small></span></div>`;
+    return `<button type="button" class="duel-row is-empty" data-picker="item" data-path="${path}" aria-label="Add an item to this slot"><span class="item-icon item-slot"></span><span class="duel-row-copy"><strong>Empty slot</strong><small>click to add an item</small></span></button>`;
   }
   const price = Number(item.price) > 0 ? ` · ${fmt(item.price)}g` : "";
-  return `<div class="duel-row"><span class="item-icon item-slot" aria-label="Change ${escapeHtml(itemName(id))}"><img src="${itemImage(id)}" alt="" /><small class="visually-hidden">${escapeHtml(itemName(id))}</small></span><span class="duel-row-copy"><strong>${escapeHtml(itemName(id))}</strong><small>${escapeHtml(itemStatsLine(item))}${price}</small></span></div>`;
+  return `<button type="button" class="duel-row" data-picker="item" data-path="${path}" aria-label="Change ${escapeHtml(itemName(id))}"><span class="item-icon item-slot"><img src="${itemImage(id)}" alt="" /></span><span class="duel-row-copy"><strong>${escapeHtml(itemName(id))}</strong><small>${escapeHtml(itemStatsLine(item))}${price}</small></span></button>`;
 }
 
 function renderDuelSide(side) {
   const host = $(side === "A" ? "duelA" : "duelB");
   if (!host) return;
-  const ids = buildIdsForSide(side);
+  const slotIds = buildArray(side).slice(0, ordinarySlotCount(side));
   const keystone = getKeystone(state.attacker[`keystone${side}`]);
-  if (!ids.length && !keystone) {
-    host.innerHTML = `<p class="roster-empty">Build ${side} has no items yet — open step 3 to fill it.</p>`;
-    return;
+  const filled = buildIdsForSide(side);
+  const rows = slotIds.map((id, index) => duelRowHtml(id, `attacker.build${side}.${index}`));
+  if (includeBootsForSide(side)) {
+    rows.push(duelRowHtml(state.attacker[`questBoot${side}`], questBootPath(side)));
   }
-  const keystoneRow = keystone
-    ? `<div class="duel-row is-keystone"><span class="item-icon"><img src="${escapeHtml(keystone.icon)}" alt="" /></span><span class="duel-row-copy"><strong>${escapeHtml(keystone.name)}</strong><small>${escapeHtml(keystone.path || "")} keystone</small></span></div>`
+  const keystoneRow = `<button type="button" class="duel-row is-keystone ${keystone ? "" : "is-empty"}" data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add a keystone"}"><span class="item-icon">${keystone ? `<img src="${escapeHtml(keystone.icon)}" alt="" />` : ""}</span><span class="duel-row-copy"><strong>${keystone ? escapeHtml(keystone.name) : "Add keystone"}</strong><small>${keystone ? `${escapeHtml(keystone.path || "")} keystone` : "rune slot"}</small></span></button>`;
+  const invite = filled.length || keystone
+    ? ""
+    : `<button type="button" class="duel-empty" data-step-toggle="builds">Build ${side} is empty<small>click a slot below · or open step 3</small></button>`;
+  const foot = filled.length
+    ? `<p class="duel-foot">${filled.length} ${plural(filled.length, "item")} · ${fmt(buildListPrice(side))}g list price</p>`
     : "";
-  const price = buildListPrice(side);
-  host.innerHTML = `${ids.map(duelRowHtml).join("")}${keystoneRow}<p class="duel-foot">${ids.length} ${plural(ids.length, "item")} · ${fmt(price)}g list price</p>`;
+  host.innerHTML = `${invite}${rows.join("")}${keystoneRow}${foot}`;
 }
 
 function prototypeParticipants(result) {
@@ -2574,6 +2584,53 @@ function signedGold(delta) {
   return `${delta > 0 ? "+" : "−"}${fmt(Math.abs(delta))}g`;
 }
 
+/** A duel needs a champion, at least one enemy, and Build A items. */
+function scenarioReady() {
+  return Boolean(state.attacker.champion)
+    && state.targets.some((target) => target.champion)
+    && buildIdsForSide("A").length > 0;
+}
+
+/**
+ * The pre-duel start state: a three-step checklist instead of a ghost duel.
+ *
+ * Until the scenario is ready there is nothing honest to duel, so the canvas
+ * leads with the three moves that get there. Each row opens its rail step
+ * through the shared data-step-toggle delegation.
+ */
+function renderStartBand(ready) {
+  const band = $("startBand");
+  if (!band) return;
+  band.hidden = ready;
+  if (ready) return;
+  const champion = getChampion(state.attacker.champion);
+  const enemies = state.targets.filter((target) => target.champion).length;
+  const items = buildIdsForSide("A").length;
+  const row = (index, step, done, title, detail) => `
+    <button type="button" class="start-step ${done ? "is-done" : ""}" data-step-toggle="${step}">
+      <span class="start-index" aria-hidden="true">${done ? "✓" : index}</span>
+      <span class="start-copy"><b>${title}</b>${detail ? `<small>${detail}</small>` : ""}</span>
+      <span class="step-action">${done ? "Edit" : "Open"}</span>
+    </button>`;
+  band.innerHTML = `
+    <p class="start-kicker">New scenario</p>
+    <h2 class="start-title">Set the duel in three steps</h2>
+    <div class="start-steps">
+      ${row(1, "champion", Boolean(champion),
+        champion ? escapeHtml(champion.name) : "Choose your champion",
+        champion
+          ? `LV ${state.attacker.level}${state.attacker.role ? ` · ${escapeHtml(state.attacker.role)}` : ""}`
+          : "The attacker every number is computed for")}
+      ${row(2, "roster", enemies > 0,
+        enemies > 0 ? `${enemies} ${plural(enemies, "enemy", "enemies")} set` : "Add an enemy",
+        enemies > 0 ? "" : "Or use “vs practice target” for a dummy")}
+      ${row(3, "builds", items > 0,
+        items > 0 ? `Build A · ${items} ${plural(items, "item")}` : "Fill Build A",
+        items > 0 ? "" : "Six slots · enable Build B to compare")}
+    </div>
+    <p class="start-note">The duel opens when all three are set. Objective, gold and window live under Constraints.</p>`;
+}
+
 function renderPrototypeResult(aResult = null, bResult = null) {
   const aTotal = aResult ? Number(aResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? aResult.total_damage ?? 0) : null;
   const bTotal = bResult ? Number(bResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? bResult.total_damage ?? 0) : null;
@@ -2639,13 +2696,18 @@ function renderPrototypeResult(aResult = null, bResult = null) {
     ? "Choose a complete scenario to receive a reviewed comparison."
     : !comparing
       ? selectedAvailable
-        ? "Build A is the selected build for this scenario. Enable Build B in step 3 to compare a second build."
+        ? "Build A is the selected build for this scenario. Enable Build B to compare a second build."
         : `${objective.label} is unavailable until the reviewed event ledger supplies that outcome.`
       : outcome.winner === "tie"
         ? `Build A and Build B are level on ${objective.label.toLowerCase()} against this roster.`
         : outcome.winner
           ? `${outcome.winner === "A" ? "Build A" : "Build B"} carries the strongest ${objective.label.toLowerCase()} package against this roster.`
           : "The selected objective is unavailable for this comparison.";
+
+  // --- start checklist vs live duel ----------------------------------------
+  const ready = scenarioReady();
+  document.getElementById("canvas")?.classList.toggle("is-start", !ready);
+  renderStartBand(ready);
 
   // --- mirrored builds and delta spine -------------------------------------
   document.querySelector(".duel")?.classList.toggle("is-solo", !duelling);
@@ -2757,6 +2819,8 @@ function render() {
   applyPrerequisiteGates();
   scheduleEngineCalculation();
   scheduleLoadoutStats();
+  // Announce the pass: trust labels, staleness and share hydration listen.
+  document.dispatchEvent(new Event("scryglass:engine-ready"));
 }
 
 function openPicker(type, path) {
@@ -3961,44 +4025,24 @@ Promise.all([
   });
 
 // ============================================================================
-// P5 · Casual quick mode + presets + build sharing + trust labels (P4)
+// Build sharing + trust labels
 // A self-contained layer on top of the analyst engine above. It owns:
-//   - the Quick view (champion → role → enemy → "Best next item")
-//   - preset scenarios (static/quick-presets.json)
 //   - build sharing (POST /api/builds + POST /api/share + ?share=<token>)
 //   - trust chips (GET /api/certainty, GET /api/not-modeled) with a
 //     contract-shaped mock fallback until the P7 backend routes deploy.
+// (The casual Quick view that used to live here left with its DOM in
+// 2026-08; the analyst view is the app.)
 // ============================================================================
 
-const QUICK_ROLES = ["top", "jungle", "mid", "bottom", "support"];
-const ROLE_LABELS = { top: "Top", jungle: "Jungle", mid: "Mid", bottom: "Bottom", support: "Support" };
-// Implicit practice target used when the casual user skips enemy selection.
-const QUICK_PRACTICE_ENEMY = { champion: "Jhin", level: 18, role: "bottom", items: [] };
 // Practice dummies for the analyst roster's "vs practice target" affordance:
 // a squishy, a tank, and a bruiser. Each click adds the next dummy that is
 // not already in the roster so the engine's no-duplicate-champions rule
 // never fires.
 const PRACTICE_TARGETS = [
-  QUICK_PRACTICE_ENEMY,
+  { champion: "Jhin", level: 18, role: "bottom", items: [] },
   { champion: "Ornn", level: 18, role: "top", items: [] },
   { champion: "Garen", level: 18, role: "top", items: [] },
 ];
-const QUICK_MAX_ITEMS = 5;
-const QUICK_LEVEL = 18;
-
-const QUICK_STATE = {
-  champion: null,
-  role: "mid",
-  enemy: null,           // null = practice target
-  items: [],             // legendary item names already owned
-  presetId: null,
-  running: false,
-  results: null,         // { baseline: {...}, candidates: [...], slot: {...}, payload: {...}, at: ts }
-  share: null,           // { token, url, buildId }
-};
-let QUICK_PRESETS = [];
-let QUICK_VIEW_READY = false;
-let QUICK_INIT_STARTED = false;
 
 // --- Trust labels (P4) ------------------------------------------------------
 // Consumed contract (owned by the P7 backend agent):
@@ -4085,7 +4129,7 @@ function certaintyChipHtml(slot) {
 }
 
 function renderTrustPanels() {
-  const champion = state.attacker.champion || QUICK_STATE.champion || "";
+  const champion = state.attacker.champion || "";
   const placeholder = CERTAINTY_STATE.source === "mock" || NOT_MODELED_STATE.source === "mock";
   const legend = document.getElementById("trustLegend");
   if (legend) {
@@ -4098,16 +4142,7 @@ function renderTrustPanels() {
       note.hidden = !placeholder;
     }
   }
-  const quickLegendHost = document.querySelector("#quickView .trust-legend");
-  const quickNote = quickLegendHost ? quickLegendHost.querySelector(".trust-legend-note") : null;
-  if (quickNote) {
-    quickNote.textContent = placeholder
-      ? "Placeholder chips — certainty endpoints are not deployed yet."
-      : "";
-    quickNote.hidden = !placeholder;
-  }
   const panel = document.getElementById("notModeledPanel");
-  const quickPanel = document.getElementById("quickNotModeled");
   const items = NOT_MODELED_STATE.items || [];
   if (panel) {
     // Product principle 6: the qualified-result marker is visible *when
@@ -4119,439 +4154,7 @@ function renderTrustPanels() {
       .map((item) => `<li>${escapeHtml(item)}</li>`)
       .join("");
   }
-  if (quickPanel) {
-    quickPanel.hidden = !champion;
-    document.getElementById("quickNotModeledList").innerHTML = items.length
-      ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
-      : `<li class="not-modeled-empty">Nothing — every modeled item for ${escapeHtml(champion)} is included in calculations.</li>`;
-  }
 }
-
-// --- Quick view rendering ---------------------------------------------------
-
-function quickChampionEntries() {
-  return (DATA?.champions || []).slice().sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function quickItemEntries(query) {
-  const q = String(query || "").trim().toLowerCase();
-  return (DATA?.items || [])
-    .filter((item) => item.backendAvailable !== false && Number(item.price) > 0)
-    .filter((item) => !q || item.name.toLowerCase().includes(q))
-    .slice(0, 30);
-}
-
-function quickGridButton(kind, entry, selected) {
-  const isChampion = kind === "champion" || kind === "enemy";
-  const icon = isChampion
-    ? `<img src="${championImage(entry.name)}" alt="" loading="lazy" />`
-    : `<img src="${itemImage(entry.id)}" alt="" loading="lazy" />`;
-  const detail = isChampion
-    ? escapeHtml(entry.title || "")
-    : `${fmt(Number(entry.price) || 0)} gold`;
-  return `<button type="button" class="quick-choice ${selected ? "selected" : ""}" data-quick-pick="${kind}" data-value="${escapeHtml(isChampion ? entry.name : entry.name)}" aria-pressed="${selected}">${icon}<span><strong>${escapeHtml(entry.name)}</strong><small>${detail}</small></span></button>`;
-}
-
-function renderQuickRole() {
-  const host = document.getElementById("quickRole");
-  if (!host) return;
-  host.innerHTML = QUICK_ROLES.map((role) => `<button type="button" class="quick-role ${QUICK_STATE.role === role ? "active" : ""}" data-quick-role="${role}" aria-pressed="${QUICK_STATE.role === role}">${ROLE_LABELS[role]}</button>`).join("");
-}
-
-function renderQuickChampionGrid(query) {
-  const host = document.getElementById("quickChampionGrid");
-  if (!host) return;
-  const q = String(query || "").trim().toLowerCase();
-  const entries = quickChampionEntries().filter((entry) => !q || entry.name.toLowerCase().includes(q));
-  host.innerHTML = entries.slice(0, 40).map((entry) => quickGridButton("champion", entry, QUICK_STATE.champion === entry.name)).join("");
-  const note = document.getElementById("quickChampionNote");
-  if (note) {
-    note.textContent = QUICK_STATE.champion
-      ? `Locked: ${QUICK_STATE.champion}. Pick a different champion to change it.`
-      : `${entries.length} champions · type to filter`;
-  }
-}
-
-function renderQuickEnemyGrid(query) {
-  const host = document.getElementById("quickEnemyGrid");
-  if (!host) return;
-  const q = String(query || "").trim().toLowerCase();
-  const entries = quickChampionEntries().filter((entry) => !q || entry.name.toLowerCase().includes(q));
-  const practice = QUICK_STATE.enemy === null;
-  host.innerHTML = `<button type="button" class="quick-choice ${practice ? "selected" : ""}" data-quick-pick="enemy" data-value="" aria-pressed="${practice}"><span class="quick-choice-icon quick-practice-icon" aria-hidden="true">🎯</span><span><strong>Practice target</strong><small>Default squishy dummy — no specific enemy</small></span></button>` + entries.slice(0, 40).map((entry) => quickGridButton("enemy", entry, !practice && QUICK_STATE.enemy?.champion === entry.name)).join("");
-  const note = document.getElementById("quickEnemyNote");
-  if (note) {
-    note.textContent = QUICK_STATE.enemy
-      ? `Fighting ${QUICK_STATE.enemy.champion}.`
-      : "Leave empty to fight a default practice target.";
-  }
-  const clear = document.getElementById("quickEnemyClear");
-  if (clear) clear.hidden = QUICK_STATE.enemy === null;
-}
-
-function renderQuickItemGrid(query) {
-  const host = document.getElementById("quickItemGrid");
-  if (!host) return;
-  const q = String(query || "").trim().toLowerCase();
-  const owned = new Set(QUICK_STATE.items);
-  host.innerHTML = quickItemEntries(q).filter((item) => !owned.has(item.name)).slice(0, 24).map((entry) => quickGridButton("item", entry, false)).join("");
-}
-
-function renderQuickItemsStrip() {
-  const host = document.getElementById("quickItems");
-  if (!host) return;
-  host.innerHTML = QUICK_STATE.items.length
-    ? QUICK_STATE.items.map((name) => {
-        const item = findItemByBackendName(name);
-        return `<span class="quick-item-chip"><img src="${item ? itemImage(item.id) : ""}" alt="" /><b>${escapeHtml(name)}</b><button type="button" class="quick-item-remove" data-quick-remove="${escapeHtml(name)}" aria-label="Remove ${escapeHtml(name)}">×</button></span>`;
-      }).join("")
-    : `<span class="quick-items-empty">No items yet — the recommendation is for your first completed item.</span>`;
-}
-
-function renderQuickPresets() {
-  const host = document.getElementById("quickPresets");
-  if (!host) return;
-  host.innerHTML = QUICK_PRESETS.map((preset) => `<button type="button" class="quick-preset ${QUICK_STATE.presetId === preset.id ? "active" : ""}" data-quick-preset="${escapeHtml(preset.id)}" title="${escapeHtml(preset.tagline || "")}" aria-pressed="${QUICK_STATE.presetId === preset.id}"><span class="quick-preset-emoji" aria-hidden="true">${preset.emoji || "🎮"}</span><span><strong>${escapeHtml(preset.label)}</strong><small>${escapeHtml(preset.tagline || "")}</small></span></button>`).join("");
-}
-
-function renderQuickView() {
-  if (!QUICK_VIEW_READY) return;
-  if (!document.getElementById("quickView")) return; // quick mode removed (2026-08-06)
-  renderQuickRole();
-  renderQuickChampionGrid(document.getElementById("quickChampionSearch")?.value || "");
-  renderQuickEnemyGrid(document.getElementById("quickEnemySearch")?.value || "");
-  renderQuickItemsStrip();
-  renderQuickItemGrid(document.getElementById("quickItemSearch")?.value || "");
-  renderQuickPresets();
-  renderTrustPanels();
-  const run = document.getElementById("quickRun");
-  if (run) {
-    run.disabled = !QUICK_STATE.champion || QUICK_STATE.running;
-    run.textContent = QUICK_STATE.running ? "Working…" : "Best next item";
-  }
-}
-
-// --- Payloads ---------------------------------------------------------------
-
-function quickPreset() {
-  return QUICK_PRESETS.find((preset) => preset.id === QUICK_STATE.presetId) || null;
-}
-
-function quickFightSettings() {
-  const preset = quickPreset();
-  if (preset) return { ...preset.fight };
-  return {
-    rotations: 1,
-    fight_mode: "one_rotation",
-    fight_duration: 10,
-    auto_attack_uptime_mode: "calculated",
-    include_auto_attacks: true,
-  };
-}
-
-function quickEnemyLoadout() {
-  if (QUICK_STATE.enemy) {
-    return [
-      {
-        champion: QUICK_STATE.enemy.champion,
-        level: QUICK_STATE.enemy.level || 18,
-        role: QUICK_STATE.enemy.role || "top",
-        items: QUICK_STATE.enemy.items || [],
-      },
-    ];
-  }
-  const preset = quickPreset();
-  if (preset && Array.isArray(preset.enemies) && preset.enemies.length) {
-    // A preset owns its full enemy roster (the 4v4 preset is a coupled
-    // team fight); a user-picked enemy always overrides it.
-    return preset.enemies.map((enemy) => ({ ...enemy }));
-  }
-  return [{ ...QUICK_PRACTICE_ENEMY }];
-}
-
-function quickCalculatePayload() {
-  const fight = quickFightSettings();
-  const preset = quickPreset();
-  const payload = {
-    champion: QUICK_STATE.champion,
-    level: QUICK_LEVEL,
-    role: QUICK_STATE.role,
-    items: QUICK_STATE.items.slice(0, QUICK_MAX_ITEMS),
-    item_options: {},
-    ability_ranks: null,
-    champion_options: {},
-    enemies: quickEnemyLoadout(),
-    allies: preset ? (preset.allies || []).slice() : [],
-    role_quest_complete: false,
-    include_actives: true,
-    include_crossover: false,
-    rotations: fight.rotations,
-    fight_mode: fight.fight_mode,
-    fight_duration: fight.fight_duration,
-    auto_attack_uptime_mode: fight.auto_attack_uptime_mode,
-    include_auto_attacks: fight.include_auto_attacks,
-  };
-  return payload;
-}
-
-function quickBisPayload() {
-  const payload = quickCalculatePayload();
-  const count = QUICK_STATE.items.length;
-  if (count < QUICK_MAX_ITEMS) {
-    payload.slot_index = count;
-    payload.slot_kind = "item";
-  } else {
-    payload.slot_index = 0;
-    payload.slot_kind = "boots";
-  }
-  payload.subject_team = "main";
-  payload.objective = "overall";
-  return payload;
-}
-
-function postJson(url, body) {
-  return fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-}
-
-async function quickBaselineResult(payload) {
-  const response = await postJson("/api/calculate", payload);
-  const result = await response.json();
-  if (!response.ok || result.error) throw new Error(result.error || `calculate failed (HTTP ${response.status})`);
-  const main = (result.combat?.participants || []).find((participant) => participant.participant_id === "main");
-  const mainBreakdown = (result.combat?.breakdown || []).find((row) => row.participant_id === "main");
-  return {
-    tdd: Number(mainBreakdown?.total_damage ?? result.total_damage ?? 0),
-    ehp: Number(main?.survival?.effective_health ?? 0),
-    effectiveArmor: Number(result.effective_armor ?? 0),
-    effectiveMr: Number(result.effective_mr ?? 0),
-    result,
-  };
-}
-
-async function quickCandidates(payload) {
-  const response = await postJson("/api/bis", payload);
-  const data = await response.json();
-  if (!response.ok || data.error) throw new Error(data.error || `best-next-item failed (HTTP ${response.status})`);
-  const certified = Array.isArray(data.candidates) ? data.candidates : [];
-  const partial = Array.isArray(data.partial_candidates) ? data.partial_candidates : [];
-  const pool = certified.length ? certified : partial;
-  return {
-    candidates: pool.slice(0, 3).map((candidate) => ({
-      name: candidate.name,
-      icon: candidate.icon || "",
-      score: Number(candidate.score ?? candidate.objective_value ?? 0),
-      components: candidate.components || {},
-      stats: candidate.stats || {},
-      survival: candidate.survival || {},
-      gold: Number((findItemByBackendName(candidate.name) || {}).price || 0),
-      certified: Boolean(candidate.timeline_coverage?.complete),
-    })),
-    certified: certified.length > 0,
-    coverageNote: data.coverage?.note || "",
-  };
-}
-
-// --- One-line "why" ---------------------------------------------------------
-
-function quickWhy(candidate, baseline, index, context) {
-  const deltaD = candidate.score - baseline.tdd;
-  const deltaE = (Number(candidate.survival.effective_health) || 0) - baseline.ehp;
-  const stats = candidate.stats || {};
-  const armorPen = Number(stats.armorPenetration || 0) + Number(stats.lethality || 0);
-  const magicPen = Number(stats.magicPenetration || 0) + Number(stats.percentPen || 0);
-  const defensive = Number(stats.hp || 0) + Number(stats.armor || 0) * 5 + Number(stats.magicResistance || 0) * 5;
-  if (baseline.effectiveMr > 120 && magicPen > 0) {
-    return "Bypasses the enemy's heavy magic resistance";
-  }
-  if (baseline.effectiveArmor > 120 && armorPen > 0) {
-    return "Cuts through the enemy's heavy armor";
-  }
-  if (deltaE > 0 && defensive > 300 && baseline.ehp < 2200) {
-    return "Adds durability — your current build is fragile here";
-  }
-  if (context.leadsDamage === candidate.name) {
-    return `Biggest single-slot damage gain (+${fmt(deltaD)} TDD)`;
-  }
-  if (context.leadsSurvival === candidate.name) {
-    return `Biggest survivability gain (+${fmt(deltaE)} eHP)`;
-  }
-  if (context.cheapest === candidate.name) {
-    return `Cheapest slot improvement (${fmt(candidate.gold)} gold)`;
-  }
-  return "Strong all-round pick for this matchup";
-}
-
-function quickContext(candidates, baseline) {
-  const withD = candidates.map((candidate) => ({ candidate, deltaD: candidate.score - baseline.tdd }));
-  const withE = candidates.map((candidate) => ({ candidate, deltaE: (Number(candidate.survival.effective_health) || 0) - baseline.ehp }));
-  // Only claim a "gain" when the delta is actually positive; a zero/negative
-  // delta (e.g. an attack-speed boots pick for a mage) must not be sold as a
-  // damage gain.
-  const positiveD = withD.filter((row) => row.deltaD > 0.5);
-  const positiveE = withE.filter((row) => row.deltaE > 0.5);
-  const bestD = positiveD.reduce((best, row) => (row.deltaD > best.deltaD ? row : best), positiveD[0]);
-  const bestE = positiveE.reduce((best, row) => (row.deltaE > best.deltaE ? row : best), positiveE[0]);
-  const cheapest = candidates.reduce((best, candidate) => (!best || candidate.gold < best.gold ? candidate : best), null);
-  return {
-    leadsDamage: bestD ? bestD.candidate.name : null,
-    leadsSurvival: bestE ? bestE.candidate.name : null,
-    cheapest: cheapest ? cheapest.name : null,
-  };
-}
-
-// --- Results rendering ------------------------------------------------------
-
-function quickResultCard(candidate, index, baseline, context, certified) {
-  const deltaD = candidate.score - baseline.tdd;
-  const deltaE = (Number(candidate.survival.effective_health) || 0) - baseline.ehp;
-  const deltaClass = (delta) => (Math.abs(delta) < 0.5 ? "quick-delta-flat" : delta > 0 ? "quick-delta-up" : "quick-delta-down");
-  const why = quickWhy(candidate, baseline, index, context);
-  return `<article class="quick-card ${index === 0 ? "quick-card-top" : ""}">
-    <div class="quick-card-rank" aria-hidden="true">${index + 1}</div>
-    <img class="quick-card-icon" src="${candidate.icon || ""}" alt="" loading="lazy" />
-    <div class="quick-card-main">
-      <div class="quick-card-title"><strong>${escapeHtml(candidate.name)}</strong>${candidate.gold ? `<span class="quick-card-gold">${fmt(candidate.gold)}g</span>` : ""}${certified ? "" : `<span class="certainty-chip certainty-estimate" title="Event order is partially certified for this coupled roster">PARTIAL</span>`}</div>
-      <p class="quick-card-why">${escapeHtml(why)}</p>
-    </div>
-    <dl class="quick-card-deltas">
-      <div><dt>TDD</dt><dd class="${deltaClass(deltaD)}">${deltaD >= 0 ? "+" : ""}${fmt(deltaD)}</dd></div>
-      <div><dt>eHP</dt><dd class="${deltaClass(deltaE)}">${deltaE >= 0 ? "+" : ""}${fmt(deltaE)}</dd></div>
-    </dl>
-  </article>`;
-}
-
-function renderQuickResults(results) {
-  const host = document.getElementById("quickResults");
-  const after = document.getElementById("quickAfter");
-  if (!results) {
-    host.hidden = true;
-    if (after) after.hidden = true;
-    return;
-  }
-  host.hidden = false;
-  if (after) after.hidden = false;
-  const context = quickContext(results.candidates, results.baseline);
-  const enemy = Array.isArray(results.enemies) && results.enemies.length ? results.enemies[0] : quickEnemyLoadout()[0] || QUICK_PRACTICE_ENEMY;
-  const preset = quickPreset();
-  const slotLabel = results.slot.kind === "boots" ? "boots slot" : `item slot ${results.slot.index + 1}`;
-  const coverage = results.certified
-    ? ""
-    : `<p class="quick-coverage-note">${escapeHtml(results.coverageNote || "Coupled-roster event order is partially certified; scores below are estimates.")}</p>`;
-  host.innerHTML = `
-    <div class="quick-results-head">
-      <div><p class="eyebrow">Recommended next item</p><h2>${escapeHtml(QUICK_STATE.champion)} · ${ROLE_LABELS[QUICK_STATE.role]}</h2></div>
-      <p class="quick-scenario-line">vs ${results.enemies.length > 1 ? `${results.enemies.length} enemies` : escapeHtml(enemy.champion)}${preset ? ` · ${escapeHtml(preset.label)}` : ""} · filling the ${slotLabel}</p>
-    </div>
-    ${coverage}
-    <div class="quick-card-list">
-      ${results.candidates.map((candidate, index) => quickResultCard(candidate, index, results.baseline, context, results.certified)).join("")}
-    </div>
-    <p class="quick-baseline-line">Baseline (your current build): ${fmt(results.baseline.tdd)} TDD · ${fmt(results.baseline.ehp)} eHP before adding an item.</p>`;
-}
-
-// --- Quick → analyst bridge -------------------------------------------------
-
-function openQuickInAnalyst() {
-  if (!QUICK_STATE.champion) {
-    document.getElementById("quickChampionSearch").focus();
-    return;
-  }
-  const payload = QUICK_STATE.results?.payload || quickCalculatePayload();
-  state.attacker.champion = QUICK_STATE.champion;
-  state.attacker.level = QUICK_LEVEL;
-  state.attacker.role = QUICK_STATE.role || "mid";
-  state.attacker.roleQuestComplete = false;
-  state.attacker.buildA = [0, 0, 0, 0, 0, 0];
-  state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
-  state.attacker.buildAItemOptions = [{}, {}, {}, {}, {}, {}];
-  state.attacker.questBootA = 0;
-  state.attacker.includeBootsA = true;
-  state.attacker.keystoneA = "";
-  state.attacker.comparisonEnabled = false;
-  (payload.items || []).forEach((name, index) => {
-    if (index >= 6) return;
-    const item = findItemByBackendName(name);
-    if (item) state.attacker.buildA[index] = item.id;
-  });
-  const loadoutFrom = (loadout) => ({
-    champion: loadout.champion,
-    level: loadout.level || 18,
-    role: loadout.role || "",
-    roleQuestComplete: false,
-    items: [0, 0, 0, 0, 0, 0],
-    itemStacks: [0, 0, 0, 0, 0, 0],
-    itemOptions: [{}, {}, {}, {}, {}, {}],
-    boots: 0,
-    includeBoots: true,
-    abilityRanks: {},
-    championOptions: {},
-    allyEffectsEnabled: false,
-  });
-  state.targets = (payload.enemies || []).filter((enemy) => enemy.champion).map(loadoutFrom);
-  state.allies = (payload.allies || []).filter((ally) => ally.champion).map(loadoutFrom);
-  state.fight.rotations = Number(payload.rotations) || 1;
-  state.fight.duration = Number(payload.fight_duration) || 10;
-  state.fight.aaUptimeMode = payload.auto_attack_uptime_mode || "calculated";
-  state.ui.objective = "overall";
-  state.ui.gameState = "theory";
-  QUICK_STATE.results = null;
-  switchView("analyst");
-  loadTrustLabels(QUICK_STATE.champion);
-  render();
-}
-
-// --- Best next item ---------------------------------------------------------
-
-async function runQuickBestNextItem() {
-  if (QUICK_STATE.running) return;
-  if (!QUICK_STATE.champion) {
-    document.getElementById("quickChampionSearch").focus();
-    return;
-  }
-  QUICK_STATE.running = true;
-  renderQuickView();
-  const spinner = document.getElementById("quickSpinner");
-  spinner.hidden = false;
-  const results = document.getElementById("quickResults");
-  results.hidden = true;
-  document.getElementById("quickAfter").hidden = true;
-  const started = Date.now();
-  try {
-    const payload = quickCalculatePayload();
-    const bisPayload = quickBisPayload();
-    const [baseline, candidatesData] = await Promise.all([quickBaselineResult(payload), quickCandidates(bisPayload)]);
-    if (!candidatesData.candidates.length) {
-      throw new Error("No event-ordered candidates were available for this scenario.");
-    }
-    QUICK_STATE.results = {
-      baseline,
-      candidates: candidatesData.candidates,
-      certified: candidatesData.certified,
-      coverageNote: candidatesData.coverageNote,
-      slot: bisPayload.slot_kind === "boots" ? { kind: "boots", index: 0 } : { kind: "item", index: bisPayload.slot_index },
-      enemies: payload.enemies,
-      payload,
-    };
-    const elapsed = Date.now() - started;
-    spinner.querySelector("#quickSpinnerText").textContent = `Crunching the event-ordered numbers… (${Math.max(1, Math.round(elapsed / 100) / 10)}s)`;
-    renderQuickResults(QUICK_STATE.results);
-    spinner.hidden = true;
-    results.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  } catch (error) {
-    spinner.hidden = true;
-    results.hidden = false;
-    results.innerHTML = `<div class="quick-error" role="alert"><strong>Could not compute a recommendation</strong><p>${escapeHtml(error.message || String(error))}</p><p class="quick-error-hint">Try a different champion, role, or preset.</p></div>`;
-  } finally {
-    QUICK_STATE.running = false;
-    renderQuickView();
-  }
-}
-
-// --- Sharing ----------------------------------------------------------------
 
 async function mintShareUrl(payload, slug) {
   // /api/builds stores ability_ranks in a dedicated JSON column and rejects
@@ -4581,22 +4184,6 @@ function openSharePanel(share) {
   status.textContent = "";
   panel.hidden = false;
   requestAnimationFrame(() => urlInput.select());
-}
-
-async function shareQuickBuild() {
-  if (!QUICK_STATE.results) {
-    await runQuickBestNextItem();
-  }
-  if (!QUICK_STATE.results) return;
-  const status = document.getElementById("shareStatus");
-  try {
-    status.textContent = "Creating your share link…";
-    const share = await mintShareUrl(QUICK_STATE.results.payload, "quick-build");
-    QUICK_STATE.share = share;
-    openSharePanel(share);
-  } catch (error) {
-    status.textContent = error.message;
-  }
 }
 
 async function shareAnalystBuild() {
@@ -4674,7 +4261,7 @@ function openSharedBuildInEditor() {
   try {
     loadSharedBuildIntoAnalyst(payload);
     setSharedReadOnly(false);
-    switchView("analyst");
+    window.scrollTo({ top: 0 });
     document.getElementById("championPicker")?.focus();
   } catch (error) {
     document.getElementById("shareBannerText").textContent = `Could not open in editor: ${error.message}`;
@@ -4758,131 +4345,14 @@ function loadSharedBuildIntoAnalyst(payload) {
   render();
 }
 
-// --- View switching ---------------------------------------------------------
-
-// Quick mode was removed in 2026-08; the analyst view is the app. Every hop
-// here is guarded so a template without the quick shell (the shipped one)
-// still switches cleanly instead of throwing on a missing node (#147).
-function switchView(view) {
-  const quick = document.getElementById("quickView");
-  const analyst = document.getElementById("analystView");
-  const quickTab = document.getElementById("viewQuickTab");
-  const analystTab = document.getElementById("viewAnalystTab");
-  const select = (tab, selected) => {
-    if (!tab) return;
-    tab.classList.toggle("active", selected);
-    tab.setAttribute("aria-selected", String(selected));
-  };
-  if (view === "analyst" || !quick) {
-    if (quick) quick.hidden = true;
-    if (analyst) analyst.hidden = false;
-    select(quickTab, false);
-    select(analystTab, true);
-    requestAnimationFrame(() => scheduleEngineCalculation());
-  } else {
-    if (analyst) analyst.hidden = true;
-    quick.hidden = false;
-    select(analystTab, false);
-    select(quickTab, true);
-    renderQuickView();
-  }
-  window.scrollTo({ top: 0 });
-}
-
-// --- Quick mode event wiring ------------------------------------------------
-
-function bindQuickEvents() {
-  // The Quick/Analyst tab bar was removed (product decision 2026-08-06): the
-  // analyst view is the app. Guard for templates that still carry the tabs.
-  const quickTab = document.getElementById("viewQuickTab");
-  const analystTab = document.getElementById("viewAnalystTab");
-  if (quickTab) quickTab.addEventListener("click", () => switchView("quick"));
-  if (analystTab) analystTab.addEventListener("click", () => switchView("analyst"));
-
-  const championSearch = document.getElementById("quickChampionSearch");
-  championSearch.addEventListener("input", () => renderQuickChampionGrid(championSearch.value));
-  const enemySearch = document.getElementById("quickEnemySearch");
-  enemySearch.addEventListener("input", () => renderQuickEnemyGrid(enemySearch.value));
-  const itemSearch = document.getElementById("quickItemSearch");
-  itemSearch.addEventListener("input", () => renderQuickItemGrid(itemSearch.value));
-
-  document.getElementById("quickChampionGrid").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-quick-pick='champion']");
-    if (!button) return;
-    QUICK_STATE.champion = button.dataset.value;
-    loadTrustLabels(QUICK_STATE.champion);
-    renderQuickChampionGrid(championSearch.value);
-    renderQuickView();
-  });
-
-  document.getElementById("quickEnemyGrid").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-quick-pick='enemy']");
-    if (!button) return;
-    if (!button.dataset.value) {
-      QUICK_STATE.enemy = null;
-    } else {
-      const champion = quickChampionEntries().find((entry) => entry.name === button.dataset.value);
-      QUICK_STATE.enemy = champion
-        ? { champion: champion.name, level: 18, role: "top", items: [] }
-        : { champion: button.dataset.value, level: 18, role: "top", items: [] };
-    }
-    renderQuickEnemyGrid(enemySearch.value);
-    renderQuickView();
-  });
-  document.getElementById("quickEnemyClear").addEventListener("click", () => {
-    QUICK_STATE.enemy = null;
-    enemySearch.value = "";
-    renderQuickEnemyGrid("");
-    renderQuickView();
-  });
-
-  document.getElementById("quickItemGrid").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-quick-pick='item']");
-    if (!button) return;
-    if (QUICK_STATE.items.length >= QUICK_MAX_ITEMS) return;
-    QUICK_STATE.items.push(button.dataset.value);
-    itemSearch.value = "";
-    renderQuickItemsStrip();
-    renderQuickItemGrid("");
-  });
-  document.getElementById("quickItems").addEventListener("click", (event) => {
-    const remove = event.target.closest("[data-quick-remove]");
-    if (!remove) return;
-    QUICK_STATE.items = QUICK_STATE.items.filter((name) => name !== remove.dataset.quickRemove);
-    renderQuickItemsStrip();
-    renderQuickItemGrid(itemSearch.value);
-  });
-
-  document.getElementById("quickRole").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-quick-role]");
-    if (!button) return;
-    QUICK_STATE.role = button.dataset.quickRole;
-    renderQuickRole();
-  });
-
-  document.getElementById("quickPresets").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-quick-preset]");
-    if (!button) return;
-    QUICK_STATE.presetId = QUICK_STATE.presetId === button.dataset.quickPreset ? null : button.dataset.quickPreset;
-    renderQuickPresets();
-  });
-
-  document.getElementById("quickRun").addEventListener("click", runQuickBestNextItem);
-  document.getElementById("quickShareButton").addEventListener("click", shareQuickBuild);
-  document.getElementById("quickAnalystButton").addEventListener("click", openQuickInAnalyst);
-}
-
 // --- Share controls ---------------------------------------------------------
 
 /**
  * Wire every build-sharing control and honor a ?share= token.
  *
- * Issue #147: this wiring used to live inside bindQuickEvents(), which
- * initQuickView() skips whenever #quickView is absent — and quick mode was
- * removed in 2026-08. That left the shared-build banner's "Open in editor"
- * and dismiss controls, the share panel, and the ?share= read all dead on the
- * shipped template. Sharing is its own concern with its own initializer, and
- * it depends on nothing but the analyst view.
+ * Issue #147: this wiring once rode along with the removed quick view's
+ * initializer and silently died with it. Sharing is its own concern with its
+ * own initializer, and it depends on nothing but the analyst view.
  */
 function initShareControls() {
   const openEditor = document.getElementById("shareOpenEditor");
@@ -4946,57 +4416,14 @@ function dismissShareBanner() {
 
 // --- Boot -------------------------------------------------------------------
 
-async function initQuickView() {
-  if (QUICK_INIT_STARTED) return;
-  QUICK_INIT_STARTED = true;
-  if (!document.getElementById("quickView")) return; // quick mode removed (2026-08-06)
-  try {
-    const response = await fetch("/static/quick-presets.json");
-    if (!response.ok) throw new Error("presets failed to load");
-    const data = await response.json();
-    QUICK_PRESETS = Array.isArray(data?.presets) ? data.presets : [];
-  } catch (error) {
-    QUICK_PRESETS = [];
-  }
-  QUICK_VIEW_READY = true;
-  bindQuickEvents();
-  renderQuickView();
-  // Share handling lives in initShareControls(); quick view only needs to
-  // hand the analyst view its trust labels.
-  if (state.attacker.champion) loadTrustLabels(state.attacker.champion);
-}
-
+// render() announces every pass as scryglass:engine-ready; trust labels
+// follow the selected champion off that signal (loadTrustLabels self-guards
+// against repeat fetches for the same champion).
 document.addEventListener("scryglass:engine-ready", () => {
-  if (!QUICK_VIEW_READY) initQuickView();
-  if (document.getElementById("quickView")) renderQuickView();
-  loadTrustLabels(state.attacker.champion || QUICK_STATE.champion || "");
+  loadTrustLabels(state.attacker.champion || "");
 });
 
-// Boot the quick view immediately so its controls are live even before the
-// patch snapshot finishes loading; grids repopulate on engine-ready.
-initQuickView();
-// Sharing boots unconditionally — it is not a quick-view feature (#147).
 initShareControls();
-
-// Patch the analyst champion selection so trust labels follow the analyst view.
-const _originalRenderPrototypeChampion = renderPrototypeChampion;
-renderPrototypeChampion = function (...args) {
-  const result = _originalRenderPrototypeChampion.apply(this, args);
-  const champion = state.attacker.champion;
-  if (champion && !CERTAINTY_STATE.loading) loadTrustLabels(champion);
-  return result;
-};
-
-// Hook the engine-ready signal into the existing bootstrap.
-if (typeof window.__scryglassEngineReadyHook === "undefined") {
-  window.__scryglassEngineReadyHook = true;
-  const _originalRender = render;
-  render = function (...args) {
-    const result = _originalRender.apply(this, args);
-    document.dispatchEvent(new Event("scryglass:engine-ready"));
-    return result;
-  };
-}
 
 
 // Temporary local design-review mode. It is opt-in via ?review=1 and has no
