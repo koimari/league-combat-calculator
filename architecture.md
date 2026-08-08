@@ -63,7 +63,9 @@ None of this changes which builds are evaluated or how they score: cache-vs-no-c
 
 ## Public boundary
 
-`app.py` parses bounded requests and exposes stable JSON. `static/js/app.js` renders the scenario and results from backend receipts only: it contains no champion or item formulas, no item-id literals, and no local damage/stat engine (issue #135 retired the duplicate in-browser engine and the 175% crit fallback). Stat cards are fed by `POST /api/loadout-stats`; scores, breakdowns, BIS, and both optimizers consume `/api/calculate`, `/api/bis`, and `/api/optimize`.
+`app.py` is the HTTP adapter: it decodes JSON, applies cache/rate policy, delegates, translates typed failures, and serializes stable JSON. `request_parsing.py` owns the public scalar/list coercion policy; `calculate.py` owns the pure calculate payload and comparison-curve orchestration; `bis.py` owns candidate construction, scoring, ranking, and receipts; `certainty.py` and `validation_receipts.py` own trust and observed-result classification. Validation receipts call `calculate_payload()` directly, never round-trip through a Flask `Response` (issue #158).
+
+`static/js/app.js` renders the scenario and results from backend receipts only: it contains no champion or item formulas, no item-id literals, and no local damage/stat engine (issue #135 retired the duplicate in-browser engine and the 175% crit fallback). Stat cards are fed by `POST /api/loadout-stats`; scores, breakdowns, BIS, and both optimizers consume `/api/calculate`, `/api/bis`, and `/api/optimize`.
 
 Reviewed champion modules are enabled as attackers. Every cached champion can be used as an ally or target for independently derived base and item stats. Missing attacker mechanics fail closed. Missing ally or defensive mechanics are disclosed as unmodeled context.
 

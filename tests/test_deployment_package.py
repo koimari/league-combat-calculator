@@ -45,6 +45,9 @@ _IGNORED_NAMES = {
 _IGNORED_SUFFIXES = (".pyc", ".blend", ".blend1", ".psd", ".mov")
 
 _ROUTE_DEPENDENCIES = [
+    "src.calculator.application_errors",
+    "src.calculator.calculate",
+    "src.calculator.certainty",
     "src.calculator.data_fetcher",
     "src.calculator.item_effects",
     "src.calculator.rune_effects",
@@ -63,6 +66,8 @@ _ROUTE_DEPENDENCIES = [
     "src.calculator.role_quests",
     "src.calculator.pipeline",
     "src.calculator.public_response",
+    "src.calculator.request_parsing",
+    "src.calculator.validation_receipts",
     "src.calculator.bis",
     "src.rate_limit",
     "src.db",
@@ -130,9 +135,15 @@ def test_deployment_package_imports_every_route_dependency(deployment_package):
     no repo path on sys.path — including the runtime ``metrics`` module."""
     imports = "; ".join(f"import {name}" for name in _ROUTE_DEPENDENCIES)
     code = f"""
+import os
 import sys
 import importlib.util
-assert importlib.util.find_spec("scripts") is None, "scripts must not ship"
+from pathlib import Path
+scripts_spec = importlib.util.find_spec("scripts")
+package_root = Path(os.environ["PYTHONPATH"]).resolve()
+if scripts_spec is not None:
+    locations = [Path(value).resolve() for value in (scripts_spec.submodule_search_locations or [])]
+    assert package_root not in locations and not any(package_root in value.parents for value in locations), "scripts must not ship"
 # Importing src.app first mirrors the production entrypoint; every route
 # dependency must then resolve from the packaged artifact alone under the
 # single ``src.*`` namespace (issue #164).

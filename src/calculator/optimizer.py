@@ -9,6 +9,7 @@ import time
 from dataclasses import replace
 from typing import Any
 
+from .application_errors import NoCompleteEventOrder
 from .data_fetcher import fetch_item_data, get_item_by_name
 from .item_coverage import (
     optimizer_candidate_coverage,
@@ -20,7 +21,7 @@ from .loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
     ITEM_TO_EXCLUSIVITY_GROUPS,
     conflicts_with_groups,
-    exclusivity_groups,
+    exclusivity_groups,  # pylint: disable=unused-import  # compatibility export
     occupied_groups,
     inventory_capacity,
     role_quest_legal_items,
@@ -1159,9 +1160,13 @@ def optimize_purchase(
         if math.isfinite(score):
             scored.append((score, plan, spend))
     if not scored:
-        raise ValueError(
-            "No complete legal event-ordered purchase fits the selected constraints"
-        )
+        message = "No complete legal purchase fits the selected constraints"
+        if require_complete_timeline:
+            raise NoCompleteEventOrder(
+                message.replace("legal purchase", "legal event-ordered purchase"),
+                champion=champion_data["name"],
+            )
+        raise ValueError(message)
     scored.sort(key=lambda row: (-row[0], row[2], _plan_key(row[1])))
 
     coverage_pool = [
@@ -1628,12 +1633,15 @@ def optimize_build(
     if not ranked:
         constraint = f" within {gold_budget:,} gold" if gold_budget is not None else ""
         qualifier = " event-ordered" if require_complete_timeline else ""
-        raise ValueError(
+        message = (
             f"No complete legal{qualifier} build fits the selected "
             f"constraints{constraint} for "
-            f"{champion_data.get('name', 'the selected champion')}; this champion's current "
-            "event package has no complete candidate timeline"
+            f"{champion_data.get('name', 'the selected champion')}; this champion's "
+            "current event package has no complete candidate timeline"
         )
+        if require_complete_timeline:
+            raise NoCompleteEventOrder(message, champion=champion_data["name"])
+        raise ValueError(message)
     duration = (
         fight_params[0].fight_duration_seconds
         if isinstance(fight_params, tuple)
