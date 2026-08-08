@@ -104,7 +104,7 @@ body {
   background-image:
     linear-gradient(90deg, rgba(6, 18, 16, .14) 0%, rgba(6, 18, 16, .02) 44%, rgba(6, 18, 16, .2) 100%),
     linear-gradient(180deg, rgba(5, 18, 16, .04) 0%, rgba(5, 18, 16, .24) 100%),
-    url("/static/img/rift-illustration-4k.webp");
+    url("/static/img/rift-background-user.webp");
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100% 100%, 100% 100%, cover;
