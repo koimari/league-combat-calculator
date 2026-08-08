@@ -949,7 +949,8 @@ def test_picker_rendering_never_puts_api_strings_into_inner_html():
 def test_frontend_uses_level_derived_ranks_for_nonstandard_kits():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert '"Elise", "Jayce", "Karma", "Nidalee", "Udyr"' in source
+    assert "engine.domainContract?.rank_allocation" in source
+    assert 'modes.by_champion?.[String(championName || "")]' in source
     assert "if (usesLevelDerivedRanks(state.attacker.champion)) return null;" in source
     assert "ability_ranks: usesLevelDerivedRanks(target.champion)" in source
 
@@ -1123,9 +1124,8 @@ def test_bis_frontend_surfaces_backend_withheld_candidate_receipts():
 def test_bis_frontend_sends_and_filters_by_the_selected_objective():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert (
-        'payload.objective = OBJECTIVES[objective] ? objective : "overall";' in source
-    )
+    assert "payload.objective = objectiveDefinition(objective)" in source
+    assert "Object.keys(OBJECTIVES)[0]" in source
     assert "data-bis-objective" in source
     assert "result.objective || {}" in source
     assert "bisContext.objective = objective" in source

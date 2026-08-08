@@ -183,9 +183,8 @@ def test_spine_never_makes_colour_the_only_carrier(source: str):
 
 def test_spine_keeps_the_kill_time_exception_note(source: str):
     body = function_body(source, "function renderPrototypeResult(")
-    assert "higher is better except Kill time" in body.lower() or (
-        "Higher is better except Kill time" in body
-    )
+    assert "const lowerObjective = Object.values(OBJECTIVES)" in body
+    assert "const directionNote = lowerObjective?.label" in body
 
 
 def test_gold_delta_and_recommendation_ride_the_spine_footer(source: str):

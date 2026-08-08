@@ -297,6 +297,18 @@ def bis_objective_meta(key: str) -> dict[str, str]:
     return {"key": key, **meta}
 
 
+def bis_objective_contract() -> dict[str, dict[str, str]]:
+    """Return the complete objective map for public clients."""
+    units = {
+        "overall": "TDD",
+        "kill": "",
+        "survival": "eHP",
+        "damage": "TDD",
+        "utility": "",
+    }
+    return {key: {**meta, "unit": units[key]} for key, meta in BIS_OBJECTIVES.items()}
+
+
 def bis_time_to_target_defeat(
     combat: Mapping[str, object],
     *,
