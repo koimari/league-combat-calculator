@@ -9,7 +9,6 @@ from src.calculator.champions import (
     registered_champion_names,
 )
 from src.calculator.data_fetcher import get_champion
-from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
 

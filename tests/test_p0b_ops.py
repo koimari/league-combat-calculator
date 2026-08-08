@@ -109,7 +109,7 @@ def test_sentry_captures_route_500(monkeypatch, fake_sentry):
     # module object is the one the route executes.
     import src.calculator.scenario as calculator_scenario
 
-    monkeypatch.setattr(calculator_scenario, "_load_public_champion", _broken_loader)
+    monkeypatch.setattr(calculator_scenario, "load_public_champion", _broken_loader)
     payload = {
         "champion": "Ahri",
         "level": 18,

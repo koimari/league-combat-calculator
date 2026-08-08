@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.app import _load_public_champion
+from src.calculator.scenario import load_public_champion as _load_public_champion
 from src.app import app
 from src.calculator.champions import get_champion_options_meta
 from src.calculator.pipeline import FightParams, run_fight

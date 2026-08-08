@@ -60,14 +60,9 @@ class ActionKind(Enum):
     DAMAGE_MODIFIER = "damage_modifier"
     ON_HIT_MAGIC = "on_hit_magic"
     UTILITY = "utility"
-    # Embedded transitions (implemented as kernel functions, never standalone
-    # actions): timed-shield expiry, lifeline threshold triggers, reactive
-    # shields, Maw omnivamp, Defy.
-    TIMED_SHIELD_EXPIRY = "timed_shield_expiry"
-    THRESHOLD_TRIGGER = "threshold_trigger"
-    REACTIVE_SHIELD = "reactive_shield"
-    MAW_OMNIVAMP = "maw_omnivamp"
-    DEFY = "defy"
+    # Timed-shield expiry, lifeline threshold triggers, reactive shields,
+    # Maw omnivamp, and Defy are embedded transitions implemented as kernel
+    # functions; they never appear as standalone actions.
 
 
 # Kinds a damage event may classify to; every one applies the shared damage

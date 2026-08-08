@@ -25,7 +25,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits, extract_named
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 

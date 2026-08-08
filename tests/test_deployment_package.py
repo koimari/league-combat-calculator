@@ -14,7 +14,6 @@ import, and the scorecard endpoint must return 200 (never the
 payloads agree (modulo the timestamp).
 """
 
-import json
 import os
 import shutil
 import subprocess

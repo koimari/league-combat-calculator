@@ -2,10 +2,8 @@
 
 import pytest
 
-from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.slotlib import extract_named
 from src.calculator.champions.alistar import (
-    parse_abilities,
     _extract_e_on_hit_damage,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage

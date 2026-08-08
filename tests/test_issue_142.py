@@ -11,7 +11,6 @@ validate before any packet can be created.
 """
 
 import inspect
-from types import SimpleNamespace
 
 import pytest
 
@@ -22,7 +21,6 @@ from src.calculator.capabilities import (
 )
 from src.calculator.participant_timeline import (
     Combatant,
-    _support_effect_templates,
     _support_target_ids,
 )
 from src.calculator import support_effects

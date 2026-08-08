@@ -148,14 +148,14 @@
           promise.then(function (response) {
             try {
               response.clone().json().then(capturePayload);
-            } catch (error) {
+            } catch {
               // Non-JSON or already-consumed body — ignore, never break the app.
             }
           }).catch(function () {
             // Capture failures are invisible to the app's own promise chain.
           });
         }
-      } catch (error) {
+      } catch {
         // Never let the capture break the app's own request.
       }
       return promise;

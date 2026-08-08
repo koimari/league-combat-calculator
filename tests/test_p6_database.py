@@ -339,16 +339,6 @@ def test_cache_bypassed_in_testing_mode(sqlite_database):
 # ---------------------------------------------------------------------------
 
 
-def test_staleness_state_round_trip(sqlite_database):
-    db.staleness_set("25.7", {"verified": True, "diffs": []})
-    row = db.staleness_get("25.7")
-    assert row["payload"]["verified"] is True
-    assert row["checked_at"].endswith("Z")
-    db.staleness_set("25.7", {"verified": False, "diffs": ["Q recast"]})
-    assert db.staleness_get("25.7")["payload"]["diffs"] == ["Q recast"]
-    assert db.staleness_get("24.5") is None
-
-
 def test_sqlite_fallback_without_database_url(monkeypatch, tmp_path):
     """With DATABASE_URL unset the layer still works on a local SQLite file
     (the dev fallback), while is_configured reports False so the result

@@ -2,12 +2,6 @@
 
 import pytest
 
-from src.calculator.champions.annie import (
-    _TIBBERS_AURA_AP_RATIO_PER_TICK,
-    _TIBBERS_AURA_BASE_PER_TICK,
-    _TIBBERS_AURA_TICK_INTERVAL,
-)
-
 # ---------------------------------------------------------------------------
 # P: Pyromania (stun only, no damage)
 # ---------------------------------------------------------------------------

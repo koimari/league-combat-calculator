@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage, source_row
-from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .slotlib import damage_entry, extract_cooldown, extract_named
 
 
 def _trial_by_fire(ctx: SlotCtx, ability: dict[str, Any]) -> float:

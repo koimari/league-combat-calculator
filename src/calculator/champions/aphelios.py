@@ -12,7 +12,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import damage_entry
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
 
@@ -150,7 +150,6 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("R")
     if not ability:
         return None
-    rank = ctx.level if ctx.level in (6, 7, 8, 9, 10) else ctx.rank_for("R")
     r_rank = 1 if ctx.level < 11 else (2 if ctx.level < 16 else 3)
     base = (125.0, 175.0, 225.0)[r_rank - 1]
     ad = float(ctx.stats.get("bonus_attack_damage", 0.0))

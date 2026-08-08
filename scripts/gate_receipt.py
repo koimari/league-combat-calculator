@@ -8,7 +8,6 @@ champion_optimizer_matrix) serializes the same envelope: a strict boolean
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
 SCHEMA_VERSION = 1
@@ -72,17 +71,3 @@ def validate_receipt(receipt: dict[str, Any]) -> None:
         raise ValueError("passed must equal (failed == 0)")
     if not isinstance(receipt.get("failures"), list):
         raise ValueError("failures must be a list")
-
-
-def dump_receipt(receipt: dict[str, Any], path: Any) -> None:
-    """Validate then serialize a receipt to a file path."""
-    validate_receipt(receipt)
-    from pathlib import Path
-
-    out = Path(path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    tmp = out.with_suffix(out.suffix + ".tmp")
-    tmp.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
-    import os
-
-    os.replace(tmp, out)

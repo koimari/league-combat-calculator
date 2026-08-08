@@ -471,8 +471,3 @@ def public_capability_contract(
             },
         },
     }
-
-
-def copy_capability_contract(contract: Mapping[str, Any]) -> dict[str, Any]:
-    """Return a safe response copy for callers that may mutate JSON values."""
-    return deepcopy(dict(contract))

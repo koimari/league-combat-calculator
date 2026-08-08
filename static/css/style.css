@@ -337,7 +337,6 @@ a { color: inherit; }
 .brief-chip span { display: block; font: 600 9px var(--mono); color: var(--cream-70); }
 
 .brief-roster { display: grid; gap: 5px; }
-.brief-line { font: 500 10.5px var(--mono); color: rgba(246, 242, 223, .68); }
 
 .brief-card {
   display: flex;
@@ -1944,8 +1943,7 @@ a { color: inherit; }
 .event-order-sources li { margin-bottom: 2px; }
 
 .roster-empty,
-.picker-empty,
-.not-modeled-empty {
+.picker-empty {
   padding: 10px 0;
   font: 600 11.5px var(--font);
   color: var(--ink-muted);
@@ -2429,6 +2427,6 @@ a { color: inherit; }
   }
   .roster-item-slot { height: 40px; }
   /* Touch targets stay at least 40px on the controls a phone actually uses. */
-  .rail-primary, .rail-secondary, .add-button, .toggle, .segment,
+  .rail-primary, .add-button, .toggle, .segment,
   .banner-button, .buy-dismiss, .ledger-open { min-height: 40px; }
 }

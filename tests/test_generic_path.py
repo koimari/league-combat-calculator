@@ -15,7 +15,6 @@ from src.calculator.champions.engine import build_parser
 from src.calculator.champions.scaling import resolve_scaling
 from src.calculator.champions.attribute_classifier import (
     is_damage_attribute,
-    classify_damage_type,
 )
 from src.calculator.champions.skill_orders import get_ability_rank
 

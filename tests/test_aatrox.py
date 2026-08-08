@@ -1,7 +1,5 @@
 """Tests for Aatrox champion ability parsing and damage calculation."""
 
-import pytest
-
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage

@@ -27,9 +27,9 @@ They exist so nothing about an item is decided by a hand-maintained list.
 | `passives[].branches`, `active[].branches` | Wiki `description`, `description2`, … | The **complete** text of one effect; replaces the old single `effects` string, which truncated multi-branch passives |
 | `sourceWarnings` | ingestion | Anything the merge could not match, named rather than dropped |
 
-An ingestion fix reaches this cache without a whole patch pull through
-`data_updater.refresh_item_sources()`, the item counterpart of
-`reparse_cached_rune_effects()`.
+A rune-ingestion fix reaches this cache without a whole patch pull through
+`data_updater.reparse_cached_rune_effects()`; item-ingestion fixes go through a
+full `data_updater` pull.
 
 (Not to be confused with `vendor/lolstaticdata/`'s scratch output of the same
 names — that's the scraper's raw intermediate, not read at runtime.)

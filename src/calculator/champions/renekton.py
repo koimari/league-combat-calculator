@@ -5,7 +5,6 @@ E2 DoT fix: W (Ruthless Predator) prices 2 strikes; R (Dominus) prices
 """
 
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
 

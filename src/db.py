@@ -889,42 +889,6 @@ def cache_stats() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Staleness state
-# ---------------------------------------------------------------------------
-
-
-def staleness_set(patch: str, payload: Mapping[str, Any]) -> None:
-    """Upsert the staleness/coverage payload for one patch."""
-    with session() as db_session:
-        row = db_session.execute(
-            select(StalenessState).where(StalenessState.patch == patch)
-        ).scalar_one_or_none()
-        if row is None:
-            db_session.add(
-                StalenessState(patch=patch, payload=dict(payload), checked_at=_utcnow())
-            )
-        else:
-            row.payload = dict(payload)
-            row.checked_at = _utcnow()
-        db_session.commit()
-
-
-def staleness_get(patch: str) -> dict[str, Any] | None:
-    """Load one patch's staleness payload, or None."""
-    with session() as db_session:
-        row = db_session.execute(
-            select(StalenessState).where(StalenessState.patch == patch)
-        ).scalar_one_or_none()
-        if row is None:
-            return None
-        return {
-            "patch": row.patch,
-            "payload": row.payload or {},
-            "checked_at": _serialize_datetime(row.checked_at),
-        }
-
-
-# ---------------------------------------------------------------------------
 # Beta metrics events (P1b)
 # ---------------------------------------------------------------------------
 

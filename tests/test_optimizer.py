@@ -3,9 +3,9 @@
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.loadout_rules import exclusivity_groups
 from src.calculator.optimizer import (
     _evaluate_build,
-    exclusivity_groups,
     get_eligible_legendaries,
     get_eligible_boots,
     optimizer_supported_items,

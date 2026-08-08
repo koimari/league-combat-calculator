@@ -1345,8 +1345,6 @@ function buildStacksForSide(side) {
 
 function buildAIds() { return buildIdsForSide("A"); }
 function buildBIds() { return buildIdsForSide("B"); }
-function buildAStacks() { return buildStacksForSide("A"); }
-function buildBStacks() { return buildStacksForSide("B"); }
 
 
 function survivalStatus(survival = {}) {
@@ -2133,12 +2131,6 @@ function exactObjectiveMetric(result, fallbackDamage = 0) {
   };
 }
 
-function objectiveMetric(result, fallbackDamage = 0) {
-  const key = state.ui.objective;
-  const value = exactObjectiveMetric(result, fallbackDamage)[key];
-  return Number.isFinite(value) ? value : null;
-}
-
 function killTimeLabel(value) {
   // A finite kill always shows its real time-to-defeat from the timeline.
   // Zero (or a value that rounds to 0.0) is a defeat at the first event, not
@@ -2147,13 +2139,6 @@ function killTimeLabel(value) {
   const seconds = Number(value);
   if (!Number.isFinite(seconds) || seconds <= 0) return "<1 s";
   return seconds < 0.05 ? "<1 s" : `${one(seconds)} s`;
-}
-
-function objectiveFormat(value) {
-  if (value == null) return "Unavailable";
-  if (state.ui.objective === "kill") return killTimeLabel(value) || "Unavailable";
-  const unit = { overall: "TDD", survival: "eHP", damage: "TDD", utility: "value" }[state.ui.objective] || "value";
-  return `${fmt(value)} ${unit}`;
 }
 
 function objectiveWinner(aValue, bValue) {
@@ -2259,18 +2244,6 @@ function displayStatsFromBackend(stats) {
     lethality: Number(stats.lethality || 0),
     percentArmorPen: Number(stats.armor_penetration_percent || 0),
   };
-}
-
-function magicPenLabel(stats) {
-  if (stats.percentPen && stats.pen) return `${one(stats.percentPen)}% + ${one(stats.pen)}`;
-  if (stats.percentPen) return `${one(stats.percentPen)}%`;
-  return one(stats.pen);
-}
-
-function armorPenLabel(stats) {
-  if (stats.percentArmorPen && stats.lethality) return `${one(stats.percentArmorPen)}% + ${one(stats.lethality)}`;
-  if (stats.percentArmorPen) return `${one(stats.percentArmorPen)}%`;
-  return one(stats.lethality);
 }
 
 function mainParticipantBackendStats(result) {
@@ -4555,6 +4528,14 @@ function renderTrustPanels() {
   }
 }
 
+function postJson(url, body) {
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 async function mintShareUrl(payload, slug) {
   // /api/builds stores ability_ranks in a dedicated JSON column and rejects
   // null, while /api/calculate needs null for level-derived transform kits
@@ -4613,7 +4594,7 @@ async function renderSharedBuild(token) {
     const response = await fetch(`/api/share/${encodeURIComponent(token)}`);
     payload = await response.json();
     if (!response.ok || payload.error) throw new Error(payload.error || "share lookup failed");
-  } catch (error) {
+  } catch {
     dismissShareBanner();
     showShareError("This shared build link is invalid or expired.");
     return;
@@ -4784,7 +4765,7 @@ function initShareControls() {
       try {
         await navigator.clipboard.writeText(urlInput.value);
         status.textContent = "Copied to clipboard";
-      } catch (error) {
+      } catch {
         urlInput.select();
         status.textContent = "Select the link and copy it manually.";
       }
@@ -5032,7 +5013,7 @@ initShareControls();
   let seen = false;
   try {
     seen = localStorage.getItem(ONBOARDING_KEY) === "1";
-  } catch (error) {
+  } catch {
     return; // storage blocked — never show a tour we cannot remember
   }
   if (seen) return;
@@ -5050,7 +5031,7 @@ initShareControls();
   function persistDismissal() {
     try {
       localStorage.setItem(ONBOARDING_KEY, "1");
-    } catch (error) {
+    } catch {
       // Best effort: the tour is dismissible either way.
     }
   }

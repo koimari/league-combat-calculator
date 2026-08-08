@@ -9,8 +9,6 @@ enumeration/prose come from ``effect_entries()``/``branches()``/
 once.
 """
 
-import json
-
 import pytest
 
 from scripts import full_entry_audit as audit

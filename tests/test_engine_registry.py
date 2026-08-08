@@ -5,7 +5,6 @@ import json
 from src.calculator.champions import (
     _CUSTOM_CHAMPION_MODULES,
     engine_registration_kind,
-    parse_champion_abilities,
     registered_champion_names,
 )
 

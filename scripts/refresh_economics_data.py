@@ -45,10 +45,6 @@ _UNSELLABLE = {
 _UNSELLABLE_NOTE = "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
 
 
-def round_half_up(value: float) -> int:
-    return int(value + 0.5)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--patch", default="16.15.1")

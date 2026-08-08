@@ -2,11 +2,9 @@
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
 
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.akshan import (
-    parse_abilities,
     _extract_e_per_shot,
     _parse_passive_proc_damage,
     _extract_double_shot_ratio,

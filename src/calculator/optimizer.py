@@ -32,7 +32,6 @@ from .loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
     ITEM_TO_EXCLUSIVITY_GROUPS,
     conflicts_with_groups,
-    exclusivity_groups,  # pylint: disable=unused-import  # compatibility export
     occupied_groups,
     inventory_capacity,
     role_quest_legal_items,

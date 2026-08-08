@@ -211,89 +211,10 @@ class PurchasePlan:
     final_items: list[dict[str, Any]] = field(default_factory=list)
     final_boots: dict[str, Any] | None = None
     price_rows: list[PriceRow] = field(default_factory=list)
-    gold_before: int = 0
     spend: int = 0
     refund: int = 0
     remaining: int = 0
     incomplete_combine: bool = False
-
-
-def _canonical_name(
-    inventory: dict[int, int], by_id: dict[int, dict[str, Any]]
-) -> list[str]:
-    return [
-        by_id[item_id]["name"]
-        for item_id in sorted(inventory)
-        for _ in range(inventory[item_id])
-    ]
-
-
-def _complete_recipe(
-    inventory: dict[int, int],
-    by_id: dict[int, dict[str, Any]],
-) -> list[tuple[int, dict[int, int]]]:
-    """Return every recipe fully satisfied by ``inventory`` (multiset)."""
-    completed: list[tuple[int, dict[int, int]]] = []
-    for item_id, item in by_id.items():
-        demand = recipe_demand(item)
-        if not demand:
-            continue
-        if all(
-            inventory.get(component_id, 0) >= count
-            for component_id, count in demand.items()
-        ):
-            completed.append((item_id, demand))
-    return completed
-
-
-def _cascade(
-    inventory: dict[int, int],
-    rows: list[PriceRow],
-    by_id: dict[int, dict[str, Any]],
-    policy: str,
-) -> dict[int, int]:
-    """Combine every completed recipe at zero additional cost (shop policy).
-
-    Under ``component_accumulate`` the inventory is left as components and no
-    cascade runs; the caller marks the plan incomplete_combine instead.
-    """
-    if policy != "shop_combine":
-        return inventory
-    guard = 0
-    while guard < len(by_id) + 1:
-        guard += 1
-        progressed = False
-        for item_id, demand in _complete_recipe(inventory, by_id):
-            item = by_id[item_id]
-            if not is_purchasable(item):
-                continue
-            consumed = [
-                {
-                    "name": by_id[component_id]["name"],
-                    "count": count,
-                    "value": item_total(by_id[component_id]) * count,
-                }
-                for component_id, count in sorted(demand.items())
-            ]
-            for component_id, count in demand.items():
-                inventory[component_id] -= count
-                if inventory[component_id] <= 0:
-                    del inventory[component_id]
-            inventory[item_id] = inventory.get(item_id, 0) + 1
-            rows.append(
-                PriceRow(
-                    item=item["name"],
-                    list_price=item_total(item),
-                    components_consumed=consumed,
-                    combined_charged=0,
-                    net=0,
-                )
-            )
-            progressed = True
-            break
-        if not progressed:
-            break
-    return inventory
 
 
 _COMBINABLE_ROWS_SOURCE: dict[int, dict[str, Any]] | None = None
@@ -387,7 +308,6 @@ def apply_purchase_plan(
     plan = PurchasePlan(
         sell_items=[item["name"] for item in (sell_items or ())],
         purchases=[item["name"] for item in buys],
-        gold_before=gold_on_hand,
     )
     remaining = gold_on_hand
     for sold in sell_items or ():
@@ -555,9 +475,7 @@ def validate_economy_loadout(
         return
     counts = collections.Counter(names)
     for name, count in counts.items():
-        if count > 1 and not is_stackable(
-            plan.final_items[0] if False else _find_by_name(plan.final_items, name)
-        ):
+        if count > 1 and not is_stackable(_find_by_name(plan.final_items, name)):
             raise ValueError(f"{name} cannot appear {count} times in one inventory")
     equipped = ([plan.final_boots] if plan.final_boots else []) + plan.final_items
     if len(equipped) > inventory_capacity(role, role_quest_complete):

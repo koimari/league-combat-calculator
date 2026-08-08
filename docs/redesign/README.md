@@ -6,7 +6,6 @@ Claude Design handoff bundle is not required.
 
 | File | What it is |
 |---|---|
-| `kickoff-prompt.md` | The prompt that starts an implementation session. Start here. |
 | `target-2a.html` | Approved mock, resting state: rail collapsed, duel gets the full canvas. Standalone — open in a browser at ≥1500px. |
 | `target-2b.html` | Approved mock, Roster step expanded in place; duel dimmed but live behind it. |
 | `design-language.md` | Distilled visual system: layout concept, palette tokens, type, shape, voice. |

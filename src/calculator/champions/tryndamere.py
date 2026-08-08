@@ -20,31 +20,10 @@ hardcoded.
 
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import build_parser
+from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import simple_damage
-
-
-def _no_damage(slot: str, reason: str):
-    """Emit an explicit zero-damage entry for a non-damaging slot."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
-        return {
-            "name": ability.get("name", f"Ability {slot}"),
-            "rank": ctx.rank_for(),
-            "cooldown": 0.0,
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
-
-    parse.phase = "damage"
-    return parse
-
 
 ASSUMPTIONS = [
     "Q (Bloodlust) is a heal; no enemy-damage leveling row exists for it "
@@ -57,20 +36,20 @@ ASSUMPTIONS = [
 SOURCES = list(load_champion_sources("Tryndamere"))
 
 SLOTS = {
-    "P": _no_damage(
+    "P": no_damage_parser(
         "P",
         "Battle Fury is a fury/AD-while-missing state passive; no enemy damage.",
     ),
-    "Q": _no_damage(
+    "Q": no_damage_parser(
         "Q",
         "Bloodlust is a heal (Minimum Heal leveling row); no enemy damage.",
     ),
-    "W": _no_damage(
+    "W": no_damage_parser(
         "W",
         "Mocking Shout reduces enemy AD and slows; no enemy damage.",
     ),
     "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
-    "R": _no_damage(
+    "R": no_damage_parser(
         "R",
         "Undying Rage is a minimum-health/fury ultimate; no enemy damage.",
     ),

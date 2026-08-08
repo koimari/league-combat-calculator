@@ -5,11 +5,6 @@ import pytest
 from src.calculator.ability_spec import parts_raw_total
 
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.ambessa import (
-    parse_abilities,
-    _parse_passive_damage,
-)
 from src.calculator.damage import FightConfig, calculate_fight_damage
 
 

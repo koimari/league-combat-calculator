@@ -47,10 +47,6 @@ def _values(modifier: dict[str, Any]) -> list[float]:
     return [value for value in (_number(item) for item in raw) if value is not None]
 
 
-def _normalise_percent(value: float) -> float:
-    return value / 100.0
-
-
 def _ratio_components(unit: str, attribute: str) -> dict[str, float]:
     text = " ".join(str(unit or "").lower().split())
     attr = str(attribute or "").lower()

@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 import src.app as app_module
-from src.calculator.data_fetcher import fetch_item_data, get_champion
+from src.calculator.data_fetcher import get_champion
 from src.calculator.loadout_rules import role_quest_legal_items
 from src.calculator.optimizer import (
     get_eligible_legendaries,

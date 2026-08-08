@@ -34,7 +34,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import os
 import socket
 import statistics
@@ -226,7 +225,7 @@ async def _fire(
     started = time.perf_counter()
     try:
         response = await client.post(f"{base_url}{endpoint}", json=payload)
-    except httpx.HTTPError as exc:
+    except httpx.HTTPError:
         return endpoint, time.perf_counter() - started, -1
     return endpoint, time.perf_counter() - started, response.status_code
 

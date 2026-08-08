@@ -15,7 +15,6 @@ import json
 
 import pytest
 
-from src import app as app_module
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.support_effects import derive_ally_effects
 

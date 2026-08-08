@@ -31,6 +31,7 @@ hardcoded.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import (
     extract_cooldown,
@@ -43,27 +44,6 @@ from ..ability_spec import DamagePart
 # "renders the target Marked for Death for 3 seconds", "detonating at
 # the end of the duration").
 _DEATH_MARK_DETONATION_DELAY = 3.0
-
-
-def _no_damage(slot: str, reason: str):
-    """Emit an explicit zero-damage entry for a non-damaging slot."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
-        return {
-            "name": ability.get("name", f"Ability {slot}"),
-            "rank": ctx.rank_for(),
-            "cooldown": 0.0,
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
-
-    parse.phase = "damage"
-    return parse
 
 
 def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -133,13 +113,13 @@ ASSUMPTIONS = [
 SOURCES = list(load_champion_sources("Zed"))
 
 SLOTS = {
-    "P": _no_damage(
+    "P": no_damage_parser(
         "P",
         "Contempt for the Weak is a % max-HP on-hit rider on basic attacks; "
         "no separate enemy-damage formula is priced for the passive slot.",
     ),
     "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
-    "W": _no_damage(
+    "W": no_damage_parser(
         "W",
         "Living Shadow is a shadow/utility placement; no enemy damage.",
     ),

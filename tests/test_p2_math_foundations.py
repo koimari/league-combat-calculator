@@ -18,8 +18,6 @@ cannot silently break the math without a test failing:
 - movement-speed soft caps vs. the wiki's worked example (600 -> 530)
 """
 
-import math
-
 import pytest
 
 from src.calculator.damage import (
@@ -60,7 +58,7 @@ class TestResistanceIdentity:
 
     def test_effective_health_identity(self) -> None:
         """A target with H0 health and R resists survives H0*(1+R/100) raw."""
-        h0, resistance, raw = 2000.0, 150.0, 5000.0
+        h0, resistance = 2000.0, 150.0
         ehp = h0 * (1.0 + resistance / 100.0)
         assert apply_resistance(ehp, resistance) == pytest.approx(h0)
 
