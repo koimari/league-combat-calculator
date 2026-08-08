@@ -396,6 +396,13 @@ def public_capability_contract(
             state_path="fight.aaUptimeMode",
             frontend_token="uptimeModeToggle",
         ),
+        # The Enemy Hits constraint: unchecked, enemies deal zero damage in
+        # the coupled timeline (participant_timeline owns the semantics).
+        "enemies_attack": _field(
+            payload_field="enemies_attack",
+            state_path="fight.enemiesAttack",
+            frontend_token='id="enemyHitsToggle"',
+        ),
     }
     return {
         "schema_version": CAPABILITY_SCHEMA_VERSION,

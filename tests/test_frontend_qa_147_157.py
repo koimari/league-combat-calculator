@@ -444,26 +444,32 @@ def test_optimizer_receipt_has_a_visible_home(soup: BeautifulSoup, source: str):
 
 
 def test_keystone_icon_has_an_explicit_size_contract(css: str):
-    block = rule_block(css, ".keystone-icon")
+    # The keystone rides an ordinary build slot row on the duel canvas, so the
+    # shared row icon is what has to be bounded.
+    block = rule_block(css, ".duel-row .item-icon")
     for declaration in ("width", "height", "aspect-ratio"):
         assert declaration in block, f"keystone icon is missing {declaration}"
 
 
 def test_keystone_image_is_bounded_and_cropped(css: str):
-    block = rule_block(css, ".keystone-icon img")
+    block = rule_block(css, ".duel-row .item-icon img")
     assert "object-fit" in block
     assert "width: 100%" in block and "height: 100%" in block
 
 
-def test_keystone_slot_matches_the_item_slot_grammar(css: str):
-    block = rule_block(css, ".item-slot.keystone-slot")
-    assert "width" in block, "the shared slot class needs a bounded width"
-    assert "grid-template-columns" in block, "keystone rows share the slot grid"
+def test_keystone_slot_matches_the_item_slot_grammar(source: str):
+    """The keystone row is built from the same duel-row grammar as an item
+    slot — same class, same icon + copy structure, its own picker."""
+    render = source.split("function renderDuelSide(")[1].split("\nfunction ")[0]
+    assert 'class="duel-row is-keystone' in render
+    assert 'data-picker="keystone"' in render
+    assert 'class="item-icon"' in render
+    assert 'class="duel-row-copy"' in render
 
 
 def test_keystone_label_wraps_instead_of_stretching_the_card(css: str):
-    block = rule_block(css, ".keystone-slot small")
-    assert "overflow" in block or "text-overflow" in block
+    block = rule_block(css, ".duel-row-copy strong")
+    assert "overflow-wrap" in block or "overflow" in block
 
 
 # ---------------------------------------------------------------------------

@@ -105,10 +105,11 @@ def test_overlay_has_exactly_three_steps_with_required_copy():
     headings = [step.find("h3").get_text(strip=True) for step in steps]
     assert headings == [
         "Set the scenario in the rail",
-        "Read the duel",
+        "Build and read the duel",
         "Open the receipts",
     ]
-    # Step 1 names the three numbered steps and the constraints block.
+    # Step 1 names the two numbered steps, the constraints block, and where
+    # builds actually live now that they are not a rail step.
     first = steps[0].get_text()
     for token in ("Champion", "Roster", "Builds", "Constraints".lower()):
         assert token.lower() in first.lower(), token

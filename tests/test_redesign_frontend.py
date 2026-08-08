@@ -98,11 +98,9 @@ def test_a_dimmed_canvas_is_also_inert(source: str):
 
 
 def test_step_editors_stay_mounted_while_collapsed(soup: BeautifulSoup):
-    """feedback.js and staleness.js read #slotsA / #abilityRow at any time, and
-    a collapsed step must not drop the state its summary describes."""
+    """staleness.js reads #abilityRow at any time, and a collapsed step must
+    not drop the state its summary describes."""
     for control_id in (
-        "slotsA",
-        "slotsB",
         "abilityRow",
         "championOptionsRow",
         "statsGrid",
@@ -319,9 +317,14 @@ def test_optimizer_receipts_survive_into_the_band(source: str):
     reaches the band — silently dropping one reads as a certified result."""
     purchase = function_body(source, "async function startPurchaseOptimize()")
     assert "exhaustive_within_scope" in purchase
-    assert "the full purchase space was truncated" in purchase
+    assert "budget-aware local search" in purchase
+    assert "time budget" in purchase
     assert "search_timeline_coverage" in purchase
-    assert "No build was applied" in purchase
+    # A best-buy winner is always applied with an honest guarantee label;
+    # the silent "withheld · nothing applied" dead end is gone.
+    assert "withheld" not in purchase
+    # An item that cannot land in a visible slot is reported, never dropped.
+    assert "Could not be placed" in purchase
     build = function_body(source, "async function optimizeMainBuildFromBackend()")
     assert "is_certified_best" in build
     assert "timeline_withheld_candidate_count" in build
@@ -377,12 +380,11 @@ def test_the_app_fills_the_viewport_not_a_floating_1440_card(css: str):
 def test_collapsed_briefs_are_click_targets_for_their_step(
     soup: BeautifulSoup, css: str
 ):
-    """The champion/roster/builds summary cards open their editor on click —
-    not just the small Edit caption in the step header."""
+    """The champion/roster summary cards open their editor on click — not
+    just the small Edit caption in the step header."""
     for brief_id, step in (
         ("championBrief", "champion"),
         ("rosterBrief", "roster"),
-        ("buildsBrief", "builds"),
     ):
         brief = soup.select_one(f"#{brief_id}")
         assert brief is not None, brief_id
@@ -402,9 +404,11 @@ def test_comparison_can_be_turned_off_from_the_duel_itself(
     assert disable.find_parent(class_="verdict-b") is not None
     # Shown in duel mode, hidden in solo (where enable takes its place).
     assert re.search(r"\.verdict\.is-solo \.verdict-disable \{[^}]*display: none", css)
-    body = function_body(source, "function renderPrototypeBuilder()")
-    assert '"Disable Build B' in body
-    assert '"Enable Build B"' in body
+    enable = soup.select_one("#enableBuildB")
+    assert enable is not None
+    assert enable.has_attr("data-toggle-compare")
+    assert "Enable Build B" in enable.get_text(strip=True)
+    assert "Disable Build B" in disable.get_text(strip=True)
 
 
 def test_duel_rows_open_the_item_picker_for_their_exact_slot(source: str):
@@ -419,11 +423,13 @@ def test_duel_rows_open_the_item_picker_for_their_exact_slot(source: str):
     assert 'data-picker="keystone"' in render
 
 
-def test_an_empty_duel_side_is_an_invitation_not_a_dead_end(source: str):
-    """ "Open step 3 to fill it" as prose is a dead end; the empty state is a
-    button that actually opens step 3."""
+def test_an_empty_duel_side_points_at_the_slots_directly_below_it(source: str):
+    """ "Open step 3 to fill it" was a dead end even before step 3 left: the
+    slot rows are right there, so the empty state names them."""
     render = function_body(source, "function renderDuelSide(")
-    assert 'data-step-toggle="builds"' in render
+    assert "is empty" in render
+    assert "click any slot below to add an item" in render
+    assert "data-step-toggle" not in render
     assert "roster-empty" not in render
 
 
@@ -446,9 +452,12 @@ def test_first_run_shows_a_start_checklist_not_a_ghost_duel(
         ), hidden_band
     body = function_body(source, "function renderStartBand(")
     # Each checklist row opens the step it names through the shared handler.
+    # Filling a build is not a checklist row: the duel panel that follows is
+    # where that happens, and the engine already scores an itemless champion.
     assert 'data-step-toggle="${step}"' in body
-    for step in ('"champion"', '"roster"', '"builds"'):
+    for step in ('"champion"', '"roster"'):
         assert step in body, step
+    assert '"builds"' not in body
     assert 'classList.toggle("is-start"' in source
 
 
@@ -523,11 +532,11 @@ def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):
     order = [node for node in canvas.find_all(recursive=False)]
     assert order.index(soup.select_one(".verdict")) < order.index(bar)
     assert order.index(bar) < order.index(soup.select_one(".duel"))
-    # All four rows plus the action stay wired.
+    # All five rows plus the action stay wired.
     toggles = [
         t["data-constraint-toggle"] for t in bar.select("[data-constraint-toggle]")
     ]
-    assert toggles == ["gold", "objective", "window", "state"]
+    assert toggles == ["gold", "objective", "window", "state", "enemyHits"]
     assert bar.select_one("#economicsOptimize") is not None
     block = re.search(r"\.constraints-bar \{([^}]*)\}", css)
     assert block is not None and "var(--rail)" in block.group(1)

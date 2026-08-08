@@ -85,11 +85,13 @@
     var roleSelect = byId("roleSelect");
     var role = roleSelect ? String(roleSelect.value || "") : "";
 
+    // Build A is edited on the duel canvas: one .duel-row per slot, the item
+    // name on the icon's alt text and the slot path on the row itself.
     var items = [];
     var boots = "";
-    var slots = byId("slotsA");
+    var slots = byId("duelA");
     if (slots) {
-      var slotButtons = slots.querySelectorAll("button.slot:not(.empty-slot)");
+      var slotButtons = slots.querySelectorAll("button.duel-row:not(.is-empty):not(.is-keystone)");
       Array.prototype.forEach.call(slotButtons, function (button) {
         var image = one("img", button);
         var name = image ? String(image.getAttribute("alt") || "").trim() : "";
@@ -147,9 +149,9 @@
     uptime = explicitUptime ? uptime / 100 : 0;
 
     var keystone = "";
-    var keystoneSlot = one("#slotsA .keystone-slot");
+    var keystoneSlot = one("#duelA .duel-row.is-keystone:not(.is-empty)");
     if (keystoneSlot) {
-      var keystoneName = textOf(one("small", keystoneSlot));
+      var keystoneName = textOf(one("strong", keystoneSlot));
       if (keystoneName && keystoneName !== "Add keystone") keystone = keystoneName;
     }
 

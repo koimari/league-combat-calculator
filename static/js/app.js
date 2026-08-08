@@ -46,7 +46,7 @@ const state = {
     // answering for, marked ACTIVE in the collapsed rail (target-2a).
     expandedStep: null,
     expandedConstraint: null,
-    activeStep: "builds",
+    activeStep: "roster",
   },
   attacker: {
     champion: null,
@@ -75,7 +75,7 @@ const state = {
   },
   targets: [],
   allies: [],
-  fight: { rotations: 1, duration: 10, aaUptime: 0, aaUptimeMode: "calculated" },
+  fight: { rotations: 1, duration: 10, aaUptime: 0, aaUptimeMode: "calculated", enemiesAttack: true },
   optimizer: { running: false, summary: null, scope: null, rosterErrors: {}, availableGold: 0 },
 };
 
@@ -945,6 +945,271 @@ function itemStatsLine(item) {
   return stats.join(" · ") || "Item effect";
 }
 
+// ---------------------------------------------------------------------------
+// Item hover card
+//
+// A wiki-style reading of whatever item the pointer rests on: the catalogue's
+// stat block plus the effect catalogue's passive/active wiki text, rendered
+// through a small wiki-markup formatter. One popover element serves every
+// anchor carrying data-item-tooltip; the popover API keeps it above the
+// <dialog> pickers.
+// ---------------------------------------------------------------------------
+
+/** Stat fields the hover card lists, wiki-style, one per line. */
+const ITEM_TIP_STATS = [
+  ["ap", "ability power", "", "wk-ap"],
+  ["ad", "attack damage", "", "wk-ad"],
+  ["hp", "health", "", "wk-health"],
+  ["mana", "mana", "", "wk-mana"],
+  ["armor", "armor", "", "wk-stat"],
+  ["mr", "magic resistance", "", "wk-stat"],
+  ["haste", "ability haste", "", "wk-haste"],
+  ["attackSpeed", "attack speed", "%", "wk-as"],
+  ["crit", "critical strike chance", "%", "wk-ad"],
+  ["critDamage", "critical strike damage", "%", "wk-ad"],
+  ["lethality", "lethality", "", "wk-physical"],
+  ["percentArmorPen", "armor penetration", "%", "wk-physical"],
+  ["pen", "magic penetration", "", "wk-magic"],
+  ["percentPen", "magic penetration", "%", "wk-magic"],
+  ["lifesteal", "life steal", "%", "wk-health"],
+  ["omnivamp", "omnivamp", "%", "wk-health"],
+  ["healAndShieldPower", "heal and shield power", "%", "wk-health"],
+  ["healthRegen", "base health regeneration", "%", "wk-health"],
+  ["manaRegen", "base mana regeneration", "%", "wk-mana"],
+  ["moveSpeed", "movement speed", "", "wk-ms"],
+  ["tenacity", "tenacity", "%", "wk-stat"],
+  ["goldPer10", "gold per 10 seconds", "", "wk-gold"],
+];
+
+/** Colour class for a wiki stat phrase, mirroring the wiki's stat tinting. */
+const WIKI_STAT_CLASSES = [
+  [/magic damage/i, "wk-magic"],
+  [/physical damage/i, "wk-physical"],
+  [/true damage/i, "wk-true"],
+  [/ability power|\bAP\b/, "wk-ap"],
+  [/attack damage|\bAD\b/, "wk-ad"],
+  [/omnivamp|life steal|heal|health|\bHP\b/i, "wk-health"],
+  [/shield/i, "wk-health"],
+  [/mana|energy/i, "wk-mana"],
+  [/movement speed|move speed/i, "wk-ms"],
+  [/attack speed/i, "wk-as"],
+  [/ability haste|cooldown/i, "wk-haste"],
+  [/gold/i, "wk-gold"],
+];
+
+function wikiStatClass(text) {
+  const match = WIKI_STAT_CLASSES.find(([pattern]) => pattern.test(text));
+  return match ? match[1] : "wk-stat";
+}
+
+/**
+ * Evaluate the arithmetic the wiki's {{ap|...}} template computes inline
+ * (e.g. "60/6" → 10, "(60/6)+10" → 20). Returns null for anything that is
+ * not a plain arithmetic expression — including 2+ bare slashes, which read
+ * as a per-rank progression, not division. Hand-rolled recursive descent
+ * because the site CSP has no unsafe-eval.
+ */
+function wikiArithmetic(expression) {
+  const text = String(expression).trim();
+  if (!text || !/^[\d+\-*/(). ]+$/.test(text)) return null;
+  const slashes = (text.match(/\//g) || []).length;
+  if (slashes > 1 && !/[+*()]/.test(text)) return null;
+  if (!/[+\-*/]/.test(text)) return null;
+  const tokens = text.match(/\d+(?:\.\d+)?|[+\-*/()]/g) || [];
+  let cursor = 0;
+  const peek = () => tokens[cursor];
+  const parseExpr = () => {
+    let value = parseTerm();
+    while (peek() === "+" || peek() === "-") value = tokens[cursor++] === "+" ? value + parseTerm() : value - parseTerm();
+    return value;
+  };
+  const parseTerm = () => {
+    let value = parseFactor();
+    while (peek() === "*" || peek() === "/") value = tokens[cursor++] === "*" ? value * parseFactor() : value / parseFactor();
+    return value;
+  };
+  const parseFactor = () => {
+    if (peek() === "-") { cursor += 1; return -parseFactor(); }
+    if (peek() === "(") {
+      cursor += 1;
+      const value = parseExpr();
+      if (peek() !== ")") return NaN;
+      cursor += 1;
+      return value;
+    }
+    const token = tokens[cursor++];
+    return /^\d/.test(token || "") ? Number(token) : NaN;
+  };
+  const value = parseExpr();
+  return cursor === tokens.length && Number.isFinite(value) ? Number(value.toFixed(2)) : null;
+}
+
+/** Resolve one already-innermost {{template|...}} body to display HTML. */
+function resolveWikiTemplate(body) {
+  const parts = body.split("|");
+  const name = (parts.shift() || "").trim().toLowerCase();
+  const positional = parts.filter((part) => !/^\s*\w[\w ]*=/.test(part)).map((part) => part.trim());
+  const content = positional[0] || "";
+  switch (name) {
+    case "as": // coloured stat text, optional explicit stat hint as 2nd param
+      return `<span class="wk ${wikiStatClass(positional[1] || content)}">${content}</span>`;
+    case "ap":
+    case "fd":
+    case "nie": {
+      const value = wikiArithmetic(content);
+      return value == null ? content : String(value);
+    }
+    case "sbc":
+      return `<b>${content}</b>`;
+    case "tip":
+    case "sti":
+    case "tt":
+    case "ft":
+      return positional[1] || content;
+    case "g":
+      return `${content}g`;
+    default:
+      return content;
+  }
+}
+
+/** Render wiki effect text (templates, links, bold/italic) to inline HTML. */
+function wikiMarkupHtml(raw) {
+  let text = escapeHtml(String(raw || ""));
+  // Innermost templates first, so nesting like {{as|(+ {{ap|6/6}}% AP)}}
+  // resolves the arithmetic before the colour wrap sees it.
+  for (let pass = 0; pass < 24 && /\{\{[^{}]*\}\}/.test(text); pass += 1) {
+    text = text.replace(/\{\{([^{}]*)\}\}/g, (_, body) => resolveWikiTemplate(body));
+  }
+  return text
+    .replace(/\[\[(?:File|Image):[^\]]*\]\]/gi, "")
+    .replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, "$2")
+    .replace(/\[\[([^\]]*)\]\]/g, "$1")
+    .replace(/'''(.+?)'''/g, "<b>$1</b>")
+    .replace(/''(.+?)''/g, "<i>$1</i>");
+}
+
+function itemTipHtml(item) {
+  const effect = EFFECT_CATALOG[String(item.id)] || {};
+  const stats = ITEM_TIP_STATS
+    .filter(([key]) => Number(item[key]))
+    .map(([key, label, unit, cls]) => `<li><span class="wk ${cls}">+${item[key]}${unit} ${label}</span></li>`);
+  const passives = (effect.passives || [])
+    .filter((passive) => passive?.text)
+    .map((passive) => `<p class="tip-effect">${passive.name ? `<b class="tip-effect-name">${escapeHtml(passive.name)}:</b> ` : ""}${wikiMarkupHtml(passive.text)}</p>`);
+  const actives = (Array.isArray(effect.active) ? effect.active : [])
+    .map((active) => {
+      const meta = [
+        active.cooldown ? `${active.cooldown}s cooldown` : "",
+        active.range ? `${active.range} range` : "",
+      ].filter(Boolean).join(" · ");
+      const branches = (active.branches || []).map(wikiMarkupHtml).join(" ");
+      return `<p class="tip-effect">${active.name ? `<b class="tip-effect-name">${escapeHtml(active.name)}:</b> ` : ""}${branches}${meta ? ` <small>(${escapeHtml(meta)})</small>` : ""}</p>`;
+    });
+  return `<header class="tip-head"><span>${escapeHtml(itemName(item.id))}</span>${Number(item.price) ? `<b>${fmt(item.price)}g</b>` : ""}</header>
+    <div class="tip-identity"><img src="${itemImage(item.id)}" alt="" />${stats.length ? `<ul class="tip-stats">${stats.join("")}</ul>` : ""}</div>
+    ${passives.length ? `<p class="tip-section">Passive</p>${passives.join("")}` : ""}
+    ${actives.length ? `<p class="tip-section">Active</p>${actives.join("")}` : ""}`;
+}
+
+const itemTip = (() => {
+  const tip = document.createElement("div");
+  tip.className = "item-tip";
+  tip.setAttribute("popover", "manual");
+  tip.setAttribute("role", "tooltip");
+  if (!tip.showPopover) tip.classList.add("no-popover");
+  document.body.appendChild(tip);
+  return tip;
+})();
+let itemTipAnchor = null;
+let itemTipPending = null;
+let itemTipTimer = null;
+
+function closeItemTip() {
+  clearTimeout(itemTipTimer);
+  itemTipTimer = null;
+  itemTipPending = null;
+  itemTipAnchor = null;
+  if (itemTip.hidePopover) {
+    try { itemTip.hidePopover(); } catch { /* already closed */ }
+  } else {
+    itemTip.classList.remove("is-open");
+  }
+}
+
+/**
+ * Position the card beside the pointer when a hover produced it — wide
+ * anchors like duel rows would otherwise push it clear across the delta
+ * spine. Keyboard focus has no pointer, so it anchors to the element edge.
+ */
+function placeItemTip(anchor, point = null) {
+  const tipRect = itemTip.getBoundingClientRect();
+  const margin = 10;
+  const offset = 16;
+  let left;
+  let top;
+  if (point) {
+    left = point.x + offset;
+    if (left + tipRect.width > window.innerWidth - margin) left = point.x - offset - tipRect.width;
+    top = point.y + offset;
+    if (top + tipRect.height > window.innerHeight - margin) top = point.y - offset - tipRect.height;
+  } else {
+    const rect = anchor.getBoundingClientRect();
+    left = rect.right + margin;
+    if (left + tipRect.width > window.innerWidth - margin) left = rect.left - margin - tipRect.width;
+    top = rect.top;
+  }
+  left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
+  top = Math.max(margin, Math.min(top, window.innerHeight - tipRect.height - margin));
+  itemTip.style.left = `${Math.round(left)}px`;
+  itemTip.style.top = `${Math.round(top)}px`;
+}
+
+function showItemTip(anchor, point = null) {
+  const item = getItem(anchor.dataset.itemTooltip);
+  if (!item) return;
+  itemTipAnchor = anchor;
+  itemTip.innerHTML = itemTipHtml(item);
+  if (itemTip.showPopover) {
+    try { itemTip.showPopover(); } catch { /* already open */ }
+  } else {
+    itemTip.classList.add("is-open");
+  }
+  placeItemTip(anchor, point);
+}
+
+document.addEventListener("pointerover", (event) => {
+  const anchor = event.target.closest?.("[data-item-tooltip]");
+  if (!anchor || anchor === itemTipAnchor || anchor === itemTipPending) return;
+  clearTimeout(itemTipTimer);
+  itemTipPending = anchor;
+  const point = { x: event.clientX, y: event.clientY };
+  itemTipTimer = setTimeout(() => {
+    itemTipPending = null;
+    showItemTip(anchor, point);
+  }, 140);
+});
+document.addEventListener("pointerout", (event) => {
+  const anchor = event.target.closest?.("[data-item-tooltip]");
+  if (!anchor || anchor.contains(event.relatedTarget)) return;
+  if (itemTipPending === anchor) {
+    clearTimeout(itemTipTimer);
+    itemTipTimer = null;
+    itemTipPending = null;
+  }
+  if (itemTipAnchor === anchor) closeItemTip();
+});
+document.addEventListener("focusin", (event) => {
+  const anchor = event.target.closest?.("[data-item-tooltip]");
+  // :focus-visible keeps this a keyboard affordance — a mouse click already
+  // has the pointerover card and shouldn't re-flash it while a dialog opens.
+  if (anchor && anchor.matches(":focus-visible")) showItemTip(anchor);
+  else if (!anchor && itemTipAnchor) closeItemTip();
+});
+// Any scroll or press invalidates the anchored position; just dismiss.
+document.addEventListener("scroll", () => { if (itemTipAnchor || itemTipPending) closeItemTip(); }, true);
+document.addEventListener("pointerdown", () => { if (itemTipAnchor || itemTipPending) closeItemTip(); });
+
 function bisReadyForPath(path) {
   const [root, indexText] = String(path).split(".");
   const index = Number(indexText);
@@ -1058,19 +1323,6 @@ function buildStackArray(side) {
 function questBootPath(side) {
   return `attacker.questBoot${side}`;
 }
-
-function keystoneSlot(side) {
-  const name = state.attacker[`keystone${side}`];
-  const keystone = getKeystone(name);
-  return `<div class="quest-item keystone-item"><span>Keystone</span><div class="slot-wrap">
-    <button class="item-slot keystone-slot" type="button" ${capabilityAttributes("main", "keystone")} data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add keystone"}">
-      <span class="item-icon keystone-icon ${keystone ? "" : "empty"}">${keystone ? `<img src="${keystone.icon}" alt="" />` : `<span aria-hidden="true">+</span>`}</span>
-      <small>${escapeHtml(keystone?.name || "Add keystone")}</small>
-    </button>
-  </div></div>`;
-}
-
-
 
 function buildIdsForSide(side) {
   const ids = buildArray(side)
@@ -1266,26 +1518,55 @@ function engineFightPayload(side) {
     ability_ranks: engineAbilityRanks(),
     rotations: state.fight.rotations,
   };
-  const maxWindow = Number(engine.fightLimits.fight_duration?.[1] || 30);
-  const requestedWindow = Math.max(1, state.fight.duration * state.fight.rotations);
   payload.auto_attack_uptime_mode = state.fight.aaUptimeMode || "calculated";
+  // The Enemy Hits constraint: unchecked, every enemy deals zero damage.
+  payload.enemies_attack = state.fight.enemiesAttack !== false;
+  // The Window is a timed window: abilities recast whenever their cooldown
+  // is back up inside it (the engine's shared cast schedule). one_rotation —
+  // a fixed 5s window where every ability casts exactly once — is only sent
+  // for the few champions whose module certifies nothing else.
+  const timedMode = championSupportsTimedWindow(state.attacker.champion)
+    ? "time_based"
+    : "one_rotation";
   if (state.fight.aaUptimeMode === "calculated") {
-    payload.fight_mode = state.fight.rotations > 1 ? "time_based" : "one_rotation";
-    payload.fight_duration = Math.min(maxWindow, requestedWindow);
+    payload.fight_mode = timedMode;
+    payload.fight_duration = configuredFightWindow();
     payload.include_auto_attacks = true;
     payload.auto_attack_uptime = 0;
   } else if (state.fight.aaUptime > 0) {
-    payload.fight_mode = "time_based";
-    payload.fight_duration = Math.min(maxWindow, requestedWindow);
+    payload.fight_mode = timedMode;
+    payload.fight_duration = configuredFightWindow();
     payload.include_auto_attacks = true;
     payload.auto_attack_uptime = state.fight.aaUptime;
   } else {
-    payload.fight_mode = "one_rotation";
-    payload.fight_duration = state.fight.duration;
+    payload.fight_mode = timedMode;
+    payload.fight_duration = configuredFightWindow();
     payload.include_auto_attacks = false;
     payload.auto_attack_uptime = 0;
   }
   return payload;
+}
+
+/**
+ * Whether the champion's module certifies timed-window (recast) fights.
+ * Unrestricted modules (the overwhelming majority) certify every mode; a
+ * restricted module names its modes and carries a sourced reason, shown in
+ * the Window constraint by renderRail.
+ */
+function championSupportsTimedWindow(championName) {
+  const modes = getChampion(championName)?.supportedFightModes;
+  return !Array.isArray(modes) || modes.includes("time_based");
+}
+
+/**
+ * The fight window the constraints bar configures: rotations × seconds per
+ * rotation, capped by the engine's fight-duration limit. This is the same
+ * number engineFightPayload requests, so the fight timeline's x-axis and the
+ * calculation window can never disagree.
+ */
+function configuredFightWindow() {
+  const maxWindow = Number(engine.fightLimits.fight_duration?.[1] || 30);
+  return Math.min(maxWindow, Math.max(1, state.fight.duration * state.fight.rotations));
 }
 
 
@@ -1515,7 +1796,7 @@ function hideEngineError() {
 }
 
 function clearAnalystScores() {
-  ["scoreA", "scoreB", "buildAScore", "buildBScore"].forEach((id) => {
+  ["scoreA", "scoreB"].forEach((id) => {
     const element = $(id);
     if (element) element.textContent = "Unavailable";
   });
@@ -1590,7 +1871,7 @@ function scenarioSentence() {
   const keystoneText = keystoneA ? ` running ${escapeHtml(keystoneA.name)}` : "";
   const stateLabel = state.ui.gameState === "live" ? "snapshot lens" : "theory state";
   const objectiveLabel = OBJECTIVES[state.ui.objective]?.label || "Overall";
-  return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${keystoneText}${compareText}${targetText} · ${escapeHtml(objectiveLabel)} · ${stateLabel} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s each · ${Math.round(state.fight.aaUptime * 100)}% auto uptime${allyText}.`;
+  return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${keystoneText}${compareText}${targetText} · ${escapeHtml(objectiveLabel)} · ${stateLabel} · ${one(configuredFightWindow())}s fight window · ${Math.round(state.fight.aaUptime * 100)}% auto uptime${state.fight.enemiesAttack === false ? " · enemies deal no damage" : ""}${allyText}.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1602,7 +1883,9 @@ function scenarioSentence() {
 // Every function below only reads `state` and backend receipts.
 // ---------------------------------------------------------------------------
 
-const STEP_IDS = ["champion", "roster", "builds"];
+// Setup steps that live in the rail. Builds is deliberately absent: the duel
+// panel on the canvas is the only place a build is edited.
+const STEP_IDS = ["champion", "roster"];
 
 /**
  * List-price total of one side's build.
@@ -1672,23 +1955,16 @@ function renderRosterBrief() {
   }
 }
 
-function renderBuildsBrief() {
-  const priceA = buildListPrice("A");
-  const priceB = buildListPrice("B");
-  const line = state.attacker.comparisonEnabled
-    ? `A ${fmt(priceA)}g · B ${fmt(priceB)}g`
-    : priceA > 0 ? `A ${fmt(priceA)}g · comparison off` : "No build yet";
-  const brief = $("buildsBriefLine");
-  if (brief) brief.textContent = line;
-  const summary = $("buildsSummary");
-  if (summary) summary.textContent = line;
-}
-
 function windowSummary() {
   const uptime = state.fight.aaUptimeMode === "calculated"
     ? "AA calc"
     : `${Math.round(state.fight.aaUptime * 100)}% AA`;
-  return `${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s · ${uptime}`;
+  // A restricted module runs the engine's fixed one-cast rotation instead of
+  // the timed window; say so where the window is read, not just in the body.
+  if (state.attacker.champion && !championSupportsTimedWindow(state.attacker.champion)) {
+    return `1 rotation · 5s · ${uptime}`;
+  }
+  return `${one(configuredFightWindow())}s window · ${uptime}`;
 }
 
 function renderConstraintSummaries() {
@@ -1700,6 +1976,10 @@ function renderConstraintSummaries() {
   if (windowValue) windowValue.textContent = windowSummary();
   const stateValue = $("stateValue");
   if (stateValue) stateValue.textContent = state.ui.gameState === "live" ? "Snapshot lens" : "Theory";
+  const enemyHitsValue = $("enemyHitsValue");
+  if (enemyHitsValue) enemyHitsValue.textContent = state.fight.enemiesAttack !== false ? "On" : "Off";
+  const enemyHitsToggle = $("enemyHitsToggle");
+  if (enemyHitsToggle) enemyHitsToggle.checked = state.fight.enemiesAttack !== false;
 }
 
 /**
@@ -1752,7 +2032,7 @@ function applyRailDisclosure() {
     centreHost.hidden = !centreEditing;
     const head = $("startEditorHead");
     if (head && centreEditing) {
-      head.textContent = `Setup · step ${STEP_IDS.indexOf(state.ui.expandedStep) + 1} of 3`;
+      head.textContent = `Setup · step ${STEP_IDS.indexOf(state.ui.expandedStep) + 1} of ${STEP_IDS.length}`;
     }
   }
   // The checklist and the centre editor share the canvas middle.
@@ -1766,7 +2046,7 @@ function applyRailDisclosure() {
   });
   const patch = $("railPatch");
   if (patch && editing) {
-    patch.textContent = `SETUP · STEP ${STEP_IDS.indexOf(state.ui.expandedStep) + 1} OF 3`;
+    patch.textContent = `SETUP · STEP ${STEP_IDS.indexOf(state.ui.expandedStep) + 1} OF ${STEP_IDS.length}`;
   } else if (patch) {
     patch.textContent = "26.15";
   }
@@ -1783,7 +2063,6 @@ function renderScenarioRail() {
   }
   renderChampionBrief();
   renderRosterBrief();
-  renderBuildsBrief();
   renderConstraintSummaries();
   applyRailDisclosure();
 
@@ -1923,16 +2202,6 @@ function bisTrigger(path, compact = false) {
   return `<button class="bis-trigger${compact ? " compact" : ""}" type="button" data-bis-path="${path}" title="${escapeHtml(title)}" aria-label="Best item for this slot" ${ready ? "" : "disabled"}>BIS</button>`;
 }
 
-function prototypeItemSlot(id, path) {
-  const item = getItem(id);
-  const field = path.includes("questBoot") ? "boots" : "items";
-  const kind = participantKindForPath(path);
-  const emptyTitle = capabilityTitle(capabilityFor(kind, field));
-  const controlAttrs = capabilityAttributes(kind, field);
-  const title = item ? escapeHtml(itemStatsLine(item)) : escapeHtml(emptyTitle);
-  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}"${title ? ` title="${title}"` : ""}>${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}${item ? itemOptionControls(path, id) : ""}${bisTrigger(path)}</div>`;
-}
-
 function prototypeRosterItemSlot(root, index, loadout, slot) {
   const isBoots = slot === "boots";
   const id = isBoots ? loadout.boots : loadout.items[slot];
@@ -1942,31 +2211,7 @@ function prototypeRosterItemSlot(root, index, loadout, slot) {
   const slotLabel = isBoots ? `<span class="roster-slot-label">Boots</span>` : "";
   const kind = root === "allies" ? "ally" : "enemy";
   const field = isBoots ? "boots" : "items";
-  return `<div class="roster-slot-wrap ${isBoots ? "roster-boots-wrap" : ""}">${slotLabel}<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" ${capabilityAttributes(kind, field)} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : emptyLabel}" title="${item ? escapeHtml(itemStatsLine(item)) : emptyLabel}">${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>${item && stackSpec(id) ? stackControl(path, id, true) : ""}${item && !isBoots ? itemOptionControls(path, id, true) : ""}${bisTrigger(path, true)}</div>`;
-}
-
-function prototypeBuildSlots(side) {
-  const sideUpper = side.toUpperCase();
-  const ids = buildArray(sideUpper);
-  const count = ordinarySlotCount(sideUpper);
-  const slots = [];
-  // Bottom quest builds have six ordinary items plus a dedicated boots slot.
-  // Keep the familiar six-column grid, but do not silently hide that seventh
-  // slot from the user.
-  const visibleCount = Math.max(6, count + (includeBootsForSide(sideUpper) ? 1 : 0));
-  for (let index = 0; index < visibleCount; index += 1) {
-    if (index < count) slots.push(prototypeItemSlot(ids[index], `attacker.build${sideUpper}.${index}`));
-    else if (includeBootsForSide(sideUpper) && index === count) slots.push(prototypeItemSlot(state.attacker[`questBoot${sideUpper}`], questBootPath(sideUpper)));
-    else slots.push(`<span class="slot empty-slot slot-locked" aria-hidden="true"><span>·</span></span>`);
-  }
-  return `${slots.join("")}${keystoneSlot(sideUpper)}`;
-}
-
-function prototypeBuildScore(side) {
-  const ids = side === "a" ? buildAIds() : buildBIds();
-  if (!ids.some(Boolean)) return "—";
-  if (!engine.responses) return "Unavailable";
-  return objectiveFormat(objectiveMetric(engine.responses[side], 0));
+  return `<div class="roster-slot-wrap ${isBoots ? "roster-boots-wrap" : ""}">${slotLabel}<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" ${capabilityAttributes(kind, field)} data-picker="item" data-path="${path}"${item ? ` data-item-tooltip="${item.id}"` : ""} aria-label="${item ? `Change ${escapeHtml(item.name)}` : emptyLabel}"${item ? "" : ` title="${emptyLabel}"`}>${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>${item && stackSpec(id) ? stackControl(path, id, true) : ""}${item && !isBoots ? itemOptionControls(path, id, true) : ""}${bisTrigger(path, true)}</div>`;
 }
 
 function loadoutStatsPayload() {
@@ -2129,7 +2374,7 @@ function renderPrototypeChampion() {
   $("bootsToggle").disabled = bootsCapability.supported === false;
   $("bootsToggle").title = capabilityTitle(bootsCapability);
   $("bootsToggle").dataset.capabilityField = "include_boots";
-  $("stateReadout").textContent = `${state.ui.gameState === "live" ? "Snapshot lens" : "Theory state"} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
+  $("stateReadout").textContent = `${state.ui.gameState === "live" ? "Snapshot lens" : "Theory state"} · ${one(configuredFightWindow())}s window`;
   // The placeholder is for "no stats yet", not "stats are refreshing" (#151):
   // a recalculation keeps the previous values on screen and marks the grid
   // pending, so the portrait, identity and controls never flash empty.
@@ -2179,24 +2424,6 @@ function renderPrototypeBuilder() {
   renderPrototypeChampion();
   $("abilityRow").innerHTML = champion ? prototypeAbilityCards(champion) : `<p class="roster-empty">Choose a champion to load its sourced ability package.</p>`;
   $("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";
-  $("slotsA").innerHTML = prototypeBuildSlots("a");
-  $("slotsB").innerHTML = prototypeBuildSlots("b");
-  $("buildAScore").textContent = prototypeBuildScore("a");
-  $("buildBScore").textContent = state.attacker.comparisonEnabled ? prototypeBuildScore("b") : "—";
-  const aValue = state.attacker.comparisonEnabled ? objectiveMetric(engine.responses?.a, null) : null;
-  const bValue = state.attacker.comparisonEnabled ? objectiveMetric(engine.responses?.b, null) : null;
-  const outcome = objectiveWinner(aValue, bValue);
-  $("winnerCaption").textContent = !state.attacker.comparisonEnabled ? "comparison off" : outcome.winner === "B" ? "winner · selected objective" : outcome.winner === "A" ? "lead · selected objective" : outcome.winner === "tie" ? "tie · selected objective" : "awaiting reviewed output";
-  document.querySelector('[data-build="a"]')?.classList.toggle("is-winner", outcome.winner === "A");
-  document.querySelector('[data-build="b"]')?.classList.toggle("is-winner", outcome.winner === "B");
-  const compareToggle = $("compareToggle");
-  if (compareToggle) {
-    // A control names the action it performs, not the state it left behind —
-    // "Build B enabled" read as a status and hid the only way back to solo.
-    compareToggle.textContent = state.attacker.comparisonEnabled ? "Disable Build B · back to solo" : "Enable Build B";
-    compareToggle.classList.toggle("is-on", Boolean(state.attacker.comparisonEnabled));
-    compareToggle.setAttribute("aria-pressed", String(Boolean(state.attacker.comparisonEnabled)));
-  }
   renderPrototypeRoster("targets");
   renderPrototypeRoster("allies");
   $("rotationOutput").textContent = state.fight.rotations;
@@ -2239,6 +2466,16 @@ function renderPrototypeBuilder() {
     modeButton.disabled = modeCapability.supported === false;
     modeButton.title = capabilityTitle(modeCapability);
     modeButton.dataset.capabilityField = "auto_attack_uptime_mode";
+  }
+  const windowModeNote = $("windowModeNote");
+  if (windowModeNote) {
+    const restricted = Boolean(state.attacker.champion)
+      && !championSupportsTimedWindow(state.attacker.champion);
+    windowModeNote.hidden = !restricted;
+    if (restricted) {
+      windowModeNote.textContent = getChampion(state.attacker.champion)?.fightModeReason
+        || "This champion is certified for single-rotation calculations only; the timed window and its cooldown recasts are withheld.";
+    }
   }
 }
 
@@ -2360,37 +2597,49 @@ function spineRowHtml(metric, aValue, bValue, comparing, aAlive = "", bAlive = "
 }
 
 /**
- * One slot row on the duel canvas — a button into the item picker for that
- * exact slot. The duel is editable in place; step 3 remains the full editor
- * (stacks, item options, per-slot BIS).
+ * One build slot on the duel canvas: the picker row plus everything that
+ * slot owns — its BIS trigger, anchored to the row's outer edge, and the
+ * stack/item-option scenario controls the item declares. All three are
+ * siblings of the row, never children: a button cannot nest interactive
+ * children.
  */
 function duelRowHtml(id, path) {
   const item = getItem(id);
-  if (!item) {
-    return `<button type="button" class="duel-row is-empty" data-picker="item" data-path="${path}" aria-label="Add an item to this slot"><span class="item-icon item-slot"></span><span class="duel-row-copy"><strong>Empty slot</strong><small>click to add an item</small></span></button>`;
-  }
-  const price = Number(item.price) > 0 ? ` · ${fmt(item.price)}g` : "";
-  return `<button type="button" class="duel-row" data-picker="item" data-path="${path}" aria-label="Change ${escapeHtml(itemName(id))}"><span class="item-icon item-slot"><img src="${itemImage(id)}" alt="" /></span><span class="duel-row-copy"><strong>${escapeHtml(itemName(id))}</strong><small>${escapeHtml(itemStatsLine(item))}${price}</small></span></button>`;
+  const field = path.includes("questBoot") ? "boots" : "items";
+  const kind = participantKindForPath(path);
+  const controlAttrs = capabilityAttributes(kind, field);
+  const row = item
+    ? `<button type="button" class="duel-row" ${controlAttrs} data-picker="item" data-path="${path}" data-item-tooltip="${item.id}" aria-label="Change ${escapeHtml(itemName(id))}"><span class="item-icon item-slot"><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /></span><span class="duel-row-copy"><strong>${escapeHtml(itemName(id))}</strong><small>${escapeHtml(itemStatsLine(item))}${Number(item.price) > 0 ? ` · ${fmt(item.price)}g` : ""}</small></span></button>`
+    : `<button type="button" class="duel-row is-empty" ${controlAttrs} data-picker="item" data-path="${path}" title="${escapeHtml(capabilityTitle(capabilityFor(kind, field)))}" aria-label="Add an item to this slot"><span class="item-icon item-slot"></span><span class="duel-row-copy"><strong>Empty slot</strong><small>click to add an item</small></span></button>`;
+  const controls = `${item && stackSpec(id) ? stackControl(path, id, true) : ""}${item ? itemOptionControls(path, id, true) : ""}`;
+  return `<div class="duel-slot">${row}${bisTrigger(path, true)}${controls ? `<div class="duel-slot-controls">${controls}</div>` : ""}</div>`;
 }
 
+/**
+ * The build panel for one side. This is the only build editor in the app:
+ * a labelled head with the whole-side copy move, one row per slot, the
+ * keystone row, and the list-price foot.
+ */
 function renderDuelSide(side) {
   const host = $(side === "A" ? "duelA" : "duelB");
   if (!host) return;
   const slotIds = buildArray(side).slice(0, ordinarySlotCount(side));
   const keystone = getKeystone(state.attacker[`keystone${side}`]);
   const filled = buildIdsForSide(side);
+  const from = side === "A" ? "B" : "A";
+  const head = `<div class="duel-side-head"><span class="duel-side-kicker">Build ${side} · ${side === "A" ? "baseline" : "challenger"}</span><button class="link-button" type="button" data-copy="${from.toLowerCase()}">Copy ${from} → ${side}</button></div>`;
   const rows = slotIds.map((id, index) => duelRowHtml(id, `attacker.build${side}.${index}`));
   if (includeBootsForSide(side)) {
     rows.push(duelRowHtml(state.attacker[`questBoot${side}`], questBootPath(side)));
   }
-  const keystoneRow = `<button type="button" class="duel-row is-keystone ${keystone ? "" : "is-empty"}" data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add a keystone"}"><span class="item-icon">${keystone ? `<img src="${escapeHtml(keystone.icon)}" alt="" />` : ""}</span><span class="duel-row-copy"><strong>${keystone ? escapeHtml(keystone.name) : "Add keystone"}</strong><small>${keystone ? `${escapeHtml(keystone.path || "")} keystone` : "rune slot"}</small></span></button>`;
+  const keystoneRow = `<button type="button" class="duel-row is-keystone ${keystone ? "" : "is-empty"}" ${capabilityAttributes("main", "keystone")} data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add a keystone"}"><span class="item-icon">${keystone ? `<img src="${escapeHtml(keystone.icon)}" alt="${escapeHtml(keystone.name)}" />` : ""}</span><span class="duel-row-copy"><strong>${keystone ? escapeHtml(keystone.name) : "Add keystone"}</strong><small>${keystone ? `${escapeHtml(keystone.path || "")} keystone` : "rune slot"}</small></span></button>`;
   const invite = filled.length || keystone
     ? ""
-    : `<button type="button" class="duel-empty" data-step-toggle="builds">Build ${side} is empty<small>click a slot below · or open step 3</small></button>`;
+    : `<p class="duel-empty">Build ${side} is empty<small>click any slot below to add an item</small></p>`;
   const foot = filled.length
     ? `<p class="duel-foot">${filled.length} ${plural(filled.length, "item")} · ${fmt(buildListPrice(side))}g list price</p>`
     : "";
-  host.innerHTML = `${invite}${rows.join("")}${keystoneRow}${foot}`;
+  host.innerHTML = `${head}${invite}${rows.join("")}${keystoneRow}${foot}`;
 }
 
 function prototypeParticipants(result) {
@@ -2444,8 +2693,10 @@ function mainDamageSeries(result) {
   return { points, total: running };
 }
 
-/** Ability and auto-attack casts the main attacker landed, in event order. */
-const CHART_MARK_LIMIT = 8;
+/** Ability and auto-attack casts the main attacker landed, in event order.
+    Sized for a timed window: an opening burst, the auto stream, and every
+    cooldown recast a 30s window can reasonably hold. */
+const CHART_MARK_LIMIT = 14;
 function castMarkers(result) {
   // Casts that land on the same timestamp share one marker: two ticks at the
   // same x would overlap into an unreadable smear.
@@ -2463,7 +2714,30 @@ function castMarkers(result) {
   return [...byTime.entries()]
     .sort(([a], [b]) => a - b)
     .slice(0, CHART_MARK_LIMIT)
-    .map(([time, labels]) => ({ time, label: labels.join(" "), ultimate: labels.includes("R") }));
+    .map(([time, slots]) => ({ time, slots, ultimate: slots.includes("R") }));
+}
+
+/** Icon strip for one cast marker: real ability icons, a text chip for AA. */
+function castMarkIcons(slots) {
+  const abilities = new Map((getChampion(state.attacker.champion)?.abilities || []).map((ability) => [ability.slot, ability]));
+  return slots.map((slot) => {
+    const icon = slot === "AA" ? "" : abilityImage(abilities.get(slot));
+    return icon
+      ? `<img src="${escapeHtml(icon)}" alt="${escapeHtml(slot)}" title="${escapeHtml(slot)}" />`
+      : `<b class="mark-chip" title="${slot === "AA" ? "Auto attack" : escapeHtml(slot)}">${escapeHtml(slot)}</b>`;
+  }).join("");
+}
+
+/**
+ * Cast markers for one build's curve. Build A hangs its icons from the top
+ * edge, Build B raises its icons from the bottom edge, so the two rotations
+ * stay readable even when their timestamps interleave.
+ */
+function chartMarksHtml(result, side, duration) {
+  return castMarkers(result).map((mark) =>
+    `<span class="chart-mark mark-${side}${mark.ultimate ? " is-ult" : ""}" style="left:${((mark.time / duration) * 100).toFixed(2)}%">
+      <i></i><span class="mark-icons">${castMarkIcons(mark.slots)}</span>${side === "a" ? `<span class="mark-time">${one(mark.time)}s</span>` : ""}
+    </span>`).join("");
 }
 
 /** Round an axis top up to a readable 1/2/5-family value. */
@@ -2474,15 +2748,52 @@ function niceCeiling(value) {
   return (step || 10) * magnitude;
 }
 
-function polylinePoints(series, duration, top) {
+/** Round an axis floor down to a readable 1/2/5-family value. */
+function niceFloor(value) {
+  if (!(Number(value) > 0)) return 0;
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  const step = [10, 7.5, 5, 4, 3, 2.5, 2, 1.5, 1.25, 1].find((factor) => value >= factor * magnitude);
+  return (step || 1) * magnitude;
+}
+
+/** Cumulative total a series has reached by `time` (0 before its first event). */
+function seriesValueAt(series, time) {
+  let total = 0;
+  for (const point of series.points) {
+    if (point.time > time) break;
+    total = point.total;
+  }
+  return total;
+}
+
+/**
+ * The damage axis floor. Burst rotations park both curves in a narrow band
+ * near the top, where a zero-based axis flattens real differences into
+ * overlapping hairlines. When both builds have banked at least a quarter of
+ * the axis early in the window, the floor rises to a nice value under the
+ * lowest landed total — every curve stays fully in frame and the opening
+ * burst simply enters from the bottom edge. Sustained ramps keep the zero
+ * floor: zooming those would crop half the story.
+ */
+function chartAxisFloor(seriesList, duration, top) {
+  const earlyTotals = seriesList.map((series) => seriesValueAt(series, duration * 0.1));
+  const floor = niceFloor(Math.min(...earlyTotals));
+  return floor >= top * 0.25 && floor < top ? floor : 0;
+}
+
+function polylinePoints(series, duration, top, low = 0) {
   const last = series.points.at(-1);
   // Carry the final total flat to the end of the window: the curve is
   // cumulative, so stopping at the last event would read as damage vanishing.
   const points = last && last.time < duration
     ? [...series.points, { time: duration, total: last.total }]
     : series.points;
+  const span = Math.max(top - low, 1e-9);
   return points
-    .map((point) => `${((point.time / duration) * 1000).toFixed(1)},${(200 - (point.total / top) * 200).toFixed(1)}`)
+    .map((point) => {
+      const y = Math.min(200, Math.max(0, 200 - ((point.total - low) / span) * 200));
+      return `${((point.time / duration) * 1000).toFixed(1)},${y.toFixed(1)}`;
+    })
     .join(" ");
 }
 
@@ -2503,23 +2814,30 @@ function renderFightChart(aResult, bResult) {
     return;
   }
   const times = [...(seriesA?.points || []), ...(seriesB?.points || [])].map((point) => point.time);
-  const duration = Math.max(
+  // The axis spans the window the engine actually simulated (its receipt —
+  // for a one-rotation-only champion that is the fixed 5s rotation, not the
+  // slider), falling back to the configured Window before a receipt exists.
+  // An event past the window stretches the axis rather than being clipped.
+  const reported = Math.max(
     Number(aResult?.combat?.duration || 0),
     Number(bResult?.combat?.duration || 0),
-    ...times,
-    1,
   );
+  const duration = Math.max(reported > 0 ? reported : configuredFightWindow(), ...times, 1);
   const aTotal = mainTotalDamage(aResult);
   const bTotal = bResult ? mainTotalDamage(bResult) : null;
   const top = niceCeiling(Math.max(seriesA?.total || 0, seriesB?.total || 0, aTotal || 0, bTotal || 0, 1));
+  const low = chartAxisFloor([seriesA, seriesB].filter(Boolean), duration, top);
   if (title) title.textContent = `Fight timeline · 0 → ${one(duration)} s`;
 
-  const lineB = seriesB ? `<polyline points="${polylinePoints(seriesB, duration, top)}" fill="none" stroke="#1f6f4e" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>` : "";
-  const lineA = seriesA ? `<polyline points="${polylinePoints(seriesA, duration, top)}" fill="none" stroke="#3c6558" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>` : "";
-  const marks = castMarkers(aResult).map((mark) => `<span class="chart-mark ${mark.ultimate ? "is-ult" : ""}" style="left:${((mark.time / duration) * 100).toFixed(2)}%"><i></i><b>${escapeHtml(mark.label)}</b><span>${one(mark.time)}s</span></span>`).join("");
+  const lineB = seriesB ? `<polyline class="line-b" points="${polylinePoints(seriesB, duration, top, low)}" fill="none" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>` : "";
+  const lineA = seriesA ? `<polyline class="line-a" points="${polylinePoints(seriesA, duration, top, low)}" fill="none" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>` : "";
+  const gridX = [250, 500, 750]
+    .map((x) => `<line x1="${x}" y1="0" x2="${x}" y2="200" stroke="rgba(22,72,58,.08)" stroke-width="1"></line>`)
+    .join("");
+  const marks = `${chartMarksHtml(aResult, "a", duration)}${bResult ? chartMarksHtml(bResult, "b", duration) : ""}`;
   const ends = [
-    bTotal == null ? "" : `<div class="chart-end is-b"><strong>${fmt(bTotal)}</strong><span>Build B</span></div>`,
-    aTotal == null ? "" : `<div class="chart-end"><strong>${fmt(aTotal)}</strong><span>Build A</span></div>`,
+    bTotal == null ? "" : `<div class="chart-end is-b" data-chart-focus="b"><strong>${fmt(bTotal)}</strong><span>Build B</span></div>`,
+    aTotal == null ? "" : `<div class="chart-end is-a" data-chart-focus="a"><strong>${fmt(aTotal)}</strong><span>Build A</span></div>`,
   ].join("");
   // The curve is drawn from ordered events; a coarse source contributes to
   // TDD without an authored timestamp, so say when the two disagree rather
@@ -2529,9 +2847,10 @@ function renderFightChart(aResult, bResult) {
     ? `<p class="chart-note">Curve covers ${fmt(seriesA.total)} of Build A's ${fmt(aTotal)} TDD; ${fmt(uncovered)} comes from sources without an authored timestamp.</p>`
     : "";
   host.innerHTML = `<div class="chart-frame">
-    <div class="chart-axis"><span>${fmt(top)}</span><span>${fmt(top / 2)}</span><span>0</span></div>
+    <div class="chart-axis"><span>${fmt(top)}</span><span>${fmt((top + low) / 2)}</span><span>${fmt(low)}</span></div>
     <div class="chart-plot">
       <svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+        ${gridX}
         <line x1="0" y1="100" x2="1000" y2="100" stroke="rgba(22,72,58,.16)" stroke-width="1"></line>
         ${lineA}${lineB}
       </svg>
@@ -2611,19 +2930,24 @@ function signedGold(delta) {
   return `${delta > 0 ? "+" : "−"}${fmt(Math.abs(delta))}g`;
 }
 
-/** A duel needs a champion, at least one enemy, and Build A items. */
+/**
+ * A duel needs a champion and at least one enemy. Items are NOT required:
+ * an empty Build A shows as clickable empty slots on the live board (the
+ * engine already scores the itemless champion), which beats sending the
+ * user back through a checklist whose only open step is "add an item".
+ */
 function scenarioReady() {
   return Boolean(state.attacker.champion)
-    && state.targets.some((target) => target.champion)
-    && buildIdsForSide("A").length > 0;
+    && state.targets.some((target) => target.champion);
 }
 
 /**
- * The pre-duel start state: a three-step checklist instead of a ghost duel.
+ * The pre-duel start state: a two-step checklist instead of a ghost duel.
  *
  * Until the scenario is ready there is nothing honest to duel, so the canvas
- * leads with the three moves that get there. Each row opens its rail step
- * through the shared data-step-toggle delegation.
+ * leads with the two moves that get there. Each row opens its rail step
+ * through the shared data-step-toggle delegation. Filling the build is not a
+ * step: the duel panel that appears next is where that happens.
  */
 function renderStartBand(ready) {
   const band = $("startBand");
@@ -2633,7 +2957,6 @@ function renderStartBand(ready) {
   if (ready) return;
   const champion = getChampion(state.attacker.champion);
   const enemies = state.targets.filter((target) => target.champion).length;
-  const items = buildIdsForSide("A").length;
   const row = (index, step, done, title, detail) => `
     <button type="button" class="start-step ${done ? "is-done" : ""}" data-step-toggle="${step}">
       <span class="start-index" aria-hidden="true">${done ? "✓" : index}</span>
@@ -2642,7 +2965,7 @@ function renderStartBand(ready) {
     </button>`;
   band.innerHTML = `
     <p class="start-kicker">New scenario</p>
-    <h2 class="start-title">Set the duel in three steps</h2>
+    <h2 class="start-title">Set the duel in two steps</h2>
     <div class="start-steps">
       ${row(1, "champion", Boolean(champion),
         champion ? escapeHtml(champion.name) : "Choose your champion",
@@ -2652,11 +2975,8 @@ function renderStartBand(ready) {
       ${row(2, "roster", enemies > 0,
         enemies > 0 ? `${enemies} ${plural(enemies, "enemy", "enemies")} set` : "Add an enemy",
         enemies > 0 ? "" : "Or use “vs practice target” for a dummy")}
-      ${row(3, "builds", items > 0,
-        items > 0 ? `Build A · ${items} ${plural(items, "item")}` : "Fill Build A",
-        items > 0 ? "" : "Six slots · enable Build B to compare")}
     </div>
-    <p class="start-note">The duel opens when all three are set. Objective, gold and window live under Constraints.</p>`;
+    <p class="start-note">The duel opens when both are set — you fill Build A on its slots there. Objective, gold and window live under Constraints.</p>`;
 }
 
 function renderPrototypeResult(aResult = null, bResult = null) {
@@ -2912,6 +3232,7 @@ function createPickerContent(entries, selected, query, includeEmpty) {
     button.type = "button";
     button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${(isKeystone && !entry.implemented) || itemBlocked ? "locked" : ""}`;
     button.dataset.pickerValue = String(value);
+    if (pickerContext.type === "item") button.dataset.itemTooltip = String(entry.id);
     if ((isKeystone && !entry.implemented) || itemBlocked) {
       button.disabled = true;
       button.title = itemBlocked
@@ -3338,7 +3659,6 @@ async function startPurchaseOptimize() {
     const ownedNames = ownedIds.map((id) => itemName(id));
     payload.optimization_scope = "purchase";
     payload.available_gold = state.optimizer.availableGold;
-    payload.max_purchase_items = 2;
     payload.allow_sell = Boolean(document.getElementById("economicsSell")?.checked);
     payload.max_sell_items = 1;
     payload.combine_policy = "shop_combine";
@@ -3362,24 +3682,7 @@ async function startPurchaseOptimize() {
         elapsedMs: performance.now() - started,
         headline: `No legal modeled purchase fits ${fmt(state.optimizer.availableGold)} gold.`,
         lines: [{ label: "Available gold", value: `${fmt(state.optimizer.availableGold)}g` }],
-        notes: [result.coverage?.note].filter(Boolean),
-      };
-      return;
-    }
-    if (!result.is_certified_best || !result.winner_event_order_certified) {
-      state.optimizer.summary = {
-        kind: "purchase",
-        title: "Best buy · withheld",
-        scope: "Build A",
-        applied: false,
-        tested: Number(result.evaluations || 0),
-        elapsedMs: Number(result.optimization_time_ms || performance.now() - started),
-        headline: "Best buy withheld because the exhaustive candidate set is not fully event-order certified.",
-        lines: [{ label: "Available gold", value: `${fmt(state.optimizer.availableGold)}g` }],
-        notes: [
-          result.search_timeline_coverage?.note,
-          "No build was applied — an uncertified candidate set is a receipt, not a recommendation.",
-        ].filter(Boolean),
+        notes: [],
       };
       return;
     }
@@ -3392,20 +3695,41 @@ async function startPurchaseOptimize() {
       });
     });
     const soldNames = new Set(result.sell_items || []);
-    const resultIds = (result.items || []).map((name) => findItemByBackendName(name)?.id || 0).filter(Boolean);
+    // Every recommended item must land in a visible slot; anything that
+    // cannot be placed is reported, never silently dropped.
+    const resultNames = result.items || [];
+    const mappedIds = resultNames.map((name) => findItemByBackendName(name)?.id || 0);
+    const unplaced = resultNames.filter((_, index) => !mappedIds[index]);
+    const resultIds = mappedIds.filter(Boolean);
+    const slotCap = ordinarySlotCount("A");
+    if (resultIds.length > slotCap) unplaced.push(...resultIds.slice(slotCap).map((id) => itemName(id)));
     state.attacker.buildA = [...resultIds, ...Array(Math.max(0, 6 - resultIds.length)).fill(0)].slice(0, 6);
     state.attacker.buildAStacks = state.attacker.buildA.map((id) => previous.get(itemName(id))?.stack || 0);
     state.attacker.buildAItemOptions = state.attacker.buildA.map((id) => previous.get(itemName(id))?.options || {});
     state.attacker.questBootA = findItemByBackendName(result.boots)?.id || 0;
     const purchase = (result.purchase_items || []).join(" + ");
+    const baseTitle = result.recommendation_type === "sell_pivot" ? "Best buy · sell pivot" : "Best buy";
+    // The search guarantee is a label, never a reason to withhold: a plan
+    // always lands in the build, and the note says how strong the claim is.
+    const guaranteeNote = result.exhaustive_within_scope
+      ? "Certified best buy — every affordable plan was searched."
+      : result.search_guarantee === "purchase_local_search"
+        ? "Best plan found by budget-aware local search of the full shop; a better combination may exist."
+        : result.truncated
+          ? "Search hit its time budget; applying the best plan found so far."
+          : "Best plan across the modeled candidates; unmodeled items are excluded from certification.";
     state.optimizer.summary = {
       kind: "purchase",
-      title: result.recommendation_type === "sell_pivot" ? "Best buy · sell pivot" : "Best buy",
+      title: result.exhaustive_within_scope ? baseTitle : `${baseTitle} · best found`,
       scope: "Build A",
       applied: true,
       tested: Number(result.evaluations || result.candidate_count || 0),
       elapsedMs: Number(result.optimization_time_ms || performance.now() - started),
-      headline: purchase ? `Buy ${purchase}` : "Rebalance the current inventory",
+      headline: purchase
+        ? `Buy ${purchase}`
+        : (result.recommendation_type === "keep_gold"
+          ? "No purchase improves this fight — keep your gold"
+          : "Rebalance the current inventory"),
       lines: [
         { label: "Sell", value: soldNames.size ? [...soldNames].join(" + ") : "" },
         { label: "Combines", value: (result.combine_items || []).join(" + ") },
@@ -3415,10 +3739,9 @@ async function startPurchaseOptimize() {
         { label: "Boots", value: result.boots || "" },
       ],
       notes: [
-        result.exhaustive_within_scope
-          ? "Exhaustive purchase search within your gold."
-          : "Best evaluated plan; the full purchase space was truncated, so a better buy may exist.",
+        guaranteeNote,
         result.search_timeline_coverage?.note,
+        unplaced.length ? `Could not be placed in the build interface: ${unplaced.join(", ")}.` : "",
       ].filter(Boolean),
     };
   } catch (error) {
@@ -3917,6 +4240,12 @@ document.addEventListener("change", (event) => {
     state.optimizer.availableGold = Number.isInteger(value) ? Math.max(0, Math.min(30_000, value)) : 0;
     return render();
   }
+  const enemyHits = event.target.closest("#enemyHitsToggle");
+  if (enemyHits) {
+    state.fight.enemiesAttack = Boolean(enemyHits.checked);
+    invalidateOptimization();
+    return render();
+  }
   const championOption = event.target.closest("[data-champion-option]");
   if (championOption) {
     const key = championOption.dataset.championOption;
@@ -4000,6 +4329,25 @@ document.addEventListener("change", (event) => {
   if (event.target.closest("[data-fight-range]")) render();
 });
 
+// Hovering a build's cumulative-damage label spotlights its curve on the
+// fight timeline and greys the other one out (CSS owns the treatment).
+{
+  const chartHost = $("timelineChart");
+  if (chartHost) {
+    chartHost.addEventListener("pointerover", (event) => {
+      const end = event.target.closest("[data-chart-focus]");
+      if (!end) return;
+      chartHost.classList.toggle("is-focus-a", end.dataset.chartFocus === "a");
+      chartHost.classList.toggle("is-focus-b", end.dataset.chartFocus === "b");
+    });
+    chartHost.addEventListener("pointerout", (event) => {
+      const end = event.target.closest("[data-chart-focus]");
+      if (!end || end.contains(event.relatedTarget)) return;
+      chartHost.classList.remove("is-focus-a", "is-focus-b");
+    });
+  }
+}
+
 $("pickerSearch").addEventListener("input", (event) => renderPicker(event.target.value));
 $("pickerClose").addEventListener("click", closePicker);
 $("picker").addEventListener("click", (event) => { if (event.target === $("picker")) closePicker(); });
@@ -4028,7 +4376,11 @@ Promise.all([
     mergeEffectCatalog(effectCatalog);
     championAvailability.forEach((entry) => {
       const champion = DATA.champions.find((candidate) => candidate.name === entry.name);
-      if (champion) champion.engineRegistration = entry.engine_registration || null;
+      if (champion) {
+        champion.engineRegistration = entry.engine_registration || null;
+        champion.supportedFightModes = entry.supported_fight_modes || null;
+        champion.fightModeReason = entry.unsupported_fight_mode_reason || "";
+      }
       engine.availability.set(entry.name, entry.availability || {});
       if (entry.availability?.ready && entry.engine_registration === "reviewed_module") engine.reviewed.add(entry.name);
       if (entry.engine_backend_enabled) engine.backend.add(entry.name);
@@ -4383,6 +4735,7 @@ function loadSharedBuildIntoAnalyst(payload) {
   state.fight.duration = Number(fightParams.fight_duration || 10);
   state.fight.aaUptimeMode = fightParams.auto_attack_uptime_mode || "calculated";
   state.fight.aaUptime = Number(fightParams.auto_attack_uptime || 0);
+  state.fight.enemiesAttack = fightParams.enemies_attack !== false;
   engine.responses = null;
   // A shared build was authored under one role-quest state; re-normalize the
   // restored quest boot and support items so an illegal stage never renders

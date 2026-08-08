@@ -192,10 +192,13 @@ class TestMidQuestBootTierContract:
             "state.attacker[`questBoot${to}`] = state.attacker[`questBoot${from}`];"
         ) in source
 
-        # Rerender reads the quest boot straight from state in both the
-        # analyst strip and the prototype slot grid — nothing resets it.
+        # Rerender reads the quest boot straight from state on the duel
+        # canvas — its own slot row, keyed by side; nothing resets it.
         assert "state.attacker[`questBoot${side}`]" in source
-        assert "state.attacker[`questBoot${sideUpper}`]" in source
+        assert (
+            "rows.push(duelRowHtml(state.attacker[`questBoot${side}`], "
+            "questBootPath(side)));"
+        ) in source
 
         # The picker only offers the tier the current quest state allows.
         assert (

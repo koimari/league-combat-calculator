@@ -45,7 +45,9 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
     # The setup rail and duel canvas each exist exactly once and the proof
     # surfaces ride in the visible canvas — the legacy hidden DOM is gone.
     assert len(soup.select(".app-grid")) == 1
-    assert len(soup.select("#slotsA")) == 1
+    # Build A is edited on the duel canvas, not in a rail step.
+    assert len(soup.select("#duelA")) == 1
+    assert soup.select_one("#duelA").find_parent(class_="canvas") is not None
     assert soup.select_one("#damageBreakdown").find_parent(class_="canvas") is not None
     assert soup.select_one("#defenseReceipts").find_parent(class_="canvas") is not None
     assert soup.select_one("#feedbackWidget").find_parent(class_="canvas") is not None
@@ -1019,14 +1021,18 @@ def test_frontend_layout_separates_item_option_rows():
     assert "min-width: 0;" in label_block
     assert "overflow-wrap: anywhere;" in label_block
     assert "white-space: normal;" in label_block
-    # The option rows must sit clear of the slot they belong to. The redesign
-    # gets that from the wrapper's own grid gap instead of a margin rule on
-    # each child, so a slot, its stack control and its option rows can never
-    # collide however many of them an item declares.
-    wrap_block = source[source.index(".slot-wrap {") : source.index(".slot {")]
-    assert "display: grid;" in wrap_block
-    assert "gap: 4px;" in wrap_block
-    assert "position: relative;" in wrap_block
+    # The option rows must sit clear of the slot they belong to. On the duel
+    # canvas that comes from the controls wrapper's own flex gap instead of a
+    # margin rule on each child, so a slot, its stack control and its option
+    # rows can never collide however many of them an item declares.
+    wrap_block = source[
+        source.index(".duel-slot-controls {") : source.index(
+            ".duel-b .duel-slot-controls {"
+        )
+    ]
+    assert "display: flex;" in wrap_block
+    assert "flex-wrap: wrap;" in wrap_block
+    assert "gap: 6px 10px;" in wrap_block
 
 
 def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_effect():
@@ -1240,8 +1246,8 @@ def test_live_builder_surfaces_backend_item_state_controls_for_all_participants(
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
     assert "function stackControl(path, id, compact = false)" in source
-    assert "item && stackSpec(id) ? stackControl(path, id)" in source
-    assert "item && stackSpec(id) ? stackControl(path, id, true)" in source
+    # Main build slots (duel canvas) and roster slots both mount the control.
+    assert source.count("item && stackSpec(id) ? stackControl(path, id, true)") == 2
     assert 'data-stack-path="${path}"' in source
     assert "function setStackValue(path, value)" in source
     assert "engineItemOptions(itemIds, itemStacks)" in source
@@ -2115,6 +2121,23 @@ class TestChampionVerifiedFlags:
             "blockers": [],
         }
         assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
+
+    def test_fight_mode_restrictions_are_published(self):
+        """A module certifying a fight-mode subset publishes it with its
+        sourced reason, so the interface can request a supported mode (the
+        timed recast window by default) instead of failing closed."""
+        champs = app_module.app.test_client().get("/api/champions").get_json()
+        by_name = {champion["name"]: champion for champion in champs}
+
+        # Unrestricted module: every public fight mode is certified.
+        assert by_name["Ahri"]["supported_fight_modes"] is None
+        assert by_name["Ahri"]["unsupported_fight_mode_reason"] is None
+
+        # Restricted module: modes and the sourced reason ride together.
+        assert by_name["Karthus"]["supported_fight_modes"] == ["one_rotation"]
+        assert "time-based" in (
+            by_name["Karthus"]["unsupported_fight_mode_reason"].lower()
+        )
 
     def test_verified_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()

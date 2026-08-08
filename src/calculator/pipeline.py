@@ -552,6 +552,11 @@ class FightParams(FightConfig):
     role: str = ""
     role_quest_complete: bool = False
     ally_stat_bonuses: dict[str, float] | None = None
+    # The Enemy Hits constraint. False composes no enemy pair fights in the
+    # coupled timeline and suppresses every enemy-authored event (thorns,
+    # authored reactives) — enemies deal exactly zero damage. The one-pair
+    # engine never reads this; participant_timeline owns the semantics.
+    enemies_attack: bool = True
 
     @classmethod
     def from_request(
@@ -648,6 +653,7 @@ class FightParams(FightConfig):
             keystone=keystone,
             role=role,
             role_quest_complete=role_quest_complete,
+            enemies_attack=_request_bool(data, "enemies_attack", True),
             deterministic=deterministic,
         )
         params._validate_request_values()

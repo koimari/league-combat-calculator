@@ -265,10 +265,11 @@ def test_frontend_renders_a_bis_trigger_on_every_slot():
     css = Path("static/css/style.css").read_text(encoding="utf-8")
 
     assert "function bisTrigger(path, compact = false)" in source
-    # Attacker build A/B slots and quest boots carry the trigger.
-    assert "${bisTrigger(path)}</div>" in source
-    # Enemy and ally roster slots (items + boots) carry a compact trigger.
+    # Attacker build A/B slots and quest boots carry the trigger on the duel
+    # canvas; enemy and ally roster slots carry the same compact trigger.
     assert "${bisTrigger(path, true)}</div>" in source
+    assert "${row}${bisTrigger(path, true)}" in source
+    assert ".duel-slot > .bis-trigger" in css
     assert 'data-bis-path="${path}"' in source
     assert '"Rank every legal item for this slot"' in source
     assert ".bis-trigger" in css

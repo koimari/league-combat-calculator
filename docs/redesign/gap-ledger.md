@@ -45,15 +45,22 @@ implementing session's to detail, staying inside the design language.
 | Per-card: boots toggle, quest toggle, ally-effects toggle (allies only) | Row of toggles in the card, same idiom as role/level |
 | "Affects your BIS" insight callout | Keep — it's in the mock; feed it from real receipts only, else omit it (no invented prose) |
 
-## Rail · step 3 Builds
+## Canvas · the build panel
+
+Builds are **not** a rail step. A rail step that edits slots while the duel
+canvas mirrors them read-only means two homes for one concept, and the mirror
+is the one the user is already looking at. So the duel panel *is* the build
+editor: `renderDuelSide` owns every control below, and the rail carries the
+two steps (Champion, Roster) that are genuinely scenario setup.
 
 | Current control | Home in new design |
 |---|---|
-| A/B 6 item slots, per-slot picker | Expanded step 3 edits slots; the duel canvas mirrors them read-only |
-| Keystone slot per build (modal picker; uncompiled keystones greyed) | 7th slot chip per build, as option 1a's "Add keystone · Electrocute" shows |
-| Copy A→B / B→A | Expanded step 3 actions |
-| Compare on/off toggle | Expanded step 3: "Enable Build B" (see locked decision 2) |
-| Per-slot BIS ("Find best item for a slot", objective filter, ranked candidates, certified-subset notes, Use button) | Per-slot action in expanded step 3 opening the BIS dialog, restyled; keep every receipt/coverage note |
+| A/B 6 item slots, per-slot picker | Each `.duel-row` on the duel canvas is the picker button for that exact slot |
+| Keystone slot per build (modal picker; uncompiled keystones greyed) | 7th row per side, same duel-row grammar, opening the keystone picker |
+| Per-slot stacks and item options | `.duel-slot-controls` under the row that declares them |
+| Copy A→B / B→A | The one whole-side move, in each side's `.duel-side-head` |
+| Compare on/off toggle | The verdict strip only — "Enable Build B" on the empty challenger side, "Disable Build B" from the live duel (see locked decision 2) |
+| Per-slot BIS ("Find best item for a slot", objective filter, ranked candidates, certified-subset notes, Use button) | BIS chip on each slot row plus the whole-build entry in `.build-actions`; keep every receipt/coverage note |
 
 ## Rail · Constraints block
 
@@ -89,7 +96,7 @@ implementing session's to detail, staying inside the design language.
 | Current surface | Home in new design |
 |---|---|
 | Top bar (brand, patch, auth) | Rail header holds brand + patch (mock); auth/logout moves to a small rail footer |
-| Share build button + panel (permanent link warning) | Action in step 3 / rail footer; panel keeps its permanence warning verbatim |
+| Share build button + panel (permanent link warning) | Action in `.build-actions` under the duel panel; panel keeps its permanence warning verbatim |
 | Onboarding overlay | Rewrite for the new IA — current copy references removed Quick mode (stale even today). Keep the once-per-browser localStorage contract |
 | Feedback widget, consent banner | Keep mounts; restyle to design language |
 | Footer (legal links, Riot disclaimer) | Slim footer band under the canvas |

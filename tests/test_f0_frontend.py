@@ -94,8 +94,8 @@ def test_analyst_builder_exists_exactly_once():
         "statsGrid",
         "abilityRow",
         "championOptionsRow",
-        "slotsA",
-        "slotsB",
+        "duelA",
+        "duelB",
         "bisButton",
         "enemies",
         "allies",
@@ -118,17 +118,17 @@ def test_every_setup_step_is_a_labelled_disclosure():
     card carries the same data-step-toggle as a large pointer target."""
     soup = _soup()
     heads = soup.select("button.step-toggle[data-step-toggle]")
-    assert [t["data-step-toggle"] for t in heads] == ["champion", "roster", "builds"]
+    assert [t["data-step-toggle"] for t in heads] == ["champion", "roster"]
     for toggle in heads:
         assert toggle.get("aria-expanded") == "false"
         controls = toggle.get("aria-controls")
         assert controls and soup.select_one(f"#{controls}") is not None
         assert soup.select_one(f"#{controls}").has_attr("hidden")
     briefs = soup.select(".step-brief[data-step-toggle]")
-    assert [b["data-step-toggle"] for b in briefs] == ["champion", "roster", "builds"]
-    # Every editor stays mounted while collapsed: the feedback widget and the
-    # staleness module read #slotsA / #abilityRow whether or not it is open.
-    assert soup.select_one("#slotsA").find_parent(class_="step-body") is not None
+    assert [b["data-step-toggle"] for b in briefs] == ["champion", "roster"]
+    # Every editor stays mounted while collapsed: the staleness module reads
+    # #abilityRow whether or not its step is open.
+    assert soup.select_one("#abilityRow").find_parent(class_="step-body") is not None
 
 
 def test_constraint_rows_are_labelled_disclosures():
@@ -139,6 +139,7 @@ def test_constraint_rows_are_labelled_disclosures():
         "objective",
         "window",
         "state",
+        "enemyHits",
     ]
     for row in rows:
         assert row.get("aria-expanded") == "false"
@@ -382,7 +383,7 @@ def test_page_has_one_h1_and_a_sane_heading_order():
     assert "visually-hidden" in h1s[0].get("class", [])
     assert "calculator" in h1s[0].get_text(strip=True).lower()
     step_headings = soup.select(".step .step-head")
-    assert [h.name for h in step_headings] == ["h2", "h2", "h2"]
+    assert [h.name for h in step_headings] == ["h2", "h2"]
     champion = soup.select_one("#championName")
     assert champion is not None and champion.name == "h3"
 

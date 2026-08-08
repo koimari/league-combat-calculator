@@ -238,53 +238,9 @@
             </div>
           </section>
 
-          <!-- ---- Step 3 · Builds ---- -->
-          <section class="step" id="stepBuilds">
-            <h2 class="step-head">
-              <button class="step-toggle" type="button" data-step-toggle="builds" aria-expanded="false" aria-controls="stepBuildsBody">
-                <span class="step-index" aria-hidden="true">3</span>
-                <span class="step-title">Builds</span>
-                <span class="step-summary" id="buildsSummary"></span>
-                <span class="step-action">Edit</span>
-              </button>
-            </h2>
-
-            <div class="step-brief" id="buildsBrief" data-step-toggle="builds">
-              <p class="mono brief-line" id="buildsBriefLine">No build yet</p>
-            </div>
-
-            <div class="step-body" id="stepBuildsBody" hidden>
-              <article class="build-editor" data-build="a">
-                <header class="build-editor-head">
-                  <span class="build-kicker">Build A · baseline</span>
-                  <strong id="buildAScore">—</strong>
-                  <button class="link-button" type="button" data-copy="b">Copy B → A</button>
-                </header>
-                <div class="slot-grid" id="slotsA"></div>
-              </article>
-
-              <article class="build-editor" data-build="b">
-                <header class="build-editor-head">
-                  <span class="build-kicker">Build B · challenger</span>
-                  <strong id="buildBScore">—</strong>
-                  <button class="link-button" type="button" data-copy="a">Copy A → B</button>
-                </header>
-                <p class="build-caption" id="winnerCaption">comparison off</p>
-                <div class="slot-grid" id="slotsB"></div>
-              </article>
-
-              <button class="toggle toggle-wide" id="compareToggle" type="button" data-toggle-compare aria-pressed="false">Enable Build B</button>
-
-              <button class="rail-secondary" id="bisButton" type="button" aria-describedby="bisPrerequisite">Find best item for a slot</button>
-              <p class="prerequisite" id="bisPrerequisite" hidden>
-                <span id="bisPrerequisiteText"></span>
-                <button class="link-button" id="bisAddEnemy" type="button">+ Add enemy</button>
-              </p>
-
-              <button class="rail-secondary" id="shareAnalystButton" type="button">Share this build</button>
-              <button class="rail-primary" type="button" data-step-toggle="none">Done · back to the duel</button>
-            </div>
-          </section>
+          <!-- Builds are not a rail step: the duel panel on the canvas is the
+               one place a build is edited (slots, stacks, item options, BIS,
+               copy, share). renderDuelSide owns that markup. -->
         </div>
 
         <div class="rail-foot">
@@ -348,6 +304,10 @@
               <span class="constraint-name" id="gameStateLabel">State</span>
               <span class="constraint-value" id="stateValue">Theory</span>
             </button>
+            <button class="constraint-row" type="button" data-constraint-toggle="enemyHits" aria-expanded="false" aria-controls="constraintEnemyHitsBody">
+              <span class="constraint-name">Enemy hits</span>
+              <span class="constraint-value" id="enemyHitsValue">On</span>
+            </button>
             <button class="rail-primary constraints-action" id="economicsOptimize" type="button">Find best buy</button>
           </div>
 
@@ -386,6 +346,10 @@
               <input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" aria-label="Auto attack uptime percent" disabled />
             </label>
             <button class="toggle" id="uptimeModeToggle" type="button" aria-pressed="true">Use explicit</button>
+            <!-- Shown only for champions whose module certifies one_rotation
+                 fights exclusively: the sourced reason the timed window (and
+                 its cooldown recasts) is withheld. renderRail owns it. -->
+            <p class="constraint-note" id="windowModeNote" hidden></p>
           </div>
 
           <div class="constraint-body" id="constraintStateBody" hidden>
@@ -400,6 +364,13 @@
             <span id="stateTheoryHelp" class="visually-hidden">Theory: the unconstrained comparison state. Builds are scored exactly as you assemble them, with no check that the gold, timing, or purchase order they would require is achievable in a real game.</span>
             <span id="stateLiveHelp" class="visually-hidden">Snapshot lens: reads the scenario as one moment in a game. The champion level, role quest, and legal inventory you have selected are the constraints the comparison is judged under, and the Window controls set the time slice it is measured over.</span>
             <p class="constraint-note" id="gameStateHelp" role="status" aria-live="polite"></p>
+          </div>
+
+          <div class="constraint-body" id="constraintEnemyHitsBody" hidden>
+            <label class="checkbox" for="enemyHitsToggle">
+              <input id="enemyHitsToggle" type="checkbox" checked /> <span>Enemies deal damage</span>
+            </label>
+            <p class="constraint-note">Unchecked, every enemy deals exactly zero damage — no casts, autos, or item retaliation (thorns) — a pure target-dummy reading. Survival and kill time follow accordingly.</p>
           </div>
         </section>
 
@@ -434,6 +405,19 @@
           </div>
           <div class="duel-side duel-b" id="duelB" aria-label="Build B items"></div>
         </div>
+
+        <!-- ---- Build actions ----
+             The whole-build moves that no single slot row owns. They sit with
+             the duel panel because that is where a build is edited; the
+             per-slot moves (pick, stacks, item options, BIS) ride their row. -->
+        <section class="build-actions" id="buildActions" aria-label="Build actions">
+          <button class="build-action" id="bisButton" type="button" aria-describedby="bisPrerequisite">Find best item for a slot</button>
+          <button class="build-action" id="shareAnalystButton" type="button">Share this build</button>
+          <p class="prerequisite" id="bisPrerequisite" hidden>
+            <span id="bisPrerequisiteText"></span>
+            <button class="link-button" id="bisAddEnemy" type="button">+ Add enemy</button>
+          </p>
+        </section>
 
         <section class="hp-band" id="hpBand" aria-label="Team fight health at window end">
           <header class="band-head">
@@ -528,12 +512,13 @@
         <section class="onboarding-step is-active">
           <span class="onboarding-step-mark" aria-hidden="true">1</span>
           <h3>Set the scenario in the rail</h3>
-          <p>Three numbered steps on the left: <em>Champion</em>, <em>Roster</em>, <em>Builds</em>. A step opens in place and the duel stays live behind it, so you always see what your edit changed. Constraints — gold, objective, window, game state — ride the banner above the duel.</p>
+          <p>Two numbered steps on the left: <em>Champion</em> and <em>Roster</em>. A step opens in place and the duel stays live behind it, so you always see what your edit changed. Constraints — gold, objective, window, game state — ride the banner above the duel.</p>
+          <p>Builds are not a rail step: you assemble them on the duel panel itself.</p>
         </section>
         <section class="onboarding-step" hidden>
           <span class="onboarding-step-mark" aria-hidden="true">2</span>
-          <h3>Read the duel</h3>
-          <p>The strip along the top answers first: Build A, the delta, Build B. Below it the two builds mirror around a delta spine — each bar reads Build B against Build A, green ahead and red behind — and the fight timeline plots cumulative damage with the casts that produced it.</p>
+          <h3>Build and read the duel</h3>
+          <p>The strip along the top answers first: Build A, the delta, Build B. Below it the two builds mirror around a delta spine — each bar reads Build B against Build A, green ahead and red behind — and every slot row on either side is a button, so you fill and tune a build right where you read it.</p>
         </section>
         <section class="onboarding-step" hidden>
           <span class="onboarding-step-mark" aria-hidden="true">3</span>

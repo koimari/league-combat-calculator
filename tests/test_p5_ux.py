@@ -147,7 +147,7 @@ def test_index_renders_the_analyst_view_surface():
         "championPicker",
         "roleSelect",
         "levelInput",
-        "slotsA",
+        "duelA",
     ):
         assert soup.select_one(f"#{required_id}") is not None, required_id
 
