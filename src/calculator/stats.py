@@ -344,8 +344,14 @@ def calculate_total_stats(
 
     for item in items:
         item_stats = get_item_stats(item)
-        for key in total_item_stats:
-            total_item_stats[key] += item_stats.get(key, 0.0)
+        # Most items grant a handful of the tracked stats; adding the zeros
+        # is a no-op bit-for-bit, so only non-zero grants touch the totals
+        # (keys outside the tracked set are ignored exactly as before).
+        for key, value in item_stats.items():
+            if value:
+                total = total_item_stats.get(key)
+                if total is not None:
+                    total_item_stats[key] = total + value
 
     # Stateful item inputs are explicit scenario state, not guessed proc
     # counts. Apply their sourced health/mana before conversions (Awe,

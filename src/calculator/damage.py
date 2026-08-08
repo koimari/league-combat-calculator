@@ -126,7 +126,7 @@ from collections.abc import Mapping, Sequence
 from collections import Counter
 from dataclasses import dataclass, field, replace
 from operator import itemgetter
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from . import item_effects
 from . import rune_effects
@@ -1370,6 +1370,12 @@ def _ordered_damage_events(
         if phase not in _EVENT_PHASE_ORDER:
             phase = default_phase
         phase_rank = _EVENT_PHASE_ORDER[phase]
+        # Per-entry constants, hoisted out of the per-event loop.
+        is_ability_source = source_key in cast_order
+        vamp_source = source_key.startswith(("auto_attacks", "on_hit_"))
+        shield_events = entry.get("self_shield_events")
+        if not isinstance(shield_events, list):
+            shield_events = None
         for ordinal, event in enumerate(declared, start=1):
             if not isinstance(event, dict):
                 continue
@@ -1403,8 +1409,6 @@ def _ordered_damage_events(
                     "sequence": sequence,
                     "_lk": (time, order_value, phase_rank, sequence),
                 }
-                if event.get("raw_damage") is not None:
-                    row["raw_damage"] = event["raw_damage"]
             else:
                 row = {
                     "source_key": source_key,
@@ -1417,8 +1421,6 @@ def _ordered_damage_events(
                     "order": order_value,
                     "_lk": (time, order_value, phase_rank, sequence),
                 }
-                if event.get("raw_damage") is not None:
-                    row["raw_damage"] = event["raw_damage"]
                 source_missing_ratio = event.get("source_missing_ratio")
                 if source_missing_ratio is not None:
                     row["source_missing_ratio"] = float(source_missing_ratio)
@@ -1428,10 +1430,9 @@ def _ordered_damage_events(
             if event.get("cc_kind") is not None:
                 row["cc_kind"] = str(event["cc_kind"])
                 row["cc_reviewed"] = bool(event.get("cc_reviewed", True))
-            if source_key in cast_order:
+            if is_ability_source:
                 row["is_ability"] = True
-            shield_events = entry.get("self_shield_events")
-            if isinstance(shield_events, list) and ordinal - 1 < len(shield_events):
+            if shield_events is not None and ordinal - 1 < len(shield_events):
                 shield = shield_events[ordinal - 1]
                 if isinstance(shield, Mapping):
                     row["self_shield"] = dict(shield)
@@ -1441,13 +1442,12 @@ def _ordered_damage_events(
             raw_formula = event.get("raw_formula")
             if raw_formula is not None:
                 row["raw_formula"] = raw_formula
-            if event.get("basic_attack"):
+            basic_attack = event.get("basic_attack")
+            if basic_attack:
                 row["basic_attack"] = True
             if isinstance(event.get("self_shield"), Mapping):
                 row["self_shield"] = dict(event["self_shield"])
-            if event.get("basic_attack") or source_key.startswith(
-                ("auto_attacks", "on_hit_")
-            ):
+            if basic_attack or vamp_source:
                 row["omnivamp_effectiveness"] = 1.0
             events_append(row)
             sequence += 1

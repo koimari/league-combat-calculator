@@ -7,7 +7,8 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 
 import math
 from dataclasses import dataclass, replace
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .champions import (
     RESERVED_OPTION_KEYS,
@@ -278,7 +279,10 @@ def _item_self_healing_events(
     item_regen_flat = 0.0
     item_regen_percent = 0.0
     for item in items or ():
-        item_stats = get_item_stats(dict(item))
+        # Pass the cached item dict itself: a defensive copy would defeat
+        # get_item_stats' identity memo and re-validate the full stat map
+        # on every optimizer evaluation.
+        item_stats = get_item_stats(item if isinstance(item, dict) else dict(item))
         item_regen_flat += float(item_stats["health_regen_flat"])
         item_regen_percent += float(item_stats["health_regen_percent"])
     base_regen_per_second = (
@@ -784,6 +788,33 @@ def require_fight_mode_support(params: "FightParams", champion_name: str) -> Non
         )
 
 
+# The optimizer replays the same frozen FightParams for thousands of
+# candidate fights, and the resolved cast order for one champion is almost
+# always identical across candidates.  Memoize the derived params by
+# (params identity, order): frozen instances are safe to share, the strong
+# reference guards ``id()`` recycling, and the bound keeps candidate churn
+# from growing the memo without limit.
+_CAST_ORDER_PARAMS_MEMO: dict[
+    tuple[int, tuple[str, ...]], tuple["FightParams", "FightParams"]
+] = {}
+_CAST_ORDER_PARAMS_MEMO_LIMIT = 512
+
+
+def _params_with_cast_order(
+    params: "FightParams", declared_order: list[str]
+) -> "FightParams":
+    """``replace(params, cast_order=declared_order)`` with an identity memo."""
+    key = (id(params), tuple(declared_order))
+    memo = _CAST_ORDER_PARAMS_MEMO.get(key)
+    if memo is not None and memo[0] is params:
+        return memo[1]
+    resolved = replace(params, cast_order=declared_order)
+    if len(_CAST_ORDER_PARAMS_MEMO) > _CAST_ORDER_PARAMS_MEMO_LIMIT:
+        _CAST_ORDER_PARAMS_MEMO.clear()
+    _CAST_ORDER_PARAMS_MEMO[key] = (params, resolved)
+    return resolved
+
+
 def run_fight(
     champion_data: dict[str, Any],
     level: int,
@@ -888,7 +919,7 @@ def run_fight(
             champion_data=champion_data,
             certified_order=get_champion_cast_order(champion_data.get("name", "")),
         )
-        params = replace(params, cast_order=declared_order)
+        params = _params_with_cast_order(params, declared_order)
         resolved_rotation_rule = combo_rule
         resolved_certified_order = (
             combo_rule.order

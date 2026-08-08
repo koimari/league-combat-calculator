@@ -246,6 +246,34 @@ def has_takedown_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
     )
 
 
+# The holders that consume each pre-scanned trigger stream below.  The
+# streams are built lazily from these sets: every consumer branch in
+# ``derive_item_support_effects`` is gated on its item name, so a holder
+# with none of a stream's items can skip that scan entirely.  A new branch
+# that reads ``cc_events``/``damage_events`` must add its item here, or
+# its stream will arrive empty.
+CC_TRIGGER_ITEMS = frozenset(
+    {"Fimbulwinter", "Bandlepipes", "Solstice Sleigh", "Imperial Mandate"}
+)
+DAMAGE_TRIGGER_ITEMS = frozenset({"Bloodsong", "Black Cleaver", "Bloodletter's Curse"})
+
+# Every holder whose scan reads the per-event view at all (``target`` /
+# ``_event_id`` enrichment, the takedown synthesis, or a raw damage sum).
+# The optimizer's compiled path builds that enriched per-event view only
+# for these holders; everyone else scans the plain engine result.
+EVENT_VIEW_SUPPORT_ITEMS = (
+    EVENT_SCAN_SUPPORT_ITEMS
+    | TAKEDOWN_SCAN_SUPPORT_ITEMS
+    | CC_TRIGGER_ITEMS
+    | frozenset({"Echoes of Helia"})
+)
+
+
+def has_event_view_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
+    """Whether any held item scans the per-event damage/takedown view."""
+    return any(str(item.get("name", "")) in EVENT_VIEW_SUPPORT_ITEMS for item in items)
+
+
 def derive_item_support_effects(
     attacker: Any,
     result: Mapping[str, Any],
@@ -261,9 +289,13 @@ def derive_item_support_effects(
     teammates = _teammates(attacker, all_actors)
     packets: list[dict[str, Any]] = []
     triggers = _support_triggers(trigger_effects, attacker)
-    cc_events = _cc_triggers(result)
-    takedown_events = _takedown_triggers(result)
-    damage_events = _damage_triggers(result)
+    # Each stream scans the full event ledger, so it is built only when a
+    # held item consumes it (the registries above own that knowledge).
+    cc_events = _cc_triggers(result) if names & CC_TRIGGER_ITEMS else []
+    takedown_events = (
+        _takedown_triggers(result) if names & TAKEDOWN_SCAN_SUPPORT_ITEMS else []
+    )
+    damage_events = _damage_triggers(result) if names & DAMAGE_TRIGGER_ITEMS else []
 
     # Reap is a progression/economy branch, not a guessed combat bonus.  The
     # authored minion-kill count is bounded by its sourced 100-kill quest and

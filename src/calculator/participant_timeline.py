@@ -13,7 +13,8 @@ from collections import defaultdict
 from dataclasses import dataclass, replace
 import math
 from operator import itemgetter
-from typing import Any, Iterable, Mapping, MutableMapping
+from collections.abc import Iterable, Mapping, MutableMapping
+from typing import Any
 
 from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
@@ -23,6 +24,7 @@ from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
     derive_item_support_effects,
+    has_event_view_support_items,
     schedule_knights_vow,
 )
 from .champions.skill_orders import get_ability_rank
@@ -412,6 +414,19 @@ def _pair_packet(
     champion_wound_by_source = {
         str(packet.get("source_key", "")): packet for packet in champion_wounds
     }
+    # The engine exposes the final effective resistances for this pair.
+    # Preserve them on every packet so an ordered target state can re-price
+    # the same post-mitigation event after adding its sourced resistance
+    # delta.  A missing value is deliberately left absent: the survival
+    # walk then refuses to invent a mitigation ratio for that packet.
+    baseline_fields = []
+    for field in ("effective_armor", "effective_mr"):
+        try:
+            baseline = float(result[field])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if math.isfinite(baseline):
+            baseline_fields.append((f"_baseline_{field}", baseline))
     for index, event in enumerate(result.get("damage_events", [])):
         if "sequence" not in event:
             # See _action_key: pair-local event ids stay order-irrelevant
@@ -421,6 +436,8 @@ def _pair_packet(
                 "has no sequence; the walk's tie-break order would depend on "
                 "event-id numbering"
             )
+        source_key = str(event.get("source_key", ""))
+        time_key = round(float(event.get("time", 0.0)), 9)
         enriched = {
             **event,
             "attacker": attacker_id,
@@ -433,9 +450,7 @@ def _pair_packet(
         # the damaging event as the same wound receipt the survival walks
         # consume: the patch-wide factor and a 3-second window, refreshed by
         # every hit (each Death Lotus dagger), sourced to the ability label.
-        wound_packet = champion_wound_by_source.get(
-            str(event.get("source_key", "")), None
-        )
+        wound_packet = champion_wound_by_source.get(source_key)
         if wound_packet is not None and float(event.get("damage", 0.0) or 0.0) > 0.0:
             enriched["grievous_duration"] = float(wound_packet.get("duration", 0.0))
             enriched["_wound_source"] = str(
@@ -445,37 +460,21 @@ def _pair_packet(
         # same target-allocation receipt onto each ordered packet so the
         # coupled timeline can prove which roster slot received it instead of
         # displaying an unexplained aggregate secondary hit.
-        source_row = result_breakdown.get(str(event.get("source_key", "")), {})
+        source_row = result_breakdown.get(source_key, {})
         if isinstance(source_row, Mapping) and isinstance(
             source_row.get("targeting"), Mapping
         ):
             enriched["targeting"] = dict(source_row["targeting"])
-        # The engine exposes the final effective resistances for this pair.
-        # Preserve them on every packet so an ordered target state can re-price
-        # the same post-mitigation event after adding its sourced resistance
-        # delta.  A missing value is deliberately left absent: the survival
-        # walk then refuses to invent a mitigation ratio for that packet.
-        for field in ("effective_armor", "effective_mr"):
-            try:
-                baseline = float(result[field])
-            except (KeyError, TypeError, ValueError):
-                continue
-            if math.isfinite(baseline):
-                enriched[f"_baseline_{field}"] = baseline
+        for baseline_key, baseline in baseline_fields:
+            enriched[baseline_key] = baseline
         enriched["_sk"] = _action_key(
             float(event.get("time", 0.0)), 0.0, defender_id, enriched
         )
         events.append(enriched)
-        event_ids_by_key[
-            (
-                str(event.get("source_key", "")),
-                round(float(event.get("time", 0.0)), 9),
-                int(event.get("sequence", 0) or 0),
-            )
-        ] = enriched["_event_id"]
-        event_ids_by_source_time[
-            (str(event.get("source_key", "")), round(float(event.get("time", 0.0)), 9))
-        ].append(enriched["_event_id"])
+        event_ids_by_key[(source_key, time_key, int(event.get("sequence", 0) or 0))] = (
+            enriched["_event_id"]
+        )
+        event_ids_by_source_time[(source_key, time_key)].append(enriched["_event_id"])
     heals: list[dict[str, Any]] = []
     for heal_index, event in enumerate(result.get("self_healing_events", [])):
         original_event_id = event.get("_event_id")
@@ -843,8 +842,12 @@ def _support_effect_templates(
                     "_source_event_id": applied_self_id,
                 }
             )
-    item_result = dict(result)
-    if damage_events is not None:
+    if damage_events is None:
+        # No per-event override: the item scan reads the engine result as-is
+        # (it never mutates it), so skip the per-candidate dict copy.
+        item_result: Mapping[str, Any] = result
+    else:
+        item_result = dict(result)
         item_result["damage_events"] = list(damage_events)
         if (
             target_id
@@ -1798,16 +1801,30 @@ def _simulate_survival(
             index += 1
         bucket.insert(index + 1, clone)
 
+    # Only a Death's Dance holder can stamp deferral metadata; resolving the
+    # holders once keeps the per-event loop below to plain marker checks.
+    deferral_holders = {
+        participant_id: combatant
+        for participant_id, combatant in combatant_by_id.items()
+        if float(getattr(combatant.defenses, "damage_deferral_fraction", 0.0) or 0.0)
+        > 0.0
+    }
     for participant_id, events in incoming.items():
         for original in events:
             event = original
             target_id = str(event.get("target", participant_id))
-            try:
-                redirect_fraction = float(event.get("redirect_fraction", 0.0) or 0.0)
-            except (TypeError, ValueError):
+            if "redirect_fraction" not in event:
                 redirect_fraction = 0.0
-            redirect_fraction = max(0.0, min(1.0, redirect_fraction))
-            redirect_target = str(event.get("redirect_target", ""))
+                redirect_target = ""
+            else:
+                try:
+                    redirect_fraction = float(
+                        event.get("redirect_fraction", 0.0) or 0.0
+                    )
+                except (TypeError, ValueError):
+                    redirect_fraction = 0.0
+                redirect_fraction = max(0.0, min(1.0, redirect_fraction))
+                redirect_target = str(event.get("redirect_target", ""))
             if redirect_fraction > 0.0 and redirect_target in states:
                 original_amount = max(0.0, float(event.get("damage", 0.0)))
                 # Knight's Vow redirects pre-mitigation damage.  A pair event
@@ -2012,17 +2029,14 @@ def _simulate_survival(
             # packets.  Apply its typed defense metadata here, before the
             # shared split logic, so every authored source (abilities, autos,
             # item procs, and reactive packets) follows the same path.
-            target_defenses = combatant_by_id.get(target_id)
+            target_defenses = (
+                deferral_holders.get(target_id) if deferral_holders else None
+            )
             if (
                 target_defenses is not None
                 and not event.get("_deferred")
                 and str(event.get("damage_type", "")) in {"physical", "magic"}
                 and float(event.get("damage", 0.0) or 0.0) > 0.0
-                and float(
-                    getattr(target_defenses.defenses, "damage_deferral_fraction", 0.0)
-                    or 0.0
-                )
-                > 0.0
                 and "deferred_fraction" not in event
             ):
                 event["deferred_fraction"] = float(
@@ -2039,12 +2053,19 @@ def _simulate_survival(
             # represented only when the packet provides all timing fields.
             # It is split into deterministic equal true-damage ticks; no
             # hidden item-specific duration is introduced here.
-            try:
-                deferred_fraction = float(event.get("deferred_fraction", 0.0) or 0.0)
-                deferred_duration = float(event.get("deferred_duration", 0.0) or 0.0)
-                deferred_ticks = int(event.get("deferred_ticks", 0) or 0)
-            except (TypeError, ValueError):
+            if "deferred_fraction" not in event:
                 deferred_fraction, deferred_duration, deferred_ticks = 0.0, 0.0, 0
+            else:
+                try:
+                    deferred_fraction = float(
+                        event.get("deferred_fraction", 0.0) or 0.0
+                    )
+                    deferred_duration = float(
+                        event.get("deferred_duration", 0.0) or 0.0
+                    )
+                    deferred_ticks = int(event.get("deferred_ticks", 0) or 0)
+                except (TypeError, ValueError):
+                    deferred_fraction, deferred_duration, deferred_ticks = 0.0, 0.0, 0
             if (
                 deferred_fraction > 0.0
                 and deferred_duration > 0.0
@@ -2310,6 +2331,9 @@ class CoupledSearchContext:
         "base_sorted",
         "base_heal_dedup",
         "validated_roster_window",
+        # The main champion's wound-declaring sources are champion-fixed;
+        # derived once per search instead of once per evaluation.
+        "main_champion_wounds",
         # Issue #137: set when search-invariant compilation (roster pairs or
         # a signature panel) hit an unrepresentable transition; the compiled
         # path is then skipped for the rest of the search.
@@ -2332,6 +2356,7 @@ class CoupledSearchContext:
         self.base_sorted: list[tuple[Any, ...]] = []
         self.base_heal_dedup: dict[int, dict[tuple[str, float], float]] = {}
         self.validated_roster_window = False
+        self.main_champion_wounds: dict[str, Any] | None = None
 
 
 class _SignaturePanel:
@@ -2787,10 +2812,13 @@ def _score_with_search_context(
         damage_type: _grievous_pack(main_profiles, damage_type)
         for damage_type in ("physical", "magic", "true")
     }
-    main_champion_wounds = {
-        str(packet.get("source_key", "")): packet
-        for packet in champion_grievous_wound_sources(main.champion_data)
-    }
+    main_champion_wounds = context.main_champion_wounds
+    if main_champion_wounds is None:
+        main_champion_wounds = {
+            str(packet.get("source_key", "")): packet
+            for packet in champion_grievous_wound_sources(main.champion_data)
+        }
+        context.main_champion_wounds = main_champion_wounds
     reusable_stats = main.stats if reuse_main_stats else None
     heal_dedup: dict[tuple[str, float], float] = {}
     first_result = None
@@ -2828,7 +2856,12 @@ def _score_with_search_context(
         # compiles or fails closed, never silently vanishes (issue #169).
         # A tuple-ledger fight needs none of this: the pipeline's tuple
         # predicate excludes every event-scanning holder.
-        if first_result.get("damage_events_tuple"):
+        if first_result.get("damage_events_tuple") or not has_event_view_support_items(
+            main.items
+        ):
+            # Tuple-ledger fights carry no scannable rows by construction,
+            # and a holder with no event-view item never reads the enriched
+            # per-event copy — both scan the plain engine result.
             support_templates = _support_effect_templates(
                 main, first_result, all_actors
             )
