@@ -87,6 +87,48 @@ from .survival import (
 _WalkCompiler = WalkCompiler
 
 
+def _cache_signature(value: Any) -> Any:
+    """Freeze nested request values for a hashable pair cache key."""
+    if isinstance(value, Mapping):
+        return tuple(
+            sorted((str(key), _cache_signature(item)) for key, item in value.items())
+        )
+    if isinstance(value, (list, tuple)):
+        return tuple(_cache_signature(item) for item in value)
+    try:
+        hash(value)
+    except TypeError:
+        return repr(value)
+    return value
+
+
+def _offensive_signature(attacker: Combatant) -> tuple[Any, ...]:
+    """Capture every candidate-owned input used by a cached pair fight."""
+    request = attacker.request
+    return (
+        str(attacker.champion_data.get("name", "")),
+        int(attacker.level),
+        tuple(str(item.get("name", "")) for item in attacker.items),
+        _cache_signature(attacker.stats),
+        _cache_signature(getattr(request, "ability_ranks", None)),
+        _cache_signature(getattr(request, "champion_options", None)),
+        _cache_signature(getattr(request, "cast_order", None)),
+        _cache_signature(getattr(request, "item_options", None)),
+        str(getattr(request, "role", "") or ""),
+        bool(getattr(request, "role_quest_complete", False)),
+    )
+
+
+def _pair_cache_key(attacker: Combatant, defender: Combatant) -> tuple[Any, ...]:
+    """Key reusable pairs by both offensive and defensive loadout state."""
+    return (
+        attacker.participant_id,
+        defender.participant_id,
+        _offensive_signature(attacker),
+        _defensive_signature(defender),
+    )
+
+
 def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
     """Identify a champion cast without treating passive/proc rows as casts.
 
@@ -2886,6 +2928,15 @@ def _score_with_search_context(
             }
         )
     coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
+    focus_index = next(
+        (
+            index
+            for index, actor in enumerate(all_actors)
+            if actor.participant_id == "main"
+        ),
+        0,
+    )
+    focus_survival = survival_rows[focus_index]
     return {
         "duration": float(duration),
         "participants": [
@@ -2899,6 +2950,33 @@ def _score_with_search_context(
             for index, actor in enumerate(all_actors)
         ],
         "breakdown": public_breakdown,
+        "objective": {
+            "main_team_damage_before_death": round(
+                sum(
+                    row["total_damage"]
+                    for row in public_breakdown
+                    if row["team"] in {"main", "ally"}
+                ),
+                1,
+            ),
+            "enemy_team_damage_before_death": round(
+                sum(
+                    row["total_damage"]
+                    for row in public_breakdown
+                    if row["team"] == "enemy"
+                ),
+                1,
+            ),
+            "focus_participant_id": "main",
+            "focus_damage_before_death": round(
+                float(public_breakdown[focus_index]["total_damage"]), 1
+            ),
+            "focus_survival": focus_survival,
+            "focus_support_value": round(support_value[focus_index], 1),
+            "focus_healing": round(
+                float(focus_survival.get("healing_received", 0.0)), 1
+            ),
+        },
         "timeline_coverage": combine_timeline_coverages(
             coverage_reports,
             target_count=len(coverage_reports),
@@ -3078,14 +3156,7 @@ def build_participant_timeline(
                 # fights instead of re-simulating them.  Fights the candidate
                 # attacks with are always recomputed.
                 cacheable = attacker.participant_id != "main"
-                if defender.participant_id == "main":
-                    cache_key = (
-                        attacker.participant_id,
-                        defender.participant_id,
-                        _defensive_signature(defender),
-                    )
-                else:
-                    cache_key = (attacker.participant_id, defender.participant_id)
+                cache_key = _pair_cache_key(attacker, defender)
                 packet = (
                     pair_result_cache.get(cache_key)
                     if cacheable and pair_result_cache is not None
@@ -3513,6 +3584,21 @@ def build_participant_timeline(
                 "death_time": actor_survival.get("death_time"),
             }
         )
+    focus_row = next(
+        (
+            row
+            for row in public_breakdown
+            if row["participant_id"] == focus_participant_id
+        ),
+        None,
+    )
+    focus_survival = survival.get(focus_participant_id, {})
+    focus_support_value = sum(
+        float(event.get("applied_amount", 0.0))
+        for events in support_effects.values()
+        for event in events
+        if event.get("attacker") == focus_participant_id
+    )
     if not include_receipt:
         # Optimizer scoring reads only the survival rows, the per-actor
         # damage breakdown, and the ordering receipt.  Skip the public
@@ -3531,6 +3617,34 @@ def build_participant_timeline(
                 for actor in all_actors
             ],
             "breakdown": public_breakdown,
+            "objective": {
+                "main_team_damage_before_death": round(
+                    sum(
+                        row["total_damage"]
+                        for row in public_breakdown
+                        if row["team"] in {"main", "ally"}
+                    ),
+                    1,
+                ),
+                "enemy_team_damage_before_death": round(
+                    sum(
+                        row["total_damage"]
+                        for row in public_breakdown
+                        if row["team"] == "enemy"
+                    ),
+                    1,
+                ),
+                "focus_participant_id": focus_participant_id,
+                "focus_damage_before_death": round(
+                    float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0,
+                    1,
+                ),
+                "focus_survival": focus_survival,
+                "focus_support_value": round(focus_support_value, 1),
+                "focus_healing": round(
+                    float(focus_survival.get("healing_received", 0.0)), 1
+                ),
+            },
             "timeline_coverage": combine_timeline_coverages(
                 coverage_reports,
                 target_count=len(coverage_reports),

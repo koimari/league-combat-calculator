@@ -246,8 +246,10 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
     return response
 
 
-def calculate_payload(data: Mapping[str, object]) -> dict:
+def calculate_payload(
+    data: Mapping[str, object], *, deterministic: bool = False
+) -> dict:
     """Return the complete JSON-safe calculate payload without Flask state."""
-    request = parse_scenario_request(data)
+    request = parse_scenario_request(data, deterministic=deterministic)
     resolved = resolve_scenario(request)
     return _calculate_resolved(request, resolved)

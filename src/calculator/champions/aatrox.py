@@ -50,6 +50,16 @@ _Q_NORMAL_ATTRS = [
     "Second Cast Damage",
     "Third Cast Damage",
 ]
+_Q_VARIANT_ATTRS = [
+    *_Q_NORMAL_ATTRS[:1],
+    *_Q_SWEETSPOT_ATTRS[:1],
+    *_Q_NORMAL_ATTRS[1:2],
+    *_Q_SWEETSPOT_ATTRS[1:2],
+    *_Q_NORMAL_ATTRS[2:3],
+    *_Q_SWEETSPOT_ATTRS[2:3],
+    "Maximum Non-Minion Non-Sweetspot Damage",
+    "Maximum Non-Minion Sweetspot Damage",
+]
 
 
 def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -60,6 +70,24 @@ def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
+
+    if "q_variant" in ctx.options:
+        try:
+            variant = int(ctx.options["q_variant"])
+        except (TypeError, ValueError):
+            variant = len(_Q_VARIANT_ATTRS) - 1
+        variant = max(0, min(variant, len(_Q_VARIANT_ATTRS) - 1))
+        attribute = _Q_VARIANT_ATTRS[variant]
+        total = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
+        entry = damage_entry(
+            ability.get("name", "The Darkin Blade"),
+            rank,
+            extract_cooldown(ability, rank),
+            total,
+            "physical",
+        )
+        entry["detail"] = f"Q variant: {attribute}."
+        return entry
 
     attrs = (
         _Q_SWEETSPOT_ATTRS
@@ -97,6 +125,15 @@ def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
 _deathbringer_stance.phase = ONHIT
 
 OPTIONS = [
+    {
+        "key": "q_variant",
+        "type": "int",
+        "default": 7,
+        "min": 0,
+        "max": 7,
+        "label": "Q damage variant",
+        "legacy_keys": ["sweetspot"],
+    },
     {"key": "sweetspot", "type": "bool", "default": True, "label": "Q Sweetspot hits"},
 ]
 

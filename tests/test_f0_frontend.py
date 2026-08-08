@@ -303,6 +303,12 @@ def test_ability_variant_buttons_write_the_declared_backend_option():
     )
     assert "options[option.key] = abilityInput(variantAbility.slot).variant" in source
     assert "input.variant = Number(abilityVariantButton.dataset.value)" in source
+    assert (
+        'const variantBinding = abilityOptionBinding(ability.slot, "ability_variants")'
+        in source
+    )
+    assert "ability.variants?.length > 1 && variantBinding" in source
+    assert "legacyVariantKeys" in source
 
 
 def test_quick_to_analyst_bridge_is_wired():
