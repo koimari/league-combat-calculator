@@ -32533,6 +32533,7 @@
           },
           "cooldown": 6.0,
           "damage_type": "physical",
+          "detail": "Q variant: Total Physical Damage.",
           "name": "The Darkin Glaive",
           "parts": [
             "DamagePart(physical, amount=86.5, count=2, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=0.0)"
@@ -41695,7 +41696,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1786113324.862417,
-    "git_head": "22bbf91920a0a80e164fdd03b83548bf474d84d4",
+    "git_head": "6277b69bd3034fcc52f561eba8d096568e20eccc",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1786113359.0537379,

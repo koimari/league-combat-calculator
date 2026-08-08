@@ -225,6 +225,15 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
         ),
     }
 
+    if not is_main and not is_ally:
+        fields["target_stats"] = _field(
+            payload_field="target_stats",
+            state_path="targets.*.targetStats",
+            frontend_token="data-dummy-stat",
+            conditional=True,
+            availability="practice_dummy",
+        )
+
     if is_main:
         fields.update(
             {

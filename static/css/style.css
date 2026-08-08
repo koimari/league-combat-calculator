@@ -717,6 +717,7 @@ a { color: inherit; }
   border-left: 2px solid var(--lose);
 }
 #allies .roster-card { border-left-color: var(--cream-62); }
+.roster-card--dummy { border-left-color: var(--win-dark); }
 
 .roster-pick {
   width: 34px; height: 34px;
@@ -729,6 +730,7 @@ a { color: inherit; }
   font: 600 14px var(--font);
 }
 .roster-pick img { width: 100%; height: 100%; object-fit: cover; }
+.roster-pick--dummy { background: var(--rail-chip); }
 .roster-card-copy { min-width: 0; }
 .roster-card-copy strong { display: block; font: 700 13px var(--font); color: var(--cream); }
 .roster-card-copy > span {
@@ -886,6 +888,68 @@ a { color: inherit; }
 .roster-slot-wrap .stack-control,
 .roster-slot-wrap .item-option-controls { padding-left: 0; }
 .roster-champion-options { border-left-color: var(--lose-dark); }
+
+.practice-dummy-note {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  background: var(--rail-chip);
+  border-left: 2px solid var(--win-dark);
+}
+.practice-dummy-note strong {
+  font: 800 10px var(--font);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+.practice-dummy-note span {
+  font: 500 9.5px/1.4 var(--font);
+  color: rgba(246, 242, 223, .62);
+}
+.practice-dummy-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.practice-dummy-stat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 6px 7px;
+  background: var(--rail-chip);
+  border: 1px solid rgba(246, 242, 223, .08);
+  font: 700 9px var(--font);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(246, 242, 223, .68);
+}
+.practice-dummy-stat span { min-width: 0; }
+.practice-dummy-stat input {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 6px;
+  border: 1px solid var(--dline-3);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--cream);
+  font: 600 11px var(--mono);
+  letter-spacing: 0;
+}
+.practice-dummy-reset {
+  justify-self: start;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid var(--dline-3);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--cream-70);
+  font: 700 9px var(--font);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.practice-dummy-reset:hover { border-color: var(--win-dark); color: var(--win-dark); }
 
 /* --------------------------------------------------------------------------
    4. Constraints banner (canvas) and rail footer
@@ -2426,6 +2490,10 @@ a { color: inherit; }
     max-width: 40px;
   }
   .roster-item-slot { height: 40px; }
+  .practice-dummy-stat-grid { grid-template-columns: minmax(0, 1fr); }
+  .practice-dummy-stat { min-height: 40px; grid-template-columns: minmax(0, 1fr) 104px; }
+  .practice-dummy-stat input { min-height: 32px; }
+  .practice-dummy-reset { min-height: 40px; }
   /* Touch targets stay at least 40px on the controls a phone actually uses. */
   .rail-primary, .add-button, .toggle, .segment,
   .banner-button, .buy-dismiss, .ledger-open { min-height: 40px; }
