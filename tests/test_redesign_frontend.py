@@ -90,10 +90,11 @@ def test_opening_a_step_widens_the_rail_and_dims_the_live_canvas(css: str):
 
 
 def test_a_dimmed_canvas_is_also_inert(source: str):
-    """Dimming without inerting would leave stale numbers clickable."""
+    """Dimming without inerting would leave stale numbers clickable. Only
+    rail-mode editing dims — centre-mode editing lives inside the canvas."""
     body = function_body(source, "function applyRailDisclosure()")
-    assert "canvas.inert = editing" in body
-    assert 'canvas.setAttribute("aria-hidden", String(editing))' in body
+    assert "canvas.inert = railEditing" in body
+    assert 'canvas.setAttribute("aria-hidden", String(railEditing))' in body
 
 
 def test_step_editors_stay_mounted_while_collapsed(soup: BeautifulSoup):
@@ -490,3 +491,80 @@ def test_engine_ready_is_dispatched_by_render_not_a_monkey_patch(source: str):
     assert "_originalRenderPrototypeChampion" not in source
     body = function_body(source, "function render()")
     assert 'dispatchEvent(new Event("scryglass:engine-ready"))' in body
+
+
+# ---------------------------------------------------------------------------
+# Second interaction pass (2026-08-08): background, centre editing, the
+# constraints banner, and closing an editor from the canvas.
+# ---------------------------------------------------------------------------
+
+
+def test_the_rift_illustration_is_the_page_background(soup: BeautifulSoup, css: str):
+    """The page sits on the Summoner's Rift illustration (as the pre-redesign
+    production page did), with an opaque dark base while the image loads."""
+    wash = soup.select_one(".map-wash")
+    assert wash is not None
+    assert wash.get("aria-hidden") == "true"
+    block = re.search(r"\.map-wash \{([^}]*)\}", css)
+    assert block is not None
+    assert "rift-illustration-4k.webp" in block.group(1)
+    assert "position: fixed" in block.group(1)
+    assert re.search(r"background-color:\s*#[0-9a-f]{6}", block.group(1))
+
+
+def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):
+    """The constraints shape every calculation, so they sit as a command bar
+    directly under the verdict strip — not at the bottom of the rail."""
+    bar = soup.select_one("#railConstraints")
+    assert bar is not None
+    assert bar.find_parent(class_="canvas") is not None
+    assert bar.find_parent(class_="rail") is None
+    canvas = soup.select_one(".canvas")
+    order = [node for node in canvas.find_all(recursive=False)]
+    assert order.index(soup.select_one(".verdict")) < order.index(bar)
+    assert order.index(bar) < order.index(soup.select_one(".duel"))
+    # All four rows plus the action stay wired.
+    toggles = [
+        t["data-constraint-toggle"] for t in bar.select("[data-constraint-toggle]")
+    ]
+    assert toggles == ["gold", "objective", "window", "state"]
+    assert bar.select_one("#economicsOptimize") is not None
+    block = re.search(r"\.constraints-bar \{([^}]*)\}", css)
+    assert block is not None and "var(--rail)" in block.group(1)
+
+
+def test_pre_duel_editing_happens_centre_canvas(source: str, soup: BeautifulSoup):
+    """Until the scenario is ready an open step's editor is relocated into
+    #startEditor on the canvas; once the duel is live, editing returns to the
+    widened rail. One DOM home per editor — moved, never duplicated."""
+    assert soup.select_one("#startEditor") is not None
+    body = function_body(source, "function applyRailDisclosure()")
+    assert "const centreEditing = editing && !scenarioReady()" in body
+    assert "centreHost.appendChild(body)" in body
+    assert "section.appendChild(body)" in body
+    assert 'classList.toggle("is-start-editing", centreEditing)' in body
+
+
+def test_clicking_the_canvas_closes_an_open_step(source: str):
+    """The dimmed duel (or the start state's whitespace) acts as Done. The
+    close never swallows a live control's click and never fires on dialogs,
+    which live outside #appGrid."""
+    handler = source.split(
+        'const stepToggle = event.target.closest("[data-step-toggle]")'
+    )[1]
+    close = handler.split('if (event.target.closest("#buyDismiss"))')[0]
+    assert 'event.target.closest("#appGrid")' in close
+    assert '!event.target.closest(".rail")' in close
+    assert '!event.target.closest("#startEditor")' in close
+    assert "state.ui.expandedStep = null" in close
+
+
+def test_opening_the_champion_step_with_no_champion_opens_the_picker(source: str):
+    """ "Choose your champion" means choose one: the checklist row (and the
+    rail step) open the editor with the roster dialog already up."""
+    handler = source.split(
+        'const stepToggle = event.target.closest("[data-step-toggle]")'
+    )[1]
+    branch = handler.split("applyRailDisclosure();")[1].split("return;")[0]
+    assert 'next === "champion" && !state.attacker.champion' in branch
+    assert 'openPicker("champion", "attacker.champion")' in branch

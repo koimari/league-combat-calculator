@@ -116,6 +116,7 @@
   </style>
 </head>
 <body>
+  <div class="map-wash" aria-hidden="true"></div>
   <h1 class="visually-hidden">Scryglass — item calculator</h1>
 
   <main class="app-card" id="analystView">
@@ -286,90 +287,6 @@
           </section>
         </div>
 
-        <!-- ---- Constraints ---- -->
-        <div class="rail-constraints" id="railConstraints">
-          <p class="rail-label" id="constraintsLabel">Constraints</p>
-          <div class="constraint-rows" role="group" aria-labelledby="constraintsLabel">
-
-            <div class="constraint" id="constraintGold">
-              <button class="constraint-row" type="button" data-constraint-toggle="gold" aria-expanded="false" aria-controls="constraintGoldBody">
-                <span class="constraint-name">Available gold</span>
-                <span class="constraint-value" id="goldValue">—</span>
-              </button>
-              <div class="constraint-body" id="constraintGoldBody" hidden>
-                <label class="field" for="economicsGold">
-                  <span class="field-label">Gold in hand</span>
-                  <input id="economicsGold" type="number" min="1" max="30000" step="50" inputmode="numeric" placeholder="e.g. 1250" />
-                </label>
-                <label class="checkbox" for="economicsSell">
-                  <input id="economicsSell" type="checkbox" /> <span>Allow selling (pivot)</span>
-                </label>
-                <p class="constraint-note">Buys at list price · combines charge the recipe fee · sells refund the sourced 70% value (40% for starters, support and consumables).</p>
-              </div>
-            </div>
-
-            <div class="constraint" id="constraintObjective">
-              <button class="constraint-row" type="button" data-constraint-toggle="objective" aria-expanded="false" aria-controls="constraintObjectiveBody">
-                <span class="constraint-name">Objective</span>
-                <span class="constraint-value" id="objectiveValue">Overall</span>
-              </button>
-              <div class="constraint-body" id="constraintObjectiveBody" hidden>
-                <div class="segmented" role="group" aria-label="Objective">
-                  <button class="segment is-on" data-objective="overall" aria-pressed="true" type="button">Overall</button>
-                  <button class="segment" data-objective="kill" aria-pressed="false" type="button">Kill</button>
-                  <button class="segment" data-objective="survival" aria-pressed="false" type="button">Survival</button>
-                  <button class="segment" data-objective="damage" aria-pressed="false" type="button">Damage</button>
-                  <button class="segment" data-objective="utility" aria-pressed="false" type="button">Utility</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="constraint" id="constraintWindow">
-              <button class="constraint-row" type="button" data-constraint-toggle="window" aria-expanded="false" aria-controls="constraintWindowBody">
-                <span class="constraint-name">Window</span>
-                <span class="constraint-value" id="windowValue">1 rotation</span>
-              </button>
-              <div class="constraint-body" id="constraintWindowBody" hidden>
-                <label class="range-field">
-                  <span class="field-label">Rotations <output id="rotationOutput">1</output></span>
-                  <input id="rotationRange" type="range" min="1" max="6" value="1" data-proto-range="rotations" aria-label="Rotations" />
-                </label>
-                <label class="range-field">
-                  <span class="field-label">Window per rotation <output id="durationOutput">10s</output></span>
-                  <input id="durationRange" type="range" min="1" max="30" step="0.5" value="10" data-proto-range="duration" aria-label="Window per rotation" />
-                </label>
-                <label class="range-field">
-                  <span class="field-label">Auto uptime <output id="uptimeOutput">CALCULATED</output></span>
-                  <input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" aria-label="Auto attack uptime percent" disabled />
-                </label>
-                <button class="toggle" id="uptimeModeToggle" type="button" aria-pressed="true">Use explicit</button>
-              </div>
-            </div>
-
-            <div class="constraint" id="constraintState">
-              <button class="constraint-row" type="button" data-constraint-toggle="state" aria-expanded="false" aria-controls="constraintStateBody">
-                <span class="constraint-name" id="gameStateLabel">State</span>
-                <span class="constraint-value" id="stateValue">Theory</span>
-              </button>
-              <div class="constraint-body" id="constraintStateBody" hidden>
-                <div class="segmented" role="group" aria-labelledby="gameStateLabel">
-                  <button class="segment is-on" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true" aria-describedby="stateTheoryHelp">Theory</button>
-                  <button class="segment" id="stateLive" type="button" data-game-state="live" aria-pressed="false" aria-describedby="stateLiveHelp">Snapshot lens</button>
-                </div>
-                <!-- One home for the mode copy (#150). These descriptions are what
-                     assistive technology announces on each button before selection;
-                     renderRail mirrors the active one into #gameStateHelp so sighted
-                     users read the same sentence. Do not restate them in JS. -->
-                <span id="stateTheoryHelp" class="visually-hidden">Theory: the unconstrained comparison state. Builds are scored exactly as you assemble them, with no check that the gold, timing, or purchase order they would require is achievable in a real game.</span>
-                <span id="stateLiveHelp" class="visually-hidden">Snapshot lens: reads the scenario as one moment in a game. The champion level, role quest, and legal inventory you have selected are the constraints the comparison is judged under, and the Window controls set the time slice it is measured over.</span>
-                <p class="constraint-note" id="gameStateHelp" role="status" aria-live="polite"></p>
-              </div>
-            </div>
-          </div>
-
-          <button class="rail-primary" id="economicsOptimize" type="button">Find best buy</button>
-        </div>
-
         <div class="rail-foot">
           <span class="rail-foot-note" id="stateReadout">Theory state</span>
           {% if auth_user %}<span class="rail-foot-user">Signed in as <strong>{{ auth_user }}</strong></span><a class="rail-foot-link" href="/auth/logout">Log out</a>{% endif %}
@@ -408,12 +325,98 @@
           </div>
         </div>
 
+        <!-- ---- Constraints banner ----
+             These directly shape every calculation, so they ride directly
+             under the verdict as a command bar rather than hiding at the
+             bottom of the rail. One row expands at a time below the bar. -->
+        <section class="constraints-bar" id="railConstraints" aria-label="Constraints">
+          <div class="constraints-row">
+            <span class="constraints-kicker" id="constraintsLabel">Constraints</span>
+            <button class="constraint-row" type="button" data-constraint-toggle="gold" aria-expanded="false" aria-controls="constraintGoldBody">
+              <span class="constraint-name">Available gold</span>
+              <span class="constraint-value" id="goldValue">—</span>
+            </button>
+            <button class="constraint-row" type="button" data-constraint-toggle="objective" aria-expanded="false" aria-controls="constraintObjectiveBody">
+              <span class="constraint-name">Objective</span>
+              <span class="constraint-value" id="objectiveValue">Overall</span>
+            </button>
+            <button class="constraint-row" type="button" data-constraint-toggle="window" aria-expanded="false" aria-controls="constraintWindowBody">
+              <span class="constraint-name">Window</span>
+              <span class="constraint-value" id="windowValue">1 rotation</span>
+            </button>
+            <button class="constraint-row" type="button" data-constraint-toggle="state" aria-expanded="false" aria-controls="constraintStateBody">
+              <span class="constraint-name" id="gameStateLabel">State</span>
+              <span class="constraint-value" id="stateValue">Theory</span>
+            </button>
+            <button class="rail-primary constraints-action" id="economicsOptimize" type="button">Find best buy</button>
+          </div>
+
+          <div class="constraint-body" id="constraintGoldBody" hidden>
+            <label class="field constraint-gold-field" for="economicsGold">
+              <span class="field-label">Gold in hand</span>
+              <input id="economicsGold" type="number" min="1" max="30000" step="50" inputmode="numeric" placeholder="e.g. 1250" />
+            </label>
+            <label class="checkbox" for="economicsSell">
+              <input id="economicsSell" type="checkbox" /> <span>Allow selling (pivot)</span>
+            </label>
+            <p class="constraint-note">Buys at list price · combines charge the recipe fee · sells refund the sourced 70% value (40% for starters, support and consumables).</p>
+          </div>
+
+          <div class="constraint-body" id="constraintObjectiveBody" hidden>
+            <div class="segmented" role="group" aria-label="Objective">
+              <button class="segment is-on" data-objective="overall" aria-pressed="true" type="button">Overall</button>
+              <button class="segment" data-objective="kill" aria-pressed="false" type="button">Kill</button>
+              <button class="segment" data-objective="survival" aria-pressed="false" type="button">Survival</button>
+              <button class="segment" data-objective="damage" aria-pressed="false" type="button">Damage</button>
+              <button class="segment" data-objective="utility" aria-pressed="false" type="button">Utility</button>
+            </div>
+          </div>
+
+          <div class="constraint-body" id="constraintWindowBody" hidden>
+            <label class="range-field">
+              <span class="field-label">Rotations <output id="rotationOutput">1</output></span>
+              <input id="rotationRange" type="range" min="1" max="6" value="1" data-proto-range="rotations" aria-label="Rotations" />
+            </label>
+            <label class="range-field">
+              <span class="field-label">Window per rotation <output id="durationOutput">10s</output></span>
+              <input id="durationRange" type="range" min="1" max="30" step="0.5" value="10" data-proto-range="duration" aria-label="Window per rotation" />
+            </label>
+            <label class="range-field">
+              <span class="field-label">Auto uptime <output id="uptimeOutput">CALCULATED</output></span>
+              <input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" aria-label="Auto attack uptime percent" disabled />
+            </label>
+            <button class="toggle" id="uptimeModeToggle" type="button" aria-pressed="true">Use explicit</button>
+          </div>
+
+          <div class="constraint-body" id="constraintStateBody" hidden>
+            <div class="segmented" role="group" aria-labelledby="gameStateLabel">
+              <button class="segment is-on" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true" aria-describedby="stateTheoryHelp">Theory</button>
+              <button class="segment" id="stateLive" type="button" data-game-state="live" aria-pressed="false" aria-describedby="stateLiveHelp">Snapshot lens</button>
+            </div>
+            <!-- One home for the mode copy (#150). These descriptions are what
+                 assistive technology announces on each button before selection;
+                 renderRail mirrors the active one into #gameStateHelp so sighted
+                 users read the same sentence. Do not restate them in JS. -->
+            <span id="stateTheoryHelp" class="visually-hidden">Theory: the unconstrained comparison state. Builds are scored exactly as you assemble them, with no check that the gold, timing, or purchase order they would require is achievable in a real game.</span>
+            <span id="stateLiveHelp" class="visually-hidden">Snapshot lens: reads the scenario as one moment in a game. The champion level, role quest, and legal inventory you have selected are the constraints the comparison is judged under, and the Window controls set the time slice it is measured over.</span>
+            <p class="constraint-note" id="gameStateHelp" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+
         <p class="verdict-summary" id="resultSummary" role="status">Choose a champion, a complete build, and an enemy roster.</p>
 
         <!-- Start checklist: shown until the scenario has a champion, an
              enemy and Build A items (renderStartBand). Each row opens the
              rail step it names through the shared data-step-toggle handler. -->
         <section class="start-band" id="startBand" hidden aria-label="Scenario checklist"></section>
+
+        <!-- Centre editing host: while the scenario is not yet ready, an
+             open step's .step-body is moved here so setup happens on the
+             canvas's empty middle instead of the narrow rail
+             (applyRailDisclosure owns the relocation both ways). -->
+        <div class="start-editor" id="startEditor" hidden>
+          <p class="start-editor-head" id="startEditorHead"></p>
+        </div>
 
         <details class="qualified" id="notModeledPanel" hidden>
           <summary>Qualified result · what is not modeled for this champion</summary>
@@ -525,7 +528,7 @@
         <section class="onboarding-step is-active">
           <span class="onboarding-step-mark" aria-hidden="true">1</span>
           <h3>Set the scenario in the rail</h3>
-          <p>Three numbered steps on the left: <em>Champion</em>, <em>Roster</em>, <em>Builds</em>. A step opens in place and the duel stays live behind it, so you always see what your edit changed. Constraints — gold, objective, window, game state — sit underneath.</p>
+          <p>Three numbered steps on the left: <em>Champion</em>, <em>Roster</em>, <em>Builds</em>. A step opens in place and the duel stays live behind it, so you always see what your edit changed. Constraints — gold, objective, window, game state — ride the banner above the duel.</p>
         </section>
         <section class="onboarding-step" hidden>
           <span class="onboarding-step-mark" aria-hidden="true">2</span>

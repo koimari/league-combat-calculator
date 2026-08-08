@@ -81,11 +81,34 @@ body {
   margin: 0;
   padding: 24px;
   min-height: 100vh;
-  background: var(--page-wash);
+  /* Transparent so the fixed .map-wash illustration shows through; the html
+     page-wash colour is the pre-load and no-image fallback. */
+  background: transparent;
   color: var(--ink);
   font-family: var(--font);
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
+}
+
+/* The Summoner's Rift illustration behind the app — the same treatment the
+   pre-redesign production page used: an opaque dark base so text over the
+   wash stays readable while (or if) the image never loads, two darkening
+   gradients, and the 4k render. Decorative only (aria-hidden in markup). */
+.map-wash {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: #0a1715;
+  background-image:
+    linear-gradient(90deg, rgba(6, 18, 16, .14) 0%, rgba(6, 18, 16, .02) 44%, rgba(6, 18, 16, .2) 100%),
+    linear-gradient(180deg, rgba(5, 18, 16, .04) 0%, rgba(5, 18, 16, .24) 100%),
+    url("/static/img/rift-illustration-4k.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 100%, cover;
+  filter: saturate(1.12) contrast(1.03);
 }
 
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -965,37 +988,61 @@ a { color: inherit; }
 .roster-champion-options { border-left-color: var(--lose-dark); }
 
 /* --------------------------------------------------------------------------
-   4. Setup rail — constraints and footer
-   -------------------------------------------------------------------------- */
+   4. Constraints banner (canvas) and rail footer
+   --------------------------------------------------------------------------
+   The constraints directly shape every calculation, so they ride the canvas
+   as a command bar under the verdict strip — rail-dark, one row of segments,
+   the expanded editor unfolding full-width beneath the bar. */
 
-.rail-constraints {
-  margin-top: 10px;
-  padding-bottom: 4px;
+.constraints-bar {
+  background: var(--rail);
   border-top: 1px solid var(--dline-2);
 }
-.is-editing .rail-constraints { display: none; }
-.constraint-rows { padding: 0 16px; }
-.rail-constraints .rail-primary { width: calc(100% - 32px); margin: 12px 16px 0; }
-
-.constraint + .constraint { margin-top: 7px; }
+.constraints-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  padding: 0 26px;
+}
+.constraints-kicker {
+  align-self: center;
+  margin-right: 16px;
+  font: 700 9.5px var(--font);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--cream-62);
+}
 .constraint-row {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
-  padding: 0;
+  gap: 8px;
+  padding: 12px 14px;
   border: 0;
+  border-left: 1px solid var(--dline-1);
   background: transparent;
   text-align: left;
 }
-.constraint-name { font: 600 11px var(--font); color: var(--cream-70); }
+.constraint-row:hover { background: var(--rail-active); }
+.constraint-row[aria-expanded="true"] {
+  background: var(--rail-active);
+  box-shadow: inset 0 -3px 0 var(--win-dark);
+}
+.constraint-name { font: 600 11px var(--font); color: var(--cream-70); white-space: nowrap; }
 .constraint-value { font: 700 11px var(--font); color: var(--cream); white-space: nowrap; }
-#constraintGold .constraint-value { font: 800 13px var(--font); }
 .constraint-row[aria-expanded="true"] .constraint-name { color: var(--win-dark); }
+/* .rail-primary is block/full-width for the rail; in the bar it shrinks to
+   its label and docks right. */
+.constraints-action { display: inline-block; width: auto; margin: 7px 0 7px auto; align-self: center; padding-inline: 16px; }
 
-.constraint-body { padding: 9px 0 3px; }
+.constraint-body {
+  padding: 12px 26px 15px;
+  background: var(--rail-active);
+  border-top: 1px solid var(--dline-1);
+}
 .constraint-body > * + * { margin-top: 9px; }
+.constraint-gold-field { max-width: 260px; }
+.constraint-body .segmented { max-width: 560px; }
+.constraint-body .range-field { max-width: 420px; }
 .constraint-note {
   font: 500 10px/1.5 var(--font);
   color: rgba(246, 242, 223, .58);
@@ -1246,6 +1293,30 @@ a { color: inherit; }
 .canvas.is-start .timeline-band { display: none; }
 .canvas.is-start .ledger-band { display: none; }
 .canvas.is-start .feedback-widget { display: none; }
+
+/* --- Centre editing (pre-duel) ---------------------------------------------
+   Until the scenario is ready the canvas middle is empty, so an open step's
+   editor (.step-body, relocated by applyRailDisclosure) takes it: a dark
+   rail-toned card, centred where the checklist was. */
+.start-editor {
+  width: min(640px, calc(100% - 52px));
+  margin: 26px auto;
+  padding: 16px 0 6px;
+  background: var(--rail);
+  border: 1px solid var(--dline-3);
+  border-radius: var(--radius);
+  box-shadow: inset 3px 0 0 var(--win-dark), var(--card-shadow);
+  color: var(--cream);
+}
+.start-editor-head {
+  padding: 0 18px 12px;
+  border-bottom: 1px solid var(--dline-2);
+  font: 700 9.5px var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--win-dark);
+}
+.start-editor > .step-body { padding: 14px 18px; }
 
 .qualified {
   border-bottom: 1px solid var(--line-2);

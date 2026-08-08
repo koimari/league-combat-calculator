@@ -1705,32 +1705,59 @@ function renderConstraintSummaries() {
 /**
  * Apply the open/closed disclosure state to the rail and the canvas.
  *
- * One step at a time: the grid widens, the other two steps drop to one-line
- * rows, and the canvas stays live but dimmed and inert so a stale click
- * cannot land on numbers that are about to change.
+ * One step at a time, in one of two places. Before the scenario is ready the
+ * canvas middle is empty, so the open step's editor (.step-body) is moved
+ * into #startEditor and edits front-and-centre. Once the duel is live the
+ * editor returns to the widening rail (2b) and the canvas dims, inert, so a
+ * stale click cannot land on numbers that are about to change.
  */
 function applyRailDisclosure() {
   const grid = $("appGrid");
   const editing = Boolean(state.ui.expandedStep);
-  if (grid) grid.classList.toggle("is-editing", editing);
+  const centreEditing = editing && !scenarioReady();
+  const railEditing = editing && !centreEditing;
+  if (grid) grid.classList.toggle("is-editing", railEditing);
   const canvas = $("canvas");
   if (canvas) {
-    canvas.inert = editing;
-    canvas.setAttribute("aria-hidden", String(editing));
+    canvas.inert = railEditing;
+    canvas.setAttribute("aria-hidden", String(railEditing));
+    canvas.classList.toggle("is-start-editing", centreEditing);
   }
+  const centreHost = $("startEditor");
   STEP_IDS.forEach((step) => {
-    const section = $(`step${step[0].toUpperCase()}${step.slice(1)}`);
+    const sectionId = `step${step[0].toUpperCase()}${step.slice(1)}`;
+    const section = $(sectionId);
     if (!section) return;
     const open = state.ui.expandedStep === step;
-    section.classList.toggle("is-open", open);
-    section.classList.toggle("is-active", !editing && state.ui.activeStep === step);
+    section.classList.toggle("is-open", open && railEditing);
+    section.classList.toggle(
+      "is-active",
+      (open && centreEditing) || (!editing && state.ui.activeStep === step),
+    );
     const toggle = section.querySelector("[data-step-toggle]");
     if (toggle) toggle.setAttribute("aria-expanded", String(open));
-    const body = section.querySelector(".step-body");
-    if (body) body.hidden = !open;
+    const body = $(`${sectionId}Body`);
+    if (body) {
+      if (open && centreEditing) {
+        if (centreHost && body.parentElement !== centreHost) centreHost.appendChild(body);
+      } else if (body.parentElement !== section) {
+        section.appendChild(body);
+      }
+      body.hidden = !open;
+    }
     const action = section.querySelector(".step-action");
     if (action) action.textContent = open ? "Editing" : (!editing && state.ui.activeStep === step ? "Active" : "Edit");
   });
+  if (centreHost) {
+    centreHost.hidden = !centreEditing;
+    const head = $("startEditorHead");
+    if (head && centreEditing) {
+      head.textContent = `Setup · step ${STEP_IDS.indexOf(state.ui.expandedStep) + 1} of 3`;
+    }
+  }
+  // The checklist and the centre editor share the canvas middle.
+  const band = $("startBand");
+  if (band) band.hidden = scenarioReady() || centreEditing;
   document.querySelectorAll("[data-constraint-toggle]").forEach((toggle) => {
     const open = state.ui.expandedConstraint === toggle.dataset.constraintToggle;
     toggle.setAttribute("aria-expanded", String(open));
@@ -2601,7 +2628,8 @@ function scenarioReady() {
 function renderStartBand(ready) {
   const band = $("startBand");
   if (!band) return;
-  band.hidden = ready;
+  // Visibility is owned by applyRailDisclosure (the checklist also yields to
+  // the centre editor); this function only fills the content.
   if (ready) return;
   const champion = getChampion(state.attacker.champion);
   const enemies = state.targets.filter((target) => target.champion).length;
@@ -3470,12 +3498,31 @@ document.addEventListener("click", (event) => {
       state.ui.expandedConstraint = null;
     }
     applyRailDisclosure();
+    if (next === "champion" && !state.attacker.champion) {
+      // "Choose your champion" means choose one: the editor opens AND the
+      // roster dialog is already up, one click saved.
+      return openPicker("champion", "attacker.champion");
+    }
     if (next) {
       document.getElementById(stepToggle.getAttribute("aria-controls") || "")?.querySelector("button, select, input, a")?.focus();
     } else {
       document.querySelector(`#step${state.ui.activeStep[0].toUpperCase()}${state.ui.activeStep.slice(1)} [data-step-toggle]`)?.focus();
     }
     return;
+  }
+  if (
+    state.ui.expandedStep
+    && event.target.closest("#appGrid")
+    && !event.target.closest(".rail")
+    && !event.target.closest("#startEditor")
+  ) {
+    // Clicking the canvas while a step editor is open closes it, same as
+    // Done — and the click still does whatever it hit (a constraint row,
+    // the compare toggle), so this never swallows a live control. While the
+    // rail editor is open the canvas is inert, so only the grid itself can
+    // be the target. Dialog clicks land outside #appGrid entirely.
+    state.ui.expandedStep = null;
+    applyRailDisclosure();
   }
   if (event.target.closest("#buyDismiss")) {
     state.optimizer.summary = null;

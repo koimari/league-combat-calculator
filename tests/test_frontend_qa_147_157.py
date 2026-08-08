@@ -226,11 +226,16 @@ def test_brand_reads_against_the_rail(css: str):
     assert "var(--cream)" in mark
 
 
-def test_the_retired_map_wash_is_gone(css: str, page: str):
-    """The illustration behind the heading is not part of the one committed
-    look; neither its element nor its stylesheet rule may linger."""
-    assert ".map-wash" not in css
-    assert "map-wash" not in page
+def test_the_map_wash_is_decorative_only(css: str, page: str):
+    """The Rift illustration returned as the page background (user decision
+    2026-08-08), but #149's criterion survives: nothing readable sits on the
+    wash. It is aria-hidden, pointer-inert, behind everything, and keeps an
+    opaque base colour; every text surface has its own opaque background."""
+    assert 'class="map-wash" aria-hidden="true"' in page
+    block = rule_block(css, ".map-wash")
+    assert "z-index: -1" in block
+    assert "pointer-events: none" in block
+    assert re.search(r"background-color:\s*#[0-9a-f]{6}", block)
     assert ".app-shell" not in css
 
 
@@ -370,10 +375,11 @@ def test_blocked_bis_offers_a_direct_path_to_add_enemy(source: str):
 def test_best_buy_controls_live_in_the_constraints_block(soup: BeautifulSoup):
     """#153 was "the Best buy panel is unreadable".
 
-    The redesign moves the whole economics bar into the rail's CONSTRAINTS
-    block: gold, the sell pivot and the action. The criteria below are the
-    same ones — an opaque surface, legible ink, a legible disabled state and
-    a layout that does not collapse into one inline sentence.
+    The whole economics bar lives in the CONSTRAINTS surface (now the banner
+    under the verdict strip): gold, the sell pivot and the action. The
+    criteria below are the same ones — an opaque surface, legible ink, a
+    legible disabled state and a layout that does not collapse into one
+    inline sentence.
     """
     constraints = soup.select_one("#railConstraints")
     assert constraints is not None
@@ -384,8 +390,9 @@ def test_best_buy_controls_live_in_the_constraints_block(soup: BeautifulSoup):
 
 
 def test_constraints_block_sits_on_an_opaque_surface(css: str):
-    """The rail's own background is a flat opaque colour, never a wash."""
-    block = rule_block(css, ".rail")
+    """The constraints banner's background is a flat opaque colour, never a
+    wash — same bar the rail uses."""
+    block = rule_block(css, ".constraints-bar")
     assert "background: var(--rail)" in block
     tokens = rule_block(css, ":root")
     assert re.search(r"--rail:\s*#[0-9a-f]{6}", tokens)
