@@ -532,7 +532,7 @@ def test_the_rift_illustration_is_the_page_background(soup: BeautifulSoup, css: 
     assert wash.get("aria-hidden") == "true"
     block = re.search(r"\.map-wash \{([^}]*)\}", css)
     assert block is not None
-    assert "rift-illustration-4k.webp" in block.group(1)
+    assert "rift-background-user.webp" in block.group(1)
     assert "position: fixed" in block.group(1)
     assert re.search(r"background-color:\s*#[0-9a-f]{6}", block.group(1))
 
