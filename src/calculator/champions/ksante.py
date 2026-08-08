@@ -156,7 +156,7 @@ def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
     if bool(ctx.options.get("all_out", False)):
         entry["stat_buff"] = {
             "bonus_attack_speed": extract_value(ability, "Bonus Attack Speed", rank),
-            "armor_penetration_percent": 50.0,
+            "armor_penetration_bonus_percent": 50.0,
             # "he gains bonus attack speed, 50% bonus-armor penetration, and
             # 20% omnivamp" (cached R fourth effect).  The fight engine's
             # omnivamp channel prices 20% of the post-mitigation damage of

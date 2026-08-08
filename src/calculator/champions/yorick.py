@@ -61,10 +61,13 @@ PACKET_SPEC = _BATCH_SLOTS.packet_spec
 # Attack speed 1.0 -> 5 attacks in the 5s window.
 _MIST_WALKER_DAMAGE_START = 15.0  # level 1
 _MIST_WALKER_DAMAGE_END = 100.0  # level 18
+# Pet AD ratios price BONUS AD, not total AD (autoresearch pass 35): the
+# game files / wiki patch history pin Mist Walker at 20% bonus AD and the
+# Maiden at 30% bonus AD; the Maiden rank base is 50/75/100 (13.21 change).
 _MIST_WALKER_AD_RATIO = 0.20
 _MIST_WALKER_MAX = 4
 _MIST_WALKER_AS_AT_18 = 1.18
-_MAIDEN_BASE_BY_RANK = (50.0, 100.0, 150.0)
+_MAIDEN_BASE_BY_RANK = (50.0, 75.0, 100.0)
 _MAIDEN_AD_RATIO = 0.30
 _MAIDEN_AS = 1.0
 
@@ -79,7 +82,7 @@ def _mist_walker_attack_damage(ctx: SlotCtx) -> float:
     span = _MIST_WALKER_DAMAGE_END - _MIST_WALKER_DAMAGE_START
     interpolated = _MIST_WALKER_DAMAGE_START + span * (ctx.level - 1) / 17.0
     base = interpolated * growth_multiplier(ctx.level)
-    return base + _MIST_WALKER_AD_RATIO * ctx.stats.get("attack_damage", 0.0)
+    return base + _MIST_WALKER_AD_RATIO * ctx.stats.get("bonus_attack_damage", 0.0)
 
 
 def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -141,7 +144,7 @@ def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
             reason="maiden_attacks is 0 — set it to price Maiden basic attacks.",
         )
     base = _MAIDEN_BASE_BY_RANK[min(rank - 1, len(_MAIDEN_BASE_BY_RANK) - 1)]
-    per = base + _MAIDEN_AD_RATIO * ctx.stats.get("attack_damage", 0.0)
+    per = base + _MAIDEN_AD_RATIO * ctx.stats.get("bonus_attack_damage", 0.0)
     entry = damage_entry(
         ability.get("name", "Eulogy of the Isles"),
         rank,

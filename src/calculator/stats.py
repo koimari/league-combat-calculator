@@ -19,6 +19,16 @@ from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 # slider (via the index template) both read this constant.
 MAX_LEVEL = 20
 
+# Percent armor penetration that applies ONLY to BONUS armor (wiki
+# Armor_penetration section 4.1; the cache's stats panel displays these as
+# normal total pen — see the K'Sante R footnote "incorrectly displayed as
+# normal percentage armor penetration on the stats panel HUD").  The Last
+# Whisper family is the only item source; Serylda's Grudge / Perplexity are
+# TOTAL penetration and stay on the regular channel (autoresearch pass 30).
+BONUS_ARMOR_PEN_ITEM_NAMES = frozenset(
+    {"Last Whisper", "Mortal Reminder", "Lord Dominik's Regards"}
+)
+
 
 def growth_multiplier(level: int) -> float:
     """The shared LoL stat-progression multiplier ``0.7025 + 0.0175 * (level-1)``.
@@ -261,7 +271,16 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "magic_penetration_percent": get_percent("magicPenetration"),
         "ability_power_percent": 0.0,
         "lethality": get_flat("lethality"),
-        "armor_penetration_percent": get_percent("armorPenetration"),
+        "armor_penetration_percent": (
+            0.0
+            if str(item_data.get("name", "")) in BONUS_ARMOR_PEN_ITEM_NAMES
+            else get_percent("armorPenetration")
+        ),
+        "armor_penetration_bonus_percent": (
+            get_percent("armorPenetration")
+            if str(item_data.get("name", "")) in BONUS_ARMOR_PEN_ITEM_NAMES
+            else 0.0
+        ),
         "critical_strike_chance": (
             get_flat("criticalStrikeChance") + get_percent("criticalStrikeChance")
         ),
@@ -326,6 +345,7 @@ def calculate_total_stats(
         "magic_penetration_percent": 0.0,
         "lethality": 0.0,
         "armor_penetration_percent": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
         "critical_strike_chance": 0.0,
         "mana": 0.0,
         "ability_haste": 0.0,
@@ -554,6 +574,9 @@ def calculate_total_stats(
         "lethality": lethality,
         "flat_armor_penetration": flat_armor_pen,
         "armor_penetration_percent": final_armor_pen_percent,
+        "armor_penetration_bonus_percent": total_item_stats.get(
+            "armor_penetration_bonus_percent", 0.0
+        ),
         "critical_strike_chance": total_item_stats["critical_strike_chance"],
         "max_mana": round(total_mana),
         "bonus_mana": round(total_item_stats["mana"]),

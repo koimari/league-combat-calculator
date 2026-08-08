@@ -286,11 +286,11 @@ def test_essence_reaver_spellblade_mana_restore_typed_and_wired():
     ) == pytest.approx(0.625)
     assert required_effect_value(
         "Essence Reaver", "mana_restore_crit_ratio"
-    ) == pytest.approx(0.25)
-    # 0.625 x 100 base AD + 0.25 x (50% crit / 100) = 62.625
+    ) == pytest.approx(25.0)
+    # 0.625 x 100 base AD + 25 x (50% crit / 100) = 75.0
     assert essence_reaver_mana_restore_per_proc(
         base_attack_damage=100, critical_strike_chance=50
-    ) == pytest.approx(62.625)
+    ) == pytest.approx(75.0)
 
     data = _calculate(["Essence Reaver"])
     stats = data["champion_stats"]
