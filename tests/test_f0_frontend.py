@@ -338,6 +338,21 @@ def test_global_form_variant_click_syncs_every_bound_slot():
     assert "syncGlobalFormVariants" in source
 
 
+def test_global_form_variants_default_to_the_module_option_default():
+    """A fresh champion pick must not flip a form toggle: variant index 0 is
+    Jayce's hammer kit, but his module defaults hammer_stance to false
+    (cannon).  Reset seeds each bound slot's variant from the option default,
+    and the payload falls back to the option value when no variant input
+    exists (share-restore clears abilityInputs)."""
+    source = _source()
+    assert "defaultFormVariantIndex" in source
+    assert "variant: defaultFormVariantIndex(ability.slot)" in source
+    # Payload never reads the synthetic variant-0 fallback for form toggles.
+    assert (
+        "options[option.key] = abilityInput(variantAbility.slot).variant" not in source
+    )
+
+
 def test_quick_to_analyst_bridge_is_wired():
     """Quick mode, its Open-in-Analyst bridge and the whole view-switching
     layer were removed; share links load directly into the analyst view."""

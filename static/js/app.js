@@ -598,6 +598,21 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
 const GLOBAL_FORM_TOGGLES = { "mega": 1, "hammer_stance": 0 };
 
 /**
+ * The variant index a slot starts on: the one matching its bound form
+ * toggle's module default.  Variant 0 is Jayce's hammer kit, but his module
+ * defaults hammer_stance to false (cannon) — a fresh pick must not flip the
+ * form.  Slots without a bound form toggle start on their first variant.
+ */
+function defaultFormVariantIndex(slot) {
+  const binding = abilityOptionBinding(slot, "ability_variants");
+  if (!(binding in GLOBAL_FORM_TOGGLES)) return 0;
+  const option = (engine.championOptions[state.attacker.champion]?.options || [])
+    .find((entry) => entry.key === binding);
+  const trueIndex = GLOBAL_FORM_TOGGLES[binding];
+  return option?.default ? trueIndex : 1 - trueIndex;
+}
+
+/**
  * Mirror one slot's Variant selection onto every slot bound to the same
  * global form toggle.  Q/W/E all bind the toggle, but the payload reads the
  * first bound slot only — without the mirror, clicking Boulder Toss on Q
@@ -652,7 +667,7 @@ function resetAbilityInputs() {
     rank: ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0),
     casts: 1,
     hits: 1,
-    variant: 0,
+    variant: defaultFormVariantIndex(ability.slot),
   }]));
 }
 
@@ -1591,10 +1606,15 @@ function engineChampionOptions() {
         && abilityOptionBinding(ability.slot, "ability_variants") === option.key
     );
     if (variantAbility) {
-      const variantIndex = abilityInput(variantAbility.slot).variant;
-      options[option.key] = option.key in GLOBAL_FORM_TOGGLES
-        ? variantIndex === GLOBAL_FORM_TOGGLES[option.key]
-        : variantIndex;
+      // Share-restore clears abilityInputs; without a real variant input the
+      // option keeps its stored/default value instead of reading the
+      // synthetic variant-0 fallback (which would flip Jayce to hammer).
+      const input = state.attacker.abilityInputs[variantAbility.slot];
+      if (option.key in GLOBAL_FORM_TOGGLES) {
+        if (input) options[option.key] = input.variant === GLOBAL_FORM_TOGGLES[option.key];
+      } else if (input) {
+        options[option.key] = input.variant;
+      }
     }
   });
   return options;
