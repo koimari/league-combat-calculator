@@ -15,9 +15,71 @@ composition and the score compiler build the same keys.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, IntEnum
 from collections.abc import Mapping
+import math
 from typing import Any, NamedTuple
+
+# ---------------------------------------------------------------------------
+# Transition rank — the one ordered "when does this resolve" vocabulary
+# ---------------------------------------------------------------------------
+
+
+class TransitionRank(IntEnum):
+    """When a transition resolves, relative to everything at its timestamp.
+
+    Dense ordinals in ordering order: a lower rank resolves first.  This is
+    the campaign's single phase vocabulary; the walk still sorts on the
+    float :func:`legacy_phase` projects, so the names below say what each
+    float *meant* without changing what it *is*.
+
+    ``TERMINAL`` has no producer.  It exists so the published phase list
+    keeps ``death_or_terminal_cutoff`` (a name the ledger publishes but no
+    transition emits) and is declared last so ``legacy_phase`` stays
+    non-decreasing while projecting it to ``math.inf``.
+    """
+
+    STATE_GRANT = 0
+    BARRIER_GRANT = 1
+    DAMAGE = 2
+    LATE_BARRIER = 3
+    REACTIVE = 4
+    DEBUFF_ARM = 5
+    RECOVERY = 6
+    UTILITY_ARM = 7
+    TERMINAL = 8
+
+
+# The projection is deliberately many-to-one: several ranks share a float
+# because the float never carried the distinction.  ``LATE_BARRIER`` is a
+# barrier an authored packet places *after* damage (Eclipse's self-shield,
+# Fimbulwinter's Everlasting), which is why it is not ``BARRIER_GRANT``.
+_LEGACY_PHASES: dict[TransitionRank, float] = {
+    TransitionRank.STATE_GRANT: -2.0,
+    TransitionRank.BARRIER_GRANT: -1.0,
+    TransitionRank.DAMAGE: 0.0,
+    TransitionRank.LATE_BARRIER: 0.5,
+    TransitionRank.REACTIVE: 0.5,
+    TransitionRank.DEBUFF_ARM: 1.0,
+    TransitionRank.RECOVERY: 1.0,
+    TransitionRank.UTILITY_ARM: 1.0,
+    TransitionRank.TERMINAL: math.inf,
+}
+
+
+def legacy_phase(rank: TransitionRank) -> float:
+    """The float ``phase`` one rank projects to, for today's sort keys.
+
+    Total over the enum and non-decreasing over declaration order, with no
+    member exempted: a rank added without a float raises here rather than
+    falling through to a guessed number.  Deleted in Phase 4, when the sort
+    key consumes the rank itself.
+    """
+    try:
+        return _LEGACY_PHASES[rank]
+    except KeyError:
+        raise KeyError(f"TransitionRank.{rank.name} declares no legacy phase") from None
+
 
 # ---------------------------------------------------------------------------
 # Action kinds
@@ -551,9 +613,11 @@ def survival_action_from_event(
 __all__ = [
     "ActionKind",
     "SurvivalAction",
+    "TransitionRank",
     "action_key",
     "classify_event_kind",
     "event_sequence",
+    "legacy_phase",
     "participant_order",
     "survival_action_from_event",
 ]

@@ -20,9 +20,11 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 from .actions import (
     ActionKind,
     SurvivalAction,
+    TransitionRank,
     action_key,
     classify_event_kind,
     event_sequence,
+    legacy_phase,
     participant_order,
     survival_action_from_event,
 )
@@ -66,6 +68,7 @@ __all__ = [
     "ScoreLedger",
     "SurvivalAction",
     "TransitionContext",
+    "TransitionRank",
     "UncompilableActionError",
     "WalkCompiler",
     "accumulate_damage_totals",
@@ -83,6 +86,7 @@ __all__ = [
     "expire_temporary_health",
     "finalize_states",
     "heal_trigger_key",
+    "legacy_phase",
     "participant_pools",
     "participant_order",
     "resolve_grievous",

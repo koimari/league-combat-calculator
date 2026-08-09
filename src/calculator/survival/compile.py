@@ -20,9 +20,11 @@ from typing import Any
 from .actions import (
     ActionKind,
     SurvivalAction,
+    TransitionRank,
     action_key,
     compiled_damage_action,
     event_sequence,
+    legacy_phase,
     participant_order,
 )
 from ..item_effects import sustain_effect_value
@@ -313,10 +315,13 @@ def revive_candidate_actions(
             candidates.append(
                 SurvivalAction(
                     sort_key=action_key(
-                        candidate_time, 0.0, actor.participant_id, candidate
+                        candidate_time,
+                        legacy_phase(TransitionRank.DAMAGE),
+                        actor.participant_id,
+                        candidate,
                     ),
                     time=candidate_time,
-                    phase=0.0,
+                    phase=legacy_phase(TransitionRank.DAMAGE),
                     kind=ActionKind.REVIVE,
                     subject=actor_index,
                     attacker=-1,
@@ -862,7 +867,7 @@ class WalkCompiler:
                 SurvivalAction(
                     sort_key=(
                         time_value,
-                        1.0,
+                        legacy_phase(TransitionRank.RECOVERY),
                         event_sequence(event),
                         order_a,
                         order_b,
@@ -871,7 +876,7 @@ class WalkCompiler:
                         str(event.get("source", event.get("source_key", ""))),
                     ),
                     time=time_value,
-                    phase=1.0,
+                    phase=legacy_phase(TransitionRank.RECOVERY),
                     kind=ActionKind.HEAL,
                     subject=attacker_i,
                     attacker=attacker_i,
@@ -1008,7 +1013,7 @@ class WalkCompiler:
                     SurvivalAction(
                         sort_key=sort_key,
                         time=strike_time,
-                        phase=0.5,
+                        phase=legacy_phase(TransitionRank.REACTIVE),
                         kind=ActionKind.DAMAGE,
                         subject=striker_i,
                         attacker=wearer_i,
