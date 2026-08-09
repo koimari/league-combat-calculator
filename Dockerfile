@@ -11,6 +11,7 @@ COPY requirements-runtime.txt .
 RUN apt-get update \
     && apt-get upgrade --yes \
     && apt-get install --no-install-recommends --yes libpq5 \
+    && pip uninstall --yes msgpack \
     && rm -rf /var/lib/apt/lists/* \
     && pip install --no-cache-dir --require-hashes -r requirements-runtime.txt \
     && addgroup --system app \
