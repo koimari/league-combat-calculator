@@ -15,6 +15,11 @@ Categories:
 WRITERS maps every data/ subtree (or file) to the module(s) allowed to
 write it.  tests/test_data_writer_inventory.py enforces the map with an
 AST scan so a new downloader cannot silently join the boundary.
+
+data_version() is the other half of that ownership statement, read from
+the consumer's side: one monotonic counter naming *which* runtime cache a
+derived value was computed from, so a memo can tell "still current" from
+"computed before the last refresh".
 """
 
 from __future__ import annotations
@@ -39,6 +44,28 @@ WRITERS: dict[str, tuple[str, ...]] = {
     "atoms": ("scripts/extract_atoms.py",),
     "practice-corpus": (),  # hand-authored only
 }
+
+# How many times this process has replaced a runtime cache.  Starts at zero
+# and only ever grows, so "same version" is a sound reason to reuse a value
+# derived from data/ and a bump is the one signal that invalidates every
+# such memo at once.
+_DATA_VERSION = 0
+
+
+def data_version() -> int:
+    """The current runtime-cache generation — monotonic, process-local.
+
+    Every memo over data/-derived values keys on this number: two reads
+    that see the same version saw the same cache, and write_runtime_cache
+    bumping it is what makes a mid-process refresh recompute rather than
+    serve a value derived from the cache it replaced.
+
+    Deliberately unread for now.  The memos that will key on it belong to
+    two lanes that are live at once, and a counter either of them declared
+    would be a counter the other could not use, so it is declared here —
+    in the module that owns the write it counts.
+    """
+    return _DATA_VERSION
 
 
 def write_runtime_cache(
@@ -76,7 +103,16 @@ def write_runtime_cache(
 
     from .data_fetcher import _read_json_version  # local: no import cycle
 
+    # The file on disk has changed, so the parsed-JSON cache is stale and so
+    # is everything derived from it.  Both are invalidated here, before the
+    # provenance metadata is written: a reader that sees the new version has
+    # a live parse behind it.  ``global`` is the honest spelling of a
+    # module-level counter; hiding it in a container would not make the
+    # state any less module-level.
     _read_json_version.cache_clear()
+    global _DATA_VERSION  # pylint: disable=global-statement
+    _DATA_VERSION += 1
+
     metadata: dict[str, Any] = {
         "fetched_at": time.time(),
         "filename": filename,
