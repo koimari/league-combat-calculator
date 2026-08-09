@@ -375,3 +375,38 @@ class TestExactBaseline:
         """It is excluded from the 2-dp compare and gated by the test above."""
         assert _load(COUPLED_EXACT)["metadata"]["exact"] is True
         assert _load(COUPLED_BASELINE)["metadata"]["exact"] is False
+
+
+class TestFingerprintsReceipt:
+    """The receipt is the sole home of every golden shape count (criterion 2)."""
+
+    RECEIPT = REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
+
+    @pytest.mark.parametrize(
+        "block, path",
+        [
+            ("golden", PAIR_BASELINE),
+            ("coupled_golden", COUPLED_BASELINE),
+            ("coupled_golden_exact", COUPLED_EXACT),
+        ],
+    )
+    def test_the_receipt_reproduces_the_committed_fingerprint(self, block, path):
+        recorded = _load(self.RECEIPT)[block]
+        printed = gs.fingerprint(_load(path))
+        assert {field: printed[field] for field in recorded} == recorded
+
+    def test_every_recorded_block_carries_a_provenance_class(self):
+        receipt = _load(self.RECEIPT)
+        for block, provenance in receipt["provenance"].items():
+            assert block in receipt
+            assert provenance in {"VERIFIED", "CARRIED", "PRIOR"}
+
+    def test_the_ratio_denominator_comes_from_the_receipt(self):
+        """R-15's 1% clause reads a field, never a figure from a document."""
+        receipt = _load(self.RECEIPT)
+        assert gs.receipt_numeric_leaves(gs.PAIR_SNAPSHOT_KIND) == (
+            receipt["golden"]["numeric_leaves"]
+        )
+        assert gs.receipt_numeric_leaves(gs.COUPLED_SNAPSHOT_KIND) == (
+            receipt["coupled_golden"]["numeric_leaves"]
+        )
