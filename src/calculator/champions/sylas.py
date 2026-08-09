@@ -27,6 +27,12 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Sylas")
+
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Abscond/Abduct) carries no shield in the current kit: the CP-era "
     "SylasEShield atom (80/115/150/185/220 + 100% AP for 2s) was removed "

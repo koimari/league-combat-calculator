@@ -151,6 +151,8 @@ def _fight(
     options: dict | None = None,
     enemy: str | None = None,
     target_health: float = 2000.0,
+    target_armor: float = 0.0,
+    target_mr: float = 0.0,
 ) -> dict:
     """One /api/calculate fight at level 18, no items, 0 target resists."""
     payload = {
@@ -163,8 +165,8 @@ def _fight(
         "include_auto_attacks": True,
         "auto_attack_uptime": 1.0,
         "target_health": target_health,
-        "target_armor": 0,
-        "target_mr": 0,
+        "target_armor": target_armor,
+        "target_mr": target_mr,
     }
     if options:
         payload["champion_options"] = options
@@ -453,23 +455,53 @@ def test_poppy_r_charged_branch():
 
 
 def test_yone_e_prices_the_stored_damage():
-    """E = the 'Damage Stored' percentage (25/27.5/30/32.5/35% of damage
-    dealt by rank) of the fight's ability-cast damage (Q/W/R results),
-    re-dealt as true damage at the +5s auto-recast — no longer a flat 0."""
+    """Yone prices W/R mixed packets and stores the exact Spirit Form window."""
     stats, abilities = _parse("Yone")
     ratio = _leveling("Yone", "E", "Damage Stored")["modifiers"][0]["values"][4] / 100.0
-    ability_damage = (
-        abilities["Q"]["total_raw"]
-        + abilities["W"]["total_raw"]
-        + abilities["R"]["total_raw"]
-    )
+    w_physical = _leveling_at("Yone", "W", "Physical Damage", 5, stats, 2000.0)
+    w_magic = _leveling_at("Yone", "W", "Magic Damage", 5, stats, 2000.0)
+    r_physical = _leveling_at("Yone", "R", "Physical Damage", 3, stats, 2000.0)
+    r_magic = _leveling_at("Yone", "R", "Magic Damage", 3, stats, 2000.0)
     assert ratio == pytest.approx(0.35)
-    assert abilities["E"]["total_raw"] == pytest.approx(ratio * ability_damage)
-    assert abilities["E"]["total_raw"] == pytest.approx(194.46)
+    assert abilities["W"]["damage_type"] == "mixed"
+    assert abilities["W"]["total_raw"] == pytest.approx(w_physical + w_magic)
+    assert abilities["R"]["damage_type"] == "mixed"
+    assert abilities["R"]["total_raw"] == pytest.approx(r_physical + r_magic)
+    assert abilities["E"]["total_raw"] == pytest.approx(0.0)
+    assert abilities["E"]["stored_damage"]["ratio"] == pytest.approx(ratio)
     assert abilities["E"]["damage_type"] == "true"
     data = _fight("Yone")
+    e_start = next(
+        event["time"] for event in data["cast_timeline"] if event["slot"] == "E"
+    )
+    e_recast = next(
+        event
+        for event in data["damage_events"]
+        if event["source"] == "E" and event["damage_type"] == "true"
+    )
+    stored_sources = [
+        event
+        for event in data["damage_events"]
+        if event["source"] in {"Q", "W", "R", "auto_attacks"}
+        and event["damage_type"] in {"physical", "magic"}
+        and e_start <= event["time"] <= e_recast["time"]
+    ]
+    assert stored_sources
+    assert e_recast["time"] == pytest.approx(e_start + 5.0)
     _api_total(
-        data["breakdown"]["E"], ratio * ability_damage * data["breakdown"]["E"]["casts"]
+        data["breakdown"]["E"], ratio * sum(event["damage"] for event in stored_sources)
+    )
+    _api_total(
+        data["breakdown"]["W"], (w_physical + w_magic) * data["breakdown"]["W"]["casts"]
+    )
+    _api_total(
+        data["breakdown"]["R"], (r_physical + r_magic) * data["breakdown"]["R"]["casts"]
+    )
+
+    resisted = _fight("Yone", target_armor=100.0, target_mr=100.0)
+    _api_total(
+        resisted["breakdown"]["R"],
+        r_physical * 0.5 + r_magic * 0.5,
     )
 
 

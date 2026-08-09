@@ -179,3 +179,9 @@ SOURCES = [
         "revision_timestamp": "2026-07-31T01:16:52Z",
     }
 ]
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Ahri")

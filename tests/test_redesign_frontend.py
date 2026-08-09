@@ -183,9 +183,8 @@ def test_spine_never_makes_colour_the_only_carrier(source: str):
 
 def test_spine_keeps_the_kill_time_exception_note(source: str):
     body = function_body(source, "function renderPrototypeResult(")
-    assert "higher is better except Kill time" in body.lower() or (
-        "Higher is better except Kill time" in body
-    )
+    assert "const lowerObjective = Object.values(OBJECTIVES)" in body
+    assert "const directionNote = lowerObjective?.label" in body
 
 
 def test_gold_delta_and_recommendation_ride_the_spine_footer(source: str):
@@ -533,9 +532,24 @@ def test_the_rift_illustration_is_the_page_background(soup: BeautifulSoup, css: 
     assert wash.get("aria-hidden") == "true"
     block = re.search(r"\.map-wash \{([^}]*)\}", css)
     assert block is not None
-    assert "rift-illustration-4k.webp" in block.group(1)
+    assert "rift-background-user.webp" in block.group(1)
     assert "position: fixed" in block.group(1)
     assert re.search(r"background-color:\s*#[0-9a-f]{6}", block.group(1))
+
+
+def test_panel_language_keeps_the_wash_visible_and_uses_godya(css: str):
+    """The shared panel layer is translucent, and the bundled display font
+    stays local so the visual system does not depend on a third-party request.
+    """
+    tokens = re.search(r":root\s*\{([^}]*)\}", css)
+    assert tokens is not None
+    assert re.search(r"--panel-alpha:\s*\.67", tokens.group(1))
+    assert "--paper-panel: rgba(246, 242, 223, var(--panel-alpha))" in tokens.group(1)
+    assert "--rail-panel: rgba(10, 23, 18, var(--panel-alpha))" in tokens.group(1)
+    assert 'font-family: "Godya Display"' in css
+    assert "GodyaDisplayBalinese-Regular.otf" in css
+    assert re.search(r"\.app-card\s*\{[^}]*background: var\(--paper-panel\)", css)
+    assert re.search(r"\.rail\s*\{[^}]*background: var\(--rail-panel\)", css)
 
 
 def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):
@@ -556,7 +570,7 @@ def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):
     assert toggles == ["gold", "objective", "window", "state", "enemyHits"]
     assert bar.select_one("#economicsOptimize") is not None
     block = re.search(r"\.constraints-bar \{([^}]*)\}", css)
-    assert block is not None and "var(--rail)" in block.group(1)
+    assert block is not None and "var(--rail-panel)" in block.group(1)
 
 
 def test_pre_duel_editing_happens_centre_canvas(source: str, soup: BeautifulSoup):

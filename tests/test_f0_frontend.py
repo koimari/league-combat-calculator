@@ -275,11 +275,34 @@ def test_practice_target_affordance_is_wired():
     soup = _soup()
     button = soup.select_one("#addPracticeEnemy")
     assert button is not None
-    assert "vs practice target" in button.get_text()
+    assert "vs target dummy" in button.get_text()
     source = _source()
     assert 'event.target.closest("#addPracticeEnemy")' in source
     assert "PRACTICE_TARGETS" in source
     assert "no-duplicate-champions" in source or "present.has" in source
+
+
+def test_practice_target_is_the_passive_dummy_with_exact_stat_inputs():
+    source = _source()
+    assert 'const PRACTICE_DUMMY_KIND = "practice_dummy"' in source
+    assert (
+        'const PRACTICE_DUMMY_IMAGE = "/static/img/practice-dummy-enemy.png"' in source
+    )
+    assert "data-dummy-stat" in source
+    assert "targetStatOverrides" in source
+    assert "No skills or outgoing actions" in source
+    assert (ROOT / "static" / "img" / "practice-dummy-enemy.png").is_file()
+
+
+def test_ability_variant_buttons_write_the_declared_backend_option():
+    source = _source()
+    assert 'data-ability-variant="${ability.slot}"' in source
+    assert (
+        'abilityOptionBinding(ability.slot, "ability_variants") === option.key'
+        in source
+    )
+    assert "options[option.key] = abilityInput(variantAbility.slot).variant" in source
+    assert "input.variant = Number(abilityVariantButton.dataset.value)" in source
 
 
 def test_quick_to_analyst_bridge_is_wired():

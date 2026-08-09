@@ -159,3 +159,47 @@ def boot_upgrade_contract() -> dict[str, dict[str, str]]:
         base: {"base": base, "upgraded": upgraded}
         for base, upgraded in BOOT_UPGRADES.items()
     }
+
+
+def role_quest_domain_contract() -> dict[str, object]:
+    """Return the role-dependent limits used by every public client.
+
+    The browser needs these values to shape controls.  Keep the calculation
+    functions as the owners and publish only their JSON-safe result here.
+    """
+    from .loadout_rules import inventory_capacity, required_boots_tier
+
+    states = (("incomplete", False), ("complete", True))
+    return {
+        "roles": sorted(ROLES),
+        "level_cap": {
+            "default": level_cap("", False),
+            "by_role": {
+                role: {
+                    state_name: level_cap(role, complete)
+                    for state_name, complete in states
+                }
+                for role in sorted(ROLES)
+            },
+        },
+        "inventory_capacity": {
+            "default": inventory_capacity("", False),
+            "by_role": {
+                role: {
+                    state_name: inventory_capacity(role, complete)
+                    for state_name, complete in states
+                }
+                for role in sorted(ROLES)
+            },
+        },
+        "boots_tier": {
+            "default": required_boots_tier("", False),
+            "by_role": {
+                role: {
+                    state_name: required_boots_tier(role, complete)
+                    for state_name, complete in states
+                }
+                for role in sorted(ROLES)
+            },
+        },
+    }

@@ -301,8 +301,8 @@ def test_frontend_kill_time_never_displays_zero_and_shows_surviving_hp():
     spine = source.split('$("metricList").innerHTML = SPINE_METRICS')[1].split(
         '.join("")'
     )[0]
-    assert 'metric.key === "kill" ? aAlive : ""' in spine
-    assert 'metric.key === "kill" ? bAlive : ""' in spine
+    assert 'metric.lower ? aAlive : ""' in spine
+    assert 'metric.lower ? bAlive : ""' in spine
     row = source.split("function spineRowHtml(")[1].split("\nfunction ")[0]
     assert "metricValueLabel(metric, aValue, aAlive" in row
     # The receipt is never lost to the 52px column: it rides as the cell's
