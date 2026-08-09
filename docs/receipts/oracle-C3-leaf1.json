@@ -1,0 +1,67 @@
+{
+  "receipt_id": "oracle-C3-leaf1",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[4]/pair_damage",
+  "old_value": 234.2,
+  "new_value": 209.1,
+  "verdict": "new_value_correct",
+
+  "observed_delta": {
+    "ratio_old_over_new": 1.1200382592061215,
+    "exactness_check": "209.1 x 1.12 = 234.192, which rounds to the old leaf 234.2; 234.2 / 1.12 = 209.107, which rounds to the new leaf 209.1",
+    "conclusion": "The change is exactly one multiplicative factor of 1.12 - i.e. exactly Abyssal Mask's Unmake modifier - being removed from this event. No other modifier in this scenario has a 12% magnitude (Imperial Mandate's Vulnerable is 7%, Amumu's Cursed Touch is 10%)."
+  },
+
+  "independent_computation": {
+    "step_1_identify_the_12_percent": "data/items.json[8020] Abyssal Mask, passive 'Unmake': 'Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.' riotDescription: 'Nearby enemy champions take 12% more magic damage.' The 12% is therefore MAGIC-ONLY and is the only 12% factor available in this scenario.",
+    "step_2_the_other_modifier_in_the_scenario": "data/items.json[4005] Imperial Mandate, passive 'Command': 'Immobilizing an enemy champion marks them as Vulnerable for 4 seconds, increasing the damage they take from all sources by 7%.' This one is all-sources, so it is NOT type-gated and cannot explain a 12% swing.",
+    "step_3_modifier_taxonomy": "League Wiki, 'Damage modifier' (live fetch, section 'Damage received modifier'): 'These are buffs or debuffs that allow the champion that have them to receive increased or decreased magic or physical damage ... The final value from the attack or ability is increased or decreased by the modifier and then directly applied to the target's health.' Both Abyssal Mask and Imperial Mandate are listed under 'Increasing damage received > Items'. So each is a damage-RECEIVED multiplier on the final value of a damage instance, and Unmake's multiplier is only defined for instances whose subtype is magic damage.",
+    "step_4_reconstruct_the_leaf": "Let D be the leaf event's damage with every wiki-supported modifier applied EXCEPT Unmake. Because Unmake is magic-only, it multiplies D if and only if the event is a magic-damage instance. old = D x 1.12 and new = D. Solving from the published old value: D = 234.2 / 1.12 = 209.107 -> 209.1, which is exactly the new value. Hence the two baselines differ precisely by 'does Unmake amplify this event', and the new value is the one with Unmake withheld.",
+    "step_5_which_side_the_wiki_supports": "The wiki supports withholding it. The only two mechanisms by which the engine could legitimately have carried x1.12 on this leaf are both ruled out by the cached/live text: (a) if the event is physical or true damage, Unmake does not apply at all - the modifier is stated as 'increased magic damage' in both the cached wiki passive text and the cached riotDescription; (b) if the event is the Amumu 'Curse' row that this scenario's name also plausibly refers to (data/champions.json Amumu P 'Cursed Touch': 'Cursed targets receive 10% bonus true damage from all incoming pre-mitigation magic damage', damageType TRUE_DAMAGE), Unmake still cannot enter it twice over: the row is a TRUE damage instance (so the magic-only received-modifier does not multiply it), and its base is the PRE-MITIGATION magic damage, which the wiki's own tooltip on that ability defines as '{{tt|pre-mitigation|Damage calculated before modifiers}}' - explicitly before damage modifiers, so Unmake's +12% is not in the base either. Under both readings the correct leaf carries no x1.12, i.e. 209.1.",
+    "step_6_why_the_old_value_is_the_plausible_defect": "Unmake was an ALL-DAMAGE amplifier historically (League Wiki Abyssal Mask patch history: V10.23 'Immobilizing an enemy champion increases the damage they take by 10% for 4 seconds', V11.10 'increased to 15%', V11.14/V11.23 era), and only became the magic-only 12% curse at V25.S1.1: 'New Effect: Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources.' A model that amplifies a non-magic event by Unmake is exactly the stale pre-V25.S1.1 semantics.",
+    "arithmetic": "correct = 234.2 / 1.12 = 209.107... -> 209.1 (matches new). The engine-side mitigation identity used to reason about the composition is docs/math-foundations.md Section 2.1, m(R) = 100/(100+R), which is linear in raw damage - so a received-modifier applied post-mitigation and the same factor applied pre-mitigation are indistinguishable on the magic instance itself, and differ ONLY for derived rows such as Cursed Touch's 'pre-mitigation' base. That is precisely the leaf under test."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 8020 'Abyssal Mask' -> passives[0] 'Unmake' -> branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "source": "data/items.json -> id 8020 'Abyssal Mask' -> riotDescription",
+      "quote": "Nearby enemy champions take 12% more magic damage."
+    },
+    {
+      "source": "data/items.json -> id 4005 'Imperial Mandate' -> passives[1] 'Command' -> branches[0]",
+      "quote": "Immobilizing an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "source": "data/champions.json -> Amumu -> abilities.P[0] 'Cursed Touch' -> effects[1].description (damageType: TRUE_DAMAGE)",
+      "quote": "Cursed targets receive 10% bonus true damage from all incoming pre-mitigation magic damage."
+    },
+    {
+      "source": "League Wiki live fetch, Template:Data Amumu/Cursed Touch (description2 wikitext) - defines what 'pre-mitigation' means for this ability",
+      "quote": "''Cursed'' targets receive {{sti|{{as|10% '''bonus''' true damage}}}} from all incoming {{tt|pre-mitigation|Damage calculated before modifiers}} {{as|magic damage}}."
+    },
+    {
+      "source": "League Wiki live fetch, 'Damage modifier', section 'Damage received modifier' (Abyssal Mask and Imperial Mandate are both listed under 'Increasing damage received > Items')",
+      "quote": "These are buffs or debuffs that allow the champion that have them to receive increased or decreased magic or physical damage from autoattacks, abilities and item's actives. The final value from the attack or ability is increased or decreased by the modifier and then directly applied to the target's health."
+    },
+    {
+      "source": "League Wiki live fetch, 'Abyssal Mask' patch history",
+      "quote": "V25.S1.1 - Unique Passive - Unmake: New Effect: Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources. Old Effect: ... reducing their magic resistance by 30%. | V10.23 - Unique Passive - Unmake: Immobilizing an enemy champion increases the damage they take by 10% for 4 seconds."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    }
+  ],
+
+  "assumptions_and_residual_uncertainty": {
+    "what_was_not_available": "The scenario definition (roster, builds, event ordering) lives outside the permitted evidence tree (src/, tests/, scripts/ were not read, per runbook). The leaf's damage subtype and the identity of events[4] therefore could not be observed directly; they were inferred from the exact 1.12 ratio plus the scenario name's three amplifier sources.",
+    "conditional_form_of_the_verdict": "The verdict holds under every wiki-supported reading in which a 12% factor could legitimately move: non-magic (physical/true) event -> Unmake must not apply; Amumu Cursed Touch true-damage row -> Unmake applies neither to the true instance nor to its 'before modifiers' base. The single reading that would make 234.2 correct is 'events[4] is a magic-damage instance dealt to a champion standing within 700 units of the Abyssal Mask holder and on the opposing team from that holder' - and in that reading the 12% would have had to be dropped for a reason with no support anywhere in the cached item text, whereas the pre-V25.S1.1 all-damage semantics gives a concrete, documented way for the OLD number to be 12% too high.",
+    "not_committed": true
+  }
+}

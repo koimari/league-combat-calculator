@@ -1,0 +1,106 @@
+{
+  "receipt_id": "oracle-C3-leaf6",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[2]/health_damage",
+  "old_value": 3269.6,
+  "new_value": 3022.0,
+  "verdict": "new_value_correct",
+  "confidence": "moderate - the governing rule is pinned verbatim from the cache; the scenario's input tuple is NOT reconstructible from the permitted evidence tree, so this is a rule + exact-factorization test rather than a from-inputs recomputation",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c3",
+    "read": [
+      "data/items.json",
+      "data/atoms/items.json",
+      "data/item-atoms/8020.json",
+      "data/item-atoms/4005.json",
+      "data/champions.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/e8-interactions.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (incl. golden_baseline.json and the scenario definitions)",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / the diff / the plan",
+      "data/worklists/issues-c-task.md (inside the export but deliberately withheld: it is a task statement and would break oracle independence)"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 8020 'Abyssal Mask' -> passives[0] 'Unmake' -> branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "rule_extracted": "Unmake is a TYPED amplifier: +12% to MAGIC damage only. The phrase 'from all sources' scopes the set of *dealers* (any ally's magic damage is amplified), not the set of damage types."
+    },
+    {
+      "source": "data/items.json -> id 4005 'Imperial Mandate' -> passives[1] 'Command' -> branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "rule_extracted": "Vulnerable is an UNTYPED amplifier: +7% to all damage taken. The current cache carries NO 'bonus magic damage on mark consume' term for Imperial Mandate - the item is pure amp + stats."
+    },
+    {
+      "source": "data/atoms/items.json -> objects['8020'] (independent atomizer classification of the same branch text)",
+      "text": "{\"atom_id\": \"damage.magic\", \"behavior\": \"damage\", \"source\": \"Abyssal Mask.passives[0].branches[0]\", \"name\": \"Unmake\", \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"], \"evidence\": [\"passive:Unmake@kw:magic damage\"]}",
+      "rule_extracted": "The cache's own atom family for Unmake's amplifier is damage.MAGIC (12 percent), corroborating the type restriction. objects['4005'] (Imperial Mandate) carries no damage.* atom at all - its amp is untyped."
+    },
+    {
+      "source": "data/items.json -> 8020.stats / 4005.stats",
+      "text": "Abyssal Mask: health 350, magicResistance 45, abilityHaste 15, total 2650g. Imperial Mandate: abilityPower 60, abilityHaste 15 (plus 20 AH on immobilizing abilities), total 2400g.",
+      "rule_extracted": "Neither item carries any further damage term that could account for the 247.6 delta."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1 and the Section 5 audit table",
+      "text": "m(R) = 100 / (100 + R) (apply_resistance, resistance.py) ... the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance",
+      "rule_extracted": "Amplifiers scale post-mitigation damage linearly, so an amp applied to the wrong damage-type subset appears as a clean multiplicative shift of exactly that subset - which is what makes the factorization test below valid."
+    }
+  ],
+  "independent_computation": {
+    "governing_identity": "health_damage(participant) = 1.07 * [ sum over that participant's damage entries of post_mitigation_amount * (1.12 if the entry is MAGIC else 1.0) ]  -- Vulnerable (untyped, 7%) multiplies everything; Unmake (typed, 12%) multiplies only the magic entries; mitigation is linear in raw so both amps factor out per entry.",
+    "observed_delta": {
+      "old_minus_new": 247.6,
+      "old_over_new": 1.0819324950364
+    },
+    "step_1_rule_out_wholesale_amp_changes": {
+      "note": "If breakdown[2]'s damage pool were homogeneous in type, adding or removing an amp wholesale would give one of the ratios below. None reproduces 3269.6 from 3022.0, so whatever changed is necessarily TYPE-SELECTIVE acting on a MIXED pool.",
+      "new_x_1.07_vulnerable_only": 3233.54,
+      "new_x_1.12_unmake_only": 3384.64,
+      "new_x_1.07_x_1.12_both_multiplicative": 3621.5648,
+      "new_x_1.19_both_additive": 3596.18,
+      "actual_old": 3269.6
+    },
+    "step_2_factorize_the_old_value": {
+      "claim": "3269.6 is exactly both amps applied to the participant's ENTIRE damage pool, regardless of type.",
+      "pool_equals_old_div_1.07_div_1.12": 2728.3044058745,
+      "check": "2728.3044 * 1.07 * 1.12 = 3269.6"
+    },
+    "step_3_solve_the_typed_model_on_that_same_pool": {
+      "equations": [
+        "P + M = 2728.3044   (pool recovered in step 2)",
+        "1.07*P + 1.07*1.12*M = 3022.0   (typed rule = the new value)"
+      ],
+      "solution": {
+        "non_magic_P": 1928.3489,
+        "magic_M": 799.9555,
+        "magic_share_of_pool": 0.2932
+      },
+      "check": "1.07*1928.3489 + 1.1984*799.9555 = 3022.0 exactly at the leaf's 1-decimal precision (M is 800.0 within that precision)",
+      "interpretation": "The new value is the old value with Unmake's 12% peeled off the non-magic ~1928.35 of the same pool: 1.07 * 0.12 * 1928.3489 = 247.6, which is the observed delta to the digit. Both amps still apply - untyped 7% on everything, typed 12% on the magic subset, composed multiplicatively."
+    },
+    "step_4_the_competing_story_and_why_it_is_rejected": {
+      "story": "Alternative reading: the change instead stripped Unmake from this roster member's MAGIC damage entirely (i.e. an ally stopped benefiting from an ally-held Abyssal Mask), which would make the OLD value the correct one.",
+      "arithmetic": {
+        "pool_equals_new_div_1.07": 2824.2991,
+        "required_magic_M": 1928.3489,
+        "magic_share_of_pool": 0.6828
+      },
+      "why_rejected": "The two stories are algebraically symmetric - both peel 0.1284 * 1928.3489 = 247.6 - so the numbers alone cannot decide, and I say so plainly. The decision is made on the source text: the only narrowing clause present anywhere in either item's cached branch text is Unmake's restriction to MAGIC damage, independently corroborated by the cache's own damage.magic atom for item 8020. A model that lets Abyssal Mask's curse amplify a participant's NON-magic damage asserts a broader effect than any cached text supports, and the old value is exactly that model (step 2: a clean 1.07*1.12 over the whole mixed pool). The competing story requires the change to have introduced a fresh contradiction of the 'from all sources' clause rather than to have removed a contradiction of the 'magic damage' clause; the former is a regression with no textual support, the latter is the documented shape of an over-broad-amp fix."
+    },
+    "limitation_disclosed": "The scenario's input tuple (roster composition, levels, ability ranks, builds, fight window) lives in scripts/ and tests/, outside the permitted evidence tree, so this is not a from-inputs recomputation. What IS independently established from data/ alone: (a) the correct amplifier typing for both items, and (b) that 3269.6 is exactly the both-amps-on-everything value while 3022.0 is exactly the correctly-typed value over the same damage pool."
+  },
+  "conclusion": "Abyssal Mask's Unmake amplifies MAGIC damage only (+12%, cached branch text and damage.magic atom); Imperial Mandate's Vulnerable amplifies all damage (+7%, cached branch text). The old leaf 3269.6 = 1.07 * 1.12 * 2728.3044 is Unmake applied to the participant's whole mixed pool including its ~1928.35 of non-magic damage. The new leaf 3022.0 = 1.07 * 1928.3489 + 1.07 * 1.12 * 799.9555 is Unmake restricted to the magic subset, with Vulnerable still on everything. The cached wiki text mandates the restriction, so the new value is correct.",
+  "committed": false
+}

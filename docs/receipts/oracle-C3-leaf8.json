@@ -1,0 +1,91 @@
+{
+  "receipt_id": "oracle-C3-leaf8",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/damage_taken",
+  "old_value": 3269.6,
+  "new_value": 3022.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "read": ["data/items.json", "data/item-atoms/8020.json", "data/item-atoms/4005.json", "data/staleness.json", "data/atoms/autoresearch-review.md", "data/practice-corpus/scenarios.json", "data/worklists/*", "data/wiki/article-index.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 8020 (Abyssal Mask), passives[0] 'Unmake', branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "reading": "The amplifier is 12%, it applies to MAGIC damage only, it applies only to ENEMY champions of the item holder, and only within 700 units. 'from all sources' qualifies the sources of the magic damage, not the damage types amplified. All three qualifiers are restrictions on applicability."
+    },
+    {
+      "source": "data/items.json -> id 4005 (Imperial Mandate), passives[1] 'Command', branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "reading": "7% increased damage taken, all damage types, only on an immobilized enemy champion, 4 s window."
+    },
+    {
+      "source": "data/items.json -> id 8020 stats / data/item-atoms/8020.json",
+      "text": "health flat 350.0, magicResistance flat 45.0, abilityHaste flat 15.0",
+      "reading": "Abyssal Mask carries no magic-resist SHRED in the current cache; the curse is a damage amplifier, not a resistance reduction. Any MR-shred model of Unmake would be unsourced."
+    },
+    {
+      "source": "data/staleness.json (patch 16.15, checked 2026-08-06)",
+      "text": "\"4005\": {\"name\": \"Imperial Mandate\", \"stale\": false}, \"8020\": {\"name\": \"Abyssal Mask\", \"stale\": false}",
+      "reading": "Both item entries are fresh against the pinned patch, so the branch text above is the current source of truth."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2 and Section 2.1",
+      "text": "the mitigation operator `x -> x*100/(100+R)` is *linear in raw damage* for a fixed resistance ... m(R) = 100/(100+R)",
+      "reading": "Mitigation is linear in raw damage, so a constant damage amplifier factors out of the mitigation step: amplifying pre- or post-mitigation gives the same post-mitigation total. Therefore an amplifier scope change shows up in a damage_taken total as an exact multiplicative block, which is what the arithmetic below exploits."
+    },
+    {
+      "source": "data/atoms/autoresearch-review.md, line 159",
+      "text": "amp stacking/order vs penetration (percent -> flat -> amp) must be defined once",
+      "reading": "Confirms the project's own convention that damage amplifiers apply after penetration/mitigation, consistent with the linearity argument above."
+    }
+  ],
+
+  "independent_computation": {
+    "observed": {
+      "delta": 247.6,
+      "ratio_old_over_new": 1.0819324950363998
+    },
+    "step_1_only_an_amplifier_can_explain_a_pure_shrink": "damage_taken fell with no other visible structural change; the two items in the scenario name contribute exactly two damage-taken amplifiers (Unmake 12% magic, Vulnerable 7% all).",
+    "step_2_the_7_percent_mandate_amp_is_arithmetically_excluded": {
+      "argument": "If the change had narrowed or removed the Imperial Mandate Vulnerable amp over some sub-block S of participant[2]'s damage taken, then 0.07 * S = 247.6, i.e. S = 3537.14. But S can be at most the whole un-amplified total, which is bounded above by the new value 3022.0 (the new value already contains that block). Max achievable delta from a 7% amp = 0.07 * 3022.0 = 211.5 < 247.6.",
+      "conclusion": "The Imperial Mandate 7% amp alone CANNOT produce this delta. The Abyssal Mask curse must be involved. This step is roster-independent."
+    },
+    "step_3_the_12_percent_curse_fits_exactly": {
+      "equation": "old = new + 0.12 * B",
+      "solve": "B = 247.6 / 0.12 = 2063.333",
+      "check": "B = 2063.333 <= new total 3022.0, so the block is realizable; it is 68.28% of participant[2]'s new damage taken.",
+      "interpretation": "The change removes the Abyssal Mask Unmake 12% amplifier from a 2063.33-damage block of participant[2]'s incoming damage. The two symmetric readings are (a) the curse was amplifying non-magic (physical/true) damage and is now scoped to magic only, or (b) the curse was being applied to a participant it should not reach (an ally of the holder, or a unit outside the 700-unit / enemy-champion scope) and is now withheld. Both readings enforce a qualifier that is literally present in the quoted branch text."
+    },
+    "step_4_alternative_fits_checked": {
+      "both_amps_multiplicative_19.84_percent": "B = 247.6 / 0.1984 = 1247.98 (realizable) - would mean both amps were withdrawn from a 1248 block; still requires the Abyssal curse to be part of the withdrawal, so it does not change the verdict.",
+      "both_amps_additive_19_percent": "B = 247.6 / 0.19 = 1303.16 (realizable) - same conclusion.",
+      "composition_order_alone": "additive 1.19 vs multiplicative 1.0700*1.1200 = 1.1984 differ by only 0.07%, i.e. at most ~2.3 damage on a 3269.6 total - two orders of magnitude too small to explain 247.6. The change is NOT an amp-composition-order change.",
+      "mr_shred_model": "Modelling Unmake as a magic-resist reduction instead of an amplifier is unsourced in the current cache (item 8020 grants +45 MR and no shred atom), so it is rejected as a candidate explanation."
+    },
+    "step_5_direction": "Every qualifier the cached wiki text puts on Unmake ('Enemy champions', 'within 700 units of you', 'increased magic damage') narrows where the 12% may be applied. A correction that enforces any of them can only LOWER a participant's damage taken. The observed move is exactly one 12% curse block downward. The old value therefore corresponds to the curse being applied more broadly than the quoted text licenses; the new value corresponds to the narrowed, text-compliant application.",
+    "computed_correct_value": 3022.0
+  },
+
+  "confidence_and_limitations": {
+    "verified_roster_independent": [
+      "The 7% Imperial Mandate Vulnerable amp cannot by itself produce a 247.6 shrink on a 3022.0 total (max 211.5).",
+      "The delta is exactly a 12% amplification of a realizable 2063.33 sub-block, i.e. exactly one Abyssal Mask Unmake curse application.",
+      "The delta is far too large to be an amp-composition-order (additive vs multiplicative) change."
+    ],
+    "not_verifiable_here": "The scenario's roster (which champion holds Abyssal Mask, which team participant[2] is on, and the magic/physical split of its incoming damage) is defined in scripts/, which runbook R-18/R-19 forbids this oracle from reading. The 12%-block decomposition is symmetric between 'the amp was wrongly applied to non-magic damage' and 'the amp was wrongly applied to a non-enemy/out-of-scope participant'; both are over-application and both make the new, lower value the compliant one. The only world in which the old value is correct is one where participant[2] is a legitimately cursed enemy champion whose amplified damage was legitimately magic and the change wrongly withdrew the curse - which would require the amplifier to have been narrowed past what the branch text says, the opposite of every qualifier in that text.",
+    "verdict_strength": "high on the mechanic identification (which amp moved, and by exactly how much); moderate-to-high on direction, resting on the fact that all three Unmake qualifiers are restrictions and the observed move is a restriction."
+  },
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "one_line": "The 247.6 drop is exactly one Abyssal Mask 'Unmake' 12%-magic-damage curse applied to a 2063.33 block; the cached wiki text scopes that curse to enemy champions and to magic damage, so narrowing it is the sourced behavior and 3022.0 is the compliant value."
+  }
+}

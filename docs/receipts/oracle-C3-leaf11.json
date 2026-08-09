@@ -1,0 +1,69 @@
+{
+  "receipt_id": "oracle-C3-leaf11",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "generated_at": "2026-08-09",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/ending_health_ratio",
+  "scenario": "mandate_abyssal_curse_roster",
+  "old_value": 0.17,
+  "new_value": 0.27,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle11",
+    "read": ["data/items.json", "data/atoms/items.json", "data/item-atoms/8020.json", "data/item-atoms/4005.json", "data/practice-corpus/scenarios.json", "data/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (other)", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\" -> passives[0] (\"Unmake\") -> branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "reading": "Multiplier 1.12 on MAGIC damage only. Conditions: (a) the target is an ENEMY of the item holder, (b) the target is within 700 units of the holder. It is a damage-taken amplifier keyed to one holder's aura, not a global roster property, and it never touches physical or true damage."
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> passives[1] (\"Command\") -> branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "reading": "Multiplier 1.07 on ALL damage types, but only on a target that has personally been immobilized, and only for the 4 s mark window. The current cached text carries NO damage component (no mark-detonation proc); the item's only offensive contribution is the 7% Vulnerable amplifier plus 60 AP / 15+20 ability haste."
+    },
+    {
+      "id": "S3",
+      "source": "docs/math-foundations.md sections 1.2 and 2.1",
+      "text": "the mitigation operator `x -> x*100/(100+R)` is *linear in raw damage* for a fixed resistance ... post = raw * m(R)",
+      "reading": "For a fixed defensive profile, post-mitigation damage is linear in raw damage, so toggling a raw-side amplifier k scales the participant's total damage taken by exactly k. This licenses the ratio algebra below."
+    },
+    {
+      "id": "S4",
+      "source": "docs/math-foundations.md section 5 (formula-audit table), shield/revive rows",
+      "text": "Shield absorption (survival walk) | clipping identity `absorbed = min(shield, damage)` ... Revive ... earliest lethal packet",
+      "reading": "ending_health_ratio for a surviving, unshielded, unhealed participant is 1 - D/H with D = total post-mitigation damage taken and H = max health."
+    }
+  ],
+  "independent_computation": {
+    "method": "Constraint / invariant oracle. The scenario specification (roster composition, champion, level, builds, fight window) is NOT inside the permitted evidence tree - data/practice-corpus/scenarios.json contains 22 scenarios and none is 'mandate_abyssal_curse_roster', and nothing under data/ or docs/math-foundations.md defines coupled_scenarios. A full re-simulation of the leaf is therefore impossible from the allowed sources. What IS decidable from the allowed sources is which hypotheses about the change are arithmetically admissible, and which of the two candidate values matches the conditions the cached wiki text places on the two amplifiers.",
+    "step_1_damage_fractions": {
+      "formula": "ending_health_ratio = 1 - D/H (S4)",
+      "D_old_over_H": 0.83,
+      "D_new_over_H": 0.73,
+      "observed_ratio_D_old_over_D_new": 1.13699,
+      "rounding_band": "Values are quoted to 2 dp, so D_old/H in [0.825,0.835) and D_new/H in (0.725,0.735]; the admissible ratio band is [1.12245, 1.15172]."
+    },
+    "step_2_hypothesis_screen": [
+      {"hypothesis": "Imperial Mandate 7% Vulnerable toggled on participant[2] only", "implied_ratio": 1.07, "in_band": false, "conclusion": "EXCLUDED - too small to move the leaf by 10 points of max health"},
+      {"hypothesis": "Abyssal curse 12% toggled on participant[2] only (upper bound, i.e. 100% of incoming damage magic)", "implied_ratio": 1.12, "in_band": false, "conclusion": "EXCLUDED - 1.12 is below the 1.12245 band floor, and any physical/true damage in the mix only lowers it further (S1: magic-only)"},
+      {"hypothesis": "Curse double-applied then de-duplicated (1.12^2 -> 1.12)", "implied_ratio": 1.12, "in_band": false, "conclusion": "EXCLUDED (same arithmetic)"},
+      {"hypothesis": "Amplifier composition changed additive (1.19) <-> multiplicative (1.07*1.12=1.1984)", "implied_ratio": 1.00706, "in_band": false, "conclusion": "EXCLUDED - a 0.7% effect cannot move 0.17 to 0.27"},
+      {"hypothesis": "BOTH amplifiers stopped applying to participant[2]", "implied_ratio": "1.07*(1+0.12*f) where f = magic share of incoming damage", "solves_at": "f = 0.5217", "in_band": true, "conclusion": "ADMISSIBLE - the unique amplifier-based explanation; requires ~52% of participant[2]'s incoming damage to be magic, which is unremarkable for an AP-carrying roster fight"},
+      {"hypothesis": "participant[2]'s max health gained Abyssal Mask's 350 flat health with damage unchanged", "solves_at": "H_old = 2555, H_new = 2905, D = 2120.6", "in_band": true, "conclusion": "ADMISSIBLE as a second explanation, and it points the same direction: participant[2] is treated as the Abyssal Mask HOLDER (an ally/self), not as a cursed enemy"}
+    ],
+    "step_3_which_value_matches_the_wiki_conditions": "Both admissible explanations describe the same correction: participant[2] stopped being treated as a legitimate recipient of the two debuffs. S1 grants the 12% curse only to ENEMIES of the holder standing within 700 units of that one holder - it is a single-holder aura, not a roster-wide property, and the repo's own coupled model is documented as a pair-decomposition in which each pair fight cannot see the roster (data/atoms/autoresearch-review.md, section 3.2), exactly the structure in which a holder-keyed aura gets replicated onto every pair. S2 grants the 7% Vulnerable only to a target that has personally been immobilized, inside a 4 s window - a third roster participant qualifies only if the immobilizing ability actually hit them. The old value 0.17 requires participant[2] to satisfy BOTH conditions simultaneously (cursed AND immobilized); the new value 0.27 requires neither. Under the cached text the narrow reading is the defensible default, and over-application of a holder-keyed aura plus an immobilize-gated mark to a non-primary roster member is the failure mode the text rules out. Note additionally that the current cached Imperial Mandate text carries no damage component at all (S2) - any residual mark-detonation damage modelled on participant[2] would be unsourced, and removing it moves the leaf in exactly the observed direction.",
+    "result": "0.27 is the value consistent with the cached wiki conditions; 0.17 is consistent only with participant[2] receiving amplifiers the item text does not grant them."
+  },
+  "limitations": [
+    "This is a constraint-based oracle, not a full independent re-simulation: the scenario definition lives outside the permitted evidence tree (src/, tests/, scripts/), so the absolute leaf value cannot be regenerated from data/ + docs/math-foundations.md alone.",
+    "The screen in step 2 is decisive (it excludes every single-amplifier and composition-order hypothesis); the direction call in step 3 rests on the conditional wording of S1/S2 plus the documented pair-decomposition of the coupled model, not on a recomputed number.",
+    "If the scenario in fact immobilizes participant[2] AND places them inside the 700-unit aura of an enemy-held Abyssal Mask, the old value 0.17 would be the correct one. That fact is not determinable from the allowed sources; it should be confirmed against the scenario definition by a reviewer who is permitted to read it."
+  ],
+  "verdict_reason": "The change moves participant[2] from receiving both damage-taken amplifiers to receiving neither. Abyssal Mask's Unmake is a holder-keyed 700-unit aura on the holder's ENEMIES and touches magic damage only; Imperial Mandate's Command applies only to a target that was personally immobilized, for 4 s, and carries no damage of its own. Applying both to a non-primary roster participant is unsourced under the cached text; the new value is the one those conditions produce."
+}

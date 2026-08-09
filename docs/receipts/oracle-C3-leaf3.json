@@ -1,0 +1,107 @@
+{
+  "receipt_id": "oracle-C3-leaf3",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[1]/total_damage",
+  "old_value": 863.4,
+  "new_value": 838.3,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle_c3",
+    "read": ["data/items.json", "data/champions.json", "data/wiki-atoms/damage.json", "data/practice-corpus/scenarios.json", "data/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\" -> passives[0] \"Unmake\" -> branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "reading": "Type-scoped amplifier: +12% applies to MAGIC damage only; physical and true damage are untouched."
+    },
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> passives[1] \"Command\" -> branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "reading": "Untyped amplifier: +7% applies to every damage type, for a 4 s window seeded by an immobilize. Imperial Mandate carries no damage payload of its own in the current cache (passives are Control = 20 AH on immobilizing abilities, and Command = the 7% Vulnerable)."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json -> atom_id \"damage.modifier\" (wiki_pages: Damage, True damage)",
+      "quote": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction.",
+      "reading": "The two amps compose multiplicatively; on a pure-magic damage instance the composite is 1.07 x 1.12 = 1.1984, on a non-magic instance it is 1.07."
+    },
+    {
+      "source": "data/champions.json -> Amumu -> abilities.P \"Cursed Touch\" -> effects[1] (the third 'curse' the scenario name can refer to)",
+      "quote": "Cursed targets receive 10% bonus true damage from all incoming pre-mitigation magic damage.",
+      "reading": "Amumu's curse pays out as a TRUE-damage instance sized off pre-mitigation magic damage. Because the payout is true damage, Abyssal's magic-only +12% must not amplify it; because it reads PRE-mitigation magic damage, it must not be sized off a post-mitigation/target-amp figure either."
+    },
+    {
+      "source": "docs/math-foundations.md, section 2.1 / formula-audit table",
+      "quote": "m(R)=100/(100+R); EHP round-trip raw = post*(1+R/100) ... EXACT",
+      "reading": "Resistance mitigation is a pure scalar multiplier and is linear in raw damage (section 1.2), so amplifier composition on a row is a product of scalars and the row's damage-type split is the only structure that matters."
+    }
+  ],
+
+  "independent_computation": {
+    "note": "The permitted evidence tree (data/ + docs/math-foundations.md) does not contain the scenario's input tuple (champion, level, ranks, roster membership, target resistances) -- data/practice-corpus/scenarios.json holds 22 corpus scenarios and none of them is mandate_abyssal_curse_roster, and no file under data/ names the scenario. The scenario's absolute damage therefore cannot be re-derived from first principles inside the permitted tree. What CAN be derived exactly, and what fully decides this leaf, is the set of amplifier structures the sourced text permits, and which of the two candidate values is reachable from a correct structure.",
+    "observed": {
+      "old": 863.4,
+      "new": 838.3,
+      "delta": 25.1,
+      "ratio_old_over_new": 1.0299415483717047,
+      "delta_as_pct_of_new": 2.9941548371704667
+    },
+    "step_1_row_is_not_pure_magic": {
+      "argument": "If breakdown[1] were a single-damage-type row, any change confined to amplifier modelling would multiply the row by a ratio drawn from the amplifier lattice {1.07, 1.12, 1.10 (Amumu-as-amp), 1.19, 1.1984, 1.232, 1.31824} or a ratio of two of them.",
+      "checks": {
+        "new * 1.07": 896.98,
+        "new * 1.12": 938.9,
+        "new * 1.1984": 1004.62,
+        "new * 1.10": 922.13,
+        "closest_lattice_ratio_1.10/1.07": 1.028037,
+        "implied_value_from_that_ratio": 861.81
+      },
+      "conclusion": "1.0299415 is not in the lattice (nearest member 1.10/1.07 = 1.02804 would give 861.8, not 863.4). breakdown[1] is therefore a COMPOSITE row: it carries a magic sub-total and a non-magic (true and/or physical) sub-total that the two amplifiers touch differently."
+    },
+    "step_2_eliminate_additive_vs_multiplicative_stacking": {
+      "model": "row = A_magic * M + A_nonmagic * P, with additive stacking giving A_magic = 1.19 and multiplicative giving A_magic = 1.1984 (A_nonmagic = 1.07 either way).",
+      "additive_to_multiplicative": "new - old = (1.1984 - 1.19) * M = +0.0084 * M > 0, i.e. the value would have RISEN. Observed value fell. ELIMINATED.",
+      "multiplicative_to_additive": "old - new = 0.0084 * M = 25.1 => M = 2988 post-mitigation magic, but then old >= 1.1984 * 2988 = 3581 >> 863.4. Contradiction. ELIMINATED.",
+      "conclusion": "The change is not about additive-vs-multiplicative composition of the 7% and 12% amps; the sourced multiplicative rule (damage.modifier) is untouched by this leaf."
+    },
+    "step_3_eliminate_whole_amp_toggles": {
+      "curse_dropped_entirely": "838.3 * 1.12 = 938.9 != 863.4. ELIMINATED.",
+      "vulnerable_dropped_entirely": "838.3 * 1.07 = 896.98 != 863.4. ELIMINATED.",
+      "both_dropped": "838.3 * 1.1984 = 1004.62 != 863.4. ELIMINATED.",
+      "conclusion": "Neither amplifier was switched on/off wholesale for this row. The change is a SCOPE change on a sub-component of the row."
+    },
+    "step_4_surviving_decompositions": [
+      {
+        "family": "A. Abyssal's magic-only +12% was being applied to the row's NON-MAGIC sub-total (true and/or physical), and the change restricts it to magic.",
+        "solve": "new = X + Y, old = X + 1.12*Y  =>  0.12*Y = 25.1  =>  Y = 209.17 (non-magic sub-total, already carrying Vulnerable's 1.07), X = 629.13 (magic sub-total, carrying 1.07*1.12).",
+        "sanity": "Both components positive and sensible: ~25% of the row is non-magic. Raw non-magic before Vulnerable = 209.17/1.07 = 195.49.",
+        "verdict_contribution": "new (838.3) is the value consistent with the quoted text ('12% increased MAGIC damage')."
+      },
+      {
+        "family": "B. Amumu's Cursed Touch true-damage payout (10% of PRE-mitigation magic) was being sized off the AMPLIFIED magic figure, and the change sizes it off the pre-mitigation, pre-target-amp figure.",
+        "solve": "0.1984 * T_new = 25.1 => T_new = 126.51 true-damage component, magic component X = 711.79.",
+        "sanity": "Positive, ~15% of the row is the true-damage curse payout, which is the right order for a 10%-of-pre-mitigation-magic rider.",
+        "verdict_contribution": "Also makes new (838.3) the corrected value: the wiki says PRE-mitigation magic, and target damage-taken amplifiers are not part of the pre-mitigation figure."
+      },
+      {
+        "family": "C. (counter-hypothesis) Imperial Mandate's untyped +7% Vulnerable stopped applying to a sub-component that should carry it.",
+        "solve": "0.07 * Y = 25.1 => Y = 358.57, X = 479.73. Arithmetically admissible.",
+        "why_rejected": "Nothing in the quoted Mandate text scopes Vulnerable by damage type ('damage they take from all sources by 7%'), so there is no documented restriction a fix could be enforcing here; this family requires the change to have DELETED a correct application rather than enforced a stated one. It is also the only surviving family in which the row's non-magic share would be 43% while its magic share carries the Abyssal curse -- possible, but it needs an unsourced mechanism, whereas families A and B each enforce a restriction written verbatim in data/."
+      }
+    ],
+    "step_5_direction_argument": "Every restriction the two items' cached text imposes is a NARROWING one: Abyssal's curse is magic-only and range-gated (700 units); Mandate's Vulnerable is immobilize-gated and 4 s long; Amumu's rider is true damage sized off PRE-mitigation magic. Enforcing any of them can only lower a previously over-broad total. The observed change lowers the leaf by 2.99%, and both surviving decompositions (A and B) land on exactly the sourced restriction. The value that is reachable from an amplifier model consistent with the quoted text is therefore 838.3.",
+    "result": 838.3,
+    "confidence": "medium-high on the verdict, structural rather than absolute: the ratio test (steps 1-3) is exact and rules out every amplifier-composition story except a sub-component scope change, and the only scope changes with a documented basis in data/ are the ones that lower the number. The absolute 838.3 could not be re-derived end-to-end because the scenario's input tuple lives outside the permitted evidence tree."
+  },
+
+  "caveats": [
+    "The scenario definition (roster, champion, level, ability ranks, target resistances) is not present in data/ or docs/math-foundations.md, so no end-to-end recomputation of the absolute number was possible under the runbook's read restrictions. The verdict rests on an exact elimination over amplifier structures plus the sourced type/scope restrictions.",
+    "If the scenario contains NO true/physical component in breakdown[1] (i.e. the row really is pure magic), then NEITHER value is reachable from any amplifier model in the lattice and the correct verdict would be both_wrong; the composite-row reading is the only one under which either candidate is reachable at all, and under it the new value is the sourced one."
+  ]
+}

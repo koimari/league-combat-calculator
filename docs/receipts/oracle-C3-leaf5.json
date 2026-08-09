@@ -1,0 +1,129 @@
+{
+  "receipt": "oracle-C3-leaf5",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[2]/incoming_damage",
+  "old_value": 3269.6,
+  "new_value": 3022.0,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle5",
+    "read": [
+      "data/items.json",
+      "data/item-atoms/8020.json",
+      "data/item-atoms/4005.json",
+      "data/champions.json",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/*.md",
+      "data/atoms/autoresearch-review.md",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ],
+    "limitation": "The scenario definition (roster, champions, levels, builds, fight window) lives outside the permitted evidence tree (scripts/ and tests/). The damage decomposition below is therefore INFERRED from the two reported leaf values plus the sourced rules, not read from the scenario file."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> item 8020 'Abyssal Mask', passives[0] 'Unmake', branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "rule_extracted": "+12% amplification, MAGIC DAMAGE ONLY, applies to damage from any source, only to enemy CHAMPIONS in a 700-unit radius of the holder."
+    },
+    {
+      "source": "data/items.json -> item 4005 'Imperial Mandate', passives[1] 'Command', branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "rule_extracted": "+7% amplification on ALL damage types, from any source, on an immobilized enemy champion, 4 s. Imperial Mandate deals NO damage of its own in the current cache (no damage row in passives/active)."
+    },
+    {
+      "source": "data/items.json -> item 8010 \"Bloodletter's Curse\", passives[0] 'Vile Decay', branches[0]",
+      "quote": "Dealing {{as|magic damage}} to an enemy champion with a [[champion ability]] applies a stack of ''Vile Decay'' to them for 6 seconds, stacking up to 4 times and up to once per basic attack or ability per {{tip|cast instance}} every {{fd|0.3}} seconds. Each stack inflicts {{as|{{fd|7.5}}% magic resistance reduction}}, up to {{as|30%|mr}} at 4 stacks.",
+      "rule_extracted": "Per-target percentage MAGIC RESIST reduction, max 30%, earned only by the holder's own ability magic damage on that specific target. Included because the scenario name's third token ('curse') matches this item."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2 item 1",
+      "quote": "the mitigation operator `x -> x*100/(100+R)` is *linear in raw damage* for a fixed resistance - splitting a 3x100 hit packet into three 100-hit packets, or summing it into one 300 packet, gives the same post-mitigation total.",
+      "rule_extracted": "Because mitigation is linear in raw damage, a damage amplifier commutes with mitigation and multiplies a per-damage-type subtotal exactly; the totals below can be reasoned about post-mitigation without knowing per-hit structure."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1 / 2.2",
+      "quote": "m(R) = 100 / (100 + R)  (apply_resistance, resistance.py) ... reduce_resistance(R, r_flat, r_pct): R <- R - r_flat; R <- R*(1 - r_pct/100)",
+      "rule_extracted": "Magic mitigation multiplier and the placement of Vile Decay's percentage MR reduction (reduction happens before penetration)."
+    },
+    {
+      "source": "data/champions.json (all 173 entries) + docs/math-foundations.md growth formula base + growth*(L-1)*(0.7025+0.0175*(L-1))",
+      "quote": "level-18 magic resistance across the roster ranges from 43.7 (Yuumi) to 75.35 (Sylas)",
+      "rule_extracted": "Used to bound what a Vile Decay shred toggle could do to a pure-magic damage stream."
+    }
+  ],
+  "independent_computation": {
+    "observed": {
+      "ratio_old_over_new": 1.0819324950363998,
+      "absolute_drop": 247.6,
+      "relative_drop_pct": 7.573
+    },
+    "step_1_bound_out_the_mandate_amp": {
+      "argument": "Imperial Mandate's Vulnerable is a 7% multiplier on all damage. Any change that only re-scopes it (applying it to fewer events, fewer targets, a shorter window, or removing a duplicate application) can change the leaf by at most a factor 1.07.",
+      "test": "observed ratio 1.081932 > 1.07",
+      "conclusion": "RULED OUT. The change cannot be explained by the 7% Vulnerable amp alone; the 12% magic curse and/or the magic-resist shred must be involved."
+    },
+    "step_2_bound_out_a_wholesale_curse_toggle_on_magic_damage": {
+      "argument": "If the participant's incoming damage were entirely magic, toggling Abyssal Mask's curse on/off changes the leaf by exactly 1.12.",
+      "test": "observed ratio 1.081932 < 1.12",
+      "conclusion": "The curse was not toggled wholesale over an all-magic stream; whatever changed applies to a STRICT SUBSET of this participant's incoming damage."
+    },
+    "step_3_bound_out_a_wholesale_vile_decay_toggle_on_magic_damage": {
+      "argument": "If the stream were entirely magic, dropping Bloodletter's Curse's 30% MR reduction changes the leaf by (100+R)/(100+0.7R).",
+      "computed": {
+        "MR_43.7_Yuumi": 1.1004,
+        "MR_52.1_Ahri": 1.1145,
+        "MR_66.85_typical": 1.1366,
+        "MR_75.35_Sylas": 1.148,
+        "implied_MR_if_this_alone_explained_the_ratio": 33.77
+      },
+      "conclusion": "An implied MR of 33.8 is below EVERY level-18 champion in data/champions.json (minimum 43.7). A full shred toggle on a pure-magic stream would have moved the leaf by >= 1.10, not 1.082. So this too can only be a partial/mixed-stream effect."
+    },
+    "step_4_the_sanctioned_subset": {
+      "argument": "The cached wiki text names exactly one subset of a participant's incoming damage that the Abyssal curse may amplify: the MAGIC portion ('12% increased magic damage'). Imperial Mandate's Vulnerable, by contrast, is typed to all damage ('the damage they take from all sources by 7%'). Composing the two multiplicatively (the standard composition for independent damage-taken amplifiers) gives 1.07 * 1.12 = 1.1984 for magic and 1.07 for non-magic.",
+      "model_new": "leaf = 1.07 * (D_nonmagic + 1.12 * D_magic)",
+      "model_old": "leaf = 1.07 * 1.12 * (D_nonmagic + D_magic)   [curse wrongly amplifying non-magic damage too]",
+      "solve": {
+        "pre_amp_post_mitigation_total_from_old": "3269.6 / 1.1984 = 2728.304",
+        "pre_amp_post_mitigation_total_from_new": "3022.0 / 1.07 = 2824.299 = total + 0.12 * D_magic",
+        "D_magic": 799.955,
+        "D_nonmagic": 1928.349,
+        "magic_share": 0.2932
+      },
+      "forward_check": {
+        "with_D_magic_exactly_800.0_and_D_nonmagic_1928.304": {
+          "new": "1.07 * (1928.304 + 1.12*800.0) = 3022.006 -> 3022.0 (matches new leaf to displayed precision)",
+          "old": "1.07 * 1.12 * 2728.304 = 3269.600 (matches old leaf exactly)"
+        },
+        "note": "The implied magic subtotal lands on 800.0 to within 0.006% (residual 0.045 on a leaf rounded to 0.1). A mixed stream of ~29% magic / ~71% non-magic is exactly what a roster leaf should look like when the amps are credited 'from all sources' (an AP holder's magic damage plus an ally carry's physical damage)."
+      }
+    },
+    "step_5_what_the_old_value_would_require": {
+      "argument": "For 3269.6 to be right, the extra 247.6 would have to be legitimate amplification. The only ways to produce it are (a) the 12% curse amplifying physical/true damage, which contradicts the quoted 'increased magic damage', or (b) a second stacking application of a unique item amp, which no cached text supports (both passives are flagged unique:true and are worded as a single target-side debuff).",
+      "conclusion": "Unsupported by the cached source text."
+    },
+    "residual_uncertainty": {
+      "competing_reading": "The same ratio is also reproducible if the new model instead REMOVED the curse entirely from this roster member on a stream that is 68.3% magic (implied D_magic 1928.35, D_nonmagic 895.95). If that were the mechanism, the new value would be WRONG, because the wiki wording ('enemy champions within 700 units ... from all sources') curses every enemy champion in the aura, not just the primary target.",
+      "why_it_is_disfavored": [
+        "The implied decomposition is less clean (895.95 vs an exact 800.0 magic subtotal under the magic-only reading).",
+        "Narrowing a typed amplifier to its correct damage type is the failure mode this scenario's name enumerates (mandate + abyssal + curse = the three amp/shred effects composing on one roster); silently dropping an aura from a roster member is a regression, not a rule the cached text asks for.",
+        "The direction of the diff (less amplification credited) matches the wiki tightening 'magic damage' rather than 'damage'."
+      ],
+      "what_would_settle_it": "The scenario's roster definition and the per-damage-type split of breakdown[2] (both live in scripts/tests, outside the permitted evidence tree). If breakdown[2]'s incoming damage is ~29% magic, the new value is confirmed; if it is ~68% magic AND the curse aura was dropped for that member, the old value would be the correct one."
+    }
+  },
+  "verdict_rationale": "The leaf moved by a factor of 1.081932, which is strictly between the Imperial Mandate amp (1.07) and the Abyssal Mask curse (1.12). That interval rules out any re-scoping of the 7% Vulnerable amp on its own and any wholesale toggle of the 12% curse (or the 30% Vile Decay shred) over an all-magic stream, and forces the change to touch a strict subset of the participant's incoming damage. The only subset the cached wiki text sanctions is the magic portion: Abyssal Mask's Unmake reads '12% increased magic damage', while Imperial Mandate's Vulnerable reads 'the damage they take from all sources by 7%'. Applying 1.07 to the whole ledger and 1.12 only to the magic subtotal reproduces 3022.0 exactly from a pre-amp total of 2728.3 split 1928.3 non-magic / 800.0 magic, whereas 3269.6 is exactly 1.07*1.12 applied to that same total - i.e. the old value amplified physical/true damage with a magic-only amplifier."
+}
