@@ -9,7 +9,7 @@ psycopg==3.3.4
 setuptools==84.0.0
 
 # P0a managed Redis result-cache backend.
-redis==7.4.1
+redis==8.1.0
 
 # P0b error tracking (lazy import; only initialised when SENTRY_DSN is set).
 sentry-sdk==2.66.1
