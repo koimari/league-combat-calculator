@@ -20,7 +20,7 @@ from collections.abc import Iterable, Mapping
 import math
 from typing import Any, NamedTuple
 
-from ..ability_spec import AttackClass, DamageClass
+from ..ability_spec import IMMOBILIZING_CC_KINDS, AttackClass, DamageClass
 
 # ---------------------------------------------------------------------------
 # Transition rank — the one ordered "when does this resolve" vocabulary
@@ -274,6 +274,10 @@ class SurvivalAction(NamedTuple):
     source: str = ""
     event_id: str | None = None
     sequence: Any = None
+    # The packet applied immobilizing crowd control — the shared
+    # ``ability_spec.IMMOBILIZING_CC_KINDS`` vocabulary or a legacy marker
+    # flag, never a set this module decides for itself (D-08).  Force of
+    # Nature's Steadfast reads it for its two-stack branch.
     immobilized: bool = False
     cc_kind: str = ""
     baseline_effective_armor: float | None = None
@@ -795,8 +799,7 @@ def survival_action_from_event(
             get("immobilized")
             or get("crowd_control")
             or get("hard_cc")
-            or cc_kind.lower()
-            in {"immobilize", "stun", "root", "knockup", "suppression"}
+            or cc_kind.lower().strip() in IMMOBILIZING_CC_KINDS
         ),
         cc_kind=cc_kind,
         baseline_effective_armor=(

@@ -1,0 +1,89 @@
+{
+  "slice": "C5",
+  "decisions": [
+    "D-08"
+  ],
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17/R-32/D-97 — no baseline moves inside this commit"
+  },
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "expected_qualifying_occurrences": 0,
+    "method": "A leaf can move only where a packet's cc_kind is one of the ten kinds the walk's retired literal did not hold AND the subject holds Force of Nature, whose Steadfast stack count is the only consumer of SurvivalAction.immobilized (survival/transitions.py, the two-stack branch, plus the immobilized field of its own stack-event receipt row). The authored population is read from src/calculator/champions/*.py: every cc_kind a reviewed module authors today.",
+    "authored_cc_kinds_in_src": {
+      "champions/ahri.py": "immobilize",
+      "champions/pantheon.py": "stun",
+      "champions/syndra.py": "stun"
+    },
+    "widened_kinds": [
+      "airborne",
+      "charm",
+      "fear",
+      "flee",
+      "knockback",
+      "pull",
+      "sleep",
+      "snare",
+      "stasis",
+      "taunt"
+    ],
+    "golden_scenarios": [],
+    "golden_population_argument": "Every authored cc_kind in src/ ('immobilize', 'stun') was already a member of the retired five-kind literal, so no row anywhere can change its immobilize answer. The pair-engine population is additionally empty by construction: golden_snapshot.py enters through pipeline.run_fight, and neither pipeline.py nor damage.py imports src/calculator/survival, so that path constructs no SurvivalAction at all.",
+    "coupled_golden_scenarios": [],
+    "coupled_population_size": 0
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": []
+  },
+  "measured": {
+    "golden": "compare clean",
+    "coupled_golden": "compare byte-identical to the pre-edit report: 55 differences, 53 qualifying, every one of them C2/C3/C4's already-receipted Abyssal population. Zero leaves moved by C5.",
+    "reports": [
+      "<scratch>/coupled-pre-C5.json",
+      "<scratch>/coupled-post-C5.json"
+    ]
+  },
+  "oracle_receipts_required": 0,
+  "shown_by_fixture_instead": {
+    "suite": "tests/test_immobilize_predicate.py",
+    "effects": [
+      "all 15 IMMOBILIZING_CC_KINDS grant Steadfast's immobilize stack count (2, from item_effects)",
+      "a slow grants exactly 1",
+      "a reviewed 'none' grants exactly 1",
+      "an unmarked cast grants exactly 1",
+      "the legacy immobilized / crowd_control / hard_cc flags still mark an immobilize",
+      "a whitespace-padded kind reads the way every other consumer of the vocabulary reads it"
+    ]
+  },
+  "bench": {
+    "instrument": "scripts/bench_coupled_optimizer.py --fixed-work --isolate --json",
+    "reference": "the C4 tip (9e0a32e), re-measured on this machine rather than read from the 0A capture, because C1 moved syndra_mandate_3champ's routing",
+    "cassiopeia_3champ": "identical (all four counter families, residual, rungs, winner, score, timeline_complete)",
+    "cassiopeia_5champ": "identical",
+    "mundo_3champ": "identical",
+    "syndra_mandate_3champ": "identical",
+    "allocation_peak_bytes": {
+      "cassiopeia_3champ": [
+        257522,
+        257458
+      ],
+      "cassiopeia_5champ": [
+        560932,
+        560868
+      ],
+      "mundo_3champ": [
+        220699,
+        220509
+      ],
+      "syndra_mandate_3champ": [
+        390165,
+        390164
+      ],
+      "cause": "One inline frozenset literal per survival_action_from_event compile unit becomes a shared module-level constant; the tracemalloc peak falls by 64–190 bytes (under 0.09%). No allocation gate exists before Phase 4 S4 (R-28)."
+    }
+  },
+  "row_11_routing": "routing_divergences empty for all four scenarios; winner and score identical across both routings"
+}
