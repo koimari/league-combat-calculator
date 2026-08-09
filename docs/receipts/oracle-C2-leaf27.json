@@ -1,0 +1,90 @@
+{
+  "receipt": "oracle-C2-leaf27",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[23]/pair_damage",
+  "old_value": 157.8,
+  "new_value": 140.9,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "read": [
+      "data/items.json",
+      "data/item-atoms/4005.json",
+      "data/item-atoms/8010.json",
+      "data/item-atoms/8020.json",
+      "data/champions.json (Amumu passive only)",
+      "data/runes.json",
+      "data/practice-corpus/scenarios.json",
+      "data/atoms/autoresearch-review.md",
+      "data/worklists/*.md",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (incl. golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / diff"
+    ]
+  },
+  "independent_computation": {
+    "step_1_identify_the_delta": {
+      "ratio_old_over_new": 1.1199432,
+      "display_rounding_band": "leaves are printed at 0.1 precision, so the true ratio lies in [157.75/140.95, 157.85/140.85] = [1.11919, 1.12070]",
+      "closed_form_check": "140.9 x 1.12 = 157.808 -> displays 157.8; 157.8 / 1.12 = 140.8929 -> displays 140.9. The two leaves are exactly one x1.12 factor apart, consistent in both rounding directions.",
+      "conclusion": "the change removes exactly one application of a 1.12 damage-taken amplifier; every other factor in the chain (base damage, 100/(100+R) mitigation, Vile Decay magic-resist reduction, Imperial Mandate's 7%) is unchanged."
+    },
+    "step_2_uniqueness_of_the_1_12_factor": {
+      "method": "scanned every passives[].branches / active[].branches string in data/items.json and all of data/runes.json for damage-taken / damage-dealt amplifiers",
+      "result": "Abyssal Mask's Unmake (12% increased magic damage) is the ONLY 1.12 amplifier in the cache. Nearest other amplifier constants: Imperial Mandate 1.07, Riftmaker 1.08 (4 stacks), Liandry's Torment / Haunting Guise 1.06 (3 stacks), Vladimir R 1.10, Amumu Cursed Touch 10% (a separate true-damage channel, not a multiplier). None lands inside the [1.11919, 1.12070] band.",
+      "resistance_side_alternative_ruled_out": "a magic-resist explanation would need (100+R_new)/(100+R_old) = 1.12. With Bloodletter's Curse Vile Decay (7.5%/stack, 30% at 4 stacks) that requires a contrived base MR (55.56 for a 4->0 stack swing, 90.9 for 3->0, and 1- and 2-stack swings are impossible). The amplifier explanation is exact by construction and the item is named in the scenario, so the delta is Unmake."
+    },
+    "step_3_what_the_sources_say_the_factor_may_touch": {
+      "abyssal_mask_unmake": "magic damage ONLY, and only against champions cursed by the wearer's own aura (i.e. the wearer's enemies, within 700 units). 'from all sources' widens WHO may deal the amplified damage; it does not widen the damage TYPE or flip who is cursed.",
+      "imperial_mandate_command": "7%, explicitly 'the damage they take from all sources' with no type restriction - it applies to every damage type. This is the wording contrast the scenario stacks the two items to exercise.",
+      "consequence": "a x1.12 belongs on a damage event if and only if (i) the event's damage type is magic AND (ii) the damaged unit is an enemy champion of the Abyssal Mask holder. On any other event the 1.12 is unsourced."
+    },
+    "step_4_mitigation_chain_used": {
+      "quoted_from": "docs/math-foundations.md Sections 2.1-2.2",
+      "identity": "post = raw * m(R), m(R) = 100/(100+R); resistance order flat reduction -> percentage reduction -> percentage penetration -> flat penetration, R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)",
+      "role_here": "Vile Decay is a percentage magic-resist REDUCTION (7.5%/stack, 30% cap), so it enters R before penetration; it is a resistance-side term and cannot produce the observed 1.12 amplifier-shaped delta (step 2)."
+    },
+    "step_5_verdict_reasoning": "The corrected leaf 140.9 is the same damage chain with exactly one Unmake factor stripped and Imperial Mandate's all-damage 7% retained - i.e. a surgical narrowing of a magic-only, direction-bearing aura rather than a blanket amplifier removal. That is precisely the shape of a fix for over-application of Unmake (applying a magic-only amplifier to a non-magic event, or applying the wearer's own curse to damage dealt to the wearer's team / by the wrong side of a roster pair). Retaining the 1.12 would be sourced only if the event were magic damage dealt to an enemy champion of the Abyssal holder; the corrected value's chain is sourced under the cached wiki text in every other case, and it is the value consistent with 'take 12% more MAGIC damage' being a type-restricted, wearer-directed aura.",
+    "residual_uncertainty": "data/ contains no scenario definitions (data/practice-corpus/scenarios.json holds 22 unrelated ids; no worklist mentions Abyssal Mask), so the damage TYPE and the attacker/defender sides of combat/events[23] could not be read from the sanctioned export. Falsifier: if event 23 is magic damage dealt BY the Abyssal Mask holder's team TO an enemy champion, then 'from all sources' makes the 12% legitimate and the old value 157.8 would be correct. Confidence in new_value_correct: moderate-high (the delta is an exact, isolated Unmake factor and every other amplifier in the chain survived, which is a scope fix, not a formula change)."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> 8020 Abyssal Mask -> passives[0] 'Unmake' -> branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "source": "data/items.json -> 8020 Abyssal Mask -> riotDescription",
+      "quote": "Unmake: Nearby enemy champions take 12% more magic damage."
+    },
+    {
+      "source": "data/items.json -> 4005 Imperial Mandate -> passives[1] 'Command' -> branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "source": "data/items.json -> 8010 Bloodletter's Curse -> passives 'Vile Decay' -> branches[0]",
+      "quote": "Dealing {{as|magic damage}} to an enemy champion with a [[champion ability]] applies a stack of ''Vile Decay'' to them for 6 seconds, stacking up to 4 times ... Each stack inflicts {{as|{{fd|7.5}}% magic resistance reduction}}, up to {{as|30%|mr}} at 4 stacks."
+    },
+    {
+      "source": "data/champions.json -> Amumu -> abilities.P 'Cursed Touch' -> effects[1].description (checked and ruled out as the delta's source)",
+      "quote": "Cursed targets receive 10% bonus true damage from all incoming pre-mitigation magic damage."
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.2",
+      "quote": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)"
+    }
+  ],
+  "committed": false
+}

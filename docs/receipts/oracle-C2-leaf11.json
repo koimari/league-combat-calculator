@@ -1,0 +1,60 @@
+{
+  "receipt_id": "oracle-C2-leaf11",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/participants[2]/survival/ending_health_ratio",
+  "old_value": 0.17,
+  "new_value": 0.26,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c2",
+    "read": ["data/items.json", "data/item-atoms/8020.json", "data/item-atoms/4005.json", "data/wiki/article-index.json", "data/practice-corpus/scenarios.json", "docs/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> 8020 Abyssal Mask, passives[0] 'Unmake', branches[0] (cached wiki text)",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "source": "data/items.json -> 8020 Abyssal Mask, riotDescription (cached in-client text)",
+      "quote": "<passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic damage</magicDamage>."
+    },
+    {
+      "source": "data/items.json -> 4005 Imperial Mandate, passives[1] 'Command', branches[0] (cached wiki text)",
+      "quote": "Immobilizing an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.1 (damage multiplier / effective-health identity)",
+      "quote": "post = raw \u00b7 m(R)  \u21d4  raw = post \u00b7 (1 + R/100) = post \u00b7 EHP_multiplier(R), EHP(R) = H\u2080 \u00b7 (1 + R/100)."
+    },
+    {
+      "source": "docs/math-foundations.md Section 5, 'Shield absorption (survival walk)' row",
+      "quote": "clipping identity `absorbed = min(shield, damage)`, `overkill = max(0, damage\u2212absorbed)`; `absorbed+overkill = damage`"
+    }
+  ],
+  "independent_computation": {
+    "note": "The scenario's roster/loadout definition lives outside the permitted evidence tree (it is not present anywhere under data/ or in docs/math-foundations.md), so an absolute re-derivation of the health ratio from first principles is not available to this oracle. What IS derivable from the permitted sources is the exact multiplicative relationship between the two candidate values, which uniquely identifies the mechanic that moved and pins its direction against the quoted wiki/Riot text.",
+    "step_1_survival_identity": "ending_health_ratio = 1 - (post-mitigation damage taken to participant[2]) / (max health of participant[2]), per the survival-walk conservation identity in math-foundations Section 5 (absorbed + overkill = damage; no heal/shield term changes between the two values since only one leaf moved).",
+    "step_2_damage_fractions": "D_old = 1 - 0.17 = 0.83 of max health; D_new = 1 - 0.26 = 0.74 of max health.",
+    "step_3_implied_amp": "D_old / D_new = 0.83 / 0.74 = 1.1216. Accounting for 2-decimal rounding (old in [0.165,0.175), new in [0.255,0.265)), the implied amplifier is bounded to (1.1074, 1.1361].",
+    "step_4_candidate_elimination": {
+      "Abyssal Mask Unmake 12% magic amp (x1.12)": "INSIDE the interval -> consistent",
+      "Imperial Mandate Vulnerable 7% all-source amp (x1.07)": "1.07 < 1.1074 -> EXCLUDED",
+      "both amps composed multiplicatively (1.07 x 1.12 = 1.1984)": "> 1.1361 -> EXCLUDED",
+      "both amps composed additively (1 + 0.07 + 0.12 = 1.19)": "> 1.1361 -> EXCLUDED",
+      "no amp change (x1.00)": "EXCLUDED"
+    },
+    "step_5_exact_consistency_check": "0.74 x 1.12 = 0.8288 -> 1 - 0.8288 = 0.1712, which rounds to 0.17. Equivalently 0.83 / 1.12 = 0.74107 -> 1 - 0.74107 = 0.25893, which rounds to 0.26. The two golden values differ by exactly one application of Abyssal Mask's 12% Unmake amplifier on participant[2]'s incoming damage, and by nothing else.",
+    "step_6_direction_from_source_text": "The new value is the one in which participant[2] does NOT receive the Unmake amplifier. Both the cached wiki branch and Riot's own item text scope Unmake on three axes that a roster-wide implementation would violate: (a) recipients must be ENEMY champions of the item's holder ('Enemy champions ... of you'; 'Nearby enemy champions'), so the holder itself and the holder's allies can never be cursed; (b) recipients must be within 700 units (center to edge) of the holder; (c) the amplified damage must be MAGIC damage ('12% increased magic damage' / '12% more magic damage'), not damage from all sources. Note the deliberate contrast with Imperial Mandate on the same scenario, whose Command mark is explicitly worded 'increasing the damage they take from ALL sources by 7%' - the cached text distinguishes an all-source amp from a magic-only amp within the very pair of items this scenario exercises, so a magic-only reading of Unmake is not an inference but the literal source text.",
+    "step_7_conclusion": "Removing the 12% Unmake amp from exactly one member of the roster (participant[2]) - while the other participants' leaves did not move - is the signature of one of Unmake's quoted scoping restrictions finally being honored for that participant (ally/self of the holder, out of the 700-unit aura, or taking non-magic damage). The permissive alternative that produces 0.17 - amplifying participant[2]'s incoming damage by 12% regardless of team, range, or damage type - contradicts the quoted text on its face. Therefore 0.26 is the value consistent with the cached source text."
+  },
+  "independent_value": 0.26,
+  "confidence": "high on the mechanic and direction (the 1.12 fingerprint is unique among this scenario's amplifiers and the source text is unambiguous about enemy-only / magic-only scoping); the absolute magnitude 0.26 could not be re-derived from scratch because the scenario roster/loadout is not part of the permitted evidence tree.",
+  "caveats": [
+    "Scenario definition (roster, levels, loadouts, ranks) is not present under data/ or docs/math-foundations.md; this receipt therefore verifies the delta and its direction rather than re-deriving the absolute ratio.",
+    "The identity of participant[2] (holder, ally, out-of-range enemy, or physical-damage taker) cannot be pinned from the permitted sources - but every one of those cases points the same way: the 12% amp must not apply."
+  ]
+}

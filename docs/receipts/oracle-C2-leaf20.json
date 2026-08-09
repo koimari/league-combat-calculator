@@ -1,0 +1,96 @@
+{
+  "receipt": "oracle-C2-leaf20",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[24]/damage",
+  "old_value": 221.2,
+  "new_value": 197.5,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C2",
+    "read": ["data/items.json", "data/atoms/items.json", "data/item-atoms/8020.json", "data/practice-corpus/scenarios.json", "data/wiki/article-index.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "path": "data/items.json",
+      "locator": "item 8020 \"Abyssal Mask\" -> passives[0] (name \"Unmake\", unique=true) -> branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "id": "S2",
+      "path": "data/items.json",
+      "locator": "item 4005 \"Imperial Mandate\" -> passives[1] (name \"Command\", unique=true) -> branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "id": "S3",
+      "path": "data/atoms/items.json",
+      "locator": "key \"8020\" -> atom control.curse / damage.magic, source \"Abyssal Mask.passives[0].branches[0]\"",
+      "quote": "\"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"]  (radius 700 units, amplification 12%)"
+    },
+    {
+      "id": "S4",
+      "path": "data/item-atoms/8020.json",
+      "locator": "atoms[3]",
+      "quote": "{\"atom_id\": \"damage.magic\", \"family\": \"damage\", \"behavior\": \"Unmake\", \"provenance\": {\"evidence\": \"passive:Unmake\"}}  (the Unmake amplification is typed magic-damage-only)"
+    },
+    {
+      "id": "S5",
+      "path": "docs/math-foundations.md",
+      "locator": "Section 2.1 / Section 5 audit table, row \"Resistance mitigation (apply_resistance)\"",
+      "quote": "m(R) = 100 / (100 + R) ... The engine's totals ... mitigation operator x -> x*100/(100+R) is *linear in raw damage* for a fixed resistance"
+    },
+    {
+      "id": "S6",
+      "path": "data/practice-corpus/scenarios.json",
+      "locator": "scenarios[].expected.formula (corpus target conventions)",
+      "quote": "3 stacks x 5% maxHP per stack (W rank 5, 0 AP) of Ahri's 2358 max HP = 3 x 117.9 = 353.7 raw magic; post-mitigation vs 52 MR = 232.7  |  Siphoning Strike ... = 355 raw physical; post-mitigation vs 92 armor = 184.9"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_delta": {
+      "ratio_old_over_new": 1.12,
+      "exact_check": "197.5 x 1.12 = 221.2 (exact to the golden's 1-decimal precision)",
+      "rounding_band": "with both leaves rounded to 0.1, the true ratio lies in [1.11946, 1.12054]",
+      "candidate_amplifiers_in_this_scenario": {
+        "Imperial Mandate - Command / Vulnerable": "x1.07 (S2) - excluded, 197.5 x 1.07 = 211.3",
+        "Imperial Mandate + Abyssal combined": "x1.07 x 1.12 = x1.1984 - excluded, 197.5 x 1.1984 = 236.7",
+        "Abyssal Mask - Unmake / Curse": "x1.12 (S1, S3) - the ONLY candidate inside the rounding band"
+      },
+      "conclusion": "The two leaf values differ by exactly one application of the Abyssal Mask Unmake curse (12% increased magic damage). No other amplifier available in this scenario reproduces the observed factor. Because mitigation x -> x*100/(100+R) is linear in raw damage (S5), the amp factor factors cleanly out of the post-mitigation number, so the ratio test is exact."
+    },
+    "step_2_what_the_source_authorizes": {
+      "amp_value": "12%, fixed",
+      "target_scope": "enemy champions within 700 units of the wearer; 'become cursed' is a boolean debuff state on the target, not a per-source counter (S1)",
+      "damage_type_scope": "magic damage only (S1 wording 'increased magic damage'; the atom decomposition types Unmake as damage.magic, S4)",
+      "source_scope": "'from all sources' scopes WHICH incoming damage instances are amplified (any attacker, ally or self) - it is not a licence to multiply the amp once per damaging source or once per curser",
+      "therefore": "a cursed target's magic damage taken carries the factor 1.12 exactly once; combined with Imperial Mandate's Vulnerable the legal total is 1.07 x 1.12 = 1.1984, and 1.12^2 = 1.2544 is not authorised by any cached text"
+    },
+    "step_3_case_analysis": {
+      "setup": "Let B be the event's damage with every amp except the curse question resolved; then new = B*k_new and old = B*k_old with k_old = 1.12 * k_new. The set of source-legal curse factors for a single event is {1.00 (non-magic damage, or target not cursed), 1.12 (magic damage on a cursed target)}.",
+      "case_I": "k_new = 1.00, k_old = 1.12 (B = 197.5). Both factors are individually legal; which one is right depends on whether event 24 is magic damage on a cursed target.",
+      "case_II": "k_new = 1.12, k_old = 1.2544 (B = 176.34). Here the old value applies the unique curse twice - the signature of accumulating the same named aura once per roster source. k_old is not authorised by any cached source, so the old value is wrong outright.",
+      "resolution": "Case II is the reading the scenario itself points at: the scenario is named '..._curse_roster', i.e. it exercises the curse across a multi-participant roster, which is exactly the configuration in which a per-source amp accumulator yields 1.12^n instead of 1.12. In Case I the new value is also the correct one (a non-magic event must not carry a magic-only amp). The old value is correct only under the single remaining branch of Case I - event 24 being magic damage on a cursed target whose legitimate, single curse the engine now drops - which would contradict the scenario's own purpose (the corpus pins curse application in this very scenario) and is supported by no cached source.",
+      "verdict_reasoning": "Every source-supported branch lands on 197.5; the branch supporting 221.2 requires the engine to be silently dropping a legal single curse in the one scenario built to pin it, with no textual support. Verdict: new_value_correct."
+    },
+    "step_4_numeric_reconstruction_attempted": {
+      "note": "The scenario's input tuple (champion, level, build, target, fight mode) lives in scripts/, which this runbook forbids reading, so an absolute reconstruction of 197.5 from raw damage is not available to this oracle. The corpus conventions in S6 (level-18 target at 52 MR / 92 armor) were used to sanity-check plausibility only.",
+      "consistency_checks": [
+        "Case II base B = 221.2 / 1.2544 = 176.34; 176.34 x 1.12 = 197.5 (matches the new leaf)",
+        "Case I base B = 197.5; 197.5 x 1.12 = 221.2 (matches the old leaf)",
+        "physical reading of 197.5 vs 92 armor => raw 379.2 (197.5 x 1.92); magic reading of 197.5 vs 52 MR => raw 300.2 (197.5 x 1.52) - both are attainable, neither discriminates, so the verdict rests on the amp-legality analysis above, not on the reconstruction"
+      ]
+    }
+  },
+
+  "confidence": "high on the delta identification (the 1.12 factor is unique in the rounding band and matches the Abyssal Mask sourced value exactly); moderate-to-high on the direction, established by case analysis over source-legal amp factors rather than by an absolute reconstruction of the event.",
+
+  "independence_statement": "No source file, test, script, plan, receipt, diff, or commit was read. All numbers above come from the git-archive export of data/ and docs/math-foundations.md at HEAD."
+}

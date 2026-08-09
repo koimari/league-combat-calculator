@@ -1,0 +1,77 @@
+{
+  "receipt_id": "oracle-C2-leaf25",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/breakdown[0]/sources[1]/total_damage",
+  "old_value": 758.1,
+  "new_value": 676.9,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle25",
+    "read": ["data/items.json", "data/item-atoms/8020.json", "data/item-atoms/4005.json", "data/atoms/items.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "id": "abyssal-wiki-passive",
+      "locator": "data/items.json -> \"8020\".passives[0] (\"Unmake\").branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "id": "abyssal-riot-description",
+      "locator": "data/items.json -> \"8020\".riotDescription",
+      "text": "<passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic damage</magicDamage>."
+    },
+    {
+      "id": "abyssal-atom-classification",
+      "locator": "data/atoms/items.json -> \"8020\" atoms; data/item-atoms/8020.json",
+      "text": "atom_id \"damage.magic\" / behavior \"damage\", values [700.0, 12.0], units [\"flat\", \"percent\"], evidence \"passive:Unmake@kw:magic damage\"; companion atom \"control.curse\" with the same [700, 12] pair. The cached decomposition types the amplifier as MAGIC, not all-damage."
+    },
+    {
+      "id": "mandate-wiki-passive",
+      "locator": "data/items.json -> \"4005\".passives[1] (\"Command\").branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "id": "mandate-riot-description",
+      "locator": "data/items.json -> \"4005\".riotDescription",
+      "text": "<passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 7% <Keyword>Vulnerable</Keyword> for 4 seconds."
+    },
+    {
+      "id": "math-foundations-scope-note",
+      "locator": "docs/math-foundations.md",
+      "text": "Sections 2.1-2.3 cover only the resistance/penetration multiplier m(R)=100/(100+R) and the pen/reduction composition order. The document contains NO clause on damage-taken amplifiers, so the amplifier semantics were taken entirely from the cached wiki/Riot item text above."
+    }
+  ],
+  "independent_computation": {
+    "step_1_identify_the_delta": {
+      "old_over_new_expression": "758.1 / 676.9",
+      "old_over_new_value": 1.11995863,
+      "new_times_1_12": 758.128,
+      "old_over_1_12": 676.875,
+      "absolute_delta": 81.2,
+      "twelve_percent_of_new": 81.228,
+      "conclusion": "To one-decimal golden precision the two values differ by exactly one multiplicative factor of 1.12 - the Abyssal Mask 'Unmake' curse amplifier and nothing else. No other factor in the scenario (Mandate's 7% Vulnerable, the 100/(100+R) mitigation term, crit/AS terms) can produce a clean 1.1200 ratio, and 758.1 / 1.12 = 676.875 rounds to exactly the new value 676.9."
+    },
+    "step_2_apply_the_item_text": {
+      "abyssal_unmake": "multiplier 1.12, GATED ON DAMAGE TYPE = MAGIC ('take 12% more magic damage'). 'from all sources' in the wiki phrasing quantifies over the DEALER (any champion on the cursing team's side benefits), not over the damage type - the Riot description drops 'from all sources' entirely and keeps only '12% more magic damage', and the cached atom decomposition files it under damage.magic.",
+      "mandate_command": "multiplier 1.07, NOT gated on damage type ('the damage they take from all sources by 7%' / '7% Vulnerable'). Applies to physical, magic and true alike.",
+      "composition": "amp-multiplied on top of the post-mitigation total; the two amps are independent multiplicative factors, so a MAGIC source carries x1.07 x 1.12 = x1.1984 and a NON-MAGIC source carries x1.07 only."
+    },
+    "step_3_reconstruct_the_leaf": {
+      "pre_amp_total_implied": 632.62,
+      "derivation": "new / 1.07 = 676.9 / 1.07 = 632.6168; old / (1.07 x 1.12) = 758.1 / 1.1984 = 632.5935. Both values agree on the same pre-amplifier base ~632.6, i.e. the ONLY disagreement between old and new is whether the Abyssal magic-only factor 1.12 is applied to this source.",
+      "correct_value_if_source_is_non_magic": 676.9,
+      "correct_value_if_source_is_magic": 758.1,
+      "resolution": "The scenario is named for the curse and is a multi-attacker roster fight in which Imperial Mandate's untyped 7% Vulnerable and Abyssal Mask's magic-only 12% curse are both live - the exact configuration whose purpose is to separate an all-damage amplifier from a type-gated one. A wholesale loss of the curse would have moved EVERY magic leaf in the scenario by the same 1.12, which is a uniform regression rather than a single-source delta; a type-gating correction moves precisely the non-magic sources, which is the shape observed here (breakdown[0] source[1] alone, while the sibling source[0] retains its value). The cached item text admits no reading under which a non-magic damage source is amplified by Unmake."
+    },
+    "computed_value": 676.9,
+    "arithmetic_check": "632.6168 x 1.07 = 676.90 (new, non-magic source: Mandate only). 632.6168 x 1.07 x 1.12 = 758.13 (old, which additionally charges the magic-only curse)."
+  },
+  "residual_uncertainty": {
+    "note": "The oracle deliberately never read the scenario definition (scripts/, tests/) or the diff, so the damage TYPE of breakdown[0]/sources[1] was inferred rather than observed. The verdict is: 676.9 is correct iff that source is physical or true damage; 758.1 would be correct only if it is magic damage. Every piece of admissible evidence (item text, Riot description, the damage.magic atom classification, and the single-source rather than scenario-wide shape of the delta) points to the type-gating reading.",
+    "what_would_falsify_this_verdict": "Showing that breakdown[0]/sources[1] is a magic-damage source AND that the Abyssal holder is an ally within 700 units of the target - in which case the 12% is legitimately owed and 758.1 stands."
+  },
+  "verdict_rationale": "Abyssal Mask's Unmake amplifies MAGIC damage only (12%); Imperial Mandate's Vulnerable amplifies ALL damage (7%). The leaf changed by exactly the 1.12 curse factor and by nothing else, which is the signature of confining the curse to magic damage. The new value 676.9 is what the cached wiki and Riot text require for a non-magic source under a live Mandate mark."
+}

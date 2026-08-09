@@ -1,0 +1,99 @@
+{
+  "receipt": "oracle-C2-leaf28",
+  "runbook": "R-18 / R-19 (independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[7]/damage",
+  "old_value": 157.8,
+  "new_value": 140.9,
+  "verdict": "new_value_correct",
+  "confidence": "high on the rule, medium on the event identification (see falsifier)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c2",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/items.json",
+      "locator": "item 8020 \"Abyssal Mask\" -> passives[0] \"Unmake\" -> branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "rule_extracted": "Unmake is a +12% damage-TAKEN amplifier that is TYPED: it applies to magic damage only."
+    },
+    {
+      "id": "S2",
+      "file": "data/items.json",
+      "locator": "item 4005 \"Imperial Mandate\" -> passives[1] \"Command\" -> branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "rule_extracted": "Command's Vulnerable is +7% and UNTYPED (all sources), so it applies to physical, magic and true instances alike."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Amumu -> abilities.P[0] \"Cursed Touch\"",
+      "quote": "Cursed targets receive 10% bonus true damage from all incoming pre-mitigation magic damage.  [ability record: \"damageType\": \"TRUE_DAMAGE\"]",
+      "rule_extracted": "The Curse proc is a TRUE-damage instance whose base is 10% of the pre-mitigation magic damage it reads. It is not itself magic damage, so Unmake's magic-only amp cannot apply to it; the 12% is already carried once, inside the magic instance the 10% is taken from."
+    },
+    {
+      "id": "S4",
+      "file": "data/champion-audit/batch-0.json",
+      "locator": "Amumu -> notable_atoms / gap_summary",
+      "quote": "curse amplifier (P: +10% bonus true damage on magic - AMP pseudo-slot)  ...  All damage atoms modeled (Q/W/E/R + P curse amplification as true-damage AMP).",
+      "rule_extracted": "The engine models Cursed Touch as a separate true-damage AMP row in the event ledger - i.e. a non-magic event can and does appear in combat/events for a curse scenario."
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.2 / Section 5 audit table (Resistance mitigation row)",
+      "quote": "the mitigation operator x -> x*100/(100+R) is *linear in raw damage* for a fixed resistance ... True damage ignores all resistances entirely (project domain rule).",
+      "rule_extracted": "All amps in this engine are pure multiplicative scalars on a damage instance, so a change of exactly one amp factor is recoverable by division - which is what makes the reconstruction below exact."
+    },
+    {
+      "id": "S6",
+      "file": "data/items.json (full scan)",
+      "locator": "scan of every passives[].branches / active[].branches for 'increased damage' / 'damage taken'",
+      "quote": "Abyssal Mask | Unmake is the ONLY cached item effect with a 12% damage amplifier; no other item or rune in the cache supplies a 1.12 factor.",
+      "rule_extracted": "The 1.12 factor in the diff can only be Unmake."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_measure_the_delta": {
+      "expression": "157.8 / 140.9",
+      "value": 1.119943,
+      "note": "equals 1.12 to within one-decimal display rounding"
+    },
+    "step_2_exact_round_trip": {
+      "old_div_1_12": 140.892857,
+      "rounded": 140.9,
+      "new_times_1_12": 157.808,
+      "rounded_back": 157.8,
+      "conclusion": "The change is exactly ONE application of Abyssal Mask's 12% Unmake amp, added or removed. Nothing else moved."
+    },
+    "step_3_rule_out_competing_explanations": [
+      "Not a Command/Vulnerable change: that would be a 1.07 factor (157.8/1.07 = 147.5) or, if Unmake swapped for Command, 1.12/1.07 = 1.0467. Neither reproduces 140.9.",
+      "Not an additive-vs-multiplicative amp-stacking change: additive (1+0.12+0.07 = 1.19) -> Command-only gives 157.8/1.19*1.07 = 141.9, not 140.9; multiplicative 1.1984 vs additive 1.19 differ by only 0.7%, not 12%.",
+      "Not a resistance/penetration change: a 1.12 mitigation swing needs (100+R2)/(100+R1) = 1.12. The only 45-unit MR object in play is Abyssal Mask's own 45 MR, which would require the target to sit at R = 275 MR (45 = 0.12*(100+R)). Absurd for any roster target; rejected.",
+      "Not a magic-penetration change: Abyssal Mask grants no magic penetration in the cache (stats = 350 HP / 45 MR / 15 AH only).",
+      "Command is unchanged across the diff: whatever untyped 7% applied before still applies after, since the residual ratio is exactly 1.12 and not 1.12*1.07 or 1.12/1.07."
+    ],
+    "step_4_which_side_is_right": {
+      "question": "Should combat/events[7] carry Unmake's 12%?",
+      "answer": "Only if that event is a MAGIC damage instance (S1). The scenario id pairs 'abyssal' with 'curse'; the cached-source meaning of 'curse' alongside Abyssal Mask is Amumu's Cursed Touch, whose proc is TRUE damage computed as 10% of pre-mitigation magic damage (S3) and which the engine authors as its own AMP row in the ledger (S4). A true-damage row is outside Unmake's stated scope, and its 12% share is already carried once inside the magic instance its 10% is read from - applying Unmake again to the true row is both a damage-type violation and a double count.",
+      "correct_value": 140.9,
+      "derivation": "correct = 157.8 / 1.12 = 140.892857 -> 140.9 (one-decimal display), i.e. the pre-Unmake value of the same instance with every other factor (Command's untyped 7%, resistances, crit/uptime terms) held fixed."
+    },
+    "step_5_sanity_check_the_untyped_amp_survives": "Under the reconstruction, Command's +7% still multiplies the true-damage row (S2: 'from all sources'), which is why the diff is a clean 1.12 and not 1.12*1.07 = 1.1984. This is corroborating: the change removed only the TYPED amp and left the UNTYPED one, exactly the shape a damage-type-gating fix produces."
+  },
+
+  "falsifier": {
+    "statement": "The verdict flips to old_value_correct if and only if combat/events[7] is a MAGIC damage instance dealt to a champion cursed by an allied (or own) Abyssal Mask holder.",
+    "why_it_was_not_checked": "The scenario definition (scripts/) and the golden baseline are outside the permitted evidence tree, so the event's damage type could not be read directly; it was inferred from the scenario id, the cached Amumu Cursed Touch record (S3) and the audit's statement that the curse is authored as a separate true-damage AMP row (S4).",
+    "why_the_inference_is_preferred": "(a) The magic-only wording in S1 is unambiguous and is the only type gate in the pair; (b) a pipeline regression that dropped Unmake from magic damage would move EVERY magic event in this scenario, whereas a type-gating fix moves exactly the non-magic rows - and only one event leaf carries this delta; (c) removing an amp from a row the source text does not cover is the conservative, source-backed direction, whereas keeping it requires the wiki text to mean something it does not say."
+  },
+
+  "recommendation": "Accept 140.9. If the reviewer can see the ledger, confirm combat/events[7].type is true (or physical) damage; if it is magic, re-open - the same arithmetic then indicts the new value."
+}

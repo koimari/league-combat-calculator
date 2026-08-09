@@ -1,0 +1,105 @@
+{
+  "receipt_id": "oracle-C2-leaf16",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[21]/damage",
+  "old_value": 252.7,
+  "new_value": 225.6,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c2",
+    "read": ["data/items.json", "data/item-atoms/4005.json", "data/item-atoms/8020.json", "data/atoms/items.json", "data/practice-corpus/scenarios.json", "data/staleness.json", "data/wiki/article-index.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\" -> passives[0] \"Unmake\" -> branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "unique": true
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> passives[1] \"Command\" -> branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "unique": true
+    },
+    {
+      "id": "S3",
+      "source": "data/item-atoms/8020.json -> atoms[3]",
+      "text": "{\"atom_id\": \"damage.magic\", \"family\": \"damage\", \"behavior\": \"Unmake\", \"provenance\": {\"wiki\": [\"Abyssal Mask\"], \"evidence\": \"passive:Unmake\"}}",
+      "note": "The cached atomization independently types Unmake as magic-scoped (damage.magic), not an all-damage amplifier."
+    },
+    {
+      "id": "S4",
+      "source": "data/atoms/items.json -> \"8020\" -> atoms",
+      "text": "{\"atom_id\": \"control.curse\", \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"], \"evidence\": [\"passive:Unmake@kw:curse\"]} and {\"atom_id\": \"damage.magic\", \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"], \"evidence\": [\"passive:Unmake@kw:magic damage\"]}",
+      "note": "Confirms the two parameters of Unmake are a 700-unit aura radius and a 12 percent magic-damage amplifier."
+    },
+    {
+      "id": "S5",
+      "source": "data/items.json -> id 8010 \"Bloodletter's Curse\" -> passives[0] \"Vile Decay\" -> branches[0]",
+      "text": "Dealing {{as|magic damage}} to an enemy champion with a [[champion ability]] applies a stack of ''Vile Decay'' to them for 6 seconds, stacking up to 4 times ... Each stack inflicts {{as|{{fd|7.5}}% magic resistance reduction}}, up to {{as|30%|mr}} at 4 stacks.",
+      "note": "Checked as the other 'Curse' candidate in the scenario name; ruled out below (no MR-reduction delta reproduces the observed ratio with a clean MR)."
+    },
+    {
+      "id": "S6",
+      "source": "docs/math-foundations.md Section 2.1-2.2",
+      "text": "m(R) = 100 / (100 + R) ... R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)",
+      "note": "Used to test the alternative hypothesis that the delta came from a magic-resistance-reduction change rather than a flat damage amplifier."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_delta": {
+      "work": "252.7 - 225.6 = 27.1;  252.7 / 225.6 = 1.1201241;  implied amplifier = 12.0124%",
+      "rounding_band": "With 1-decimal rounding the true ratio lies in [1.119654, 1.120594]; 1.12 is inside.",
+      "forward_check": "225.6 * 1.12 = 252.672 -> rounds to 252.7 (exact match). 252.7 / 1.12 = 225.625 -> rounds to 225.6 (exact match).",
+      "conclusion": "The two values differ by exactly ONE multiplicative factor of 1.12."
+    },
+    "step_2_identify_the_factor": {
+      "method": "Exhaustive scan of every passive/active branch in data/items.json for damage-amplification text (regex on 'increased ... damage' and 'damage they/you take').",
+      "all_amp_candidates_found": [
+        "Abyssal Mask / Unmake - 12% increased MAGIC damage (aura, 700 units, UNIQUE)",
+        "Imperial Mandate / Command - 7% increased damage from all sources (Vulnerable)",
+        "Riftmaker / Void Corruption - up to 8%",
+        "Liandry's Torment / Suffering - up to 6%",
+        "Haunting Guise / Madness - up to 6%",
+        "Lord Dominik's Regards / Giant Slayer - up to 15%",
+        "Perplexity / Giant Slayer - up to 15%",
+        "Immortal Path / Now and Forever - 4%",
+        "Reinforced Armor (turret) - 20%",
+        "Hexoptics C44 / Diamond-Tipped Spear - distance-scaled"
+      ],
+      "conclusion": "12% is unique to Abyssal Mask's Unmake (S1). No other cached item, and no composition of the others (1.07*1.12 = 1.1984, 1.07+0.12 additive = 1.19, etc.), reproduces a clean 1.12."
+    },
+    "step_3_rule_out_the_resistance_hypothesis": {
+      "work": "If the delta came from Bloodletter's Curse MR shred (S5) instead of a flat amp, then via m(R)=100/(100+R) (S6) we need (100+R_new)/(100+R_old) = 1.1201241. Solving for the natural stack transitions against a target MR of M: 4 stacks (-30%) -> 0 stacks requires M = 55.6; 4 stacks -> 1 stack requires M = 85.2; 4 stacks -> 2 stacks requires M = 182.3. None is a clean roster MR, and none reproduces the ratio exactly.",
+      "conclusion": "The delta is a flat multiplicative amplifier, not a resistance change. Abyssal Mask Unmake is the only source."
+    },
+    "step_4_amplifier_composition": {
+      "work": "Back out the pre-amp packet. 225.6 / 1.07 = 210.841 (Mandate Vulnerable only). 252.7 / (1.07 * 1.12) = 210.864 (Mandate + Unmake). The two agree to 0.01%, so both golden values sit on the same base packet B ~= 210.85, with the amplifiers composing multiplicatively: new = B*1.07, old = B*1.07*1.12.",
+      "conclusion": "The change removed exactly one application of Unmake from this event while leaving Imperial Mandate's Vulnerable 7% (which per S2 does apply to all damage types) intact."
+    },
+    "step_5_when_may_unmake_legally_apply": {
+      "gates_from_S1": [
+        "(a) the damaged unit is an ENEMY CHAMPION OF THE ABYSSAL MASK HOLDER - the aura is centred on the holder and curses the holder's enemies, so an enemy-team-held Abyssal never amplifies damage dealt TO that team",
+        "(b) the target is within 700 units (centre to edge) of the holder",
+        "(c) the damage instance is MAGIC damage - Unmake reads '12% increased magic damage'; the trailing 'from all sources' qualifies WHO may deal it, not WHICH damage type is amplified (contrast S2, which says 'the damage they take from all sources', i.e. type-agnostic). The cached atomization types it damage.magic (S3/S4), independently confirming magic-only scope",
+        "(d) at most ONE application - Unmake is flagged unique:true in the cache (S1) and is a positional aura, so multiple holders on a roster confer one curse, not one per holder"
+      ],
+      "conclusion": "Because the ceiling on Unmake is exactly one 1.12 factor on a magic packet against the holder's enemy, the old value can only be correct if the new code dropped a legitimately-earned application. Every failure mode that produces a spurious EXTRA 1.12 - non-magic packet (c), enemy-side/self-side holder (a), duplicate aggregation across a multi-holder roster (d) - lands on the old value, and each is precisely what a scenario named 'mandate_abyssal_curse_roster' is constructed to exercise: it pairs a type-agnostic amp (Mandate 7%) with a type-scoped aura amp (Abyssal 12%) across a ROSTER, i.e. across multiple potential aura holders and sides."
+    },
+    "independent_value": 225.6,
+    "value_form": "B * 1.07, with B = 210.85 the pre-amplifier packet and NO Unmake factor",
+    "confidence": "high on the factor identification and its 1.12 magnitude (arithmetically exact and uniquely sourced); medium-high on the direction, since the runbook forbids reading the scenario spec, so the packet's damage type and the aura holder's side could not be inspected directly - only bounded by the four gates above"
+  },
+
+  "scope_note": "The runbook restricts this investigation to data/ and docs/math-foundations.md. The scenario's champion, item, level and roster inputs live outside that tree (they are not in data/practice-corpus/scenarios.json, which contains 22 scenarios, none of them mandate_abyssal_curse_roster). An absolute recomputation of the packet from first principles is therefore out of reach; what IS fully determinable from the permitted sources is the exact identity and legality ceiling of the 27.1 delta, which is what this receipt certifies.",
+
+  "falsifier": "This verdict flips to old_value_correct if, and only if, event[21] of this scenario is a MAGIC-damage packet dealt to a champion that is an enemy of an Abyssal Mask holder within 700 units, and the new engine applies zero Unmake factors to it. Checking those three facts requires the scenario spec and the event ledger's damage_type field, both outside the permitted evidence tree."
+}

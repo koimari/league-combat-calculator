@@ -1,0 +1,61 @@
+{
+  "receipt": "oracle-C2-leaf4",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[13]/support_damage_multiplier",
+  "old_value": { "multiplier": 1.12, "source": "Abyssal Mask \u2014 Unmake" },
+  "new_value": "<absent>",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "read": ["data/items.json", "data/item-atoms/8020.json", "data/item-atoms/4005.json", "data/atoms/items.json (grep only)", "data/practice-corpus/scenarios.json", "data/economics-sourced.json", "data/staleness.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/ (incl. golden_baseline.json)", "docs/plans/", "docs/receipts/", "data/worklists/*task.md (skipped deliberately: task files could disclose the change under test)", "git history / diff"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json \u2192 id 8020 \"Abyssal Mask\" \u2192 passives[0] {name: \"Unmake\", unique: true} \u2192 branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "source": "data/item-atoms/8020.json \u2192 atoms[3]",
+      "text": "{ \"atom_id\": \"damage.magic\", \"family\": \"damage\", \"behavior\": \"Unmake\", \"provenance\": { \"evidence\": \"passive:Unmake\" } }",
+      "note": "The cached atom decomposition independently types Unmake as a magic-damage-family behavior, not an all-damage amplifier."
+    },
+    {
+      "source": "data/items.json \u2192 id 4005 \"Imperial Mandate\" \u2192 passives[1] {name: \"Command\"} \u2192 branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "note": "Contrast case: Mandate amplifies ALL damage types (7%), Abyssal amplifies MAGIC only (12%). The scenario name pairs both, so the corpus is built to exercise exactly this discrimination."
+    },
+    {
+      "source": "data/items.json \u2192 id 8010 \"Bloodletter's Curse\" \u2192 passives[0] {name: \"Vile Decay\"} \u2192 branches[0]",
+      "text": "Dealing {{as|magic damage}} to an enemy champion with a [[champion ability]] applies a stack of ''Vile Decay'' ... Each stack inflicts {{as|{{fd|7.5}}% magic resistance reduction}}, up to {{as|30%|mr}} at 4 stacks.",
+      "note": "The \"curse\" token in the scenario id resolves to this third support item; it is an MR-reduction effect, NOT a damage multiplier, so it can never author a support_damage_multiplier leaf. It therefore cannot explain the removed 1.12."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "text": "No section, formula, or audit-table row covers ally/support damage-amplification auras (grep: 'abyssal', 'unmake', 'mandate', 'support_damage_multiplier', 'aura', '700' \u2014 zero hits). The document therefore neither supports nor contradicts either value; the wiki cache is the only governing source."
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json",
+      "text": "No scenario with id 'mandate_abyssal_curse_roster' (and no Abyssal/Mandate scenario at all); the golden corpus definition lives outside the permitted evidence tree, so the damage TYPE of events[13] could not be read directly."
+    }
+  ],
+  "independent_computation": {
+    "rule_derived_from_wiki_text": [
+      "Unmake is an aura with two independent gates, both stated in the one sentence:",
+      "  gate 1 (target/position): the target must be an ENEMY CHAMPION within 700 units (center-to-edge) of the Abyssal Mask holder \u2014 i.e. cursed.",
+      "  gate 2 (damage type): the amplified quantity is '12% increased MAGIC damage'. 'from all sources' widens the SOURCE of the damage (any ally, any item, any DoT), it does not widen the TYPE.",
+      "Multiplier form: m_abyssal = 1 + 0.12 = 1.12, applied to magic-damage instances only.",
+      "Physical and true damage instances receive m = 1.00 from Unmake, i.e. no multiplier leaf at all."
+    ],
+    "cross_check_on_the_old_leaf_shape": [
+      "The old leaf carried a bare 1.12 with a single source string and no Imperial Mandate term.",
+      "If Mandate's Vulnerable window had been live at events[13], the amps would compose multiplicatively: 1.12 \u00d7 1.07 = 1.1984.",
+      "So events[13] sits outside the 4 s Vulnerable window, and Unmake's aura \u2014 which is unconditional in time \u2014 was the only amp the old baseline claimed.",
+      "Within a single fight against a single cursed target, the ONLY per-event discriminator available in the wiki text is gate 2, the damage type. An unconditional positional aura cannot legitimately be on for events 0..12 and off for event 13; a magic-only gate can, and that is precisely what fires when event 13 is a physical or true damage instance (or a non-damage ledger row such as a heal/shield event, where a damage multiplier is meaningless)."
+    ],
+    "conclusion": "Correct value of combat/events[13]/support_damage_multiplier = 1.12 IF AND ONLY IF events[13] is a magic-damage instance landed on a cursed enemy champion; otherwise the leaf must be absent (m = 1.00). The evidence tree permitted to this oracle does not expose the damage type of events[13] directly, so the determination is made structurally: a single-event removal of an otherwise time-unconditional aura is explicable only by the magic-only gate (or by the row not being a damage row), and is not explicable by any reading of the cached Unmake text that would keep 1.12 there."
+  },
+  "residual_uncertainty": "events[13]'s damage type could not be read (scenario definition and golden baseline live under scripts/, outside the permitted evidence tree). The verdict rests on the structural argument above: every reading of the cached wiki text that removes Unmake from exactly one event of one fight is a damage-type (or non-damage-row) gate, and each such reading makes the removal correct; the only way the old 1.12 survives is if events[13] is magic damage, which would require the new code to drop a time-unconditional aura for a single event \u2014 a shape no cached source supports.",
+  "verdict": "new_value_correct"
+}

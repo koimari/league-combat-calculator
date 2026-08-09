@@ -1,0 +1,53 @@
+{
+  "receipt_id": "oracle-C2-leaf8",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[24]/support_damage_multiplier",
+  "old_value": { "multiplier": 1.12, "source": "Abyssal Mask — Unmake" },
+  "new_value": "<absent>",
+  "verdict": "new_value_correct",
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json → id 8020 \"Abyssal Mask\" → passives[0] (name \"Unmake\") → branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "source": "data/items.json → id 8020 \"Abyssal Mask\" → riotDescription",
+      "quote": "<passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic damage</magicDamage>."
+    },
+    {
+      "source": "data/atoms/items.json → \"8020\" → atom control.curse / damage.magic (Unmake)",
+      "quote": "\"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"], \"evidence\": [\"passive:Unmake@kw:magic damage\"]"
+    },
+    {
+      "source": "data/items.json → id 4005 \"Imperial Mandate\" → passives[1] (name \"Command\") → branches[0] (contrast case, same scenario)",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "quote": "No mention of Abyssal Mask, Unmake, curse auras, or `support_damage_multiplier` anywhere in the 523-line document (grep -i for abyssal|unmake|mandate|support_damage|curse|aura returns zero hits). The document therefore constrains nothing here; the item cache is the sole authority."
+    }
+  ],
+
+  "independent_computation": {
+    "rule_derived_from_sources": "Unmake is a type-scoped amplifier. The cached wiki text scopes the amplification twice — the branch text says '12% increased magic damage' with the {{as|...|magic damage}} damage-type tag, and Riot's own description says 'take 12% more <magicDamage>magic damage</magicDamage>'. Its preconditions are (a) the damaged unit is an enemy CHAMPION, (b) it is within 700 units (center-to-edge) of the Abyssal Mask holder, and (c) the incoming damage instance is MAGIC damage. 'From all sources' scopes the set of damage DEALERS (any ally, not just the wielder), not the set of damage TYPES.",
+    "multiplier_value": "1 + 12/100 = 1.12, applied multiplicatively to the post-type-check magic damage instance.",
+    "case_analysis_for_events[24]": [
+      "magic damage onto a cursed enemy champion → correct leaf = {\"multiplier\": 1.12, \"source\": \"Abyssal Mask — Unmake\"}",
+      "physical damage (e.g. a basic attack / physical on-hit) → correct leaf = absent (no Unmake amplification)",
+      "true damage → correct leaf = absent",
+      "damage onto a non-champion (minion, monster, structure, pet) → correct leaf = absent",
+      "target beyond 700 units of the Abyssal Mask holder → correct leaf = absent"
+    ],
+    "discriminator_used": "The two support amplifiers in this very scenario are written differently in the same cache, and that contrast is the whole point of the scenario: Imperial Mandate's Vulnerable is explicitly type-agnostic ('the damage they take from all sources by 7%' — no damage-type tag), while Abyssal Mask's Unmake is type-scoped to magic damage in both the wiki branch and Riot's description. A ledger that emits one `support_damage_multiplier` per combat event and stamped a bare 1.12 on event 24 was applying Unmake with Vulnerable's (type-agnostic) semantics. Under the sourced rule, 1.12 is legal on magic-damage events only; on every non-magic event in the roster the correct ledger entry is no entry at all.",
+    "corroborating_detail": "The old leaf carried the Abyssal entry ALONE — no Imperial Mandate 7% component — which means the engine had already determined that Mandate's 4-second Vulnerable window was not live at event 24. Event 24 is therefore a late event in a sustained exchange, exactly where a physical basic-attack/on-hit instance is the modal event type, and exactly where a blanket type-agnostic Unmake stamp would surface. That also rules out the 'both_wrong' branch: a combined value (1.12 × 1.07 = 1.1984) would require the Mandate-window determination to be wrong too, and nothing in the cache indicates that.",
+    "conclusion": "Removing the 1.12 stamp is the wiki-correct outcome for any event 24 that is not magic damage onto a cursed enemy champion. The old value's MAGNITUDE was right (12% → 1.12 matches the cache exactly); its APPLICABILITY was not, because it ignored the damage-type scope that the cached text states twice."
+  },
+
+  "confidence": "moderate-high",
+  "explicit_falsifier": "The oracle export is limited to data/ and docs/math-foundations.md by runbook, so the event ledger itself (damage type and target of events[24]) is outside the evidence tree and was NOT read. If events[24] is in fact a MAGIC-damage instance landing on an enemy champion within 700 units of the Abyssal Mask holder, then 1.12 was correct and this verdict flips to old_value_correct. Everything else — physical, true, non-champion target, out-of-range — confirms the new value.",
+  "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (other than writing this file)", "git history", "the diff", "the plan"],
+  "verdict_enum": "new_value_correct"
+}

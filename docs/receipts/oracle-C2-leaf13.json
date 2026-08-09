@@ -1,0 +1,101 @@
+{
+  "receipt_id": "oracle-C2-leaf13",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/breakdown[0]/sources[4]/total_damage",
+  "old_value": 560.4,
+  "new_value": 500.3,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle13",
+    "read": ["data/items.json", "data/atoms/items.json", "data/item-atoms/8020.json", "data/item-atoms/4005.json", "data/champions.json (Amumu P only)", "data/practice-corpus/scenarios.json", "data/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "id": "abyssal-unmake",
+      "file": "data/items.json",
+      "locator": "item 8020 \"Abyssal Mask\" .passives[0] (\"Unmake\", unique) .branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "id": "abyssal-unmake-riot",
+      "file": "data/items.json",
+      "locator": "item 8020 .riotDescription",
+      "text": "<passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic damage</magicDamage>."
+    },
+    {
+      "id": "abyssal-atom",
+      "file": "data/atoms/items.json",
+      "locator": "\"8020\" -> atom_id control.curse / damage.magic, source \"Abyssal Mask.passives[0].branches[0]\"",
+      "text": "\"name\": \"Unmake\", \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"], \"evidence\": [\"passive:Unmake@kw:magic damage\"]"
+    },
+    {
+      "id": "mandate-command",
+      "file": "data/items.json",
+      "locator": "item 4005 \"Imperial Mandate\" .passives[1] (\"Command\", unique) .branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "id": "bloodletters-vile-decay",
+      "file": "data/items.json",
+      "locator": "item 8010 \"Bloodletter's Curse\" .passives[0] (\"Vile Decay\") .branches[0]",
+      "text": "Dealing {{as|magic damage}} to an enemy champion with a [[champion ability]] applies a stack of ''Vile Decay'' ... stacking up to 4 times ... Each stack inflicts {{as|7.5% magic resistance reduction}}, up to {{as|30%|mr}} at 4 stacks."
+    },
+    {
+      "id": "mitigation-identity",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1 \"The 100/(100+R) identity\"",
+      "text": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "roster-vocabulary",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.4",
+      "text": "the single-target fight prices one allocation across the roster (`statikk_chain_target_count`)"
+    }
+  ],
+  "independent_computation": {
+    "step_1_observed_ratio": {
+      "expression": "560.4 / 500.3",
+      "value": 1.1201279232460524,
+      "note": "The change is a pure multiplicative factor of 1.12 on this one source, not an additive shift."
+    },
+    "step_2_factor_identification": {
+      "candidates_tested": [
+        {"factor": 1.12, "name": "Abyssal Mask 'Unmake' curse (12% increased magic damage)", "old/factor": 500.3571, "new*factor": 560.336, "match": true},
+        {"factor": 1.07, "name": "Imperial Mandate 'Command' Vulnerable (7% all damage)", "old/factor": 523.7383, "match": false},
+        {"factor": 1.10, "name": "Amumu P 'Cursed Touch' (10% bonus true damage from pre-mitigation magic)", "old/factor": 509.4545, "match": false},
+        {"factor": 1.1984, "name": "1.07 x 1.12 (both amps, multiplicative)", "old/factor": 467.6235, "match": false},
+        {"factor": 1.19, "name": "additive 7% + 12%", "old/factor": 470.9244, "match": false}
+      ],
+      "conclusion": "1.12 is the only clean match, and it is exactly the Abyssal Mask Unmake number (12.0 percent, atom `control.curse`/`damage.magic` on item 8020)."
+    },
+    "step_3_rounding_consistency": {
+      "argument": "Both leaves are reported at 1 decimal place. If the underlying unrounded value is A, the exact-1.12 hypothesis requires A in [560.35, 560.45) (rounds to 560.4) AND A/1.12 in [500.25, 500.35) (rounds to 500.3), i.e. A in [560.35, 560.392) — a non-empty interval.",
+      "worked_example": "A = 560.36 -> rounds to 560.4; A / 1.12 = 500.3214 -> rounds to 500.3.",
+      "conclusion": "The delta is exactly ONE application of the 12% Unmake curse being removed from this source. Nothing else in the item set reproduces it."
+    },
+    "step_4_alternative_ruled_out": {
+      "hypothesis": "The delta comes from Bloodletter's Curse 'Vile Decay' magic-resist shred instead of the Abyssal amp.",
+      "test": "Damage ratio from a full 4-stack (30%) shred is (100+M)/(100+0.7M) via m(R)=100/(100+R). Setting that equal to 1.1201 gives M = 55.64 magic resist; the 3-stack (22.5%) branch needs M = 91.0 and the 2-stack (15%) branch needs M = 250.1.",
+      "conclusion": "Every Vile Decay branch requires an unmotivated, precisely-tuned target MR to land on 1.1201, while the Abyssal Mask branch requires no coincidence at all (12.0 is a literal cached constant). Vile Decay is rejected as the explanation."
+    },
+    "step_5_which_side_is_right": {
+      "rule_from_source": "Unmake is (a) magic-damage-only ('receive 12% increased MAGIC damage'), (b) a named debuff placed on ENEMY CHAMPIONS WITHIN 700 UNITS OF THE WEARER — i.e. it amplifies damage taken by the wearer's enemies, and it is one curse state on the target, not a per-holder stack (item 8020 passive is flagged \"unique\": true).",
+      "consequences": [
+        "A non-magic source row (physical basic attacks, physical/true ability damage) must NOT receive the 12% — only the Mandate 7% 'from all sources' may touch it.",
+        "Two roster members both carrying Abyssal Mask cannot multiply the curse; the target is cursed or not cursed.",
+        "An Abyssal Mask carried by a member of the ENEMY roster curses OUR champions, so it must not amplify the damage we deal TO that enemy."
+      ],
+      "verdict_logic": "The observed change removes exactly one application of the 12% curse from this source. Every reading of the cached wiki text that could produce a spurious extra application (magic-only amp leaking onto a non-magic source; a second holder multiplying a unique named curse; an enemy-held mask amplifying damage dealt to its own holder) makes the OLD 560.4 the over-count and the NEW 500.3 the corrected value. The only reading that would favour 560.4 is an ally-held mask legitimately amplifying a magic source — but that case would have been amplified in BOTH baselines for every magic source, and the source text grants the amp 'from all sources' unconditionally, so there is no rule in the cached data under which a genuinely-cursed magic source loses its 12%.",
+      "computed_correct_value": 500.3,
+      "identity": "total_damage(source[4]) = raw x m(R_effective) x (1 + 0.07 if Vulnerable) , with NO x1.12 Unmake factor on this source; the removed factor is exactly Abyssal Mask's 12.0 percent."
+    }
+  },
+  "confidence": "medium-high",
+  "confidence_note": "The multiplicative factor is identified with certainty (exactly Abyssal Mask's cached 12.0 percent, and no other item constant reproduces 1.1201 without an invented target-MR coincidence). The residual uncertainty is which damage source occupies index 4 of breakdown[0]: the scenario tuple lives outside the permitted evidence tree (scripts/, tests/), so the direction was decided from the item text's magic-only, single-curse, wearer-relative semantics rather than from the source row's own damage type.",
+  "committed": false
+}

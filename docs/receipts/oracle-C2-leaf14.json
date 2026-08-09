@@ -1,0 +1,133 @@
+{
+  "receipt": "oracle-C2-leaf14",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[11]/damage",
+  "old_value": 252.7,
+  "new_value": 225.6,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c2",
+    "read": [
+      "data/items.json",
+      "data/atoms/items.json",
+      "data/item-atoms/8020.json",
+      "data/wiki-atoms/damage.json",
+      "data/runes.json",
+      "data/practice-corpus/scenarios.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/ (other than writing this file)",
+      "git history / diff / plan"
+    ]
+  },
+
+  "independent_computation": {
+    "step_1_isolate_the_factor": {
+      "old_over_new": 1.1201241134751774,
+      "round_trip_checks": [
+        "225.6 x 1.12 = 252.672 -> 252.7 at one decimal place",
+        "252.7 / 1.12 = 225.625 -> 225.6 at one decimal place"
+      ],
+      "conclusion": "The entire diff is one multiplicative factor of exactly 1.12 (a 12% amplifier toggling off). It is not a resistance/penetration shift, not a scaling change, and not a hit-count change."
+    },
+
+    "step_2_identify_the_only_12_percent_source_in_the_cache": {
+      "method": "Scanned every passive/active branch text in data/items.json for damage-amplification language, and grepped data/runes.json for any '12%'.",
+      "items_with_amp_text_found": [
+        "Abyssal Mask - Unmake - 12% increased MAGIC damage (the only 12% amplifier in the corpus)",
+        "Imperial Mandate - Command - 7% increased damage from ALL sources (no damage-type gate)",
+        "Haunting Guise / Liandry's Torment - 2% per stack, max 6%",
+        "Riftmaker - 2% per stack, max 8%",
+        "Immortal Path - 4%",
+        "Lord Dominik's Regards / Perplexity / Diamond-Tipped Spear - ramped %, not 12% flat"
+      ],
+      "runes_json": "no '12%' amplifier present",
+      "conclusion": "The 1.12 that disappeared can only be Abyssal Mask's Unmake curse."
+    },
+
+    "step_3_read_the_gates_the_wiki_text_puts_on_that_factor": {
+      "abyssal_mask_unmake": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "gates": [
+        "DAMAGE-TYPE GATE: the amplified quantity is 'magic damage'. 'from all sources' qualifies the SOURCE of that magic damage (any champion, item or rune may deal it), not the damage type. Physical and true damage are outside the amplifier.",
+        "PROXIMITY GATE: only enemies within 700 units of the Abyssal Mask holder are cursed."
+      ],
+      "contrast_imperial_mandate_command": "Immobilizing an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7% -- no damage-type gate at all, so Mandate's 7% legitimately rides every damage type."
+    },
+
+    "step_4_composition_rule": {
+      "quoted_source": "data/wiki-atoms/damage.json, atom 'damage.modifier' (wiki_pages: Damage, True damage): 'Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction.'",
+      "implication": "Amplifiers compose multiplicatively, so an amplifier switching on/off scales the leaf by exactly its own factor -- which is precisely the clean 1.12 observed. Consistency check on the alternative (additive) composition: with the same underlying packet, additive 1 + 0.07 + 0.12 = 1.19 would give 210.84 x 1.19 = 250.9, which matches NEITHER 252.7 nor 225.6. Additive composition is therefore excluded, and 'both_wrong via composition error' is ruled out."
+    },
+
+    "step_5_reconstruct_both_readings": {
+      "implied_base_packet": "225.6 / 1.07 = 210.84 (post-mitigation packet carrying only Imperial Mandate's untyped 7% Vulnerable)",
+      "new_value_reconstruction": "210.84 x 1.07 = 225.6  -- Mandate's untyped 7% applies; Abyssal's magic-only 12% does not.",
+      "old_value_reconstruction": "210.84 x 1.07 x 1.12 = 252.67 -> 252.7  -- both amplifiers applied, i.e. Abyssal's magic-only curse riding a packet it is not entitled to.",
+      "note": "The 1.07 factor is present in BOTH values (it cancels in the ratio), so Imperial Mandate's Command amp is untouched by this diff; only Abyssal's factor moved."
+    },
+
+    "step_6_ruling_out_bloodletters_curse": {
+      "why_considered": "The scenario id reads as Mandate + Abyssal + Curse; data/items.json id 8010 is Bloodletter's Curse, whose 'Vile Decay' passive is a 7.5% magic-resistance reduction per stack, up to 30% at 4 stacks.",
+      "quoted_text": "Dealing {{as|magic damage}} to an enemy champion with a [[champion ability]] applies a stack of ''Vile Decay'' to them for 6 seconds, stacking up to 4 times ... Each stack inflicts {{as|{{fd|7.5}}% magic resistance reduction}}, up to {{as|30%|mr}} at 4 stacks.",
+      "why_rejected": "Vile Decay acts through the mitigation term m(R) = 100/(100+R) (docs/math-foundations.md Sec 2.1), not as a flat factor. Reproducing exactly 1.12 from a full 4-stack on/off flip requires (100+R)/(100+0.7R) = 1.12, i.e. a target MR of exactly 55.6 -- a coincidence, and a partial-stack flip cannot reach 1.12 at any realistic MR (4->3 stacks yields only ~1.02-1.04). Also, an MR term cannot change a physical/true packet at all. The literal 12% in Abyssal's text is by far the parsimonious explanation.",
+      "also_ruled_out": "A pure penetration/MR shift would need a coincidental (100+R_new)/(100+R_old) = 1.12; nothing in the cached items grants a resistance delta that lands there while leaving every other factor untouched."
+    },
+
+    "correct_value": 225.6,
+    "reasoning": "Abyssal Mask's Unmake is, by its own cached wiki text, a damage-type-gated amplifier: it multiplies MAGIC damage only, and only against enemies inside the 700-unit curse radius of the holder. Imperial Mandate's Command is the untyped amplifier in this scenario and is unaffected by the diff. The observed change is the removal of exactly one 1.12 factor from a single combat event, leaving the untyped 7% in place -- the exact signature of correctly confining Abyssal's magic-only curse to magic damage (equivalently, of confining it to a target actually inside the aura). Carrying that 12% onto a packet the item does not amplify is a silent overstatement of the same class the repo's item-value rules exist to prevent; 225.6 is the value the sources support."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json id 8020 -> passives[0] 'Unmake' branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "source": "data/items.json id 4005 -> passives[1] 'Command' branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "source": "data/items.json id 8010 -> passives[0] 'Vile Decay' branches[0]",
+      "text": "Dealing {{as|magic damage}} to an enemy champion with a [[champion ability]] applies a stack of ''Vile Decay'' to them for 6 seconds, stacking up to 4 times and up to once per basic attack or ability per {{tip|cast instance}} every {{fd|0.3}} seconds. Each stack inflicts {{as|{{fd|7.5}}% magic resistance reduction}}, up to {{as|30%|mr}} at 4 stacks."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json -> atom 'damage.modifier'",
+      "text": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json -> atom 'damage.magic'",
+      "text": "Damage type mitigated by magic resistance; dealt by most AP-scaling abilities and some item effects. Mitigation is a percentage: raw x 100/(100+MR); MR's effectiveness can be reduced by magic penetration."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json -> atom 'damage.physical'",
+      "text": "Damage type mitigated by armor; dealt by all unmodified basic attacks and many AD-scaling abilities/item effects."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json -> atom 'damage.on-damage'",
+      "text": "Effects triggered upon dealing (or receiving) damage, often keyed to the damage subtype: e.g. Blackfire Torch/Liandry's on any damage, Black Cleaver/Executioner's on physical damage, Hexdrinker/Morellonomicon on magic damage."
+    },
+    {
+      "source": "docs/math-foundations.md Sec 2.1",
+      "text": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py) ... post = raw . m(R)"
+    },
+    {
+      "source": "data/atoms/items.json -> id 8020",
+      "text": "atom 'damage.magic', behavior 'damage', source 'Abyssal Mask.passives[0].branches[0]', values [700.0, 12.0], units ['flat','percent'], evidence 'passive:Unmake@kw:magic damage'"
+    }
+  ],
+
+  "confidence": {
+    "level": "high on the mechanism, medium-high on the verdict",
+    "what_is_certain": "The diff is exactly one factor of 1.12; the only 1.12 amplifier anywhere in the cached item and rune corpus is Abyssal Mask's Unmake; that amplifier is explicitly restricted to magic damage and to targets inside a 700-unit radius; amplifiers compose multiplicatively so an on/off toggle produces exactly this ratio.",
+    "residual_uncertainty": "The oracle protocol forbids reading scripts/, so the scenario definition and the damage type of combat/events[11] could not be inspected directly. The verdict rests on the inference that a single event losing the 12% (while the untyped 7% survives in both values) is type-gating, not wholesale loss of the amplifier.",
+    "falsifier": "If combat/events[11] is a MAGIC damage instance against a target inside the Abyssal holder's 700-unit curse radius, then Abyssal's 12% legitimately applies and 252.7 would be the correct value instead. Checking the damage type of that one event settles it."
+  }
+}

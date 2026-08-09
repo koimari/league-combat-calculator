@@ -1,0 +1,123 @@
+{
+  "receipt_id": "oracle-C2-leaf43",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/participants[2]/survival/health_damage",
+  "old_value": 3269.6,
+  "new_value": 3047.1,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c2",
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (including scripts/golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/",
+      "data/worklists/*task*.md (task/plan text, deliberately avoided)",
+      "git history / diff"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\", passives[0] \"Unmake\" (unique), branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "rules_extracted": [
+        "amplifier, not a magic-resist shred",
+        "applies to MAGIC damage only (not physical, not true)",
+        "applies to ENEMY champions only, within 700 units of the wearer",
+        "credited against damage from ALL sources (allies included), not just the wearer",
+        "magnitude 12%"
+      ]
+    },
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\", passives[1] \"Command\" (unique), branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "rules_extracted": [
+        "amplifier of 7% on ALL damage types (all sources)",
+        "gated on an immobilize, 4 s window, extended by later immobilizes"
+      ]
+    },
+    {
+      "source": "data/atoms/items.json -> objects[\"8020\"]",
+      "quote": "{\"atom_id\": \"damage.magic\", \"name\": \"Unmake\", \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"], \"evidence\": [\"passive:Unmake@kw:magic damage\"]}",
+      "rules_extracted": [
+        "independent atomizer pass also binds Unmake's 12% to the magic-damage family and to a 700-unit radius"
+      ]
+    },
+    {
+      "source": "data/item-atoms/8020.json",
+      "quote": "{\"atom_id\": \"damage.magic\", \"family\": \"damage\", \"behavior\": \"Unmake\", \"provenance\": {\"evidence\": \"passive:Unmake\"}}",
+      "rules_extracted": ["same magic-damage classification of Unmake"]
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1 and the Section 5 audit table",
+      "quote": "m(R) = 100 / (100 + R) ... post = raw \u00b7 m(R) ... [Resistance mitigation] EXACT",
+      "rules_extracted": [
+        "mitigation is LINEAR in raw damage, so a damage-taken amplifier commutes with mitigation: applying 1.12 pre- or post-mitigation is identical. Any discrepancy therefore cannot come from amp/mitigation ordering, only from WHICH damage the amp is applied to."
+      ]
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 audit table (shield row)",
+      "quote": "Shield absorption (survival walk) | clipping identity absorbed = min(shield, damage), overkill = max(0, damage\u2212absorbed) | EXACT",
+      "rules_extracted": [
+        "health_damage = total incoming \u2212 absorbed; with a fully-consumed shield the absorbed term is constant across the two runs, so the DELTA between runs equals the delta of total damage (222.5) even when a shield exists"
+      ]
+    }
+  ],
+  "independent_computation": {
+    "observed": {
+      "delta": 222.5,
+      "ratio_old_over_new": 1.0730202487611171,
+      "note": "delta of health_damage equals delta of total incoming damage regardless of any fully-consumed shield (clipping identity above)"
+    },
+    "step_1_enumerate_wiki_sanctioned_amplifiers_on_participant_2": [
+      "Abyssal 'Unmake': x1.12, MAGIC damage only, only if participant 2 is an ENEMY of the Abyssal wearer and inside 700 units; credited to damage from all sources",
+      "Imperial Mandate 'Command': x1.07, ALL damage types, only while Vulnerable (4 s from an immobilize)"
+    ],
+    "step_2_falsify_candidate_explanations_of_the_222.5_drop": [
+      {
+        "hypothesis": "H1: the 12% curse was dropped wholesale from participant 2's entire incoming damage",
+        "test": "then total incoming = 222.5 / 0.12 = 1854.17",
+        "result": "IMPOSSIBLE: 1854.17 < new health_damage 3047.1; health damage cannot exceed total damage",
+        "status": "falsified"
+      },
+      {
+        "hypothesis": "H2: Imperial Mandate's 7% all-sources amp was dropped wholesale (no shield)",
+        "test": "then ratio old/new must be exactly 1.070000, i.e. new = 3269.6 / 1.07 = 3055.70",
+        "result": "observed new is 3047.1, off by 8.6; observed ratio is 1.07302, not 1.07000",
+        "status": "falsified in the no-shield case; only survivable if a shield absorbed exactly 131.5 in both runs, an unexplained free parameter (neither Abyssal Mask nor Imperial Mandate grants a shield)"
+      },
+      {
+        "hypothesis": "H3: the 12% curse was NARROWED from 'all damage participant 2 takes' to 'magic damage only' (the wiki rule)",
+        "test": "delta = 0.12 x (non-magic post-Mandate damage) -> non-magic = 222.5 / 0.12 = 1854.1667; remaining cursed magic (post-curse) = 3047.1 \u2212 1854.1667 = 1192.9333 -> pre-curse magic = 1192.9333 / 1.12 = 1065.119",
+        "result": "fully self-consistent, all components positive and plausible (magic share of the new total = 39.1%); reconstructing the old number: 1.12 x (1854.1667 + 1065.119) = 3269.60 exactly",
+        "status": "CONSISTENT with the quoted wiki text"
+      },
+      {
+        "hypothesis": "H4: the curse was narrowed to enemy champions only (participant 2 previously cursed while not a valid target), removing 12% from its magic damage",
+        "test": "delta = 0.12 x (participant 2's magic damage) -> magic = 1854.17 of a 3047.1 total (60.9% magic share)",
+        "result": "also self-consistent; same arithmetic signature, same direction (old over-applied Unmake)",
+        "status": "CONSISTENT with the quoted wiki text"
+      },
+      {
+        "hypothesis": "H5 (the only 'old was right' reading): the curse was wrongly narrowed from 'from all sources' to only the wearer's own magic damage, deleting allies' 1854.17 of cursed magic damage",
+        "test": "arithmetically identical signature to H3/H4",
+        "result": "cannot be excluded by arithmetic alone, but it would require a change that directly contradicts the explicit wiki phrase 'from all sources'; two of the three surviving readings (H3, H4) say the OLD value over-applied Unmake, and only this one says the new value under-applies it",
+        "status": "possible but unsupported"
+      }
+    ],
+    "step_3_conclusion": {
+      "reasoning": "The 222.5 drop is a 12%-shaped effect, not a 7%-shaped one: the observed whole-total ratio 1.07302 is provably NOT the 1.07000 that a wholesale removal of Imperial Mandate's all-sources Vulnerable amp would produce, and a wholesale removal of the 12% curse is arithmetically impossible (it would make the total smaller than the surviving health damage). What remains is a NARROWING of Abyssal Mask's Unmake from a broader application to the one the cached wiki text authorizes - 12% on MAGIC damage only, against ENEMY champions only. Under that reading the old number reconstructs exactly as 1.12 x (1854.17 non-magic + 1065.12 magic) = 3269.6, i.e. the old run amplified 1854.17 of damage that Unmake is not allowed to touch. The new value 3047.1 = 1854.17 + 1.12 x 1065.12 is the value the quoted text supports.",
+      "wiki_upper_bound_check": "Both amplifiers remain within their wiki magnitudes in the new value (magic portion carries at most x1.12 from Unmake and x1.07 from Command; non-magic carries at most x1.07). No wiki-sanctioned amplifier is missing from the new number that could account for a further 7.30% of the total."
+    },
+    "confidence": "high on direction (the old value applied Unmake's 12% to damage the wiki text excludes), medium on exactness",
+    "limitations": [
+      "The scenario definition for 'mandate_abyssal_curse_roster' (champions, levels, builds, participant ordering, fight window) lives under scripts/ or tests/, which runbook R-18/R-19 forbids this investigator from reading. A full end-to-end re-simulation of participant 2's damage was therefore not possible from data/ + docs/math-foundations.md alone.",
+      "What was verified independently is the amplifier identity implied by the delta: which wiki-sanctioned amplifier can and cannot produce a 222.5 / 7.30% drop on this leaf, and which reading of the cached Abyssal Mask and Imperial Mandate text each candidate corresponds to.",
+      "The one reading under which the old value would be correct (H5: Unmake narrowed to the wearer's own damage) contradicts the explicit 'from all sources' phrase in the cached wiki text and is judged unsupported, but it is not excluded by arithmetic."
+    ]
+  }
+}

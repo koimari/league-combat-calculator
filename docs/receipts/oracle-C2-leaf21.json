@@ -1,0 +1,62 @@
+{
+  "receipt_id": "oracle-C2-leaf21",
+  "runbook": "R-18 / R-19 independent oracle",
+  "generated_at": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[24]/pair_damage",
+  "old_value": 221.2,
+  "new_value": 197.5,
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_honored": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were not read."
+  },
+  "sources": [
+    {
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\", passives[0] \"Unmake\", branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "reading": "Multiplier 1.12. Scope is explicitly MAGIC damage. Beneficiary scope is 'from all sources' (any damage source, including allies of the bearer). Victim scope is 'enemy champions within 700 units of you' -- i.e. enemies of the Mask's bearer, never the bearer or its allies. The effect is a single unique aura; nothing in the text authorises more than one 12% factor on one damage instance."
+    },
+    {
+      "source": "data/atoms/items.json -> objects[\"8020\"]",
+      "quote": "{\"atom_id\": \"damage.magic\", \"behavior\": \"damage\", \"source\": \"Abyssal Mask.passives[0].branches[0]\", \"name\": \"Unmake\", \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"], \"evidence\": [\"passive:Unmake@kw:magic damage\"]}  and  {\"atom_id\": \"control.curse\", ... \"values\": [700.0, 12.0]}",
+      "reading": "The cached decomposition types Unmake's amplifier under damage.magic (700 unit radius, 12 percent) -- corroborating that the 12% is magic-typed, not a generic damage amp."
+    },
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\", passives[1] \"Command\", branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "reading": "Multiplier 1.07, untyped -- applies to every damage type. data/atoms/items.json objects[\"4005\"] carries no damage.* atom at all (only control.immobilize / stat.* / timing.cooldown), consistent with an untyped all-damage amp."
+    },
+    {
+      "source": "docs/math-foundations.md Sec. 2.1 and Sec. 5 audit table",
+      "quote": "m(R) = 100 / (100 + R)  (apply_resistance, resistance.py) ... Resistance mitigation ... EXACT",
+      "reading": "Mitigation is linear in raw damage for a fixed resistance (Sec. 1.2 item 1), so post-mitigation amplifiers are exact multiplicative factors on the pair-damage leaf; the amp question is purely which factors are licensed."
+    }
+  ],
+  "computation": {
+    "step_1_delta_is_exactly_the_curse_factor": {
+      "old_over_new": "221.2 / 197.5 = 1.1200000",
+      "check": "197.5 x 1.12 = 221.2 (exact to the leaf's 0.1 resolution)",
+      "conclusion": "The entire disagreement is exactly one Abyssal Mask 'Unmake' factor (1.12). Neither the base damage nor Imperial Mandate's 1.07 changed, and the composition is multiplicative, not additive (an additive 1 + 0.07 + 0.12 = 1.19 stack on the same base would give 219.65, not 221.2)."
+    },
+    "step_2_the_two_arithmetically_consistent_decompositions": {
+      "reading_A_new_carries_mandate_only": {
+        "base_post_mitigation": 184.5794,
+        "new": "184.5794 x 1.07 = 197.5   (Vulnerable only -- correct when the event's damage is NOT magic, or the target is not cursed)",
+        "old": "184.5794 x 1.07 x 1.12 = 221.2  (curse applied to a damage instance outside its stated magic scope)"
+      },
+      "reading_B_new_carries_mandate_plus_one_curse": {
+        "base_post_mitigation": 164.8031,
+        "new": "164.8031 x 1.07 x 1.12 = 197.5   (Vulnerable + exactly one authorised curse factor)",
+        "old": "164.8031 x 1.07 x 1.12 x 1.12 = 221.2  (curse counted twice -- e.g. two roster bearers of a unique aura, or an attacker-side and a target-side application of the same aura)"
+      },
+      "worked_numeric_illustration": "A magic/physical row of raw 240 against 30 post-penetration resistance mitigates to 240 x 100/130 = 184.615; x1.07 = 197.54 -> 197.5; a further x1.12 = 221.24 -> 221.2. Both leaf values are reproduced by the same base, so the leaf resolution does not discriminate; only the licensed factor count does."
+    },
+    "step_3_which_factor_count_the_sources_license": {
+      "argument": "The cached wiki text licenses AT MOST ONE 1.12 factor per damage instance, and only when (i) the instance is magic damage and (ii) the victim is an enemy champion of the Abyssal Mask's bearer. 197.5 is the wiki-consistent value under both readings above: under reading A it is the correct value because the curse may not touch a non-magic instance, and under reading B it is the correct value because it already carries the single authorised curse factor. 221.2 is wiki-consistent under only one narrow reading -- that the true base carries no curse at all and the recapture wrongly stripped a legitimate magic-damage curse. In two of the three possible states of the world the higher number is a surplus 1.12; in one it is correct.",
+      "corroborating_structural_note": "A scenario deliberately pairing Imperial Mandate (untyped 7% Vulnerable) with Abyssal Mask (magic-only 12% curse) over a roster is exactly the fixture that pins amp SCOPE. A change that leaves the 7% intact and removes exactly one 12% from a subset of events is the signature of enforcing the magic-only / bearer's-enemies-only scope; a scope widening would raise leaves, not lower them.",
+      "limitation_stated_honestly": "The exported evidence tree (data/ + docs/math-foundations.md) does not contain the scenario roster or the event ledger, so the damage TYPE of combat/events[24] and the identity of the Abyssal Mask bearer cannot be read directly -- data/practice-corpus/scenarios.json holds no mandate/abyssal scenario and data/wiki/ holds only the article index, not article bodies. The verdict is therefore reached from the licensed-factor-count argument above, not from a direct re-simulation of event 24. Confidence: moderate-high, not certain."
+    }
+  },
+  "independent_value": 197.5,
+  "verdict": "new_value_correct"
+}

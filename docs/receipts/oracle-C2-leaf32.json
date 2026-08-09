@@ -1,0 +1,91 @@
+{
+  "receipt_id": "oracle-C2-leaf32",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[13]/damage",
+  "old_value": 186.8,
+  "new_value": 166.8,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c2",
+    "read": [
+      "data/items.json (ids 4005, 8020, plus a full sweep of every item passive/active branch mentioning a damage-taken / damage-increase percentage)",
+      "data/item-atoms/4005.json",
+      "data/item-atoms/8020.json",
+      "data/practice-corpus/scenarios.json (22 scenarios; does NOT contain this scenario)",
+      "data/wiki/article-index.json + data/wiki/README.md (index only, no wikitext bodies cached)",
+      "docs/math-foundations.md (Sec. 2 resistance/penetration, Sec. 5 formula-audit table)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/items.json -> \"8020\" (Abyssal Mask) -> passives[0] (name \"Unmake\", \"unique\": true) -> branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "id": "S2",
+      "where": "data/items.json -> \"8020\" -> riotDescription (game-client text)",
+      "text": "<passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic damage</magicDamage>."
+    },
+    {
+      "id": "S3",
+      "where": "data/items.json -> \"4005\" (Imperial Mandate) -> passives[1] (name \"Command\", \"unique\": true) -> branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "id": "S4",
+      "where": "data/item-atoms/8020.json -> atoms[3]",
+      "text": "{ \"atom_id\": \"damage.magic\", \"family\": \"damage\", \"behavior\": \"Unmake\", \"provenance\": { \"wiki\": [\"Abyssal Mask\"], \"evidence\": \"passive:Unmake\" } }  -- the decomposed atom types Unmake as magic-damage-only, matching S1/S2."
+    },
+    {
+      "id": "S5",
+      "where": "data/items.json, exhaustive sweep of all non-removed items' passive/active branches for percentage damage-taken / damage-increase effects",
+      "text": "The only 12% amplifier in the cached corpus is Abyssal Mask's Unmake. Neighbours are: Imperial Mandate 7% (all sources), Bloodsong 'Expose Weakness' 8%/5% (all sources), Horizon Focus 'Hypershot' 10% (holder's own damage), Haunting Guise / Liandry's Torment 6%, Riftmaker 8%, Lord Dominik's 0-15%, Perplexity 0-15%. No other cached effect can contribute a factor of exactly 1.12."
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md Sec. 5, Grievous Wounds row",
+      "text": "\"multiplicative factor 0.60 (40% reduction); strongest-wins composition via `min` of factors ... sources do not stack (min is the game rule)\" -- the document's only statement about composing same-named modifiers from multiple sources: same-effect modifiers are resolved once, not compounded per source. (Note: math-foundations.md contains NO row for damage amplification, so it constrains only the composition convention, not the amp value.)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_factor": {
+      "observed_ratio": "186.8 / 166.8 = 1.1199041",
+      "round_trip_check": [
+        "166.8 x 1.12 = 186.816  -> 186.8 at the golden's 1-decimal precision (match)",
+        "186.8 / 1.12 = 166.7857 -> 166.8 at 1 decimal (match)"
+      ],
+      "rejected_alternatives": [
+        "Imperial Mandate 7% alone: 186.8 / 1.07 = 174.58 != 166.8",
+        "Additive composition of both amps (1 + 0.07 + 0.12 = 1.19): 186.8 / 1.19 = 156.97 != 166.8",
+        "Both amps multiplicative (1.07 x 1.12 = 1.1984): 186.8 / 1.1984 = 155.87 != 166.8",
+        "A flat 20-damage component: the delta is exactly 20.0, but no cached effect on either item deals flat damage (Imperial Mandate's only numbers are 60 AP / 15 AH / 150% base mana regen / 20 AH conditional / 7% Vulnerable; Abyssal Mask's are 350 HP / 45 MR / 15 AH / 12% curse). The 20.0 is a coincidence of the 1.12 factor at this magnitude."
+      ],
+      "conclusion": "The diff is exactly ONE application of Abyssal Mask's Unmake curse factor, 1.12 (S1, S2, S5). The old leaf carried one more curse multiplication than the new leaf. Consistent decompositions: base 155.888 x 1.07(Mandate) -> 166.8, x1.12 -> 186.8; or base 139.186 x 1.07 x 1.12 -> 166.8, x1.12 again -> 186.8."
+    },
+    "step_2_what_the_sources_permit": {
+      "rule_a_magic_only": "S1/S2/S4: Unmake amplifies MAGIC damage only ('receive 12% increased magic damage', atom family damage.magic). A physical or true-damage event must take 1.00 from Unmake, while Imperial Mandate's Vulnerable (S3) is the only all-source amp of the pair. Riot's own text repeats 'take 12% more magic damage'.",
+      "rule_b_single_application": "S1: 'Enemy champions ... become cursed' -- the curse is a status ON THE TARGET, and the passive is flagged \"unique\": true in data/items.json. One cursed target = one 1.12 factor, however many nearby champions carry the item. S6 records the corpus convention that same-effect sources resolve once rather than compounding.",
+      "rule_c_holder_relative_range": "S1: the cursed set is 'enemy champions within 700 units OF YOU' -- of the Abyssal Mask holder. In a roster fight this is directional: a mask carried by the target's own side curses the OTHER team, so it cannot amplify damage dealt TO that target; and a target outside the 700-unit band is not cursed at all.",
+      "ceiling": "Under rules a-c, the maximum contribution of Abyssal Mask to any single damage event is one factor of 1.12, and it is 1.00 whenever the event is non-magic, the target is uncursed, or the mask sits on the target's own team."
+    },
+    "step_3_verdict_reasoning": {
+      "argument": "The corrected leaf must satisfy the ceiling in step 2. The old value exceeds the new by exactly one full 1.12 curse factor, i.e. the old leaf multiplied by Unmake one time more than the new one. In a scenario whose own name ('mandate_abyssal_curse_roster') is a multi-champion roster carrying both amps, every over-application mode the sources forbid -- two roster members' masks compounding (rule b), a mask on the wrong side of the roster or out of the 700-unit band (rule c), or the curse leaking onto a physical/true event while only Mandate's all-source 7% should apply (rule a) -- produces exactly the surplus 1.12 that the new value removes. No rule in the cached text produces a SECOND curse multiplication, so 186.8 cannot be reached from 166.8 by any sourced mechanic; the reverse direction is reachable and is what the correction did.",
+      "chosen": "new_value_correct (166.8)"
+    },
+    "residual_uncertainty": {
+      "note": "The scenario input tuple (roster composition, which side holds Abyssal Mask, distances, and the damage TYPE of combat/events[13]) is defined outside the permitted evidence tree -- it is not in data/ (checked: data/practice-corpus/scenarios.json holds 22 unrelated scenarios) and lives in scripts/tests, which this runbook forbids reading. So the leaf's damage type could not be confirmed directly from data/.",
+      "flip_condition": "The verdict would flip to old_value_correct only if events[13] is MAGIC damage dealt to a target that is genuinely cursed by exactly one ALLY-held Abyssal Mask within 700 units, and the change dropped that legitimate amp. That is the single reading in which 186.8 respects the step-2 ceiling; it requires the correction to be a regression rather than a fix, whereas all three sourced over-application modes explain the observed surplus directly.",
+      "confidence": "high on the magnitude (the delta is provably one Unmake factor, 1.12, and nothing else in the cached corpus yields 1.12); moderate-to-high on the direction (rests on the roster/magic-only rules above rather than on the unreadable scenario tuple)."
+    }
+  },
+
+  "committed": false
+}

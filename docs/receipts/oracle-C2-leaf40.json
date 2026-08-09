@@ -1,0 +1,118 @@
+{
+  "receipt_id": "oracle-C2-leaf40",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/breakdown[2]/incoming_damage",
+  "old_value": 3269.6,
+  "new_value": 3047.1,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle40",
+    "read": [
+      "data/items.json (4005 Imperial Mandate, 8020 Abyssal Mask)",
+      "data/item-atoms/4005.json, data/item-atoms/8020.json",
+      "data/atoms/items.json (8020 atom control.curse / damage.magic)",
+      "data/wiki-atoms/damage.json (damage.modifier, damage.true, damage.resistance-mitigation)",
+      "data/practice-corpus/scenarios.json (no matching scenario)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> 8020 Abyssal Mask -> passives[0] 'Unmake' -> branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "reading": "The +12% is TYPE-SELECTIVE: it amplifies magic damage only. 'from all sources' qualifies the sources of the magic damage, not the damage types amplified. It applies only to ENEMY champions of the wearer, within 700 units."
+    },
+    {
+      "source": "data/items.json -> 4005 Imperial Mandate -> passives[1] 'Command' -> branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "reading": "The +7% is TYPE-AGNOSTIC: it amplifies physical, magic and true damage alike."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json -> atom 'damage.modifier' (Damage modifier (amplification/reduction)), wiki_pages: Damage, True damage",
+      "quote": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction.",
+      "reading": "Vulnerable and Curse compose multiplicatively, and multiplicatively on top of 100/(100+R) mitigation."
+    },
+    {
+      "source": "data/wiki-atoms/damage.json -> atom 'damage.true'",
+      "quote": "Damage type not reduced by resistances or almost all damage-reduction effects; ... is affected by most damage amplifiers (except jungle-item/Smite/Ignite true damage).",
+      "reading": "True damage is inside the Vulnerable 7% but outside any magic-typed amp."
+    },
+    {
+      "source": "data/atoms/items.json -> \"8020\" atoms",
+      "quote": "{\"atom_id\": \"control.curse\", ... \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"]}, {\"atom_id\": \"damage.magic\", ... \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"]}",
+      "reading": "The atomizer classifies Unmake's 12% under the damage.magic family, independently confirming the magic-only restriction."
+    },
+    {
+      "source": "docs/math-foundations.md §2.1 / formula-audit table",
+      "quote": "m(R) = 100 / (100 + R)  (apply_resistance, resistance.py) ... post = raw * m(R)",
+      "reading": "Amplifiers act on the post-mitigation stream; the identity is linear in raw damage, so the amp/mitigation order does not change the totals below."
+    }
+  ],
+  "governing_formula": {
+    "statement": "For a champion that is both Vulnerable (Imperial Mandate) and Cursed (Abyssal Mask), with post-mitigation incoming damage split into a non-magic part P (physical + true) and a magic part M:",
+    "correct": "incoming = 1.07 * P + 1.07 * 1.12 * M = 1.07*P + 1.1984*M",
+    "wrong_blanket": "incoming = 1.07 * 1.12 * (P + M) = 1.1984*(P+M)   <-- applies the magic-only Curse to physical/true damage as well"
+  },
+  "independent_computation": {
+    "observed_ratio": {
+      "old_over_new": 1.0730202487611171,
+      "note": "3269.6 / 3047.1"
+    },
+    "step_1_rule_out_uniform_changes": {
+      "method": "Any change that adds/removes a multiplier over the participant's WHOLE incoming stream produces a ratio equal to that multiplier exactly.",
+      "candidates": {
+        "Vulnerable 7% only": 1.07,
+        "Curse 12% only": 1.12,
+        "both, multiplicative": 1.1984,
+        "both, additive bucket 1+0.07+0.12": 1.19,
+        "multiplicative vs additive composition (1.1984/1.19)": 1.00706,
+        "additive bucket vs Vulnerable alone (1.19/1.07)": 1.11215,
+        "Curse counted twice (1.12^2)": 1.2544
+      },
+      "result": "1.07302 matches NONE of them. The change is therefore PARTIAL / type-selective: a 12%-class amplifier was withdrawn from part of the damage stream, not from all of it. In particular the change is far too large (6.8%) to be an additive-vs-multiplicative composition question, whose maximum possible effect here is 0.0084*M <= 0.70% of the total."
+    },
+    "step_2_the_only_type_restriction_in_this_scenario": "Of the two effects named by the scenario, exactly one is type-restricted by the wiki text: Abyssal Mask's Curse (magic damage only). Imperial Mandate's Vulnerable is 'all sources'. So the unique wiki-sanctioned partial-12% withdrawal is 'stop applying the Curse to non-magic damage'.",
+    "step_3_solve_for_the_damage_split": {
+      "equations": [
+        "old = 1.1984 * (P + M)            [Curse applied blanket]",
+        "new = 1.07 * P + 1.1984 * M       [Curse restricted to magic]"
+      ],
+      "solution": {
+        "P_non_magic_post_mitigation": 1732.87,
+        "M_magic_post_mitigation": 995.44,
+        "P_plus_M": 2728.3,
+        "magic_share_of_incoming": 0.3649
+      },
+      "verification": {
+        "old_recomputed": 3269.6,
+        "new_recomputed": 3047.1,
+        "residual": 0.0
+      },
+      "interpretation": "The two golden values are exactly the blanket-12% and the magic-only-12% evaluations of the same underlying fight (36.5% of this participant's post-mitigation incoming damage is magic). The wiki text permits only the second."
+    },
+    "step_4_cross_checks": [
+      "Removing the Vulnerable 7% uniformly would give 3269.6/1.07 = 3055.70, not 3047.1 -- excluded.",
+      "Excluding true damage from the Vulnerable 7% requires a true-damage share t with 1.07/(1.07-0.07t) = 1.07302, i.e. t = 1.04 > 1 -- arithmetically impossible, excluded.",
+      "Curse double-counted (1.12^2 on magic) would need the ratio to be 1 + 0.1344*m/(1+0.12m); it is solvable (m=0.58) but requires the Curse to have been applied twice from a single unique passive, which data/items.json marks \"unique\": true -- and it still lands on 'old overstated, new correct'.",
+      "An additive amp bucket 1.19 applied blanket in the old value also solves (m=0.30) -- again 'old overstated, new correct'."
+    ]
+  },
+  "competing_hypothesis_considered": {
+    "model": "old = 1.07*P + 1.1984*M (already correct) and new = 1.07*(P+M) (Curse dropped entirely), which solves with P = 1114.89, M = 1732.87 (magic share 60.9%).",
+    "why_rejected": [
+      "It requires a Curse-specific regression that keeps the Mandate amp on the same participant. The only wiki-legal reason to drop the Curse entirely from a participant is that it is NOT an enemy of the Abyssal Mask holder, or is outside 700 units -- and in that case dropping it is CORRECT, which again makes the new value right.",
+      "Both items are same-team auras (Mandate's Vulnerable is also enemy-only). A team/range correction would have withdrawn BOTH amps from a wrongly-affected participant, giving a ratio of 1.1984, not 1.07302. The observed change withdraws a 12%-class amp while a 7%-class amp survives -- the signature of a damage-TYPE split, not a target-eligibility change.",
+      "A scenario named for the Curse whose baseline shows zero Curse contribution on this participant would be self-defeating as a regression pin."
+    ]
+  },
+  "limits_of_this_oracle": [
+    "The scenario definition (roster, builds, levels, fight window) lives under scripts/, which runbook R-18/R-19 forbids this investigator from reading. The absolute value therefore cannot be re-derived from champion/item first principles inside the permitted export; data/practice-corpus/scenarios.json contains no matching scenario.",
+    "What IS derivable, and what this receipt establishes, is the governing rule and the shape of the delta: the change is exactly a partial withdrawal of a 12% amplifier, the magnitude of which pins the participant's magic share at 36.5%. Every wiki-legal reconstruction of the delta puts the old value at or above the correct one and the new value at the correct one.",
+    "Resolution floor: the two values cannot distinguish multiplicative (1.07*1.12 = 1.1984) from additive (1.19) composition of the two amps on the magic part. If the engine composes additively, the fully correct value would be ~8-9 higher than 3047.1 (0.84% of the magic share). The wiki (data/wiki-atoms/damage.json 'damage.modifier') requires multiplicative composition; the new value is consistent with it, so this is flagged as a follow-up check on the composition code, not a defect in the number."
+  ],
+  "conclusion": "Abyssal Mask's Unmake amplifies MAGIC damage only (12%), multiplicatively with Imperial Mandate's type-agnostic Vulnerable (7%). The old baseline 3269.6 equals 1.1984 x (P+M): the magic-only Curse applied blanket to the participant's physical/true damage as well. The new baseline 3047.1 equals 1.07 x P + 1.1984 x M with P = 1732.87 and M = 995.44 -- the wiki-correct composition."
+}

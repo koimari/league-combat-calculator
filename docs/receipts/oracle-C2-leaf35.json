@@ -1,0 +1,166 @@
+{
+  "receipt_id": "oracle-C2-leaf35",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[14]/pair_damage",
+  "old_value": 186.8,
+  "new_value": 166.8,
+  "verdict": "new_value_correct",
+  "confidence": "medium-high",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/items.json",
+      "data/item-atoms/8020.json",
+      "data/item-atoms/4005.json",
+      "data/atoms/items.json",
+      "data/wiki-atoms/damage.json",
+      "data/champions.json",
+      "data/practice-corpus/scenarios.json",
+      "docs/math-foundations.md"
+    ],
+    "scope_not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (incl. golden_snapshot.py and golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/ (other receipts)",
+      "git history / diff / plan"
+    ]
+  },
+  "scenario_reconstruction": {
+    "method": "The scenario name resolves to three cached items plus a multi-participant roster.",
+    "items": [
+      {
+        "id": 4005,
+        "name": "Imperial Mandate",
+        "relevant_effect": "Command",
+        "quoted_wiki_text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%.",
+        "amp_scope": "ALL damage types (7%)"
+      },
+      {
+        "id": 8020,
+        "name": "Abyssal Mask",
+        "relevant_effect": "Unmake",
+        "quoted_wiki_text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+        "amp_scope": "MAGIC damage only (12%), applied to enemies OF THE WEARER"
+      },
+      {
+        "id": 8010,
+        "name": "Bloodletter's Curse",
+        "relevant_effect": "Vile Decay",
+        "quoted_wiki_text": "Dealing {{as|magic damage}} to an enemy champion with a [[champion ability]] applies a stack of ''Vile Decay'' to them for 6 seconds, stacking up to 4 times and up to once per basic attack or ability per {{tip|cast instance}} every {{fd|0.3}} seconds. Each stack inflicts {{as|{{fd|7.5}}% magic resistance reduction}}, up to {{as|30%|mr}} at 4 stacks.",
+        "amp_scope": "magic resistance REDUCTION (percentage), not an amp"
+      }
+    ],
+    "note": "The scenario's per-item spec (champion, level, ranks, roster membership) lives in scripts/, which is out of bounds for this oracle. The absolute pre-amp base could therefore NOT be reconstructed; the analysis below is an exact identification of the CHANGED FACTOR plus a rules test on that factor."
+  },
+  "independent_computation": {
+    "step_1_exact_delta": {
+      "old/new": 1.119904076738609,
+      "old-new": 20.0,
+      "round(new*1.12,1)": 186.8,
+      "round(old/1.12,1)": 166.8,
+      "conclusion": "The two values differ by exactly one multiplicative factor of 1.12 (consistent in both rounding directions at 1 dp). 166.8 * 1.12 = 186.816 -> 186.8; 186.8 / 1.12 = 166.786 -> 166.8."
+    },
+    "step_2_which_effect_is_1.12": {
+      "candidates_tested": [
+        {
+          "hypothesis": "Abyssal Mask 'Unmake' 12% increased magic damage",
+          "predicted_ratio": 1.12,
+          "matches": true
+        },
+        {
+          "hypothesis": "Imperial Mandate 'Vulnerable' 7%",
+          "predicted_ratio": 1.07,
+          "matches": false
+        },
+        {
+          "hypothesis": "Amumu P 'Cursed Touch' 10% bonus true damage from incoming pre-mitigation magic ('Cursed targets receive 10% bonus true damage from all incoming pre-mitigation magic damage.')",
+          "predicted_ratio": 1.10,
+          "matches": false
+        },
+        {
+          "hypothesis": "Bloodletter's Curse Vile Decay stack change, 3 -> 4 stacks (22.5% -> 30% MR reduction)",
+          "predicted_ratio": "max 1.107 as MR -> infinity; 1.04-1.07 at realistic level-18 MR",
+          "matches": false,
+          "note": "Mathematically cannot reach 1.12 for any finite MR."
+        },
+        {
+          "hypothesis": "Bloodletter's Curse full 0 -> 4 stacks (30% MR reduction)",
+          "predicted_ratio": "requires total target MR = 55.49 exactly",
+          "matches": false,
+          "note": "Level-18 MR = base + growth*17 (the growth multiplier 0.7025 + 0.0175*17 = 1.000 at L18). Scanned all 173 champions in data/champions.json: nearest values are 54.10 (Aurora/Cassiopeia/Ryze/Veigar -> old would be 186.4) and 56.35 (Thresh -> 187.0). Neither yields 186.8, and any MR item on the target pushes the ratio further away."
+        },
+        {
+          "hypothesis": "amp composition changed additive (1+0.07+0.12) -> multiplicative (1.07*1.12)",
+          "predicted_ratio": 1.00706,
+          "matches": false
+        }
+      ],
+      "conclusion": "The removed factor is uniquely Abyssal Mask 'Unmake' (12% increased MAGIC damage). Implied pre-Unmake value is self-consistent: 186.8/(1.07*1.12) = 155.874 vs 166.8/1.07 = 155.888, i.e. the engine composes percent modifiers multiplicatively, which is what the cached wiki rule requires."
+    },
+    "step_3_composition_rule_check": {
+      "quoted_source": "data/wiki-atoms/damage.json, atom damage.modifier: 'Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction.'",
+      "result": "Multiplicative composition confirmed; the observed 1.12 factor is a clean single-modifier removal, not a re-ordering artifact."
+    },
+    "step_4_rules_test_on_the_removed_factor": {
+      "rule": "Unmake amplifies MAGIC damage only, and it curses ENEMY CHAMPIONS OF THE WEARER ('Enemy champions within 700 units of YOU become cursed'). It therefore must NOT apply to (a) physical or true damage instances, (b) damage dealt to a unit on the wearer's own side, (c) damage dealt to the wearer, or (d) be counted twice when more than one roster participant carries the aura.",
+      "contrast_rule": "Imperial Mandate's Vulnerable is explicitly 'damage they take from all sources' and is NOT type-restricted, so a 7% factor legitimately survives on non-magic events. The scenario deliberately pairs a type-restricted amp (Abyssal 12% magic) with an unrestricted amp (Mandate 7% all) and a resistance shred (Vile Decay) over a roster - i.e. its purpose is exactly damage-type / team-scope discrimination.",
+      "conclusion": "A single event losing exactly and only the magic-only factor, while the rest of the event's value is unchanged, is the signature of an over-application being withdrawn (magic-only amp leaking onto a non-magic instance, onto a wrong-side target, or double-counted across roster holders). Every mechanism that fits the observed 12%-only delta is a mechanism in which the pre-change value over-stated the damage."
+    }
+  },
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "item 8020 -> passives[0] 'Unmake' -> branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 8020 -> riotDescription",
+      "text": "Unmake: Nearby enemy champions take 12% more magic damage."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 4005 -> passives[1] 'Command' -> branches[0]",
+      "text": "Immobilizing an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item 8010 'Bloodletter's Curse' -> passives[0] 'Vile Decay' -> branches[0]",
+      "text": "Each stack inflicts 7.5% magic resistance reduction, up to 30% at 4 stacks."
+    },
+    {
+      "file": "data/atoms/items.json",
+      "locator": "8020 -> atom damage.magic / control.curse",
+      "text": "values [700.0, 12.0], units ['flat','percent'], evidence 'passive:Unmake@kw:magic damage' - the cached atomization also types Unmake as magic-only."
+    },
+    {
+      "file": "data/wiki-atoms/damage.json",
+      "locator": "atom damage.modifier",
+      "text": "percent modifiers stack multiplicatively with each other and with resistance-based reduction."
+    },
+    {
+      "file": "data/wiki-atoms/damage.json",
+      "locator": "atom damage.true",
+      "text": "Damage type not reduced by resistances or almost all damage-reduction effects ... is affected by most damage amplifiers."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Amumu -> abilities.P 'Cursed Touch' -> effects[1]",
+      "text": "Cursed targets receive 10% bonus true damage from all incoming pre-mitigation magic damage."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1 / Section 2.2 / Section 5 audit table",
+      "text": "m(R) = 100/(100+R); reduce_resistance(R, r_flat, r_pct): R <- R - r_flat; R <- R*(1 - r_pct/100); mitigation is linear in raw damage for fixed R, so a single percent amp appears as an exact multiplicative factor on the post-mitigation event value."
+    }
+  ],
+  "limitations": [
+    "The scenario definition (attacker champion, level, ability ranks, which roster slot holds which item, and what event index 14 is) lives in scripts/, which this oracle is forbidden to read. The absolute value could therefore not be rebuilt from first principles; what was rebuilt exactly is the identity of the single factor that changed.",
+    "Because the changed factor is exactly Abyssal Mask's magic-only 12% amp and nothing else about the event moved, the verdict rests on the sourced type/side restriction of Unmake rather than on a full end-to-end recomputation. If event 14 were in fact a magic-damage instance dealt BY the attacker's side against a target cursed by an attacker-side Abyssal Mask, the old value would be the correct one; no reading of the cached item text supports applying Unmake to a non-magic instance, to a wrong-side target, or twice."
+  ],
+  "committed": false
+}

@@ -1,0 +1,95 @@
+{
+  "receipt_id": "oracle-C2-leaf22",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/events[8]/damage",
+  "old_value": 221.2,
+  "new_value": 197.5,
+  "verdict": "new_value_correct",
+
+  "sources": [
+    {
+      "id": "S1",
+      "source": "data/items.json -> item 8020 \"Abyssal Mask\" -> passives[0] (\"Unmake\", unique) -> branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "reading": "A +12% amplifier that is TYPED: it applies to magic damage only. Its scope over sources is unrestricted (\"from all sources\"), i.e. ally-held Abyssal Mask amplifies a teammate's magic damage against the cursed target."
+    },
+    {
+      "id": "S2",
+      "source": "data/items.json -> item 4005 \"Imperial Mandate\" -> passives[1] (\"Command\", unique) -> branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "reading": "A +7% amplifier that is UNTYPED (all damage types) and, like Unmake, unrestricted over damage sources (ally-applied). This is the only other amplifier the scenario name puts in play."
+    },
+    {
+      "id": "S3",
+      "source": "data/item-atoms/8020.json",
+      "quote": "{\"atom_id\": \"damage.magic\", \"family\": \"damage\", \"behavior\": \"Unmake\", \"provenance\": {\"wiki\": [\"Abyssal Mask\"], \"evidence\": \"passive:Unmake\"}}",
+      "reading": "The decomposed atom for Unmake is classified under the magic-damage family, independently corroborating S1's typing."
+    },
+    {
+      "id": "S4",
+      "source": "data/staleness.json (items) + data/.items.json.meta",
+      "quote": "\"4005\": {\"name\": \"Imperial Mandate\", \"stale\": false, ...}, \"8020\": {\"name\": \"Abyssal Mask\", \"stale\": false, ...}",
+      "reading": "Both item caches are current for the pinned patch, so the 7% / 12% magnitudes quoted above are the live values, not stale text."
+    },
+    {
+      "id": "S5",
+      "source": "docs/math-foundations.md Section 2.1 / Section 5 formula-audit table (Resistance mitigation row)",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)",
+      "reading": "Used below to reconstruct the pre-amplifier mitigated base of the event."
+    },
+    {
+      "id": "S6",
+      "source": "data/worklists/e8d-task.md line 30 (definition of the \"roster\" fight shape)",
+      "quote": "assert in a /api/calculate fight WITH AN ALLY in the roster (enemies + allies lists are supported) that the ally's ledger receives the heal/shield",
+      "reading": "\"roster\" in a scenario name means the fight carries allies (and enemies) alongside the main participant. Imperial Mandate (enchanter support item) and Abyssal Mask (tank support item) are both ally-held in such a scenario; neither is a carry item. This matters for the discriminating argument below."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_isolate_the_delta": {
+      "old_over_new": 1.12,
+      "arithmetic": "221.2 / 197.5 = 1.1200000 ; 197.5 x 1.12 = 221.2 exactly",
+      "conclusion": "The two golden values differ by exactly one factor of 1.12 -- numerically identical to Abyssal Mask's Unmake amplifier (S1). No other quantity in the scenario's named mechanics equals 1.12: Imperial Mandate's Vulnerable is 1.07 (197.5 x 1.07 = 211.3, not 221.2), and additive composition of the two amps would be 1.19 (184.6 x 1.19 = 219.7, matching neither value). The change is therefore exactly 'the Unmake curse is / is not applied to this event', nothing else."
+    },
+    "step_2_reconstruct_the_base": {
+      "identity_used": "m(R) = 100/(100+R)   [S5]",
+      "hypothesis": "new = base x 1.07 (untyped Mandate amp retained), old = base x 1.07 x 1.12 (Mandate amp x Abyssal curse)",
+      "base_implied": 184.6154,
+      "clean_source_fit": "raw 240 vs resistance 30: 240 x 100/(100+30) = 184.6154",
+      "check_new": "184.6154 x 1.07 = 197.538 -> 197.5  (matches the NEW golden value)",
+      "check_old": "184.6154 x 1.07 x 1.12 = 221.243 -> 221.2  (matches the OLD golden value)",
+      "conclusion": "Both golden values are the two branches of one and the same mitigated base, with and without the 12% magic curse. The residual value 197.5 still carries a ~7% amplifier, i.e. amplification as a family is still being applied to this event; only the magic-TYPED amplifier was removed."
+    },
+    "step_3_which_branch_is_correct": {
+      "premise": "Under S1, applying the Unmake curse to this event is correct if and only if event[8] carries magic damage. Under S2, the 7% Vulnerable amp is correct for any damage type.",
+      "discriminating_argument": "Both candidate items are ally-held in a roster fight (S6). Their amplifiers are alike in source-scope (both 'from all sources', both applied by an ally) and differ ONLY in damage typing (S1 typed magic; S2 untyped). Therefore: (a) a change to how ALLY-sourced amplifiers reach the main participant's ledger would have moved both factors together, producing a 1.07 x 1.12 = 1.1984 delta; (b) the observed delta is exactly 1.12 with an untyped amplifier still resident in the surviving value (step 2). A discriminator that keeps the untyped amp and drops the typed one is, by construction, a DAMAGE-TYPE gate, not a source-scope change. That is precisely the rule S1 states.",
+      "corroboration": "No text under data/ authorises an untyped 12% amplifier from Abyssal Mask. items.json 8020 has exactly one passive branch, and it says 'magic damage'; the decomposed atom agrees (S3). A ledger event that receives 12% amplification without being magic damage has no source backing it, whereas the 197.5 branch is fully sourced (mitigation identity S5 x untyped Vulnerable S2).",
+      "conclusion": "197.5 is the value supported by the cached sources; 221.2 requires event[8] to be magic damage, which the selective-removal signature in step 3 rules against."
+    },
+    "load_bearing_premise": "This oracle cannot read the scenario definition or the event ledger (scripts/, tests/ and the baseline are out of scope by runbook), so the damage TYPE of events[8] is inferred, not observed. The inference rests on: (i) the delta being exactly the magic-only 1.12 and nothing else, and (ii) an untyped ~1.07 amplifier surviving in the new value, which excludes an ally-scope regression as the cause. If events[8] could be shown to be magic damage, the old value would instead be correct -- that is the single fact that would overturn this verdict.",
+    "composition_note": "Both values are consistent with multiplicative composition of amplifiers (1.07 x 1.12 = 1.1984). Additive composition (1 + 0.07 + 0.12 = 1.19) reproduces neither value, so amplifier-composition semantics is not the axis of this change and no 'both_wrong' branch opens on that account."
+  },
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "correct_value": 197.5,
+    "reason": "Abyssal Mask's Unmake is a magic-damage-only amplifier (data/items.json 8020, passive 'Unmake': 'receive 12% increased magic damage from all sources'). The golden leaf moved by exactly that 1.12 factor while an untyped ~7% Imperial Mandate 'Vulnerable' amplifier remained in the surviving value, which is the signature of gating the curse by damage type rather than of dropping an ally-sourced aura. Applying a magic-typed amplifier to a non-magic ledger event is unsupported by every cached source; the new value 197.5 = 240 x 100/(100+30) x 1.07 is fully reconstructible from the wiki cache plus the mitigation identity in docs/math-foundations.md."
+  },
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "files_read": [
+      "data/items.json (items 4005, 8020, 8010, 3135, 3137, 6653)",
+      "data/item-atoms/4005.json",
+      "data/item-atoms/8020.json",
+      "data/staleness.json",
+      "data/.items.json.meta",
+      "data/practice-corpus/scenarios.json",
+      "data/worklists/*.md (roster fight-shape definition)",
+      "data/wiki/README.md, data/wiki/article-index.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  }
+}

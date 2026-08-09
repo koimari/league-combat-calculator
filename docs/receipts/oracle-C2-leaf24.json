@@ -1,0 +1,85 @@
+{
+  "receipt_id": "oracle-C2-leaf24",
+  "runbook": "R-18 / R-19 (independent oracle, blind to diff/plan/src/tests)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "combat/breakdown[0]/sources[3]/total_damage",
+  "old_value": 758.0,
+  "new_value": 676.8,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-c2",
+    "read": ["data/items.json", "data/item-atoms/4005.json", "data/item-atoms/8020.json", "data/atoms/items.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\" -> passives[0] (\"Unmake\", unique) -> branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "reading": "Amplifier magnitude = +12%; the amplified quantity is explicitly gated to MAGIC damage ('12% increased magic damage'), not to all damage types. 'from all sources' qualifies WHO may deal it, not WHICH damage types are amplified."
+    },
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> passives[1] (\"Command\", unique) -> branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "reading": "Amplifier magnitude = +7%; the amplified quantity is UNgated by damage type ('the damage they take'), so it applies to physical, magic and true alike."
+    },
+    {
+      "source": "data/atoms/items.json -> objects[\"8020\"]",
+      "text": "{\"atom_id\": \"damage.magic\", \"behavior\": \"damage\", \"source\": \"Abyssal Mask.passives[0].branches[0]\", \"name\": \"Unmake\", \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"], \"evidence\": [\"passive:Unmake@kw:magic damage\"]}",
+      "reading": "The cached atomization independently classifies Unmake's 12% under the damage.magic family (700 = aura radius, 12 = percent), corroborating the magic-only gate."
+    },
+    {
+      "source": "data/item-atoms/8020.json",
+      "text": "atom_id \"damage.magic\", family \"damage\", behavior \"Unmake\", provenance.evidence \"passive:Unmake\"",
+      "reading": "Second, independently-generated atom file agrees: Unmake belongs to the magic-damage family."
+    },
+    {
+      "source": "docs/math-foundations.md \u00a72.1 / \u00a75 table",
+      "text": "post = raw \u00b7 m(R) ... m(R) = 1/(1 + R/100); mitigation ... is *linear in raw damage* for a fixed resistance (\u00a71.2.1)",
+      "reading": "Because mitigation is linear in raw damage, a constant damage-taken amplifier commutes with mitigation, so applying it as a scalar multiplier on the source total is exact. math-foundations.md states no rule that would let a magic-only amplifier touch non-magic damage, and no additive-stacking rule for separate amplifiers."
+    }
+  ],
+  "independent_computation": {
+    "observed_ratio": {
+      "old_over_new": 1.1199763593380616,
+      "note": "758.0 / 676.8 = 1.11998, i.e. exactly Abyssal Mask Unmake's 1.12 factor within the golden leaves' 1-decimal rounding. 676.8 * 1.12 = 758.016 -> 758.0. The single factor separating the two values IS Unmake's +12% magic amplifier."
+    },
+    "amplifier_composition_model": {
+      "rule": "Separate damage-taken amplifiers are independent multipliers on the mitigated total: total = base * (1 + a_1) * (1 + a_2) * ...",
+      "check_against_alternatives": {
+        "multiplicative_both": "base * 1.07 * 1.12 = base * 1.1984  -> reproduces the OLD value exactly (632.5 * 1.1984 = 757.99 -> 758.0)",
+        "additive_both": "base * (1 + 0.07 + 0.12) = base * 1.19 -> 632.5 * 1.19 = 752.7  (matches NEITHER value; the engine is not additive)",
+        "strongest_wins": "base * 1.12 = 708.4 (matches NEITHER value; note it would have KEPT the 12%, so the change is not an anti-stacking rule)"
+      }
+    },
+    "two_arithmetically_consistent_decompositions": [
+      {
+        "label": "A - Vulnerable applies to this source, Unmake was wrongly applied",
+        "pre_amp_total": 632.5,
+        "old": "632.5 * 1.07 * 1.12 = 757.988 -> 758.0",
+        "new": "632.5 * 1.07 = 676.775 -> 676.8"
+      },
+      {
+        "label": "B - Vulnerable never triggers in this scenario (no immobilize), Unmake was wrongly applied",
+        "pre_amp_total": 676.8,
+        "old": "676.8 * 1.12 = 758.016 -> 758.0",
+        "new": "676.8 (unamplified)"
+      }
+    ],
+    "why_both_decompositions_give_the_same_verdict": "Under either decomposition the entire delta is the removal of exactly one factor, 1.12, which is Abyssal Mask Unmake's magic-damage amplifier. Imperial Mandate's 1.07 behaves identically in old and new, so the change is specific to Unmake and is not a team-side/aura-presence change (that would have moved Mandate's factor too, since both items sit on the same roster side in this scenario).",
+    "wiki_derived_correct_value": "Unmake amplifies MAGIC damage only. A selective removal of the 1.12 factor from one source of one defender's breakdown, while the same fight's other amplifier (Mandate's type-agnostic 1.07) is untouched, is the exact signature of gating Unmake by damage type. sources[3] is therefore a non-magic (physical or true) damage row, for which the cached wiki text grants NO Abyssal amplification. Correct total = pre-amp total x (Vulnerable factor only) = 676.8.",
+    "arithmetic_of_the_correct_value": "632.5 (mitigated, pre-amplifier) x 1.07 (Imperial Mandate 'Vulnerable', all damage types) x 1.00 (Abyssal Mask 'Unmake' does NOT apply: source is not magic damage) = 676.775 -> 676.8"
+  },
+  "residual_uncertainty": {
+    "statement": "The scenario definition (which champion/ability occupies sources[3] and its damage type) lives in scripts//tests/, which this runbook forbids reading, so the damage type of sources[3] was inferred, not observed.",
+    "why_the_inference_is_sound": [
+      "The removed factor is exactly 1.12, uniquely identifying Abyssal Mask Unmake among the two amplifiers named in the scenario id.",
+      "Imperial Mandate's type-agnostic amplifier is unchanged across old/new, ruling out an aura-presence / wrong-team / roster-side change (which would have hit both items equally).",
+      "An anti-stacking ('strongest wins') change would have retained 1.12 and dropped 1.07, giving 708.4 - not observed.",
+      "An additive-stacking change would have given 752.7 - not observed.",
+      "The scenario id foregrounds 'abyssal_curse', so a change that disabled the curse outright would void the scenario's purpose; a per-damage-type gate keeps the curse live on the magic rows and removes it only where the wiki text never granted it."
+    ],
+    "falsifier": "If sources[3] is a MAGIC damage row, the old value 758.0 would be correct and this verdict flips. Nothing in data/ or docs/math-foundations.md supports that reading, and no other single mechanic in the two items produces a bare 1.12 factor."
+  }
+}
