@@ -3,9 +3,15 @@
   "captured_at_src_tree": "66072eacfc496dbde2ce25b71085256e16e0c46a",
   "notes": [
     "The sole home of every golden shape count in the campaign. No plan document states one; every consumer reads this file.",
-    "Blocks filled by slice 0A.2: golden, coupled_golden, coupled_golden_exact, corpus, tests, pylint. bench, alloc, wall and frontier are owned by later slices and are empty rather than guessed.",
+    "Blocks filled by slice 0A.2: golden, coupled_golden, coupled_golden_exact, corpus, tests, pylint. Blocks filled by slice 0A.3: bench, alloc, and the five pylint rows for the files 0A.3 touched. wall and frontier stay empty: wall{stage} is written per Phase 4 stage under R-32's carve-out, and frontier belongs to Phases 3 and 4.",
     "provenance below classes each block per R-06: VERIFIED = reproduced against source this session, CARRIED = two independent contracts agree, PRIOR = a number with no producing tool.",
-    "Every gate slice 0A.2 added ships a permanent negative test, so demonstrated_red is empty by construction rather than by omission: compare's provenance exclusion is driven by tests/test_golden_snapshot.py::TestProvenanceExclusion, the coupled baseline's producer sensitivity by TestCoupledCoverage, and the pylint ratchet by tests/test_pylint_ratchet.py::TestCheckRatchet."
+    "Every gate slice 0A.2 added ships a permanent negative test, so demonstrated_red is empty by construction rather than by omission: compare's provenance exclusion is driven by tests/test_golden_snapshot.py::TestProvenanceExclusion, the coupled baseline's producer sensitivity by TestCoupledCoverage, and the pylint ratchet by tests/test_pylint_ratchet.py::TestCheckRatchet.",
+    "bench was captured with 'scripts/bench_coupled_optimizer.py --fixed-work --isolate --repeats 5 --determinism --json' -- the --isolate mode R-26 requires, at the app's 60000 ms time-budget ceiling, with no repeat reporting truncated. The no_compiled block beside each scenario is the R-01 row 11 run ('--fixed-work --isolate --no-compiled --repeats 1'): winner and score identical in all four, rung histogram uniformly receipt_walk_gate, residual and wall moved as declared.",
+    "R-07: each legacy scenario's prior is recorded beside its measurement in the counter's 'prior' field, and the residual is recorded rather than asserted equal. Divergence cause: none -- every prior reproduced exactly (evaluations 1324/1033/706, proposals 1306/1015/688, memo misses 1249/967/577, pair fights 2735/3127/1446, residual 87/28/34), so those three families leave the PRIOR class. syndra_mandate_3champ is new in 0A.3 and has no prior; its residual of 330 is roughly four times the largest legacy one, which is the compiled-to-receipt routing cost R-27 predicted the cc scenario would expose.",
+    "R-08 determinism probe: five isolated repeats per scenario, all four scenarios. Every counter family, the residual and the rung histogram are 'exact' with spread 0, so each may be equality gated and none is demoted to a ratchet. Wall time is a ratchet by rule, not by measurement (R-28).",
+    "R-28 allocation_probe: tracemalloc peak for one isolated candidate evaluation, with the scenario's PROBE_BUILDS build locked into every slot so the optimizer's exact regime scores exactly one option. Three captures of each scenario differed by at most 63 bytes (0.03%); the recorded value is the maximum observed and the gate margin is Phase 4 S4's 15%.",
+    "tests.collected moved 5007 -> 5035. 5007 was captured at c05467f, before 24a0297 added five golden-instrument tests later in the same slice; HEAD before 0A.3 collects 5012, and 0A.3 declares 23 new (10 in tests/test_work_counters.py, 13 in tests/test_bench_coupled_optimizer.py).",
+    "The two gates 0A.3 adds ship a reproducible red as a permanent test rather than a demonstrated_red entry (R-05): the void rule by tests/test_bench_coupled_optimizer.py::TestVoidRule::test_a_truncated_response_voids_the_run, which drives report_from_response directly because no build-scope response reports truncated today; and the counted-pair-fight invariant by tests/test_work_counters.py::TestRungLadder::test_every_pair_fight_goes_through_the_counted_wrapper."
   ],
   "provenance": {
     "golden": "VERIFIED",
@@ -13,7 +19,9 @@
     "coupled_golden_exact": "VERIFIED",
     "corpus": "VERIFIED",
     "tests": "VERIFIED",
-    "pylint": "VERIFIED"
+    "pylint": "VERIFIED",
+    "bench": "VERIFIED",
+    "alloc": "VERIFIED"
   },
   "golden": {
     "sections": "champion_baselines,item_sweep,registered_champion_fights",
@@ -36,11 +44,360 @@
     "numeric_leaves": 0,
     "src_tree_sha": "66072eacfc496dbde2ce25b71085256e16e0c46a"
   },
-  "bench": {},
-  "alloc": {},
+  "bench": {
+    "cassiopeia_3champ": {
+      "public_evaluations": {
+        "value": 1324,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 1324
+      },
+      "measured_proposals": {
+        "value": 1306,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 1306
+      },
+      "score_memo_misses": {
+        "value": 1249,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 1249
+      },
+      "pair_run_fight_calls": {
+        "value": 2735,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 2735
+      },
+      "residual": {
+        "value": 87,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 87
+      },
+      "rungs": {
+        "value": {
+          "compiled": 1074,
+          "receipt_walk_candidate": 175
+        },
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "timeline_complete": false,
+      "winner": {
+        "items": [
+          "Actualizer",
+          "Void Staff",
+          "Rabadon's Deathcap",
+          "Malignance",
+          "Stormsurge"
+        ],
+        "boots": "Sorcerer's Shoes"
+      },
+      "score": 4003.1,
+      "wall_best_of_5_ms": {
+        "value": 2119.5,
+        "provenance": "VERIFIED",
+        "tolerance": "ratchet only (R-28); never a pass criterion"
+      },
+      "determinism": {
+        "public_evaluations": "exact",
+        "measured_proposals": "exact",
+        "score_memo_misses": "exact",
+        "pair_run_fight_calls": "exact",
+        "residual": "exact",
+        "rungs": "exact"
+      },
+      "spread": {
+        "public_evaluations": 0,
+        "measured_proposals": 0,
+        "score_memo_misses": 0,
+        "pair_run_fight_calls": 0,
+        "residual": 0
+      },
+      "truncated": false,
+      "no_compiled": {
+        "winner_identical": true,
+        "score_identical": true,
+        "residual": 36,
+        "rungs": {
+          "receipt_walk_gate": 1249
+        },
+        "wall_ms": 3583.5
+      }
+    },
+    "cassiopeia_5champ": {
+      "public_evaluations": {
+        "value": 1033,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 1033
+      },
+      "measured_proposals": {
+        "value": 1015,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 1015
+      },
+      "score_memo_misses": {
+        "value": 967,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 967
+      },
+      "pair_run_fight_calls": {
+        "value": 3127,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 3127
+      },
+      "residual": {
+        "value": 28,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 28
+      },
+      "rungs": {
+        "value": {
+          "compiled": 833,
+          "receipt_walk_candidate": 134
+        },
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "timeline_complete": false,
+      "winner": {
+        "items": [
+          "Malignance",
+          "Void Staff",
+          "Rabadon's Deathcap",
+          "Actualizer",
+          "Stormsurge"
+        ],
+        "boots": "Sorcerer's Shoes"
+      },
+      "score": 5010.8,
+      "wall_best_of_5_ms": {
+        "value": 2058.6,
+        "provenance": "VERIFIED",
+        "tolerance": "ratchet only (R-28); never a pass criterion"
+      },
+      "determinism": {
+        "public_evaluations": "exact",
+        "measured_proposals": "exact",
+        "score_memo_misses": "exact",
+        "pair_run_fight_calls": "exact",
+        "residual": "exact",
+        "rungs": "exact"
+      },
+      "spread": {
+        "public_evaluations": 0,
+        "measured_proposals": 0,
+        "score_memo_misses": 0,
+        "pair_run_fight_calls": 0,
+        "residual": 0
+      },
+      "truncated": false,
+      "no_compiled": {
+        "winner_identical": true,
+        "score_identical": true,
+        "residual": -24,
+        "rungs": {
+          "receipt_walk_gate": 967
+        },
+        "wall_ms": 3413.0
+      }
+    },
+    "mundo_3champ": {
+      "public_evaluations": {
+        "value": 706,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 706
+      },
+      "measured_proposals": {
+        "value": 688,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 688
+      },
+      "score_memo_misses": {
+        "value": 577,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 577
+      },
+      "pair_run_fight_calls": {
+        "value": 1446,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 1446
+      },
+      "residual": {
+        "value": 34,
+        "provenance": "VERIFIED",
+        "tolerance": 0,
+        "prior": 34
+      },
+      "rungs": {
+        "value": {
+          "compiled": 489,
+          "receipt_walk_candidate": 88
+        },
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "timeline_complete": false,
+      "winner": {
+        "items": [
+          "Serylda's Grudge",
+          "Stridebreaker",
+          "Voltaic Cyclosword",
+          "Bastionbreaker",
+          "Trinity Force"
+        ],
+        "boots": "Sorcerer's Shoes"
+      },
+      "score": 3305.0,
+      "wall_best_of_5_ms": {
+        "value": 969.9,
+        "provenance": "VERIFIED",
+        "tolerance": "ratchet only (R-28); never a pass criterion"
+      },
+      "determinism": {
+        "public_evaluations": "exact",
+        "measured_proposals": "exact",
+        "score_memo_misses": "exact",
+        "pair_run_fight_calls": "exact",
+        "residual": "exact",
+        "rungs": "exact"
+      },
+      "spread": {
+        "public_evaluations": 0,
+        "measured_proposals": 0,
+        "score_memo_misses": 0,
+        "pair_run_fight_calls": 0,
+        "residual": 0
+      },
+      "truncated": false,
+      "no_compiled": {
+        "winner_identical": true,
+        "score_identical": true,
+        "residual": -4,
+        "rungs": {
+          "receipt_walk_gate": 577
+        },
+        "wall_ms": 1402.7
+      }
+    },
+    "syndra_mandate_3champ": {
+      "public_evaluations": {
+        "value": 796,
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "measured_proposals": {
+        "value": 782,
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "score_memo_misses": {
+        "value": 775,
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "pair_run_fight_calls": {
+        "value": 1922,
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "residual": {
+        "value": 330,
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "rungs": {
+        "value": {
+          "compiled": 546,
+          "receipt_walk_candidate": 229
+        },
+        "provenance": "VERIFIED",
+        "tolerance": 0
+      },
+      "timeline_complete": false,
+      "winner": {
+        "items": [
+          "Imperial Mandate",
+          "Void Staff",
+          "Rabadon's Deathcap",
+          "Actualizer",
+          "Stormsurge"
+        ],
+        "boots": "Sorcerer's Shoes"
+      },
+      "score": 4642.3,
+      "wall_best_of_5_ms": {
+        "value": 1198.3,
+        "provenance": "VERIFIED",
+        "tolerance": "ratchet only (R-28); never a pass criterion"
+      },
+      "determinism": {
+        "public_evaluations": "exact",
+        "measured_proposals": "exact",
+        "score_memo_misses": "exact",
+        "pair_run_fight_calls": "exact",
+        "residual": "exact",
+        "rungs": "exact"
+      },
+      "spread": {
+        "public_evaluations": 0,
+        "measured_proposals": 0,
+        "score_memo_misses": 0,
+        "pair_run_fight_calls": 0,
+        "residual": 0
+      },
+      "truncated": false,
+      "no_compiled": {
+        "winner_identical": true,
+        "score_identical": true,
+        "residual": 56,
+        "rungs": {
+          "receipt_walk_gate": 775
+        },
+        "wall_ms": 1586.0
+      }
+    }
+  },
+  "alloc": {
+    "cassiopeia_3champ": {
+      "peak_bytes": 252754,
+      "provenance": "VERIFIED",
+      "margin": 0.15,
+      "observed_spread_bytes": 63
+    },
+    "cassiopeia_5champ": {
+      "peak_bytes": 555684,
+      "provenance": "VERIFIED",
+      "margin": 0.15,
+      "observed_spread_bytes": 63
+    },
+    "mundo_3champ": {
+      "peak_bytes": 220387,
+      "provenance": "VERIFIED",
+      "margin": 0.15,
+      "observed_spread_bytes": 63
+    },
+    "syndra_mandate_3champ": {
+      "peak_bytes": 231406,
+      "provenance": "VERIFIED",
+      "margin": 0.15,
+      "observed_spread_bytes": 63
+    }
+  },
   "wall": {},
   "tests": {
-    "collected": 5007,
+    "collected": 5035,
     "skipped": 0,
     "xfailed": 0
   },
@@ -50,10 +407,15 @@
   "frontier": {},
   "demonstrated_red": {},
   "pylint": {
+    "scripts/bench_coupled_optimizer.py": 9.950495049504951,
     "scripts/golden_snapshot.py": 9.58128078817734,
     "scripts/patch_update.py": 9.782608695652174,
     "scripts/pylint_ratchet.py": 10.0,
     "scripts/repin_corpus.py": 9.6875,
-    "src/calculator/item_support_effects.py": 9.838709677419354
+    "src/app.py": 9.459783913565426,
+    "src/calculator/item_support_effects.py": 9.838709677419354,
+    "src/calculator/optimizer.py": 9.6,
+    "src/calculator/participant_timeline.py": 9.698275862068966,
+    "src/calculator/work_counters.py": 10.0
   }
 }
