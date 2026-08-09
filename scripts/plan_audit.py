@@ -30,13 +30,26 @@ Three checks run over ``docs/plans/*.md``:
 Two definitions this module owns, because R-37 states the rule and not its
 mechanics:
 
-**Adjacency is parenthesis.**  A backtick span adjoins a citation only when one
-parenthesises the other — ``(`file.py:12`)`` or ``` `file.py:12` (`frag`) ```.
-A comma-separated neighbour is an enumeration item, not a referent: Phase 2
-writes ``(`survival/score_state.py:97`, `survival/compile.py:72`,
+**Adjacency is parenthesis, and it is measured over the paragraph.**  A backtick
+span adjoins a citation only when one parenthesises the other —
+``(`file.py:12`)`` or ``` `file.py:12` (`frag`) ```.  A comma-separated
+neighbour is an enumeration item, not a referent: Phase 2 writes
+``(`survival/score_state.py:97`, `survival/compile.py:72`,
 `SurvivalAction.defy_trigger_id`)``, a list of three sibling pointers in which
 the third is nobody's fragment, while Phase 3 writes a comma-separated
 parenthetical in which it is.  Comma cannot tell those apart; parenthesis can.
+
+The pair is sought over the *paragraph*, not the source line: an author's
+line wrap is invisible to a reader and must be invisible to the gate, or a
+fragment that happens to land past the wrap is never verified — a class of
+plan/tree divergence unreachable by construction, which is the failure shape
+this campaign exists to kill.  ``_logical_lines`` joins each markdown block
+into one string and keeps the source line of every offset, so findings still
+name the line the citation is written on.  Blocks end where a reader stops
+reading across: blank lines, table rows, headings, fences, block quotes and
+list markers.  Check 2's proximity prong reads the same blocks for the same
+reason — a shape keyword and the figure it labels are as adjacent across a
+wrap as within one line.
 
 **A fragment is at the cited location** when it appears, whitespace-insensitive,
 within ``CITATION_WINDOW`` lines of the citation — or, for a Python file, when
@@ -229,6 +242,8 @@ _CITATION = re.compile(
 )
 # A gap that parenthesises: brackets plus markdown emphasis and nothing else.
 _PARENTHETIC_GAP = re.compile(r"^[\s*_]*[()][\s*_]*$")
+# A line that opens its own markdown block and never joins the one above it.
+_BLOCK_START = re.compile(r"^(?:\s*$|\s*\||#{1,6}\s|\s*```|\s*>|\s*[-*+]\s|\s*\d+\.\s)")
 # A span that is itself a locator rather than a fragment.
 _LOCATOR_SPAN = re.compile(r"^:?\d")
 _QUALIFIED = re.compile(r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+(?:\(\))?$")
@@ -272,11 +287,67 @@ def _adjoining_fragment(line: str, spans: Sequence[re.Match], index: int) -> str
     return None
 
 
+@dataclass(frozen=True, slots=True)
+class LogicalLine:
+    """One markdown block as a single string, plus where its offsets came from.
+
+    ``origins`` holds ``(offset, source line number)`` for each joined line, so
+    a citation found anywhere in ``text`` still reports the line an author
+    would edit.
+    """
+
+    text: str
+    origins: tuple[tuple[int, int], ...]
+
+    def source_line(self, offset: int) -> int:
+        """The document line the character at ``offset`` was written on."""
+        number = self.origins[0][1]
+        for start, line in self.origins:
+            if start > offset:
+                break
+            number = line
+        return number
+
+
+def _logical_lines(text: str) -> tuple[LogicalLine, ...]:
+    """The document's markdown blocks, each joined into one line.
+
+    A wrapped paragraph is one thing a reader reads, so it is one thing the
+    citation check reads.  A line that opens its own block — blank, table row,
+    heading, fence, block quote, or a new list item — never joins the block
+    above it.
+    """
+    blocks: list[LogicalLine] = []
+    parts: list[str] = []
+    origins: list[tuple[int, int]] = []
+    width = 0
+
+    def flush() -> None:
+        nonlocal width
+        if parts:
+            blocks.append(LogicalLine(" ".join(parts), tuple(origins)))
+        parts.clear()
+        origins.clear()
+        width = 0
+
+    for number, line in enumerate(text.splitlines(), 1):
+        if _BLOCK_START.match(line):
+            flush()
+            if line.strip():
+                blocks.append(LogicalLine(line, ((0, number),)))
+            continue
+        origins.append((width, number))
+        parts.append(line)
+        width += len(line) + 1
+    flush()
+    return tuple(blocks)
+
+
 def parse_citations(text: str, doc: str) -> tuple[Citation, ...]:
     """Every citation in one plan document, with its adjoining fragment."""
     found: list[Citation] = []
-    for number, line in enumerate(text.splitlines(), 1):
-        spans = list(_SPAN.finditer(line))
+    for block in _logical_lines(text):
+        spans = list(_SPAN.finditer(block.text))
         for index, span in enumerate(spans):
             match = _CITATION.match(span.group(1))
             if match is None:
@@ -284,11 +355,11 @@ def parse_citations(text: str, doc: str) -> tuple[Citation, ...]:
             found.append(
                 Citation(
                     doc=doc,
-                    doc_line=number,
+                    doc_line=block.source_line(span.start()),
                     target=match.group("target"),
                     start=int(match.group("start")),
                     end=int(match.group("end") or match.group("start")),
-                    fragment=_adjoining_fragment(line, spans, index),
+                    fragment=_adjoining_fragment(block.text, spans, index),
                 )
             )
     return tuple(found)
@@ -530,7 +601,8 @@ def check_golden_figures(
                         "home of every golden shape count (criterion 4)",
                     )
                 )
-        findings.extend(_check_proximity(doc, number, line))
+    for block in _logical_lines(text):
+        findings.extend(_check_proximity(doc, block))
     return tuple(findings)
 
 
@@ -545,9 +617,15 @@ def _keyword_token_indices(tokens: Sequence[str]) -> tuple[int, ...]:
     return tuple(hits)
 
 
-def _check_proximity(doc: str, number: int, line: str) -> tuple[Finding, ...]:
-    """The second prong: an integer beside a shape keyword must cite the receipt."""
-    tokens = line.split()
+def _check_proximity(doc: str, block: LogicalLine) -> tuple[Finding, ...]:
+    """The second prong: an integer beside a shape keyword must cite the receipt.
+
+    Measured over the paragraph for the same reason adjacency is: a keyword and
+    the figure it labels are as adjacent to a reader across a line wrap as they
+    are within one line.
+    """
+    words = list(re.finditer(r"\S+", block.text))
+    tokens = [word.group() for word in words]
     keywords = _keyword_token_indices(tokens)
     if not keywords:
         return ()
@@ -559,7 +637,8 @@ def _check_proximity(doc: str, number: int, line: str) -> tuple[Finding, ...]:
         if not any(abs(index - hit) <= PROXIMITY_TOKENS for hit in keywords):
             continue
         value = int(match.group(1))
-        if _allowed(doc, value, line):
+        number = block.source_line(words[index].start())
+        if _allowed(doc, value, block.text):
             continue
         neighbourhood = tokens[
             max(0, index - PROXIMITY_TOKENS) : index + PROXIMITY_TOKENS + 1

@@ -76,6 +76,45 @@ class TestCitationParsing:
         )
         assert citation.fragment is None
 
+    def test_a_fragment_past_the_line_wrap_still_adjoins(self):
+        """A wrap is invisible to a reader and must be invisible to the gate."""
+        (citation,) = plan_audit.parse_citations(
+            "the constant `scripts/plan_audit.py:1`\n  (`REPO_ROOT`) resolves it",
+            "doc.md",
+        )
+        assert citation.fragment == "REPO_ROOT"
+
+    def test_a_wrapped_citation_is_found_at_its_own_line(self):
+        """Joining a paragraph must not move a finding to the block's first line."""
+        (citation,) = plan_audit.parse_citations(
+            "a paragraph that wraps before it cites\n  `scripts/plan_audit.py:1`",
+            "doc.md",
+        )
+        assert citation.doc_line == 2
+
+    def test_a_citation_split_by_a_wrap_is_parsed_at_all(self):
+        """An unclosed span on one line used to hide the citation entirely."""
+        (citation,) = plan_audit.parse_citations(
+            "the six migrated sites are `survival/compile.py:316, :319,\n  :1011`",
+            "doc.md",
+        )
+        assert (citation.target, citation.start) == ("survival/compile.py", 316)
+
+    def test_a_table_row_does_not_adopt_the_row_below_it(self):
+        first, second = plan_audit.parse_citations(
+            "| a | `scripts/plan_audit.py:1` |\n| b | `scripts/plan_audit.py:2` |",
+            "doc.md",
+        )
+        assert (first.fragment, second.fragment) == (None, None)
+
+    def test_a_new_list_item_starts_its_own_block(self):
+        first, second = plan_audit.parse_citations(
+            "- `scripts/plan_audit.py:1`\n- (`REPO_ROOT`) `scripts/plan_audit.py:2`",
+            "doc.md",
+        )
+        assert first.fragment is None
+        assert second.fragment == "REPO_ROOT"
+
     def test_a_range_keeps_both_ends(self):
         (citation,) = plan_audit.parse_citations(
             "`scripts/plan_audit.py:10-20`", "d.md"
@@ -130,6 +169,16 @@ class TestCitationChecks:
         )
         assert "plan/tree divergence to escalate" in finding.message
         assert "drifted" not in finding.message
+
+    def test_a_vanished_fragment_past_a_wrap_is_escalated_too(self):
+        """The red for the paragraph rule: a wrapped pair the gate used to skip."""
+        (finding,) = plan_audit.check_citations(
+            plan_audit.parse_citations(
+                "the reader `scripts/plan_audit.py:1`\n  (`no_such_symbol_anywhere`)",
+                "d.md",
+            )
+        )
+        assert "plan/tree divergence to escalate" in finding.message
 
     def test_whitespace_inside_a_fragment_is_insignificant(self):
         """Documents compress code; the source is formatted."""
@@ -236,6 +285,14 @@ class TestGoldenFigures:
             "d.md", "the golden baseline holds 999 entries", {}
         )
         assert "no `fingerprint:` citation marker" in finding.message
+
+    def test_a_wrong_figure_past_a_wrap_fails_and_names_its_own_line(self):
+        """Prong two reads the paragraph too, or a wrap hides the claim."""
+        (finding,) = plan_audit.check_golden_figures(
+            "d.md", "the golden baseline\n  holds 999 entries", {}
+        )
+        assert "no `fingerprint:` citation marker" in finding.message
+        assert finding.line == 2
 
     def test_a_marked_figure_passes(self):
         assert (
