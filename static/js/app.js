@@ -576,15 +576,43 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   const declared = new Set(options.map((option) => option.key));
   const direct = perSlot.find((key) => declared.has(key));
   if (direct) return direct;
-  if (slot !== "R" && (declared.has("hammer_stance") || declared.has("mega"))) {
-    return "hammer_stance" in declared ? "hammer_stance" : "mega";
+  if (slot !== "R") {
+    const toggle = Object.keys(GLOBAL_FORM_TOGGLES).find((key) => declared.has(key));
+    if (toggle) return toggle;
+    if (declared.has("stance")) return "stance";
   }
-  if (slot !== "R" && declared.has("stance")) return "stance";
   // A generic variant-family option for the slot (e.g. q_variant on Heimer).
   const family = [...declared].find((key) =>
     key.startsWith(slotKey) && /variant|stance|mode|form|style/.test(key)
   );
   return family || null;
+}
+
+// Bool form toggles driven by the ability Variant buttons, mapped to the
+// variant index that means "true".  The backend types these as booleans, so
+// the payload must never carry the raw variant index (sending Gnar's
+// ``mega: 0`` produced "champion_options.mega must be true or false" the
+// moment he was selected).  Gnar's forms list Mini first (Mega = index 1);
+// Jayce's hammer kit is the wiki's first entry (hammer_stance = index 0,
+// cannon second).
+const GLOBAL_FORM_TOGGLES = { "mega": 1, "hammer_stance": 0 };
+
+/**
+ * Mirror one slot's Variant selection onto every slot bound to the same
+ * global form toggle.  Q/W/E all bind the toggle, but the payload reads the
+ * first bound slot only — without the mirror, clicking Boulder Toss on Q
+ * would leave W/E rendering (and the user reading) the Mini kit.
+ */
+function syncGlobalFormVariants(slot, variantIndex) {
+  const binding = abilityOptionBinding(slot, "ability_variants");
+  if (!(binding in GLOBAL_FORM_TOGGLES)) return;
+  activeAbilityKit().forEach((ability) => {
+    if (ability.slot === slot || !(ability.variants?.length > 1)) return;
+    if (abilityOptionBinding(ability.slot, "ability_variants") !== binding) return;
+    const input = abilityInput(ability.slot);
+    input.variant = Math.min(variantIndex, ability.variants.length - 1);
+    state.attacker.abilityInputs[ability.slot] = input;
+  });
 }
 
 function abilityCapability(slot, field, championName = state.attacker.champion) {
@@ -1562,7 +1590,12 @@ function engineChampionOptions() {
       ability.variants?.length > 1
         && abilityOptionBinding(ability.slot, "ability_variants") === option.key
     );
-    if (variantAbility) options[option.key] = abilityInput(variantAbility.slot).variant;
+    if (variantAbility) {
+      const variantIndex = abilityInput(variantAbility.slot).variant;
+      options[option.key] = option.key in GLOBAL_FORM_TOGGLES
+        ? variantIndex === GLOBAL_FORM_TOGGLES[option.key]
+        : variantIndex;
+    }
   });
   return options;
 }
@@ -4310,6 +4343,7 @@ document.addEventListener("click", (event) => {
     const input = abilityInput(slot);
     input.variant = Number(abilityVariantButton.dataset.value);
     state.attacker.abilityInputs[slot] = input;
+    syncGlobalFormVariants(slot, input.variant);
     return render();
   }
   const resetDummyStats = event.target.closest("[data-reset-dummy-stats]");

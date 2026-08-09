@@ -19795,6 +19795,7 @@
           "cooldown": 11.0,
           "damage_type": "physical",
           "detail": "%max-HP physical damage row: 7% of the target's maximum health (1.5% per 100 AP + 0.4% per 100 bonus health).",
+          "event_order_certified": "single_hit",
           "name": "Shield Vault",
           "parts": [
             "DamagePart(physical, amount=140.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='stun')"
@@ -25928,9 +25929,10 @@
           "cast_time": 0.25,
           "cooldown": 15.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Scatter the Weak",
           "parts": [
-            "DamagePart(magic, amount=60.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=60.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='stun')"
           ],
           "rank": 1,
           "resource_cost": 50.0,
@@ -37579,9 +37581,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "damage_amp_Imperial Mandate"
         ],
-        "total_damage": 981.0
+        "total_damage": 988.37
       },
       "vayne": {
         "breakdown_keys": [
@@ -41707,7 +41710,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1786113324.862417,
-    "git_head": "7982690040dbe28575e0ef6b69c8e44789129f61",
+    "git_head": "d06ee446e5c720d607a7da43bd286c0c6a3e6dff",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1786113359.0537379,
@@ -65524,9 +65527,9 @@
             "W": 470.37,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 160.66,
-            "shadowflame_Shadowflame": 185.2
+            "shadowflame_Shadowflame": 200.47
           },
-          "total_damage": 2577.5
+          "total_damage": 2592.77
         },
         "no_items": {
           "breakdown_totals": {
@@ -65571,9 +65574,9 @@
               "W": 470.37,
               "auto_attacks": 158.0,
               "proc_Luden's Echo": 160.66,
-              "shadowflame_Shadowflame": 185.2
+              "shadowflame_Shadowflame": 200.47
             },
-            "total_damage": 2735.5
+            "total_damage": 2750.77
           },
           "no_items": {
             "breakdown_totals": {
@@ -65622,9 +65625,9 @@
             "W": 531.67,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 160.66,
-            "shadowflame_Shadowflame": 229.46
+            "shadowflame_Shadowflame": 231.93
           },
-          "total_damage": 2891.06
+          "total_damage": 2893.52
         },
         "no_items": {
           "breakdown_totals": {
@@ -65669,9 +65672,9 @@
               "W": 531.67,
               "auto_attacks": 274.67,
               "proc_Luden's Echo": 160.66,
-              "shadowflame_Shadowflame": 323.19
+              "shadowflame_Shadowflame": 325.66
             },
-            "total_damage": 3728.1
+            "total_damage": 3730.57
           },
           "no_items": {
             "breakdown_totals": {

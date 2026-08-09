@@ -301,8 +301,41 @@ def test_ability_variant_buttons_write_the_declared_backend_option():
         'abilityOptionBinding(ability.slot, "ability_variants") === option.key'
         in source
     )
-    assert "options[option.key] = abilityInput(variantAbility.slot).variant" in source
     assert "input.variant = Number(abilityVariantButton.dataset.value)" in source
+
+
+def test_global_form_toggles_send_booleans_not_variant_indices():
+    """Bool form toggles (Gnar mega, Jayce hammer_stance) are variant-driven,
+    but the backend contract types them as booleans — sending the raw variant
+    index produced ``champion_options.mega must be true or false`` the moment
+    Gnar was selected.  The payload builder must map index -> bool through the
+    per-option truth table (Gnar lists Mini first, so Mega is index 1; Jayce
+    lists the hammer kit first, so hammer_stance is index 0)."""
+    source = _source()
+    assert '"mega": 1' in source
+    assert '"hammer_stance": 0' in source
+    assert "GLOBAL_FORM_TOGGLES" in source
+    # The raw-index write must be gone for bool toggles.
+    assert (
+        "options[option.key] = abilityInput(variantAbility.slot).variant" not in source
+    )
+
+
+def test_global_form_binding_checks_set_membership_not_property_lookup():
+    """``"hammer_stance" in declared`` on a Set checks properties, never
+    membership — it silently returned "mega" for Jayce, whose module declares
+    no such option, leaving his variant buttons wired to a dead key."""
+    source = _source()
+    assert '"hammer_stance" in declared' not in source
+    assert "Object.keys(GLOBAL_FORM_TOGGLES).find((key) => declared.has(key))" in source
+
+
+def test_global_form_variant_click_syncs_every_bound_slot():
+    """Q/W/E all bind the same global form toggle; clicking Boulder Toss must
+    not leave W/E rendering the Mini kit (and the payload is read from the
+    first bound slot, so unsynced slots would silently disagree with it)."""
+    source = _source()
+    assert "syncGlobalFormVariants" in source
 
 
 def test_quick_to_analyst_bridge_is_wired():
