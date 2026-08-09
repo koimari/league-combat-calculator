@@ -18,6 +18,7 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 """
 
 from .actions import (
+    BARRIER_GRANT_KINDS,
     SUPPORT_RANK_KEY,
     ActionKind,
     SurvivalAction,
@@ -66,6 +67,7 @@ from .transitions import (
 
 __all__ = [
     "ActionKind",
+    "BARRIER_GRANT_KINDS",
     "SUPPORT_RANK_KEY",
     "COMPILED_WALK_UNREPRESENTABLE_ITEMS",
     "ReceiptLedger",

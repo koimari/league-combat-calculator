@@ -60,6 +60,7 @@ from .resistance import (
     apply_resistance,
 )
 from .survival import (
+    BARRIER_GRANT_KINDS,
     SUPPORT_RANK_KEY,
     ActionKind,
     ReceiptLedger,
@@ -255,7 +256,10 @@ def _pair_packet(
         for baseline_key, baseline in baseline_fields:
             enriched[baseline_key] = baseline
         enriched["_sk"] = _action_key(
-            float(event.get("time", 0.0)), 0.0, defender_id, enriched
+            float(event.get("time", 0.0)),
+            legacy_phase(TransitionRank.DAMAGE),
+            defender_id,
+            enriched,
         )
         events.append(enriched)
         event_ids_by_key[(source_key, time_key, int(event.get("sequence", 0) or 0))] = (
@@ -311,7 +315,10 @@ def _pair_packet(
         if "_trigger_source" in event:
             enriched_heal["trigger_target"] = defender_id
         enriched_heal["_sk"] = _action_key(
-            float(event.get("time", 0.0)), 1.0, attacker_id, enriched_heal
+            float(event.get("time", 0.0)),
+            legacy_phase(TransitionRank.RECOVERY),
+            attacker_id,
+            enriched_heal,
         )
         heals.append(enriched_heal)
     return {
@@ -366,7 +373,11 @@ def _packet_typed_actions(
         if subject is None:
             continue
         by_template[id(template)] = survival_action_from_event(
-            template, 0.0, subject, index_of, subject_id=subject_id
+            template,
+            legacy_phase(TransitionRank.DAMAGE),
+            subject,
+            index_of,
+            subject_id=subject_id,
         )._replace(event=None)
     for template in packet["heals"]:
         subject_id = str(template.get("attacker", ""))
@@ -374,7 +385,11 @@ def _packet_typed_actions(
         if subject is None:
             continue
         by_template[id(template)] = survival_action_from_event(
-            template, 1.0, subject, index_of, subject_id=subject_id
+            template,
+            legacy_phase(TransitionRank.RECOVERY),
+            subject,
+            index_of,
+            subject_id=subject_id,
         )._replace(event=None)
     packet["_typed"] = (token, by_template)
     return by_template
@@ -1770,7 +1785,7 @@ def _simulate_survival(
                     )
                 redirected["_sk"] = _action_key(
                     float(redirected.get("time", 0.0)),
-                    0.5,
+                    legacy_phase(TransitionRank.REACTIVE),
                     redirect_target,
                     redirected,
                 )
@@ -1878,7 +1893,7 @@ def _simulate_survival(
                     }
                     deferred["_sk"] = _action_key(
                         float(deferred.get("time", 0.0)),
-                        0.0,
+                        legacy_phase(TransitionRank.DAMAGE),
                         target_id,
                         deferred,
                     )
@@ -1993,7 +2008,11 @@ def _simulate_survival(
             if cached is not None:
                 actions.append(cached._replace(event=event))
                 continue
-            phase = 0.5 if event.get("_reactive") else 0.0
+            phase = legacy_phase(
+                TransitionRank.REACTIVE
+                if event.get("_reactive")
+                else TransitionRank.DAMAGE
+            )
             actions.append(
                 survival_action_from_event(
                     event,
@@ -2013,7 +2032,7 @@ def _simulate_survival(
             actions.append(
                 survival_action_from_event(
                     event,
-                    1.0,
+                    legacy_phase(TransitionRank.RECOVERY),
                     subject,
                     index_of,
                     subject_id=participant_id,
@@ -2396,7 +2415,7 @@ def _context_setup(
             base.actions.append(
                 survival_action_from_event(
                     event,
-                    1.0,
+                    legacy_phase(TransitionRank.RECOVERY),
                     actor_i,
                     context.index_of,
                     subject_id=actor.participant_id,
@@ -2787,7 +2806,7 @@ def _score_with_search_context(
             event_id = f"main:grey:{source}:{index}"
             sort_key = _action_key(
                 float(heal_time),
-                1.0,
+                legacy_phase(TransitionRank.RECOVERY),
                 "main",
                 {"attacker": "main", "_event_id": event_id, "source": source},
             )
@@ -2935,6 +2954,27 @@ def _score_with_search_context(
             target_count=len(coverage_reports),
         ),
     }
+
+
+def _published_support_phase(event: Mapping[str, Any]) -> float:
+    """Where one support packet sits in the *published* support list.
+
+    Deliberately not :func:`support_transition_rank`.  This orders the
+    receipt the API serializes, and it classifies on kind alone, so a
+    packet that declares ``LATE_BARRIER`` (Eclipse's self-shield,
+    Fimbulwinter's Everlasting) is still published beside the other
+    barriers rather than after the damage it followed, and a state grant is
+    published with the recoveries rather than first.  The walk's arming
+    order is the packet's own ``_sk``; this is the reading order, and the
+    two have never agreed for a declared rank.  Naming that divergence is
+    all this stage does about it: closing it moves published output, which
+    is a correction, not a rename.
+    """
+    return legacy_phase(
+        TransitionRank.BARRIER_GRANT
+        if event.get("kind") in BARRIER_GRANT_KINDS
+        else TransitionRank.RECOVERY
+    )
 
 
 def build_participant_timeline(
@@ -3430,7 +3470,12 @@ def build_participant_timeline(
                 "_event_id": f"main:grey:{source}:{index}",
                 "_grey_health": True,
             }
-            heal_event["_sk"] = _action_key(float(heal_time), 1.0, "main", heal_event)
+            heal_event["_sk"] = _action_key(
+                float(heal_time),
+                legacy_phase(TransitionRank.RECOVERY),
+                "main",
+                heal_event,
+            )
             healing["main"].append(heal_event)
         for event in main_incoming:
             receipt = _grey_health_event_receipt(
@@ -3615,7 +3660,11 @@ def build_participant_timeline(
         key=lambda event: event.get("_sk")
         or _action_key(
             float(event.get("time", 0.0)),
-            0.5 if event.get("_reactive") else 0.0,
+            legacy_phase(
+                TransitionRank.REACTIVE
+                if event.get("_reactive")
+                else TransitionRank.DAMAGE
+            ),
             str(event.get("target", "")),
             event,
         ),
@@ -3625,7 +3674,7 @@ def build_participant_timeline(
         key=lambda event: event.get("_sk")
         or _action_key(
             float(event.get("time", 0.0)),
-            1.0,
+            legacy_phase(TransitionRank.RECOVERY),
             str(event.get("attacker", "")),
             event,
         ),
@@ -3634,7 +3683,7 @@ def build_participant_timeline(
         (event for events in support_effects.values() for event in events),
         key=lambda event: (
             float(event.get("time", 0.0)),
-            -1.0 if event.get("kind") in {"shield", "temporary_health"} else 1.0,
+            _published_support_phase(event),
             str(event.get("target", "")),
             str(event.get("attacker", "")),
             str(event.get("_event_id", "")),

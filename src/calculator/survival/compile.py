@@ -915,7 +915,16 @@ class WalkCompiler:
             target_id = str(template["target"])
             subject_i = index_of[target_id]
             kind = str(template.get("kind", ""))
-            priority = -1.0 if kind == "shield" else 1.0
+            # The rank this support packet arms at.  Named here rather than
+            # recomputed as a float: the compiled path and the receipt walk
+            # must place a barrier and a recovery at the same two points,
+            # and two independent float ladders is exactly how they drift.
+            rank = (
+                TransitionRank.BARRIER_GRANT
+                if kind == "shield"
+                else TransitionRank.RECOVERY
+            )
+            priority = legacy_phase(rank)
             # Issue #137: fail closed on any resolved support template the
             # score kernel cannot stage — non-heal/shield kinds (stat buffs,
             # damage modifiers, on-hit magic, temporary health, ...), timed
@@ -999,7 +1008,7 @@ class WalkCompiler:
                 self.next_aidx += 1
                 sort_key = (
                     strike_time,
-                    0.5,
+                    legacy_phase(TransitionRank.REACTIVE),
                     strike_sequence,
                     *wearer_order,
                     striker.participant_id,

@@ -81,6 +81,17 @@ def legacy_phase(rank: TransitionRank) -> float:
         raise KeyError(f"TransitionRank.{rank.name} declares no legacy phase") from None
 
 
+# The read side of the projection.  The walk still receives a float and
+# still branches on where that float sits relative to three boundaries;
+# resolving them here once means a comparison names the rank it is asking
+# about instead of restating a number, and means the hot walk pays a module
+# attribute rather than a dict lookup per action.  Deleted with
+# ``legacy_phase`` in Phase 4, when the walk compares ranks directly.
+BARRIER_GRANT_PHASE = legacy_phase(TransitionRank.BARRIER_GRANT)
+DAMAGE_PHASE = legacy_phase(TransitionRank.DAMAGE)
+RECOVERY_PHASE = legacy_phase(TransitionRank.RECOVERY)
+
+
 # The published phase a rank belongs to.  Many-to-one for a different reason
 # than ``legacy_phase``: the public contract names the *kind* of transition,
 # so a late barrier is still a barrier, and arming a debuff or a utility
@@ -407,7 +418,10 @@ _UTILITY_KINDS = frozenset(
 _STATE_GRANT_KINDS = frozenset(
     {"stasis", "invulnerability", "untargetable", "spell_shield"}
 )
-_BARRIER_GRANT_KINDS = frozenset({"shield", "temporary_health"})
+# Public because the published support receipt orders barriers ahead of
+# everything else too, and one spelling of "which kinds are barriers"
+# is the point of this module.
+BARRIER_GRANT_KINDS = frozenset({"shield", "temporary_health"})
 _DEBUFF_ARM_KINDS = frozenset({"damage_modifier", "stat_buff"})
 
 # The key a packet author uses to declare its own rank.  Underscored because
@@ -434,7 +448,7 @@ def support_transition_rank(event: Mapping[str, Any]) -> TransitionRank:
     kind = str(event.get("kind", ""))
     if kind in _STATE_GRANT_KINDS:
         return TransitionRank.STATE_GRANT
-    if kind in _BARRIER_GRANT_KINDS:
+    if kind in BARRIER_GRANT_KINDS:
         return TransitionRank.BARRIER_GRANT
     if kind in _HEAL_KINDS:
         return TransitionRank.RECOVERY
@@ -487,20 +501,20 @@ def _classify_prefetched(
     standalone = _STANDALONE_KINDS.get(kind)
     if standalone is not None:
         return standalone
-    if phase == -1 and kind == "temporary_health":
+    if phase == BARRIER_GRANT_PHASE and kind == "temporary_health":
         return ActionKind.TEMP_HEALTH
-    if phase == -1 and kind in _HEAL_KINDS:
+    if phase == BARRIER_GRANT_PHASE and kind in _HEAL_KINDS:
         return _classify_heal(event)
-    if phase == 1:
-        # The authoritative walk's phase-1 branch heals every remaining
-        # packet unconditionally (the kind gate exists only in phase -1);
-        # engine self-heals may carry arbitrary kind strings such as
-        # ``champion_ability``.
+    if phase == RECOVERY_PHASE:
+        # The authoritative walk's recovery branch heals every remaining
+        # packet unconditionally (the kind gate exists only at
+        # ``BARRIER_GRANT``); engine self-heals may carry arbitrary kind
+        # strings such as ``champion_ability``.
         return _classify_heal(event)
-    if phase < 0:
-        # Phase -1 kinds outside the enumerated support transitions are
-        # silent no-ops in the authoritative walk; every kind authored
-        # today is classified above.
+    if phase < DAMAGE_PHASE:
+        # Kinds arming before damage but outside the enumerated support
+        # transitions are silent no-ops in the authoritative walk; every
+        # kind authored today is classified above.
         return ActionKind.UTILITY
     # Damage path.  The plain-damage marker mirrors the compiler: no live
     # health formula, no Grievous pack, no wound.

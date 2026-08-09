@@ -13,7 +13,13 @@ from __future__ import annotations
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any
 
-from .actions import SurvivalAction, action_key, survival_action_from_event
+from .actions import (
+    SurvivalAction,
+    TransitionRank,
+    action_key,
+    legacy_phase,
+    survival_action_from_event,
+)
 from .transitions import participant_pools
 from ..item_effects import sustain_effect_value
 
@@ -339,7 +345,10 @@ class ReceiptLedger:
         """Insert a recovery packet authored by a just-applied trigger
         beside the current action (receipt adapter observation)."""
         heal_event["_sk"] = action_key(
-            float(heal_event.get("time", 0.0)), 1.0, recipient_id, heal_event
+            float(heal_event.get("time", 0.0)),
+            legacy_phase(TransitionRank.RECOVERY),
+            recipient_id,
+            heal_event,
         )
         if self.expanded_healing is not None:
             self.expanded_healing.setdefault(recipient_id, []).append(heal_event)
@@ -347,7 +356,7 @@ class ReceiptLedger:
                 self.healing[recipient_id] = self.expanded_healing[recipient_id]
         action = survival_action_from_event(
             heal_event,
-            1.0,
+            legacy_phase(TransitionRank.RECOVERY),
             self.index_of[recipient_id],
             self.index_of,
             subject_id=recipient_id,

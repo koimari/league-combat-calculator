@@ -79,27 +79,184 @@ def test_a_rank_without_a_float_raises_rather_than_guessing(monkeypatch) -> None
         legacy_phase(TransitionRank.RECOVERY)
 
 
-def _survival_action_phase_constants(path: Path) -> list[tuple[str, int]]:
-    """Every ``SurvivalAction(phase=<literal>)`` still authored in one file."""
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    offenders: list[tuple[str, int]] = []
+# --- The phase slot: every way a float can still reach one ------------------
+#
+# The guard below is positional, not name-based: it finds the *slots* that
+# carry a phase and rejects a numeric literal anywhere inside the expression
+# filling one.  The counting rule is stated here so the population is
+# reproducible rather than judged (R-29's idiom).  A phase slot is:
+#
+#   1. the ``phase=`` keyword of any call;
+#   2. positional argument 1 of ``action_key``, ``_action_key``,
+#      ``survival_action_from_event``, ``classify_event_kind`` and
+#      ``_classify_prefetched`` — every function whose second parameter is
+#      literally named ``phase``;
+#   3. element 1 of a sort-key tuple, in the three shapes the tree writes
+#      one: a ``sort_key=`` keyword, an assignment to a name ``sort_key``,
+#      and the body of a ``lambda`` handed to a ``key=`` argument;
+#   4. the constant side of a comparison whose other side is ``phase`` or
+#      ``<something>.phase``.
+#
+# A slot filled by a bare local name is resolved through one level of
+# assignment inside the enclosing function, because ``priority = -1.0 if
+# ... else 1.0`` followed by ``phase=priority`` is the same literal wearing
+# a variable's clothes — that spelling is exactly how the compiled support
+# branch kept its own float ladder after the first migration pass.
+
+_PHASE_ARG1_CALLS = frozenset(
+    {
+        "action_key",
+        "_action_key",
+        "survival_action_from_event",
+        "classify_event_kind",
+        "_classify_prefetched",
+    }
+)
+
+
+def _callee_name(node: ast.expr) -> str:
+    """The bare name of a call target, however it was spelled."""
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return ""
+
+
+def _holds_number(node: ast.AST) -> bool:
+    """Whether an expression carries a numeric literal as a *value*.
+
+    Subscript indices are skipped: ``float(event["_sk"][1])`` reads the
+    phase back out of a sort key that was itself built from a rank, so its
+    ``1`` is a tuple position and not a phase anybody chose.
+    """
+    if isinstance(node, ast.Constant):
+        return isinstance(node.value, (int, float)) and not isinstance(node.value, bool)
+    if isinstance(node, ast.Subscript):
+        return _holds_number(node.value)
+    return any(_holds_number(child) for child in ast.iter_child_nodes(node))
+
+
+def _local_assignments(tree: ast.AST) -> dict[str, list[ast.expr]]:
+    """Every ``name = <expr>`` in the module, by name.
+
+    One level is enough: the tree never routes a phase through two hops,
+    and a deeper chain would be flagged by the reader rather than hidden.
+    """
+    bound: dict[str, list[ast.expr]] = {}
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        if getattr(node.func, "id", "") != "SurvivalAction":
-            continue
-        for keyword in node.keywords:
-            if keyword.arg == "phase" and isinstance(keyword.value, ast.Constant):
-                offenders.append((path.name, node.lineno))
-    return offenders
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    bound.setdefault(target.id, []).append(node.value)
+    return bound
 
 
-def test_no_action_is_built_with_a_float_phase_literal() -> None:
-    """Phases are named ranks, not floats an author picked at the call site."""
-    offenders: list[tuple[str, int]] = []
+def _slot_offends(node: ast.expr, bound: dict[str, list[ast.expr]]) -> bool:
+    """Whether the expression filling a phase slot carries a literal."""
+    if isinstance(node, ast.Name):
+        return any(_holds_number(value) for value in bound.get(node.id, ()))
+    return _holds_number(node)
+
+
+def _sort_key_tuples(tree: ast.AST) -> list[ast.Tuple]:
+    """Every tuple literal the tree builds as a sort key (shape 3 above)."""
+    found: list[ast.Tuple] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            for keyword in node.keywords:
+                if keyword.arg == "sort_key" and isinstance(keyword.value, ast.Tuple):
+                    found.append(keyword.value)
+                if keyword.arg == "key" and isinstance(keyword.value, ast.Lambda):
+                    if isinstance(keyword.value.body, ast.Tuple):
+                        found.append(keyword.value.body)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if (
+                    isinstance(target, ast.Name)
+                    and target.id == "sort_key"
+                    and isinstance(node.value, ast.Tuple)
+                ):
+                    found.append(node.value)
+    return found
+
+
+def _is_phase_operand(node: ast.expr) -> bool:
+    """``phase`` or ``<x>.phase`` — the reader side of a comparison."""
+    if isinstance(node, ast.Name):
+        return node.id == "phase"
+    if isinstance(node, ast.Attribute):
+        return node.attr == "phase"
+    return False
+
+
+def phase_literals(path: Path) -> list[tuple[str, int, str]]:
+    """Every numeric literal still reaching a phase slot in one file."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    bound = _local_assignments(tree)
+    offenders: list[tuple[str, int, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            callee = _callee_name(node.func)
+            for keyword in node.keywords:
+                if keyword.arg == "phase" and _slot_offends(keyword.value, bound):
+                    offenders.append((path.name, keyword.value.lineno, "phase="))
+            if callee in _PHASE_ARG1_CALLS and len(node.args) > 1:
+                if _slot_offends(node.args[1], bound):
+                    offenders.append((path.name, node.args[1].lineno, f"{callee}(,1)"))
+        elif isinstance(node, ast.Compare):
+            operands = [node.left, *node.comparators]
+            if any(_is_phase_operand(side) for side in operands) and any(
+                _holds_number(side) for side in operands
+            ):
+                offenders.append((path.name, node.lineno, "phase comparison"))
+    for tup in _sort_key_tuples(tree):
+        if len(tup.elts) > 1 and _slot_offends(tup.elts[1], bound):
+            offenders.append((path.name, tup.elts[1].lineno, "sort_key[1]"))
+    return sorted(offenders)
+
+
+def test_no_float_literal_reaches_a_phase_slot() -> None:
+    """Phases are named ranks, not floats an author picked at the call site.
+
+    The population is every phase slot in the kernel package and the
+    timeline — action construction, sort-key tuples, the ``action_key``
+    family's phase argument, and the comparisons that read a phase back —
+    not just the ``SurvivalAction(phase=)`` keyword, which is one spelling
+    of five and the one a migration notices first.
+    """
+    offenders: list[tuple[str, int, str]] = []
     for path in (*sorted(SURVIVAL.glob("*.py")), TIMELINE):
-        offenders.extend(_survival_action_phase_constants(path))
+        offenders.extend(phase_literals(path))
     assert offenders == []
+
+
+def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
+    """The guard's own red: each shape it claims to cover, made to fail."""
+    sample = tmp_path / "sample.py"
+    sample.write_text(
+        "\n".join(
+            (
+                "SurvivalAction(phase=1.0)",
+                "action_key(t, 0.5, who, event)",
+                "SurvivalAction(sort_key=(t, 1.0, s))",
+                "sort_key = (t, 0.5, s)",
+                "sorted(rows, key=lambda row: (row.t, -1.0, row.id))",
+                "if phase == -1:\n    pass",
+                "priority = -1.0 if kind == 'shield' else 1.0",
+                "SurvivalAction(phase=priority)",
+            )
+        ),
+        encoding="utf-8",
+    )
+    slots = [slot for _, _, slot in phase_literals(sample)]
+    assert sorted(set(slots)) == [
+        "action_key(,1)",
+        "phase comparison",
+        "phase=",
+        "sort_key[1]",
+    ]
+    assert slots.count("phase=") == 2  # the literal and the aliased ladder
 
 
 # --- The support ladder: a rank, never an open float ------------------------

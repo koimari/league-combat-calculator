@@ -45,7 +45,7 @@ from dataclasses import dataclass, field
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
-from .actions import ActionKind, SurvivalAction
+from .actions import DAMAGE_PHASE, RECOVERY_PHASE, ActionKind, SurvivalAction
 from .. import shield_ledger
 from ..healing_reduction import GRIEVOUS_WOUNDS_FACTOR, matching_healing_reduction
 from ..item_effects import sustain_effect_value
@@ -1153,7 +1153,7 @@ def _apply_live_packet_chain(
     # champion-hit window.
     if (
         state["incoming_damage_multiplier"] < 1.0
-        and action.phase >= 0
+        and action.phase >= DAMAGE_PHASE
         and 0 <= attacker < len(ctx.combatants)
         and attacker != action.subject
         and not action.reactive
@@ -1666,7 +1666,7 @@ def run_survival_walk(
             # The shared ledger is bounded by the authored fight window.  A
             # post-window revive, heal, or damage tick must remain visible in
             # the receipt but cannot alter terminal state or totals.
-            ledger.skip(action, "outside_window", damage_phase=phase >= 0)
+            ledger.skip(action, "outside_window", damage_phase=phase >= DAMAGE_PHASE)
             continue
 
         pools = state["pools"]
@@ -1717,13 +1717,18 @@ def run_survival_walk(
             # neither a recovery tick nor a reactive strike-back.  An action
             # with no trigger linkage at all passes both adapters trivially,
             # so the ledger is only consulted when a link exists.
-            ledger.skip(action, "trigger_event_skipped", damage_phase=phase < 1)
+            ledger.skip(
+                action, "trigger_event_skipped", damage_phase=phase < RECOVERY_PHASE
+            )
             continue
         if action.redirect_cancelled or (
             action.event_id is not None and action.event_id in ctx.redirect_cancelled
         ):
             ledger.skip(
-                action, "redirect_gate", damage_phase=phase < 1, preserve_reason=True
+                action,
+                "redirect_gate",
+                damage_phase=phase < RECOVERY_PHASE,
+                preserve_reason=True,
             )
             continue
         # Knight's Vow's 30%-health condition is an ordered state gate.  The
@@ -1788,7 +1793,7 @@ def run_survival_walk(
         ):
             ledger.skip(action, "defy_cleared_deferred_damage", damage_phase=True)
             continue
-        if phase >= 0 and (
+        if phase >= DAMAGE_PHASE and (
             state["stasis_until"] > event_time
             or state["invulnerable_until"] > event_time
             or state["untargetable_until"] > event_time
@@ -1796,7 +1801,7 @@ def run_survival_walk(
             ledger.skip(action, "target_state_blocked", damage_phase=True)
             continue
         if (
-            phase >= 0
+            phase >= DAMAGE_PHASE
             and action.is_ability
             and state["spell_shield_until"] > event_time
         ):
@@ -1820,7 +1825,7 @@ def run_survival_walk(
                 ledger.skip(action, "spell_shield", damage_phase=True)
                 continue
         if (
-            phase >= 0
+            phase >= DAMAGE_PHASE
             and 0 <= action.attacker < len(states)
             and not action.reactive
             and (
@@ -1861,9 +1866,10 @@ def run_survival_walk(
             _apply_live_packet_chain(ctx, action, state)
             _apply_heal(ctx, action, state)
             continue
-        if phase < 0:
-            # Phase -1 residue: the authoritative walk's phase -1 branch
-            # ends with a bare continue (no state change, no annotations).
+        if phase < DAMAGE_PHASE:
+            # Pre-damage residue: the authoritative walk's branch for ranks
+            # arming before damage ends with a bare continue (no state
+            # change, no annotations).
             continue
         _apply_damage(ctx, action, state)
 
