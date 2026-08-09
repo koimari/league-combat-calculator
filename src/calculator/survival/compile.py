@@ -950,6 +950,19 @@ class WalkCompiler:
             # declaring ``LATE_BARRIER`` would arm before the damage it was
             # placed after on the compiled path and after it on the walk —
             # a desync no equality gate can see until such a packet exists.
+            #
+            # This also widened the *kind* ladder, which is a second thing
+            # and is inert only because of the receipt above.  The branch
+            # this replaced was ``BARRIER_GRANT if kind == "shield" else
+            # RECOVERY``, so for the kinds ``unrepresentable_template_receipt``
+            # rejects — everything but ``shield`` and ``heal`` — the rank
+            # moved: ``temporary_health`` to ``BARRIER_GRANT`` and
+            # ``stasis`` to ``STATE_GRANT`` (both float moves, 1.0 to -1.0
+            # and -2.0), ``stat_buff``/``damage_modifier`` to
+            # ``DEBUFF_ARM`` and ``movement``/``cleanse``/... to
+            # ``UTILITY_ARM`` (rank moves at the same 1.0).  Admitting a
+            # kind to compilation therefore lands two behaviour changes,
+            # not one: read this line before widening that receipt.
             priority = legacy_phase(support_transition_rank(template))
             aidx = self.next_aidx
             self.next_aidx += 1

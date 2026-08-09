@@ -98,6 +98,13 @@ def _packet(
     kind does not decide it (a barrier the triggering damage placed, say).
     It is the only way to override the walk's ladder: an author names a
     :class:`TransitionRank`, never a number.
+
+    It also sits earlier in the returned dict than the open ordering float
+    it replaced did: that arrived through ``**fields``, after every
+    explicit key, and the rank is injected before them.  Inert — the
+    published receipt is assembled from an explicit key list, not from this
+    dict's order — but it is a payload-shape change beyond the key's name
+    and type, and a fixture comparing serialized packet order would see it.
     """
     if not math.isfinite(float(amount)) or float(amount) < 0.0:
         raise ValueError(f"{source} packet amount must be finite and non-negative")

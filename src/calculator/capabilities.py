@@ -22,6 +22,13 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Mapping
 
+# This module's one intra-package import, and the price of deriving the
+# published phase list instead of hand-listing it (0A.6): the public schema
+# now points at the kernel.  Note the reach — importing ``.survival.actions``
+# executes ``survival/__init__.py``, so compile, transitions, accumulate,
+# receipt_state and score_state all load with this module, which is heavier
+# than the import line reads for a module whose job is publishing a contract.
+# Acyclic: nothing under ``survival/`` imports ``capabilities``.
 from .survival.actions import TransitionRank, public_phase
 
 CAPABILITY_SCHEMA_VERSION = 1

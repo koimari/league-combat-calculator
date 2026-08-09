@@ -15,6 +15,16 @@ Package layout (top-level flow: compile -> transition -> accumulate):
   receipts (:class:`UncompilableActionError`);
 * :mod:`accumulate` — per-attacker float-sum order, rounded death-time
   cutoff, breakdown rows.
+
+``__all__`` is the package's declared API, so growing it is an API change.
+0A.4 grew it by six names — ``TransitionRank``, ``SUPPORT_RANK_KEY``,
+``BARRIER_GRANT_KINDS``, ``legacy_phase``, ``public_phase`` and
+``support_transition_rank`` — which is the transition vocabulary the item
+layer and the public schema now author against instead of writing floats.
+``BARRIER_GRANT_KINDS`` is additionally a rename: it was ``_BARRIER_GRANT_KINDS``
+until the published support ordering needed the kernel's one spelling of it.
+``legacy_phase`` is temporary by design and leaves this list in Phase 4,
+when the sort key consumes the rank itself.
 """
 
 from .actions import (
