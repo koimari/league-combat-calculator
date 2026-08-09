@@ -17,7 +17,10 @@ import pytest
 from src.calculator.survival import actions as actions_module
 from src.calculator.survival.actions import (
     SUPPORT_RANK_KEY,
+    ActionKind,
+    SurvivalAction,
     TransitionRank,
+    compiled_damage_action,
     legacy_phase,
     support_transition_rank,
 )
@@ -100,7 +103,13 @@ def test_a_rank_without_a_float_raises_rather_than_guessing(monkeypatch) -> None
 #      of a ``lambda`` handed to a ``key=`` argument, and a tuple handed
 #      positionally to the argument a definition names ``sort_key``;
 #   4. the constant side of a comparison whose other side is ``phase`` or
-#      ``<something>.phase``.
+#      ``<something>.phase``;
+#   5. the *default* of a class field named ``phase``.  A default is a slot
+#      every constructor that omits the field fills, which makes it the
+#      widest one in the tree rather than the narrowest:
+#      ``compiled_damage_action`` deliberately assigns no phase, so
+#      ``SurvivalAction``'s class default is where every compiled damage
+#      action in the hot path gets its phase from.
 #
 # **Shapes 2 and 3 read their positions from the definitions, never from a
 # list of names.**  The first version of this guard typed out five callee
@@ -268,6 +277,18 @@ def phase_literals(
                 _holds_number(side) for side in operands
             ):
                 offenders.append((path.name, node.lineno, "phase comparison"))
+        elif isinstance(node, ast.ClassDef):
+            for stmt in node.body:
+                if (
+                    isinstance(stmt, ast.AnnAssign)
+                    and isinstance(stmt.target, ast.Name)
+                    and stmt.target.id == "phase"
+                    and stmt.value is not None
+                    and _slot_offends(stmt.value, bound)
+                ):
+                    offenders.append(
+                        (path.name, stmt.lineno, f"{node.name}.phase default")
+                    )
     for tup, slot in _sort_key_tuples(tree, rules):
         if len(tup.elts) > 1 and _slot_offends(tup.elts[1], bound):
             offenders.append((path.name, tup.elts[1].lineno, slot))
@@ -318,6 +339,38 @@ def test_no_float_literal_reaches_a_phase_slot() -> None:
     assert offenders == []
 
 
+def test_the_compiled_hot_path_arms_at_the_damage_rank() -> None:
+    """The widest phase slot: a class default nothing overwrites.
+
+    ``compiled_damage_action`` assigns no phase — there is no ``_I_PHASE``
+    index — so every damage action the optimizer compiles takes
+    :class:`SurvivalAction`'s class default.  Asserting both halves is what
+    keeps that shortcut honest: if the default ever stops being the damage
+    rank, this fails instead of the compiled score path quietly arming its
+    damage somewhere the receipt walk does not.
+    """
+    action = compiled_damage_action(
+        (0.0, legacy_phase(TransitionRank.DAMAGE), 0),
+        0.0,
+        ActionKind.PLAIN_DAMAGE,
+        0,
+        1,
+        0,
+        10.0,
+        "physical",
+        None,
+        10.0,
+        None,
+        None,
+        "source_key",
+        "Source",
+        "event:1",
+        0,
+    )
+    assert action.phase == legacy_phase(TransitionRank.DAMAGE)
+    assert SurvivalAction().phase == legacy_phase(TransitionRank.DAMAGE)
+
+
 def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
     """The guard's own red: each shape it claims to cover, made to fail."""
     sample = tmp_path / "sample.py"
@@ -336,12 +389,14 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
                 "if phase == -1:\n    pass",
                 "priority = -1.0 if kind == 'shield' else 1.0",
                 "SurvivalAction(phase=priority)",
+                "class Action(NamedTuple):\n    phase: float = 0.0",
             )
         ),
         encoding="utf-8",
     )
     slots = [slot for _, _, slot in phase_literals(sample)]
     assert sorted(set(slots)) == [
+        "Action.phase default",
         "action_key(,1)",
         "phase comparison",
         "phase=",

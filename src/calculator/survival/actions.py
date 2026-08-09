@@ -208,12 +208,18 @@ class SurvivalAction(NamedTuple):
     receipt adapter's observation target (the event dict the public
     timeline serializes); score-mode actions leave it ``None`` so the
     kernel never annotates what the optimizer does not read.
+
+    ``phase`` defaults to the damage rank rather than to a bare zero.
+    That default is not a formality: ``compiled_damage_action``
+    deliberately assigns no phase, so it is where every compiled damage
+    action in the hot path gets its phase from — the widest phase slot in
+    the tree, not the narrowest.
     """
 
     # Ordering / routing
     sort_key: tuple = ()
     time: float = 0.0
-    phase: float = 0.0
+    phase: float = DAMAGE_PHASE
     kind: ActionKind = ActionKind.DAMAGE
     subject: int = -1
     attacker: int = -1
@@ -359,8 +365,11 @@ def compiled_damage_action(
     """Build a compiler damage action without keyword-default parsing.
 
     Exactly ``SurvivalAction(**those sixteen fields)``: every other field
-    keeps its class default (``phase=0.0`` and ``reactive=False`` included,
-    matching what the compiler always passes for damage packets).
+    keeps its class default, ``reactive=False`` and the phase included.
+    The phase is the load-bearing one — this function has no ``_I_PHASE``
+    because the class default *is* ``DAMAGE_PHASE``, which is what the
+    compiler would pass for a damage packet anyway.  Read the rank at
+    :class:`SurvivalAction`, not here.
     """
     row = _ACTION_DEFAULT_ROW.copy()
     row[_I_SORT_KEY] = sort_key
