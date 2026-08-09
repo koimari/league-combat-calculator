@@ -2,14 +2,26 @@
 
 Exercises damage._evaluate_cast_parts directly with a stub FightState:
 the evaluator owns HP-threading, per-part mitigation, and reduced-
-effectiveness crit — champion files own only the closures.
+effectiveness crit — champion files own only the closures.  Also pins the
+four closed vocabularies the leaf declares, member for member.
 """
 
+import ast
+from enum import Enum
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.ability_spec import DamagePart
+from src.calculator import ability_spec
+from src.calculator.ability_spec import (
+    AttackClass,
+    Authority,
+    DamageClass,
+    DamagePart,
+    Disposition,
+    part_damage_types,
+)
 from src.calculator.damage import _evaluate_cast_parts
 from src.calculator.resistance import apply_resistance
 
@@ -29,6 +41,104 @@ def _stub_state(
         crit_multiplier=crit_multiplier,
         resists=SimpleNamespace(effective_armor=effective_armor),
     )
+
+
+def _module_tree() -> ast.Module:
+    return ast.parse(Path(ability_spec.__file__).read_text(encoding="utf-8"))
+
+
+class TestClosedVocabularies:
+    """The four vocabularies every later phase spells by symbol, not by string."""
+
+    def test_damage_class_is_the_three_mitigation_types(self) -> None:
+        assert [member.name for member in DamageClass] == [
+            "MAGIC",
+            "PHYSICAL",
+            "TRUE",
+        ]
+        assert [member.value for member in DamageClass] == [
+            "magic",
+            "physical",
+            "true",
+        ]
+
+    def test_attack_class_is_the_three_delivery_types(self) -> None:
+        assert [member.name for member in AttackClass] == [
+            "BASIC_ATTACK",
+            "ABILITY",
+            "OTHER",
+        ]
+
+    def test_disposition_is_the_campaign_invariant(self) -> None:
+        assert [member.name for member in Disposition] == [
+            "MEASURED",
+            "STRUCTURAL_ZERO",
+            "WITHHELD",
+            "STARVED",
+        ]
+
+    def test_authority_names_all_five_engines_of_ownership(self) -> None:
+        assert [member.name for member in Authority] == [
+            "PAIR_ONLY",
+            "SPLIT",
+            "COUPLED_AUTHORITATIVE",
+            "COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW",
+            "COUPLED_ONLY",
+        ]
+
+    @pytest.mark.parametrize("vocabulary", [Disposition, Authority])
+    def test_receipt_spellings_equal_their_symbols(
+        self, vocabulary: type[Enum]
+    ) -> None:
+        # These members are serialized as receipt strings and reason
+        # prefixes, so symbol and spelling must be one string.
+        for member in vocabulary:
+            assert member.value == member.name
+
+    @pytest.mark.parametrize(
+        "vocabulary", [DamageClass, AttackClass, Disposition, Authority]
+    )
+    def test_vocabulary_is_closed(self, vocabulary: type[Enum]) -> None:
+        with pytest.raises(ValueError):
+            vocabulary("not_a_declared_member")
+
+    def test_part_damage_types_is_the_damage_class_projection(self) -> None:
+        assert part_damage_types() == frozenset(member.value for member in DamageClass)
+
+    def test_every_damage_class_builds_a_part(self) -> None:
+        for member in DamageClass:
+            assert DamagePart(member.value, 10.0).damage_type == member.value
+
+    def test_the_damage_type_strings_have_exactly_one_home(self) -> None:
+        """No literal spelling of the three types survives outside the enum."""
+        tree = _module_tree()
+        declaration = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ClassDef) and node.name == "DamageClass"
+        )
+        declared = {id(node) for node in ast.walk(declaration)}
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Constant)
+                and node.value in {"magic", "physical", "true"}
+                and id(node) not in declared
+            ):
+                raise AssertionError(
+                    f"{node.value!r} is spelled at ability_spec.py:{node.lineno} "
+                    "outside DamageClass; the vocabulary has one home"
+                )
+
+    def test_the_vocabulary_leaf_imports_no_sibling_module(self) -> None:
+        """Authority lives here because every layer can import this module."""
+        for node in ast.walk(_module_tree()):
+            if isinstance(node, ast.ImportFrom):
+                assert node.level == 0 and not str(node.module).startswith(
+                    "src.calculator"
+                ), f"ability_spec.py:{node.lineno} imports a sibling module"
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    assert not alias.name.startswith("src.calculator")
 
 
 class TestDamagePartValidation:

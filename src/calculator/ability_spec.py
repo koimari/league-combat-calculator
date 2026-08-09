@@ -1,4 +1,4 @@
-"""The champion→engine ability-damage contract.
+"""The champion→engine ability-damage contract and the closed vocabularies.
 
 An ability entry carries its damage arithmetic as a tuple of DamageParts;
 the fight engine evaluates parts generically
@@ -7,13 +7,119 @@ champion-specific keys. Champion-unique scaling math lives in the
 champion module as a ``hp_scaled_damage`` closure on the part.
 
 This module is a dependency-free leaf between the champion layer and the
-fight engine: both import the contract, neither imports the other.
+fight engine: both import the contract, neither imports the other. That
+is also why the campaign's four closed vocabularies live here —
+``DamageClass``, ``AttackClass``, ``Disposition`` and ``Authority`` are
+declared once, in the one module every layer may import, so no consumer
+has to re-spell a member as a bare string.
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import Enum
 
-_PART_DAMAGE_TYPES = frozenset({"magic", "physical", "true"})
+
+class DamageClass(Enum):
+    """Which resistance mitigates a number.
+
+    The string values are the engine's own spellings, so
+    ``part_damage_types()`` is the enum's projection rather than a second
+    list that can drift from it.
+    """
+
+    MAGIC = "magic"
+    PHYSICAL = "physical"
+    TRUE = "true"
+
+
+class AttackClass(Enum):
+    """How a number was delivered, independent of what mitigates it.
+
+    A damage-restricted mechanic declares both axes: Abyssal Mask's Unmake
+    is ``{MAGIC}`` from every attack class ("from all sources"), while a
+    basic-attack-only amplifier is every damage class from
+    ``{BASIC_ATTACK}``. ``OTHER`` covers damage that is neither — item
+    procs, burns and the environment.
+    """
+
+    BASIC_ATTACK = "basic_attack"
+    ABILITY = "ability"
+    OTHER = "other"
+
+
+class Disposition(Enum):
+    """What a numeric leaf *is* — the campaign's one invariant, as a type.
+
+    A number the model did not compute must never be indistinguishable
+    from a number the model computed as zero, so every serialized leaf is
+    exactly one of these:
+
+    * ``MEASURED`` — a rule ran against adequate inputs and produced this
+      value, zero included.
+    * ``STRUCTURAL_ZERO`` — a declaration says the mechanic does not apply
+      here; zero is the answer and the declaration is the receipt.
+    * ``WITHHELD`` — coverage refused to model it: a named receipt and no
+      number.
+    * ``STARVED`` — a projection could not answer the question a rule
+      asked. A programming error.
+
+    Each member's value is its own name, because these spellings are also
+    receipt strings and reason prefixes: a symbol and its serialized form
+    cannot drift when they are one string.
+    """
+
+    MEASURED = "MEASURED"
+    STRUCTURAL_ZERO = "STRUCTURAL_ZERO"
+    WITHHELD = "WITHHELD"
+    STARVED = "STARVED"
+
+
+class Authority(Enum):
+    """Which engine owns a mechanic — the pair engine, the coupled walk, or both.
+
+    Authority belongs to the smallest engine that can see every input the
+    mechanic's rule reads: all-pair-local inputs are ``PAIR_ONLY``, and any
+    roster input (another participant's damage, another holder's stacks,
+    the subject's live HP under combined fire) is coupled-authoritative.
+
+    * ``PAIR_ONLY`` — every input is pair-local.
+    * ``SPLIT`` — the pair-local restriction of the rule is exactly the
+      holder's own contribution, the two halves are provably disjoint, and
+      the owner skip is machine-checked. This is the only member that
+      carries an ``owner``.
+    * ``COUPLED_AUTHORITATIVE`` — the coupled walk owns it outright.
+    * ``COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW`` — the walk owns the
+      applied number and a pair-side preview survives, tagged theoretical
+      so it is never summed into the coupled total.
+    * ``COUPLED_ONLY`` — the walk owns it and no pair-side half exists at
+      all.
+
+    Declared here in 0A because 0B declares members on packets before
+    ``trigger_stream`` — the eventual re-export home — exists.
+    """
+
+    PAIR_ONLY = "PAIR_ONLY"
+    SPLIT = "SPLIT"
+    COUPLED_AUTHORITATIVE = "COUPLED_AUTHORITATIVE"
+    COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW = "COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW"
+    COUPLED_ONLY = "COUPLED_ONLY"
+
+
+# The projection every DamagePart is validated against, computed from the
+# enum once at import: the vocabulary has one home (DamageClass) and this
+# is its cached string view, not a second declaration of the same fact.
+_PART_DAMAGE_TYPES = frozenset(damage_class.value for damage_class in DamageClass)
+
+
+def part_damage_types() -> frozenset[str]:
+    """The string projection of ``DamageClass``.
+
+    The engine and the champion layer speak damage types as strings; this
+    is the only place those strings come from, so a fourth damage class is
+    added to the enum and nowhere else.
+    """
+    return _PART_DAMAGE_TYPES
+
 
 # The ``cc_kind`` values that count as an immobilize — the Wiki's
 # "Immobilizing" crowd-control class (airborne, forced actions, root,
@@ -79,8 +185,9 @@ class DamagePart:
     return is the Horizon Focus trigger for mixed entries.
 
     Attributes:
-        damage_type: "magic" | "physical" | "true" (anything else raises
-            at construction — a typo must never mitigate as magic).
+        damage_type: one of ``part_damage_types()``, the string projection
+            of ``DamageClass`` (anything else raises at construction — a
+            typo must never mitigate as magic).
         amount: Raw damage when ``hp_scaled_damage`` is None.
         count: Times the part hits per cast (Fox-Fire subsequent ×2).
         hp_scaled_damage: missing_ratio (0..1) → raw damage for one hit;
@@ -125,10 +232,10 @@ class DamagePart:
     cc_kind: str | None = None
 
     def __post_init__(self) -> None:
-        if self.damage_type not in _PART_DAMAGE_TYPES:
+        if self.damage_type not in part_damage_types():
             raise ValueError(
                 f"DamagePart damage_type must be one of "
-                f"{sorted(_PART_DAMAGE_TYPES)}, got {self.damage_type!r}"
+                f"{sorted(part_damage_types())}, got {self.damage_type!r}"
             )
         if self.time_offset is not None and self.time_offset < 0:
             raise ValueError("DamagePart time_offset cannot be negative")
