@@ -4,8 +4,8 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 
 * :mod:`actions` — typed :class:`SurvivalAction`/:class:`ActionKind`
   interface plus the shared ordering helpers;
-* :mod:`transitions` — the single kernel: :func:`apply_transition` per
-  kind, the shared :func:`run_survival_walk` loop, and the embedded
+* :mod:`transitions` — the single kernel: the :func:`run_survival_walk`
+  loop with the one dispatch ladder per kind, and the embedded
   transitions (reactive shields, Maw omnivamp, Defy).  Shield and health
   absorption itself belongs to :mod:`calculator.shield_ledger`, which the
   one-pair engine drives too (issue #159);
@@ -24,7 +24,10 @@ layer and the public schema now author against instead of writing floats.
 ``BARRIER_GRANT_KINDS`` is additionally a rename: it was ``_BARRIER_GRANT_KINDS``
 until the published support ordering needed the kernel's one spelling of it.
 ``legacy_phase`` is temporary by design and leaves this list in Phase 4,
-when the sort key consumes the rank itself.
+when the sort key consumes the rank itself.  0A.8 shrank it by one: the
+export was a second dispatch ladder over the same kinds, with zero
+callers, and a declared API is exactly where such a thing survives long
+enough to drift from the loop that is actually run.
 """
 
 from .actions import (
@@ -66,7 +69,6 @@ from .accumulate import accumulate_damage_totals, accumulate_support_values
 from .score_state import ScoreLedger
 from .transitions import (
     TransitionContext,
-    apply_transition,
     evaluate_live_raw_formula,
     expire_temporary_health,
     finalize_states,
@@ -90,7 +92,6 @@ __all__ = [
     "accumulate_damage_totals",
     "accumulate_support_values",
     "action_key",
-    "apply_transition",
     "assemble_survival_rows",
     "build_state",
     "build_states",

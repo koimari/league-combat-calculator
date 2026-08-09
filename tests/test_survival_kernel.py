@@ -5,7 +5,7 @@ Contract tests: the optimizer score path (``search_context`` +
 (:class:`ReceiptLedger`) for every scenario, across the mechanics the
 kernel implements.  Before Phase 2 the two walks were hand-synchronized
 mirror implementations that drifted silently (Aphelios Severum); now both
-adapters drive one :func:`apply_transition` kernel and these tests pin the
+adapters drive one :func:`run_survival_walk` kernel and these tests pin the
 adapters.
 
 Every scenario asserts the *full* scoring receipt (participants +

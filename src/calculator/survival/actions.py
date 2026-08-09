@@ -5,7 +5,7 @@ Every mechanic the coupled survival walks apply is expressed as one
 that mechanic reads.  The receipt walk and the optimizer's score walk both
 consume this interface; the only thing that differs between them is the
 ledger representation (event-annotating dicts vs parallel-array
-accumulation) behind :func:`~survival.transitions.apply_transition`.
+accumulation) behind :func:`~survival.transitions.run_survival_walk`.
 
 Ordering helpers (``action_key``, ``participant_order``, ``event_sequence``)
 live here too because the sort key is part of the action's identity: the
@@ -146,7 +146,7 @@ class ActionKind(Enum):
     """Every survival mechanic the kernel can transition, as one dispatch key.
 
     Standalone kinds are returned by :func:`classify_event_kind` and
-    dispatched by :func:`~survival.transitions.apply_transition`.  The
+    dispatched by :func:`~survival.transitions.run_survival_walk`.  The
     remaining members are *embedded* transitions — state changes authored
     *inside* a damage/heal application (lifeline thresholds, reactive
     barriers, Maw omnivamp, Defy, timed-shield expiry) — implemented as

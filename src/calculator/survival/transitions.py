@@ -13,13 +13,14 @@ adapters differ only in representation and observation:
 * the score ledger keeps parallel-array accumulation (``applied`` slots,
   trigger ``status``, per-attacker damage order) and never annotates.
 
-``apply_transition`` dispatches one :class:`SurvivalAction` against one
-per-participant state dict; ``run_survival_walk`` is the shared loop that
-applies every precondition gate (window, expiry, trigger linkage, death)
-in the authoritative order and then hands the action to the kernel.  The
-plain-damage hot-loop branch stays the first dispatch arm and reads none
-of the four fields it cannot carry (trigger, live formula, Grievous pack,
-wound).
+``run_survival_walk`` is the one entry point: it applies every
+precondition gate (window, expiry, trigger linkage, death) in the
+authoritative order and dispatches each :class:`SurvivalAction` to the
+single implementation of its mechanic against one per-participant state
+dict.  That dispatch lives in the loop itself — there is exactly one
+ladder here, so a mechanic cannot be routed two ways.  The plain-damage
+hot-loop branch stays the first dispatch arm and reads none of the four
+fields it cannot carry (trigger, live formula, Grievous pack, wound).
 
 Ledger observation contract (the only adapter difference):
 
@@ -1585,61 +1586,11 @@ _DAMAGE_KINDS = frozenset(
 )
 
 
-def apply_transition(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
-) -> None:
-    """One typed action against one participant state — the single kernel.
-
-    This is the issue #137 entry point: every mechanic has exactly one
-    semantic implementation here, and the two ledger adapters differ only
-    in representation and observation.
-    """
-    kind = action.kind
-    if kind is ActionKind.PLAIN_DAMAGE:
-        _apply_damage(ctx, action, state)
-        return
-    if kind in _DAMAGE_KINDS:
-        _apply_damage(ctx, action, state)
-        return
-    if kind in (ActionKind.HEAL, ActionKind.OVERHEAL_SHIELD, ActionKind.ICHOR_CONVERT):
-        # The shared packet chain runs before recovery too (a no-op unless
-        # a next-event-only modifier is armed), mirroring the walk.
-        _apply_live_packet_chain(ctx, action, state)
-        _apply_heal(ctx, action, state)
-        return
-    if kind is ActionKind.SHIELD:
-        _apply_shield(ctx, action, state)
-        return
-    if kind is ActionKind.TEMP_HEALTH:
-        _apply_live_packet_chain(ctx, action, state)
-        _apply_temp_health(ctx, action, state)
-        return
-    if kind is ActionKind.REVIVE:
-        _apply_revive(ctx, action, state)
-        return
-    if kind in (ActionKind.STASIS, ActionKind.INVULNERABLE, ActionKind.UNTARGETABLE):
-        _apply_combat_state_transition(ctx, action, state)
-        return
-    if kind is ActionKind.SPELL_SHIELD:
-        _apply_spell_shield(ctx, action, state)
-        return
-    if kind is ActionKind.STAT_BUFF:
-        _apply_stat_buff(ctx, action, state)
-        return
-    if kind is ActionKind.DAMAGE_MODIFIER:
-        _apply_damage_modifier(ctx, action, state)
-        return
-    if kind in (ActionKind.ON_HIT_MAGIC, ActionKind.UTILITY):
-        _apply_utility(ctx, action, state)
-        return
-    raise ValueError(f"unhandled survival action kind {kind}")
-
-
 def run_survival_walk(
     actions: Sequence[SurvivalAction], ctx: TransitionContext
 ) -> None:
     """The shared walk: every precondition gate in the authoritative order,
-    then one :func:`apply_transition` per action.
+    then this loop's own dispatch to the one implementation per mechanic.
 
     Both adapters drive this exact loop; the ledger abstracts the skip
     annotations, trigger-linkage status, and walk-authored scheduling so
@@ -1884,7 +1835,6 @@ def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
 
 __all__ = [
     "TransitionContext",
-    "apply_transition",
     "evaluate_live_raw_formula",
     "expire_temporary_health",
     "finalize_states",
