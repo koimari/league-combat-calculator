@@ -25963,6 +25963,8 @@
           "cast_time": 0.25,
           "cooldown": 100.0,
           "damage_type": "magic",
+          "execute_source": "Unleashed Power",
+          "execute_threshold_ratio": 0.15,
           "name": "Unleashed Power",
           "parts": [
             "DamagePart(magic, amount=120.0, count=3, hp_scaled=no, crit_effectiveness=0.0)"
@@ -65524,9 +65526,9 @@
             "W": 470.37,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 160.66,
-            "shadowflame_Shadowflame": 185.2
+            "shadowflame_Shadowflame": 200.13
           },
-          "total_damage": 2577.5
+          "total_damage": 2592.42
         },
         "no_items": {
           "breakdown_totals": {
@@ -65571,9 +65573,9 @@
               "W": 470.37,
               "auto_attacks": 158.0,
               "proc_Luden's Echo": 160.66,
-              "shadowflame_Shadowflame": 185.2
+              "shadowflame_Shadowflame": 200.13
             },
-            "total_damage": 2735.5
+            "total_damage": 2750.42
           },
           "no_items": {
             "breakdown_totals": {
@@ -65622,9 +65624,9 @@
             "W": 531.67,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 160.66,
-            "shadowflame_Shadowflame": 229.46
+            "shadowflame_Shadowflame": 219.33
           },
-          "total_damage": 2891.06
+          "total_damage": 2880.92
         },
         "no_items": {
           "breakdown_totals": {
@@ -65669,9 +65671,9 @@
               "W": 531.67,
               "auto_attacks": 274.67,
               "proc_Luden's Echo": 160.66,
-              "shadowflame_Shadowflame": 323.19
+              "shadowflame_Shadowflame": 313.06
             },
-            "total_damage": 3728.1
+            "total_damage": 3717.97
           },
           "no_items": {
             "breakdown_totals": {

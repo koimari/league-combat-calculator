@@ -800,7 +800,7 @@ class TestTargetIncomingDamageModifiers:
             "total_damage"
         ] == pytest.approx(60.0)
         cinderbloom = result["breakdown"]["shadowflame_Shadowflame"]
-        assert cinderbloom["timeline_events"] == [
+        assert cinderbloom["damage_events"] == [
             {
                 "time": 2.0,
                 "damage": pytest.approx(60.0),

@@ -716,6 +716,15 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                 else "proc"
             )
             cons.append(("detonation_consume", "stacks", f"post_hit_proc {nm!r}"))
+        execute_ratio = float(info.get("execute_threshold_ratio", 0.0) or 0.0)
+        if execute_ratio > 0 and _is_damage_row(info):
+            cons.append(
+                (
+                    "execute",
+                    "execute",
+                    f"execute_threshold_ratio={execute_ratio:g}",
+                )
+            )
         at = atexts[b]
         if _ATTR_PER_STACK.search(at):
             cons.append(

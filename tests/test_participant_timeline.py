@@ -959,6 +959,102 @@ def test_enemy_hits_off_composes_zero_enemy_damage():
     assert main["survival"]["survived_window"] is True
 
 
+def test_enemy_hits_off_keeps_shadowflame_packets_before_target_death():
+    """Cinderbloom keeps its trigger times in the coupled damage ledger."""
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Syndra",
+            "level": 11,
+            "role": "mid",
+            "role_quest_complete": True,
+            "items": ["Doran's Ring", "Blackfire Torch", "Shadowflame"],
+            "boots": "Spellslinger's Shoes",
+            "fight_mode": "time_based",
+            "fight_duration": 30,
+            "include_auto_attacks": True,
+            "ability_ranks": {"Q": 5, "W": 3, "E": 1, "R": 2},
+            "champion_options": {"splinters": 100, "r_spheres": 3},
+            "enemies_attack": False,
+            "enemies": [
+                {
+                    "champion": "Ryze",
+                    "level": 11,
+                    "role": "mid",
+                    "role_quest_complete": True,
+                    "items": [
+                        "Rod of Ages",
+                        "Seraph's Embrace",
+                        "Doran's Ring",
+                        "Dark Seal",
+                    ],
+                    "boots": "Chainlaced Crushers",
+                    "item_options": {
+                        "Rod of Ages": {"timeless_stacks": 3},
+                        "Dark Seal": {"glory_stacks": 5},
+                    },
+                    "ability_ranks": {"Q": 5, "W": 1, "E": 3, "R": 2},
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    target = next(row for row in combat["participants"] if row["team"] == "enemy")
+    death_time = target["survival"]["death_time"]
+    shadowflame = [
+        event
+        for event in combat["events"]
+        if event["attacker"] == "main" and event["source"] == "shadowflame_Shadowflame"
+    ]
+
+    assert death_time is not None
+    assert any(
+        event["damage"] > 0 and event["time"] < death_time for event in shadowflame
+    )
+    assert any(event.get("skipped_reason") == "target_dead" for event in shadowflame)
+
+
+def test_syndra_100_stack_r_executes_in_the_coupled_timeline():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Syndra",
+            "level": 11,
+            "role": "mid",
+            "role_quest_complete": True,
+            "items": ["Doran's Ring", "Blackfire Torch", "Shadowflame"],
+            "boots": "Spellslinger's Shoes",
+            "fight_mode": "time_based",
+            "fight_duration": 30,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 5, "W": 3, "E": 1, "R": 2},
+            "champion_options": {"splinters": 100, "r_spheres": 3},
+            "enemies_attack": False,
+            "enemies": [{"champion": "Ryze", "level": 11, "items": []}],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["rotation"]["cast_order"][-1] == "R"
+    target = next(
+        row for row in payload["combat"]["participants"] if row["team"] == "enemy"
+    )
+    r_event = next(
+        event
+        for event in payload["combat"]["events"]
+        if event["attacker"] == "main" and event["source"] == "R"
+    )
+
+    assert target["survival"]["execute_source"] == "Unleashed Power"
+    assert target["survival"]["execute_time"] == pytest.approx(r_event["time"])
+    assert r_event["execute_triggered"] is True
+
+
 def test_coupled_tank_vs_tank_receipt_keeps_both_survival_rows():
     """A tank-vs-tank fight exposes outgoing and incoming state for both sides."""
     app.config["TESTING"] = True
