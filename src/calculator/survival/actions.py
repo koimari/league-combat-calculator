@@ -16,9 +16,11 @@ composition and the score compiler build the same keys.
 from __future__ import annotations
 
 from enum import Enum, IntEnum
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 import math
 from typing import Any, NamedTuple
+
+from ..ability_spec import AttackClass, DamageClass
 
 # ---------------------------------------------------------------------------
 # Transition rank — the one ordered "when does this resolve" vocabulary
@@ -284,10 +286,96 @@ class SurvivalAction(NamedTuple):
     mr_reduction_percent: float = 0.0
     resistance_type: str = ""
     owner: str = ""
+    # The class restriction a damage-modifier packet declares (D-04).  Both
+    # are required of such a packet and empty is banned, which is why the
+    # class default is the empty set: a modifier action that reached the
+    # walk without a declaration raises in ``declared_modifier_classes``
+    # instead of quietly applying to everything.
+    damage_classes: frozenset[DamageClass] = frozenset()
+    attack_classes: frozenset[AttackClass] = frozenset()
     # Utility fields
     gold_amount: float = 0.0
     ward_uses: float = 0.0
     duration_set: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Damage and attack classes — what a packet *is*, and what a modifier restricts
+# ---------------------------------------------------------------------------
+#
+# Two different questions share this vocabulary.  A damage packet *belongs
+# to* exactly one damage class and one attack class, resolved by the two
+# ``*_of`` readers below.  A damage-modifier packet *declares the set* of
+# classes it applies to, and that declaration rides the action into the
+# armed modifier.  Applicability is then set membership, in one place
+# (``transitions._modifier_applies``), instead of an untyped multiply.
+
+_DAMAGE_CLASS_BY_TYPE = {member.value: member for member in DamageClass}
+
+
+def damage_class_of(action: SurvivalAction) -> DamageClass | None:
+    """Which resistance mitigates this packet, or ``None`` if it names none.
+
+    ``None`` is the honest answer for an action carrying no ``damage_type``
+    (an arming or recovery transition), and it is not a member of any
+    declared set, so such an action matches no restriction.
+    """
+    return _DAMAGE_CLASS_BY_TYPE.get(action.damage_type)
+
+
+def attack_class_of(action: SurvivalAction) -> AttackClass:
+    """How this packet was delivered, independent of what mitigates it.
+
+    Basic attacks are read first because ``source_key == "auto_attacks"``
+    marks the engine's own auto-attack rows, which also carry an ability
+    flag when an ability empowered them; everything that is neither an
+    attack nor a spell — item procs, burns, thorns returns — is ``OTHER``.
+    """
+    if action.basic_attack or action.source_key == "auto_attacks":
+        return AttackClass.BASIC_ATTACK
+    if action.is_ability:
+        return AttackClass.ABILITY
+    return AttackClass.OTHER
+
+
+def declared_modifier_classes(
+    action: SurvivalAction,
+) -> tuple[frozenset[DamageClass], frozenset[AttackClass]]:
+    """The class restriction a damage-modifier action carries (D-04).
+
+    Both sets are required and empty-means-all is banned, so an absent or
+    empty declaration raises here — at the moment the modifier would arm —
+    naming the packet.  A silent default is what this campaign exists to
+    kill: an untyped modifier multiplies every damage class alike, which is
+    how the walk amplified a holder's true damage with a magic-only curse.
+    """
+    if not action.damage_classes or not action.attack_classes:
+        raise ValueError(
+            f"{action.source or 'damage_modifier'} arms a damage modifier "
+            "without a complete class declaration "
+            f"(damage_classes={sorted(c.name for c in action.damage_classes)}, "
+            f"attack_classes={sorted(c.name for c in action.attack_classes)}); "
+            "both are required and empty-means-all is banned (D-04)"
+        )
+    return action.damage_classes, action.attack_classes
+
+
+def _declared_class_set(value: Any, vocabulary: type) -> frozenset:
+    """One packet's declared class set, failing closed to the empty set.
+
+    An absent declaration is empty rather than guessed; a declaration
+    spelled as anything but members of ``vocabulary`` raises, because a
+    string that looks like a class is exactly the drift the enum retires.
+    """
+    if not value:
+        return frozenset()
+    members = frozenset(value if isinstance(value, Iterable) else (value,))
+    if not all(isinstance(member, vocabulary) for member in members):
+        raise TypeError(
+            f"a packet declared {sorted(map(str, members))} where "
+            f"{vocabulary.__name__} members are required"
+        )
+    return members
 
 
 # ---------------------------------------------------------------------------
@@ -718,6 +806,8 @@ def survival_action_from_event(
         mr_reduction_percent=float(get("mr_reduction_percent", 0.0) or 0.0),
         resistance_type=str(get("resistance_type", "")),
         owner=str(get("owner", "")),
+        damage_classes=_declared_class_set(get("damage_classes"), DamageClass),
+        attack_classes=_declared_class_set(get("attack_classes"), AttackClass),
         gold_amount=float(get("gold_amount", 0.0) or 0.0),
         ward_uses=float(get("ward_uses", 0.0) or 0.0),
         duration_set="duration" in event,
@@ -733,7 +823,10 @@ __all__ = [
     "SurvivalAction",
     "TransitionRank",
     "action_key",
+    "attack_class_of",
     "classify_event_kind",
+    "damage_class_of",
+    "declared_modifier_classes",
     "event_sequence",
     "legacy_phase",
     "participant_order",

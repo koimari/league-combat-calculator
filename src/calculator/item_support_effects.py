@@ -16,7 +16,13 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from .ability_spec import IMMOBILIZING_CC_KINDS, Authority, is_immobilizing_event
+from .ability_spec import (
+    IMMOBILIZING_CC_KINDS,
+    AttackClass,
+    Authority,
+    DamageClass,
+    is_immobilizing_event,
+)
 from .item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -92,6 +98,8 @@ def _packet(
     target_scope: str = "one_teammate",
     rank: TransitionRank | None = None,
     authority: Authority | None = None,
+    damage_classes: frozenset[DamageClass] | None = None,
+    attack_classes: frozenset[AttackClass] | None = None,
     **fields: Any,
 ) -> dict[str, Any]:
     """Build one sourced packet.
@@ -109,6 +117,15 @@ def _packet(
     site and :func:`cross_participant_authorities`, and a packet payload
     that grew a key would move receipts inside a semantic commit (R-17).
 
+    ``damage_classes`` and ``attack_classes`` are how a ``damage_modifier``
+    packet says *what it applies to* — the two axes of D-04, both required
+    of those packets, both banned from being empty, and both checked here.
+    Unlike ``authority`` they are written into the returned dict, because
+    the walk reads them per packet; they reach no receipt, because the
+    published support-event payload is an explicit key list
+    (``participant_timeline``'s ``support_events`` block) and neither key is
+    on it.
+
     ``rank`` also sits earlier in the returned dict than the open ordering
     float it replaced did: that arrived through ``**fields``, after every
     explicit key, and the rank is injected before them.  Inert — the
@@ -122,6 +139,12 @@ def _packet(
         raise ValueError(f"{source} packet duration must be finite and non-negative")
     if kind == _DAMAGE_MODIFIER_KIND:
         _check_cross_participant_authority(source, authority, fields.get("owner"))
+        _check_declared_classes(source, damage_classes, attack_classes)
+        fields = {
+            "damage_classes": damage_classes,
+            "attack_classes": attack_classes,
+            **fields,
+        }
     return {
         "time": float(time),
         "kind": kind,
@@ -613,6 +636,12 @@ def derive_item_support_effects(
                     all_sources=True,
                     persistent=True,
                     range_assumption="within_700_units",
+                    # "receive 12% increased *magic* damage from all
+                    # sources": one damage class, every attack class.  The
+                    # walk applied it to physical and true damage too until
+                    # this declaration existed to say otherwise.
+                    damage_classes=frozenset({DamageClass.MAGIC}),
+                    attack_classes=frozenset(AttackClass),
                     authority=Authority.SPLIT,
                     # The holder's own Unmake is priced pair-side, as the
                     # ``magic_amp`` term of the damage engine's build
@@ -652,6 +681,11 @@ def derive_item_support_effects(
                     cooldown=ally_item_effect_value(
                         "Bloodsong", "expose_weakness_cooldown"
                     ),
+                    # "take 8% increased damage from all sources" — no class
+                    # is named, so every member of both vocabularies is
+                    # declared explicitly rather than left to an empty set.
+                    damage_classes=frozenset(DamageClass),
+                    attack_classes=frozenset(AttackClass),
                     # The pair engine prices the holder's own Expose Weakness
                     # on a schedule that is not the walk's; the umbrella
                     # freezes that divergence in Phase 3 and moves this row to
@@ -697,6 +731,10 @@ def derive_item_support_effects(
                     ),
                     armor_reduction_percent=percent,
                     resistance_type="armor",
+                    # "6% armor reduction": armour mitigates physical
+                    # damage, so that is the class the reduction reaches.
+                    damage_classes=frozenset({DamageClass.PHYSICAL}),
+                    attack_classes=frozenset(AttackClass),
                     # The stack ledger is a roster fact and Carve's move to
                     # coupled-authoritative is H1's to rule; until it is
                     # ruled the pair engine keeps its own Cesàro
@@ -738,6 +776,9 @@ def derive_item_support_effects(
                     ),
                     mr_reduction_percent=percent,
                     resistance_type="magic_resistance",
+                    # "magic resistance reduction": the mirror of Carve.
+                    damage_classes=frozenset({DamageClass.MAGIC}),
+                    attack_classes=frozenset(AttackClass),
                     # Vile Decay is Carve's shape, magic- and ability-gated,
                     # and is H1-blocked with it.
                     authority=Authority.SPLIT,
@@ -881,6 +922,16 @@ def derive_item_support_effects(
                         ),
                         damage_reduction=True,
                         next_event_only=True,
+                        # "reduces the damage of the next *attack or spell*
+                        # they receive": every damage class, but only two
+                        # attack classes.  This is the one producer whose
+                        # own text matches the walk's delivery gate — the
+                        # gate is this restriction, generalised to five
+                        # mechanics that never claimed it.
+                        damage_classes=frozenset(DamageClass),
+                        attack_classes=frozenset(
+                            {AttackClass.BASIC_ATTACK, AttackClass.ABILITY}
+                        ),
                         # No pair engine prices Blue Dream Bubble: it shields
                         # an *ally* against the next hit from anyone, which is
                         # a roster fact with no pair-local restriction, and
@@ -1057,6 +1108,10 @@ def derive_item_support_effects(
                             "Imperial Mandate", "command_damage_amp"
                         ),
                         all_sources=True,
+                        # "increasing the damage they take from all sources
+                        # by 7%": every class on both axes.
+                        damage_classes=frozenset(DamageClass),
+                        attack_classes=frozenset(AttackClass),
                         # The holder's pair engine prices its own amp
                         # (damage._apply_command_amp); the walk applies
                         # this packet to every other participant only.
@@ -1478,6 +1533,38 @@ def _check_cross_participant_authority(
             "half is unreachable to the walk's skip and the holder is priced "
             "twice"
         )
+
+
+def _check_declared_classes(
+    source: str,
+    damage_classes: frozenset[DamageClass] | None,
+    attack_classes: frozenset[AttackClass] | None,
+) -> None:
+    """Every ``damage_modifier`` packet says which damage it applies to (D-04).
+
+    Both axes are required with no default and neither may be empty:
+    "empty means all" is a silent default, and the walk that consumed these
+    packets untyped amplified a magic-only curse onto physical and true
+    damage alike.  ``attack_classes`` is the axis on which "from all
+    sources" becomes something a packet can *state* rather than something a
+    reader infers from a missing restriction.
+    """
+    for name, declared, vocabulary in (
+        ("damage_classes", damage_classes, DamageClass),
+        ("attack_classes", attack_classes, AttackClass),
+    ):
+        if not declared:
+            raise ValueError(
+                f"{source} modifies another participant's damage and declares "
+                f"no {name}; a non-empty frozenset of "
+                f"{vocabulary.__name__} is required and empty-means-all is "
+                "banned (D-04)"
+            )
+        if not all(isinstance(member, vocabulary) for member in declared):
+            raise ValueError(
+                f"{source} declares {name} holding something other than "
+                f"{vocabulary.__name__} members"
+            )
 
 
 def producer_item(source: str) -> str:

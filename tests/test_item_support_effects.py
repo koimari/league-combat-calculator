@@ -13,7 +13,9 @@ import pytest
 
 from src.app import app
 from src.calculator import item_support_effects, pipeline
-from src.calculator.ability_spec import Authority
+from src.calculator.ability_spec import AttackClass, Authority, DamageClass
+from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.item_source import effect_entries, effect_text
 from src.calculator.item_effects import ITEM_EFFECTS, ally_item_effect_value
 from src.calculator.item_effects import ally_item_level_value
 from src.calculator.item_support_effects import (
@@ -600,7 +602,12 @@ class TestCrossParticipantAuthorities:
 
 # One Abyssal holder, one ally to price and one cursed enemy — the shape the
 # coupled baseline's ``mandate_abyssal_curse_roster`` scenario uses, reduced to
-# the one item this slice moves.
+# the one item these slices move.  The ally is an Ahri rather than the
+# baseline's Pantheon because C3 types the curse: Pantheon's only damage into
+# the cursed enemy after the arming timestamp is physical, so with a magic-only
+# Unmake his rows carry no multiplier at all and the roster could no longer show
+# an amped ally.  Ahri's Q lands magic *and* true damage into the same enemy at
+# the same instant, which is the whole of C3 in one packet pair.
 _ABYSSAL_ROSTER = {
     "champion": "Ahri",
     "level": 18,
@@ -610,7 +617,7 @@ _ABYSSAL_ROSTER = {
     "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
     "allies": [
         {
-            "champion": "Pantheon",
+            "champion": "Ahri",
             "level": 18,
             "items": [],
             "ally_effects_enabled": True,
@@ -633,6 +640,8 @@ class TestOwnerIsPresentIffSplit:
             "source": "Abyssal Mask — Unmake",
             "authority": Authority.SPLIT,
             "owner": holder.participant_id,
+            "damage_classes": frozenset({DamageClass.MAGIC}),
+            "attack_classes": frozenset(AttackClass),
         }
         fields.update(overrides)
         return item_support_effects._packet(**fields)
@@ -672,6 +681,176 @@ class TestOwnerIsPresentIffSplit:
     def test_the_declaration_never_reaches_the_packet_payload(self):
         """R-17: a semantic commit may not move a serialized receipt's shape."""
         assert "authority" not in self._modifier()
+
+
+def declared_classes_by_producer():
+    """Each ``damage_modifier`` call site's declared class sets, by source.
+
+    Read from the construction sites and evaluated in the module's own
+    namespace, so the test sees the declaration a reader sees rather than a
+    packet a fixture happened to build.  Public because the C3 sentinel in
+    ``test_phase0_sentinels`` reads the same declarations: a second AST walk
+    over the same call sites would be a second home for one fact.
+    """
+    module_source = Path(item_support_effects.__file__).read_text(encoding="utf-8")
+    declared = {}
+    for node in ast.walk(ast.parse(module_source)):
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "_packet"
+        ):
+            continue
+        kind = item_support_effects._packet_keyword(node, "kind")
+        if not (isinstance(kind, ast.Constant) and kind.value == "damage_modifier"):
+            continue
+        source = item_support_effects._packet_keyword(node, "source").value
+        declared[source] = {
+            axis: eval(  # pylint: disable=eval-used
+                compile(
+                    ast.Expression(item_support_effects._packet_keyword(node, axis)),
+                    "<declaration>",
+                    "eval",
+                ),
+                vars(item_support_effects),
+            )
+            for axis in ("damage_classes", "attack_classes")
+        }
+    return declared
+
+
+class TestDeclaredDamageAndAttackClasses:
+    """C3's half of the same construction site: what a modifier applies to (D-04)."""
+
+    def _modifier(self, **overrides):
+        holder = _actor("main", "main", ())
+        enemy = _actor("enemy:Aatrox", "enemy", ())
+        fields = {
+            "attacker": holder,
+            "target": enemy,
+            "time": 0.0,
+            "kind": "damage_modifier",
+            "source": "Abyssal Mask — Unmake",
+            "authority": Authority.SPLIT,
+            "owner": holder.participant_id,
+            "damage_classes": frozenset({DamageClass.MAGIC}),
+            "attack_classes": frozenset(AttackClass),
+        }
+        fields.update(overrides)
+        return item_support_effects._packet(**fields)
+
+    def test_the_declaration_reaches_the_packet(self):
+        """Unlike ``authority``, the walk reads these per packet."""
+        packet = self._modifier()
+        assert packet["damage_classes"] == frozenset({DamageClass.MAGIC})
+        assert packet["attack_classes"] == frozenset(AttackClass)
+
+    @pytest.mark.parametrize("axis", ["damage_classes", "attack_classes"])
+    def test_an_absent_declaration_raises(self, axis):
+        with pytest.raises(ValueError, match=f"declares no {axis}"):
+            self._modifier(**{axis: None})
+
+    @pytest.mark.parametrize("axis", ["damage_classes", "attack_classes"])
+    def test_an_empty_declaration_raises(self, axis):
+        """Empty-means-all is banned: the ban is what makes the field required."""
+        with pytest.raises(ValueError, match="empty-means-all is banned"):
+            self._modifier(**{axis: frozenset()})
+
+    def test_a_declaration_of_the_wrong_vocabulary_raises(self):
+        with pytest.raises(ValueError, match="other than DamageClass members"):
+            self._modifier(damage_classes=frozenset({"magic"}))
+
+    def test_a_non_modifier_packet_needs_no_declaration(self):
+        packet = self._modifier(
+            kind="shield",
+            authority=None,
+            owner=None,
+            damage_classes=None,
+            attack_classes=None,
+        )
+        assert "damage_classes" not in packet
+
+    def test_every_producer_declares_both_axes_at_its_call_site(self):
+        """A seventh producer cannot ship undeclared even if it never runs.
+
+        The runtime check in ``_packet`` only fires on a packet that is
+        built; this reads the construction sites themselves, so a branch no
+        fixture reaches still has to name both axes.
+        """
+        tree = ast.parse(
+            Path(item_support_effects.__file__).read_text(encoding="utf-8")
+        )
+        sites = []
+        for node in ast.walk(tree):
+            if not (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "_packet"
+            ):
+                continue
+            kind = item_support_effects._packet_keyword(node, "kind")
+            if isinstance(kind, ast.Constant) and kind.value == "damage_modifier":
+                sites.append(node)
+        assert len(sites) == len(cross_participant_authorities())
+        for node in sites:
+            for axis in ("damage_classes", "attack_classes"):
+                assert (
+                    item_support_effects._packet_keyword(node, axis) is not None
+                ), f"line {node.lineno} declares no {axis}"
+
+    def test_the_declarations_agree_with_the_cached_wiki_text(self):
+        """Every restriction is read off the cached entry, never assumed.
+
+        The two axes read different phrases, which is the whole of D-04:
+        "from all sources" says nothing about damage class — Unmake says it
+        while restricting to magic — so it is the *attack* axis that phrase
+        settles, and the damage axis is settled by the class or the
+        resistance the text names.  The text comes from
+        ``item_source.effect_text`` — every branch of the entry — as repo
+        rule 6 requires.
+        """
+        damage_axis_phrases = {
+            "increased magic damage": frozenset({DamageClass.MAGIC}),
+            "armor reduction": frozenset({DamageClass.PHYSICAL}),
+            "magic resistance reduction": frozenset({DamageClass.MAGIC}),
+        }
+        for source, declared in declared_classes_by_producer().items():
+            item = get_item_by_name(producer_item(source))
+            effect = source.split(" — ", 1)[1]
+            # Two effects are named inside a larger passive rather than by
+            # it: Expose Weakness lives in Bloodsong's Spellblade and the
+            # Blue Bubble in Dream Maker's own passive, so the entry is the
+            # one that names the effect, by title or in its text.
+            text = next(
+                effect_text(entry)
+                for _kind, entry in effect_entries(item)
+                if str(entry.get("name", "")) == effect or effect in effect_text(entry)
+            )
+            if "from all sources" in text:
+                assert declared["attack_classes"] == frozenset(AttackClass), source
+            if "attack or spell" in text:
+                assert AttackClass.OTHER not in declared["attack_classes"], source
+            named = [
+                classes
+                for phrase, classes in damage_axis_phrases.items()
+                if phrase in text
+            ]
+            assert declared["damage_classes"] == (
+                named[0] if named else frozenset(DamageClass)
+            ), source
+
+    def test_blue_dream_bubble_is_the_one_producer_restricted_to_attacks(self):
+        """Its text says "the next attack or spell", and only its does."""
+        declared = declared_classes_by_producer()
+        narrow = {
+            source
+            for source, sets in declared.items()
+            if sets["attack_classes"] != frozenset(AttackClass)
+        }
+        assert narrow == {"Dream Maker — Blue Dream Bubble"}
+        assert declared["Dream Maker — Blue Dream Bubble"]["attack_classes"] == (
+            frozenset({AttackClass.BASIC_ATTACK, AttackClass.ABILITY})
+        )
 
 
 class TestDreamMakerIsCoupledOnly:
@@ -753,11 +932,37 @@ class TestAbyssalMaskOwnerHandshake:
             if (event.get("support_damage_multiplier") or {}).get("source")
             == "Abyssal Mask — Unmake"
         }
-        assert amped == {"ally:Pantheon"}
+        assert amped == {"ally:Ahri"}
         assert any(
             event["attacker"] == "main" and event["target"] == "enemy:Aatrox"
             for event in events
         )
+
+    def test_the_curse_amps_the_ally_s_magic_and_not_her_true_damage(self):
+        """C3's correction end to end: one class in, two classes out.
+
+        The ally's Q lands a magic and a true packet into the cursed enemy
+        at one timestamp.  Unmake reads "12% increased *magic* damage from
+        all sources", so exactly one of them carries the multiplier — while
+        the untyped walk multiplied both.
+
+        Only damage after ``t = 0`` is read: the curse arms at ``DEBUFF_ARM``
+        and so misses the packets at its own timestamp, which is a separate
+        defect and C4's correction, not this one's.
+        """
+        app.config["TESTING"] = True
+        response = app.test_client().post("/api/calculate", json=_ABYSSAL_ROSTER)
+        assert response.status_code == 200
+        by_type = defaultdict(set)
+        for event in response.get_json()["combat"]["events"]:
+            if event["attacker"] != "ally:Ahri" or event["target"] != "enemy:Aatrox":
+                continue
+            if float(event["time"]) <= 0.0:
+                continue
+            source = (event.get("support_damage_multiplier") or {}).get("source")
+            by_type[event["damage_type"]].add(source == "Abyssal Mask — Unmake")
+        assert by_type["magic"] == {True}
+        assert by_type["true"] == {False}
 
 
 class TestEventViewTupleGate:

@@ -46,7 +46,15 @@ from dataclasses import dataclass, field
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
-from .actions import DAMAGE_PHASE, RECOVERY_PHASE, ActionKind, SurvivalAction
+from .actions import (
+    DAMAGE_PHASE,
+    RECOVERY_PHASE,
+    ActionKind,
+    SurvivalAction,
+    attack_class_of,
+    damage_class_of,
+    declared_modifier_classes,
+)
 from .. import shield_ledger
 from ..healing_reduction import GRIEVOUS_WOUNDS_FACTOR, matching_healing_reduction
 from ..item_effects import sustain_effect_value
@@ -920,6 +928,9 @@ def _apply_damage_modifier(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
     """Arm a timed (or persistent) cross-participant damage modifier."""
+    # The declaration is read before the availability gate: a packet that
+    # restricts nothing is a bug whether or not this one arms (D-04).
+    damage_classes, attack_classes = declared_modifier_classes(action)
     persistent = action.persistent
     if action.duration <= 0.0 and not persistent:
         ctx.ledger.skip(action, "damage_modifier_not_available")
@@ -935,6 +946,8 @@ def _apply_damage_modifier(
         "mr_reduction_percent": action.mr_reduction_percent,
         "resistance_type": action.resistance_type,
         "owner": action.owner,
+        "damage_classes": damage_classes,
+        "attack_classes": attack_classes,
     }
     state["active_damage_modifiers"].append(modifier)
     if not persistent:
@@ -1173,6 +1186,50 @@ def _apply_live_packet_chain(
     return amount
 
 
+def _modifier_applies(
+    modifier: Mapping[str, Any], action: SurvivalAction, source_id: str
+) -> bool:
+    """Whether one armed cross-participant modifier prices this packet.
+
+    The one predicate every modifier branch consults — the reduction and
+    multiplier branches were separately untyped, and a mechanic answering
+    "does this apply to me?" in two places is how two answers drift apart.
+    Three clauses, in order:
+
+    * the **owner skip**: the originating holder's pair engine already
+      priced its own half, so the packet exists for every other source
+      (``Authority.SPLIT``'s machine-checked handshake);
+    * the **declared class match**: a magic-only curse does not amplify a
+      true-damage ability, which is what ``damage_classes`` says (D-04);
+    * the **delivery gate**: today's walk prices only attacks and spells.
+
+    ``source_id`` is the third argument the phase document's sketch omits:
+    the owner skip compares participant ids and a ``SurvivalAction`` carries
+    its attacker as a roster index, so the id has to arrive from the caller
+    that already resolved it.
+
+    The delivery gate and ``attack_classes`` are deliberately *both* here
+    and are **not** the same rule.  ``is_attack_or_spell`` is Blue Dream
+    Bubble's own restriction ("the next attack or spell they receive"),
+    generalised to every modifier before any of them could say so; Unmake,
+    Expose Weakness and Command all read "from all sources" and declare all
+    three attack classes, so for them the gate is narrower than the
+    declaration and ``AttackClass.OTHER`` damage goes unpriced.  Widening
+    the gate is a second correction and is not made here: the divergence
+    ships characterized behind a sentinel (D-04).
+    """
+    owner = modifier.get("owner")
+    if owner and owner == source_id:
+        return False
+    if damage_class_of(action) not in modifier["damage_classes"]:
+        return False
+    if not (
+        action.is_ability or action.basic_attack or action.source_key == "auto_attacks"
+    ):
+        return False
+    return attack_class_of(action) in modifier["attack_classes"]
+
+
 def _apply_cross_participant_modifiers(
     ctx: TransitionContext,
     action: SurvivalAction,
@@ -1192,16 +1249,8 @@ def _apply_cross_participant_modifiers(
         else ""
     )
     for modifier in list(active_modifiers):
-        if modifier.get("owner") and modifier.get("owner") == source_id:
-            # The originating holder's pair engine already priced its
-            # own stack/amp.  The packet exists for every other eligible
-            # participant in the coupled ledger.
+        if not _modifier_applies(modifier, action, source_id):
             continue
-        is_attack_or_spell = bool(
-            action.is_ability
-            or action.basic_attack
-            or action.source_key == "auto_attacks"
-        )
         resistance_key = str(modifier.get("resistance_type", ""))
         reduction_key = (
             "armor_reduction_percent"
@@ -1213,10 +1262,11 @@ def _apply_cross_participant_modifiers(
             )
         )
         if reduction_key:
+            # Which resistance the reduction touches is a separate fact from
+            # the modifier's declared damage classes: a packet may restrict
+            # itself to two classes and still reduce only one resistance.
             relevant_type = "physical" if reduction_key.startswith("armor") else "magic"
             if action.damage_type != relevant_type:
-                continue
-            if not is_attack_or_spell:
                 continue
             baseline = (
                 action.baseline_effective_armor
@@ -1248,8 +1298,6 @@ def _apply_cross_participant_modifiers(
                             "factor": round(reduced_factor / baseline_factor, 6),
                         }
                     )
-            continue
-        if not is_attack_or_spell:
             continue
         if modifier.get("damage_reduction"):
             before = max(0.0, amount)
