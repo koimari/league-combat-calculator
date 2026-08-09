@@ -1,14 +1,20 @@
 """Typed cross-participant item packets and explicit trigger contracts."""
 
 from collections import defaultdict
+from pathlib import Path
+import re
+import tempfile
 from types import SimpleNamespace
 
 import pytest
 
+from src.calculator import item_support_effects
 from src.calculator.item_effects import ally_item_effect_value
 from src.calculator.item_effects import ally_item_level_value
 from src.calculator.item_support_effects import (
+    cross_participant_authorities,
     derive_item_support_effects,
+    producer_item,
     schedule_knights_vow,
 )
 
@@ -481,3 +487,60 @@ def test_knights_vow_attaches_typed_redirect_and_holder_heal_receipts():
     heal = next(p for p in support[holder.participant_id] if p["kind"] == "heal")
     assert heal["target"] == holder.participant_id
     assert heal["amount"] == pytest.approx(24.0)
+
+
+class TestCrossParticipantAuthorities:
+    """The producer set is derived from the packets, never tabulated."""
+
+    def test_every_damage_modifier_packet_is_a_row(self):
+        """One row per ``kind="damage_modifier"`` construction site."""
+        body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
+        call_sites = len(
+            re.findall(r'^\s*kind="damage_modifier",$', body, flags=re.MULTILINE)
+        )
+        assert call_sites == len(cross_participant_authorities())
+
+    def test_dream_maker_is_a_producer(self):
+        """The sixth producer sets no ``all_sources`` flag and is in anyway."""
+        assert "Dream Maker — Blue Dream Bubble" in cross_participant_authorities()
+
+    def test_authorities_are_undeclared_until_c2(self):
+        """0A derives the producer set; 0B's C2 fills the Authority values."""
+        assert set(cross_participant_authorities().values()) == {None}
+
+    def test_a_new_producer_joins_without_editing_a_list(self):
+        """A seventh construction site is a member the moment it parses."""
+        seventh = (
+            "def _f():\n"
+            "    _packet(attacker=a, target=t, time=0.0,\n"
+            '            kind="damage_modifier", source="Synthetic — Seventh")\n'
+        )
+        original = item_support_effects._MODULE_PATH
+        with tempfile.TemporaryDirectory() as scratch:
+            grown = Path(scratch) / "grown.py"
+            grown.write_text(
+                original.read_text(encoding="utf-8") + seventh, encoding="utf-8"
+            )
+            item_support_effects._MODULE_PATH = grown
+            item_support_effects._producer_sources.cache_clear()
+            try:
+                assert "Synthetic — Seventh" in cross_participant_authorities()
+            finally:
+                item_support_effects._MODULE_PATH = original
+                item_support_effects._producer_sources.cache_clear()
+
+    def test_no_hand_written_producer_list_exists(self):
+        """A source assertion against the second home the derivation retires."""
+        body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
+        derivation = body.split("def cross_participant_authorities")[1]
+        for source in cross_participant_authorities():
+            assert source not in derivation, (
+                f"{source!r} is spelled inside cross_participant_authorities; the "
+                "producer set must be derived from the _packet call sites"
+            )
+
+    def test_producer_item_names_the_item_a_scenario_must_equip(self):
+        assert producer_item("Imperial Mandate — Command") == "Imperial Mandate"
+        assert producer_item("Bloodletter's Curse — Vile Decay") == (
+            "Bloodletter's Curse"
+        )

@@ -8,8 +8,11 @@ assumes an active or a trigger that is absent from the authored event stream.
 
 from __future__ import annotations
 
+import ast
 from collections.abc import Iterable, Mapping
+from functools import lru_cache
 import math
+from pathlib import Path
 from typing import Any
 
 from .ability_spec import IMMOBILIZING_CC_KINDS, is_immobilizing_event
@@ -1212,8 +1215,97 @@ def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
     return any(str(item.get("name", "")) in ALLY_ITEM_EFFECTS for item in items)
 
 
+# ---------------------------------------------------------------------------
+# Cross-participant producers
+# ---------------------------------------------------------------------------
+#
+# A ``damage_modifier`` packet changes how much damage some *other*
+# participant deals or takes, so the question "which engine owns this
+# mechanic" has to be answered for every one of them.  The answer is an
+# ``Authority`` value that the packets themselves will carry; until they
+# declare it the producer set alone is already load-bearing, because the
+# coupled golden baseline reads it to prove its scenario set covers every
+# producer (runbook R-12).
+#
+# The set is DERIVED from this module's own ``_packet(...)`` call sites, never
+# typed out: a hand list is a second home for a fact the construction sites
+# already state, and the campaign exists because a hand-maintained claim
+# outlived the code it described.  ``_producer_sources`` reads the module's
+# source with ``ast`` and returns the ``source=`` literal of every
+# ``kind="damage_modifier"`` packet, so a seventh producer joins the set on
+# the commit that constructs it.
+
+_MODULE_PATH = Path(__file__)
+_DAMAGE_MODIFIER_KIND = "damage_modifier"
+
+
+def _packet_keyword(call: ast.Call, name: str) -> ast.expr | None:
+    """The value node of one keyword argument of a ``_packet(...)`` call."""
+    for keyword in call.keywords:
+        if keyword.arg == name:
+            return keyword.value
+    return None
+
+
+@lru_cache(maxsize=1)
+def _producer_sources() -> tuple[str, ...]:
+    """Every ``source=`` literal of a ``kind="damage_modifier"`` packet here.
+
+    Derived from this module's own construction sites so that the producer
+    set cannot disagree with the packets: a new cross-participant modifier is
+    a member the moment its ``_packet`` call exists.
+    """
+    tree = ast.parse(_MODULE_PATH.read_text(encoding="utf-8"))
+    sources: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if not (isinstance(func, ast.Name) and func.id == "_packet"):
+            continue
+        kind = _packet_keyword(node, "kind")
+        if not (isinstance(kind, ast.Constant) and kind.value == _DAMAGE_MODIFIER_KIND):
+            continue
+        source = _packet_keyword(node, "source")
+        if not (isinstance(source, ast.Constant) and isinstance(source.value, str)):
+            raise ValueError(
+                "a damage_modifier packet must name a literal source; "
+                f"line {node.lineno} of {_MODULE_PATH.name} does not"
+            )
+        sources.append(source.value)
+    return tuple(sorted(sources))
+
+
+def cross_participant_authorities() -> Mapping[str, Any]:
+    """One row per packet that modifies another participant's damage.
+
+    The key is the packet's ``source`` literal; the value is the engine that
+    owns the mechanic — an ``Authority`` once Phase 0B's C2 declares one per
+    packet and adds the owner-iff-``SPLIT`` check that reads them.  At this
+    stage every producer is present with ``None``, which is what makes
+    "declared nowhere" a visible state rather than an absent row.
+
+    Also the producer set ``golden_snapshot.capture_coupled`` reads (R-12):
+    the coupled baseline covers whatever this returns, so a seventh producer
+    with no covering scenario fails rather than passes.
+    """
+    return {source: None for source in _producer_sources()}
+
+
+def producer_item(source: str) -> str:
+    """The item name a producer's ``source`` literal names.
+
+    Every packet source is spelled ``"<item> — <effect>"``, so the item a
+    scenario must equip to reach a producer is derivable from the producer
+    itself rather than tabulated beside it.
+    """
+    return source.split(" — ", 1)[0].strip()
+
+
 __all__ = [
+    "cross_participant_authorities",
     "derive_item_support_effects",
     "has_ordered_item_team_effects",
+    "producer_item",
     "schedule_knights_vow",
 ]
