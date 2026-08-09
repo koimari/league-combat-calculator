@@ -23,6 +23,10 @@ Usage:
     python scripts/bench_coupled_optimizer.py --fixed-work --isolate --json
     python scripts/bench_coupled_optimizer.py --fixed-work --isolate --no-compiled --json
     python scripts/bench_coupled_optimizer.py --alloc --json
+
+``--no-compiled`` is R-01 row 11 and runs *both* routings: the row is defined
+against row 8's default run, so the command pairs them itself, reports
+``routing_divergences`` per scenario and exits non-zero on any.
 """
 
 from __future__ import annotations
@@ -329,6 +333,11 @@ def _isolated_run(scenario: str, *, compiled: bool) -> dict[str, Any]:
         "--repeats",
         "1",
         "--json",
+        # The child measures exactly the routing it was asked for.  Without
+        # this, ``--no-compiled`` would make the child run both routings the
+        # way the top-level row 11 command does, and the parent would be
+        # measuring a comparison inside its own comparison.
+        "--single-routing",
     ]
     if not compiled:
         command.append("--no-compiled")
@@ -419,6 +428,80 @@ def determinism_spread(reports: Sequence[Mapping[str, Any]]) -> dict[str, int]:
     return spread
 
 
+def routing_divergences(
+    compiled_report: Mapping[str, Any], receipt_report: Mapping[str, Any]
+) -> tuple[str, ...]:
+    """Where the two routings answered differently — R-01 row 11's verdict.
+
+    Row 11 runs one scenario through the compiled score path and again
+    forced onto the receipt walk, and demands the same winner and the same
+    score.  The rung histogram is *expected* to differ and is deliberately
+    not compared here; a different **answer** is a routing change wearing a
+    performance change's clothes, which is the only thing this row catches.
+    The empty tuple is the pass condition, so the gate has a verdict a
+    caller reads rather than two JSON blobs a human eyeballs.
+    """
+    scenario = compiled_report.get("scenario") or receipt_report.get("scenario") or "?"
+    voided = [
+        f"{scenario}: the {label} routing voided "
+        f"({report.get('reason', 'a repeat reported truncated')})"
+        for label, report in (
+            ("compiled", compiled_report),
+            ("receipt-walk", receipt_report),
+        )
+        if report.get("void")
+    ]
+    if voided:
+        return tuple(voided)
+    failures = []
+    if compiled_report["winner"] != receipt_report["winner"]:
+        failures.append(
+            f"{scenario}: winner {compiled_report['winner']} "
+            f"-> {receipt_report['winner']}"
+        )
+    if compiled_report["score"] != receipt_report["score"]:
+        failures.append(
+            f"{scenario}: score {compiled_report['score']} "
+            f"-> {receipt_report['score']}"
+        )
+    return tuple(failures)
+
+
+def routing_comparison(
+    scenarios: Sequence[str],
+    *,
+    isolate: bool,
+    repeats: int,
+    determinism: bool = False,
+    report: Any = None,
+) -> dict[str, dict[str, Any]]:
+    """Every named scenario run both ways, each carrying its own verdict.
+
+    This is the body of R-01 row 11's command: the row is defined against
+    row 8's default run, so the command runs that routing itself instead of
+    trusting a reader to pair two invocations.  Each entry is the
+    receipt-walk report plus the compiled run under ``compiled_run`` and
+    :func:`routing_divergences`'s verdict under ``routing_divergences``.
+    ``report`` is the seam a test drives to make the verdict red on demand
+    (R-05); it defaults to :func:`fixed_work_report`.
+    """
+    measure = report or fixed_work_report
+    comparison: dict[str, dict[str, Any]] = {}
+    for name in scenarios:
+        compiled_report = measure(name, isolate=isolate, repeats=repeats, compiled=True)
+        receipt_report = measure(name, isolate=isolate, repeats=repeats, compiled=False)
+        entry = dict(receipt_report)
+        entry["compiled_run"] = compiled_report
+        entry["routing_divergences"] = list(
+            routing_divergences(compiled_report, receipt_report)
+        )
+        if determinism and not entry["void"]:
+            entry["determinism"] = determinism_probe(entry["repeats"])
+            entry["spread"] = determinism_spread(entry["repeats"])
+        comparison[name] = entry
+    return comparison
+
+
 def allocation_probe(scenario: str) -> int:
     """``tracemalloc`` peak bytes for one isolated candidate evaluation.
 
@@ -502,6 +585,36 @@ def _print_fixed_work(reports: Mapping[str, Mapping[str, Any]]) -> None:
         print(f"  wall (best of {len(report['repeats'])}): {report['wall_ms']} ms")
 
 
+def _run_row_eleven(args: argparse.Namespace, selected: Mapping[str, Any]) -> None:
+    """R-01 row 11: both routings, the verdict, and a non-zero exit on any.
+
+    The row is defined against row 8's default run, so the command runs that
+    routing itself rather than trusting a reader to pair two invocations —
+    and it reports its verdict as an exit code, because a gate whose failure
+    is a paragraph a human must notice is the shape this campaign exists to
+    remove.
+    """
+    reports = routing_comparison(
+        sorted(selected),
+        isolate=args.isolate,
+        repeats=args.repeats,
+        determinism=args.determinism,
+    )
+    if args.json:
+        print(json.dumps(reports, indent=2))
+    else:
+        _print_fixed_work(reports)
+    diverged = [
+        failure
+        for report in reports.values()
+        for failure in report["routing_divergences"]
+    ]
+    for failure in diverged:
+        print(f"ROUTING DIVERGENCE — {failure}", file=sys.stderr)
+    if diverged:
+        sys.exit(1)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     """The CLI: the latency bench, the fixed-work instrument, the probes."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -523,7 +636,18 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-compiled",
         action="store_true",
-        help="force every coupled evaluation onto the receipt walk",
+        help=(
+            "R-01 row 11: run each scenario on the receipt walk and again on "
+            "the compiled path, and exit non-zero if they disagree"
+        ),
+    )
+    parser.add_argument(
+        "--single-routing",
+        action="store_true",
+        help=(
+            "measure only the routing asked for, skipping row 11's comparison "
+            "— what an isolated repeat's child process runs"
+        ),
     )
     parser.add_argument(
         "--repeats", type=int, default=1, help="repeats per fixed-work scenario"
@@ -554,6 +678,9 @@ def main() -> None:
         return
 
     if args.fixed_work:
+        if args.no_compiled and not args.single_routing:
+            _run_row_eleven(args, selected)
+            return
         reports = {
             name: fixed_work_report(
                 name,

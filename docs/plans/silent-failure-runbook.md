@@ -242,6 +242,13 @@ def fixed_work_report(scenario: str, *, isolate: bool, repeats: int) -> dict[str
     winner, score and wall — void if the response reports truncated (R-09)."""
 def determinism_probe(reports: Sequence[Mapping]) -> dict[str, Literal["exact", "tolerant"]]:
     """Which counters repeat exactly and may therefore be equality-gated (R-08)."""
+def routing_divergences(compiled_report: Mapping, receipt_report: Mapping) -> tuple[str, ...]:
+    """Row 11's verdict — winner and score across the two routings, rungs deliberately
+    excluded because they are expected to differ.  Empty tuple is the pass condition."""
+def routing_comparison(scenarios: Sequence[str], *, isolate: bool, repeats: int,
+                       determinism: bool = False, report: Any = None) -> dict[str, Any]:
+    """Row 11's command body: every scenario run both ways, each entry carrying its own
+    verdict; --no-compiled exits non-zero on any.  ``report`` is R-05's seam."""
 def allocation_probe(scenario: str) -> int:
     """tracemalloc peak bytes for one isolated evaluation — Phase 4 S4's gate (R-28)."""
 

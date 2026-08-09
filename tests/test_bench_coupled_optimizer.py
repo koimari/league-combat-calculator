@@ -119,6 +119,110 @@ class TestDeterminismProbe:
         assert bench.determinism_probe(repeats)["rungs"] == "tolerant"
 
 
+class TestRoutingComparison:
+    """R-01 row 11, and the red it can reproduce on demand (R-05).
+
+    The row demands that forcing every coupled evaluation onto the receipt
+    walk elects the same build and scores it the same.  Before this suite the
+    row had no code that could say otherwise: the two JSON blobs were paired
+    by a reader, so the gate could not fail, which is the exact shape the
+    campaign exists to remove.  ``routing_comparison``'s ``report`` argument
+    is the seam, the way ``score`` is ``check_ratchet``'s.
+    """
+
+    def _report(self, scenario="mundo_3champ", **overrides):
+        report = {
+            "scenario": scenario,
+            "void": False,
+            "winner": {"items": ["Void Staff"], "boots": "Sorcerer's Shoes"},
+            "score": 3305.0,
+            "repeats": [],
+        }
+        report.update(overrides)
+        return report
+
+    def test_the_same_answer_from_both_routings_is_the_pass_condition(self, bench):
+        assert (
+            bench.routing_divergences(self._report(), self._report()) == ()
+        ), "identical winner and score must report no divergence"
+
+    def test_a_differing_rung_histogram_is_not_a_divergence(self, bench):
+        """The receipt walk is *expected* to change the rungs; row 11 is
+        about the answer, and comparing rungs would make it red always."""
+        compiled = self._report(rungs={"compiled": 489})
+        receipt = self._report(rungs={"receipt_walk_gate": 577})
+        assert bench.routing_divergences(compiled, receipt) == ()
+
+    def test_a_differing_score_is_reported(self, bench):
+        (failure,) = bench.routing_divergences(
+            self._report(), self._report(score=3305.1)
+        )
+        assert "mundo_3champ" in failure
+        assert "3305.0" in failure and "3305.1" in failure
+
+    def test_a_differing_winner_is_reported(self, bench):
+        other = self._report()
+        other["winner"] = {"items": ["Serylda's Grudge"], "boots": "Ionian Boots"}
+        (failure,) = bench.routing_divergences(self._report(), other)
+        assert "winner" in failure
+        assert "Serylda's Grudge" in failure
+
+    def test_a_void_routing_is_reported_rather_than_compared(self, bench):
+        """R-09: a truncated run measured the machine, so it may not be read
+        as agreement — silence on a void run is the absent-but-assumed-green
+        counter R-09 forbids."""
+        voided = self._report(void=True, reason="every repeat reported truncated")
+        (failure,) = bench.routing_divergences(self._report(), voided)
+        assert "receipt-walk routing voided" in failure
+
+    def test_the_comparison_runs_both_routings_for_every_scenario(self, bench):
+        asked = []
+
+        def measure(scenario, *, isolate, repeats, compiled):
+            asked.append((scenario, compiled))
+            return self._report(scenario)
+
+        comparison = bench.routing_comparison(
+            ["mundo_3champ", "cassiopeia_3champ"],
+            isolate=True,
+            repeats=1,
+            report=measure,
+        )
+        assert asked == [
+            ("mundo_3champ", True),
+            ("mundo_3champ", False),
+            ("cassiopeia_3champ", True),
+            ("cassiopeia_3champ", False),
+        ]
+        assert set(comparison) == {"mundo_3champ", "cassiopeia_3champ"}
+        assert comparison["mundo_3champ"]["routing_divergences"] == []
+        assert comparison["mundo_3champ"]["compiled_run"]["scenario"] == "mundo_3champ"
+
+    def test_a_routing_that_changes_the_answer_turns_the_gate_red(self, bench):
+        """The gate's red, on demand, forever: one scenario whose receipt
+        walk scores differently, driven through the same entry point the
+        row 11 command uses."""
+
+        def measure(scenario, *, isolate, repeats, compiled):
+            return self._report(scenario, score=3305.0 if compiled else 3200.0)
+
+        comparison = bench.routing_comparison(
+            ["mundo_3champ"], isolate=True, repeats=1, report=measure
+        )
+        (failure,) = comparison["mundo_3champ"]["routing_divergences"]
+        assert "score 3305.0 -> 3200.0" in failure
+
+    def test_the_isolated_child_measures_one_routing(self, bench):
+        """Row 11 pairs the routings at the top level, so the child must not
+        pair them again — a child that ran both would make every isolated
+        repeat measure a comparison inside the comparison."""
+        source = (REPO_ROOT / "scripts/bench_coupled_optimizer.py").read_text(
+            encoding="utf-8"
+        )
+        assert '"--single-routing",' in source
+        assert bench._build_parser().parse_args(["--single-routing"]).single_routing
+
+
 class TestScenarioSet:
     """R-27: the fourth scenario exists to make an immobilize visible."""
 
