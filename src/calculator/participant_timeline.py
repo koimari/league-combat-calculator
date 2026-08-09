@@ -1967,6 +1967,7 @@ def build_participant_timeline(
         _from_loadout(f"enemy:{loadout.champion_data['name']}", "enemy", loadout)
         for loadout in enemies
     ]
+    enemy_attackers = [actor for actor in enemy_actors if not actor.is_practice_dummy]
     ally_actors = [
         _from_loadout(f"ally:{loadout.champion_data['name']}", "ally", loadout)
         for loadout in allies
@@ -1997,7 +1998,7 @@ def build_participant_timeline(
     )
     coverage_reports: list[dict[str, Any]] = []
 
-    teams = {"main": [main], "ally": ally_actors, "enemy": enemy_actors}
+    teams = {"main": [main], "ally": ally_actors, "enemy": enemy_attackers}
     attack_groups = (
         ("main", [*enemy_actors]),
         ("ally", [*enemy_actors]),
@@ -2185,6 +2186,9 @@ def build_participant_timeline(
     # roster).  Resolve that schedule once so ally/enemy support packets are
     # not silently dropped merely because the pairwise damage loop had no row.
     for attacker in all_actors:
+        if attacker.is_practice_dummy:
+            support_attached.add(attacker.participant_id)
+            continue
         if attacker.participant_id in support_attached:
             continue
         actor_params = _actor_params_with_resource_restores(

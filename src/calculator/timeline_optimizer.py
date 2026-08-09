@@ -178,6 +178,8 @@ def _context_setup(
     # is exempt: the roster holder's ticks compile into the base panel
     # below (issue #169).
     for loadout in (*enemies, *allies):
+        if loadout.is_practice_dummy:
+            continue
         item_receipt = _timeline_module()._uncompilable_item_receipt(
             loadout.item_data,
             loadout_stats=loadout.stats,
@@ -201,9 +203,11 @@ def _context_setup(
     context.index_of = {"main": 0}
     for offset, actor in enumerate(context.roster_actors, start=1):
         context.index_of[actor.participant_id] = offset
-        context.actor_params[actor.participant_id] = _actor_params(params, actor)
         context.thorns_profiles[offset] = thorns_effects(list(actor.items))
         _grievous_packs_for(context, offset, healing_reduction_profiles(actor.items))
+        if actor.is_practice_dummy:
+            continue
+        context.actor_params[actor.participant_id] = _actor_params(params, actor)
     context.main_request = type(
         "MainRequest",
         (),
@@ -247,6 +251,8 @@ def _context_setup(
         pair_params.validate_for_champion(champion_name, level)
         context.main_pair_params.append((defender, pair_params))
     for attacker in context.roster_actors:
+        if attacker.is_practice_dummy:
+            continue
         attacker_params = context.actor_params[attacker.participant_id]
         attacker_params.validate_for_champion(
             str(attacker.champion_data.get("name", "")), attacker.level
@@ -280,9 +286,12 @@ def _context_setup(
         context.index_of[actor.participant_id]: {} for actor in context.roster_actors
     }
     support_attached: set[str] = set()
+    enemy_attackers = [actor for actor in enemy_actors if not actor.is_practice_dummy]
     base_pairs = [
         (attacker, defender) for attacker in ally_actors for defender in enemy_actors
-    ] + [(attacker, defender) for attacker in enemy_actors for defender in ally_actors]
+    ] + [
+        (attacker, defender) for attacker in enemy_attackers for defender in ally_actors
+    ]
     # Roster position mirrors the legacy attack groups: enemies are indexed
     # from 0 for allied attackers, while an enemy attacker's ordered
     # defenders are [main, *allies], so the first ally sits at index 1.
@@ -406,7 +415,11 @@ def _build_signature_panel(
     assert base is not None, "context setup must precede panel builds"
     sig = _WalkCompiler(base.next_aidx)
     roster = context.roster_actors or []
-    enemy_actors = [actor for actor in roster if actor.team == "enemy"]
+    enemy_actors = [
+        actor
+        for actor in roster
+        if actor.team == "enemy" and not actor.is_practice_dummy
+    ]
     ally_count = sum(1 for actor in roster if actor.team == "ally")
     for attacker in enemy_actors:
         cache_key = (attacker.participant_id, "main", signature)
