@@ -29,7 +29,7 @@ pip-audit==2.10.1
 
 # P6 persistence: PostgreSQL via SQLAlchemy 2.x with the psycopg3 driver.
 SQLAlchemy==2.0.51
-psycopg[binary]==3.3.4
+psycopg==3.3.4
 
 # P0a managed Redis result-cache backend.
 redis==7.4.1
