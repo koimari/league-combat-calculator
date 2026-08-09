@@ -1909,7 +1909,6 @@ function renderExactBreakdown(aResult, bResult) {
   }).join("");
   const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Participant survival</h2></div><span>Output · incoming · endpoint</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th><th>Applied incoming damage</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
   const labels = new Map((aResult?.combat?.participants || []).map((participant) => [participant.participant_id, `${participant.champion} · ${participant.team}`]));
-  const eventRows = (aResult?.combat?.events || []).filter((event) => Number(event.damage || 0) > 0 || event.skipped_reason).map((event) => `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(labels.get(event.target) || event.target || "Target")} · ${escapeHtml(event.source || "event")} · ${escapeHtml(event.event_precision || "exact")}${event.skipped_reason ? ` · ${escapeHtml(event.skipped_reason)}` : ""}</small></td><td>${fmt(event.damage || 0)}</td></tr>`).join("");
   const healingRows = healingEventsForResult(aResult).filter((event) => Number(event.raw_amount || event.amount || 0) > 0).map((event) => {
     const factor = Number(event.healing_reduction_factor || 1);
     const wound = factor < 1 ? ` · Grievous Wounds ${Math.round((1 - factor) * 100)}%` : "";
@@ -1938,7 +1937,7 @@ function renderExactBreakdown(aResult, bResult) {
   const targetAllocation = aResult?.combat?.target_allocation || null;
   const utilitySummary = utility ? `<section class="utility-outcome-ledger" aria-label="Utility outcome dimensions"><header><div><p class="eyebrow">Utility objective</p><h2>Applied non-TDD outcomes</h2></div><span>Native units · no guessed conversion</span></header><p class="utility-outcome-note">${escapeHtml(utility.metric_note || "Movement, slows, cleanse, economy, and vision remain separate from TDD.")}</p><div class="utility-outcome-chips"><span>Movement ${fmt(utility.movement?.speed_percent_seconds || 0)} %·s</span><span>Slow ${fmt(utility.slow?.percent_seconds || 0)} %·s</span><span>Cleanse ${fmt(utility.cleanse?.event_count || 0)} events</span><span>Economy ${fmt(utility.economy?.gold || 0)} gold</span><span>Vision ${fmt(utility.vision?.ward_uses || 0)} wards</span><span>Secondary ${fmt(utility.multi_target?.allocated_packet_count || 0)}/${fmt(utility.multi_target?.packet_count || 0)} allocated</span></div></section>` : "";
   const allocationNote = targetAllocation && targetAllocation.secondary_packet_count ? `<p class="utility-target-allocation" role="status">Target allocation: ${targetAllocation.complete ? "complete" : "withheld"} · ${fmt(targetAllocation.allocated_secondary_packet_count || 0)}/${fmt(targetAllocation.secondary_packet_count || 0)} secondary packets use the authored roster-index policy.</p>` : "";
-  const eventSection = eventRows || healingRows || supportRows || utilitySummary ? `<details class="breakdown-audit"><summary>Audit trail <span>Event order · timestamps</span></summary>${utilitySummary}${allocationNote}<section class="combat-event-ledger" aria-label="Event order audit"><header><div><p class="eyebrow">Event order</p><h2>Timestamped events</h2></div><span>Outgoing · incoming · recovery · support</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
+  const eventSection = healingRows || supportRows || utilitySummary ? `<details class="breakdown-audit"><summary>Recovery and support <span>Healing · protection · utility</span></summary>${utilitySummary}${allocationNote}<section class="combat-event-ledger" aria-label="Recovery and support audit"><header><div><p class="eyebrow">Recovery and support</p><h2>Applied effects</h2></div><span>Healing · protection · utility</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Effect</th><th>Applied value</th></tr></thead><tbody>${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
   const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aMainTotal, bResult ? bMainTotal : null))}</p>`;
   $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
 }
@@ -2703,7 +2702,7 @@ function renderEventTimeline(combatEvents, duration, eventLabel) {
   }).join("");
   const note = shown.length === combatEvents.length
     ? `${combatEvents.length} ordered ${plural(combatEvents.length, "event")}, oldest first`
-    : `First ${shown.length} of ${combatEvents.length} ordered events — the full sequence is in the ledger below`;
+    : `First ${shown.length} of ${combatEvents.length} ordered events`;
   return `<div class="timeline-axis"><span>0:00</span><span>${one(duration / 2)}s</span><span>${one(duration)}s</span></div>
     <ol class="timeline-events" aria-label="Ordered combat events">${lanes}</ol>
     <small class="timeline-note">${escapeHtml(note)}</small>`;
@@ -3287,16 +3286,6 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   const duration = Math.max(1, Number(aResult?.combat?.duration || state.fight.duration));
   const eventLabel = (participantId) => participantLabels.get(participantId) || participantId || "Participant";
   $("timeline").innerHTML = renderEventTimeline(combatEvents, duration, eventLabel);
-  // data-event-index matches the timeline lane above, so a row and its lane
-  // are traceably the same event (#155).
-  const eventRows = combatEvents.slice(0, 24).map((event, index) => {
-    const time = eventTime(event);
-    const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
-    const value = Number(event.damage || 0);
-    const precision = event.event_precision && event.event_precision !== "exact" ? ` · ${event.event_precision}` : "";
-    const source = `${eventLabel(event.attacker)} → ${eventLabel(event.target)} · ${event.source || "event"}${precision}`;
-    return `<div class="ledger-line" data-event-index="${index}"><span>${escapeHtml(timeLabel)} · ${escapeHtml(source)}</span><strong>${value > 0 ? `${fmt(value)} damage` : escapeHtml(event.skipped_reason || "No damage")}</strong></div>`;
-  });
   const healingRows = healingEvents.slice(0, 12).map((event) => {
     const time = eventTime(event);
     const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
@@ -3325,12 +3314,12 @@ function renderPrototypeResult(aResult = null, bResult = null) {
     ].filter(Boolean).join(" · ");
     return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(event.source || "support")}${details ? ` · ${escapeHtml(details)}` : ""}</span><strong>${fmt(Number(event.applied_amount ?? event.amount ?? 0))} ${escapeHtml(event.kind || "support")} · ${escapeHtml(policy)}</strong></div>`;
   });
-  const overflow = combatEvents.length > 24 || healingEvents.length > 12 || supportEvents.length > 12
-    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${combatEvents.length > 24 ? combatEvents.length - 24 : 0} damage · ${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
+  const overflow = healingEvents.length > 12 || supportEvents.length > 12
+    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
     : "";
   const enemyEhp = enemyEffectiveHealth(aResult);
   const overkill = aTotal == null ? 0 : enemyOverkill(aResult, aTotal);
-  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${eventRows.join("")}${healingRows.join("")}${supportRows.join("")}${overflow}`;
+  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${healingRows.join("")}${supportRows.join("")}${overflow}`;
   // P4: the per-ability damage table carries a certainty chip next to every
   // sourced number. It re-renders on every result so chips track the loaded
   // /api/certainty contract (or its placeholder fallback).

@@ -1090,7 +1090,7 @@ def test_frontend_click_handlers_handle_missing_main_build_option_buckets():
     assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
 
 
-def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
+def test_damage_breakdown_leads_with_result_and_keeps_support_audit_disclosed():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
     assert "function breakdownOutcome" in source
@@ -1102,7 +1102,8 @@ def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
     # through killTimeLabel so a first-event defeat is "<1 s", never "0 s".
     assert "defeated at ${killTimeLabel(deathTime)" in source
     assert 'class="breakdown-audit"' in source
-    assert 'aria-label="Event order audit"' in source
+    assert 'aria-label="Recovery and support audit"' in source
+    assert 'aria-label="Event order audit"' not in source
 
 
 def test_bis_frontend_surfaces_backend_withheld_candidate_receipts():

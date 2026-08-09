@@ -929,6 +929,7 @@ def run_fight(
             ability_damages,
             champion_data=champion_data,
             certified_order=get_champion_cast_order(champion_data.get("name", "")),
+            champion_options=champion_options,
         )
         params = _params_with_cast_order(params, declared_order)
         resolved_rotation_rule = combo_rule
@@ -997,6 +998,13 @@ def run_fight(
         # item by keeping dict rows, whose stamps the compiled walk then
         # rejects with a named receipt (issue #169).
         and item_damage_effects.execute is None
+        # Champion executes use the same per-event threshold receipt. Keep
+        # dict rows so the participant walk can apply the terminal state.
+        and not any(
+            float(ability.get("execute_threshold_ratio", 0.0) or 0.0) > 0
+            for ability in ability_damages.values()
+            if isinstance(ability, Mapping)
+        )
     )
     result = calculate_fight_damage(
         fight_stats,

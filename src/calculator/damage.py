@@ -9045,9 +9045,9 @@ def _add_shadowflame_cinderbloom(
             "name": f"{effect.item_name} (Cinderbloom)",
             "total_damage": shadowflame_bonus,
             # Cinderbloom is computed from the ordered source ledger above.
-            # Keep those bonus timestamps for precision certification without
-            # replaying the bonus as a second shield-resolution damage source.
-            "timeline_events": bonus_events,
+            # Preserve each trigger timestamp in the shared damage ledger so
+            # participant death can stop only later bonus packets.
+            "damage_events": bonus_events,
             **_damage_type_fields(bonus_by_type),
         }
         state.total_damage += shadowflame_bonus
@@ -9855,17 +9855,28 @@ def calculate_fight_damage(
     if not tuple_ledger:
         _add_lifesteal_events(state, damage_events)
         _add_omnivamp_events(state, damage_events)
-    # The Collector's threshold is a terminal target-state transition, not
-    # outgoing damage.  Carry the sourced ratio on each authored event so the
-    # coupled ledger can apply it against the target's live health after
-    # mitigation.  Tuple ledgers are score-only internals and do not expose
-    # state transitions; those callers remain fail-closed for the item.
-    if state.damage_effects.execute is not None and not tuple_ledger:
-        execute_ratio = float(state.damage_effects.execute.threshold)
+    # Execute thresholds are terminal target-state transitions. Ability
+    # thresholds apply only to their own cast. Item thresholds apply to every
+    # authored packet. When both apply, keep the larger threshold.
+    if not tuple_ledger:
+        item_execute = state.damage_effects.execute
         for event in damage_events:
-            if isinstance(event, dict):
-                event["execute_threshold_ratio"] = execute_ratio
-                event["execute_source"] = state.damage_effects.execute.item_name
+            if not isinstance(event, dict):
+                continue
+            source_key = str(event.get("source_key", ""))
+            ability = state.ability_damages.get(source_key, {})
+            ability_ratio = float(ability.get("execute_threshold_ratio", 0.0) or 0.0)
+            item_ratio = (
+                float(item_execute.threshold) if item_execute is not None else 0.0
+            )
+            if ability_ratio >= item_ratio and ability_ratio > 0:
+                event["execute_threshold_ratio"] = ability_ratio
+                event["execute_source"] = str(
+                    ability.get("execute_source") or ability.get("name") or source_key
+                )
+            elif item_ratio > 0:
+                event["execute_threshold_ratio"] = item_ratio
+                event["execute_source"] = item_execute.item_name
     if (
         score_only
         and config.target_threshold_health_heal <= 0
