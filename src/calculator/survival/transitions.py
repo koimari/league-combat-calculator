@@ -946,19 +946,9 @@ def _apply_utility(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
     """Utility dimensions (on-hit magic, movement, cleanse, slow, economy,
-    vision) are recorded in native units; the calculator never converts
-    them into damage.  On-hit magic also arms the source's live ledger."""
-    state["utility_effects"].append(
-        {
-            "source": str(action.source or action.utility_kind),
-            "kind": action.utility_kind,
-            "time": action.time,
-            "amount": action.amount,
-            "duration": action.duration,
-            "gold_amount": action.gold_amount,
-            "ward_uses": action.ward_uses,
-        }
-    )
+    vision) are receipted in their native units; the calculator never
+    converts them into damage.  On-hit magic is the one kind the walk's
+    arithmetic reads, and it arms the subject's live ledger here."""
     if action.kind is ActionKind.ON_HIT_MAGIC:
         state["active_on_hit_magic"].append(
             {

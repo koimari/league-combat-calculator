@@ -106,7 +106,6 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         "support_buffs": [],
         "active_damage_modifiers": [],
         "active_on_hit_magic": [],
-        "utility_effects": [],
         "timed_shields": [],
         "temporary_health_received": 0.0,
         "temporary_health_amount": 0.0,

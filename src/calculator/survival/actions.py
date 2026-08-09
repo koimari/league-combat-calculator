@@ -285,7 +285,6 @@ class SurvivalAction(NamedTuple):
     resistance_type: str = ""
     owner: str = ""
     # Utility fields
-    utility_kind: str = ""
     gold_amount: float = 0.0
     ward_uses: float = 0.0
     duration_set: bool = False
@@ -427,9 +426,6 @@ def action_key(
 # ---------------------------------------------------------------------------
 
 _HEAL_KINDS = frozenset({"heal", "regen"})
-_UTILITY_KINDS = frozenset(
-    {"on_hit_magic", "movement", "cleanse", "slow", "economy", "vision"}
-)
 
 # The support ladder, by packet kind.  A sourced barrier arms before damage
 # and a sourced heal recovers after it; they must not share one rank merely
@@ -722,7 +718,6 @@ def survival_action_from_event(
         mr_reduction_percent=float(get("mr_reduction_percent", 0.0) or 0.0),
         resistance_type=str(get("resistance_type", "")),
         owner=str(get("owner", "")),
-        utility_kind=kind if kind in _UTILITY_KINDS else "",
         gold_amount=float(get("gold_amount", 0.0) or 0.0),
         ward_uses=float(get("ward_uses", 0.0) or 0.0),
         duration_set="duration" in event,

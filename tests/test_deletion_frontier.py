@@ -99,3 +99,26 @@ def test_exactly_one_dispatch_ladder_survives_in_the_kernel() -> None:
         for function in functions
     }
     assert found == {"transitions.py:run_survival_walk"}
+
+
+# --- D-09: the write-only utility state -------------------------------------
+
+
+def test_the_write_only_utility_state_is_gone_from_the_source() -> None:
+    """A field, its vocabulary and the state nobody ever read.
+
+    ``utility_kind`` could only ever be ``""``: it was set by testing an
+    ``ActionKind`` member for membership in a ``frozenset[str]``, and
+    ``ActionKind`` is not a string enum, so the comparison was permanently
+    false.  The ledger entry it fed was appended and never read back.
+    """
+    assert _holders("utility_kind") == []
+    assert _holders("_UTILITY_KINDS") == []
+    assert _holders("utility_effects") == []
+
+
+def test_the_survival_action_carries_no_utility_kind() -> None:
+    """The field is gone from the typed interface, not merely unset."""
+    from src.calculator.survival.actions import SurvivalAction
+
+    assert "utility_kind" not in SurvivalAction._fields
