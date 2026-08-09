@@ -26,6 +26,7 @@ from .actions import (
     event_sequence,
     legacy_phase,
     participant_order,
+    support_transition_rank,
 )
 from ..item_effects import sustain_effect_value
 
@@ -915,16 +916,6 @@ class WalkCompiler:
             target_id = str(template["target"])
             subject_i = index_of[target_id]
             kind = str(template.get("kind", ""))
-            # The rank this support packet arms at.  Named here rather than
-            # recomputed as a float: the compiled path and the receipt walk
-            # must place a barrier and a recovery at the same two points,
-            # and two independent float ladders is exactly how they drift.
-            rank = (
-                TransitionRank.BARRIER_GRANT
-                if kind == "shield"
-                else TransitionRank.RECOVERY
-            )
-            priority = legacy_phase(rank)
             # Issue #137: fail closed on any resolved support template the
             # score kernel cannot stage — non-heal/shield kinds (stat buffs,
             # damage modifiers, on-hit magic, temporary health, ...), timed
@@ -946,6 +937,13 @@ class WalkCompiler:
                     receipt="support_trigger_link",
                     source=str(template.get("source", "")),
                 )
+            # When this packet arms, read from the same classifier the
+            # receipt walk reads.  Classifying by kind here instead would
+            # ignore a packet's own ``_rank`` declaration, so a shield
+            # declaring ``LATE_BARRIER`` would arm before the damage it was
+            # placed after on the compiled path and after it on the walk —
+            # a desync no equality gate can see until such a packet exists.
+            priority = legacy_phase(support_transition_rank(template))
             aidx = self.next_aidx
             self.next_aidx += 1
             time_value = float(template.get("time", 0.0))

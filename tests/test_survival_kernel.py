@@ -743,3 +743,58 @@ def test_receipt_and_score_adapters_share_one_kernel():
     assert score_row == receipt_row
     assert score_row["ending_health"] == 90.0
     assert score_row["healing_received"] == 50.0
+
+
+def test_compiled_support_arms_at_the_rank_the_walk_reads():
+    """The compiled support branch reads the walk's classifier, not a kind.
+
+    A shield whose author declares ``LATE_BARRIER`` (the rank Eclipse's
+    self-shield and Fimbulwinter's Everlasting use for a barrier placed
+    *after* the damage that triggered it) is representable: it has no
+    duration, no amount formula and no trigger link, so
+    ``unrepresentable_template_receipt`` returns ``None`` and it compiles.
+    While the compiled branch classified by kind alone it armed such a
+    packet before damage while the receipt walk armed it after — a desync
+    no equality gate could see, because every ``LATE_BARRIER`` author in
+    the tree today is excluded by one of the other three receipts.
+    """
+    from src.calculator.survival import (
+        SUPPORT_RANK_KEY,
+        TransitionRank,
+        WalkCompiler,
+        legacy_phase,
+        support_transition_rank,
+    )
+    from src.calculator.survival.compile import unrepresentable_template_receipt
+
+    declared = {
+        "target": "main",
+        "kind": "shield",
+        "amount": 40.0,
+        "duration": 0.0,
+        "time": 1.0,
+        "source": "Declared Late Barrier",
+        "source_key": "declared_late_barrier",
+        "_event_id": "declared:late",
+        SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
+    }
+    plain = {**declared, "_event_id": "plain:barrier"}
+    del plain[SUPPORT_RANK_KEY]
+
+    # Both are compilable, so neither is protected by a fail-closed receipt.
+    assert unrepresentable_template_receipt(declared) is None
+    assert unrepresentable_template_receipt(plain) is None
+
+    compiler = WalkCompiler()
+    compiler.add_support_templates([declared, plain], 0, {"main": 0})
+    by_event = {action.event_id: action for action in compiler.actions}
+
+    for template in (declared, plain):
+        expected = legacy_phase(support_transition_rank(template))
+        action = by_event[template["_event_id"]]
+        assert action.phase == expected
+        assert action.sort_key[1] == expected
+
+    # The declaration is what separates them: same kind, different arming.
+    assert by_event["declared:late"].phase == legacy_phase(TransitionRank.LATE_BARRIER)
+    assert by_event["plain:barrier"].phase == legacy_phase(TransitionRank.BARRIER_GRANT)
