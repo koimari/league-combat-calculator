@@ -23,6 +23,7 @@ vanish). Dropping a non-damaging slot is the parser's decision.
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from ..ability_spec import CC_KIND_VOCABULARY
 from .skill_orders import get_ability_rank
 
 # ---------------------------------------------------------------------------
@@ -323,6 +324,60 @@ def _validate_entry_keys(
     _VALIDATED_ENTRY_SHAPES.add(shape)
 
 
+def _validate_cc_event_contract(
+    champion_name: str,
+    result_key: str,
+    entry: dict[str, Any],
+) -> None:
+    """A part-authored ``cc_kind`` must be a known kind that reaches the
+    event ledger.
+
+    CC-triggered item passives (Imperial Mandate's Command, Fimbulwinter's
+    Everlasting) read the marker off authored damage events only. A marker
+    on an entry the fight engine will aggregate coarsely — no single-hit
+    certification, no authored ``time_offset``, no dynamic part, no
+    module-authored event list — silently never triggers anything, so it
+    is rejected here, at parse time, instead. Mirrors the emission gate in
+    ``damage._evaluate_cast_parts``. ``cc_kind="none"`` is an explicit
+    reviewed no-CC statement and needs no event path.
+    """
+    parts = entry.get("parts") or ()
+    cc_parts = [
+        part for part in parts if getattr(part, "cc_kind", None) not in (None, "none")
+    ]
+    if not cc_parts:
+        return
+    for part in cc_parts:
+        if part.cc_kind.lower().strip() not in CC_KIND_VOCABULARY:
+            raise ValueError(
+                f"{champion_name} entry {result_key!r}: unknown cc_kind "
+                f"{part.cc_kind!r} (known kinds are defined by "
+                "ability_spec.CC_KIND_VOCABULARY)"
+            )
+    certified = entry.get("event_order_certified") == "single_hit"
+    has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
+    has_authored_events = isinstance(entry.get("damage_events"), list)
+    for part in cc_parts:
+        emits = (
+            (certified and len(parts) == 1 and part.count <= 1)
+            or (
+                part.time_offset is not None
+                and (part.count <= 1 or part.hit_interval is not None)
+            )
+            or has_dynamic_part
+            or has_authored_events
+        )
+        if not emits:
+            raise ValueError(
+                f"{champion_name} entry {result_key!r}: cc_kind "
+                f"{part.cc_kind!r} would never reach the event ledger — "
+                "certify event_order_certified='single_hit' (one part, one "
+                "hit), author the part's time_offset, or author "
+                "damage_events; without one of these the CC silently "
+                "triggers nothing"
+            )
+
+
 def _result_key(slot: str) -> str:
     """Map a slot-map key to its key in the results dict.
 
@@ -411,6 +466,7 @@ def build_parser(
         # and a mutated entry must obey the contract too.
         for result_key, entry in results.items():
             _validate_entry_keys(champion_name, result_key, entry)
+            _validate_cc_event_contract(champion_name, result_key, entry)
 
         return results
 

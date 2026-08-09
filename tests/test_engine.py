@@ -1156,3 +1156,85 @@ class TestCastTimeStamping:
         ability["castTime"] = "0.25"
         results = parse(_champion(P=[ability]), 9, 0.0)
         assert "cast_time" not in results["passive"]
+
+
+# ---------------------------------------------------------------------------
+# cc_kind event contract
+# ---------------------------------------------------------------------------
+
+
+class TestCcEventContract:
+    """cc_kind is a trigger contract: the marked cast must reach the event
+    ledger (else CC-triggered item passives silently never fire — the
+    Imperial Mandate/Pantheon failure class), and the kind must belong to
+    the known vocabulary (a typo must never author a no-op stun)."""
+
+    @staticmethod
+    def _cc_slot(**entry_overrides):
+        def parse(ctx):
+            entry = damage_entry("Stunner", 3, 8.0, 100.0, "physical")
+            entry["parts"] = (DamagePart("physical", 100.0, cc_kind="stun"),)
+            entry.update(entry_overrides)
+            return entry
+
+        parse.phase = DAMAGE
+        return parse
+
+    def test_cc_part_without_event_path_is_rejected(self) -> None:
+        parse = build_parser({"Q": self._cc_slot()}, "TestChamp")
+        with pytest.raises(ValueError, match="event ledger"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
+
+    def test_certified_single_hit_cc_part_is_accepted(self) -> None:
+        parse = build_parser(
+            {"Q": self._cc_slot(event_order_certified="single_hit")}, "TestChamp"
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert results["Q"]["parts"][0].cc_kind == "stun"
+
+    def test_authored_time_offset_cc_part_is_accepted(self) -> None:
+        def parse_slot(ctx):
+            entry = damage_entry("Delayed Stun", 3, 8.0, 100.0, "physical")
+            entry["parts"] = (
+                DamagePart("physical", 100.0, cc_kind="stun", time_offset=0.6),
+            )
+            return entry
+
+        parse_slot.phase = DAMAGE
+        parse = build_parser({"Q": parse_slot}, "TestChamp")
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert results["Q"]["parts"][0].cc_kind == "stun"
+
+    def test_unknown_cc_kind_is_rejected(self) -> None:
+        def parse_slot(ctx):
+            entry = damage_entry("Typo Stun", 3, 8.0, 100.0, "physical")
+            entry["parts"] = (DamagePart("physical", 100.0, cc_kind="stunn"),)
+            entry["event_order_certified"] = "single_hit"
+            return entry
+
+        parse_slot.phase = DAMAGE
+        parse = build_parser({"Q": parse_slot}, "TestChamp")
+        with pytest.raises(ValueError, match="stunn"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
+
+    def test_reviewed_no_cc_result_needs_no_event_path(self) -> None:
+        """cc_kind='none' is a reviewed no-CC statement, not a trigger."""
+
+        def parse_slot(ctx):
+            entry = damage_entry("Plain Nuke", 3, 8.0, 100.0, "physical")
+            entry["parts"] = (DamagePart("physical", 100.0, cc_kind="none"),)
+            return entry
+
+        parse_slot.phase = DAMAGE
+        parse = build_parser({"Q": parse_slot}, "TestChamp")
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert results["Q"]["parts"][0].cc_kind == "none"
+
+    def test_damage_entry_cc_kind_certifies_single_hit(self) -> None:
+        entry = damage_entry("X", 1, 5.0, 100.0, "magic", cc_kind="stun")
+        assert entry["event_order_certified"] == "single_hit"
+        assert entry["parts"][0].cc_kind == "stun"
+
+    def test_damage_entry_rejects_mixed_cc(self) -> None:
+        with pytest.raises(ValueError, match="mixed"):
+            damage_entry("X", 1, 5.0, 100.0, "mixed", cc_kind="stun")

@@ -287,6 +287,99 @@ class TestUnleashedPowerSpheres:
 
 
 # ---------------------------------------------------------------------------
+# Rotation: Q must precede E (the stun consumes a sphere)
+# ---------------------------------------------------------------------------
+
+
+class TestRotationOrder:
+    """E's stun exists only by scattering a Dark Sphere, so Q is E's setup —
+    the reverse of the generic cc-setup-first ordering. The hand-verified
+    COMBO_TABLE seed pins the QE combo and keeps W/R inside the stun."""
+
+    def test_cast_order_is_qe_combo(self, syndra_data) -> None:
+        from src.calculator.rotation_resolver import resolve_cast_order
+
+        abilities = _parse(syndra_data)
+        order, rule = resolve_cast_order("Syndra", abilities, champion_data=syndra_data)
+        assert order == ["Q", "Q2", "E", "W", "R"]
+        assert rule is not None and rule.derived is False
+        assert "sphere" in rule.rationale.lower()
+
+
+# ---------------------------------------------------------------------------
+# E: Scatter the Weak's authored stun marker
+# ---------------------------------------------------------------------------
+
+
+class TestScatterTheWeakStun:
+    """E carries the authored stun so CC-triggered item passives (Imperial
+    Mandate's Command, Bandlepipes' Fanfare) can see it in the event ledger."""
+
+    def test_e_part_carries_stun_marker(self, syndra_data) -> None:
+        (part,) = _parse(syndra_data)["E"]["parts"]
+        assert part.cc_kind == "stun"
+
+    def test_e_fight_event_carries_stun_marker(
+        self, syndra_data, attacker_stats
+    ) -> None:
+        """The marker must survive the fight engine into damage_events —
+        that ledger is what item_support_effects scans for CC triggers."""
+        stats = attacker_stats(ability_power=600.0)
+        abilities = parse_abilities(
+            syndra_data,
+            18,
+            600.0,
+            ability_ranks={"Q": 0, "W": 0, "E": 5, "R": 0},
+            champion_stats=stats,
+            champion_options={"splinters": 60},
+        )
+        result = _fight(stats, abilities, one_rotation=True)
+        e_events = [
+            event
+            for event in result["damage_events"]
+            if event.get("source") == "E" or event.get("source_key") == "E"
+        ]
+        assert e_events
+        assert all(event.get("cc_kind") == "stun" for event in e_events)
+
+    def test_imperial_mandate_command_amps_post_stun_damage(
+        self, syndra_data, attacker_stats
+    ) -> None:
+        """E stuns at t=0, R lands at t=0.25 inside Command's 4s window:
+        7% of R's 840 = 58.8 bonus. E itself (the trigger) is not amped."""
+        from src.calculator.data_fetcher import get_item_by_name
+
+        items = [get_item_by_name("Imperial Mandate")]
+        stats = attacker_stats(ability_power=600.0)
+        abilities = parse_abilities(
+            syndra_data,
+            18,
+            600.0,
+            ability_ranks={"Q": 0, "W": 0, "E": 5, "R": 3},
+            champion_stats=stats,
+            champion_options={"splinters": 60},
+        )
+        result = calculate_fight_damage(
+            stats,
+            abilities,
+            items,
+            FightConfig(
+                target_health=10000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=8.0,
+                auto_attack_uptime=0.0,
+                one_rotation=False,
+                deterministic=True,
+            ),
+        )
+        row = result["breakdown"]["damage_amp_Imperial Mandate"]
+        assert row["multiplier"] == pytest.approx(1.07)
+        assert row["total_damage"] == pytest.approx(0.07 * 840.0)
+        assert result["total_damage"] == pytest.approx(560.0 + 840.0 * 1.07)
+
+
+# ---------------------------------------------------------------------------
 # Fight-engine integration
 # ---------------------------------------------------------------------------
 
@@ -336,3 +429,32 @@ class TestFightIntegration:
             fight_duration_seconds=5.0,
         )
         assert result["breakdown"]["R"]["total_damage"] == pytest.approx(980.0)
+
+
+# ---------------------------------------------------------------------------
+# Command window arithmetic (pure helpers in damage.py)
+# ---------------------------------------------------------------------------
+
+
+class TestCommandWindows:
+    """The two pieces of _apply_command_amp most exposed to refactor drift:
+    window merging (extend, not stack) and the strictly-after boundary."""
+
+    def test_overlapping_immobilizes_extend_one_window(self) -> None:
+        from src.calculator.damage import _merged_cc_windows
+
+        assert _merged_cc_windows([0.0, 2.0], 4.0) == [(0.0, 6.0)]
+
+    def test_separated_immobilizes_open_separate_windows(self) -> None:
+        from src.calculator.damage import _merged_cc_windows
+
+        assert _merged_cc_windows([0.0, 10.0], 4.0) == [(0.0, 4.0), (10.0, 14.0)]
+
+    def test_boundary_is_strictly_after_start_inclusive_end(self) -> None:
+        from src.calculator.damage import _in_cc_window, _merged_cc_windows
+
+        windows = _merged_cc_windows([1.0], 4.0)
+        assert not _in_cc_window(windows, 1.0)  # the trigger itself
+        assert _in_cc_window(windows, 1.001)
+        assert _in_cc_window(windows, 5.0)  # inclusive end
+        assert not _in_cc_window(windows, 5.001)

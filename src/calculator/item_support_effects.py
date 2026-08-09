@@ -12,6 +12,7 @@ from collections.abc import Iterable, Mapping
 import math
 from typing import Any
 
+from .ability_spec import IMMOBILIZING_CC_KINDS, is_immobilizing_event
 from .item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -111,6 +112,11 @@ def _support_triggers(
     ]
 
 
+# Any authored cc_kind that means real crowd control — the immobilize
+# class plus slows. ("none" is a reviewed no-CC statement, never a trigger.)
+_CC_TRIGGER_KINDS = IMMOBILIZING_CC_KINDS | frozenset({"slow"})
+
+
 def _cc_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     """Return damage packets with an authored crowd-control marker."""
     markers = {"immobilized", "crowd_control", "hard_cc"}
@@ -119,19 +125,19 @@ def _cc_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
         for event in result.get("damage_events", [])
         if isinstance(event, Mapping)
         if any(bool(event.get(marker)) for marker in markers)
-        or str(event.get("cc_kind", "")).lower()
-        in {"slow", "immobilize", "stun", "root", "knockup", "suppression"}
+        or str(event.get("cc_kind", "")).lower() in _CC_TRIGGER_KINDS
     ]
 
 
 def _fimbulwinter_trigger_kind(event: Mapping[str, Any]) -> str:
     """Return the explicitly reviewed Everlasting trigger kind, if any."""
     kind = str(event.get("cc_kind", "")).lower().strip()
-    if kind in {"immobilize", "stun", "root", "knockup", "suppression"}:
+    if kind in IMMOBILIZING_CC_KINDS:
         return "immobilize"
     if kind == "slow" or bool(event.get("slowed")) or bool(event.get("slow")):
         return "slow"
-    if bool(event.get("immobilized")) or bool(event.get("hard_cc")):
+    if is_immobilizing_event(event):
+        # Legacy ``immobilized`` / ``hard_cc`` flags without a narrowed kind.
         return "immobilize"
     # A bare ``crowd_control`` flag does not distinguish Everlasting's
     # immobilize/slow branches, so it is intentionally not enough here.
@@ -916,7 +922,7 @@ def derive_item_support_effects(
                         ),
                     )
                 )
-        if "Imperial Mandate" in names:
+        if "Imperial Mandate" in names and is_immobilizing_event(cc):
             target = _target_by_id(all_actors, str(cc.get("target", "")))
             if target is not None:
                 packets.append(
@@ -937,6 +943,10 @@ def derive_item_support_effects(
                             "Imperial Mandate", "command_damage_amp"
                         ),
                         all_sources=True,
+                        # The holder's pair engine prices its own amp
+                        # (damage._apply_command_amp); the walk applies
+                        # this packet to every other participant only.
+                        owner=attacker.participant_id,
                     )
                 )
 

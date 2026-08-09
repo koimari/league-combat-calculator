@@ -131,7 +131,7 @@ from typing import Any, Callable
 from . import item_effects
 from . import rune_effects
 from . import shield_ledger
-from .ability_spec import DamagePart
+from .ability_spec import DamagePart, is_immobilizing_event
 from .item_support_effects import has_takedown_scan_support_items
 from .resistance import (
     apply_resistance,
@@ -9272,6 +9272,9 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
             "informational": True,
         }
 
+    # Imperial Mandate's Command: the holder's own post-immobilize amp.
+    _apply_command_amp(state, rotation)
+
     # Horizon Focus Hypershot: amp all damage except the first ability cast
     # (the first ability triggers the mark; its own damage is not amped).
     if state.hypershot_amp > 1.0:
@@ -9288,6 +9291,87 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
             row["event_phase"] = "amplifier"
         breakdown["damage_amp_Horizon Focus"] = row
         state.total_damage += hypershot_bonus
+
+
+def _merged_cc_windows(
+    cc_times: list[float], duration: float
+) -> list[tuple[float, float]]:
+    """Merge sorted CC timestamps into ``(start, end]`` amp windows.
+
+    Overlapping windows extend rather than stack — the Wiki's "subsequent
+    immobilizes against a target extend the duration of the effect".
+    """
+    windows: list[list[float]] = []
+    for time in cc_times:
+        if windows and time <= windows[-1][1]:
+            windows[-1][1] = max(windows[-1][1], time + duration)
+        else:
+            windows.append([time, time + duration])
+    return [(start, end) for start, end in windows]
+
+
+def _in_cc_window(windows: list[tuple[float, float]], time: float) -> bool:
+    """Whether a packet timestamp falls inside an amp window.
+
+    Strictly after the window's opening CC (``start < t <= end``): the
+    trigger itself and same-timestamp packets are not amped, matching the
+    coupled walk, where the modifier arms after equal-time packets. This
+    is deliberately timestamp-only coarseness — a same-tick packet ordered
+    after the CC in the ledger is still excluded; do not "fix" it in
+    either direction without changing the walk to match.
+    """
+    return any(start < time <= end for start, end in windows)
+
+
+def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
+    """Price Imperial Mandate's Command for the holder's own fight.
+
+    An authored immobilize event (Syndra E's stun, Ahri's Charm, …) marks
+    the target *Vulnerable*: every packet landing strictly after it inside
+    the sourced window takes the amp. Without an authored immobilize event
+    the row is absent — the amp fails closed exactly like the coupled
+    walk's packet, which requires the same reviewed ``cc_kind`` marker.
+    The walk's cross-participant packet carries the holder as ``owner`` so
+    this row and the walk multiplier can never both price the holder's
+    damage.
+    """
+    effect = item_effects.command_amp_effect(state.items)
+    if effect is None:
+        return
+    cc_times = sorted(
+        float(event.get("time", 0.0) or 0.0)
+        for entry in state.breakdown.values()
+        if isinstance(entry, dict)
+        for event in entry.get("damage_events") or ()
+        if isinstance(event, dict) and is_immobilizing_event(event)
+    )
+    if not cc_times:
+        return
+    windows = _merged_cc_windows(cc_times, effect.duration)
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+        light=True,
+    )
+    amped = [row for row in events if _in_cc_window(windows, row[0][0])]
+    bonus = sum(row[1] for row in amped) * effect.amp_fraction
+    if bonus <= 0.0:
+        return
+    row = {
+        "name": f"Damage Amplification ({effect.item_name} — Command)",
+        "multiplier": 1.0 + effect.amp_fraction,
+        "total_damage": bonus,
+    }
+    delta_events = _amplifier_delta_events(amped, bonus)
+    if delta_events:
+        row["damage_events"] = delta_events
+        row["event_phase"] = "amplifier"
+    # Shares the ``damage_amp_<source>`` key namespace with
+    # ``_apply_general_amplifiers``; item names keep the keys distinct.
+    state.breakdown[f"damage_amp_{effect.item_name}"] = row
+    state.total_damage += bonus
 
 
 def _apply_temporary_lethality_windows(state: FightState) -> None:

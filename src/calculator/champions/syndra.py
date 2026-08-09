@@ -288,8 +288,12 @@ ASSUMPTIONS = [
     "R sphere count is user-set (default 3 = no setup; max 7 with "
     "spheres banked on the field); the Min/Max JSON damage rows are "
     "derived totals and are not used",
-    "E's 80-splinter upgrade (wider angle, slow) and all CC (stun, "
-    "knockback, W slow) are utility only — no damage contribution",
+    "E is assumed to scatter a sphere into the target (the standard QE "
+    "combo), so its cast is authored as a stun event (cc_kind) for "
+    "CC-triggered item passives (Imperial Mandate, Fimbulwinter, …); the "
+    "stun itself adds no damage. The 80-splinter upgrade (wider angle, "
+    "slow), the sphere-less knockback, and W's slow remain unmodeled "
+    "utility",
     "R's passive 10/20/30 ability haste applies to Q's cooldown only",
 ]
 
@@ -300,7 +304,7 @@ SLOTS = {
     "Q": _dark_sphere,
     "Q2": _dark_sphere_second_charge,
     "W": _force_of_will,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(attr="Magic Damage", dmg_type="magic", cc_kind="stun"),
     "R": _unleashed_power,
 }
 

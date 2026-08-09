@@ -911,7 +911,7 @@ def run_fight(
         # F3: the algorithmic resolver derives the order for EVERY champion
         # from the atomized ability data (setup/consume edges + per-rank DPS),
         # falling back to the champion module's certified CAST_ORDER or the
-        # engine default when the data shows a flat kit.  The ten F2 seeds
+        # engine default when the data shows a flat kit.  The hand-verified seeds
         # remain documented overrides inside the resolver.
         declared_order, combo_rule = resolve_cast_order(
             champion_data.get("name", ""),

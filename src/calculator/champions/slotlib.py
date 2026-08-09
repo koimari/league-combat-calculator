@@ -394,6 +394,7 @@ def damage_entry(
     cooldown: float,
     total: float,
     dmg_type: str,
+    cc_kind: str | None = None,
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
@@ -404,7 +405,23 @@ def damage_entry(
     (usually the parts sum; proc entries store per-proc × count, and
     hp-scaled entries store a bound) — the fight engine reads ONLY
     ``parts``.
+
+    ``cc_kind`` marks the cast's reviewed crowd control (e.g. "stun",
+    "immobilize") on the entry's single part AND certifies ``single_hit``
+    event order — authoring CC is authoring an event, and without the
+    certification the marker would dissolve into a coarse aggregate row
+    that CC-triggered item passives never see. Certifying means the hit
+    lands at the cast boundary; an ability with meaningful travel or
+    delay should author the part's ``time_offset`` instead. A "mixed"
+    entry is two parts, which the engine's certified single-hit export
+    cannot carry — that combination raises rather than silently dropping
+    the marker.
     """
+    if cc_kind is not None and dmg_type == "mixed":
+        raise ValueError(
+            f"damage_entry({name!r}): cc_kind requires a single-part entry "
+            "(dmg_type must not be 'mixed')"
+        )
     entry: dict[str, Any] = {
         "name": name,
         "rank": rank,
@@ -418,7 +435,9 @@ def damage_entry(
             DamagePart("true", total / 2.0),
         )
     else:
-        entry["parts"] = (DamagePart(dmg_type, total),)
+        entry["parts"] = (DamagePart(dmg_type, total, cc_kind=cc_kind),)
+    if cc_kind is not None:
+        entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -587,6 +606,7 @@ def simple_damage(
     cooldown: str = "standard",
     ranks: str = "rank",
     dot_duration: float | None = None,
+    cc_kind: str | None = None,
 ) -> SlotParser:
     """Standard castable damage slot.
 
@@ -615,6 +635,14 @@ def simple_damage(
             after the cast (poisons, zone ticks). Item burns (Liandry's,
             Blackfire) stay refreshed for this tail — see
             ``_add_burn_damage``. None (default) emits nothing.
+        cc_kind: Reviewed crowd control the cast applies ("stun",
+            "immobilize", "root", "slow", …), stamped on the entry's
+            first part so CC-triggered item passives can see the cast
+            in the event ledger. Authoring CC is authoring an event:
+            the entry also certifies ``single_hit`` event order, so the
+            marker actually reaches the ledger instead of dissolving
+            into a coarse aggregate row. Requires a single-part slot
+            (``dmg_type != "mixed"``). None (default) authors no CC.
 
     Returns:
         A DAMAGE-phase slot parser.
@@ -623,6 +651,14 @@ def simple_damage(
         raise ValueError(
             f"simple_damage: unknown cooldown mode {cooldown!r} "
             "(must be 'standard' or 'recharge')"
+        )
+    if cc_kind is not None and dmg_type == "mixed":
+        # The engine exports a certified single-hit event only for a
+        # one-part cast; a two-part "mixed" entry would silently drop
+        # the CC marker from the ledger. Fail closed instead.
+        raise ValueError(
+            "simple_damage: cc_kind requires a single-part slot "
+            "(dmg_type must not be 'mixed')"
         )
     extract_cd = extract_recharge if cooldown == "recharge" else extract_cooldown
 
@@ -662,7 +698,7 @@ def simple_damage(
 
         total *= _resolve_casts(casts, ability, rank)
         name = ability.get("name", f"Ability {ctx.slot}")
-        entry = damage_entry(name, rank, cd_value, total, resolved_type)
+        entry = damage_entry(name, rank, cd_value, total, resolved_type, cc_kind)
         if dot_duration is not None:
             entry["dot_duration"] = dot_duration
         return entry

@@ -50,9 +50,11 @@ _STATEFUL_MODELED_ITEMS: dict[str, str] = {
         "holder/ally attack-speed packets."
     ),
     "Imperial Mandate": (
-        "Command is represented by the shared participant support ledger: an "
-        "authored crowd-control event schedules its all-source damage amplifier "
-        "for the selected target and duration."
+        "Command is represented on both sides of one authored immobilize "
+        "event (a slow is not enough): the holder's pair engine prices its "
+        "own post-immobilize amplifier, and the shared participant support "
+        "ledger schedules the all-source amplifier for every other "
+        "participant."
     ),
     "Actualizer": "Mana Made Real is represented by its bounded active window, resource multiplier, and cooldown-progress receipt.",
     "Archangel's Staff": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",

@@ -2,7 +2,7 @@
 
 Derives the fight's ``cast_order`` from the atomized ability data for ALL
 champions, replacing the naive ``DEFAULT_CAST_ORDER`` whenever the data
-supports a setup/consume structure.  The ten hand-verified seeds in
+supports a setup/consume structure.  The hand-verified seeds in
 :data:`COMBO_TABLE` remain as documented OVERRIDES; every other champion
 is derived on the fly by :func:`derive_champion_rule` — no combo database.
 
@@ -336,6 +336,31 @@ COMBO_TABLE: dict[str, ComboRule] = {
         # Moonlight Vigil damages every enemy it passes through; Q's
         # Infernum form spreads to all in the cone (weapon-dependent).
         aoe={"R": 5, "Q": 5},
+    ),
+    # E stuns only by scattering a Dark Sphere, so Q is E's setup — the
+    # reverse of the generic cc-setup-first fan-out, which would open with
+    # a sphere-less (stun-less) E and push Q's recast cadence back a slot.
+    "Syndra": ComboRule(
+        champion="Syndra",
+        order=("Q", "Q2", "E", "W", "R"),
+        rationale=(
+            "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns "
+            "only by scattering a sphere into the target — the sphere is E's "
+            "setup, the standard QE stun combo. E follows immediately so the "
+            "stun (and CC-triggered item passives such as Imperial Mandate's "
+            "Command) covers W and R's burst. Q2 is Q's second charge and "
+            "mirrors Q's cast times."
+        ),
+        sources=(
+            "E cc_kind='stun' authored in the module (sphere-collision stun; "
+            "see the module's QE-combo assumption)",
+            "Q 'Magic Damage' — the sphere E scatters",
+            "Q2 recast_of Q (40+ splinter second charge)",
+            "R 'Magic Damage' per sphere closes the burst",
+        ),
+        setup=("Q",),
+        consume=("E",),
+        aoe={"E": 5},  # Scatter the Weak's cone
     ),
 }
 
@@ -1460,7 +1485,7 @@ def resolve_cast_order(
 ) -> tuple[list[str], ComboRule | None]:
     """Resolve the fight's ``cast_order``: override → algorithmic derive.
 
-    The ten hand-verified :data:`COMBO_TABLE` seeds win (documented
+    The hand-verified :data:`COMBO_TABLE` seeds win (documented
     overrides).  Every other champion with atomized data is derived
     algorithmically by :func:`derive_champion_rule`; a champion with no
     detectable setup/consume signal keeps its certified module order or

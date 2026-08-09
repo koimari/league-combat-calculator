@@ -15,6 +15,55 @@ from dataclasses import dataclass
 
 _PART_DAMAGE_TYPES = frozenset({"magic", "physical", "true"})
 
+# The ``cc_kind`` values that count as an immobilize — the Wiki's
+# "Immobilizing" crowd-control class (airborne, forced actions, root,
+# sleep, stasis, stun, suppression), the trigger for Imperial Mandate's
+# Command and Fimbulwinter's non-melee Everlasting. A slow is crowd
+# control but not an immobilize.
+# https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
+IMMOBILIZING_CC_KINDS = frozenset(
+    {
+        "immobilize",  # generic reviewed immobilize (kind not narrowed)
+        "airborne",
+        "charm",
+        "fear",
+        "flee",
+        "knockback",
+        "knockup",
+        "pull",
+        "root",
+        "sleep",
+        "snare",
+        "stasis",
+        "stun",
+        "suppression",
+        "taunt",
+    }
+)
+
+# Every value a module may author as a part's ``cc_kind``. "slow" is real
+# crowd control that never counts as an immobilize; "none" is an explicit
+# reviewed no-CC result. Anything else is a typo the engine rejects —
+# a misspelled kind must never author a no-op stun.
+CC_KIND_VOCABULARY = IMMOBILIZING_CC_KINDS | frozenset({"slow", "none"})
+
+
+def is_immobilizing_event(event) -> bool:
+    """Whether an authored damage-event row marks the Wiki immobilize class.
+
+    Reads the reviewed ``cc_kind`` marker plus the legacy boolean flags
+    (``immobilized`` / ``hard_cc``). This is the single predicate for
+    every immobilize-triggered consumer (Imperial Mandate's Command in
+    both the pair engine and the participant walk, Fimbulwinter's
+    Everlasting) — the two sides of one trigger must never diverge.
+    """
+    kind = str(event.get("cc_kind", "")).lower().strip()
+    return (
+        kind in IMMOBILIZING_CC_KINDS
+        or bool(event.get("immobilized"))
+        or bool(event.get("hard_cc"))
+    )
+
 
 @dataclass(frozen=True)
 class DamagePart:

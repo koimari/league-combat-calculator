@@ -227,6 +227,28 @@ def test_cc_only_packets_require_an_authored_immobilize_marker():
     assert any(p["source"] == "Bandlepipes — Fanfare" for p in marked)
     mandate = next(p for p in marked if p["source"] == "Imperial Mandate — Command")
     assert mandate["multiplier"] == pytest.approx(1.07)
+    # The holder's own pair engine prices Command (damage.py); the packet
+    # exists for every other participant, so the walk must skip the owner.
+    assert mandate["owner"] == holder.participant_id
+
+
+def test_command_requires_an_immobilize_not_a_slow():
+    """Command triggers on the Wiki's immobilize class only — a slow marks
+    nothing (unlike Solstice Sleigh, which triggers on slows too)."""
+    holder = _actor("ally:Lulu", "ally", ("Imperial Mandate",))
+    enemy = _actor("enemy:Aatrox", "enemy", ())
+    slowed = derive_item_support_effects(
+        holder,
+        {"damage_events": [{"time": 1.0, "target": "enemy:Aatrox", "cc_kind": "slow"}]},
+        [holder, enemy],
+    )
+    assert not any(p["source"] == "Imperial Mandate — Command" for p in slowed)
+    stunned = derive_item_support_effects(
+        holder,
+        {"damage_events": [{"time": 1.0, "target": "enemy:Aatrox", "cc_kind": "stun"}]},
+        [holder, enemy],
+    )
+    assert any(p["source"] == "Imperial Mandate — Command" for p in stunned)
 
 
 def test_sourced_cc_packets_include_holder_movement_and_solstice_both_recipients():

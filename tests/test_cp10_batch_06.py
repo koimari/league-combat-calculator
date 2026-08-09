@@ -93,3 +93,11 @@ def test_cp10_6_variant_options_and_provenance_are_exposed():
     assert {
         option["key"] for option in get_champion_options_meta("Rell")["options"]
     } == {"w_variant"}
+
+
+def test_pantheon_w_stun_reaches_the_event_ledger():
+    """W's authored stun must ride a certified event so CC-triggered item
+    passives (Imperial Mandate's Command, Fimbulwinter) can see it."""
+    entry = _parse("Pantheon")["W"]
+    assert entry["parts"][0].cc_kind == "stun"
+    assert entry["event_order_certified"] == "single_hit"

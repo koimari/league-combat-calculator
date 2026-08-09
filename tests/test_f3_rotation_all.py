@@ -1,6 +1,6 @@
 """F3 — algorithmic optimal-order derivation for every registered champion.
 
-The F2 combo layer hand-curated ten ``COMBO_TABLE`` seeds; every other
+The F2 combo layer hand-curated the ``COMBO_TABLE`` seeds; every other
 champion fell back to the certified/default order with a generic
 rationale.  F3 replaces that with a fully algorithmic derivation
 (:func:`src.calculator.rotation_resolver.derive_champion_rule`): the
@@ -22,7 +22,7 @@ EVERY champion:
 (c) the order is deterministic and stable across levels/items for the
     same champion;
 (d) the order is a permutation of the certified/base slots (no invented
-    slots, none dropped), and the ten verified seeds stay as overrides.
+    slots, none dropped), and the verified seeds stay as overrides.
 """
 
 import pytest
@@ -35,7 +35,7 @@ from src.calculator.rotation_resolver import (
     resolve_cast_order,
 )
 
-# ── the ten verified seeds stay as documented overrides ──
+# ── the verified seeds stay as documented overrides ──
 _OVERRIDE_CHAMPIONS = [
     "Cassiopeia",
     "Varus",
@@ -47,6 +47,7 @@ _OVERRIDE_CHAMPIONS = [
     "Lux",
     "Zed",
     "Aphelios",
+    "Syndra",
 ]
 
 # Documented seed exceptions: the verified F2 seed deliberately deviates
@@ -58,9 +59,14 @@ _OVERRIDE_CHAMPIONS = [
 #   - Varus: R applies Blight stacks, so the data says R→Q, but the seed
 #     puts the Blight DETONATOR Q first (the auto-applied stacks ride Q;
 #     R's own stacks land later in the burst).
+#   - Syndra: E's authored stun makes the generic cc-setup fan-out say
+#     E→(Q, Q2, W, R), but the stun only exists by scattering a sphere Q
+#     provides — the dependency runs Q→E, so the seed opens Q and keeps
+#     W/R inside the stun window.
 _OVERRIDE_SEED_EXCEPTIONS = {
     "Cassiopeia": {("W", "E")},
     "Varus": {("R", "Q")},
+    "Syndra": {("E", "Q"), ("E", "Q2")},
 }
 
 # Level x build reference matrix (mirrors scripts/golden_snapshot.py).
@@ -189,12 +195,12 @@ def _edge_kinds(edges):
 
 
 # ---------------------------------------------------------------------------
-# (d) the ten verified seeds stay as documented overrides
+# (d) the verified seeds stay as documented overrides
 # ---------------------------------------------------------------------------
 
 
 class TestOverrideSeeds:
-    def test_table_holds_exactly_the_ten_seeds(self) -> None:
+    def test_table_holds_exactly_the_verified_seeds(self) -> None:
         assert set(COMBO_TABLE) == set(_OVERRIDE_CHAMPIONS)
 
     def test_seed_rules_are_not_marked_derived(self) -> None:

@@ -38,6 +38,7 @@ _COMBO_CHAMPIONS = [
     "Lux",
     "Zed",
     "Aphelios",
+    "Syndra",
 ]
 
 _EXPECTED_ORDERS = {
@@ -51,6 +52,7 @@ _EXPECTED_ORDERS = {
     "Lux": ["E", "Q", "R", "W"],
     "Zed": ["W", "E", "Q", "R"],
     "Aphelios": ["Q", "W", "R"],
+    "Syndra": ["Q", "Q2", "E", "W", "R"],
 }
 
 _RATIONALE_FRAGMENTS = {
@@ -64,6 +66,7 @@ _RATIONALE_FRAGMENTS = {
     "Lux": ("slow", "root"),
     "Zed": ("shadow", "Death Mark"),
     "Aphelios": ("weapon", "swap"),
+    "Syndra": ("sphere", "stun"),
 }
 
 
@@ -123,6 +126,7 @@ class TestComboTable:
             for slot in rule.order:
                 assert slot in {
                     "Q",
+                    "Q2",  # a recast slot rides its parent's schedule
                     "W",
                     "E",
                     "R",

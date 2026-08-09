@@ -103,14 +103,17 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
     percent += _W_BONUS_HEALTH_PER_100 * bonus_health / 100.0
     value = percent / 100.0 * target_max
 
+    # cc_kind routes through damage_entry so the stun certifies its event —
+    # a marker outside the event ledger never triggers Imperial Mandate's
+    # Command or Fimbulwinter's Everlasting.
     entry = damage_entry(
         ability.get("name", "Shield Vault"),
         rank,
         extract_cooldown(ability, rank),
         value,
         "physical",
+        cc_kind="stun",
     )
-    entry["parts"] = (DamagePart("physical", value, cc_kind="stun"),)
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
         f"%max-HP physical damage row: {percent:g}% of the target's "
