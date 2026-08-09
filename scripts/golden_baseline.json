@@ -41710,12 +41710,20 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1786113324.862417,
-    "git_head": "d06ee446e5c720d607a7da43bd286c0c6a3e6dff",
+    "fingerprint": {
+      "entries": 670,
+      "leaves": 51437,
+      "numeric_leaves": 43348,
+      "sections": "champion_baselines,item_sweep,registered_champion_fights"
+    },
+    "git_head": "e4716e40b39869d2fda0febf2767b49c8585fc73",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1786113359.0537379,
     "patch_last_changed_max": "26.15",
-    "registered_champion_count": 173
+    "registered_champion_count": 173,
+    "snapshot_kind": "pair",
+    "src_tree_sha": "66072eacfc496dbde2ce25b71085256e16e0c46a"
   },
   "registered_champion_fights": {
     "Aatrox": {
