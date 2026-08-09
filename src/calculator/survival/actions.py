@@ -366,6 +366,47 @@ _UTILITY_KINDS = frozenset(
     {"on_hit_magic", "movement", "cleanse", "slow", "economy", "vision"}
 )
 
+# The support ladder, by packet kind.  A sourced barrier arms before damage
+# and a sourced heal recovers after it; they must not share one rank merely
+# because both are support effects.
+_STATE_GRANT_KINDS = frozenset(
+    {"stasis", "invulnerability", "untargetable", "spell_shield"}
+)
+_BARRIER_GRANT_KINDS = frozenset({"shield", "temporary_health"})
+_DEBUFF_ARM_KINDS = frozenset({"damage_modifier", "stat_buff"})
+
+# The key a packet author uses to declare its own rank.  Underscored because
+# it is transport between the author and the walk; the public receipt
+# serializes an explicit key list and never sees it.
+SUPPORT_RANK_KEY = "_rank"
+
+
+def support_transition_rank(event: Mapping[str, Any]) -> TransitionRank:
+    """When one sourced support packet arms, as a named rank.
+
+    A packet may declare its own rank when its kind does not decide it:
+    Eclipse's self-shield and Fimbulwinter's Everlasting are barriers placed
+    *after* the damage that triggered them, not before it, so they declare
+    ``LATE_BARRIER`` where the kind alone would say ``BARRIER_GRANT``.  The
+    declaration is a member of :class:`TransitionRank` and nothing else, so
+    an author can choose a rank but cannot invent an ordering.  Every other
+    packet is classified from its kind, and no branch falls through to a
+    number.
+    """
+    declared = event.get(SUPPORT_RANK_KEY)
+    if declared is not None:
+        return TransitionRank(declared)
+    kind = str(event.get("kind", ""))
+    if kind in _STATE_GRANT_KINDS:
+        return TransitionRank.STATE_GRANT
+    if kind in _BARRIER_GRANT_KINDS:
+        return TransitionRank.BARRIER_GRANT
+    if kind in _HEAL_KINDS:
+        return TransitionRank.RECOVERY
+    if kind in _DEBUFF_ARM_KINDS:
+        return TransitionRank.DEBUFF_ARM
+    return TransitionRank.UTILITY_ARM
+
 
 def _classify_heal(event: Mapping[str, Any]) -> ActionKind:
     """Heal-kind classification with the sourced transition markers."""
@@ -612,6 +653,7 @@ def survival_action_from_event(
 # both into one ``amount`` field; this alias documents that convention.
 __all__ = [
     "ActionKind",
+    "SUPPORT_RANK_KEY",
     "SurvivalAction",
     "TransitionRank",
     "action_key",
@@ -619,5 +661,6 @@ __all__ = [
     "event_sequence",
     "legacy_phase",
     "participant_order",
+    "support_transition_rank",
     "survival_action_from_event",
 ]

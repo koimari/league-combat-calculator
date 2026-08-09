@@ -18,6 +18,7 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 """
 
 from .actions import (
+    SUPPORT_RANK_KEY,
     ActionKind,
     SurvivalAction,
     TransitionRank,
@@ -26,6 +27,7 @@ from .actions import (
     event_sequence,
     legacy_phase,
     participant_order,
+    support_transition_rank,
     survival_action_from_event,
 )
 from .compile import (
@@ -63,6 +65,7 @@ from .transitions import (
 
 __all__ = [
     "ActionKind",
+    "SUPPORT_RANK_KEY",
     "COMPILED_WALK_UNREPRESENTABLE_ITEMS",
     "ReceiptLedger",
     "ScoreLedger",
@@ -91,6 +94,7 @@ __all__ = [
     "participant_order",
     "resolve_grievous",
     "run_survival_walk",
+    "support_transition_rank",
     "survival_action_from_event",
     "thorns_return_damage",
     "uncompilable_item_receipt",

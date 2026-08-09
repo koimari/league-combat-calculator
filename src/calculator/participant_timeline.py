@@ -60,6 +60,7 @@ from .resistance import (
     apply_resistance,
 )
 from .survival import (
+    SUPPORT_RANK_KEY,
     ActionKind,
     ReceiptLedger,
     ScoreLedger,
@@ -79,6 +80,7 @@ from .survival import (
     resolve_grievous as _grievous_pack,
     revive_candidate_actions,
     run_survival_walk,
+    support_transition_rank,
     survival_action_from_event,
     uncompilable_item_receipt as _uncompilable_item_receipt,
 )
@@ -1965,24 +1967,12 @@ def _simulate_survival(
                 # ledgers below. Keep the support copy for the public receipt,
                 # but do not schedule the same object a second time here.
                 continue
-            # A sourced ally shield is a pre-damage barrier.  A sourced heal
-            # is a post-damage recovery event.  They must not share one
-            # priority merely because both are support effects.
-            kind = str(event.get("kind", ""))
-            priority = (
-                float(event.get("_priority", 0.0))
-                if "_priority" in event
-                else (
-                    -2.0
-                    if kind
-                    in {"stasis", "invulnerability", "untargetable", "spell_shield"}
-                    else (-1.0 if kind in {"shield", "temporary_health"} else 1.0)
-                )
-            )
+            arm_rank = support_transition_rank(event)
+            arm_phase = legacy_phase(arm_rank)
             actions.append(
                 survival_action_from_event(
                     event,
-                    priority,
+                    arm_phase,
                     index_of[participant_id],
                     index_of,
                     subject_id=participant_id,
@@ -3226,7 +3216,9 @@ def build_participant_timeline(
                                     "target_policy": "self",
                                     "_event_id": f"{shield_event_id}:shield",
                                     "_trigger_event_id": shield_event_id,
-                                    "_priority": 0.5,
+                                    # A barrier the triggering damage placed:
+                                    # it arms after that damage, not before.
+                                    SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
                                 }
                             )
                             ordered_item_support_ids.add(shield_event_id)

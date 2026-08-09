@@ -14,11 +14,17 @@ from pathlib import Path
 import pytest
 
 from src.calculator.survival import actions as actions_module
-from src.calculator.survival.actions import TransitionRank, legacy_phase
+from src.calculator.survival.actions import (
+    SUPPORT_RANK_KEY,
+    TransitionRank,
+    legacy_phase,
+    support_transition_rank,
+)
 
 ROOT = Path(__file__).parents[1]
 SURVIVAL = ROOT / "src" / "calculator" / "survival"
 TIMELINE = ROOT / "src" / "calculator" / "participant_timeline.py"
+ITEM_SUPPORT = ROOT / "src" / "calculator" / "item_support_effects.py"
 
 
 def test_legacy_phase_is_total_over_the_enum() -> None:
@@ -94,3 +100,94 @@ def test_no_action_is_built_with_a_float_phase_literal() -> None:
     for path in (*sorted(SURVIVAL.glob("*.py")), TIMELINE):
         offenders.extend(_survival_action_phase_constants(path))
     assert offenders == []
+
+
+# --- The support ladder: a rank, never an open float ------------------------
+
+
+def test_the_open_priority_hatch_is_gone_from_the_source() -> None:
+    """No producer can hand the walk an arbitrary ordering float."""
+    holders = [
+        path.relative_to(ROOT).as_posix()
+        for path in sorted((ROOT / "src").rglob("*.py"))
+        if "_priority" in path.read_text(encoding="utf-8")
+    ]
+    assert holders == []
+
+
+def test_support_kinds_classify_to_their_ladder_rank() -> None:
+    """Every support kind resolves to a named rank, none to a number."""
+    by_kind = {
+        "stasis": TransitionRank.STATE_GRANT,
+        "invulnerability": TransitionRank.STATE_GRANT,
+        "untargetable": TransitionRank.STATE_GRANT,
+        "spell_shield": TransitionRank.STATE_GRANT,
+        "shield": TransitionRank.BARRIER_GRANT,
+        "temporary_health": TransitionRank.BARRIER_GRANT,
+        "heal": TransitionRank.RECOVERY,
+        "regen": TransitionRank.RECOVERY,
+        "damage_modifier": TransitionRank.DEBUFF_ARM,
+        "stat_buff": TransitionRank.DEBUFF_ARM,
+        "movement": TransitionRank.UTILITY_ARM,
+        "cleanse": TransitionRank.UTILITY_ARM,
+        "economy": TransitionRank.UTILITY_ARM,
+        "vision": TransitionRank.UTILITY_ARM,
+    }
+    for kind, rank in by_kind.items():
+        assert support_transition_rank({"kind": kind}) is rank
+
+
+def test_the_classified_ladder_reproduces_the_floats_it_replaced() -> None:
+    """The three legacy branches — -2.0, -1.0 and the 1.0 fall-through."""
+    assert legacy_phase(support_transition_rank({"kind": "stasis"})) == -2.0
+    assert legacy_phase(support_transition_rank({"kind": "shield"})) == -1.0
+    for kind in ("heal", "damage_modifier", "movement", "anything_unlisted"):
+        assert legacy_phase(support_transition_rank({"kind": kind})) == 1.0
+
+
+def test_a_packet_may_declare_a_rank_but_not_an_ordering() -> None:
+    """The declaration overrides the kind, and only enum members are legal."""
+    late = {"kind": "shield", SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER}
+    assert support_transition_rank(late) is TransitionRank.LATE_BARRIER
+    assert legacy_phase(support_transition_rank(late)) == 0.5
+    with pytest.raises(ValueError):
+        support_transition_rank({"kind": "shield", SUPPORT_RANK_KEY: 0.5})
+
+
+def _rank_name(node: ast.expr) -> str:
+    """``TransitionRank.X`` as ``"X"``, anything else as ``""``."""
+    if isinstance(node, ast.Attribute) and getattr(node.value, "id", "") == (
+        "TransitionRank"
+    ):
+        return node.attr
+    return ""
+
+
+def _declared_ranks(path: Path) -> list[tuple[str, str]]:
+    """Every rank a packet author declares on a packet in one file.
+
+    Two spellings, one meaning: the ``rank=`` keyword of a ``_packet`` call
+    and a literal ``SUPPORT_RANK_KEY:`` dict entry.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    found: list[tuple[str, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            for keyword in node.keywords:
+                if keyword.arg == "rank" and _rank_name(keyword.value):
+                    found.append((path.name, _rank_name(keyword.value)))
+        elif isinstance(node, ast.Dict):
+            for key, value in zip(node.keys, node.values):
+                if getattr(key, "id", "") == "SUPPORT_RANK_KEY" and _rank_name(value):
+                    found.append((path.name, _rank_name(value)))
+    return found
+
+
+def test_the_packet_authors_that_declare_a_rank_are_exactly_three() -> None:
+    """The population that used to write an open float, now named."""
+    declared = _declared_ranks(ITEM_SUPPORT) + _declared_ranks(TIMELINE)
+    assert sorted(declared) == [
+        ("item_support_effects.py", "DAMAGE"),
+        ("item_support_effects.py", "LATE_BARRIER"),
+        ("participant_timeline.py", "LATE_BARRIER"),
+    ]

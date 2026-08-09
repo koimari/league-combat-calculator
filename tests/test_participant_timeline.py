@@ -25,10 +25,12 @@ from src.calculator.participant_timeline import (
     build_participant_timeline,
 )
 from src.calculator.survival import (
+    SUPPORT_RANK_KEY,
     ActionKind,
     ScoreLedger,
     SurvivalAction,
     TransitionContext,
+    TransitionRank,
     assemble_survival_rows,
     build_states,
     finalize_states,
@@ -3134,7 +3136,7 @@ def test_eclipse_self_shield_is_triggered_and_expires_in_order():
                 "source": "Eclipse (Ever Rising Moon)",
                 "_event_id": "proc:shield",
                 "_trigger_event_id": "proc",
-                "_priority": 0.5,
+                SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
             }
         ]
     }

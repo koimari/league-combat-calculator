@@ -23,6 +23,7 @@ from .item_effects import (
     ally_item_level_value,
     required_effect_value,
 )
+from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
 
 
 def _same_side(attacker: Any, actor: Any) -> bool:
@@ -81,8 +82,16 @@ def _packet(
     amount: float = 0.0,
     duration: float = 0.0,
     target_scope: str = "one_teammate",
+    rank: TransitionRank | None = None,
     **fields: Any,
 ) -> dict[str, Any]:
+    """Build one sourced packet.
+
+    ``rank`` is how a packet declares *when* it arms, for the packets whose
+    kind does not decide it (a barrier the triggering damage placed, say).
+    It is the only way to override the walk's ladder: an author names a
+    :class:`TransitionRank`, never a number.
+    """
     if not math.isfinite(float(amount)) or float(amount) < 0.0:
         raise ValueError(f"{source} packet amount must be finite and non-negative")
     if not math.isfinite(float(duration)) or float(duration) < 0.0:
@@ -99,6 +108,7 @@ def _packet(
         "target_scope": target_scope,
         "target_policy": "explicit_selected_roster_target",
         "_item_support": True,
+        **({SUPPORT_RANK_KEY: rank} if rank is not None else {}),
         **fields,
     }
 
@@ -503,7 +513,7 @@ def derive_item_support_effects(
                     cooldown_until=time + cooldown,
                     source_url=source_meta["source_url"],
                     source_revision_id=source_meta["source_revision_id"],
-                    _priority=0.5,
+                    rank=TransitionRank.LATE_BARRIER,
                 )
             )
             last_activation = time
@@ -1043,7 +1053,7 @@ def derive_item_support_effects(
                     target_scope="enemy_champions_in_radius",
                     range_assumption=f"within_{range_units:g}_units",
                     beam_delay=beam_delay,
-                    _priority=0.0,
+                    rank=TransitionRank.DAMAGE,
                     sequence=0,
                 )
             )
