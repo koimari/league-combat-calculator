@@ -40,6 +40,7 @@ from flask import (
 )
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.comparison import compare_payload
 from src.calculator.application_errors import ApplicationError
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
@@ -83,7 +84,7 @@ from src.calculator.optimizer import (
 )
 from src.calculator.stats import MAX_LEVEL
 from src.calculator.stats import get_item_stats
-from src.calculator.bis import bis_objective_contract, bis_payload
+from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
 from src.calculator.public_response import (
     ICON_HOSTS as _ICON_HOSTS,
     https_icon as _https_icon,
@@ -233,7 +234,12 @@ _SCOPE_LABELS = {
 # other two because it is deterministic and the most expensive endpoint.
 _OPERATION_POLICY = {
     "calculate": {"rate_limit_scope": "calculate", "cache_namespace": "calculate"},
+    "compare": {"rate_limit_scope": "calculate", "cache_namespace": "compare"},
     "bis": {"rate_limit_scope": "calculate", "cache_namespace": "bis"},
+    "bis_batch": {
+        "rate_limit_scope": "calculate",
+        "cache_namespace": "bis_batch",
+    },
     "optimize": {"rate_limit_scope": "optimize", "cache_namespace": "optimize"},
 }
 
@@ -1228,6 +1234,41 @@ def api_calculate():
     return jsonify(payload)
 
 
+@app.route("/api/compare", methods=["POST"])
+# pylint: disable=too-many-return-statements
+def api_compare():
+    """Calculate Build A and Build B behind one request boundary."""
+    try:
+        data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key(
+            _OPERATION_POLICY["compare"]["cache_namespace"], data
+        )
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["compare"]["rate_limit_scope"]
+    )
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    try:
+        payload = compare_payload(data)
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if cache_key is not None:
+        cache_set(cache_key, payload)
+    return jsonify(payload)
+
+
 @app.route("/api/bis", methods=["POST"])
 def api_bis():
     """Rank one slot through the pure BIS application boundary."""
@@ -1251,6 +1292,44 @@ def api_bis():
 
     try:
         payload = bis_payload(data)
+    except KeyError as exc:
+        missing = exc.args[0] if exc.args else "requested data"
+        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if cache_key is not None:
+        cache_set(cache_key, payload)
+    return jsonify(payload)
+
+
+@app.route("/api/bis/batch", methods=["POST"])
+# pylint: disable=too-many-return-statements
+def api_bis_batch():
+    """Score dependent BIS slots with one shared timeline cache."""
+    try:
+        data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key(
+            _OPERATION_POLICY["bis_batch"]["cache_namespace"], data
+        )
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["bis_batch"]["rate_limit_scope"]
+    )
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    try:
+        payload = bis_batch_payload(data)
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404

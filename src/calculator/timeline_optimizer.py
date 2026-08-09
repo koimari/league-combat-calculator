@@ -302,7 +302,8 @@ def _context_setup(
         defender.participant_id: index for index, defender in enumerate(ally_actors)
     }
     for attacker, defender in base_pairs:
-        cache_key = (attacker.participant_id, defender.participant_id)
+        pair_param_key = (attacker.participant_id, defender.participant_id)
+        cache_key = _timeline_module()._pair_cache_key(attacker, defender)
         defender_index = (
             enemy_index.get(defender.participant_id, 0)
             if attacker.team == "ally"
@@ -315,7 +316,7 @@ def _context_setup(
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
-                    context.roster_pair_params[cache_key],
+                    context.roster_pair_params[pair_param_key],
                     validated=True,
                 ),
                 attacker.participant_id,
@@ -422,7 +423,7 @@ def _build_signature_panel(
     ]
     ally_count = sum(1 for actor in roster if actor.team == "ally")
     for attacker in enemy_actors:
-        cache_key = (attacker.participant_id, "main", signature)
+        cache_key = _timeline_module()._pair_cache_key(attacker, main)
         packet = pair_result_cache.get(cache_key)
         if packet is None:
             packet = _timeline_module()._pair_packet(
@@ -903,6 +904,15 @@ def _score_with_search_context(
             }
         )
     coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
+    focus_index = next(
+        (
+            index
+            for index, actor in enumerate(all_actors)
+            if actor.participant_id == "main"
+        ),
+        0,
+    )
+    focus_survival = survival_rows[focus_index]
     return {
         "duration": float(duration),
         "participants": [
@@ -916,6 +926,33 @@ def _score_with_search_context(
             for index, actor in enumerate(all_actors)
         ],
         "breakdown": public_breakdown,
+        "objective": {
+            "main_team_damage_before_death": round(
+                sum(
+                    row["total_damage"]
+                    for row in public_breakdown
+                    if row["team"] in {"main", "ally"}
+                ),
+                1,
+            ),
+            "enemy_team_damage_before_death": round(
+                sum(
+                    row["total_damage"]
+                    for row in public_breakdown
+                    if row["team"] == "enemy"
+                ),
+                1,
+            ),
+            "focus_participant_id": "main",
+            "focus_damage_before_death": round(
+                float(public_breakdown[focus_index]["total_damage"]), 1
+            ),
+            "focus_survival": focus_survival,
+            "focus_support_value": round(support_value[focus_index], 1),
+            "focus_healing": round(
+                float(focus_survival.get("healing_received", 0.0)), 1
+            ),
+        },
         "timeline_coverage": combine_timeline_coverages(
             coverage_reports,
             target_count=len(coverage_reports),

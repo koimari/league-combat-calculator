@@ -21,6 +21,7 @@ import pytest
 
 import src.app as app_module
 from src.calculator.bis import bis_candidate_pool
+from src.calculator.calculate import calculate_payload
 
 
 @pytest.fixture(autouse=True)
@@ -190,6 +191,69 @@ def test_bis_enemy_slot_excludes_the_enemy_s_equipped_item():
     assert "Stridebreaker" not in ranked
 
 
+def test_bis_batch_scores_dependent_slots_in_one_response():
+    """The roster optimizer can keep its dependent slot loop server-side."""
+    client = app_module.app.test_client()
+    response = client.post(
+        "/api/bis/batch",
+        json={
+            **_bis_payload(),
+            "slots": [
+                {"slot_kind": "item", "slot_index": 0},
+                {"slot_kind": "item", "slot_index": 1},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert len(body["results"]) == 2
+    assert body["tested"] == sum(
+        result["candidate_count"] for result in body["results"]
+    )
+    assert "optimization_time_ms" in body
+
+
+def test_bis_batch_applies_each_winner_before_the_next_slot(monkeypatch):
+    """A later slot sees the certified item selected by the prior slot."""
+    import src.calculator.bis as bis_module
+
+    seen_items = []
+    seen_contexts = []
+
+    def fake_bis(data, *, pair_result_cache=None, search_context=None):
+        seen_items.append(tuple(data.get("items", [])))
+        seen_contexts.append(search_context)
+        slot_index = int(data["slot_index"])
+        winner = "Rabadon's Deathcap" if slot_index == 0 else "Void Staff"
+        return {
+            "candidate_count": 1,
+            "coverage": {"complete": True},
+            "candidates": [{"name": winner}],
+        }
+
+    monkeypatch.setattr(bis_module, "bis_payload", fake_bis)
+    response = app_module.app.test_client().post(
+        "/api/bis/batch",
+        json={
+            **_bis_payload(),
+            "slots": [
+                {"slot_kind": "item", "slot_index": 0},
+                {"slot_kind": "item", "slot_index": 1},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["selected"] == [
+        {"slot_index": 0, "slot_kind": "item", "name": "Rabadon's Deathcap"},
+        {"slot_index": 1, "slot_kind": "item", "name": "Void Staff"},
+    ]
+    assert seen_items[1][0] == "Rabadon's Deathcap"
+    assert seen_contexts[0] is not None
+    assert seen_contexts[0] is seen_contexts[1]
+
+
 # ---------------------------------------------------------------------------
 # Bug 4 (backend): overkill + enemy effective health in /api/calculate
 # ---------------------------------------------------------------------------
@@ -236,6 +300,44 @@ def test_calculate_exposes_overkill_and_target_effective_health():
     assert body["overkill"] > 0  # burst exceeds the squishy target's eHP
 
 
+def test_compare_returns_the_same_two_results_as_two_deterministic_calculations():
+    """Build comparison uses one application request with stable math."""
+    client = app_module.app.test_client()
+    build_a = _burst_payload()
+    build_b = {
+        **build_a,
+        "items": ["Luden's Echo", "Shadowflame", "Void Staff"],
+    }
+    expected_a = calculate_payload(build_a, deterministic=True)
+    expected_b = calculate_payload(build_b, deterministic=True)
+
+    response = client.post(
+        "/api/compare",
+        json={"builds": [build_a, build_b]},
+    )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["build_count"] == 2
+    assert body["request_count"] == 1
+    assert body["mode"] == "deterministic"
+    assert body["results"] == [expected_a, expected_b]
+
+    repeated = client.post(
+        "/api/compare",
+        json={"builds": [build_a, build_b]},
+    ).get_json()
+    assert repeated["results"] == body["results"]
+
+
+def test_compare_requires_exactly_two_builds():
+    client = app_module.app.test_client()
+    response = client.post("/api/compare", json={"builds": [_burst_payload()]})
+
+    assert response.status_code == 400
+    assert "exactly 2" in response.get_json()["error"]
+
+
 def test_calculate_combat_ledger_carries_exact_participant_overkill():
     """The coupled combat response already reports overkill per participant."""
     client = app_module.app.test_client()
@@ -267,8 +369,9 @@ def test_frontend_renders_a_bis_trigger_on_every_slot():
     assert "function bisTrigger(path, compact = false)" in source
     # Attacker build A/B slots and quest boots carry the trigger on the duel
     # canvas; enemy and ally roster slots carry the same compact trigger.
-    assert "${bisTrigger(path, true)}</div>" in source
     assert "${row}${bisTrigger(path, true)}" in source
+    assert 'fetch("/api/compare"' in source
+    assert "${bisTrigger(path, true)}</div>" in source
     assert ".duel-slot > .bis-trigger" in css
     assert 'data-bis-path="${path}"' in source
     assert '"Rank every legal item for this slot"' in source
@@ -282,6 +385,8 @@ def test_frontend_bis_trigger_disables_with_context_tooltip():
     assert "Needs a champion and role on this ally" in source
     assert '${ready ? "" : "disabled"}' in source
     assert "const ready = bisReadyForPath(path);" in source
+    assert "function requestBisBatch(path, slots)" in source
+    assert 'fetch("/api/bis/batch"' in source
 
 
 # ---------------------------------------------------------------------------

@@ -234,6 +234,18 @@ def assemble_public_receipt(
 ) -> dict[str, Any]:
     """Build the score-only or full public timeline receipt."""
 
+    focus_index = next(
+        (
+            index
+            for index, actor in enumerate(all_actors)
+            if actor.participant_id == focus_participant_id
+        ),
+        0,
+    )
+    focus_row = public_breakdown[focus_index] if public_breakdown else None
+    focus_survival = survival.get(focus_participant_id, {})
+    focus_support = float(support_by_attacker.get(focus_participant_id, 0.0))
+    focus_healing = float(focus_survival.get("healing_received", 0.0))
     if not include_receipt:
         # Optimizer scoring reads only the survival rows, the per-actor
         # damage breakdown, and the ordering receipt.  Skip the public
@@ -252,6 +264,32 @@ def assemble_public_receipt(
                 for actor in all_actors
             ],
             "breakdown": public_breakdown,
+            "objective": {
+                "main_team_damage_before_death": round(
+                    sum(
+                        row["total_damage"]
+                        for row in public_breakdown
+                        if row["team"] in {"main", "ally"}
+                    ),
+                    1,
+                ),
+                "enemy_team_damage_before_death": round(
+                    sum(
+                        row["total_damage"]
+                        for row in public_breakdown
+                        if row["team"] == "enemy"
+                    ),
+                    1,
+                ),
+                "focus_participant_id": focus_participant_id,
+                "focus_damage_before_death": round(
+                    float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0,
+                    1,
+                ),
+                "focus_survival": focus_survival,
+                "focus_support_value": round(focus_support, 1),
+                "focus_healing": round(focus_healing, 1),
+            },
             "timeline_coverage": combine_timeline_coverages(
                 coverage_reports,
                 target_count=len(coverage_reports),

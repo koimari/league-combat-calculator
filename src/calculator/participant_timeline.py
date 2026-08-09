@@ -102,6 +102,48 @@ from .timeline_receipts import (
 _WalkCompiler = WalkCompiler
 
 
+def _cache_signature(value: Any) -> Any:
+    """Freeze nested request values for a hashable pair cache key."""
+    if isinstance(value, Mapping):
+        return tuple(
+            sorted((str(key), _cache_signature(item)) for key, item in value.items())
+        )
+    if isinstance(value, (list, tuple)):
+        return tuple(_cache_signature(item) for item in value)
+    try:
+        hash(value)
+    except TypeError:
+        return repr(value)
+    return value
+
+
+def _offensive_signature(attacker: Combatant) -> tuple[Any, ...]:
+    """Capture every candidate-owned input used by a cached pair fight."""
+    request = attacker.request
+    return (
+        str(attacker.champion_data.get("name", "")),
+        int(attacker.level),
+        tuple(str(item.get("name", "")) for item in attacker.items),
+        _cache_signature(attacker.stats),
+        _cache_signature(getattr(request, "ability_ranks", None)),
+        _cache_signature(getattr(request, "champion_options", None)),
+        _cache_signature(getattr(request, "cast_order", None)),
+        _cache_signature(getattr(request, "item_options", None)),
+        str(getattr(request, "role", "") or ""),
+        bool(getattr(request, "role_quest_complete", False)),
+    )
+
+
+def _pair_cache_key(attacker: Combatant, defender: Combatant) -> tuple[Any, ...]:
+    """Key reusable pairs by both offensive and defensive loadout state."""
+    return (
+        attacker.participant_id,
+        defender.participant_id,
+        _offensive_signature(attacker),
+        _defensive_signature(defender),
+    )
+
+
 def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
     """Identify a champion cast without treating passive/proc rows as casts.
 
@@ -2036,14 +2078,7 @@ def build_participant_timeline(
                 # fights instead of re-simulating them.  Fights the candidate
                 # attacks with are always recomputed.
                 cacheable = attacker.participant_id != "main"
-                if defender.participant_id == "main":
-                    cache_key = (
-                        attacker.participant_id,
-                        defender.participant_id,
-                        _defensive_signature(defender),
-                    )
-                else:
-                    cache_key = (attacker.participant_id, defender.participant_id)
+                cache_key = _pair_cache_key(attacker, defender)
                 packet = (
                     pair_result_cache.get(cache_key)
                     if cacheable and pair_result_cache is not None

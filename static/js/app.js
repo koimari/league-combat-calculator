@@ -577,7 +577,7 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   const direct = perSlot.find((key) => declared.has(key));
   if (direct) return direct;
   if (slot !== "R" && (declared.has("hammer_stance") || declared.has("mega"))) {
-    return "hammer_stance" in declared ? "hammer_stance" : "mega";
+    return declared.has("hammer_stance") ? "hammer_stance" : "mega";
   }
   if (slot !== "R" && declared.has("stance")) return "stance";
   // A generic variant-family option for the slot (e.g. q_variant on Heimer).
@@ -615,6 +615,15 @@ function activeAbilityKit() {
   return getChampion(state.attacker.champion)?.abilities || [];
 }
 
+function abilityVariantDefault(slot, count) {
+  const binding = abilityOptionBinding(slot, "ability_variants");
+  const definition = (engine.championOptions[state.attacker.champion]?.options || [])
+    .find((option) => option.key === binding);
+  const value = Number(definition?.default);
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(count - 1, Math.trunc(value)));
+}
+
 function resetAbilityInputs() {
   const defaultRanks = defaultAbilityRanks({
     champion: state.attacker.champion,
@@ -624,7 +633,7 @@ function resetAbilityInputs() {
     rank: ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0),
     casts: 1,
     hits: 1,
-    variant: 0,
+    variant: ability.variants?.length > 1 ? abilityVariantDefault(ability.slot, ability.variants.length) : 0,
   }]));
 }
 
@@ -1370,12 +1379,23 @@ function stackControl(path, id, compact = false) {
 
 function abilityBindsChampionOption(key) {
   const abilities = activeAbilityKit();
+  const definitions = engine.championOptions[state.attacker.champion]?.options || [];
   if (key === "passive_procs") return abilities.some((ability) => ability.slot === "P");
   if (key === "mines_hit") return abilities.some((ability) => ability.slot === "E" && Number(ability.maxHits) > 1);
   if (key === "r_sweet_spot") return abilities.some((ability) => ability.slot === "R" && ability.variants?.length > 1);
-  return abilities.some((ability) =>
+  const bound = abilities.some((ability) =>
     ability.variants?.length > 1
       && abilityOptionBinding(ability.slot, "ability_variants") === key
+  );
+  if (bound) return true;
+  return definitions.some((option) =>
+    option.key !== key
+      && Array.isArray(option.legacy_keys)
+      && option.legacy_keys.includes(key)
+      && abilities.some((ability) =>
+        ability.variants?.length > 1
+          && abilityOptionBinding(ability.slot, "ability_variants") === option.key
+      )
   );
 }
 
@@ -1544,6 +1564,11 @@ function engineChampionOptions() {
   const champion = state.attacker.champion;
   const definition = engine.championOptions[champion];
   if (!definition?.options) return {};
+  const legacyVariantKeys = new Set(
+    definition.options
+      .filter((option) => abilityBindsChampionOption(option.key))
+      .flatMap((option) => Array.isArray(option.legacy_keys) ? option.legacy_keys : []),
+  );
   const options = Object.fromEntries(
     definition.options.map((option) => [
       option.key,
@@ -1551,6 +1576,7 @@ function engineChampionOptions() {
     ]),
   );
   definition.options.forEach((option) => {
+    if (legacyVariantKeys.has(option.key)) delete options[option.key];
     if (option.key === "passive_procs" && abilityBindsChampionOption(option.key)) {
       options[option.key] = abilityInput("P").casts;
     } else if (option.key === "mines_hit" && abilityBindsChampionOption(option.key)) {
@@ -1971,14 +1997,25 @@ function scheduleEngineCalculation() {
     }
     hideEngineError();
     const builds = state.attacker.comparisonEnabled ? ["A", "B"] : ["A"];
-    Promise.all(builds.map((side) => fetch("/api/calculate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(engineFightPayload(side)),
-    }).then((response) => response.json())))
+    const buildPayloads = builds.map((side) => engineFightPayload(side));
+    const comparisonRequest = buildPayloads.length === 2
+      ? fetch("/api/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ builds: buildPayloads }),
+      })
+      : fetch("/api/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildPayloads[0]),
+      });
+    comparisonRequest.then((response) => response.json())
       .then((results) => {
         if (requestId !== engine.requestId) return;
-        const failure = results.find((result) => result.error);
+        const calculationResults = Array.isArray(results.results)
+          ? results.results
+          : [results];
+        const failure = calculationResults.find((result) => result.error);
         if (failure) {
           if (status) {
             status.textContent = "error";
@@ -1993,7 +2030,10 @@ function scheduleEngineCalculation() {
         // Clear the in-flight flag before rendering: the verdict strip reads
         // it to decide between RECALCULATING and the settled delta.
         engine.pending = false;
-        engine.responses = { a: results[0], b: results[1] || null };
+        engine.responses = {
+          a: calculationResults[0],
+          b: calculationResults[1] || null,
+        };
         syncPracticeDummyStatsFromResponse(engine.responses.a);
         renderPrototypeBuilder();
         renderPrototypeResult(engine.responses.a, engine.responses.b);
@@ -2327,7 +2367,8 @@ function prototypeAbilityCards(champion) {
     const rank = ability.slot === "P" ? 1 : input.rank;
     const rankControl = ability.slot === "P" ? `<span class="ability-rank"><small>Level scales</small><output>Lv ${state.attacker.level}</output></span>` : `<span class="ability-rank"><small>Rank</small><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}" data-delta="-1">−</button><output>${rank}</output><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}" data-delta="1">+</button></span>`;
     const hitControl = ability.maxHits ? `<span class="ability-casts ability-hits"><small>Hits</small><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_hits")} data-ability-hits="${ability.slot}" data-delta="-1" ${input.hits <= 1 ? "disabled" : ""}>−</button><output>${input.hits}</output><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_hits")} data-ability-hits="${ability.slot}" data-delta="1" ${input.hits >= ability.maxHits ? "disabled" : ""}>+</button></span>` : "";
-    const variantControl = ability.variants?.length > 1 ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_variants")} data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>` : "";
+    const variantBinding = abilityOptionBinding(ability.slot, "ability_variants");
+    const variantControl = ability.variants?.length > 1 && variantBinding ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_variants")} data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>` : "";
     const castAttributes = `${abilityCapabilityAttributes(ability.slot, "ability_casts")} data-ability-casts="${ability.slot}"`;
     return `<article class="ability-card"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong>${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}<span class="ability-casts"><small>${ability.slot === "P" ? "Procs" : "Casts"}</small><button type="button" ${castAttributes} data-delta="-1">−</button><output>${input.casts}</output><button type="button" ${castAttributes} data-delta="1">+</button></span>${hitControl}${variantControl}</article>`;
   }).join("");
@@ -3648,31 +3689,45 @@ async function requestBis(path) {
   return result;
 }
 
+async function requestBisBatch(path, slots) {
+  const payload = bisBackendPayload(path);
+  if (!payload) throw new Error("Invalid roster optimization path");
+  payload.slots = slots;
+  const response = await fetch("/api/bis/batch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json();
+  if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
+  return result;
+}
+
 async function optimizeRosterPathFromTimeline(path) {
-  let tested = 0;
   const [root, indexText] = path.split(".");
   const loadout = state[root][Number(indexText)];
-  if (loadout.includeBoots) {
-    const bootResult = await requestBis(`${path}.boots`);
-    if (!bootResult.coverage?.complete) throw new Error(bootResult.coverage?.note || "BIS withheld until event order is complete");
-    tested += Number(bootResult.candidate_count || 0);
-    const boot = bootResult.candidates?.[0] && findItemByBackendName(bootResult.candidates[0].name);
-    if (boot) loadout.boots = boot.id;
-  }
-  // Greedy slot passes keep every candidate on the same complete team
-  // timeline.  Re-running after each slot lets item interactions and deaths
-  // change the next slot's result instead of freezing a stat-only estimate.
+  const slots = [];
+  if (loadout.includeBoots) slots.push({ slot_kind: "boots", slot_index: 0 });
   for (let slot = 0; slot < rosterOrdinarySlotCount(loadout); slot += 1) {
-    const result = await requestBis(`${path}.items.${slot}`);
+    slots.push({ slot_kind: "item", slot_index: slot });
+  }
+  const batch = await requestBisBatch(path, slots);
+  const results = Array.isArray(batch.results) ? batch.results : [];
+  for (let index = 0; index < results.length; index += 1) {
+    const result = results[index];
     if (!result.coverage?.complete) throw new Error(result.coverage?.note || "BIS withheld until event order is complete");
-    tested += Number(result.candidate_count || 0);
+    const slot = slots[index];
     const candidate = result.candidates?.[0];
     const item = candidate && findItemByBackendName(candidate.name);
     if (!item) continue;
-    setPath(`${path}.items.${slot}`, item.id);
-    state[root][Number(indexText)].itemStacks[slot] = 0;
+    if (slot.slot_kind === "boots") {
+      loadout.boots = item.id;
+    } else {
+      setPath(`${path}.items.${slot.slot_index}`, item.id);
+      state[root][Number(indexText)].itemStacks[slot.slot_index] = 0;
+    }
   }
-  return tested;
+  return Number(batch.tested || 0);
 }
 
 async function startRosterOptimization(rootOrPath) {
