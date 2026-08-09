@@ -1,0 +1,61 @@
+{
+  "receipt_id": "oracle-C4-leaf1",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster (coupled golden)",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[3]/damage",
+  "old_value": 419.2,
+  "new_value": 469.5,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c4",
+    "read": ["data/items.json", "data/item-atoms/4005.json", "data/item-atoms/8020.json", "data/practice-corpus/scenarios.json", "data/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (other)", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\" -> passives[0] (\"Unmake\") -> branches[0] (cached wiki text)",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\" -> riotDescription",
+      "quote": "<passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic damage</magicDamage>."
+    },
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> passives[1] (\"Command\") -> branches[0] (cached wiki text)",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> riotDescription",
+      "quote": "<passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 7% <Keyword>Vulnerable</Keyword> for 4 seconds."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "(no row exists for damage-amplification composition; the document is silent on how distinct increased-damage-taken multipliers combine, so the composition rule was derived from the item texts themselves)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_two_amplifiers": "The scenario name names both items. Cached wiki text gives two debuffs on the TARGET, each phrased as increased damage taken 'from all sources': Imperial Mandate 'Vulnerable' = +7% damage taken (all damage types), Abyssal Mask 'Unmake' curse = +12% magic damage taken.",
+    "step_2_who_benefits": "Both are target-side debuffs applied by an aura/mark, worded 'from all sources' -- not 'from you'. In a coupled ROSTER scenario (multiple participants on one team) the Abyssal Mask holder need not be the damage dealer: any allied champion's magic damage on a cursed target is amplified. An engine that only amplified the holder's own damage would omit the 12% entirely for a teammate's magic event.",
+    "step_3_composition_rule": "Two distinct debuffs, each an independent multiplier on damage taken, with no cached text stating additive stacking between separate amplification sources. Independent multipliers on the same quantity compose multiplicatively: taken = raw * (1 + 0.07) * (1 + 0.12).",
+    "step_4_arithmetic": {
+      "observed_ratio": "469.5 / 419.2 = 1.11999 ~= 1.12 exactly (rounding to 1 dp)",
+      "forward_check": "419.2 * 1.12 = 469.504 -> 469.5 (1 dp). EXACT match.",
+      "interpretation": "The new value equals the old value times exactly the Abyssal Mask Unmake factor (1.12). The change is that the Abyssal curse, previously absent from this event, is now applied -- multiplicatively, on top of whatever amplification the event already carried.",
+      "additive_alternative_excluded": "If the two amps were meant to stack ADDITIVELY and the old value carried only Mandate's 7% (base = 419.2/1.07 = 391.7757), the additive answer would be 391.7757 * 1.19 = 466.2, NOT 469.5. The multiplicative answer is 391.7757 * 1.07 * 1.12 = 469.5. The golden's new value therefore encodes multiplicative composition, which matches the item wording (two separate 'damage taken' multipliers, neither declaring additive stacking).",
+      "old_value_diagnosis": "419.2 = 469.504 / 1.12 -- i.e. the pre-change number is exactly the post-change number with the Abyssal Mask curse dropped. Under the cached wiki text, a magic-damage event against a target standing inside an allied Abyssal Mask's 700-unit curse MUST carry the 12%; the old value is short by exactly that factor."
+    }
+  },
+
+  "confidence_and_limits": [
+    "The golden scenario's input tuple (attacker, level, loadouts, target resistances, which roster member holds which item, event[3]'s damage type) is defined outside the permitted evidence tree (scripts/ and tests/ are off limits, and data/practice-corpus/scenarios.json contains no Abyssal/Mandate scenario). I therefore could not reconstruct the ABSOLUTE damage from first principles.",
+    "What is independently verifiable from data/ alone is the DELTA, and it is a clean fingerprint: the change is exactly one factor of 1.12 -- the Abyssal Mask Unmake multiplier as cached -- applied multiplicatively. Nothing else in data/items.json carries a 12% magic-damage-taken amplifier, so the delta is uniquely attributable.",
+    "Residual assumption: event[3] is a MAGIC-damage event and the cursed target is within the aura in this scenario. If event[3] were physical/true damage, Unmake would not apply and 419.2 would stand. The scenario is named for exactly this interaction and the delta is exactly Unmake's factor, which makes the magic-damage reading overwhelmingly likely but not provable from data/ alone."
+  ],
+
+  "verdict_rationale": "The new value applies the Abyssal Mask 'Unmake' curse (+12% magic damage taken, 'from all sources', cached wiki text) multiplicatively, which is what the item text requires for a coupled roster where an ally carries the mask. The old value omitted that factor entirely (419.2 * 1.12 = 469.5 to the digit). The additive-composition alternative (466.2) is excluded by the observed number."
+}

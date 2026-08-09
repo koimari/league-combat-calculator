@@ -1,0 +1,69 @@
+{
+  "receipt": "oracle-C4-leaf0",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster (coupled golden)",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[3]/support_damage_multiplier",
+  "old_value": "<absent>",
+  "new_value": {
+    "multiplier": 1.12,
+    "source": "Abyssal Mask \u2014 Unmake"
+  },
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-c4",
+    "read_scope": "data/ and docs/math-foundations.md only; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were not read",
+    "cached_patch": "16.15 (data/staleness.json)"
+  },
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "path": "items['8020'].passives[0] (name: \"Unmake\", unique: true) .branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "file": "data/items.json",
+      "path": "items['8020'].riotDescription",
+      "quote": "<passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic damage</magicDamage>."
+    },
+    {
+      "file": "data/atoms/items.json",
+      "path": "objects['8020'] atoms 'control.curse' and 'damage.magic'",
+      "quote": "source: \"Abyssal Mask.passives[0].branches[0]\", name: \"Unmake\", values: [700.0, 12.0], units: [\"flat\", \"percent\"], evidence: [\"passive:Unmake@kw:curse\" / \"passive:Unmake@kw:magic damage\"]"
+    },
+    {
+      "file": "data/items.json",
+      "path": "items['8020'].stats",
+      "quote": "health.flat 350.0, magicResistance.flat 45.0, abilityHaste.flat 15.0 \u2014 and magicPenetration/magicResistance shred entries are all 0.0, i.e. current Unmake is a pure damage-taken amplifier, not a magic-resist reduction."
+    },
+    {
+      "file": "data/items.json",
+      "path": "items['4005'] Imperial Mandate, passives 'Command'",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. \u2014 quoted only to confirm it is a distinct, separately-sourced 7% all-damage amp and is NOT part of the 'Abyssal Mask \u2014 Unmake' leaf."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "\u00a72.1 / \u00a75 formula-audit table",
+      "quote": "m(R) = 100 / (100 + R) ... post = raw \u00b7 m(R). No Abyssal/Unmake-specific formula appears anywhere in the document; the amplifier is therefore an independent multiplicative factor on the damage packet, not a resistance-side term."
+    }
+  ],
+  "independent_computation": {
+    "rule_extracted": "Unmake (unique passive, no stacking, no ranks, no level or stat scaling in the cached text): an enemy champion within 700 units of the Abyssal Mask holder is cursed and receives 12% increased magic damage from ALL sources \u2014 explicitly including damage dealt by the holder's allies, which is what a 'support_damage_multiplier' on an allied carry's event encodes.",
+    "steps": [
+      "1. Read the only numeric in the cached effect text: 12% increased magic damage (700 is the curse radius, a flat range, not a damage term).",
+      "2. Convert 'X% increased damage taken' to a multiplicative damage factor: multiplier = 1 + X/100.",
+      "3. multiplier = 1 + 12/100 = 1.12.",
+      "4. Cross-check against a second independent representation of the same item: riotDescription says 'take 12% more magic damage' \u2192 1.12. Third representation, data/atoms/items.json atom damage.magic for Abyssal Mask, carries values [700.0, 12.0] with units [flat, percent] \u2192 12 percent \u2192 1.12. All three agree.",
+      "5. Confirm the factor is a damage-side amplifier and not a resistance shred: items['8020'].stats.magicPenetration and the passive's stats block are all 0.0, so the effect cannot be modelled through m(R) = 100/(100+R); it multiplies the packet. Applying it as a separate 1.12 factor is the correct shape.",
+      "6. Confirm the leaf is single-source: Imperial Mandate's Vulnerable is a distinct 7% all-damage-type amp with its own trigger (immobilize) and 4 s window; it is correctly NOT folded into a leaf tagged 'Abyssal Mask \u2014 Unmake'. Had both been merged into this one leaf the value would have had to be 1.12 \u00d7 1.07 = 1.1984 (or 1.19 additively), which it is not \u2014 consistent with per-source attribution.",
+      "7. Old value <absent> means no ally-curse amplification was applied to this event at all. The cached wiki text says the curse applies to magic damage 'from all sources', so a magic-damage event on a cursed target with the Abyssal holder in range must carry the amplifier. Absent is therefore an understatement of the true damage by exactly the 12% factor."
+    ],
+    "result": 1.12,
+    "result_expression": "1 + 12/100"
+  },
+  "residual_uncertainty": [
+    "The scenario definition (roster composition, event ordering, and the damage type of events[3]) lives outside the permitted read scope (tests/scripts), so this receipt verifies the MAGNITUDE and SOURCE of the multiplier, not the gating. If events[3] were a physical or true damage packet, or if the Abyssal holder were beyond 700 units at that timestamp, the correct value would be <absent> rather than 1.12 \u2014 nothing in data/ can settle that.",
+    "Conditional on events[3] being a magic-damage packet on a cursed target (which the scenario name 'mandate_abyssal_curse_roster' and the leaf's own source tag both assert), 1.12 is exactly right and is the only value the cached patch-16.15 text supports."
+  ],
+  "verdict": "new_value_correct"
+}

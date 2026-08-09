@@ -1,0 +1,95 @@
+{
+  "receipt": "oracle-C4-leaf2",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "mandate_abyssal_curse_roster (coupled golden)",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[3]/pair_damage",
+  "old_value": 419.2,
+  "new_value": 469.5,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c4",
+    "read": ["data/items.json", "data/item-atoms/8020.json", "data/atoms/items.json", "data/runes.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 8020 \"Abyssal Mask\" -> passives[0] (\"Unmake\") -> branches[0]",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.",
+      "reading": "A cursed enemy champion takes +12% magic damage. The qualifier is 'from all sources', i.e. the amplifier is NOT restricted to damage dealt by the Abyssal Mask holder - allied/paired champions' magic damage against the cursed target is amplified too."
+    },
+    {
+      "source": "data/atoms/items.json -> \"8020\" -> atom control.curse / damage.magic",
+      "text": "{\"atom_id\": \"control.curse\", \"source\": \"Abyssal Mask.passives[0].branches[0]\", \"name\": \"Unmake\", \"values\": [700.0, 12.0], \"units\": [\"flat\", \"percent\"]}",
+      "reading": "Parsed atom independently pins the magnitude at 12 percent (and the 700-unit aura radius)."
+    },
+    {
+      "source": "data/items.json -> id 4005 \"Imperial Mandate\" -> passives[1] (\"Command\") -> branches[0]",
+      "text": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+      "reading": "The other named half of the scenario. Also a team-wide ('all sources') amp, but 7% and type-agnostic - it cannot produce the observed delta on its own (see rejected hypotheses)."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2 / Section 5 audit table (Resistance mitigation row)",
+      "text": "A part with `h` identical hits is mitigated per hit and summed ... This is exact because the mitigation operator `x -> x*100/(100+R)` is *linear in raw damage* for a fixed resistance",
+      "reading": "Mitigation is linear in raw damage at fixed resistance, so a pure damage-taken amplifier commutes with mitigation: applying a 12% amp to a fully mitigated event value is identical to applying it pre-mitigation. The delta is therefore expected to be an exact 1.12 scale factor on the event's reported damage."
+    },
+    {
+      "source": "data/items.json (whole cache) and data/runes.json (whole cache)",
+      "text": "grep -o \"12% increased [a-z ]*damage\" data/items.json -> exactly 1 hit: \"12% increased magic damage\"; grep -c \"12%\" data/runes.json -> 0",
+      "reading": "Abyssal Mask's Unmake is the ONLY source of a 12% damage amplifier anywhere in the cached item and rune data, so the observed factor is uniquely attributable to it."
+    }
+  ],
+
+  "independent_computation": {
+    "method": "The golden scenario's roster/config lives under scripts/ and tests/, which this oracle is forbidden to read, so the absolute event damage cannot be re-derived from first principles inside the permitted evidence tree. Instead the leaf is verified structurally: identify the exact multiplicative relation between the two values and match it against the cached wiki rule that the scenario is named for.",
+    "step_1_observed_ratio": {
+      "expression": "469.5 / 419.2",
+      "value": 1.1199904580152673
+    },
+    "step_2_forward_check": {
+      "expression": "419.2 * 1.12  (Unmake: +12% magic damage taken)",
+      "value": 469.504,
+      "rounded_1dp": 469.5,
+      "matches_new_value": true
+    },
+    "step_3_amplifier_semantics": "Unmake is a damage-TAKEN amplifier on the target, not a resistance shred, so it multiplies the post-mitigation number directly (m(R) = 100/(100+R) is linear in raw damage - math-foundations Sec. 1.2 / Sec. 5). Composition with Imperial Mandate's 7% Vulnerable amp is multiplicative and does not affect this ratio: (1.07*1.12)/1.07 = 1.12 either way, so the check is robust to whether the Mandate mark is live on this event.",
+    "step_4_applicability_to_a_PAIR_event": "The leaf is `pair_damage` - damage attributed to the paired (non-holder) roster participant. The cached wiki text conditions the amp on the TARGET being cursed ('Enemy champions within 700 units of you become cursed') and then explicitly widens the source set to 'from all sources'. It does not condition on who deals the damage. Therefore an allied/paired champion's magic damage against the cursed target must carry exactly one 1.12 factor. That is precisely the effect this scenario ('mandate_abyssal_curse_roster') exists to exercise: two team-wide 'all sources' amps (Mandate 7%, Abyssal 12%) propagating across a roster.",
+    "conclusion": "The correct value for a magic-damage pair event against an Unmake-cursed target is the un-cursed value scaled by 1.12: 419.2 * 1.12 = 469.504 -> 469.5. The new value is that number; the old value is the same event with the curse omitted from the paired participant's damage."
+  },
+
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "The delta is Imperial Mandate's 7% Vulnerable amp being added.",
+      "arithmetic": "419.2 * 1.07 = 448.5",
+      "rejected_because": "448.5 != 469.5."
+    },
+    {
+      "hypothesis": "The delta is a change in how the two 'all sources' amps compose (additive 1+0.07+0.12=1.19 -> multiplicative 1.07*1.12=1.1984).",
+      "arithmetic": "419.2 * (1.1984/1.19) = 422.2, and the reverse 419.2 * (1.19/1.07) = 466.2",
+      "rejected_because": "Neither reaches 469.5; the observed factor is a clean 1.12, i.e. one whole amplifier appearing, not a re-composition."
+    },
+    {
+      "hypothesis": "Some other item or rune supplies the 12%.",
+      "rejected_because": "Abyssal Mask's Unmake is the only 12% damage amplifier in data/items.json, and data/runes.json contains no '12%' string at all."
+    },
+    {
+      "hypothesis": "The new value DOUBLE-applies the curse (i.e. the old 419.2 already carried one 1.12, on a base of 374.3).",
+      "arithmetic": "469.5 / 1.12 / 1.12 = 374.28",
+      "rejected_because": "Numerically self-consistent but rejected on the source rule and on scenario intent: a leaf named `pair_damage` is the PAIRED participant's damage, and the pre-change engine crediting an ally with the holder's aura is the behaviour the wiki's 'from all sources' clause demands but that a holder-scoped implementation would omit. The scenario is named for the curse-across-a-roster interaction, which only has content if the amp reaches the pair. Stated as a residual assumption below rather than hidden."
+    }
+  ],
+
+  "residual_assumptions": [
+    "events[3] is a MAGIC-damage event against the Unmake-cursed target. Unmake amplifies magic damage only; if this event were physical or true damage, a 1.12 factor would be wrong in either direction. The event type could not be confirmed from the permitted evidence tree (the scenario definition lives under scripts/ or tests/).",
+    "The Abyssal Mask holder is within the 700-unit aura radius of the target for this event. Positioning is not representable in the cached data; a roster-coupled fight scenario is assumed to place all participants in range, which is the standard modelling convention for aura items."
+  ],
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "confidence": "high on the magnitude and on the 'from all sources' rule; medium on the direction, contingent on the two residual assumptions above.",
+    "one_line": "469.5 = 419.2 x 1.12 is exactly Abyssal Mask's Unmake ('12% increased magic damage ... from all sources'), which the cached wiki text applies to the paired champion's magic damage as well as the holder's."
+  }
+}
