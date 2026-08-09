@@ -5,10 +5,12 @@ from pathlib import Path
 import re
 import tempfile
 from types import SimpleNamespace
+from typing import get_args, get_type_hints
 
 import pytest
 
 from src.calculator import item_support_effects
+from src.calculator.ability_spec import Authority
 from src.calculator.item_effects import ally_item_effect_value
 from src.calculator.item_effects import ally_item_level_value
 from src.calculator.item_support_effects import (
@@ -507,6 +509,13 @@ class TestCrossParticipantAuthorities:
     def test_authorities_are_undeclared_until_c2(self):
         """0A derives the producer set; 0B's C2 fills the Authority values."""
         assert set(cross_participant_authorities().values()) == {None}
+
+    def test_the_row_type_names_the_declared_vocabulary(self):
+        """The value is an ``Authority``, not an untyped placeholder."""
+        hints = get_type_hints(cross_participant_authorities)
+        key, value = get_args(hints["return"])
+        assert key is str
+        assert set(get_args(value)) == {Authority, type(None)}
 
     def test_a_new_producer_joins_without_editing_a_list(self):
         """A seventh construction site is a member the moment it parses."""

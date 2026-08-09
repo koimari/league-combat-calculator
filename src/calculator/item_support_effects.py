@@ -15,7 +15,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-from .ability_spec import IMMOBILIZING_CC_KINDS, is_immobilizing_event
+from .ability_spec import IMMOBILIZING_CC_KINDS, Authority, is_immobilizing_event
 from .item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -1246,10 +1246,10 @@ def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
 # A ``damage_modifier`` packet changes how much damage some *other*
 # participant deals or takes, so the question "which engine owns this
 # mechanic" has to be answered for every one of them.  The answer is an
-# ``Authority`` value that the packets themselves will carry; until they
-# declare it the producer set alone is already load-bearing, because the
-# coupled golden baseline reads it to prove its scenario set covers every
-# producer (runbook R-12).
+# ``ability_spec.Authority`` member, declared in 0A and carried by the
+# packets themselves from C2; until they carry it the producer set alone is
+# already load-bearing, because the coupled golden baseline reads it to
+# prove its scenario set covers every producer (runbook R-12).
 #
 # The set is DERIVED from this module's own ``_packet(...)`` call sites, never
 # typed out: a hand list is a second home for a fact the construction sites
@@ -1300,14 +1300,14 @@ def _producer_sources() -> tuple[str, ...]:
     return tuple(sorted(sources))
 
 
-def cross_participant_authorities() -> Mapping[str, Any]:
+def cross_participant_authorities() -> Mapping[str, Authority | None]:
     """One row per packet that modifies another participant's damage.
 
-    The key is the packet's ``source`` literal; the value is the engine that
-    owns the mechanic — an ``Authority`` once Phase 0B's C2 declares one per
-    packet and adds the owner-iff-``SPLIT`` check that reads them.  At this
-    stage every producer is present with ``None``, which is what makes
-    "declared nowhere" a visible state rather than an absent row.
+    The key is the packet's ``source`` literal; the value is the
+    ``Authority`` the packet declares — which engine owns the mechanic.
+    ``None`` is "this producer has declared none yet": the derivation of the
+    producer set is 0A's and C2 fills the values, so an undeclared producer
+    is a visible row rather than an absent one.
 
     Also the producer set ``golden_snapshot.capture_coupled`` reads (R-12):
     the coupled baseline covers whatever this returns, so a seventh producer
