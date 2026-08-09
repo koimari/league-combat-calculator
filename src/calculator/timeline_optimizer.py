@@ -314,9 +314,9 @@ def _context_setup(
             packet = _timeline_module()._pair_packet(
                 run_fight(
                     attacker.champion_data,
-                        attacker.level,
-                        list(attacker.items),
-                        context.roster_pair_params[pair_param_key],
+                    attacker.level,
+                    list(attacker.items),
+                    context.roster_pair_params[pair_param_key],
                     validated=True,
                 ),
                 attacker.participant_id,
