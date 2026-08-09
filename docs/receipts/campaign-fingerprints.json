@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "captured_at_src_tree": "66072eacfc496dbde2ce25b71085256e16e0c46a",
+  "notes": [
+    "The sole home of every golden shape count in the campaign. No plan document states one; every consumer reads this file.",
+    "Blocks filled by slice 0A.2: golden, coupled_golden, coupled_golden_exact, corpus, tests, pylint. bench, alloc, wall and frontier are owned by later slices and are empty rather than guessed.",
+    "provenance below classes each block per R-06: VERIFIED = reproduced against source this session, CARRIED = two independent contracts agree, PRIOR = a number with no producing tool.",
+    "Every gate slice 0A.2 added ships a permanent negative test, so demonstrated_red is empty by construction rather than by omission: compare's provenance exclusion is driven by tests/test_golden_snapshot.py::TestProvenanceExclusion, the coupled baseline's producer sensitivity by TestCoupledCoverage, and the pylint ratchet by tests/test_pylint_ratchet.py::TestCheckRatchet."
+  ],
+  "provenance": {
+    "golden": "VERIFIED",
+    "coupled_golden": "VERIFIED",
+    "coupled_golden_exact": "VERIFIED",
+    "corpus": "VERIFIED",
+    "tests": "VERIFIED",
+    "pylint": "VERIFIED"
+  },
+  "golden": {
+    "sections": "champion_baselines,item_sweep,registered_champion_fights",
+    "entries": 670,
+    "leaves": 51437,
+    "numeric_leaves": 43348,
+    "src_tree_sha": "66072eacfc496dbde2ce25b71085256e16e0c46a"
+  },
+  "coupled_golden": {
+    "sections": "coupled_scenarios",
+    "entries": 13,
+    "leaves": 14163,
+    "numeric_leaves": 8323,
+    "src_tree_sha": "66072eacfc496dbde2ce25b71085256e16e0c46a"
+  },
+  "coupled_golden_exact": {
+    "sections": "coupled_scenarios",
+    "entries": 13,
+    "leaves": 82,
+    "numeric_leaves": 0,
+    "src_tree_sha": "66072eacfc496dbde2ce25b71085256e16e0c46a"
+  },
+  "bench": {},
+  "alloc": {},
+  "wall": {},
+  "tests": {
+    "collected": 5007,
+    "skipped": 0,
+    "xfailed": 0
+  },
+  "corpus": {
+    "non_legacy_count": 18
+  },
+  "frontier": {},
+  "demonstrated_red": {},
+  "pylint": {
+    "scripts/golden_snapshot.py": 9.58128078817734,
+    "scripts/patch_update.py": 9.782608695652174,
+    "scripts/pylint_ratchet.py": 10.0,
+    "scripts/repin_corpus.py": 9.6875,
+    "src/calculator/item_support_effects.py": 9.838709677419354
+  }
+}
