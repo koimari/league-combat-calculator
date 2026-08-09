@@ -5,6 +5,10 @@ gunicorn==26.0.0
 SQLAlchemy==2.0.51
 psycopg==3.3.4
 
+# Security pins for packages preinstalled by the Python base image.
+msgpack==1.2.1
+setuptools==78.1.1
+
 # P0a managed Redis result-cache backend.
 redis==7.4.1
 
