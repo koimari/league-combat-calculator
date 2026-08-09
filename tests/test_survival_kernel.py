@@ -1269,6 +1269,32 @@ def test_pinned_ally_takedown_divergence_is_the_dropped_nova_heal():
     ), f"the pinned divergence changed shape: {leaves}"
 
 
+def test_every_fixture_item_name_resolves():
+    """Every name the fixture table equips is a real item record.
+
+    Records load lazily through :func:`_item`, so a renamed or misspelled name
+    surfaces as a ``KeyError`` inside whichever contract test happened to reach
+    it first — the eager module-level dict this table replaced failed at
+    collection instead.  Resolving the whole vocabulary in one place restores
+    a single named failure that says which name went away, and the negative
+    half proves the resolution can fail at all (R-05).
+    """
+    names = sorted(
+        {name for fixture in REGISTRY_FIXTURES for name in fixture.items}
+        | {
+            name
+            for fixture in REGISTRY_FIXTURES
+            for holder in fixture.enemies + fixture.allies
+            for name in holder.items
+        }
+    )
+    assert names, "the fixture table equips nothing"
+    for name in names:
+        assert str(_item(name)["name"]) == name, f"{name}: resolved to another record"
+    with pytest.raises(KeyError):
+        _item("No Such Item")
+
+
 def test_the_rung_pin_rejects_a_mis_declared_rung():
     """The rung pin's own red, on demand (R-05).
 
