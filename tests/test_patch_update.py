@@ -5,7 +5,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+from src.calculator import item_effects
+
 from patch_update import (
+    ally_effect_lines,
     item_source_lines,
     drop_noise,
     is_numeric_diff,
@@ -143,3 +146,63 @@ class TestItemSourceGate:
 
         assert ok is True
         assert any("approved" in line for line in lines)
+
+
+class TestAllyEffectLines:
+    """D-47: the hand-authored ally table is refresh-inert, so patch day says so."""
+
+    def _shop(self, **moved):
+        """A cached shop holding every hand-authored item, some values moved."""
+        return {
+            name: {
+                "name": name,
+                "stats": {
+                    "abilityPower": {
+                        "flat": (
+                            moved.get("ap", 0.0) if name == moved.get("item") else 0.0
+                        )
+                    }
+                },
+            }
+            for name in item_effects.ALLY_ITEM_EFFECTS
+        }
+
+    def test_an_unchanged_cached_entry_says_so_and_does_not_block(self) -> None:
+        cached = self._shop()
+        lines, ok = ally_effect_lines(cached, cached)
+        assert ok
+        assert lines[-1].endswith("cached entry is unchanged)")
+
+    def test_a_numeric_move_is_flagged_with_the_keys_that_cannot_refresh(self) -> None:
+        lines, ok = ally_effect_lines(
+            self._shop(), self._shop(item="Abyssal Mask", ap=5.0)
+        )
+        assert ok, "a moved entry is review, not a release block"
+        assert any("Abyssal Mask (NEEDS REVIEW)" in line for line in lines)
+        assert any("magic_damage_amp" in line for line in lines)
+        assert any(
+            "do not\n    refresh" in line or "do not refresh" in line for line in lines
+        )
+
+    def test_an_item_that_left_the_shop_blocks(self) -> None:
+        """The only branch that can stop a patch: a record pricing nothing."""
+        shop = self._shop()
+        without = {k: v for k, v in shop.items() if k != "Abyssal Mask"}
+        lines, ok = ally_effect_lines(shop, without)
+        assert not ok
+        assert any(
+            "BLOCKING: Abyssal Mask is no longer in the cached shop" in line
+            for line in lines
+        )
+        assert any("** BLOCKING" in line for line in lines)
+
+    def test_every_hand_authored_item_is_audited(self) -> None:
+        """No member of the table is exempt from the section."""
+        lines, ok = ally_effect_lines(self._shop(), {})
+        assert not ok
+        blocked = {
+            line.split("BLOCKING: ")[1].split(" is no longer")[0]
+            for line in lines
+            if "BLOCKING: " in line and " is no longer" in line
+        }
+        assert blocked == set(item_effects.ALLY_ITEM_EFFECTS)

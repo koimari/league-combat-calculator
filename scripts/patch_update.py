@@ -50,7 +50,10 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from src.calculator.champions import registered_champion_names
 from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
-from src.calculator.item_effects import _STATIC_VALUE_KEYS_BY_ITEM
+from src.calculator.item_effects import (
+    ALLY_ITEM_EFFECTS,
+    _STATIC_VALUE_KEYS_BY_ITEM,
+)
 from src.calculator.item_source import branch_losses, source_audit
 
 GOLDEN_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
@@ -59,6 +62,9 @@ DEFAULT_AUDIT_OUTPUT = REPO_ROOT / "docs" / "wiki-full-entry-audit.json"
 DEFAULT_STALENESS_OUT = REPO_ROOT / "data" / "staleness.json"
 # Wiki noise: cosmetic/bookkeeping fields whose churn never affects math.
 NOISE_SUBSTRINGS = ("icon", "releaseDate", "patchLastChanged", "price", "salePrice")
+# The two provenance keys every hand-authored ally record carries; the rest
+# of the record is the sourced numbers patch day must re-read.
+_ALLY_SOURCE_KEYS = frozenset({"source_url", "source_revision_id"})
 
 try:
     from build_reviewed_modules import (  # pylint: disable=import-error
@@ -305,11 +311,65 @@ def item_source_lines(old_items, new_items):
     return lines, not blocking
 
 
+def _authored_keys(record):
+    """The hand-typed numeric keys of one ALLY_ITEM_EFFECTS record."""
+    return sorted(key for key in record if key not in _ALLY_SOURCE_KEYS)
+
+
+def ally_effect_lines(old_items, new_items):
+    """Audit section for the hand-authored cross-participant item values.
+
+    ``ALLY_ITEM_EFFECTS`` is typed by hand from the Wiki and is where four of
+    the six ``damage_modifier`` producers read their numbers.  A data refresh
+    rewrites ``data/items.json`` and leaves this table exactly where it was:
+    it is refresh-**inert**, which is worse than stale-cached, because a
+    stale cache at least shows up as a diff while an inert table shows up as
+    nothing at all (D-47).  So patch day prints, for every item in that
+    table, whether the cached entry it was read from moved.
+
+    Blocking is reserved for an item that left the shop entirely, where the
+    hand-authored record now prices something that does not exist.  A moved
+    entry is NEEDS REVIEW: the audit's job is to put the numbers in front of
+    a human, and ``item_source`` owns the release gate.
+    """
+    lines = ["== Hand-authored ally item effects =="]
+    blocking = False
+    for name in sorted(ALLY_ITEM_EFFECTS):
+        record = ALLY_ITEM_EFFECTS[name]
+        if name not in new_items:
+            blocking = True
+            lines.append(
+                f"  BLOCKING: {name} is no longer in the cached shop, but "
+                f"ALLY_ITEM_EFFECTS still prices {_authored_keys(record)}"
+            )
+            continue
+        diffs = drop_noise(list(leaf_diffs(old_items.get(name), new_items.get(name))))
+        if not diffs:
+            continue
+        flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
+        lines.append(f"  {name} ({flag}):")
+        lines.extend(_detail_lines(diffs))
+        lines.append(
+            f"    NOTE: hand-authored values {_authored_keys(record)} do not "
+            "refresh — re-read the Wiki entry and update "
+            "item_effects.ALLY_ITEM_EFFECTS (with its source_revision_id)"
+        )
+    if len(lines) == 1:
+        lines.append("  (every hand-authored ally value's cached entry is unchanged)")
+    if blocking:
+        lines.append(
+            "  ** BLOCKING — an item priced by ALLY_ITEM_EFFECTS left the shop; "
+            "remove or re-source its record before continuing. **"
+        )
+    return lines, not blocking
+
+
 def print_audit():
     """Print the full audit report (champions, items, deltas).
 
-    Returns whether the source-completeness section is clear enough to
-    proceed; the prose sections above it are informational.
+    Returns whether the source-completeness and hand-authored ally sections
+    are clear enough to proceed; the prose sections above them are
+    informational.
     """
     old_champs, new_champs, old_items, new_items = load_old_and_new()
     print()
@@ -323,8 +383,11 @@ def print_audit():
     source_lines, source_ok = item_source_lines(old_items, new_items)
     for line in source_lines:
         print(line)
+    ally_lines, ally_ok = ally_effect_lines(old_items, new_items)
+    for line in ally_lines:
+        print(line)
     print()
-    return source_ok
+    return source_ok and ally_ok
 
 
 def print_detail(names):
