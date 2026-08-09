@@ -1,35 +1,50 @@
 """E9 — Practice-Tool corpus verification.
 
-Every corpus scenario pinned at the CURRENT git HEAD is driven through
+Every corpus scenario pinned at the anchor engine is driven through
 ``/api/calculate`` and its exact expected receipt is asserted against the
 coupled combat ledger (``combat``) and the legacy aggregate response.
 
 SHA semantics
 -------------
-Each scenario stores the git HEAD it was verified at.  A scenario is only
-asserted when its ``sha`` equals the current ``git rev-parse HEAD`` — the
-legacy four scenarios (cp21-*/e0-*/vladimir-*) are pinned at older commits
-and are deliberately skipped: their expected values predate the E-series
-rework and are re-verified only after a deliberate re-capture.  This makes
-the corpus self-validating: any future engine change that breaks a pinned
-receipt also makes that scenario's ``sha`` stale, and the test starts
-failing loudly on the NEW receipt the moment the SHA is re-pinned.
+Each scenario stores the anchor commit its receipt is filed under, and is
+asserted only while that commit's ``src/`` tree equals the anchor —
+``scripts/repin_corpus.anchor_src_sha()``, the ``src/`` tree at the merge
+base with ``main``.  Both readers here and the writer take that one
+function; the legacy four scenarios (cp21-*/e0-*/vladimir-*) predate the
+E-series rework, are enumerated in ``LEGACY_SCENARIO_IDS`` and are exempt.
 
-Every expected number below was produced by probing ``/api/calculate`` at
-the pinned commit; nothing is hand-invented (each scenario carries its
-formula in ``expected.formula`` for the audit trail).
+The anchor deliberately does not follow HEAD.  Following HEAD demanded a
+value that cannot exist until after the commit producing it exists, so any
+``src/`` edit deselected the whole corpus and this suite passed by
+asserting nothing.  Against the merge base the pin holds for a whole
+branch, so a change that breaks a receipt leaves that scenario *executed*
+and the suite fails loudly on its numbers.
+
+Every expected number below was produced by probing ``/api/calculate``;
+nothing is hand-invented (each scenario carries its formula in
+``expected.formula`` for the audit trail), and re-pinning re-probes.
 """
 
 import json
-import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
+from scripts.repin_corpus import (
+    LEGACY_SCENARIO_IDS,
+    anchor_src_sha,
+    check_pins,
+    load_corpus,
+    non_legacy_scenarios,
+    pinned_scenarios,
+    src_tree_sha,
+)
 from src import app as app_module
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CORPUS_PATH = REPO_ROOT / "data" / "practice-corpus" / "scenarios.json"
+REPIN_SCRIPT = REPO_ROOT / "scripts" / "repin_corpus.py"
 
 # Response values are rounded to one decimal (amounts/damage); survival
 # timestamps to three.  The tolerances below cover that rounding.
@@ -37,49 +52,14 @@ AMOUNT_ABS = 0.15
 TIME_ABS = 0.01
 
 
-def _current_head() -> str:
-    """The worktree's current git HEAD (the corpus pin target)."""
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
-
-
-def _src_tree_sha(commit: str) -> str:
-    """The ``src/`` tree object at ``commit``.
-
-    The corpus SHA pins the engine the receipt was probed at.  Because the
-    corpus commit itself only touches data/docs/tests, comparing ``src``
-    trees is the exact check: the receipt is valid iff the engine at the
-    pinned commit is byte-identical to the engine at HEAD.
-    """
-    result = subprocess.run(
-        ["git", "rev-parse", f"{commit}:src"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
-
-
-def _load_corpus() -> dict:
-    with CORPUS_PATH.open(encoding="utf-8") as handle:
-        return json.load(handle)
-
-
 @pytest.fixture(scope="module")
 def corpus() -> dict:
-    return _load_corpus()
+    return load_corpus()
 
 
 @pytest.fixture(scope="module")
-def head() -> str:
-    return _current_head()
+def anchor() -> str:
+    return anchor_src_sha()
 
 
 def _payload(setup: dict) -> dict:
@@ -409,44 +389,115 @@ def test_all_scenarios_have_required_fields(corpus):
             ), f"{scenario['id']} is a fight scenario without practice steps"
 
 
-_PINNED = [
-    s
-    for s in _load_corpus()["scenarios"]
-    if s.get("sha") and _src_tree_sha(s["sha"]) == _src_tree_sha(_current_head())
-]
+_PINNED = pinned_scenarios(load_corpus())
 
 
 @pytest.mark.parametrize("scenario", _PINNED, ids=[s["id"] for s in _PINNED])
-def test_scenario_receipt_at_pinned_head(corpus, head, scenario):
-    """Every scenario pinned at an engine identical to HEAD reproduces it."""
-    assert _src_tree_sha(scenario["sha"]) == _src_tree_sha(head)
+def test_scenario_receipt_at_anchor_engine(corpus, anchor, scenario):
+    """Every scenario pinned at the anchor engine reproduces its receipt."""
+    assert src_tree_sha(scenario["sha"]) == anchor
     kind = scenario["expected"]["kind"]
     assert kind in _KIND_ASSERTIONS, f"unknown receipt kind {kind!r}"
     data = _run_calculate(scenario["setup"])
     _KIND_ASSERTIONS[kind](data, scenario["expected"])
 
 
-def test_every_new_scenario_is_pinned_at_current_engine(corpus, head):
-    """New (E9) scenarios must pin the engine they were written against.
+def test_every_new_scenario_is_pinned_at_the_anchor_engine(corpus, anchor):
+    """New (E9) scenarios must pin the anchor engine, not some later HEAD.
 
-    ``scenario["sha"]`` is the worktree HEAD at write time; the receipt is
-    valid iff that commit's ``src/`` tree equals HEAD's.  The four legacy
-    scenarios predate the E-series rework and are exempt: they keep their
-    original SHAs and are re-verified only after a deliberate re-capture.
+    ``scenario["sha"]`` names the anchor commit the receipt is filed under;
+    the receipt is asserted iff that commit's ``src/`` tree equals the
+    anchor.  The four legacy scenarios predate the E-series rework and are
+    exempt: they keep their original SHAs and are re-verified only after a
+    deliberate re-capture.
     """
-    legacy = {
-        "cp21-ziggs-outer-blast",
-        "cp21-bis-utility-ahri",
-        "e0-vladimir-sanguine-pool-heal",
-        "vladimir-hemoplague-multitarget",
-    }
-    head_src = _src_tree_sha(head)
-    for scenario in corpus["scenarios"]:
-        if scenario["id"] in legacy:
-            continue
+    for scenario in non_legacy_scenarios(corpus):
         assert scenario["sha"], f"{scenario['id']} is missing its pinned SHA"
-        assert _src_tree_sha(scenario["sha"]) == head_src, (
-            f"{scenario['id']} pinned at {scenario['sha']} but the current "
-            f"engine (HEAD {head}) differs -- re-probe /api/calculate and "
-            "re-pin the receipt before committing"
+        assert src_tree_sha(scenario["sha"]) == anchor, (
+            f"{scenario['id']} pinned at {scenario['sha']} but the anchor "
+            f"engine ({anchor}) differs -- re-probe /api/calculate and "
+            "run `python scripts/repin_corpus.py`"
         )
+
+
+# ---------------------------------------------------------------------------
+# The gate itself (R-21, R-22): one anchor, and a red it can reproduce
+# ---------------------------------------------------------------------------
+
+
+_UNKNOWN_SHA = "0" * 40
+_OLDER_ENGINE_SHA = "9217dfc"  # an e0-era commit, kept alive by a legacy pin
+
+
+def test_the_anchor_has_exactly_one_definition():
+    """Writer and both readers resolve staleness through one function."""
+    needle = "def " + "anchor_src_sha("  # split so the assertion cannot match itself
+    definitions = [
+        path
+        for folder in ("src", "tests", "scripts")
+        for path in (REPO_ROOT / folder).rglob("*.py")
+        if needle in path.read_text(encoding="utf-8")
+    ]
+    assert definitions == [REPIN_SCRIPT], definitions
+    # Both readers in this module take the anchor by import: the reader owns
+    # no git call of its own, so it cannot drift from the writer.
+    assert not hasattr(sys.modules[__name__], "subprocess")
+    assert _PINNED == pinned_scenarios(load_corpus())
+
+
+def test_check_passes_on_the_committed_corpus():
+    """The committed corpus satisfies the gate this slice installs."""
+    assert (
+        check_pins(
+            load_corpus(),
+            anchor=anchor_src_sha(),
+            parametrized=[s["id"] for s in _PINNED],
+        )
+        == ()
+    )
+
+
+@pytest.mark.parametrize("stale_sha", [_UNKNOWN_SHA, _OLDER_ENGINE_SHA])
+def test_check_fails_on_a_stale_pin(corpus, anchor, stale_sha):
+    """A pin naming any engine but the anchor is reported, by scenario id."""
+    assert src_tree_sha(stale_sha) != anchor
+    mutated = json.loads(json.dumps(corpus))
+    victim = non_legacy_scenarios(mutated)[0]
+    victim["sha"] = stale_sha
+    reasons = check_pins(
+        mutated, anchor=anchor, parametrized=[s["id"] for s in _PINNED]
+    )
+    assert any(victim["id"] in reason for reason in reasons), reasons
+
+
+def test_check_fails_on_an_empty_selection(corpus, anchor):
+    """A corpus that asserts nothing fails rather than reporting green."""
+    mutated = json.loads(json.dumps(corpus))
+    for scenario in non_legacy_scenarios(mutated):
+        scenario["sha"] = _UNKNOWN_SHA
+    reasons = check_pins(
+        mutated, anchor=anchor, parametrized=[s["id"] for s in _PINNED]
+    )
+    assert any("executes 0 of" in reason for reason in reasons), reasons
+
+
+def test_check_fails_on_a_short_selection(corpus, anchor):
+    """Losing one scenario from the executed set is a failure, not a smaller run."""
+    mutated = json.loads(json.dumps(corpus))
+    dropped = non_legacy_scenarios(mutated)[0]
+    dropped["sha"] = _UNKNOWN_SHA
+    reasons = check_pins(
+        mutated, anchor=anchor, parametrized=[s["id"] for s in _PINNED]
+    )
+    assert any("test_e9_corpus" in reason for reason in reasons), reasons
+
+
+def test_check_fails_when_the_receipt_count_disagrees(corpus, anchor):
+    """The fingerprints receipt's non_legacy_count is a gate, once it exists."""
+    reasons = check_pins(
+        corpus,
+        anchor=anchor,
+        parametrized=[s["id"] for s in _PINNED],
+        expected_count=len(_PINNED) + 1,
+    )
+    assert any("non_legacy_count" in reason for reason in reasons), reasons

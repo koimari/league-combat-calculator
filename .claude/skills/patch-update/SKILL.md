@@ -98,12 +98,14 @@ as the re-review triage list.
   affected named modules. Also verify surprising *absences*
   (e.g. a buff that didn't move the baseline because the snapshot has 0 AP,
   0% crit, or the ability sits at rank 1 at the snapshot level).
-- If `src/` changed, the E9 practice-corpus gate (`tests/test_e9_corpus.py`)
-  fails until each non-legacy scenario `sha` in
-  `data/practice-corpus/scenarios.json` is re-pinned to the new engine
-  commit. Re-pin in a data-only follow-up commit; the fresh pin activates
-  the receipt assertions, so run the corpus test locally to prove the
-  receipts still reproduce before pushing.
+- The E9 practice-corpus gate (`tests/test_e9_corpus.py`) is anchored at the
+  `src/` tree of the merge base with `main`, so an in-branch `src/` change
+  leaves every scenario *executed* and a broken receipt fails on its numbers.
+  A patch that legitimately moves a receipt is re-pinned with
+  `python scripts/repin_corpus.py` in a data-only follow-up commit — it
+  re-probes `/api/calculate` first and refuses to stamp a receipt that no
+  longer reproduces — and `python scripts/repin_corpus.py --check` is the
+  gate that the pins and the executed selection are both intact.
 - Commit `data/`, `scripts/golden_baseline.json`, and any code changes
   together, with every baseline diff explained in the commit message
   (see commit f7e8aad for the format).
