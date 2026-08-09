@@ -49,8 +49,33 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Renekton self-healing events from its authored packet."""
+    healing = []
+    ability = _healing._ability(champion_data, "Q")
+    rank = _healing._rank(ability_damages, "Q")
+    amount = _healing.extract_named(
+        ability, "Champion Healing", rank, champion_stats, {}
+    )
+    for event in damage_events:
+        if _healing._event_source(event) == "Q":
+            _healing._heal_from_damage(healing, event, amount, "Cull the Meek")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Renekton")
+SELF_HEALING_RULE = declare_healing_rule("Renekton", derive_self_healing)

@@ -29,8 +29,32 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Trundle self-healing events from its authored packet."""
+    healing = []
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "R"
+    ):
+        dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        _healing._heal_from_damage(
+            healing, event, dealt, "Subjugate", link_to_damage=False
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Trundle")
+SELF_HEALING_RULE = declare_healing_rule("Trundle", derive_self_healing)

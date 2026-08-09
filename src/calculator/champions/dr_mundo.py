@@ -394,8 +394,49 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Dr. Mundo self-healing events from its authored packet."""
+    healing = []
+    r = _healing._ability(champion_data, "R")
+    r_rank = _healing._rank(ability_damages, "R")
+    per_tick = _healing.extract_named(
+        r, "Health Regenerated per 0.5 Seconds", r_rank, champion_stats, {}
+    )
+    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    if per_tick > 0.0 and duration > 0.0:
+        for cast in cast_timeline or []:
+            if cast.get("slot") != "R":
+                continue
+            start = float(cast.get("time", 0.0)) + 0.5
+            end = min(duration, start - 0.5 + 10.0)
+            tick = start
+            while tick <= end + 1e-9:
+                healing.append(
+                    {
+                        "time": tick,
+                        "amount": float(per_tick),
+                        "source": "Maximum Dosage",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+                tick += 0.5
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Dr. Mundo")
+SELF_HEALING_RULE = declare_healing_rule("Dr. Mundo", derive_self_healing)

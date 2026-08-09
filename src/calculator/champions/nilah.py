@@ -111,8 +111,50 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Nilah self-healing events from its authored packet."""
+    healing = []
+    crit = max(
+        0.0,
+        min(
+            100.0,
+            float(champion_stats.get("critical_strike_chance", 0.0) or 0.0),
+        ),
+    )
+    q_ratio = 0.20 * crit / 100.0
+    r_ratio = 0.20 + 0.30 * crit / 100.0
+    for event in damage_events:
+        source = _healing._event_source(event)
+        if source in ("Q", "auto_attacks") and q_ratio > 0.0:
+            _healing._heal_from_damage(
+                healing,
+                event,
+                float(event.get("damage", 0.0)) * q_ratio,
+                "Formless Blade",
+            )
+        elif source == "R" and r_ratio > 0.0:
+            _healing._heal_from_damage(
+                healing,
+                event,
+                float(event.get("damage", 0.0)) * r_ratio,
+                "Apotheosis",
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Nilah")
+SELF_HEALING_RULE = declare_healing_rule("Nilah", derive_self_healing)

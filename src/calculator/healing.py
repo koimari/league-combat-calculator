@@ -1,8 +1,7 @@
 """Shared healing entrypoint for the participant and fight pipelines.
 
 Champion modules own their typed declarations. This module owns generic
-ordering and receipt shape. Formula migration stays behind the registry so
-event output stays stable during the split.
+ordering and receipt shape.
 """
 
 from __future__ import annotations
@@ -12,11 +11,8 @@ from typing import Any
 
 from .champions import _CHAMPION_MODULES
 from .champions.healing_contract import ChampionHealingRule
-from .healing_legacy import (
-    GREY_HEALTH_RULE_CHAMPIONS as _GREY_HEALTH_RULE_CHAMPIONS,
-    HEALING_RULE_CHAMPIONS as _DECLARED_HEALING_CHAMPIONS,
-    _taric_starlights_touch as _LEGACY_TARIC_STARLIGHTS_TOUCH,
-)
+from .healing_helpers import _taric_starlights_touch as _LEGACY_TARIC_STARLIGHTS_TOUCH
+from .healing_legacy import GREY_HEALTH_RULE_CHAMPIONS as _GREY_HEALTH_RULE_CHAMPIONS
 
 GREY_HEALTH_RULE_CHAMPIONS = _GREY_HEALTH_RULE_CHAMPIONS
 _taric_starlights_touch = _LEGACY_TARIC_STARLIGHTS_TOUCH
@@ -24,20 +20,23 @@ _taric_starlights_touch = _LEGACY_TARIC_STARLIGHTS_TOUCH
 
 def _load_declarations() -> dict[str, ChampionHealingRule]:
     declarations: dict[str, ChampionHealingRule] = {}
-    for champion_name in sorted(_DECLARED_HEALING_CHAMPIONS):
-        module_name = _CHAMPION_MODULES.get(champion_name)
-        if module_name is None:
-            raise RuntimeError(f"no champion module for {champion_name!r}")
+    for champion_name, module_name in sorted(_CHAMPION_MODULES.items()):
         module = importlib.import_module(
             f".champions.{module_name}", package=__package__
         )
         declaration = getattr(module, "SELF_HEALING_RULE", None)
+        if declaration is None:
+            continue
         if not isinstance(declaration, ChampionHealingRule):
             raise RuntimeError(f"{module.__name__} must declare SELF_HEALING_RULE")
         if declaration.champion_name != champion_name:
             raise RuntimeError(
                 f"{module.__name__} declares {declaration.champion_name!r}, "
                 f"expected {champion_name!r}"
+            )
+        if declaration.resolver is None:
+            raise RuntimeError(
+                f"{module.__name__} must provide a champion-local healing resolver"
             )
         declarations[champion_name] = declaration
     return declarations

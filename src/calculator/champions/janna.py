@@ -160,8 +160,51 @@ SOURCES = [
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Janna self-healing events from its authored packet."""
+    healing = []
+    r_rank = _healing._rank(ability_damages, "R")
+    ability = _healing._ability(champion_data, "R")
+    per_tick = _healing.extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
+    total = _healing.extract_named(ability, "Total Heal", r_rank, champion_stats)
+    tick_count = (
+        max(1, min(100, int(round(total / per_tick))))
+        if per_tick > 0.0 and total > 0.0
+        else 12
+    )
+    if per_tick > 0.0:
+        for cast_index, cast in enumerate(cast_timeline or []):
+            if cast.get("slot") != "R":
+                continue
+            start = float(cast.get("time", 0.0))
+            for index in range(1, tick_count + 1):
+                healing.append(
+                    {
+                        "time": start + index * 0.25,
+                        "amount": float(per_tick),
+                        "source": "Monsoon",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                        "target_scope": "self_and_all_teammates",
+                        "_event_id": f"janna:r:{cast_index}:{index}",
+                    }
+                )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Janna")
+SELF_HEALING_RULE = declare_healing_rule("Janna", derive_self_healing)

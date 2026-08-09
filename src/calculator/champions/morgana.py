@@ -152,8 +152,34 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Morgana self-healing events from its authored packet."""
+    healing = []
+    for event in damage_events:
+        if _healing._event_source(event) not in {"Q", "W", "R"}:
+            continue
+        _healing._heal_from_damage(
+            healing,
+            event,
+            0.18 * max(0.0, float(event.get("damage", 0.0))),
+            "Soul Siphon",
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Morgana")
+SELF_HEALING_RULE = declare_healing_rule("Morgana", derive_self_healing)
