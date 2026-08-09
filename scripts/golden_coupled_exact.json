@@ -1,0 +1,128 @@
+{
+  "coupled_scenarios": {
+    "catalyst_roster": {
+      "combat/0:main/incoming": "2814.8",
+      "combat/0:main/outgoing": "2318.4",
+      "combat/1:ally:Pantheon/incoming": "2475.1",
+      "combat/1:ally:Pantheon/outgoing": "1646.8",
+      "combat/2:enemy:Aatrox/incoming": "1973.1",
+      "combat/2:enemy:Aatrox/outgoing": "3500.6",
+      "combat/3:enemy:Malphite/incoming": "1992.1",
+      "combat/3:enemy:Malphite/outgoing": "1789.3",
+      "fights/0:Aatrox": "1148.4",
+      "fights/1:Malphite": "1170.0"
+    },
+    "cleaver_bloodsong_roster": {
+      "combat/0:main/incoming": "3248.4",
+      "combat/0:main/outgoing": "3226.1",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "848.8",
+      "combat/2:enemy:Aatrox/incoming": "4074.9",
+      "combat/2:enemy:Aatrox/outgoing": "5377.4",
+      "fights/0:Aatrox": "3933.8"
+    },
+    "dream_maker_roster": {
+      "combat/0:main/incoming": "1774.1",
+      "combat/0:main/outgoing": "377.2",
+      "combat/1:ally:Jax/incoming": "1602.3",
+      "combat/1:ally:Jax/outgoing": "798.8",
+      "combat/2:enemy:Aatrox/incoming": "1176.0",
+      "combat/2:enemy:Aatrox/outgoing": "3376.3",
+      "fights/0:Aatrox": "377.2"
+    },
+    "mandate_abyssal_curse_roster": {
+      "combat/0:main/incoming": "1884.9",
+      "combat/0:main/outgoing": "2406.2",
+      "combat/1:ally:Pantheon/incoming": "1615.7",
+      "combat/1:ally:Pantheon/outgoing": "863.4",
+      "combat/2:enemy:Aatrox/incoming": "3269.6",
+      "combat/2:enemy:Aatrox/outgoing": "3500.6",
+      "fights/0:Aatrox": "2183.7"
+    },
+    "score_event_scan_holder": {
+      "combat/0:main/incoming": "1894.8",
+      "combat/0:main/outgoing": "1865.2",
+      "combat/1:ally:Pantheon/incoming": "1615.7",
+      "combat/1:ally:Pantheon/outgoing": "824.6",
+      "combat/2:enemy:Aatrox/incoming": "2689.9",
+      "combat/2:enemy:Aatrox/outgoing": "3510.5",
+      "fights/0:Aatrox": "1865.2"
+    },
+    "score_event_view_holder": {
+      "combat/0:main/incoming": "1894.8",
+      "combat/0:main/outgoing": "2089.8",
+      "combat/1:ally:Pantheon/incoming": "1615.7",
+      "combat/1:ally:Pantheon/outgoing": "824.6",
+      "combat/2:enemy:Aatrox/incoming": "2914.5",
+      "combat/2:enemy:Aatrox/outgoing": "3510.5",
+      "fights/0:Aatrox": "2089.8"
+    },
+    "score_plain_tuple": {
+      "combat/0:main/incoming": "1894.8",
+      "combat/0:main/outgoing": "1643.9",
+      "combat/1:ally:Pantheon/incoming": "1615.7",
+      "combat/1:ally:Pantheon/outgoing": "824.6",
+      "combat/2:enemy:Aatrox/incoming": "2468.5",
+      "combat/2:enemy:Aatrox/outgoing": "3510.5",
+      "fights/0:Aatrox": "1643.9"
+    },
+    "syndra_custom_order_120": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "5472.5"
+    },
+    "syndra_custom_order_39": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "4720.0"
+    },
+    "syndra_custom_order_60": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "4998.4"
+    },
+    "syndra_derived_order_120": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "6185.5"
+    },
+    "syndra_derived_order_39": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "4720.0"
+    },
+    "syndra_derived_order_60": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "5648.4"
+    }
+  },
+  "metadata": {
+    "champions_fetched_at": 1786113324.862417,
+    "exact": true,
+    "fingerprint": {
+      "entries": 13,
+      "leaves": 82,
+      "numeric_leaves": 0,
+      "sections": "coupled_scenarios"
+    },
+    "git_head": "e4716e40b39869d2fda0febf2767b49c8585fc73",
+    "items_fetched_at": 1786113359.0537379,
+    "producer_count": 6,
+    "scenario_count": 13,
+    "snapshot_kind": "coupled",
+    "src_tree_sha": "66072eacfc496dbde2ce25b71085256e16e0c46a"
+  }
+}
