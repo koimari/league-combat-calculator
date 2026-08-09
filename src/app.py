@@ -158,6 +158,13 @@ app.json.sort_keys = False
 app.config.update(
     MAX_CONTENT_LENGTH=32 * 1024,
     RATE_LIMIT_ENABLED=True,
+    # The benchmark harness's seam into the optimizer (campaign runbook
+    # R-24): ``{"work_counters": <sink>, "use_compiled_walk": <bool>}``.
+    # ``scripts/bench_coupled_optimizer.py`` installs it before posting, so
+    # the counters CI reads come out of the shipped request path instead of
+    # a patched copy of it.  Empty in production, where it costs one dict
+    # lookup per optimize request.
+    OPTIMIZER_INSTRUMENTATION={},
 )
 # The test client hammers /api/calculate across the per-champion suites;
 # the shared token bucket would 429 long runs. Rate limiting is a
@@ -1399,8 +1406,11 @@ def api_optimize():
     if rate_limit_response is not None:
         return rate_limit_response
 
+    instrumentation = app.config.get("OPTIMIZER_INSTRUMENTATION") or {}
     try:
         common_optimizer_args = {
+            "work_counters": instrumentation.get("work_counters"),
+            "use_compiled_walk": instrumentation.get("use_compiled_walk", True),
             "champion_data": champion_data,
             "level": level,
             "fight_params": fight_params,

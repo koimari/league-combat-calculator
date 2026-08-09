@@ -46,6 +46,7 @@ from .timeline_coverage import (
     applicability_exclusion_sources,
     combine_timeline_coverages,
 )
+from .work_counters import WorkCounterSink
 
 # Item exclusivity groups — at most one item from each group per build
 # (e.g. Spellblade items are mutually exclusive in-game). This table is
@@ -134,6 +135,7 @@ def _evaluate_build(
     timeline_audit: dict[str, Any] | None = None,
     require_complete_timeline: bool = False,
     combat_context: dict[str, Any] | None = None,
+    work_counters: WorkCounterSink | None = None,
 ) -> float:
     """Evaluate a build, reusing this search's score for an exact repeat.
 
@@ -142,7 +144,13 @@ def _evaluate_build(
     Scoring is deterministic for an identical ordered item list, so a repeat
     replays the recorded score and its ordering-audit contribution instead of
     re-simulating the roster.  The public receipts are byte-identical.
+
+    This is also the campaign's proposal counter (runbook R-24): every
+    candidate any regime proposes arrives here.  The memo *misses* are
+    counted one layer down, in the function that pays for them.
     """
+    if work_counters is not None:
+        work_counters.measured_proposals += 1
     score_memo = combat_context.get("score_memo") if combat_context else None
     if score_memo is None:
         return _evaluate_build_uncached(
@@ -155,6 +163,7 @@ def _evaluate_build(
             timeline_audit=timeline_audit,
             require_complete_timeline=require_complete_timeline,
             combat_context=combat_context,
+            work_counters=work_counters,
         )
     memo_key = tuple(item["name"] for item in items)
     hit = score_memo.get(memo_key)
@@ -192,6 +201,7 @@ def _evaluate_build(
         timeline_audit=timeline_audit,
         require_complete_timeline=require_complete_timeline,
         combat_context=combat_context,
+        work_counters=work_counters,
     )
     audit_delta = None
     if audit_before is not None:
@@ -221,11 +231,18 @@ def _evaluate_build_uncached(
     timeline_audit: dict[str, Any] | None = None,
     require_complete_timeline: bool = False,
     combat_context: dict[str, Any] | None = None,
+    work_counters: WorkCounterSink | None = None,
 ) -> float:
     """Evaluate a build and return the damage score for the given objective.
 
     Creates fresh copies of mutable state to avoid cross-call contamination.
+
+    This is the simulation the search pays for, so it is where a memo miss is
+    counted (R-24) — one increment in the function that does the work, rather
+    than one beside every branch that decides to call it.
     """
+    if work_counters is not None:
+        work_counters.score_memo_misses += 1
     if gold_budget is not None and _build_gold(items) > gold_budget:
         return float("-inf")
     targets = fight_params if isinstance(fight_params, tuple) else (fight_params,)
@@ -889,6 +906,7 @@ class _PurchaseSearch:
         deadline: float,
         capacity: int,
         reserve_boot_slot: bool,
+        work_counters: WorkCounterSink | None = None,
     ) -> None:
         self.champion_data = champion_data
         self.level = level
@@ -907,6 +925,10 @@ class _PurchaseSearch:
         self.deadline = deadline
         self.capacity = capacity
         self.reserve_boot_slot = reserve_boot_slot
+        # The work-counter sink rides the search context itself rather than
+        # a patched module attribute (runbook R-24), so the counters CI reads
+        # come from the same object the search itself carries.
+        self.work_counters = work_counters
         self.evaluations = 0
         self.candidates: dict[
             tuple[tuple[str, ...], str | None],
@@ -987,6 +1009,7 @@ class _PurchaseSearch:
             timeline_audit=self.timeline_audit,
             require_complete_timeline=self.require_complete_timeline,
             combat_context=self.combat_context,
+            work_counters=self.work_counters,
         )
         self.evaluations += 1
         self._score_memo[key] = score
@@ -1310,6 +1333,8 @@ def optimize_purchase(
     combine_policy: str = "shop_combine",
     include_starters: bool = False,
     time_budget_ms: int = 12_000,
+    work_counters: WorkCounterSink | None = None,
+    use_compiled_walk: bool = True,
 ) -> dict[str, Any]:
     """Fill the empty inventory slots with the available gold.
 
@@ -1448,7 +1473,10 @@ def optimize_purchase(
             {
                 "pair_result_cache": {},
                 "score_memo": {},
-                "search_context": CoupledSearchContext(),
+                "search_context": CoupledSearchContext(
+                    work_counters=work_counters,
+                    compiled_walk_enabled=use_compiled_walk,
+                ),
             }
         )
 
@@ -1470,6 +1498,7 @@ def optimize_purchase(
         deadline=started + time_budget_ms / 1000,
         capacity=capacity,
         reserve_boot_slot=include_boots and owned_boots is None,
+        work_counters=work_counters,
     )
 
     def current_loadout_score() -> float | None:
@@ -1736,6 +1765,8 @@ def optimize_build(
     enemy_loadouts: list[Any] | None = None,
     ally_loadouts: list[Any] | None = None,
     include_boots: bool = True,
+    work_counters: WorkCounterSink | None = None,
+    use_compiled_walk: bool = True,
 ) -> dict[str, Any]:
     """Find the optimal item build for a champion.
 
@@ -1751,6 +1782,11 @@ def optimize_build(
         boots_tier: 2 normally; 3 after the mid-lane role quest.
         require_complete_timeline: Withhold any build whose damage is not
             event-order certified. Public BIS requests enable this.
+        work_counters: Optional benchmark sink for this search's proposal,
+            memo, pair-fight and fallback-rung counts (runbook R-24).
+        use_compiled_walk: False forces every coupled evaluation onto the
+            receipt walk. The two walks are pinned equivalent, so this
+            changes cost and never an answer (R-01 row 11).
 
     Returns:
         Dict with optimized build, damage, and metadata.
@@ -1795,6 +1831,7 @@ def optimize_build(
             if enemy_loadouts or ally_loadouts
             else None
         ),
+        "work_counters": work_counters,
     }
     # Pairwise roster receipts that do not depend on the candidate main
     # build's offense are invariant across the search: roster-to-roster pairs
@@ -1804,7 +1841,10 @@ def optimize_build(
     if eval_kwargs["combat_context"] is not None:
         eval_kwargs["combat_context"]["pair_result_cache"] = {}
         eval_kwargs["combat_context"]["score_memo"] = {}
-        eval_kwargs["combat_context"]["search_context"] = CoupledSearchContext()
+        eval_kwargs["combat_context"]["search_context"] = CoupledSearchContext(
+            work_counters=work_counters,
+            compiled_walk_enabled=use_compiled_walk,
+        )
     coupled_objective = bool(enemy_loadouts or ally_loadouts)
 
     # Build item pools.  Keep the complete legal lists for the public coverage

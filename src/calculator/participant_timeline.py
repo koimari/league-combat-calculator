@@ -80,11 +80,34 @@ from .survival import (
     survival_action_from_event,
     uncompilable_item_receipt as _uncompilable_item_receipt,
 )
+from .work_counters import Rung, WorkCounterSink, record_rung
 
 # Issue #137: the survival kernel lives in ``src/calculator/survival``; the
 # underscored name below is kept as an alias so the public surface of this
 # module (and existing tests importing it here) stays stable.
 _WalkCompiler = WalkCompiler
+
+# The receipt an already-poisoned search context raises with.  A later
+# evaluation's failure is the *first* one's cause, so the rung ladder reads
+# it back rather than reporting every subsequent candidate as its own
+# candidate-local fallback.
+_CONTEXT_POISONED_RECEIPT = "context_marked_uncompilable"
+
+
+def _pair_run_fight(
+    work_counters: WorkCounterSink | None, *args: Any, **kwargs: Any
+) -> dict[str, Any]:
+    """Run one composed pair fight, counted on the search's work counters.
+
+    Every ``run_fight`` call this module makes is a *pair* fight — one
+    attacker into one defender — and the campaign's residual instrument
+    (runbook R-25) is defined over their count.  Routing all of them through
+    one wrapper is what keeps that count a property of this module rather
+    than of whoever remembered to increment a counter beside their call.
+    """
+    if work_counters is not None:
+        work_counters.pair_run_fight_calls += 1
+    return run_fight(*args, **kwargs)
 
 
 def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
@@ -2079,11 +2102,24 @@ class CoupledSearchContext:
         # a signature panel) hit an unrepresentable transition; the compiled
         # path is then skipped for the rest of the search.
         "uncompilable",
+        # The benchmark harness's counter sink, and its switch for forcing
+        # every evaluation onto the receipt walk (runbook R-24, R-01 row 11).
+        # Both are inert unless a caller installs them, and neither can
+        # change a number: the two walks are pinned equivalent.
+        "work_counters",
+        "compiled_walk_enabled",
     )
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        work_counters: WorkCounterSink | None = None,
+        compiled_walk_enabled: bool = True,
+    ) -> None:
         self.panels: dict[tuple[Any, ...], "_SignaturePanel"] = {}
         self.uncompilable = False
+        self.work_counters = work_counters
+        self.compiled_walk_enabled = compiled_walk_enabled
         self.roster_actors: list[Combatant] | None = None
         self.actor_params: dict[str, FightParams] = {}
         self.main_request: Any = None
@@ -2296,7 +2332,8 @@ def _context_setup(
         packet = pair_result_cache.get(cache_key)
         if packet is None:
             packet = _pair_packet(
-                run_fight(
+                _pair_run_fight(
+                    context.work_counters,
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
@@ -2409,7 +2446,8 @@ def _build_signature_panel(
         packet = pair_result_cache.get(cache_key)
         if packet is None:
             packet = _pair_packet(
-                run_fight(
+                _pair_run_fight(
+                    context.work_counters,
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
@@ -2483,7 +2521,7 @@ def _score_with_search_context(
     # immediately instead of re-attempting the compiled path.
     if getattr(context, "uncompilable", False):
         raise UncompilableActionError(
-            receipt="context_marked_uncompilable",
+            receipt=_CONTEXT_POISONED_RECEIPT,
             source=str(champion_data.get("name", "")),
         )
     # The main candidate's own loadout is candidate-dependent: a failure
@@ -2578,7 +2616,8 @@ def _score_with_search_context(
     first_result = None
     enemy_actors = [actor for actor in roster if actor.team == "enemy"]
     for defender_index, (defender, pair_params) in enumerate(context.main_pair_params):
-        result = run_fight(
+        result = _pair_run_fight(
+            context.work_counters,
             main.champion_data,
             main.level,
             list(main.items),
@@ -2955,8 +2994,10 @@ def build_participant_timeline(
             resource_restore_events=tuple(_resource_restores.get("main", ())),
         )
 
+    work_counters = search_context.work_counters if search_context else None
     if (
         search_context is not None
+        and search_context.compiled_walk_enabled
         and not include_receipt
         and pair_result_cache is not None
         and enemies
@@ -2976,7 +3017,7 @@ def build_participant_timeline(
         # below.
     ):
         try:
-            return _score_with_search_context(
+            scored = _score_with_search_context(
                 champion_data,
                 level,
                 items,
@@ -2996,6 +3037,19 @@ def build_participant_timeline(
             # failures fall back per evaluation.
             if exc.invariant:
                 search_context.uncompilable = True
+            record_rung(
+                work_counters,
+                (
+                    Rung.SEARCH_POISONED
+                    if exc.invariant or exc.receipt == _CONTEXT_POISONED_RECEIPT
+                    else Rung.RECEIPT_WALK_CANDIDATE
+                ),
+            )
+        else:
+            record_rung(work_counters, Rung.COMPILED)
+            return scored
+    else:
+        record_rung(work_counters, Rung.RECEIPT_WALK_GATE)
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
         champion_data,
@@ -3098,7 +3152,8 @@ def build_participant_timeline(
                         else None
                     )
                     packet = _pair_packet(
-                        run_fight(
+                        _pair_run_fight(
+                            work_counters,
                             attacker.champion_data,
                             attacker.level,
                             list(attacker.items),
@@ -3236,7 +3291,8 @@ def build_participant_timeline(
         actor_params = _actor_params_with_resource_restores(
             params, attacker, _resource_restores
         )
-        fallback = run_fight(
+        fallback = _pair_run_fight(
+            work_counters,
             attacker.champion_data,
             attacker.level,
             list(attacker.items),
@@ -3286,6 +3342,10 @@ def build_participant_timeline(
                 pair_result_cache={},
                 include_receipt=include_receipt,
                 reuse_main_stats=reuse_main_stats,
+                # The Catalyst repass deliberately drops the search context —
+                # its pair packets are priced with different inputs, so no
+                # compiled panel and no cached packet may serve it.  Its pair
+                # fights are therefore outside the work counters as well.
                 search_context=None,
                 _resource_restores=resource_restores,
                 _resource_pass=True,
