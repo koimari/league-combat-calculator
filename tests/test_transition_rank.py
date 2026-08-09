@@ -10,6 +10,7 @@ number the walk produces.
 import ast
 import math
 from pathlib import Path
+from typing import Iterable, Mapping, NamedTuple, Sequence
 
 import pytest
 
@@ -25,6 +26,11 @@ ROOT = Path(__file__).parents[1]
 SURVIVAL = ROOT / "src" / "calculator" / "survival"
 TIMELINE = ROOT / "src" / "calculator" / "participant_timeline.py"
 ITEM_SUPPORT = ROOT / "src" / "calculator" / "item_support_effects.py"
+
+
+def _population() -> tuple[Path, ...]:
+    """Every file a phase can be written in: the kernel plus the timeline."""
+    return (*sorted(SURVIVAL.glob("*.py")), TIMELINE)
 
 
 def test_legacy_phase_is_total_over_the_enum() -> None:
@@ -87,31 +93,80 @@ def test_a_rank_without_a_float_raises_rather_than_guessing(monkeypatch) -> None
 # reproducible rather than judged (R-29's idiom).  A phase slot is:
 #
 #   1. the ``phase=`` keyword of any call;
-#   2. positional argument 1 of ``action_key``, ``_action_key``,
-#      ``survival_action_from_event``, ``classify_event_kind`` and
-#      ``_classify_prefetched`` — every function whose second parameter is
-#      literally named ``phase``;
-#   3. element 1 of a sort-key tuple, in the three shapes the tree writes
-#      one: a ``sort_key=`` keyword, an assignment to a name ``sort_key``,
-#      and the body of a ``lambda`` handed to a ``key=`` argument;
+#   2. the positional argument a definition in the population names
+#      ``phase`` — ``action_key(t, 0.5, ...)`` and friends;
+#   3. element 1 of a sort-key tuple, in every shape the tree writes one: a
+#      ``sort_key=`` keyword, an assignment to a name ``sort_key``, the body
+#      of a ``lambda`` handed to a ``key=`` argument, and a tuple handed
+#      positionally to the argument a definition names ``sort_key``;
 #   4. the constant side of a comparison whose other side is ``phase`` or
 #      ``<something>.phase``.
 #
-# A slot filled by a bare local name is resolved through one level of
-# assignment inside the enclosing function, because ``priority = -1.0 if
-# ... else 1.0`` followed by ``phase=priority`` is the same literal wearing
-# a variable's clothes — that spelling is exactly how the compiled support
-# branch kept its own float ladder after the first migration pass.
+# **Shapes 2 and 3 read their positions from the definitions, never from a
+# list of names.**  The first version of this guard typed out five callee
+# names and asserted the tree was clean; ``compiled_damage_action`` was not
+# among them, so the two hot-path sort keys ``compile.py`` hands it
+# positionally were counted as absent by the very rule that existed to find
+# them.  A guard whose population is enumerated by its own blind spot is
+# green over nothing — the campaign's own failure shape, one level down.
+# ``_slot_rules`` therefore derives the index of a ``phase`` parameter and of
+# a ``sort_key`` parameter from every ``def`` and every NamedTuple field
+# list in the population, so a positional call is a slot whether or not
+# anybody remembered the callee's name.
+#
+# A slot filled by a bare name is resolved through one level of assignment,
+# because ``priority = -1.0 if ... else 1.0`` followed by ``phase=priority``
+# is the same literal wearing a variable's clothes — that spelling is exactly
+# how the compiled support branch kept its own float ladder after the first
+# migration pass.  Resolution spans the whole population rather than one
+# file, so a constant that hides a literal cannot be laundered through an
+# import.
 
-_PHASE_ARG1_CALLS = frozenset(
-    {
-        "action_key",
-        "_action_key",
-        "survival_action_from_event",
-        "classify_event_kind",
-        "_classify_prefetched",
-    }
-)
+
+class _SlotRules(NamedTuple):
+    """Where a phase can sit, read from the scanned population itself."""
+
+    phase_arg: Mapping[str, int]  # callee name -> index of its ``phase`` argument
+    sort_key_arg: Mapping[str, int]  # callee name -> index of its ``sort_key``
+    bound: Mapping[str, list[ast.expr]]  # name -> what the population assigns it
+
+
+def _positional_names(node: ast.AST) -> list[str]:
+    """The positional parameter names of one definition, callee order.
+
+    A ``def`` contributes its signature; a class contributes its annotated
+    field order, which is what a NamedTuple accepts positionally.  ``self``
+    is dropped so a method's indices match how the method is called.
+    """
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        names = [arg.arg for arg in node.args.posonlyargs + node.args.args]
+        return names[1:] if names and names[0] in ("self", "cls") else names
+    if isinstance(node, ast.ClassDef):
+        return [
+            stmt.target.id
+            for stmt in node.body
+            if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)
+        ]
+    return []
+
+
+def _slot_rules(trees: Sequence[ast.AST]) -> _SlotRules:
+    """Derive shapes 2 and 3's positions, plus the one-level name binding."""
+    phase_arg: dict[str, int] = {}
+    sort_key_arg: dict[str, int] = {}
+    bound: dict[str, list[ast.expr]] = {}
+    for tree in trees:
+        for node in ast.walk(tree):
+            names = _positional_names(node)
+            if "phase" in names:
+                phase_arg[node.name] = names.index("phase")
+            if "sort_key" in names:
+                sort_key_arg[node.name] = names.index("sort_key")
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        bound.setdefault(target.id, []).append(node.value)
+    return _SlotRules(phase_arg, sort_key_arg, bound)
 
 
 def _callee_name(node: ast.expr) -> str:
@@ -137,39 +192,32 @@ def _holds_number(node: ast.AST) -> bool:
     return any(_holds_number(child) for child in ast.iter_child_nodes(node))
 
 
-def _local_assignments(tree: ast.AST) -> dict[str, list[ast.expr]]:
-    """Every ``name = <expr>`` in the module, by name.
-
-    One level is enough: the tree never routes a phase through two hops,
-    and a deeper chain would be flagged by the reader rather than hidden.
-    """
-    bound: dict[str, list[ast.expr]] = {}
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name):
-                    bound.setdefault(target.id, []).append(node.value)
-    return bound
-
-
-def _slot_offends(node: ast.expr, bound: dict[str, list[ast.expr]]) -> bool:
+def _slot_offends(node: ast.expr, bound: Mapping[str, list[ast.expr]]) -> bool:
     """Whether the expression filling a phase slot carries a literal."""
     if isinstance(node, ast.Name):
         return any(_holds_number(value) for value in bound.get(node.id, ()))
     return _holds_number(node)
 
 
-def _sort_key_tuples(tree: ast.AST) -> list[ast.Tuple]:
-    """Every tuple literal the tree builds as a sort key (shape 3 above)."""
-    found: list[ast.Tuple] = []
+def _sort_key_tuples(tree: ast.AST, rules: _SlotRules) -> list[tuple[ast.Tuple, str]]:
+    """Every tuple literal the tree builds as a sort key (shape 3 above).
+
+    Four spellings: the ``sort_key=`` keyword, an assignment to a name
+    ``sort_key``, a ``key=lambda`` body, and a tuple handed positionally to
+    whatever index a definition puts ``sort_key`` at.
+    """
+    found: list[tuple[ast.Tuple, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             for keyword in node.keywords:
                 if keyword.arg == "sort_key" and isinstance(keyword.value, ast.Tuple):
-                    found.append(keyword.value)
+                    found.append((keyword.value, "sort_key[1]"))
                 if keyword.arg == "key" and isinstance(keyword.value, ast.Lambda):
                     if isinstance(keyword.value.body, ast.Tuple):
-                        found.append(keyword.value.body)
+                        found.append((keyword.value.body, "sort_key[1]"))
+            index = rules.sort_key_arg.get(_callee_name(node.func), -1)
+            if 0 <= index < len(node.args) and isinstance(node.args[index], ast.Tuple):
+                found.append((node.args[index], "sort_key[1] (positional)"))
         elif isinstance(node, ast.Assign):
             for target in node.targets:
                 if (
@@ -177,7 +225,7 @@ def _sort_key_tuples(tree: ast.AST) -> list[ast.Tuple]:
                     and target.id == "sort_key"
                     and isinstance(node.value, ast.Tuple)
                 ):
-                    found.append(node.value)
+                    found.append((node.value, "sort_key[1]"))
     return found
 
 
@@ -190,10 +238,18 @@ def _is_phase_operand(node: ast.expr) -> bool:
     return False
 
 
-def phase_literals(path: Path) -> list[tuple[str, int, str]]:
-    """Every numeric literal still reaching a phase slot in one file."""
+def phase_literals(
+    path: Path, rules: _SlotRules | None = None
+) -> list[tuple[str, int, str]]:
+    """Every numeric literal still reaching a phase slot in one file.
+
+    ``rules`` carries the positions and name bindings derived from the whole
+    population; a caller that omits it gets the ones this file alone
+    declares, which is what the guard's own red fixture wants.
+    """
     tree = ast.parse(path.read_text(encoding="utf-8"))
-    bound = _local_assignments(tree)
+    rules = rules if rules is not None else _slot_rules([tree])
+    bound = rules.bound
     offenders: list[tuple[str, int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
@@ -201,33 +257,64 @@ def phase_literals(path: Path) -> list[tuple[str, int, str]]:
             for keyword in node.keywords:
                 if keyword.arg == "phase" and _slot_offends(keyword.value, bound):
                     offenders.append((path.name, keyword.value.lineno, "phase="))
-            if callee in _PHASE_ARG1_CALLS and len(node.args) > 1:
-                if _slot_offends(node.args[1], bound):
-                    offenders.append((path.name, node.args[1].lineno, f"{callee}(,1)"))
+            index = rules.phase_arg.get(callee, -1)
+            if 0 <= index < len(node.args) and _slot_offends(node.args[index], bound):
+                offenders.append(
+                    (path.name, node.args[index].lineno, f"{callee}(,{index})")
+                )
         elif isinstance(node, ast.Compare):
             operands = [node.left, *node.comparators]
             if any(_is_phase_operand(side) for side in operands) and any(
                 _holds_number(side) for side in operands
             ):
                 offenders.append((path.name, node.lineno, "phase comparison"))
-    for tup in _sort_key_tuples(tree):
+    for tup, slot in _sort_key_tuples(tree, rules):
         if len(tup.elts) > 1 and _slot_offends(tup.elts[1], bound):
-            offenders.append((path.name, tup.elts[1].lineno, "sort_key[1]"))
+            offenders.append((path.name, tup.elts[1].lineno, slot))
     return sorted(offenders)
+
+
+def _population_rules(paths: Iterable[Path]) -> _SlotRules:
+    """The slot positions and name bindings the whole population declares."""
+    return _slot_rules([ast.parse(path.read_text(encoding="utf-8")) for path in paths])
+
+
+def test_the_positional_phase_slots_are_read_from_the_definitions() -> None:
+    """Shapes 2 and 3 are a derivation over the tree, not a list of names.
+
+    Pinning the derived map is what makes the guard's population auditable:
+    a new callable that takes a ``phase`` or builds a ``sort_key`` shows up
+    here, so it can never be scanned by a rule that has not heard of it.
+    """
+    rules = _population_rules(_population())
+    assert dict(rules.phase_arg) == {
+        "SurvivalAction": 2,
+        "_classify_prefetched": 1,
+        "action_key": 1,
+        "classify_event_kind": 1,
+        "survival_action_from_event": 1,
+    }
+    assert dict(rules.sort_key_arg) == {
+        "SurvivalAction": 0,
+        "compiled_damage_action": 0,
+    }
 
 
 def test_no_float_literal_reaches_a_phase_slot() -> None:
     """Phases are named ranks, not floats an author picked at the call site.
 
     The population is every phase slot in the kernel package and the
-    timeline — action construction, sort-key tuples, the ``action_key``
-    family's phase argument, and the comparisons that read a phase back —
-    not just the ``SurvivalAction(phase=)`` keyword, which is one spelling
-    of five and the one a migration notices first.
+    timeline — action construction, sort-key tuples in all four spellings,
+    the phase argument of every definition that takes one, and the
+    comparisons that read a phase back — not just the
+    ``SurvivalAction(phase=)`` keyword, which is one spelling of many and
+    the one a migration notices first.
     """
+    paths = _population()
+    rules = _population_rules(paths)
     offenders: list[tuple[str, int, str]] = []
-    for path in (*sorted(SURVIVAL.glob("*.py")), TIMELINE):
-        offenders.extend(phase_literals(path))
+    for path in paths:
+        offenders.extend(phase_literals(path, rules))
     assert offenders == []
 
 
@@ -237,11 +324,15 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
     sample.write_text(
         "\n".join(
             (
+                # The definitions shapes 2 and 3 read their positions from.
+                "def action_key(event_time, phase, participant_id, event):\n    pass",
+                "def compiled_damage_action(sort_key, time, kind):\n    pass",
                 "SurvivalAction(phase=1.0)",
                 "action_key(t, 0.5, who, event)",
                 "SurvivalAction(sort_key=(t, 1.0, s))",
                 "sort_key = (t, 0.5, s)",
                 "sorted(rows, key=lambda row: (row.t, -1.0, row.id))",
+                "compiled_damage_action((t, 0.0, seq), time, kind)",
                 "if phase == -1:\n    pass",
                 "priority = -1.0 if kind == 'shield' else 1.0",
                 "SurvivalAction(phase=priority)",
@@ -255,6 +346,7 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
         "phase comparison",
         "phase=",
         "sort_key[1]",
+        "sort_key[1] (positional)",
     ]
     assert slots.count("phase=") == 2  # the literal and the aliased ladder
 

@@ -640,6 +640,13 @@ class WalkCompiler:
         actions_append = self.actions.append
         order_append = self.damage_order[attacker_i].append
         strikes_append = self.auto_strikes_into[defender_i].append
+        # Engine damage arms at the damage rank, on both the tuple ledger and
+        # the dict one.  Named once per call rather than per action: these
+        # two loops build tens of thousands of sort keys per request, and the
+        # alternative — a bare 0.0 in tuple position 1 — is a phase nobody
+        # can grep for, which is exactly how both branches escaped the first
+        # migration pass.
+        damage_phase = legacy_phase(TransitionRank.DAMAGE)
         known_ids = len(id_strings)
         aidx = self.next_aidx
         if result.get("damage_events_tuple"):
@@ -673,7 +680,7 @@ class WalkCompiler:
                     compiled_damage_action(
                         (
                             time_value,
-                            0.0,
+                            damage_phase,
                             key[3],
                             order_a,
                             order_b,
@@ -766,7 +773,7 @@ class WalkCompiler:
                 compiled_damage_action(
                     (
                         time_value,
-                        0.0,
+                        damage_phase,
                         sequence,
                         order_a,
                         order_b,
