@@ -23,6 +23,13 @@ from .item_effects import (
     ally_item_level_value,
     required_effect_value,
 )
+
+# The item layer's one edge into the survival kernel: packet authors declare
+# when their packet arms, in the walk's vocabulary, so there is no second
+# ordering language to keep in sync.  Note the reach — importing
+# ``.survival.actions`` executes ``survival/__init__.py``, so the whole
+# kernel package loads with this module.  Acyclic: nothing under
+# ``survival/`` imports ``item_support_effects``.
 from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
 
 

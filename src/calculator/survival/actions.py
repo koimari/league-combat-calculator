@@ -37,6 +37,16 @@ class TransitionRank(IntEnum):
     keeps ``death_or_terminal_cutoff`` (a name the ledger publishes but no
     transition emits) and is declared last so ``legacy_phase`` stays
     non-decreasing while projecting it to ``math.inf``.
+
+    **Declaration order says more than the float does.**  ``DEBUFF_ARM``,
+    ``RECOVERY`` and ``UTILITY_ARM`` all project to 1.0, so their relative
+    order changes nothing while ``legacy_phase`` is what the sort key
+    consumes.  Ordering them 5 < 6 < 7 is nonetheless a decision — debuff
+    arming resolves before healing, and both before utility — and it
+    becomes the live tie-break the moment Phase 4 sorts on the rank
+    itself.  ``LATE_BARRIER`` before ``REACTIVE`` is the same kind of
+    currently-inert declaration at 0.5.  If either ordering is wrong, it
+    is wrong here and not at the call sites.
     """
 
     STATE_GRANT = 0
@@ -427,6 +437,13 @@ _DEBUFF_ARM_KINDS = frozenset({"damage_modifier", "stat_buff"})
 # The key a packet author uses to declare its own rank.  Underscored because
 # it is transport between the author and the walk; the public receipt
 # serializes an explicit key list and never sees it.
+#
+# This replaced the open ordering float, and the *shape* changed with the
+# name: the value stored on a packet dict is now a ``TransitionRank``
+# member, not a number.  Anything that read the old key off a packet reads
+# nothing here.  The type is closed but the wire value is not enum-only —
+# ``support_transition_rank`` coerces through ``TransitionRank(declared)``,
+# so a bare ordinal 0-8 is accepted and anything else raises.
 SUPPORT_RANK_KEY = "_rank"
 
 
@@ -438,9 +455,15 @@ def support_transition_rank(event: Mapping[str, Any]) -> TransitionRank:
     *after* the damage that triggered them, not before it, so they declare
     ``LATE_BARRIER`` where the kind alone would say ``BARRIER_GRANT``.  The
     declaration is a member of :class:`TransitionRank` and nothing else, so
-    an author can choose a rank but cannot invent an ordering.  Every other
-    packet is classified from its kind, and no branch falls through to a
-    number.
+    an author can choose a rank but cannot invent an ordering.
+
+    Every other packet is classified from its kind.  The classification is
+    **not total**: an unrecognised kind — a typo, a kind a later phase adds
+    — falls through to ``UTILITY_ARM`` rather than raising.  That is the
+    old ``else 1.0`` preserved deliberately, because 0A changes no
+    behaviour; what closed here is the open *float*, not the open *kind*.
+    Making the fall-through fail closed is a behaviour change and belongs
+    to a correction slice that can price it.
     """
     declared = event.get(SUPPORT_RANK_KEY)
     if declared is not None:
