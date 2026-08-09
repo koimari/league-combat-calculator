@@ -81,6 +81,41 @@ def legacy_phase(rank: TransitionRank) -> float:
         raise KeyError(f"TransitionRank.{rank.name} declares no legacy phase") from None
 
 
+# The published phase a rank belongs to.  Many-to-one for a different reason
+# than ``legacy_phase``: the public contract names the *kind* of transition,
+# so a late barrier is still a barrier, and arming a debuff or a utility
+# effect is still a state transition.
+_PUBLIC_PHASES: dict[TransitionRank, str] = {
+    TransitionRank.STATE_GRANT: "state_transition",
+    TransitionRank.BARRIER_GRANT: "shield_or_temporary_health",
+    TransitionRank.DAMAGE: "damage_and_mitigation",
+    TransitionRank.LATE_BARRIER: "shield_or_temporary_health",
+    TransitionRank.REACTIVE: "reactive_effect",
+    TransitionRank.DEBUFF_ARM: "state_transition",
+    TransitionRank.RECOVERY: "healing_and_regeneration",
+    TransitionRank.UTILITY_ARM: "state_transition",
+    TransitionRank.TERMINAL: "death_or_terminal_cutoff",
+}
+
+
+def public_phase(rank: TransitionRank) -> str:
+    """The published phase name one rank belongs to.
+
+    ``capabilities`` derives ``PARTICIPANT_LEDGER_CONTRACT["phases"]`` from
+    this by walking the enum in declaration order and keeping each name's
+    first appearance, so the published list is a vocabulary in ledger order
+    rather than six hand-written strings no contract could notice going
+    stale.  A rank with no published name raises rather than silently
+    dropping one the API already publishes.
+    """
+    try:
+        return _PUBLIC_PHASES[rank]
+    except KeyError:
+        raise KeyError(
+            f"TransitionRank.{rank.name} declares no published phase"
+        ) from None
+
+
 # ---------------------------------------------------------------------------
 # Action kinds
 # ---------------------------------------------------------------------------
@@ -661,6 +696,7 @@ __all__ = [
     "event_sequence",
     "legacy_phase",
     "participant_order",
+    "public_phase",
     "support_transition_rank",
     "survival_action_from_event",
 ]

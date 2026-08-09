@@ -27,6 +27,7 @@ from .actions import (
     event_sequence,
     legacy_phase,
     participant_order,
+    public_phase,
     support_transition_rank,
     survival_action_from_event,
 )
@@ -92,6 +93,7 @@ __all__ = [
     "legacy_phase",
     "participant_pools",
     "participant_order",
+    "public_phase",
     "resolve_grievous",
     "run_survival_walk",
     "support_transition_rank",

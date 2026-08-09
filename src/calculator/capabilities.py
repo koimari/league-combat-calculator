@@ -22,6 +22,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Mapping
 
+from .survival.actions import TransitionRank, public_phase
+
 CAPABILITY_SCHEMA_VERSION = 1
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
@@ -80,17 +82,24 @@ def _target_policy_label(scope: str) -> str:
     }[scope]
 
 
+def _ledger_phases() -> list[str]:
+    """``PARTICIPANT_LEDGER_CONTRACT['phases']``, derived from the kernel.
+
+    Walks :class:`TransitionRank` in declaration order — which is ledger
+    order — and keeps each published name's first appearance.  The list was
+    six hand-written strings, which meant no contract could notice a rank
+    being added, split or renamed; deriving it makes the published
+    vocabulary and the walk's ordering one fact.  ``CAPABILITY_SCHEMA_VERSION``
+    moves when *this list* changes, never when the derivation is edited and
+    the payload comes out identical.
+    """
+    return list(dict.fromkeys(public_phase(rank) for rank in TransitionRank))
+
+
 PARTICIPANT_LEDGER_CONTRACT: dict[str, Any] = {
     "name": "ordered_participant_ledger",
     "certification": "event_order_certified",
-    "phases": [
-        "state_transition",
-        "shield_or_temporary_health",
-        "damage_and_mitigation",
-        "reactive_effect",
-        "healing_and_regeneration",
-        "death_or_terminal_cutoff",
-    ],
+    "phases": _ledger_phases(),
     "target_policy": {
         scope: _target_policy_label(scope)
         for scope in sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)
