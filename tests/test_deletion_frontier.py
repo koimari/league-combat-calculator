@@ -122,3 +122,19 @@ def test_the_survival_action_carries_no_utility_kind() -> None:
     from src.calculator.survival.actions import SurvivalAction
 
     assert "utility_kind" not in SurvivalAction._fields
+
+
+# --- The unused import ------------------------------------------------------
+
+
+def test_the_timeline_imports_no_catalyst_predicate() -> None:
+    """The alias was imported and never called.
+
+    ``roster_composition.has_catalyst`` itself is live — its own module
+    calls it — so the absence asserted here is the unused alias, which is
+    the only thing Phase 0 deleted.
+    """
+    from src.calculator import roster_composition
+
+    assert _holders("_has_catalyst") == []
+    assert callable(roster_composition.has_catalyst)

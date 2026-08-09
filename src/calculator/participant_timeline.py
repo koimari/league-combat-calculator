@@ -25,7 +25,6 @@ from .roster_composition import (
     coalesce_darius_q_heals as _coalesce_darius_q_heals,
     defensive_signature as _defensive_signature,
     from_loadout as _from_loadout,
-    has_catalyst as _has_catalyst,
     main_combatant as _main_combatant,
     require_roster_fight_window_support,
     target_params as _target_params,
