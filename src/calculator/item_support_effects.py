@@ -9,7 +9,7 @@ assumes an active or a trigger that is absent from the authored event stream.
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Iterable, Mapping
 from functools import lru_cache
 import math
 from pathlib import Path
@@ -290,21 +290,67 @@ CC_TRIGGER_ITEMS = frozenset(
 )
 DAMAGE_TRIGGER_ITEMS = frozenset({"Bloodsong", "Black Cleaver", "Bloodletter's Curse"})
 
+# Which per-event stream each event-view holder reads.  Grouping the
+# registries above by stream is what lets a starved holder be told *which*
+# projection failed to answer, instead of only that it starved.
+EVENT_VIEW_STREAMS: Mapping[str, frozenset[str]] = {
+    "cc_events": CC_TRIGGER_ITEMS,
+    # Echoes of Helia sums raw per-event damage; the scanners read the same
+    # rows for stacks and procs.  Cryptbloom is a takedown reader only.
+    "damage_events": (EVENT_SCAN_SUPPORT_ITEMS - TAKEDOWN_SCAN_SUPPORT_ITEMS)
+    | frozenset({"Echoes of Helia"}),
+    "takedown_events": TAKEDOWN_SCAN_SUPPORT_ITEMS,
+}
+
 # Every holder whose scan reads the per-event view at all (``target`` /
 # ``_event_id`` enrichment, the takedown synthesis, or a raw damage sum).
 # The optimizer's compiled path builds that enriched per-event view only
-# for these holders; everyone else scans the plain engine result.
-EVENT_VIEW_SUPPORT_ITEMS = (
-    EVENT_SCAN_SUPPORT_ITEMS
-    | TAKEDOWN_SCAN_SUPPORT_ITEMS
-    | CC_TRIGGER_ITEMS
-    | frozenset({"Echoes of Helia"})
-)
+# for these holders; everyone else scans the plain engine result — and the
+# pipeline's score-only tuple gate keeps dict rows for exactly this set, so
+# one predicate answers the tuple question on both paths (D-01).
+EVENT_VIEW_SUPPORT_ITEMS = frozenset().union(*EVENT_VIEW_STREAMS.values())
 
 
 def has_event_view_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
     """Whether any held item scans the per-event damage/takedown view."""
     return any(str(item.get("name", "")) in EVENT_VIEW_SUPPORT_ITEMS for item in items)
+
+
+class EventViewStarvationError(ValueError):
+    """A declared event-view holder was handed the light tuple ledger.
+
+    The tuple rows are positional, so every scan below reads them as an
+    empty stream and prices the item at zero without failing.  That is a
+    projection a consumer cannot answer from — a programming error, not a
+    data condition — so it is raised rather than absorbed.
+    """
+
+
+def require_event_view(result: Mapping[str, Any], names: Collection[str]) -> None:
+    """Raise when a declared event-view holder is handed tuple rows.
+
+    The score-only tuple ledger (``damage_events_tuple``) carries positional
+    rows that no scan below can read.  After the pipeline's tuple gate
+    consults ``has_event_view_support_items`` no public request can reach
+    this state, so the raise is a programming-error tripwire rather than a
+    user-facing outcome.
+    """
+    if not result.get("damage_events_tuple"):
+        return
+    starved = sorted(
+        (item, stream)
+        for stream, holders in EVENT_VIEW_STREAMS.items()
+        for item in holders
+        if item in names
+    )
+    if not starved:
+        return
+    read = "; ".join(f"{item} reads {stream}" for item, stream in starved)
+    raise EventViewStarvationError(
+        "STARVED: the score-only tuple ledger cannot answer the item support "
+        f"scan — {read}.  The pipeline's tuple gate must keep dict rows for "
+        "every event-view holder."
+    )
 
 
 def derive_item_support_effects(
@@ -319,6 +365,7 @@ def derive_item_support_effects(
     ):
         return []
     names = _item_names(attacker)
+    require_event_view(result, names)
     teammates = _teammates(attacker, all_actors)
     packets: list[dict[str, Any]] = []
     triggers = _support_triggers(trigger_effects, attacker)
@@ -1331,5 +1378,6 @@ __all__ = [
     "derive_item_support_effects",
     "has_ordered_item_team_effects",
     "producer_item",
+    "require_event_view",
     "schedule_knights_vow",
 ]

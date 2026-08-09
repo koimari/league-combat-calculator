@@ -8,6 +8,7 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.damage import _cooldown_ready_at
+from src.calculator.item_support_effects import require_event_view
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
 
@@ -486,6 +487,7 @@ def test_score_only_keeps_the_event_view_for_its_declared_readers(item_name):
     assert not result.get("damage_events_tuple")
     assert result["damage_events"]
     assert all(isinstance(event, dict) for event in result["damage_events"])
+    require_event_view(result, {item_name})
 
 
 def test_score_only_still_takes_the_tuple_ledger_for_a_plain_build():
@@ -524,3 +526,4 @@ def test_solstice_sleighs_protection_is_membership_not_its_health_regen():
     )
 
     assert not result.get("damage_events_tuple")
+    require_event_view(result, {"Solstice Sleigh"})

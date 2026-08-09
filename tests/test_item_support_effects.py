@@ -596,3 +596,76 @@ class TestEventViewTupleGate:
         body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
         everlasting = body.split('if "Fimbulwinter" in names:')[1].split("\n    if ")[0]
         assert '_trigger_event_id=event.get("_event_id")' in everlasting
+
+    def test_every_event_view_holder_is_named_by_exactly_one_stream(self):
+        """The stream map is the set's one home, so neither can drift."""
+        streams = item_support_effects.EVENT_VIEW_STREAMS
+        union = frozenset().union(*streams.values())
+        assert union == item_support_effects.EVENT_VIEW_SUPPORT_ITEMS
+        for item in union:
+            owners = [name for name, holders in streams.items() if item in holders]
+            assert owners == [next(iter(owners))], f"{item} reads {owners}"
+
+
+class TestEventViewStarvation:
+    """The tuple ledger is a projection the item scan cannot answer from."""
+
+    TUPLE_RESULT = {
+        "damage_events_tuple": True,
+        "damage_events": [(0.0, 100.0, "Q"), (2.0, 80.0, "W")],
+    }
+
+    @pytest.mark.parametrize(
+        ("item", "stream"),
+        sorted(
+            (item, stream)
+            for stream, holders in item_support_effects.EVENT_VIEW_STREAMS.items()
+            for item in holders
+        ),
+    )
+    def test_every_declared_holder_starves_by_name(self, item, stream):
+        """The raise names the item and the stream, never just the failure."""
+        holder = _actor("main:Annie", "main", (item,))
+        ally = _actor("ally:Pantheon", "ally", ())
+        with pytest.raises(
+            item_support_effects.EventViewStarvationError,
+            match=f"{re.escape(item)} reads {stream}",
+        ):
+            derive_item_support_effects(holder, self.TUPLE_RESULT, [holder, ally])
+
+    def test_a_holder_with_no_event_view_item_reads_tuple_rows_unharmed(self):
+        """Tuple rows are legal; starving a declared reader on them is not."""
+        holder = _actor("ally:Lulu", "ally", ("Ardent Censer",))
+        ally = _actor("main:Ahri", "main", ())
+        assert (
+            derive_item_support_effects(holder, self.TUPLE_RESULT, [holder, ally]) == []
+        )
+
+    def test_dict_rows_never_starve(self):
+        """The raise keys on the ledger shape, not on the item alone."""
+        holder = _actor("main:Annie", "main", ("Imperial Mandate",))
+        ally = _actor("ally:Pantheon", "ally", ())
+        assert (
+            derive_item_support_effects(holder, {"damage_events": []}, [holder, ally])
+            == []
+        )
+
+    def test_the_raise_is_the_named_error_and_not_an_attribute_error(self):
+        """Echoes of Helia's missing guard was a latent ``AttributeError``."""
+        holder = _actor("ally:Lulu", "ally", ("Echoes of Helia",))
+        ally = _actor("main:Ahri", "main", ())
+        with pytest.raises(item_support_effects.EventViewStarvationError) as raised:
+            derive_item_support_effects(
+                holder,
+                self.TUPLE_RESULT,
+                [holder, ally],
+                trigger_effects=[
+                    {
+                        "time": 1.0,
+                        "kind": "heal",
+                        "target": ally.participant_id,
+                        "amount": 100.0,
+                    }
+                ],
+            )
+        assert "STARVED" in str(raised.value)
