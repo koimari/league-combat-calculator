@@ -1,15 +1,8 @@
-"""Registered champion healing rules.
-
-The declarations live in each champion module. The compatibility resolver
-keeps the reviewed formula implementation stable while the formulas move
-into their owning modules in small, tested slices.
-"""
+"""Retired compatibility entrypoint for champion healing formulas."""
 
 from __future__ import annotations
 
 from typing import Any
-
-from ..healing_legacy import _legacy_derive_self_healing
 
 
 def derive_rule(
@@ -21,9 +14,9 @@ def derive_rule(
     cast_timeline: list[dict[str, Any]] | None = None,
     fight_duration_seconds: float | None = None,
 ) -> list[dict[str, Any]]:
-    """Apply the registered rule for one declared champion."""
-    del champion_name
-    return _legacy_derive_self_healing(
+    """Fail closed when a caller asks for the retired global dispatcher."""
+    del (
+        champion_name,
         champion_data,
         champion_stats,
         ability_damages,
@@ -31,3 +24,4 @@ def derive_rule(
         cast_timeline,
         fight_duration_seconds,
     )
+    raise RuntimeError("champion healing must be owned by a champion module")

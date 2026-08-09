@@ -317,8 +317,68 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Kindred self-healing events from its authored packet."""
+    healing = []
+    r = _healing._ability(champion_data, "R")
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(r, "Heal", r_rank, champion_stats)
+    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    for cast_time in _healing._cast_slot_times(cast_timeline, "R"):
+        heal_time = cast_time + 4.0
+        if heal_time > duration + 1e-9:
+            continue
+        healing.append(
+            {
+                "time": heal_time,
+                "amount": r_heal,
+                "source": "Lamb's Respite",
+                "kind": "champion_ability",
+                "actor_wide": True,
+            }
+        )
+    # W passive Hunter's Vigor: at 100 stacks the next basic attack
+    # heals Kindred for 0% : 100% (based on her missing health) of the
+    # sourced per-level heal (47 : 81, data/champions.json W "Heal"
+    # per-level row).  The module emits the W_vigor receipt only at
+    # 100 stacks; the heal pays on the first basic-attack damage event
+    # (the deterministic next auto) and is naturally zero at full
+    # health (the wiki says it is not triggered there).
+    if "W_vigor" in ability_damages:
+        level = int(champion_stats.get("level", 18) or 18)
+        heal = _healing.extract_named(
+            _healing._ability(champion_data, "W"), "Heal", level, champion_stats, {}
+        )
+        for event in _healing._attributed_events(
+            damage_events, lambda source, _event: source == "auto_attacks"
+        ):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": _healing._missing_health_scaled_heal(0.0, heal),
+                    "source": "Hunter's Vigor",
+                    "kind": "champion_passive",
+                    **_healing._trigger_fields(event),
+                }
+            )
+            break
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Kindred")
+SELF_HEALING_RULE = declare_healing_rule("Kindred", derive_self_healing)

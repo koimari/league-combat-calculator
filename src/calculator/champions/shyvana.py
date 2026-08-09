@@ -298,8 +298,57 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Shyvana self-healing events from its authored packet."""
+    healing = []
+    w_row = ability_damages.get("W", {})
+    if "dragon form" in str(w_row.get("detail", "")).lower():
+        level = max(1, int(champion_stats.get("level", 18) or 18))
+        w = _healing._ability(champion_data, "W")
+        flat = _healing.extract_named(w, "Heal", level, champion_stats, {})
+        missing_pct = _healing._leveling_modifier(w, "Missing Health Damage", level, 0)
+
+        def inferno_aegis_heal(
+            current_health: float,
+            maximum_health: float,
+            flat: float = flat,
+            missing_pct: float = missing_pct,
+        ) -> float:
+            return (
+                flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+            )
+
+        for event in _healing._attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            if float(event.get("damage", 0.0)) <= 0.0:
+                continue
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": inferno_aegis_heal,
+                    "source": "Inferno Aegis",
+                    "kind": "champion_ability",
+                    **_healing._trigger_fields(event),
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Shyvana")
+SELF_HEALING_RULE = declare_healing_rule("Shyvana", derive_self_healing)

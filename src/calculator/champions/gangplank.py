@@ -208,8 +208,53 @@ SOURCES = [
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Gangplank self-healing events from its authored packet."""
+    healing = []
+    w = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats)
+    w_missing_ratio = (
+        _healing._leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
+    )
+
+    def remove_scurvy_heal(
+        current_health: float,
+        maximum_health: float,
+        flat: float = w_flat,
+        missing_ratio: float = w_missing_ratio,
+    ) -> float:
+        return flat + max(0.0, maximum_health - current_health) * missing_ratio
+
+    for cast in cast_timeline or []:
+        if cast.get("slot") != "W":
+            continue
+        healing.append(
+            {
+                "time": float(cast.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": remove_scurvy_heal,
+                "source": "Remove Scurvy",
+                "kind": "champion_ability",
+                "actor_wide": True,
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Gangplank")
+SELF_HEALING_RULE = declare_healing_rule("Gangplank", derive_self_healing)

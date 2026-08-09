@@ -133,8 +133,50 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Soraka self-healing events from its authored packet."""
+    healing = []
+    ability = _healing._ability(champion_data, "Q")
+    rank = _healing._rank(ability_damages, "Q")
+    per_tick = _healing.extract_named(
+        ability, "Heal per Tick", rank, champion_stats, {}
+    )
+    total = _healing.extract_named(ability, "Total Heal", rank, champion_stats, {})
+    tick_count = (
+        max(1, min(100, int(round(total / per_tick))))
+        if per_tick > 0.0 and total > 0.0
+        else 0
+    )
+    for event in damage_events:
+        if _healing._event_source(event) != "Q" or tick_count <= 0:
+            continue
+        trigger = _healing._trigger_fields(event)
+        for index in range(1, tick_count + 1):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)) + index * 0.2,
+                    "amount": float(per_tick),
+                    "source": "Starcall · Rejuvenation",
+                    "kind": "champion_ability",
+                    **trigger,
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Soraka")
+SELF_HEALING_RULE = declare_healing_rule("Soraka", derive_self_healing)

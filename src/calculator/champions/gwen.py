@@ -219,8 +219,40 @@ SOURCES = [
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Gwen self-healing events from its authored packet."""
+    healing = []
+    p_level = int(champion_stats.get("level", 0) or 0)
+    per_instance_cap = _healing.extract_named(
+        _healing._ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
+    )
+    for event in _healing._attributed_events(
+        damage_events,
+        lambda source, _event: source == "on_hit_ability_passive",
+    ):
+        dealt = float(event.get("damage", 0.0))
+        _healing._heal_from_damage(
+            healing,
+            event,
+            min(0.50 * dealt, per_instance_cap),
+            "A Thousand Cuts",
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Gwen")
+SELF_HEALING_RULE = declare_healing_rule("Gwen", derive_self_healing)

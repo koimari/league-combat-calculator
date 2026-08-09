@@ -371,8 +371,111 @@ SOURCES = [
     }
 ]
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+import math  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Briar self-healing events from its authored packet."""
+    healing = []
+    ability = _healing._ability(champion_data, "E")
+    rank = _healing._rank(ability_damages, "E")
+    per_tick = _healing.extract_named(
+        ability, "Heal Per Tick", rank, champion_stats, {}
+    )
+    maximum = _healing.extract_named(ability, "Maximum Heal", rank, champion_stats, {})
+    if per_tick > 0.0 and maximum > 0.0:
+        for event in damage_events:
+            if _healing._event_source(event) != "E":
+                continue
+            ticks = max(1, min(4, int(math.ceil(maximum / per_tick))))
+            for index in range(1, ticks + 1):
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)) + index * 0.25,
+                        "amount": min(
+                            float(per_tick),
+                            max(0.0, maximum - per_tick * (index - 1)),
+                        ),
+                        "source": "Chilling Scream",
+                        "kind": "champion_ability",
+                        **_healing._trigger_fields(event),
+                    }
+                )
+    # P (Crimson Curse) bleed self-heal: "The bleed always heals Briar
+    # for 25% of the pre-mitigation damage dealt" (cached passive prose).
+    # The bleed's own per-stack heal rows (2.5 : 12.5 + 12.5% bonus AD
+    # per stack, +25% per extra-stack share) are exactly 25% of the
+    # pre-mitigation bleed damage at every stack level, so one sourced
+    # rule prices the whole stream.  The wiki's missing-health healing
+    # amplifier (0% : 40%) is a live-state boundary, not priced here.
+    for event in _healing._attributed_events(
+        damage_events,
+        lambda source, _event: source.startswith("stacking_dot_"),
+    ):
+        dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        amount = 0.25 * dealt
+        if amount > 0.0:
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": amount,
+                    "source": "Crimson Curse",
+                    "kind": "champion_passive",
+                    **_healing._trigger_fields(event),
+                }
+            )
+    # W[1] (Snack Attack): "healing her for 5% of her maximum health
+    # plus a percentage of the post-mitigation damage dealt" — the
+    # percentage is the sourced "Heal Percentage" row (24 / 28 / 32 /
+    # 36 / 40% by rank).  The heal pays at the bite's hit event.
+    w_rank = _healing._rank(ability_damages, "W")
+    heal_percent = _healing.extract_named(
+        _healing._ability(champion_data, "W", 1),
+        "Heal Percentage",
+        w_rank,
+        champion_stats,
+        {},
+    )
+    max_health = float(champion_stats.get("health", 0.0) or 0.0)
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "W"
+    ):
+        snack_heal = (
+            0.05 * max_health
+            + float(event.get("damage", 0.0) or 0.0) * heal_percent / 100.0
+        )
+        _healing._heal_from_damage(healing, event, snack_heal, "Snack Attack")
+    # R (Certain Death) grants life steal (10 / 15 / 20% by rank) while
+    # Hematomania lasts; life steal heals for the sourced percentage of
+    # the post-mitigation damage dealt by basic attacks.
+    r_rank = _healing._rank(ability_damages, "R")
+    life_steal = _healing.extract_named(
+        _healing._ability(champion_data, "R"), "Life Steal", r_rank, champion_stats, {}
+    )
+    if life_steal > 0.0:
+        for event in _healing._attributed_events(
+            damage_events, lambda source, _event: source == "auto_attacks"
+        ):
+            _healing._heal_from_damage(
+                healing,
+                event,
+                float(event.get("damage", 0.0) or 0.0) * life_steal / 100.0,
+                "Certain Death",
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Briar")
+SELF_HEALING_RULE = declare_healing_rule("Briar", derive_self_healing)

@@ -242,8 +242,83 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Aphelios self-healing events from its authored packet."""
+    healing = []
+    r_detail = str(ability_damages.get("R", {}).get("detail", ""))
+    if "Severum" in r_detail:
+        severum = next(
+            (
+                entry
+                for entry in champion_data.get("abilities", {}).get("P", [])
+                if isinstance(entry, dict) and entry.get("name") == "Severum"
+            ),
+            {},
+        )
+        level = int(champion_stats.get("level", 18))
+        basic_scaling = _healing.find_named_leveling(severum, "Per-Level Scaling", 0)
+        ability_scaling = _healing.find_named_leveling(severum, "Per-Level Scaling", 1)
+        basic_ratio = (
+            _healing.sum_modifiers(basic_scaling, level, champion_stats, {}) / 100.0
+            if basic_scaling is not None
+            else 0.0
+        )
+        ability_ratio = (
+            _healing.sum_modifiers(ability_scaling, level, champion_stats, {}) / 100.0
+            if ability_scaling is not None
+            else 0.0
+        )
+        # Severum's wiki passive converts excess healing into a shield
+        # capped at the per-level "Heal" row (10 : 160 by level + 6%
+        # maximum health), lingering for up to 30 seconds.  In the
+        # fight's deterministic state the conversion is driven by the
+        # survival walk: each heal event carries the sourced cap and
+        # duration, and the participant timeline converts the excess
+        # (heal in excess of the fighter's maximum health, i.e. all of
+        # it while at full health) into a timed shield (the
+        # ``_apply_overheal_shield`` receipt).
+        heal_leveling = _healing.find_named_leveling(severum, "Heal")
+        shield_cap = (
+            _healing.sum_modifiers(heal_leveling, level, champion_stats, {})
+            if heal_leveling is not None
+            else 0.0
+        )
+        # The module stamps the option state on Moonlight Vigil's
+        # detail (the Shyvana dragon-form convention): "overheal shield
+        # on" when the user enabled the conversion (default on).
+        overheal_shield = "overheal shield on" in r_detail
+        for event in damage_events:
+            source = _healing._event_source(event)
+            if source == "auto_attacks":
+                ratio = basic_ratio
+            elif source == "Q":
+                # With Severum equipped the Q row is Onslaught, whose
+                # attacks count as ability attacks for the heal.
+                ratio = ability_ratio
+            else:
+                continue
+            amount = max(0.0, float(event.get("damage", 0.0))) * ratio
+            _healing._heal_from_damage(healing, event, amount, "Severum")
+            if overheal_shield and amount > 0.0 and shield_cap > 0.0:
+                healing[-1]["overheal_to_shield"] = True
+                healing[-1]["overheal_shield_cap"] = shield_cap
+                healing[-1]["overheal_shield_duration"] = 30.0
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Aphelios")
+SELF_HEALING_RULE = declare_healing_rule("Aphelios", derive_self_healing)

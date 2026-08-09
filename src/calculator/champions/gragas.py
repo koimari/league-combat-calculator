@@ -167,8 +167,51 @@ SOURCES = [
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+import re  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Gragas self-healing events from its authored packet."""
+    healing = []
+    p_text = " ".join(
+        effect.get("description", "")
+        for effect in _healing._ability(champion_data, "P").get("effects", [])
+    )
+    ratio_match = re.search(
+        r"heals himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
+        p_text,
+        flags=re.IGNORECASE,
+    )
+    ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
+    per_cast = ratio * float(champion_stats.get("health", 0.0))
+    if per_cast > 0.0:
+        for cast in cast_timeline or []:
+            slot = cast.get("slot")
+            if slot not in {"Q", "W", "E", "R"}:
+                continue
+            healing.append(
+                {
+                    "time": float(cast.get("time", 0.0)),
+                    "amount": per_cast,
+                    "source": f"Happy Hour · {slot}",
+                    "kind": "champion_passive",
+                    "actor_wide": True,
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position
 
-SELF_HEALING_RULE = declare_healing_rule("Gragas")
+SELF_HEALING_RULE = declare_healing_rule("Gragas", derive_self_healing)

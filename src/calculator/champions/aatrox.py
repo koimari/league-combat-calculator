@@ -32,7 +32,7 @@ from .slotlib import (
     simple_damage,
     stat_buff,
 )
-from ..healing_legacy import (
+from ..healing_helpers import (
     _ability,
     _attributed_events,
     _is_persistent,
@@ -159,6 +159,7 @@ parse_abilities = build_parser(SLOTS, "Aatrox")
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
 def derive_self_healing(
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
