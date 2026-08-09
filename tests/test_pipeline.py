@@ -9,6 +9,7 @@ import pytest
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.damage import _cooldown_ready_at
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.stats import calculate_total_stats
 
 
 @pytest.mark.parametrize(
@@ -449,3 +450,77 @@ def test_ambessa_passive_restores_energy_between_ability_casts():
     opening = result["cast_timeline"][:4]
     assert all(event["resource_restored"] == 70 for event in opening)
     assert result["resource_remaining"] >= 0
+
+
+SCORE_ONLY_PARAMS = FightParams.from_request(
+    {"fight_mode": "timed", "fight_duration": 4}, deterministic=True
+)
+
+
+@pytest.mark.parametrize(
+    "item_name",
+    [
+        "Imperial Mandate",
+        "Bandlepipes",
+        "Fimbulwinter",
+        "Solstice Sleigh",
+        "Echoes of Helia",
+    ],
+)
+def test_score_only_keeps_the_event_view_for_its_declared_readers(item_name):
+    """C1: a score-only fight for an event-view holder never starves.
+
+    Before the tuple gate consulted ``has_event_view_support_items`` these
+    five holders were handed positional rows, so every scan below read an
+    empty stream and priced the item at zero without failing.
+    """
+    annie = get_champion("Annie")
+    result = run_fight(
+        annie,
+        18,
+        [get_item_by_name(item_name)],
+        SCORE_ONLY_PARAMS,
+        score_only=True,
+    )
+
+    assert not result.get("damage_events_tuple")
+    assert result["damage_events"]
+    assert all(isinstance(event, dict) for event in result["damage_events"])
+
+
+def test_score_only_still_takes_the_tuple_ledger_for_a_plain_build():
+    """The gate narrowed by exactly the event-view set, not wholesale."""
+    annie = get_champion("Annie")
+    result = run_fight(
+        annie,
+        18,
+        [get_item_by_name("Luden's Echo")],
+        SCORE_ONLY_PARAMS,
+        score_only=True,
+    )
+
+    assert result["damage_events_tuple"] is True
+
+
+def test_solstice_sleighs_protection_is_membership_not_its_health_regen():
+    """D-02: pinning the cached-stat coincidence would pin the wrong reason."""
+    annie = get_champion("Annie")
+    sleigh = get_item_by_name("Solstice Sleigh")
+    stats = calculate_total_stats(annie, 18, [sleigh])
+    # The coincidence is real today: Sleigh's +75% health regen alone trips
+    # the tuple gate's regen clause.
+    assert stats["health_regen_per_five"] > stats["base_health_regen_per_five"]
+
+    without_regen = dict(stats)
+    without_regen["health_regen_per_five"] = stats["base_health_regen_per_five"]
+    without_regen["health_regen_percent"] = 0.0
+    result = run_fight(
+        annie,
+        18,
+        [sleigh],
+        SCORE_ONLY_PARAMS,
+        precomputed_stats=without_regen,
+        score_only=True,
+    )
+
+    assert not result.get("damage_events_tuple")

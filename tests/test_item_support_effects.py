@@ -1,5 +1,6 @@
 """Typed cross-participant item packets and explicit trigger contracts."""
 
+import ast
 from collections import defaultdict
 from pathlib import Path
 import re
@@ -9,7 +10,7 @@ from typing import get_args, get_type_hints
 
 import pytest
 
-from src.calculator import item_support_effects
+from src.calculator import item_support_effects, pipeline
 from src.calculator.ability_spec import Authority
 from src.calculator.item_effects import ally_item_effect_value
 from src.calculator.item_effects import ally_item_level_value
@@ -553,3 +554,45 @@ class TestCrossParticipantAuthorities:
         assert producer_item("Bloodletter's Curse — Vile Decay") == (
             "Bloodletter's Curse"
         )
+
+
+class TestEventViewTupleGate:
+    """One predicate answers the tuple question on both paths (D-01)."""
+
+    def test_the_pipeline_tuple_gate_consults_the_event_view_predicate(self):
+        """The score-only gate and the enriched-view gate name one predicate."""
+        body = Path(pipeline.__file__).read_text(encoding="utf-8")
+        assert "and not has_event_view_support_items(items)" in body
+        assert "has_event_scan_support_items" not in body
+
+    def test_the_scan_predicate_keeps_no_callers_in_src(self):
+        """C1 leaves the callable; Phase 2's P2c deletes it."""
+        callers = []
+        for module in (Path(pipeline.__file__).parent).rglob("*.py"):
+            tree = ast.parse(module.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if (
+                    isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Name)
+                    and node.func.id == "has_event_scan_support_items"
+                ):
+                    callers.append(f"{module.name}:{node.lineno}")
+        assert callers == []
+        assert callable(item_support_effects.has_event_scan_support_items)
+
+    def test_solstice_sleigh_enters_by_derivation(self):
+        """D-02: it is a crowd-control reader, so the set already holds it."""
+        assert "Solstice Sleigh" in item_support_effects.CC_TRIGGER_ITEMS
+        assert "Solstice Sleigh" in item_support_effects.EVENT_VIEW_SUPPORT_ITEMS
+        # ...and the retired predicate never covered it, so its protection
+        # today is the cached health-regen coincidence, not this membership.
+        sleigh = [{"name": "Solstice Sleigh"}]
+        assert not item_support_effects.has_event_scan_support_items(sleigh)
+        assert item_support_effects.has_event_view_support_items(sleigh)
+
+    def test_fimbulwinter_is_an_event_view_member_that_reads_event_id(self):
+        """D-03: dropping it disarms a fail-closed raise downstream."""
+        assert "Fimbulwinter" in item_support_effects.EVENT_VIEW_SUPPORT_ITEMS
+        body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
+        everlasting = body.split('if "Fimbulwinter" in names:')[1].split("\n    if ")[0]
+        assert '_trigger_event_id=event.get("_event_id")' in everlasting

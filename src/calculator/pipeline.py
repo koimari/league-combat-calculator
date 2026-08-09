@@ -30,7 +30,7 @@ from .damage import (
 from . import item_effects
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
-from .item_support_effects import has_event_scan_support_items
+from .item_support_effects import has_event_view_support_items
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
     AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
@@ -987,11 +987,15 @@ def run_fight(
             for ability in ability_damages.values()
             if isinstance(ability, dict)
         )
-        # Items that derive support packets by scanning the damage/takedown
-        # stream (Black Cleaver Carve, Phage Rage, ...) cannot read the
-        # positional tuple rows; keep dict rows so their scan sees the same
-        # events the receipt path enriches (issue #169).
-        and not has_event_scan_support_items(items)
+        # Items that read the per-event view — the damage/takedown scanners
+        # (Black Cleaver Carve, Phage Rage, ...), the crowd-control readers
+        # (Imperial Mandate, Fimbulwinter, ...) and Echoes of Helia's raw
+        # damage sum — cannot read the positional tuple rows; keep dict rows
+        # so their scan sees the same events the receipt path enriches
+        # (issue #169).  This is the same predicate the enriched-view gate in
+        # ``participant_timeline`` consults, so one predicate answers the
+        # tuple question on both paths (D-01).
+        and not has_event_view_support_items(items)
         # The Collector's execute rides per-event threshold stamps that the
         # tuple schema cannot carry; the engine stays fail-closed for the
         # item by keeping dict rows, whose stamps the compiled walk then
