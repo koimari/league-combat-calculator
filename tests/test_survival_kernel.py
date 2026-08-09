@@ -163,6 +163,13 @@ def _item(name):
 
 
 def _roster(champion, level=18, items=(), role="mid", quest=False, ally_effects=False):
+    """One roster participant's resolved loadout.
+
+    ``ally_effects`` is load-bearing, not cosmetic: ``derive_item_support_effects``
+    early-returns ``[]`` for a participant on the ally team whose request does
+    not enable them, so an ally fixture that leaves this False equips its items
+    and fires nothing at all.  Every ally-holder fixture below sets it, and it
+    is the sole reason any ally-side packet exists to be counted."""
     return ChampionLoadout(
         champion=champion,
         level=level,
@@ -860,9 +867,15 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
 class Holder:
     """One roster participant and the items it carries into the fight.
 
-    A holder carrying items has completed its role quest, because half the
-    required set is support-quest gear and an unfinished quest would change
-    what the fixture equips rather than what it reaches."""
+    Two of these fields change the loadout rather than describing it, so both
+    are stated here rather than left to be discovered:
+
+    * a holder carrying items has completed its role quest (``quest`` is
+      ``bool(items)`` in :meth:`resolve`), because half the required set is
+      support-quest gear and an unfinished quest would change what the fixture
+      equips rather than what it reaches;
+    * ``ally_effects`` enables the ally-side packet path — see :func:`_roster`
+      — and without it an ally holder equips its build and fires nothing."""
 
     champion: str
     items: tuple[str, ...] = ()
@@ -945,9 +958,13 @@ class KernelFixture:
 
 
 # Four candidate-holder fixtures and their four ally-holder rung variants.
-# The candidate builds ride the compiled or the fallback rung; every ally
-# build holding a cross-participant modifier poisons the search context
-# instead, which is the rung difference these variants exist to pin.
+# The candidate builds ride the compiled or the candidate-local fallback rung.
+# An ally build poisons the search context when its holder carries a
+# ``damage_modifier`` producer, which three of the four do — that is the rung
+# difference these variants exist to pin.  ``takedown_ally`` is the stated
+# exception: Cryptbloom is an event-view holder and not a producer, so its
+# ally roster stays compilable and what it pins is a dropped packet on an
+# un-poisoned context rather than a poisoning.
 _CC_TRIGGER_BUILD = (
     "Imperial Mandate",
     "Bandlepipes",
