@@ -344,6 +344,32 @@ class TestSyndraPinScenarios:
             assert "Q2" not in [cast["slot"] for cast in timeline]
 
 
+def declared_exact_moves():
+    """Per-attacker totals a landed semantic slice declared it would move.
+
+    R-17: a correction lands against the *committed* baselines plus a
+    committed allowlist of expected diff paths, and the baselines are
+    re-captured once per phase boundary.  This file is one of those
+    baselines, so its equality gate reads the same allowlists — a declaration
+    that lives in ``docs/receipts/`` and is reverted with its slice, never an
+    edit to this test.
+
+    Each entry names both values, so an allowlisted total may be exactly the
+    one the baseline still holds or exactly the one the slice declared, and
+    nothing else.  That keeps the entry harmless after the phase-boundary
+    re-capture instead of turning a stale allowlist into a permanent hole.
+    """
+    declared: dict[str, dict[str, dict[str, str]]] = {}
+    for receipt in sorted(
+        (REPO_ROOT / "docs" / "receipts").glob("expected-*-diff-*.json")
+    ):
+        body = json.loads(receipt.read_text(encoding="utf-8"))
+        moves = body.get("expected_diff_paths", {}).get("coupled_exact", {})
+        for scenario, keys in moves.items():
+            declared.setdefault(scenario, {}).update(keys)
+    return declared
+
+
 class TestExactBaseline:
     """R-13: golden equality is two decimals, so bit-exactness needs its own file."""
 
@@ -352,9 +378,26 @@ class TestExactBaseline:
             gs.COUPLED_SCENARIOS,
             producers=cross_participant_authorities(),
             exact=True,
-        )
-        committed = _load(COUPLED_EXACT)
-        assert captured["coupled_scenarios"] == committed["coupled_scenarios"]
+        )["coupled_scenarios"]
+        committed = _load(COUPLED_EXACT)["coupled_scenarios"]
+        declared = declared_exact_moves()
+        assert set(captured) == set(committed)
+        for scenario, totals in committed.items():
+            allowed = declared.get(scenario, {})
+            assert set(captured[scenario]) == set(totals)
+            for key, value in totals.items():
+                if key in allowed:
+                    assert allowed[key]["old"] == value
+                    assert captured[scenario][key] in (value, allowed[key]["new"])
+                else:
+                    assert captured[scenario][key] == value
+
+    def test_a_declared_exact_move_names_a_key_the_baseline_holds(self):
+        """An allowlist entry for a total that does not exist is a typo, not a waiver."""
+        committed = _load(COUPLED_EXACT)["coupled_scenarios"]
+        for scenario, keys in declared_exact_moves().items():
+            assert scenario in committed
+            assert set(keys) <= set(committed[scenario])
 
     def test_exact_values_are_repr_floats_not_rounded(self):
         captured = gs.capture_coupled(

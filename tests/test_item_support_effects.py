@@ -2,6 +2,7 @@
 
 import ast
 from collections import defaultdict
+from contextlib import contextmanager
 from pathlib import Path
 import re
 import tempfile
@@ -10,9 +11,10 @@ from typing import get_args, get_type_hints
 
 import pytest
 
+from src.app import app
 from src.calculator import item_support_effects, pipeline
 from src.calculator.ability_spec import Authority
-from src.calculator.item_effects import ally_item_effect_value
+from src.calculator.item_effects import ITEM_EFFECTS, ally_item_effect_value
 from src.calculator.item_effects import ally_item_level_value
 from src.calculator.item_support_effects import (
     cross_participant_authorities,
@@ -20,6 +22,29 @@ from src.calculator.item_support_effects import (
     producer_item,
     schedule_knights_vow,
 )
+
+
+@contextmanager
+def _grown_module(extra_source: str):
+    """Read the producer table off a copy of the module with one more packet.
+
+    The derivation reads ``_MODULE_PATH``, so a seventh construction site is
+    expressed as source text rather than as a monkeypatched table — which is
+    the only way to test that the table follows the call sites.
+    """
+    original = item_support_effects._MODULE_PATH
+    with tempfile.TemporaryDirectory() as scratch:
+        grown = Path(scratch) / "grown.py"
+        grown.write_text(
+            original.read_text(encoding="utf-8") + extra_source, encoding="utf-8"
+        )
+        item_support_effects._MODULE_PATH = grown
+        item_support_effects._declared_authorities.cache_clear()
+        try:
+            yield grown
+        finally:
+            item_support_effects._MODULE_PATH = original
+            item_support_effects._declared_authorities.cache_clear()
 
 
 def _actor(
@@ -507,52 +532,231 @@ class TestCrossParticipantAuthorities:
         """The sixth producer sets no ``all_sources`` flag and is in anyway."""
         assert "Dream Maker — Blue Dream Bubble" in cross_participant_authorities()
 
-    def test_authorities_are_undeclared_until_c2(self):
-        """0A derives the producer set; 0B's C2 fills the Authority values."""
-        assert set(cross_participant_authorities().values()) == {None}
+    def test_every_producer_declares_one_of_the_five_members(self):
+        """C2 fills the values: no producer is left without an owning engine."""
+        declared = cross_participant_authorities()
+        assert declared
+        assert all(isinstance(value, Authority) for value in declared.values())
 
     def test_the_row_type_names_the_declared_vocabulary(self):
-        """The value is an ``Authority``, not an untyped placeholder."""
+        """The value is an ``Authority``, with no undeclared spelling left."""
         hints = get_type_hints(cross_participant_authorities)
         key, value = get_args(hints["return"])
         assert key is str
-        assert set(get_args(value)) == {Authority, type(None)}
+        assert value is Authority
 
     def test_a_new_producer_joins_without_editing_a_list(self):
         """A seventh construction site is a member the moment it parses."""
-        seventh = (
+        with _grown_module(
             "def _f():\n"
             "    _packet(attacker=a, target=t, time=0.0,\n"
-            '            kind="damage_modifier", source="Synthetic — Seventh")\n'
-        )
-        original = item_support_effects._MODULE_PATH
-        with tempfile.TemporaryDirectory() as scratch:
-            grown = Path(scratch) / "grown.py"
-            grown.write_text(
-                original.read_text(encoding="utf-8") + seventh, encoding="utf-8"
+            '            kind="damage_modifier", source="Synthetic — Seventh",\n'
+            "            authority=Authority.COUPLED_ONLY)\n"
+        ):
+            assert (
+                cross_participant_authorities()["Synthetic — Seventh"]
+                is Authority.COUPLED_ONLY
             )
-            item_support_effects._MODULE_PATH = grown
-            item_support_effects._producer_sources.cache_clear()
-            try:
-                assert "Synthetic — Seventh" in cross_participant_authorities()
-            finally:
-                item_support_effects._MODULE_PATH = original
-                item_support_effects._producer_sources.cache_clear()
+
+    def test_a_seventh_producer_without_an_authority_fails_to_resolve(self):
+        """The declaration is required, so a silent seventh cannot exist."""
+        with _grown_module(
+            "def _g():\n"
+            "    _packet(attacker=a, target=t, time=0.0,\n"
+            '            kind="damage_modifier", source="Synthetic — Undeclared")\n'
+        ):
+            with pytest.raises(ValueError, match="Synthetic — Undeclared"):
+                cross_participant_authorities()
+
+    def test_two_call_sites_may_not_disagree_about_one_mechanic(self):
+        """One mechanic has one owning engine, even split across branches."""
+        with _grown_module(
+            "def _h():\n"
+            "    _packet(attacker=a, target=t, time=0.0,\n"
+            '            kind="damage_modifier", source="Abyssal Mask — Unmake",\n'
+            "            authority=Authority.COUPLED_ONLY)\n"
+        ):
+            with pytest.raises(ValueError, match="one mechanic has one owning engine"):
+                cross_participant_authorities()
 
     def test_no_hand_written_producer_list_exists(self):
         """A source assertion against the second home the derivation retires."""
         body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
-        derivation = body.split("def cross_participant_authorities")[1]
+        derivation = body.split("def _declared_authorities")[1].split(
+            "def producer_item"
+        )[0]
         for source in cross_participant_authorities():
             assert source not in derivation, (
-                f"{source!r} is spelled inside cross_participant_authorities; the "
-                "producer set must be derived from the _packet call sites"
+                f"{source!r} is spelled inside the producer-table derivation; "
+                "the table must be read from the _packet call sites"
             )
 
     def test_producer_item_names_the_item_a_scenario_must_equip(self):
         assert producer_item("Imperial Mandate — Command") == "Imperial Mandate"
         assert producer_item("Bloodletter's Curse — Vile Decay") == (
             "Bloodletter's Curse"
+        )
+
+
+# One Abyssal holder, one ally to price and one cursed enemy — the shape the
+# coupled baseline's ``mandate_abyssal_curse_roster`` scenario uses, reduced to
+# the one item this slice moves.
+_ABYSSAL_ROSTER = {
+    "champion": "Ahri",
+    "level": 18,
+    "items": ["Abyssal Mask"],
+    "fight_mode": "time_based",
+    "fight_duration": 8,
+    "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+    "allies": [
+        {
+            "champion": "Pantheon",
+            "level": 18,
+            "items": [],
+            "ally_effects_enabled": True,
+        }
+    ],
+}
+
+
+class TestOwnerIsPresentIffSplit:
+    """C2's machine check: the semantic decides, never the ``all_sources`` flag."""
+
+    def _modifier(self, **overrides):
+        holder = _actor("main", "main", ())
+        enemy = _actor("enemy:Aatrox", "enemy", ())
+        fields = {
+            "attacker": holder,
+            "target": enemy,
+            "time": 0.0,
+            "kind": "damage_modifier",
+            "source": "Abyssal Mask — Unmake",
+            "authority": Authority.SPLIT,
+            "owner": holder.participant_id,
+        }
+        fields.update(overrides)
+        return item_support_effects._packet(**fields)
+
+    def test_a_split_packet_carries_its_owner(self):
+        assert self._modifier()["owner"] == "main"
+
+    def test_a_split_packet_without_an_owner_raises(self):
+        with pytest.raises(ValueError, match="declares SPLIT and carries no owner"):
+            self._modifier(owner=None)
+
+    def test_the_check_ignores_all_sources(self):
+        """Criterion 9: ``all_sources=False`` does not excuse a missing owner."""
+        with pytest.raises(ValueError, match="declares SPLIT and carries no owner"):
+            self._modifier(owner=None, all_sources=False)
+
+    def test_a_coupled_only_packet_may_not_carry_an_owner(self):
+        with pytest.raises(ValueError, match="only SPLIT has a pair-side half"):
+            self._modifier(
+                source="Dream Maker — Blue Dream Bubble",
+                authority=Authority.COUPLED_ONLY,
+            )
+
+    def test_a_packet_declaring_no_authority_raises(self):
+        with pytest.raises(ValueError, match="names no Authority"):
+            self._modifier(source="Synthetic — Unknown", authority=None, owner=None)
+
+    def test_the_runtime_declaration_must_match_the_call_site(self):
+        with pytest.raises(ValueError, match="but its packet declares SPLIT"):
+            self._modifier(authority=Authority.COUPLED_AUTHORITATIVE)
+
+    def test_a_non_modifier_packet_is_unaffected(self):
+        """The check is scoped to the packets that reach another participant."""
+        packet = self._modifier(kind="shield", authority=None, owner=None)
+        assert packet["kind"] == "shield"
+
+    def test_the_declaration_never_reaches_the_packet_payload(self):
+        """R-17: a semantic commit may not move a serialized receipt's shape."""
+        assert "authority" not in self._modifier()
+
+
+class TestDreamMakerIsCoupledOnly:
+    """The sixth producer has no pair-side half, so it declares no owner."""
+
+    def test_blue_dream_bubble_declares_coupled_only(self):
+        assert (
+            cross_participant_authorities()["Dream Maker — Blue Dream Bubble"]
+            is Authority.COUPLED_ONLY
+        )
+
+    def test_no_pair_engine_pricer_for_blue_dream_bubble_exists(self):
+        """The declaration cannot silently become wrong (criterion 10).
+
+        ``ITEM_EFFECTS`` is the typed registry the pair engine's build
+        projection reads: an entry there is what "the pair engine prices this"
+        means.  Abyssal Mask is the positive control — it is ``SPLIT``
+        precisely because it *has* such an entry — so a registry that stopped
+        being the pricer's source would fail this test rather than pass it
+        vacuously.
+        """
+        assert ITEM_EFFECTS["Abyssal Mask"]["type"] == "magic_damage_amp"
+        assert "Dream Maker" not in ITEM_EFFECTS
+
+    def test_only_the_coupled_producer_reads_the_blue_bubble_values(self):
+        """A second reader would be a pair-side half arriving unannounced."""
+        registry = Path(item_support_effects.__file__).parent
+        readers = {
+            path.name
+            for path in registry.rglob("*.py")
+            if "blue_reduction" in path.read_text(encoding="utf-8")
+        }
+        assert readers == {"item_effects.py", "item_support_effects.py"}
+
+
+class TestAbyssalMaskOwnerHandshake:
+    """C2: the pair engine keeps ``magic_amp``; the walk stops re-amping the holder."""
+
+    def _packets(self):
+        holder = _actor("main", "main", ("Abyssal Mask",))
+        enemy = _actor("enemy:Aatrox", "enemy", ())
+        packets = derive_item_support_effects(holder, {}, [holder, enemy])
+        return [
+            packet for packet in packets if packet["source"] == "Abyssal Mask — Unmake"
+        ]
+
+    def test_unmake_declares_split(self):
+        assert (
+            cross_participant_authorities()["Abyssal Mask — Unmake"] is Authority.SPLIT
+        )
+
+    def test_the_walk_is_told_to_skip_the_holder(self):
+        packets = self._packets()
+        assert packets
+        assert all(packet["owner"] == "main" for packet in packets)
+
+    def test_the_pair_engine_keeps_its_own_amp(self):
+        """Golden pins the pair half, so C2 removes the duplicate, not the amp."""
+        assert ITEM_EFFECTS["Abyssal Mask"]["magic_amp"] == pytest.approx(
+            ally_item_effect_value("Abyssal Mask", "magic_damage_amp")
+        )
+
+    def test_the_walk_amps_an_ally_and_no_longer_amps_the_holder(self):
+        """The end-to-end shape: 1.12 squared on the holder becomes 1.12 once.
+
+        The pair engine's ``magic_amp`` is invisible in this receipt — it is
+        already inside every one of the holder's own damage numbers — so the
+        observable is that no Unmake multiplier is *also* recorded against the
+        holder, while an ally's damage into the same cursed enemy still
+        carries one.
+        """
+        app.config["TESTING"] = True
+        response = app.test_client().post("/api/calculate", json=_ABYSSAL_ROSTER)
+        assert response.status_code == 200
+        events = response.get_json()["combat"]["events"]
+        amped = {
+            event["attacker"]
+            for event in events
+            if (event.get("support_damage_multiplier") or {}).get("source")
+            == "Abyssal Mask — Unmake"
+        }
+        assert amped == {"ally:Pantheon"}
+        assert any(
+            event["attacker"] == "main" and event["target"] == "enemy:Aatrox"
+            for event in events
         )
 
 

@@ -13,6 +13,7 @@ from collections.abc import Collection, Iterable, Mapping
 from functools import lru_cache
 import math
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from .ability_spec import IMMOBILIZING_CC_KINDS, Authority, is_immobilizing_event
@@ -90,6 +91,7 @@ def _packet(
     duration: float = 0.0,
     target_scope: str = "one_teammate",
     rank: TransitionRank | None = None,
+    authority: Authority | None = None,
     **fields: Any,
 ) -> dict[str, Any]:
     """Build one sourced packet.
@@ -99,8 +101,16 @@ def _packet(
     It is the only way to override the walk's ladder: an author names a
     :class:`TransitionRank`, never a number.
 
-    It also sits earlier in the returned dict than the open ordering float
-    it replaced did: that arrived through ``**fields``, after every
+    ``authority`` is how a ``damage_modifier`` packet declares which engine
+    owns its mechanic.  It is required of those packets and meaningless on
+    the rest, it is checked here — the one construction site all six
+    cross-participant producers pass through — and it is deliberately *not*
+    written into the returned dict: the declaration's homes are this call
+    site and :func:`cross_participant_authorities`, and a packet payload
+    that grew a key would move receipts inside a semantic commit (R-17).
+
+    ``rank`` also sits earlier in the returned dict than the open ordering
+    float it replaced did: that arrived through ``**fields``, after every
     explicit key, and the rank is injected before them.  Inert — the
     published receipt is assembled from an explicit key list, not from this
     dict's order — but it is a payload-shape change beyond the key's name
@@ -110,6 +120,8 @@ def _packet(
         raise ValueError(f"{source} packet amount must be finite and non-negative")
     if not math.isfinite(float(duration)) or float(duration) < 0.0:
         raise ValueError(f"{source} packet duration must be finite and non-negative")
+    if kind == _DAMAGE_MODIFIER_KIND:
+        _check_cross_participant_authority(source, authority, fields.get("owner"))
     return {
         "time": float(time),
         "kind": kind,
@@ -601,6 +613,13 @@ def derive_item_support_effects(
                     all_sources=True,
                     persistent=True,
                     range_assumption="within_700_units",
+                    authority=Authority.SPLIT,
+                    # The holder's own Unmake is priced pair-side, as the
+                    # ``magic_amp`` term of the damage engine's build
+                    # projection.  Without this handshake the walk amps the
+                    # holder a second time and the holder's magic arrives at
+                    # 1.12 squared.
+                    owner=attacker.participant_id,
                 )
             )
 
@@ -633,6 +652,12 @@ def derive_item_support_effects(
                     cooldown=ally_item_effect_value(
                         "Bloodsong", "expose_weakness_cooldown"
                     ),
+                    # The pair engine prices the holder's own Expose Weakness
+                    # on a schedule that is not the walk's; the umbrella
+                    # freezes that divergence in Phase 3 and moves this row to
+                    # COUPLED_AUTHORITATIVE in Phase 4.  Until then the owner
+                    # skip is what keeps the two halves from summing.
+                    authority=Authority.SPLIT,
                     owner=attacker.participant_id,
                     trigger_event_id=event.get("_event_id"),
                 )
@@ -672,6 +697,11 @@ def derive_item_support_effects(
                     ),
                     armor_reduction_percent=percent,
                     resistance_type="armor",
+                    # The stack ledger is a roster fact and Carve's move to
+                    # coupled-authoritative is H1's to rule; until it is
+                    # ruled the pair engine keeps its own Cesàro
+                    # approximation and the walk skips the holder.
+                    authority=Authority.SPLIT,
                     owner=attacker.participant_id,
                     trigger_event_id=event.get("_event_id", source_id),
                     stack_count=stacks,
@@ -708,6 +738,9 @@ def derive_item_support_effects(
                     ),
                     mr_reduction_percent=percent,
                     resistance_type="magic_resistance",
+                    # Vile Decay is Carve's shape, magic- and ability-gated,
+                    # and is H1-blocked with it.
+                    authority=Authority.SPLIT,
                     owner=attacker.participant_id,
                     trigger_event_id=event.get("_event_id", source_id),
                     stack_count=stacks,
@@ -848,6 +881,13 @@ def derive_item_support_effects(
                         ),
                         damage_reduction=True,
                         next_event_only=True,
+                        # No pair engine prices Blue Dream Bubble: it shields
+                        # an *ally* against the next hit from anyone, which is
+                        # a roster fact with no pair-local restriction, and
+                        # ``item_coverage`` already records that the item is
+                        # outside the holder's own TDD.  So there is no
+                        # pair-side half to skip and no owner to declare.
+                        authority=Authority.COUPLED_ONLY,
                     ),
                     _packet(
                         attacker=attacker,
@@ -1020,6 +1060,10 @@ def derive_item_support_effects(
                         # The holder's pair engine prices its own amp
                         # (damage._apply_command_amp); the walk applies
                         # this packet to every other participant only.
+                        # Command's move to coupled-authoritative-with-preview
+                        # waits on H2's CcScope reading and is Phase 4's; the
+                        # umbrella's recorded default until then is SPLIT.
+                        authority=Authority.SPLIT,
                         owner=attacker.participant_id,
                     )
                 )
@@ -1294,17 +1338,18 @@ def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
 # participant deals or takes, so the question "which engine owns this
 # mechanic" has to be answered for every one of them.  The answer is an
 # ``ability_spec.Authority`` member, declared in 0A and carried by the
-# packets themselves from C2; until they carry it the producer set alone is
-# already load-bearing, because the coupled golden baseline reads it to
-# prove its scenario set covers every producer (runbook R-12).
+# packets themselves from C2.  It is also what the coupled golden baseline
+# reads to prove its scenario set covers every producer (runbook R-12).
 #
-# The set is DERIVED from this module's own ``_packet(...)`` call sites, never
-# typed out: a hand list is a second home for a fact the construction sites
-# already state, and the campaign exists because a hand-maintained claim
-# outlived the code it described.  ``_producer_sources`` reads the module's
-# source with ``ast`` and returns the ``source=`` literal of every
-# ``kind="damage_modifier"`` packet, so a seventh producer joins the set on
-# the commit that constructs it.
+# The table is DERIVED from this module's own ``_packet(...)`` call sites,
+# never typed out: a hand list is a second home for a fact the construction
+# sites already state, and the campaign exists because a hand-maintained
+# claim outlived the code it described.  ``_declared_authorities`` reads the
+# module's source with ``ast`` and returns the ``source=`` literal and the
+# ``authority=`` member of every ``kind="damage_modifier"`` packet, so a
+# seventh producer joins the table on the commit that constructs it — and a
+# seventh producer that declares no authority fails to resolve rather than
+# joining as a silent hole.
 
 _MODULE_PATH = Path(__file__)
 _DAMAGE_MODIFIER_KIND = "damage_modifier"
@@ -1318,16 +1363,44 @@ def _packet_keyword(call: ast.Call, name: str) -> ast.expr | None:
     return None
 
 
-@lru_cache(maxsize=1)
-def _producer_sources() -> tuple[str, ...]:
-    """Every ``source=`` literal of a ``kind="damage_modifier"`` packet here.
+def _declared_authority(node: ast.Call, source: str) -> Authority:
+    """The ``Authority`` member one ``_packet(...)`` call site declares.
 
-    Derived from this module's own construction sites so that the producer
-    set cannot disagree with the packets: a new cross-participant modifier is
-    a member the moment its ``_packet`` call exists.
+    The declaration must be a literal ``Authority.MEMBER`` attribute: an
+    expression the reader cannot resolve statically is exactly the kind of
+    claim this table exists to make checkable.
+    """
+    declared = _packet_keyword(node, "authority")
+    if not (
+        isinstance(declared, ast.Attribute)
+        and isinstance(declared.value, ast.Name)
+        and declared.value.id == Authority.__name__
+        and declared.attr in Authority.__members__
+    ):
+        raise ValueError(
+            f"{source} modifies another participant's damage and declares no "
+            f"literal Authority.<member> at line {node.lineno} of "
+            f"{_MODULE_PATH.name}; one of "
+            f"{sorted(member.value for member in Authority)} is required (D-07)"
+        )
+    return Authority[declared.attr]
+
+
+@lru_cache(maxsize=1)
+def _declared_authorities() -> Mapping[str, Authority]:
+    """Every ``kind="damage_modifier"`` packet's source and declared engine.
+
+    Derived from this module's own construction sites so that the table
+    cannot disagree with the packets: a new cross-participant modifier is a
+    row the moment its ``_packet`` call exists, and two call sites sharing
+    one ``source`` may not disagree about who owns the mechanic.
+
+    Returned read-only and cached because ``_packet`` consults it on every
+    cross-participant packet it builds, and the stack-ledger producers build
+    one per damage event.
     """
     tree = ast.parse(_MODULE_PATH.read_text(encoding="utf-8"))
-    sources: list[str] = []
+    declared: dict[str, Authority] = {}
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
@@ -1343,24 +1416,68 @@ def _producer_sources() -> tuple[str, ...]:
                 "a damage_modifier packet must name a literal source; "
                 f"line {node.lineno} of {_MODULE_PATH.name} does not"
             )
-        sources.append(source.value)
-    return tuple(sorted(sources))
+        authority = _declared_authority(node, source.value)
+        previous = declared.get(source.value)
+        if previous is not None and previous is not authority:
+            raise ValueError(
+                f"{source.value} declares {previous.value} at one call site and "
+                f"{authority.value} at line {node.lineno} of {_MODULE_PATH.name}; "
+                "one mechanic has one owning engine"
+            )
+        declared[source.value] = authority
+    return MappingProxyType(dict(sorted(declared.items())))
 
 
-def cross_participant_authorities() -> Mapping[str, Authority | None]:
+def cross_participant_authorities() -> Mapping[str, Authority]:
     """One row per packet that modifies another participant's damage.
 
     The key is the packet's ``source`` literal; the value is the
-    ``Authority`` the packet declares — which engine owns the mechanic.
-    ``None`` is "this producer has declared none yet": the derivation of the
-    producer set is 0A's and C2 fills the values, so an undeclared producer
-    is a visible row rather than an absent one.
+    ``Authority`` the packet declares — which engine owns the mechanic.  It
+    is the table ``_packet``'s owner-iff-``SPLIT`` check reads, so the rule
+    keys on the semantic rather than on the ``all_sources`` flag three of the
+    six producers never set (D-07).
 
     Also the producer set ``golden_snapshot.capture_coupled`` reads (R-12):
     the coupled baseline covers whatever this returns, so a seventh producer
     with no covering scenario fails rather than passes.
     """
-    return {source: None for source in _producer_sources()}
+    return _declared_authorities()
+
+
+def _check_cross_participant_authority(
+    source: str, authority: Authority | None, owner: Any
+) -> None:
+    """Every ``damage_modifier`` packet names its engine, and only ``SPLIT`` owns.
+
+    The rule keys on the declared :class:`Authority`, never on a flag: three
+    of the six producers set no ``all_sources``, so an ``all_sources``-keyed
+    check passes Dream Maker, Black Cleaver and Bloodletter's Curse by
+    construction (D-07).  ``owner`` is the walk's skip handshake — the
+    holder's own contribution is priced pair-side — so it is meaningful
+    exactly when the two halves are disjoint, which is what ``SPLIT`` says.
+    """
+    declared = cross_participant_authorities().get(source)
+    if declared is None:
+        raise ValueError(
+            f"{source} modifies another participant's damage but names no "
+            "Authority; every damage_modifier packet declares one (D-07)"
+        )
+    if authority is not declared:
+        raise ValueError(
+            f"{source} was built with authority={authority} but its packet "
+            f"declares {declared.value}"
+        )
+    if owner is not None and declared is not Authority.SPLIT:
+        raise ValueError(
+            f"{source} declares {declared.value} and carries owner={owner!r}; "
+            "only SPLIT has a pair-side half for the walk to skip"
+        )
+    if owner is None and declared is Authority.SPLIT:
+        raise ValueError(
+            f"{source} declares SPLIT and carries no owner; the pair-local "
+            "half is unreachable to the walk's skip and the holder is priced "
+            "twice"
+        )
 
 
 def producer_item(source: str) -> str:

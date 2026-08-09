@@ -1,0 +1,133 @@
+{
+  "slice": "C2",
+  "decisions": [
+    "D-07"
+  ],
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 — no baseline moves inside this commit"
+  },
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "rule": "C2 gives the Abyssal Mask packet an owner, so the walk stops re-pricing the holder's own damage into a cursed enemy.  A leaf may therefore move only if it is (a) the holder's own outgoing damage into an enemy-team target, (b) an aggregate over (a) or over that enemy's incoming damage, (c) the Unmake packet's own receipt, which gains the owner field, or (d) the snapshot's shape counters, which move whenever (c) adds or (a) removes a receipt subtree.  Enumerated from the committed scripts/golden_coupled_baseline.json and its participants[].items, before this slice's first src/ edit.",
+    "scenarios_holding_abyssal_mask": [
+      "mandate_abyssal_curse_roster"
+    ],
+    "per_scenario_size": {
+      "mandate_abyssal_curse_roster": 678
+    },
+    "holder": "main",
+    "cursed": [
+      "ally:Pantheon",
+      "enemy:Aatrox"
+    ],
+    "clause_sizes": {
+      "holder_outgoing_event_paths": 246,
+      "of_which_magic": 204,
+      "aggregates": 429,
+      "packet_receipt": 1,
+      "snapshot_shape_counters": 2
+    },
+    "c2_c4_overlap": {
+      "rule": "R-30: C2 and C4 partially cancel and both move the holder's t = 0.0 magic leaves, so this set is enumerated in BOTH allowlists in advance and its presence in two is not an error.",
+      "paths": [
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].attacker",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].damage",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].damage_type",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].event_id",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].event_precision",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].overkill",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].pair_damage",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].raw_damage",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].sequence",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].source",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].target",
+        "coupled_scenarios.mandate_abyssal_curse_roster.combat.events[0].time"
+      ]
+    },
+    "golden_population_argument": "golden_snapshot.py enters through pipeline.run_fight, a single pair with no roster, so no snapshot row is ever priced by a cross-participant packet: the committed pair baseline holds zero support_damage_multiplier leaves and zero Unmake occurrences.  C2 changes no pair-side pricer — Abyssal's magic_amp term is untouched — so the pair population is structurally empty, not assumed empty.",
+    "population_correction": "The first enumeration run omitted the combat.participants[] subtree and the container paths a vanishing receipt dict is reported at.  The rule above is unchanged and both families are (b) and (a) under it; the script was corrected and re-run against the same committed baseline, still before any src/ edit was measured.  Disclosed rather than silently widened."
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/outgoing_damage_before_death",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/sources[1]/total_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/sources[3]/total_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/sources[4]/total_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/total_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[2]/health_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[2]/incoming_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[11]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[11]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[11]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[12]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[12]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[12]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[13]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[13]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[13]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[14]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[14]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[14]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[21]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[21]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[21]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[23]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[23]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[23]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[24]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[24]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[24]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[27]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[27]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[27]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[7]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[7]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[7]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[8]/damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[8]/pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[8]/support_damage_multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/objective/focus_damage_before_death",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/objective/main_team_damage_before_death",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/damage_taken",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/ending_health",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/ending_health_ratio",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/health_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[0]/owner"
+    ],
+    "coupled_golden_shape_counters": [
+      "/metadata/fingerprint/leaves",
+      "/metadata/fingerprint/numeric_leaves"
+    ],
+    "coupled_exact": {
+      "mandate_abyssal_curse_roster": {
+        "combat/0:main/outgoing": {
+          "old": "2406.2",
+          "new": "2183.7"
+        },
+        "combat/2:enemy:Aatrox/incoming": {
+          "old": "3269.6",
+          "new": "3047.1"
+        }
+      }
+    }
+  },
+  "measured": {
+    "golden": "compare clean",
+    "coupled_golden": "every differing leaf lies inside the enumerated population; zero occurrences outside it; 44 leaves qualify for investigation under R-15 and each is owed an oracle receipt before the phase-boundary re-capture (R-19).  The two shape-counter leaves do not qualify.",
+    "one_physical_cause": "The holder's own damage into the cursed enemy loses the walk's second x1.12.  Ten of her damage rows carried an Unmake multiplier receipt and no longer do; her magic rows fall by 1/1.12 and so does her true-damage Q, because today's walk-side modifier is untyped — that is C3's correction, not this one, and it is why the population is the holder's whole outgoing set rather than her magic subset alone."
+  },
+  "oracle_receipts_required": 44,
+  "row_11_routing": "routing_divergences empty for all four scenarios; winner and score identical across both routings",
+  "bench": {
+    "instrument": "scripts/bench_coupled_optimizer.py --fixed-work --isolate --json",
+    "cassiopeia_3champ": "identical to C1 (counters, residual, rungs, winner, score)",
+    "cassiopeia_5champ": "identical to C1",
+    "mundo_3champ": "identical to C1",
+    "syndra_mandate_3champ": "identical to C1",
+    "cause": "No bench winner holds Abyssal Mask and no bench scenario equips it, so the correction is invisible to the optimizer's work counters — which is why the coupled baseline, not the bench, is this slice's numeric gate (D-93)."
+  }
+}
