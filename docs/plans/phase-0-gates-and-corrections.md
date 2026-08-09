@@ -269,10 +269,13 @@ registry moves, introduces no module boundaries, and re-opens no `[H]` decision.
 | `src/calculator/pipeline.py` | Tuple gate predicate; cast-order validation split, expansion call site |
 | `src/calculator/scenario.py` | The roster path's copy of the same cast-order permutation literal |
 | `src/calculator/data_registry.py` | `data_version()` — the monotonic counter, no reader in 0A |
+| `src/calculator/work_counters.py` *(new)* | `Rung`, `WorkCounterSink`, `record_rung` — the counter vocabulary 0A.3's harness sink satisfies. It declares what a sink looks like and which rung priced an evaluation; nothing in it counts anything |
+| `src/calculator/optimizer.py` | The sink threaded through `_PurchaseSearch` and `use_compiled_walk` threaded to the score path — the seam that makes R-24's "never a monkey-patch" implementable. Inert unheld: every counting site is one `is None` test and `use_compiled_walk` defaults to the compiled routing |
+| `src/app.py` | `OPTIMIZER_INSTRUMENTATION` — the one request-path seam the bench installs its sink through, empty in production, so the counters CI reads come out of the shipped path rather than a patched copy of it |
 | `src/calculator/survival/actions.py` | `TransitionRank`, class fields, shared immobilize predicate |
 | `src/calculator/survival/transitions.py` | Class-gated modifier application; two deletions |
 | `src/calculator/survival/{compile,receipt_state,__init__}.py` | Rank-consuming phases and sort keys; dead state |
-| `src/calculator/participant_timeline.py` | Arming ladder consumes ranks; `_priority` producer and reader retired |
+| `src/calculator/participant_timeline.py` | Arming ladder consumes ranks; `_priority` producer and reader retired; the counted pair-fight wrapper and the rung histogram's three recording sites |
 | `src/calculator/capabilities.py` | Phase list derived from the enum; version bump with `AURA_ARM` |
 | `src/calculator/champions/syndra.py` | `Q2` stamps `recast_of="Q"` — this symbol only, at C6 |
 | `scripts/plan_audit.py` *(new)* + `docs/receipts/decision-inventory.json` *(new)* | The plan-document gate: citations, golden-figure prongs, decision inventory (R-37, 0A.10) |
@@ -333,6 +336,19 @@ def _ledger_phases() -> list[str]:
 # src/calculator/data_registry.py
 def data_version() -> int:
     """Monotonic, bumped by write_runtime_cache; the one thing every derived memo keys on."""
+
+# src/calculator/work_counters.py — what the optimizer needs of a counter sink.
+# The concrete sink is the runbook Shape block's WorkCounters dataclass, which lives in
+# the harness; this module declares only the shape it satisfies, so src/ never imports
+# scripts/ and an uninstrumented request pays one "is None" test per site (R-24).
+class Rung(StrEnum): ...            # COMPILED | RECEIPT_WALK_GATE
+                                    # | RECEIPT_WALK_CANDIDATE | SEARCH_POISONED
+class WorkCounterSink(Protocol):
+    """Three mutable counters plus a rung histogram; no methods, because a sink is data.
+    public_evaluations is deliberately absent: the optimizer's own response publishes it,
+    so no counting site in src/ can disagree with the figure the harness reads."""
+def record_rung(sink: WorkCounterSink | None, rung: Rung) -> None:
+    """Attribute one coupled evaluation to the engine that priced it, or do nothing."""
 
 # src/calculator/pipeline.py — a custom order may no longer lose a slot.
 # orderable_slots and expand_user_order are IMPORTED from cast_dependency (Phase 5's leaf,
