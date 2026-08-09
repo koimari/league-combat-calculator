@@ -19,11 +19,13 @@ breakdown + duration) equality, plus which path served it:
   skip the compiled path entirely.
 
 Which builds the suite must cover is not a judgement call: the last section
-derives the required item set from the registries themselves — every
-tuple-incapable event-view holder and every cross-participant
-``damage_modifier`` producer, each reached once from the candidate and once
-from a roster ally — so a seventh producer without a fixture fails here on
-the commit that adds it (slice 0A.9).
+derives the required coverage keys from the registries themselves — every
+tuple-incapable event-view holder at *item* granularity and every
+cross-participant ``damage_modifier`` producer at *source* granularity, each
+reached once from the candidate and once from a roster ally — so a seventh
+producer without a fixture fails here on the commit that adds it, including
+when that producer is a second packet on an item some fixture already equips
+(slice 0A.9).
 """
 
 from dataclasses import dataclass
@@ -824,14 +826,23 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
 # ---------------------------------------------------------------------------
 # Registry-derived coverage (slice 0A.9)
 #
-# Which items this suite owes a fixture is READ from the two registries that
-# already know — the tuple-incapable event-view set and the derived
-# cross-participant ``damage_modifier`` producer set — never typed out here.
-# A hand list would be a second home for a fact the registries state, which is
-# the failure shape the campaign exists to kill.  Coverage is measured off the
-# receipt's public ``support_events`` rows rather than off the fixture's item
-# lists: an equipped item whose packet never fires is a fixture that proves
-# nothing.
+# What this suite owes a fixture is READ from the two registries that already
+# know — the tuple-incapable event-view set and the derived cross-participant
+# ``damage_modifier`` producer set — never typed out here.  A hand list would
+# be a second home for a fact the registries state, which is the failure shape
+# the campaign exists to kill.  Coverage is measured off the receipt's public
+# ``support_events`` rows rather than off the fixture's item lists: an equipped
+# item whose packet never fires is a fixture that proves nothing.
+#
+# The two registries are required at different granularities, because they
+# name different things.  An event-view holder's mechanic is "this item makes
+# the pipeline build the enriched per-event view", which is a property of the
+# item, so it is required by item name.  A producer's mechanic is one packet,
+# and ``item_support_effects.py`` already ships two packets on one item
+# (``Dream Maker — Blue/Purple Dream Bubble``), so requiring producers by item
+# would let a second packet on a covered item ride in uncovered.  Producers are
+# therefore required by their ``source`` literal, and a fixture is credited for
+# both the source and its item on every row it fires.
 # ---------------------------------------------------------------------------
 
 
@@ -1050,38 +1061,54 @@ REGISTRY_FIXTURES = (
 )
 
 
-def required_fixture_items() -> frozenset[str]:
-    """Every item this suite owes a fixture, read from the registries.
+def required_coverage_keys() -> frozenset[str]:
+    """Every key this suite owes a fixture, read from the registries.
 
     ``EVENT_VIEW_SUPPORT_ITEMS`` is the tuple-incapable set the pipeline's
-    tuple gate consults; ``cross_participant_authorities()`` is the derived
-    ``damage_modifier`` producer set.  Neither is restated here, so a new
-    event-view holder or a seventh producer becomes a required member on the
-    commit that adds it — and fails this suite until it has a fixture.
+    tuple gate consults, and contributes item names;
+    ``cross_participant_authorities()`` is the derived ``damage_modifier``
+    producer set, and contributes ``source`` literals — one key per packet,
+    not per item, so a second packet on an already-equipped item is its own
+    requirement.  Neither registry is restated here, so a new event-view
+    holder or a seventh producer becomes a required key on the commit that
+    adds it — and fails this suite until it has a fixture.
     """
-    return EVENT_VIEW_SUPPORT_ITEMS | frozenset(
-        producer_item(source) for source in cross_participant_authorities()
-    )
+    return EVENT_VIEW_SUPPORT_ITEMS | frozenset(cross_participant_authorities())
 
 
 @lru_cache(maxsize=None)
-def _reached_items(fixture: KernelFixture) -> tuple[frozenset[str], frozenset[str]]:
-    """``(candidate-authored, ally-authored)`` items this fixture really fires.
+def _reached_keys(fixture: KernelFixture) -> tuple[frozenset[str], frozenset[str]]:
+    """``(candidate-authored, ally-authored)`` keys this fixture really fires.
 
     Read off the receipt's public ``support_events`` rows and attributed by
     each packet's own ``attacker``, so a fixture that equips an item without
-    ever reaching its packet contributes no coverage.
+    ever reaching its packet contributes no coverage.  Each row credits both
+    granularities the registries use: the packet's own ``source`` literal and
+    the item that source names.
     """
     candidate: set[str] = set()
     ally: set[str] = set()
     for event in fixture.receipt().get("support_events", ()):
-        item = producer_item(str(event.get("source", "")))
+        source = str(event.get("source", ""))
+        keys = {source, producer_item(source)}
         attacker = str(event.get("attacker", ""))
         if attacker == "main":
-            candidate.add(item)
+            candidate |= keys
         elif attacker.startswith("ally:"):
-            ally.add(item)
+            ally |= keys
     return frozenset(candidate), frozenset(ally)
+
+
+@lru_cache(maxsize=None)
+def _fixture_coverage() -> tuple[frozenset[str], frozenset[str]]:
+    """``(candidate, ally)`` keys the whole fixture set reaches between them."""
+    candidate: frozenset[str] = frozenset()
+    ally: frozenset[str] = frozenset()
+    for fixture in REGISTRY_FIXTURES:
+        reached_candidate, reached_ally = _reached_keys(fixture)
+        candidate |= reached_candidate
+        ally |= reached_ally
+    return candidate, ally
 
 
 def missing_fixtures(
@@ -1089,20 +1116,20 @@ def missing_fixtures(
     candidate_reached: frozenset[str],
     ally_reached: frozenset[str],
 ) -> tuple[tuple[str, str], ...]:
-    """Every ``(item, side)`` a required item is owed and does not have.
+    """Every ``(key, side)`` a required key is owed and does not have.
 
     One pure function over three sets, so the check's own red is reproducible
     on demand instead of being a claim about the past (R-05).
     """
     return tuple(
         sorted(
-            (item, side)
-            for item in required
+            (key, side)
+            for key in required
             for side, reached in (
                 ("candidate", candidate_reached),
                 ("ally", ally_reached),
             )
-            if item not in reached
+            if key not in reached
         )
     )
 
@@ -1189,8 +1216,10 @@ def test_pinned_ally_takedown_divergence_is_the_dropped_nova_heal():
     assert _ally_survival(legacy)["healing_received"] > 0.0
     assert _ally_survival(fast)["healing_received"] == 0.0
 
-    _, ally_reached = _reached_items(fixture)
-    assert "Cryptbloom" in ally_reached, "the receipt walk must author the nova heal"
+    _, ally_reached = _reached_keys(fixture)
+    assert (
+        "Cryptbloom — Life From Death" in ally_reached
+    ), "the receipt walk must author the nova heal"
 
     # Every leaf that moved is a healing or health consequence of the drop.
     leaves = _differing_leaves(legacy, fast)
@@ -1210,27 +1239,32 @@ def test_pinned_ally_takedown_divergence_is_the_dropped_nova_heal():
     ), f"the pinned divergence changed shape: {leaves}"
 
 
-def test_every_registry_item_has_a_candidate_and_an_ally_fixture():
-    """The required set is derived, and every member is reached from both sides.
+def test_every_registry_key_has_a_candidate_and_an_ally_fixture():
+    """The required set is derived, and every key is reached from both sides.
 
-    Both halves are computed: the required items from the registries, the
+    Both halves are computed: the required keys from the registries, the
     covered ones from the packets the fixtures actually authored.  A seventh
     ``damage_modifier`` producer, or a new event-view holder, therefore fails
     here on the commit that adds it rather than being assumed covered.
+
+    Credit is awarded off the *receipt* walk, which is the authority the score
+    adapter must reproduce — not off the compiled score path.  A key reached
+    only by a fixture carrying a ``pinned_divergence`` is therefore credited
+    here while the compiled path is known to drop it; ``Cryptbloom — Life From
+    Death`` on the ally side is exactly that today.  What holds that case is
+    the pin in :func:`test_registry_fixture_pins_the_two_walks`, not this
+    check: coverage answers "does a fixture reach the mechanic", equality
+    answers "do the two walks agree about it".
     """
-    required = required_fixture_items()
+    required = required_coverage_keys()
     # Neither half may be empty, or the check below is green over nothing.
     assert EVENT_VIEW_SUPPORT_ITEMS and cross_participant_authorities()
     assert required >= EVENT_VIEW_SUPPORT_ITEMS
+    assert required >= frozenset(cross_participant_authorities())
 
-    candidate_reached: frozenset[str] = frozenset()
-    ally_reached: frozenset[str] = frozenset()
-    for fixture in REGISTRY_FIXTURES:
-        candidate, ally = _reached_items(fixture)
-        candidate_reached |= candidate
-        ally_reached |= ally
+    candidate_reached, ally_reached = _fixture_coverage()
     missing = missing_fixtures(required, candidate_reached, ally_reached)
-    assert not missing, f"registry items no fixture reaches: {missing}"
+    assert not missing, f"registry keys no fixture reaches: {missing}"
 
 
 def test_an_undeclared_producer_fails_the_coverage_check():
@@ -1239,9 +1273,34 @@ def test_an_undeclared_producer_fails_the_coverage_check():
     A seventh ``damage_modifier`` producer with no fixture is reported for
     both sides; nothing about the check can pass by being silent.
     """
-    covered = required_fixture_items()
+    covered = required_coverage_keys()
     assert missing_fixtures(covered | {"Seventh Producer"}, covered, covered) == (
         ("Seventh Producer", "ally"),
         ("Seventh Producer", "candidate"),
     )
     assert missing_fixtures(covered, covered, covered) == ()
+
+
+def test_a_second_producer_on_a_covered_item_fails_the_coverage_check(monkeypatch):
+    """The red for the case item-granularity coverage could not see (R-05).
+
+    A producer added as a *second* packet on an item some fixture already
+    equips and already fires — the shape ``Dream Maker`` ships today and the
+    shape Phase 0B's Abyssal Mask work adds — is reported missing on both
+    sides, driven end to end through the real derivation rather than through
+    hand-built sets.
+    """
+    extra = "Black Cleaver — Brand New Effect"
+    assert producer_item(extra) in _fixture_coverage()[0], (
+        "the counterexample only bites when the item itself is already "
+        "covered on the candidate side"
+    )
+    declared = dict(cross_participant_authorities())
+    monkeypatch.setattr(
+        "tests.test_survival_kernel.cross_participant_authorities",
+        lambda: {**declared, extra: None},
+    )
+    candidate_reached, ally_reached = _fixture_coverage()
+    assert missing_fixtures(
+        required_coverage_keys(), candidate_reached, ally_reached
+    ) == ((extra, "ally"), (extra, "candidate"))
