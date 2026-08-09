@@ -273,6 +273,58 @@ def _authors_an_immobilize(champion: str) -> bool:
     return False
 
 
+class TestAllocationReading:
+    """Criterion 4: one command emits the probe beside the counters (R-28)."""
+
+    def test_every_report_gains_its_peak(self, bench, monkeypatch):
+        monkeypatch.setattr(bench, "allocation_probe", lambda name: 4096)
+        reports = {"mundo_3champ": {"void": False}, "cassiopeia_3champ": {}}
+        bench.attach_allocation_peaks(reports)
+        assert [r["allocation_peak_bytes"] for r in reports.values()] == [4096, 4096]
+
+    def test_the_peak_comes_from_the_one_probe_the_receipt_was_read_with(
+        self, bench, monkeypatch
+    ):
+        """Same function, same process, same order — or it is a new number."""
+        probed: list[str] = []
+        monkeypatch.setattr(bench, "allocation_probe", lambda name: probed.append(name))
+        bench.attach_allocation_peaks(dict.fromkeys(bench.SCENARIOS, {}))
+        assert probed == list(bench.SCENARIOS)
+
+    def _run_main(self, bench, monkeypatch, argv):
+        probed: list[bool] = []
+        monkeypatch.setattr(sys, "argv", ["bench", *argv])
+        monkeypatch.setattr(
+            bench,
+            "fixed_work_report",
+            lambda name, **kwargs: {"scenario": name, "void": False},
+        )
+        monkeypatch.setattr(
+            bench,
+            "attach_allocation_peaks",
+            lambda reports, **kwargs: probed.append(True),
+        )
+        bench.main()
+        return probed
+
+    def test_the_named_command_probes(self, bench, monkeypatch, capsys):
+        argv = ["--fixed-work", "--isolate", "--json", "--scenario", "mundo_3champ"]
+        assert self._run_main(bench, monkeypatch, argv) == [True]
+        assert "mundo_3champ" in capsys.readouterr().out
+
+    def test_an_isolated_child_does_not_probe(self, bench, monkeypatch, capsys):
+        """The child measures one routing for its parent, not the criterion."""
+        argv = [
+            "--fixed-work",
+            "--single-routing",
+            "--json",
+            "--scenario",
+            "mundo_3champ",
+        ]
+        assert self._run_main(bench, monkeypatch, argv) == []
+        capsys.readouterr()
+
+
 class TestWorkCounters:
     """The sink's own shape — it is what the receipt is written from."""
 
