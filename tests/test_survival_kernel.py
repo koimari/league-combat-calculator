@@ -109,6 +109,27 @@ def _walk_both(champion_name, items, params, enemies, allies, *, level, role):
     return legacy, fast, context
 
 
+def _assert_rung(name, context, *, compiled, invariant):
+    """The score adapter took the documented rung — compiled, fallback or
+    poisoned.
+
+    Its own function because the rung is a property of every scenario,
+    including one whose two walks are pinned as *disagreeing*: a divergence
+    that moved to a different rung is a different divergence."""
+    assert (
+        context.uncompilable is invariant
+    ), f"{name}: expected invariant={invariant}, got {context.uncompilable}"
+    if invariant:
+        # The failure poisoned the context: no panel may be reused later.
+        assert not context.panels, f"{name}: expected no panels after poisoning"
+    elif compiled:
+        assert context.panels, f"{name}: expected the compiled path to be used"
+    else:
+        # Candidate-local fallback: the panel may exist (it is built before
+        # the fresh compile raises); the context must not be poisoned.
+        assert not context.uncompilable
+
+
 def _assert_contract(
     name,
     champion_name,
@@ -128,18 +149,7 @@ def _assert_contract(
         champion_name, items, params, enemies, allies, level=level, role=role
     )
     assert fast == legacy, f"{name}: score path diverged from the receipt walk"
-    assert (
-        context.uncompilable is invariant
-    ), f"{name}: expected invariant={invariant}, got {context.uncompilable}"
-    if invariant:
-        # The failure poisoned the context: no panel may be reused later.
-        assert not context.panels, f"{name}: expected no panels after poisoning"
-    elif compiled:
-        assert context.panels, f"{name}: expected the compiled path to be used"
-    else:
-        # Candidate-local fallback: the panel may exist (it is built before
-        # the fresh compile raises); the context must not be poisoned.
-        assert not context.uncompilable
+    _assert_rung(name, context, compiled=compiled, invariant=invariant)
 
 
 @lru_cache(maxsize=None)
@@ -1196,9 +1206,12 @@ def test_registry_fixture_pins_the_two_walks(fixture):
         f"{fixture.pinned_divergence}.  Delete the pin in the commit that "
         "fixed it."
     )
-    # The rung is pinned for a pinned fixture too: a divergence that moved
-    # to a different rung is a different divergence.
-    assert context.uncompilable is fixture.invariant
+    # The rung is pinned for a pinned fixture too — the whole rung, through
+    # the same helper the equality fixtures use: a divergence that moved to a
+    # different rung is a different divergence.
+    _assert_rung(
+        fixture.name, context, compiled=fixture.compiled, invariant=fixture.invariant
+    )
 
 
 def test_pinned_ally_takedown_divergence_is_the_dropped_nova_heal():
@@ -1237,6 +1250,30 @@ def test_pinned_ally_takedown_divergence_is_the_dropped_nova_heal():
         }
         for leaf in leaves
     ), f"the pinned divergence changed shape: {leaves}"
+
+
+def test_the_rung_pin_rejects_a_mis_declared_rung():
+    """The rung pin's own red, on demand (R-05).
+
+    A pinned fixture's rung is asserted by the pin rather than by
+    :func:`_assert_contract`, so a pin that never checked the rung would be
+    indistinguishable from one that did.  Both halves of the check are driven
+    with real contexts: ``takedown_ally`` compiles and is not poisoned, so
+    declaring it poisoned must fail, and ``cc_trigger_candidate`` takes the
+    candidate-local fallback with no panel, so declaring it compiled must fail.
+    """
+    pinned = next(f for f in REGISTRY_FIXTURES if f.name == "takedown_ally")
+    _, _, compiled_context = pinned.walk_both()
+    fallback = next(f for f in REGISTRY_FIXTURES if f.name == "cc_trigger_candidate")
+    _, _, fallback_context = fallback.walk_both()
+
+    _assert_rung("takedown_ally", compiled_context, compiled=True, invariant=False)
+    with pytest.raises(AssertionError):
+        _assert_rung("takedown_ally", compiled_context, compiled=True, invariant=True)
+    with pytest.raises(AssertionError):
+        _assert_rung(
+            "cc_trigger_candidate", fallback_context, compiled=True, invariant=False
+        )
 
 
 def test_every_registry_key_has_a_candidate_and_an_ally_fixture():
