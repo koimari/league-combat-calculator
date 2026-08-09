@@ -577,7 +577,7 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   const direct = perSlot.find((key) => declared.has(key));
   if (direct) return direct;
   if (slot !== "R" && (declared.has("hammer_stance") || declared.has("mega"))) {
-    return "hammer_stance" in declared ? "hammer_stance" : "mega";
+    return declared.has("hammer_stance") ? "hammer_stance" : "mega";
   }
   if (slot !== "R" && declared.has("stance")) return "stance";
   // A generic variant-family option for the slot (e.g. q_variant on Heimer).

@@ -219,9 +219,11 @@ def test_bis_batch_applies_each_winner_before_the_next_slot(monkeypatch):
     import src.calculator.bis as bis_module
 
     seen_items = []
+    seen_contexts = []
 
     def fake_bis(data, *, pair_result_cache=None, search_context=None):
         seen_items.append(tuple(data.get("items", [])))
+        seen_contexts.append(search_context)
         slot_index = int(data["slot_index"])
         winner = "Rabadon's Deathcap" if slot_index == 0 else "Void Staff"
         return {
@@ -248,6 +250,8 @@ def test_bis_batch_applies_each_winner_before_the_next_slot(monkeypatch):
         {"slot_index": 1, "slot_kind": "item", "name": "Void Staff"},
     ]
     assert seen_items[1][0] == "Rabadon's Deathcap"
+    assert seen_contexts[0] is not None
+    assert seen_contexts[0] is seen_contexts[1]
 
 
 # ---------------------------------------------------------------------------

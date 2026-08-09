@@ -896,6 +896,11 @@ def bis_batch_payload(data: Mapping[str, object]) -> dict:
     subject_team = request_string(scenario, "subject_team", "main")
     subject_index = request_int(scenario, "subject_index", 0, 0, 4)
     pair_result_cache: dict = {}
+    batch_search_context = (
+        CoupledSearchContext()
+        if subject_team == "main" and not scenario.get("candidate_item_options")
+        else None
+    )
     results: list[dict] = []
     selected: list[dict[str, object]] = []
     tested = 0
@@ -913,6 +918,7 @@ def bis_batch_payload(data: Mapping[str, object]) -> dict:
         result = bis_payload(
             current,
             pair_result_cache=pair_result_cache,
+            search_context=batch_search_context,
         )
         results.append(_bis_batch_result(result))
         tested += int(result.get("candidate_count", 0) or 0)

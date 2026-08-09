@@ -309,6 +309,7 @@ def test_ability_variant_buttons_write_the_declared_backend_option():
     )
     assert "ability.variants?.length > 1 && variantBinding" in source
     assert "legacyVariantKeys" in source
+    assert 'declared.has("hammer_stance") ? "hammer_stance" : "mega"' in source
 
 
 def test_quick_to_analyst_bridge_is_wired():
