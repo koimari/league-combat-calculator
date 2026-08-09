@@ -21,11 +21,16 @@ from src.calculator.survival.actions import (
 ROOT = Path(__file__).parents[1]
 ACTIONS = ROOT / "src" / "calculator" / "survival" / "actions.py"
 
-# The six names the API publishes today, byte for byte.  The derivation must
-# reproduce this list; it does not get to define it.
+# The names the API publishes, byte for byte, in ledger order.  The
+# derivation must reproduce this list; it does not get to define it.
+#
+# Six at 0A.  C4 inserted ``persistent_aura_arming`` third — the ledger slot
+# between the barriers and the damage, where an aura already in force is
+# armed — and that is the change ``CAPABILITY_SCHEMA_VERSION == 2`` names.
 PUBLISHED_PHASES = [
     "state_transition",
     "shield_or_temporary_health",
+    "persistent_aura_arming",
     "damage_and_mitigation",
     "reactive_effect",
     "healing_and_regeneration",
@@ -41,7 +46,7 @@ def test_capability_contract_exposes_named_participant_and_catalogue_fields() ->
         item_option_count=3,
     )
 
-    assert contract["schema_version"] == 1
+    assert contract["schema_version"] == 2
     assert contract["participants"]["main"]["fields"]["champion"]["supported"]
     assert contract["catalogs"]["champion_options"]["count"] == 2
     assert contract["catalogs"]["item_options"]["count"] == 3
@@ -54,9 +59,32 @@ def test_the_published_phase_list_is_derived_from_the_transition_ladder() -> Non
     assert PARTICIPANT_LEDGER_CONTRACT["phases"] == _ledger_phases()
 
 
-def test_the_derivation_does_not_move_the_schema_version() -> None:
-    """Deriving an identical payload is not a change clients can see."""
-    assert CAPABILITY_SCHEMA_VERSION == 1
+def test_the_aura_rank_publishes_its_own_name_in_ledger_order() -> None:
+    """C4's seventh name, and the reason it is not folded into an existing one.
+
+    The list keeps each name's first appearance in declaration order, so
+    folding the aura slot into ``state_transition`` — which ``STATE_GRANT``
+    already published first — would leave the one phase that resolves
+    between the barriers and the damage published nowhere.
+    """
+    assert public_phase(TransitionRank.AURA_ARM) == "persistent_aura_arming"
+    assert PUBLISHED_PHASES.index("persistent_aura_arming") == 2
+    assert PUBLISHED_PHASES[1] == public_phase(TransitionRank.BARRIER_GRANT)
+    assert PUBLISHED_PHASES[3] == public_phase(TransitionRank.DAMAGE)
+    assert public_phase(TransitionRank.AURA_ARM) != public_phase(
+        TransitionRank.DEBUFF_ARM
+    )
+
+
+def test_the_published_list_moved_the_schema_version_with_it() -> None:
+    """D-63: the version names a change to the payload, and only that.
+
+    0A derived the list at version 1 with the payload byte-identical; C4
+    published a seventh name and took version 2.  Every value in the chain
+    has exactly one owning commit.
+    """
+    assert CAPABILITY_SCHEMA_VERSION == 2
+    assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7
 
 
 def test_public_phase_is_total_over_the_ladder() -> None:

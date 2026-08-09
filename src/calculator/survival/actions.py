@@ -40,10 +40,17 @@ class TransitionRank(IntEnum):
     transition emits) and is declared last so ``legacy_phase`` stays
     non-decreasing while projecting it to ``math.inf``.
 
+    ``AURA_ARM`` is the one rank whose float no producer wrote before C4.
+    A persistent aura is *already in force* when the fight opens — Abyssal
+    Mask's Unmake curses every enemy in range from the first frame — so it
+    must resolve before the damage at its own timestamp, not after it like
+    a debuff some trigger armed.  ``DEBUFF_ARM`` (1.0) put it after, which
+    made the opening exchange the one exchange the aura did not price.
+
     **Declaration order says more than the float does.**  ``DEBUFF_ARM``,
     ``RECOVERY`` and ``UTILITY_ARM`` all project to 1.0, so their relative
     order changes nothing while ``legacy_phase`` is what the sort key
-    consumes.  Ordering them 5 < 6 < 7 is nonetheless a decision — debuff
+    consumes.  Ordering them 6 < 7 < 8 is nonetheless a decision — debuff
     arming resolves before healing, and both before utility — and it
     becomes the live tie-break the moment Phase 4 sorts on the rank
     itself.  ``LATE_BARRIER`` before ``REACTIVE`` is the same kind of
@@ -53,13 +60,14 @@ class TransitionRank(IntEnum):
 
     STATE_GRANT = 0
     BARRIER_GRANT = 1
-    DAMAGE = 2
-    LATE_BARRIER = 3
-    REACTIVE = 4
-    DEBUFF_ARM = 5
-    RECOVERY = 6
-    UTILITY_ARM = 7
-    TERMINAL = 8
+    AURA_ARM = 2
+    DAMAGE = 3
+    LATE_BARRIER = 4
+    REACTIVE = 5
+    DEBUFF_ARM = 6
+    RECOVERY = 7
+    UTILITY_ARM = 8
+    TERMINAL = 9
 
 
 # The projection is deliberately many-to-one: several ranks share a float
@@ -69,6 +77,7 @@ class TransitionRank(IntEnum):
 _LEGACY_PHASES: dict[TransitionRank, float] = {
     TransitionRank.STATE_GRANT: -2.0,
     TransitionRank.BARRIER_GRANT: -1.0,
+    TransitionRank.AURA_ARM: -0.5,
     TransitionRank.DAMAGE: 0.0,
     TransitionRank.LATE_BARRIER: 0.5,
     TransitionRank.REACTIVE: 0.5,
@@ -108,9 +117,20 @@ RECOVERY_PHASE = legacy_phase(TransitionRank.RECOVERY)
 # than ``legacy_phase``: the public contract names the *kind* of transition,
 # so a late barrier is still a barrier, and arming a debuff or a utility
 # effect is still a state transition.
+#
+# ``AURA_ARM`` is the one arming rank that does *not* fold into
+# ``state_transition``, and the reason is the list's own ordering.  The
+# published list is the ledger's phases in ledger order, keeping each name's
+# first appearance; ``state_transition`` already appears first, at
+# ``STATE_GRANT``.  Folding the aura slot into it would publish nothing for
+# the one phase that resolves between the barriers and the damage — a phase
+# the ledger has and the contract does not name, which is this campaign's
+# own failure shape in the public schema.  It is a seventh published name
+# and ``CAPABILITY_SCHEMA_VERSION`` moves with it (D-63).
 _PUBLIC_PHASES: dict[TransitionRank, str] = {
     TransitionRank.STATE_GRANT: "state_transition",
     TransitionRank.BARRIER_GRANT: "shield_or_temporary_health",
+    TransitionRank.AURA_ARM: "persistent_aura_arming",
     TransitionRank.DAMAGE: "damage_and_mitigation",
     TransitionRank.LATE_BARRIER: "shield_or_temporary_health",
     TransitionRank.REACTIVE: "reactive_effect",
@@ -525,6 +545,12 @@ _STATE_GRANT_KINDS = frozenset(
 # everything else too, and one spelling of "which kinds are barriers"
 # is the point of this module.
 BARRIER_GRANT_KINDS = frozenset({"shield", "temporary_health"})
+# A ``damage_modifier`` a trigger armed is a debuff and resolves after the
+# damage at its own timestamp; a *persistent* one is an aura that was
+# already in force, and arms at ``AURA_ARM`` instead.  The kind alone
+# cannot tell the two apart, so the aura declares its rank on the packet
+# and ``item_support_effects._packet`` refuses a persistent modifier that
+# does not (C4).
 _DEBUFF_ARM_KINDS = frozenset({"damage_modifier", "stat_buff"})
 
 # The key a packet author uses to declare its own rank.  Underscored because
@@ -546,9 +572,12 @@ def support_transition_rank(event: Mapping[str, Any]) -> TransitionRank:
     A packet may declare its own rank when its kind does not decide it:
     Eclipse's self-shield and Fimbulwinter's Everlasting are barriers placed
     *after* the damage that triggered them, not before it, so they declare
-    ``LATE_BARRIER`` where the kind alone would say ``BARRIER_GRANT``.  The
-    declaration is a member of :class:`TransitionRank` and nothing else, so
-    an author can choose a rank but cannot invent an ordering.
+    ``LATE_BARRIER`` where the kind alone would say ``BARRIER_GRANT``; and
+    Abyssal Mask's Unmake is a persistent aura rather than a triggered
+    debuff, so it declares ``AURA_ARM`` where the kind alone would say
+    ``DEBUFF_ARM``.  The declaration is a member of :class:`TransitionRank`
+    and nothing else, so an author can choose a rank but cannot invent an
+    ordering.
 
     Every other packet is classified from its kind.  The classification is
     **not total**: an unrecognised kind — a typo, a kind a later phase adds

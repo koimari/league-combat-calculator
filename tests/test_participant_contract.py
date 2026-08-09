@@ -18,6 +18,7 @@ def test_capability_contract_publishes_one_ordered_participant_ledger():
     assert ledger["phases"] == [
         "state_transition",
         "shield_or_temporary_health",
+        "persistent_aura_arming",
         "damage_and_mitigation",
         "reactive_effect",
         "healing_and_regeneration",

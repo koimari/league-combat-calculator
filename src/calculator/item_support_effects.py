@@ -140,6 +140,7 @@ def _packet(
     if kind == _DAMAGE_MODIFIER_KIND:
         _check_cross_participant_authority(source, authority, fields.get("owner"))
         _check_declared_classes(source, damage_classes, attack_classes)
+        _check_aura_arming(source, fields.get("persistent"), rank)
         fields = {
             "damage_classes": damage_classes,
             "attack_classes": attack_classes,
@@ -635,6 +636,14 @@ def derive_item_support_effects(
                     + ally_item_effect_value("Abyssal Mask", "magic_damage_amp"),
                     all_sources=True,
                     persistent=True,
+                    # Unmake is an aura, not a triggered debuff: an enemy
+                    # inside the radius is cursed from the first frame, so
+                    # the curse must be in force for the damage that lands
+                    # at the packet's own timestamp.  The kind ladder's
+                    # ``DEBUFF_ARM`` armed it *after* that damage, which
+                    # made the opening exchange the one exchange Unmake did
+                    # not price (C4).
+                    rank=TransitionRank.AURA_ARM,
                     range_assumption="within_700_units",
                     # "receive 12% increased *magic* damage from all
                     # sources": one damage class, every attack class.  The
@@ -1565,6 +1574,36 @@ def _check_declared_classes(
                 f"{source} declares {name} holding something other than "
                 f"{vocabulary.__name__} members"
             )
+
+
+def _check_aura_arming(
+    source: str, persistent: Any, rank: TransitionRank | None
+) -> None:
+    """A persistent cross-participant modifier is an aura, and arms as one.
+
+    A ``damage_modifier`` some trigger armed is a debuff: it resolves after
+    the damage at its own timestamp, because the packet that triggered it
+    landed first.  A *persistent* one was already in force when the fight
+    opened, so the same ordering makes the opening exchange the one
+    exchange the aura does not price — Abyssal Mask's Unmake curses an
+    enemy from t = 0 and priced nothing at t = 0 (C4).
+
+    The kind cannot tell the two apart, so the aura declares
+    ``AURA_ARM`` on its packet and this refuses a persistent modifier that
+    does not.  Fail closed rather than classify on ``persistent`` in the
+    walk's kind ladder: a declared rank is greppable, is enumerated by the
+    ladder's own source audit, and cannot silently re-order a packet whose
+    author never considered the question.
+    """
+    if not persistent:
+        return
+    if rank is not TransitionRank.AURA_ARM:
+        raise ValueError(
+            f"{source} is a persistent damage_modifier and declares "
+            f"rank={rank}; a persistent modifier is an aura already in "
+            "force and must declare TransitionRank.AURA_ARM, or it prices "
+            "nothing at its own timestamp (C4)"
+        )
 
 
 def producer_item(source: str) -> str:

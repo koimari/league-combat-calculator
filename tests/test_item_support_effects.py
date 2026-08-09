@@ -946,9 +946,12 @@ class TestAbyssalMaskOwnerHandshake:
         all sources", so exactly one of them carries the multiplier — while
         the untyped walk multiplied both.
 
-        Only damage after ``t = 0`` is read: the curse arms at ``DEBUFF_ARM``
-        and so misses the packets at its own timestamp, which is a separate
-        defect and C4's correction, not this one's.
+        Every packet is read, the opening exchange included.  C3 wrote this
+        test reading only ``t > 0`` because the curse then armed at
+        ``DEBUFF_ARM`` and missed the packets at its own timestamp; C4 moved
+        it to ``AURA_ARM``, so the restriction has nothing left to exclude
+        and keeping it would hide the class rule on exactly the exchange
+        that used to have no rule at all.
         """
         app.config["TESTING"] = True
         response = app.test_client().post("/api/calculate", json=_ABYSSAL_ROSTER)
@@ -956,8 +959,6 @@ class TestAbyssalMaskOwnerHandshake:
         by_type = defaultdict(set)
         for event in response.get_json()["combat"]["events"]:
             if event["attacker"] != "ally:Ahri" or event["target"] != "enemy:Aatrox":
-                continue
-            if float(event["time"]) <= 0.0:
                 continue
             source = (event.get("support_damage_multiplier") or {}).get("source")
             by_type[event["damage_type"]].add(source == "Abyssal Mask — Unmake")

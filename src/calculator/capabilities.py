@@ -31,7 +31,13 @@ from typing import Any, Mapping
 # Acyclic: nothing under ``survival/`` imports ``capabilities``.
 from .survival.actions import TransitionRank, public_phase
 
-CAPABILITY_SCHEMA_VERSION = 1
+# D-63's chain, in commit order: 1 at 0A's derivation (a starting value, not
+# a bump), 2 here — C4 publishes ``persistent_aura_arming`` as the ledger's
+# seventh phase — and the two later values belong to Phase 3's coverage flip
+# and Phase 4's S9.  The version moves for a change to the *published
+# payload* and for nothing else, so a derivation edit that comes out
+# byte-identical leaves it alone.
+CAPABILITY_SCHEMA_VERSION = 2
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
 # resolves every participant's state transition.  Keeping the phase names in
@@ -99,6 +105,11 @@ def _ledger_phases() -> list[str]:
     vocabulary and the walk's ordering one fact.  ``CAPABILITY_SCHEMA_VERSION``
     moves when *this list* changes, never when the derivation is edited and
     the payload comes out identical.
+
+    C4 is the first proof that the derivation works: adding ``AURA_ARM`` to
+    the ladder published a seventh name here without anyone editing this
+    module's payload, which is exactly the change six hand-written strings
+    would have missed.
     """
     return list(dict.fromkeys(public_phase(rank) for rank in TransitionRank))
 

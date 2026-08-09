@@ -41,6 +41,7 @@ def test_legacy_phase_is_total_over_the_enum() -> None:
     assert [legacy_phase(rank) for rank in TransitionRank] == [
         -2.0,
         -1.0,
+        -0.5,
         0.0,
         0.5,
         0.5,
@@ -65,10 +66,16 @@ def test_terminal_is_declared_last_and_projects_to_infinity() -> None:
 
 
 def test_the_projection_is_many_to_one_at_this_stage() -> None:
-    """Eight producing names collapse onto five distinct floats."""
+    """Nine producing names collapse onto six distinct floats (D-06).
+
+    Eight onto five at 0A; C4's ``AURA_ARM`` is the ninth name and the
+    sixth float, and it is the only member whose float no producer wrote
+    before it existed.
+    """
     producing = [rank for rank in TransitionRank if rank is not TransitionRank.TERMINAL]
-    assert len(producing) == 8
-    assert len({legacy_phase(rank) for rank in producing}) == 5
+    assert len(producing) == 9
+    assert len({legacy_phase(rank) for rank in producing}) == 6
+    assert legacy_phase(TransitionRank.AURA_ARM) == -0.5
     assert legacy_phase(TransitionRank.LATE_BARRIER) == legacy_phase(
         TransitionRank.REACTIVE
     )
@@ -487,10 +494,16 @@ def _declared_ranks(path: Path) -> list[tuple[str, str]]:
     return found
 
 
-def test_the_packet_authors_that_declare_a_rank_are_exactly_three() -> None:
-    """The population that used to write an open float, now named."""
+def test_the_packet_authors_that_declare_a_rank_are_exactly_four() -> None:
+    """The population that used to write an open float, now named.
+
+    Three at 0A; C4 adds Abyssal Mask's Unmake, the one persistent
+    cross-participant modifier, which declares ``AURA_ARM`` because the
+    kind ladder would otherwise arm an aura like a triggered debuff.
+    """
     declared = _declared_ranks(ITEM_SUPPORT) + _declared_ranks(TIMELINE)
     assert sorted(declared) == [
+        ("item_support_effects.py", "AURA_ARM"),
         ("item_support_effects.py", "DAMAGE"),
         ("item_support_effects.py", "LATE_BARRIER"),
         ("participant_timeline.py", "LATE_BARRIER"),
