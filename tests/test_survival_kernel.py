@@ -17,10 +17,28 @@ breakdown + duration) equality, plus which path served it:
   caller fell back to the receipt walk (never a silent drop);
 * ``invariant`` — the failure poisoned the context so later evaluations
   skip the compiled path entirely.
+
+Which builds the suite must cover is not a judgement call: the last section
+derives the required item set from the registries themselves — every
+tuple-incapable event-view holder and every cross-participant
+``damage_modifier`` producer, each reached once from the candidate and once
+from a roster ally — so a seventh producer without a fixture fails here on
+the commit that adds it (slice 0A.9).
 """
+
+from dataclasses import dataclass
+from functools import lru_cache
+from typing import Any, Mapping
+
+import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.item_support_effects import (
+    EVENT_VIEW_SUPPORT_ITEMS,
+    cross_participant_authorities,
+    producer_item,
+)
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
@@ -57,21 +75,12 @@ def _timeline(
     )
 
 
-def _assert_contract(
-    name,
-    champion_name,
-    items,
-    params,
-    enemies,
-    allies=(),
-    *,
-    level=18,
-    role="mid",
-    compiled=True,
-    invariant=False,
-):
-    """The score path must deep-equal the receipt path on the whole scoring
-    receipt, and must have taken the documented path."""
+def _walk_both(champion_name, items, params, enemies, allies, *, level, role):
+    """The same fight down both walks: ``(receipt, score, search_context)``.
+
+    Both runs take the scoring subset (``include_receipt=False``) — the
+    receipt walk's is the authority the score adapter must reproduce — and
+    the context records which path the score adapter actually took."""
     legacy = _timeline(
         champion_name,
         level,
@@ -95,6 +104,27 @@ def _assert_contract(
         pair_result_cache={},
         search_context=context,
     )
+    return legacy, fast, context
+
+
+def _assert_contract(
+    name,
+    champion_name,
+    items,
+    params,
+    enemies,
+    allies=(),
+    *,
+    level=18,
+    role="mid",
+    compiled=True,
+    invariant=False,
+):
+    """The score path must deep-equal the receipt path on the whole scoring
+    receipt, and must have taken the documented path."""
+    legacy, fast, context = _walk_both(
+        champion_name, items, params, enemies, allies, level=level, role=role
+    )
     assert fast == legacy, f"{name}: score path diverged from the receipt walk"
     assert (
         context.uncompilable is invariant
@@ -110,33 +140,24 @@ def _assert_contract(
         assert not context.uncompilable
 
 
-_ITEMS = {
-    name: get_item_by_name(name)
-    for name in (
-        "Infinity Edge",
-        "Rapid Firecannon",
-        "Phantom Dancer",
-        "Essence Reaver",
-        "Lord Dominik's Regards",
-        "Berserker's Greaves",
-        "Rabadon's Deathcap",
-        "The Collector",
-        "Death's Dance",
-        "Bloodthirster",
-        "Hextech Gunblade",
-        "Spirit Visage",
-        "Morellonomicon",
-    )
-}
+@lru_cache(maxsize=None)
+def _item(name):
+    """One cached item record by name.
+
+    Deliberately *not* a fixed vocabulary: the suite's required item set is
+    derived from the registries below, so a scenario reaching a new item may
+    not have to extend a hand list to name it (slice 0A.9)."""
+    return get_item_by_name(name)
 
 
-def _roster(champion, level=18, items=(), role="mid", quest=False):
+def _roster(champion, level=18, items=(), role="mid", quest=False, ally_effects=False):
     return ChampionLoadout(
         champion=champion,
         level=level,
         role=role,
         items=items,
         role_quest_complete=quest,
+        ally_effects_enabled=ally_effects,
     ).resolve()
 
 
@@ -152,7 +173,7 @@ def test_plain_ad_fight_compiled_walk_equals_receipt_walk():
         "plain-AD",
         "Ahri",
         [
-            _ITEMS[n]
+            _item(n)
             for n in (
                 "Infinity Edge",
                 "Rapid Firecannon",
@@ -294,7 +315,7 @@ def test_threshold_shield_compiled_walk_equals_receipt_walk():
     _assert_contract(
         "steraks-threshold",
         "Ahri",
-        [_ITEMS["Infinity Edge"]],
+        [_item("Infinity Edge")],
         FightParams.from_request(
             {
                 "fight_mode": "time_based",
@@ -325,7 +346,7 @@ def test_starting_stasis_compiled_walk_equals_receipt_walk():
     _assert_contract(
         "zhonya-stasis",
         "Ahri",
-        [_ITEMS["Infinity Edge"]],
+        [_item("Infinity Edge")],
         params,
         [_roster("Janna")],
     )
@@ -379,7 +400,7 @@ def test_aphelios_severum_score_path_matches_receipt():
     for items in (
         [],
         [
-            _ITEMS[n]
+            _item(n)
             for n in (
                 "Infinity Edge",
                 "Rapid Firecannon",
@@ -417,7 +438,7 @@ def test_roster_warmog_heart_rides_compiled_walk():
     _assert_contract(
         "warmog-roster-gated",
         "Cassiopeia",
-        [_ITEMS["Rabadon's Deathcap"]],
+        [_item("Rabadon's Deathcap")],
         FightParams.from_request(
             {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
         ),
@@ -453,7 +474,7 @@ def test_enemy_actor_wide_heal_keeps_main_pair_copy_with_allies():
     _assert_contract(
         "enemy-actor-wide-precedence",
         "Cassiopeia",
-        [_ITEMS["Rabadon's Deathcap"]],
+        [_item("Rabadon's Deathcap")],
         FightParams.from_request(
             {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
         ),
@@ -527,7 +548,7 @@ def test_vamp_candidate_rides_compiled_walk():
     _assert_contract(
         "bloodthirster-ichor",
         "Ahri",
-        [_ITEMS["Bloodthirster"], _ITEMS["Infinity Edge"]],
+        [_item("Bloodthirster"), _item("Infinity Edge")],
         params,
         [_roster("Cassiopeia")],
     )
@@ -536,7 +557,7 @@ def test_vamp_candidate_rides_compiled_walk():
     _assert_contract(
         "omnivamp-spirit-visage",
         "Ahri",
-        [_ITEMS["Hextech Gunblade"], _ITEMS["Spirit Visage"]],
+        [_item("Hextech Gunblade"), _item("Spirit Visage")],
         params,
         [_roster("Cassiopeia")],
     )
@@ -560,7 +581,7 @@ def test_grievous_builds_ride_compiled_walk():
     _assert_contract(
         "morello-candidate",
         "Ahri",
-        [_ITEMS["Morellonomicon"], _ITEMS["Rabadon's Deathcap"]],
+        [_item("Morellonomicon"), _item("Rabadon's Deathcap")],
         params,
         [_roster("Dr. Mundo", items=("Spirit Visage", "Kaenic Rookern"), role="top")],
     )
@@ -569,7 +590,7 @@ def test_grievous_builds_ride_compiled_walk():
     _assert_contract(
         "morello-roster",
         "Ahri",
-        [_ITEMS["Bloodthirster"], _ITEMS["Infinity Edge"]],
+        [_item("Bloodthirster"), _item("Infinity Edge")],
         params,
         [_roster("Cassiopeia", items=("Morellonomicon", "Vampiric Scepter"))],
     )
@@ -582,7 +603,7 @@ def test_collector_execute_falls_back():
     _assert_contract(
         "collector-execute",
         "Ahri",
-        [_ITEMS["The Collector"], _ITEMS["Infinity Edge"], _ITEMS["Rapid Firecannon"]],
+        [_item("The Collector"), _item("Infinity Edge"), _item("Rapid Firecannon")],
         FightParams.from_request(
             {
                 "fight_mode": "time_based",
@@ -605,7 +626,7 @@ def test_deaths_dance_deferral_falls_back():
     _assert_contract(
         "deaths-dance-defer",
         "Ahri",
-        [_ITEMS["Death's Dance"], _ITEMS["Infinity Edge"]],
+        [_item("Death's Dance"), _item("Infinity Edge")],
         FightParams.from_request(
             {
                 "fight_mode": "time_based",
@@ -628,7 +649,7 @@ def test_knights_vow_redirect_poisons_context_and_falls_back():
     _assert_contract(
         "knights-vow-redirect",
         "Ahri",
-        [_ITEMS["Infinity Edge"]],
+        [_item("Infinity Edge")],
         FightParams.from_request(
             {
                 "fight_mode": "time_based",
@@ -798,3 +819,429 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
     # The declaration is what separates them: same kind, different arming.
     assert by_event["declared:late"].phase == legacy_phase(TransitionRank.LATE_BARRIER)
     assert by_event["plain:barrier"].phase == legacy_phase(TransitionRank.BARRIER_GRANT)
+
+
+# ---------------------------------------------------------------------------
+# Registry-derived coverage (slice 0A.9)
+#
+# Which items this suite owes a fixture is READ from the two registries that
+# already know — the tuple-incapable event-view set and the derived
+# cross-participant ``damage_modifier`` producer set — never typed out here.
+# A hand list would be a second home for a fact the registries state, which is
+# the failure shape the campaign exists to kill.  Coverage is measured off the
+# receipt's public ``support_events`` rows rather than off the fixture's item
+# lists: an equipped item whose packet never fires is a fixture that proves
+# nothing.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class Holder:
+    """One roster participant and the items it carries into the fight.
+
+    A holder carrying items has completed its role quest, because half the
+    required set is support-quest gear and an unfinished quest would change
+    what the fixture equips rather than what it reaches."""
+
+    champion: str
+    items: tuple[str, ...] = ()
+    role: str = "mid"
+    level: int = 18
+    ally_effects: bool = False
+
+    def resolve(self):
+        """The loadout the timeline builder consumes."""
+        return _roster(
+            self.champion,
+            level=self.level,
+            items=self.items,
+            role=self.role,
+            quest=bool(self.items),
+            ally_effects=self.ally_effects,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class KernelFixture:
+    """One compiled-vs-receipt scenario, and what it puts on the board.
+
+    ``pinned_divergence`` is a *characterization*: a named, reproduced
+    disagreement between the two walks that Phase 0A may not fix, because 0A
+    moves no number in ``src/``.  A pinned fixture asserts the walks still
+    disagree, so the commit that fixes the mechanic turns this suite red and
+    its author has to read the reason rather than inherit it.
+    """
+
+    name: str
+    champion: str
+    items: tuple[str, ...]
+    enemies: tuple[Holder, ...]
+    allies: tuple[Holder, ...] = ()
+    role: str = "mid"
+    level: int = 18
+    duration: float = 8.0
+    compiled: bool = True
+    invariant: bool = False
+    pinned_divergence: str = ""
+
+    def params(self):
+        """This fixture's deterministic time-based request."""
+        return FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": self.duration,
+                "role": self.role,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+            deterministic=True,
+        )
+
+    def walk_both(self):
+        """``(receipt, score, search_context)`` for this fixture."""
+        return _walk_both(
+            self.champion,
+            [_item(name) for name in self.items],
+            self.params(),
+            [holder.resolve() for holder in self.enemies],
+            [holder.resolve() for holder in self.allies],
+            level=self.level,
+            role=self.role,
+        )
+
+    def receipt(self):
+        """The annotating receipt — the only mode carrying the support rows."""
+        return _timeline(
+            self.champion,
+            self.level,
+            [_item(name) for name in self.items],
+            self.params(),
+            [holder.resolve() for holder in self.enemies],
+            [holder.resolve() for holder in self.allies],
+            role=self.role,
+            include_receipt=True,
+        )
+
+
+# Four candidate-holder fixtures and their four ally-holder rung variants.
+# The candidate builds ride the compiled or the fallback rung; every ally
+# build holding a cross-participant modifier poisons the search context
+# instead, which is the rung difference these variants exist to pin.
+_CC_TRIGGER_BUILD = (
+    "Imperial Mandate",
+    "Bandlepipes",
+    "Solstice Sleigh",
+    "Fimbulwinter",
+)
+_EVENT_SCAN_BUILD = (
+    "Black Cleaver",
+    "Bloodletter's Curse",
+    "Bloodsong",
+    "Phage",
+    "Abyssal Mask",
+)
+_ENCHANTER_BUILD = ("Dream Maker", "Echoes of Helia")
+_TAKEDOWN_BUILD = ("Cryptbloom",)
+
+# A level-1 enemy is what makes the takedown fixtures reach a takedown at
+# all: Cryptbloom's Life From Death fires on a kill, and a level-18 enemy
+# survives the window.
+_LIVE_ENEMY = (Holder("Aatrox", role="top"),)
+_DOOMED_ENEMY = (Holder("Aatrox", role="top", level=1),)
+
+REGISTRY_FIXTURES = (
+    KernelFixture(
+        name="cc_trigger_candidate",
+        champion="Ahri",
+        items=_CC_TRIGGER_BUILD,
+        enemies=_LIVE_ENEMY,
+        allies=(Holder("Pantheon", role="support"),),
+        compiled=False,
+    ),
+    KernelFixture(
+        name="event_scan_candidate",
+        champion="Ahri",
+        items=_EVENT_SCAN_BUILD,
+        enemies=_LIVE_ENEMY,
+        allies=(Holder("Pantheon", role="support"),),
+    ),
+    KernelFixture(
+        name="enchanter_trigger_candidate",
+        champion="Lulu",
+        items=_ENCHANTER_BUILD,
+        enemies=_LIVE_ENEMY,
+        allies=(Holder("Jax", role="top"),),
+        role="support",
+    ),
+    KernelFixture(
+        name="takedown_candidate",
+        champion="Ahri",
+        items=_TAKEDOWN_BUILD,
+        enemies=_DOOMED_ENEMY,
+        allies=(Holder("Pantheon", role="support"),),
+        duration=20.0,
+    ),
+    KernelFixture(
+        name="cc_trigger_ally",
+        champion="Ahri",
+        items=(),
+        enemies=_LIVE_ENEMY,
+        allies=(
+            Holder(
+                "Pantheon",
+                items=_CC_TRIGGER_BUILD,
+                role="support",
+                ally_effects=True,
+            ),
+        ),
+        compiled=False,
+        invariant=True,
+    ),
+    KernelFixture(
+        name="event_scan_ally",
+        champion="Ahri",
+        items=(),
+        enemies=_LIVE_ENEMY,
+        allies=(
+            Holder(
+                "Pantheon",
+                items=_EVENT_SCAN_BUILD,
+                role="support",
+                ally_effects=True,
+            ),
+        ),
+        compiled=False,
+        invariant=True,
+    ),
+    KernelFixture(
+        name="enchanter_trigger_ally",
+        champion="Ahri",
+        items=(),
+        enemies=_LIVE_ENEMY,
+        allies=(
+            Holder("Lulu", items=_ENCHANTER_BUILD, role="support", ally_effects=True),
+        ),
+        compiled=False,
+        invariant=True,
+    ),
+    KernelFixture(
+        name="takedown_ally",
+        champion="Ahri",
+        items=(),
+        enemies=_DOOMED_ENEMY,
+        allies=(
+            Holder(
+                "Pantheon",
+                items=_TAKEDOWN_BUILD,
+                role="support",
+                ally_effects=True,
+            ),
+        ),
+        duration=20.0,
+        pinned_divergence=(
+            "a roster ally's takedown-triggered support packets never reach "
+            "the compiled score path: the receipt composition passes "
+            "target_id=defender.participant_id into _support_effect_templates "
+            "while the base and signature panels pass no target_id at all, so "
+            "the takedown synthesis that reads it never fires and Cryptbloom's "
+            "Life From Death authors zero packets"
+        ),
+    ),
+)
+
+
+def required_fixture_items() -> frozenset[str]:
+    """Every item this suite owes a fixture, read from the registries.
+
+    ``EVENT_VIEW_SUPPORT_ITEMS`` is the tuple-incapable set the pipeline's
+    tuple gate consults; ``cross_participant_authorities()`` is the derived
+    ``damage_modifier`` producer set.  Neither is restated here, so a new
+    event-view holder or a seventh producer becomes a required member on the
+    commit that adds it — and fails this suite until it has a fixture.
+    """
+    return EVENT_VIEW_SUPPORT_ITEMS | frozenset(
+        producer_item(source) for source in cross_participant_authorities()
+    )
+
+
+@lru_cache(maxsize=None)
+def _reached_items(fixture: KernelFixture) -> tuple[frozenset[str], frozenset[str]]:
+    """``(candidate-authored, ally-authored)`` items this fixture really fires.
+
+    Read off the receipt's public ``support_events`` rows and attributed by
+    each packet's own ``attacker``, so a fixture that equips an item without
+    ever reaching its packet contributes no coverage.
+    """
+    candidate: set[str] = set()
+    ally: set[str] = set()
+    for event in fixture.receipt().get("support_events", ()):
+        item = producer_item(str(event.get("source", "")))
+        attacker = str(event.get("attacker", ""))
+        if attacker == "main":
+            candidate.add(item)
+        elif attacker.startswith("ally:"):
+            ally.add(item)
+    return frozenset(candidate), frozenset(ally)
+
+
+def missing_fixtures(
+    required: frozenset[str],
+    candidate_reached: frozenset[str],
+    ally_reached: frozenset[str],
+) -> tuple[tuple[str, str], ...]:
+    """Every ``(item, side)`` a required item is owed and does not have.
+
+    One pure function over three sets, so the check's own red is reproducible
+    on demand instead of being a claim about the past (R-05).
+    """
+    return tuple(
+        sorted(
+            (item, side)
+            for item in required
+            for side, reached in (
+                ("candidate", candidate_reached),
+                ("ally", ally_reached),
+            )
+            if item not in reached
+        )
+    )
+
+
+def _differing_leaves(left: Any, right: Any, path: str = "") -> tuple[str, ...]:
+    """Every leaf path at which two scoring receipts disagree."""
+    if isinstance(left, Mapping) and isinstance(right, Mapping):
+        return tuple(
+            leaf
+            for key in sorted(set(left) | set(right))
+            for leaf in _differing_leaves(
+                left.get(key), right.get(key), f"{path}.{key}"
+            )
+        )
+    if isinstance(left, list) and isinstance(right, list):
+        if len(left) != len(right):
+            return (f"{path}[]",)
+        return tuple(
+            leaf
+            for index, (one, other) in enumerate(zip(left, right))
+            for leaf in _differing_leaves(one, other, f"{path}[{index}]")
+        )
+    return () if left == right else (path,)
+
+
+def _ally_survival(result: Mapping[str, Any]) -> Mapping[str, Any]:
+    """The one roster ally's survival row of a scoring receipt."""
+    allies = [
+        participant
+        for participant in result["participants"]
+        if participant["team"] == "ally"
+    ]
+    assert len(allies) == 1, "the pinned fixture carries exactly one roster ally"
+    return allies[0]["survival"]
+
+
+@pytest.mark.parametrize(
+    "fixture", REGISTRY_FIXTURES, ids=[fixture.name for fixture in REGISTRY_FIXTURES]
+)
+def test_registry_fixture_pins_the_two_walks(fixture):
+    """Every registry-derived fixture pins the two walks against each other.
+
+    A fixture carrying no ``pinned_divergence`` must deep-equal; a pinned one
+    must still disagree, and the day it stops disagreeing the pin is what
+    forces its fixer to read the reason.
+    """
+    if not fixture.pinned_divergence:
+        _assert_contract(
+            fixture.name,
+            fixture.champion,
+            [_item(name) for name in fixture.items],
+            fixture.params(),
+            [holder.resolve() for holder in fixture.enemies],
+            [holder.resolve() for holder in fixture.allies],
+            level=fixture.level,
+            role=fixture.role,
+            compiled=fixture.compiled,
+            invariant=fixture.invariant,
+        )
+        return
+    legacy, fast, context = fixture.walk_both()
+    assert fast != legacy, (
+        f"{fixture.name}: the pinned divergence is gone — "
+        f"{fixture.pinned_divergence}.  Delete the pin in the commit that "
+        "fixed it."
+    )
+    # The rung is pinned for a pinned fixture too: a divergence that moved
+    # to a different rung is a different divergence.
+    assert context.uncompilable is fixture.invariant
+
+
+def test_pinned_ally_takedown_divergence_is_the_dropped_nova_heal():
+    """The pinned divergence is exactly a lost heal, named leaf by leaf.
+
+    The receipt walk heals the roster ally with Cryptbloom's takedown nova;
+    the compiled score path heals it by nothing at all, and every differing
+    leaf is a consequence of that one missing packet.  Pinning the mechanism
+    rather than a diff count is what stops this from silently becoming a
+    *different* divergence of the same size.
+    """
+    fixture = next(f for f in REGISTRY_FIXTURES if f.name == "takedown_ally")
+    legacy, fast, _context = fixture.walk_both()
+
+    assert _ally_survival(legacy)["healing_received"] > 0.0
+    assert _ally_survival(fast)["healing_received"] == 0.0
+
+    _, ally_reached = _reached_items(fixture)
+    assert "Cryptbloom" in ally_reached, "the receipt walk must author the nova heal"
+
+    # Every leaf that moved is a healing or health consequence of the drop.
+    leaves = _differing_leaves(legacy, fast)
+    assert leaves, "the pinned divergence must still reproduce"
+    assert all(
+        leaf.rsplit(".", 1)[-1]
+        in {
+            "effective_health",
+            "ending_health",
+            "ending_health_ratio",
+            "healing_output",
+            "healing_received",
+            "overhealing",
+            "support_value",
+        }
+        for leaf in leaves
+    ), f"the pinned divergence changed shape: {leaves}"
+
+
+def test_every_registry_item_has_a_candidate_and_an_ally_fixture():
+    """The required set is derived, and every member is reached from both sides.
+
+    Both halves are computed: the required items from the registries, the
+    covered ones from the packets the fixtures actually authored.  A seventh
+    ``damage_modifier`` producer, or a new event-view holder, therefore fails
+    here on the commit that adds it rather than being assumed covered.
+    """
+    required = required_fixture_items()
+    # Neither half may be empty, or the check below is green over nothing.
+    assert EVENT_VIEW_SUPPORT_ITEMS and cross_participant_authorities()
+    assert required >= EVENT_VIEW_SUPPORT_ITEMS
+
+    candidate_reached: frozenset[str] = frozenset()
+    ally_reached: frozenset[str] = frozenset()
+    for fixture in REGISTRY_FIXTURES:
+        candidate, ally = _reached_items(fixture)
+        candidate_reached |= candidate
+        ally_reached |= ally
+    missing = missing_fixtures(required, candidate_reached, ally_reached)
+    assert not missing, f"registry items no fixture reaches: {missing}"
+
+
+def test_an_undeclared_producer_fails_the_coverage_check():
+    """The coverage check's own red, on demand (R-05).
+
+    A seventh ``damage_modifier`` producer with no fixture is reported for
+    both sides; nothing about the check can pass by being silent.
+    """
+    covered = required_fixture_items()
+    assert missing_fixtures(covered | {"Seventh Producer"}, covered, covered) == (
+        ("Seventh Producer", "ally"),
+        ("Seventh Producer", "candidate"),
+    )
+    assert missing_fixtures(covered, covered, covered) == ()
