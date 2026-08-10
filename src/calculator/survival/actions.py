@@ -20,7 +20,8 @@ from collections.abc import Iterable, Mapping
 import math
 from typing import Any, NamedTuple
 
-from ..ability_spec import IMMOBILIZING_CC_KINDS, AttackClass, DamageClass
+from ..ability_spec import AttackClass, DamageClass
+from ..trigger_stream import is_immobilizing_event
 
 # ---------------------------------------------------------------------------
 # Transition rank — the one ordered "when does this resolve" vocabulary
@@ -274,10 +275,11 @@ class SurvivalAction(NamedTuple):
     source: str = ""
     event_id: str | None = None
     sequence: Any = None
-    # The packet applied immobilizing crowd control — the shared
-    # ``ability_spec.IMMOBILIZING_CC_KINDS`` vocabulary or a legacy marker
-    # flag, never a set this module decides for itself (D-08).  Force of
-    # Nature's Steadfast reads it for its two-stack branch.
+    # The packet applied immobilizing crowd control — the trigger bus's
+    # answer over the shared ``ability_spec.IMMOBILIZING_CC_KINDS``
+    # vocabulary, or a legacy marker flag, never a set this module decides
+    # for itself (D-08).  Force of Nature's Steadfast reads it for its
+    # two-stack branch.
     immobilized: bool = False
     cc_kind: str = ""
     baseline_effective_armor: float | None = None
@@ -795,12 +797,15 @@ def survival_action_from_event(
         source=str(get("source", get("source_key", ""))),
         event_id=str(event_id) if event_id is not None else None,
         sequence=get("sequence"),
-        immobilized=bool(
-            get("immobilized")
-            or get("crowd_control")
-            or get("hard_cc")
-            or cc_kind.lower().strip() in IMMOBILIZING_CC_KINDS
-        ),
+        # The bus answers "is this an immobilize?" for every consumer; the
+        # walk used to answer it again, and the fourth re-typing is what
+        # D-08 had to widen when a module started authoring ``charm``.  The
+        # bare ``crowd_control`` marker stays a disjunct because it always
+        # was one: the bus classifies it ``UNCLASSIFIED_CONTROL`` — control
+        # nobody narrowed — and narrowing Steadfast to reject it would be a
+        # semantic correction, which is Phase 0's to make and not a
+        # refactor's.
+        immobilized=is_immobilizing_event(event) or bool(get("crowd_control")),
         cc_kind=cc_kind,
         baseline_effective_armor=(
             float(baseline_armor) if baseline_armor is not None else None
