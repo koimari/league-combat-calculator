@@ -131,8 +131,9 @@ from typing import Any, Callable
 from . import item_effects
 from . import rune_effects
 from . import shield_ledger
-from .ability_spec import DamagePart, is_immobilizing_event
+from .ability_spec import DamagePart
 from .item_support_effects import has_takedown_scan_support_items
+from .trigger_stream import Stream, authored_triggers, is_immobilizing_event
 from .resistance import (
     apply_resistance,
     apply_magic_penetration,
@@ -1715,17 +1716,24 @@ def _fimbulwinter_event_coverage(
     """
     if not item_effects.requires_authored_control_event(items):
         return True, ""
+    # The sixth control-reading site, on the bus (D-34).  ``cc_reviewed`` on
+    # a Trigger is exactly this gate's old disjunction: a row carrying a
+    # vocabulary ``cc_kind`` is reviewed by construction, and the engine
+    # writes the legacy flag only alongside such a kind.  A tuple ledger's
+    # positional rows classify as nothing at all, which is the same silence
+    # the ``isinstance`` filter produced.
     ability_events = [
-        event
-        for event in damage_events
-        if isinstance(event, dict) and bool(event.get("is_ability"))
+        trigger
+        for trigger in authored_triggers(
+            {"damage_events": damage_events},
+            streams=frozenset({Stream.DAMAGE}),
+            holder="Fimbulwinter",
+        )
+        if trigger.is_ability
     ]
     if not ability_events:
         return True, ""
-    if all(
-        event.get("cc_reviewed") is True or event.get("cc_kind") is not None
-        for event in ability_events
-    ):
+    if all(trigger.cc_reviewed for trigger in ability_events):
         return True, ""
     return False, "fimbulwinter_everlasting"
 

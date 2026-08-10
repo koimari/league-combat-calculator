@@ -726,9 +726,10 @@ def test_a_paired_capability_with_no_packet_source_is_rejected(monkeypatch):
 # attributable edit rather than a silent one.
 CC_KIND_READERS = {
     "src/calculator/ability_spec.py": frozenset({"is_immobilizing_event"}),
-    "src/calculator/damage.py": frozenset(
-        {"_fimbulwinter_event_coverage", "add_declared_events"}
-    ),
+    # ``add_declared_events`` copies the token onto the ledger row; it is
+    # the one reader that never classifies.  D-34's certification gate left
+    # this map at P2b, when it moved onto the bus.
+    "src/calculator/damage.py": frozenset({"add_declared_events"}),
     "src/calculator/survival/actions.py": frozenset({"survival_action_from_event"}),
     "src/calculator/trigger_stream.py": frozenset({"_classify_cc"}),
 }
