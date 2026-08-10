@@ -1,6 +1,6 @@
 """F3 — algorithmic optimal-order derivation for every registered champion.
 
-The F2 combo layer hand-curated the ``COMBO_TABLE`` seeds; every other
+The F2 combo layer hand-curated the ``CAST_ORDER_OVERRIDES`` seeds; every other
 champion fell back to the certified/default order with a generic
 rationale.  F3 replaces that with a fully algorithmic derivation
 (:func:`src.calculator.rotation_resolver.derive_champion_rule`): the
@@ -39,7 +39,7 @@ from src.calculator.cast_dependency import (
 from src.calculator.champions import get_champion_cast_order
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.rotation_resolver import (
-    COMBO_TABLE,
+    CAST_ORDER_OVERRIDES,
     _DERIVED_RULE_CACHE,
     DependencyReceipt,
     _Edge,
@@ -236,10 +236,10 @@ def _edge_kinds(edges):
 
 class TestOverrideSeeds:
     def test_table_holds_exactly_the_verified_seeds(self) -> None:
-        assert set(COMBO_TABLE) == set(_OVERRIDE_CHAMPIONS)
+        assert set(CAST_ORDER_OVERRIDES) == set(_OVERRIDE_CHAMPIONS)
 
     def test_seed_rules_are_not_marked_derived(self) -> None:
-        for name, rule in COMBO_TABLE.items():
+        for name, rule in CAST_ORDER_OVERRIDES.items():
             assert rule.derived is False, f"{name} is a curated seed, not derived"
             assert rule.sources, f"{name} seed has no sourced atoms"
 
@@ -249,7 +249,7 @@ class TestOverrideSeeds:
             parsed = _parse(champion_by_name[name], 11, (), {})
             order, rule = _resolve(champion_by_name[name], parsed)
             assert rule is not None and rule.derived is False
-            assert order == list(COMBO_TABLE[name].order)
+            assert order == list(CAST_ORDER_OVERRIDES[name].order)
 
 
 # ---------------------------------------------------------------------------
@@ -265,7 +265,7 @@ class TestEdgeInvariants:
         every detected setup→consume edge (setup casts before its consume)."""
         violations = []
         for name in sorted(champion_by_name):
-            if name in COMBO_TABLE:
+            if name in CAST_ORDER_OVERRIDES:
                 continue
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
@@ -300,7 +300,7 @@ class TestEdgeInvariants:
         for name in _OVERRIDE_CHAMPIONS:
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
-            order = list(COMBO_TABLE[name].order)
+            order = list(CAST_ORDER_OVERRIDES[name].order)
             edges = _detect_edges(name, data, parsed)
             pos = {slot: index for index, slot in enumerate(order)}
             exceptions = _OVERRIDE_SEED_EXCEPTIONS.get(name, set())
@@ -366,7 +366,7 @@ class TestEdgeInvariants:
         """The machine-readable setup/consume lists on the derived rule cover
         every edge endpoint that appears in the cast order."""
         for name in sorted(champion_by_name):
-            if name in COMBO_TABLE:
+            if name in CAST_ORDER_OVERRIDES:
                 continue
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
@@ -420,7 +420,7 @@ class TestRationaleCitesAtoms:
             "stacks",
         )
         for name in sorted(champion_by_name):
-            if name in COMBO_TABLE:
+            if name in CAST_ORDER_OVERRIDES:
                 continue
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
@@ -443,7 +443,7 @@ class TestRationaleCitesAtoms:
         """A champion with NO detectable edge keeps the certified/default
         order and the rationale says exactly that (data-driven, honest)."""
         for name in sorted(champion_by_name):
-            if name in COMBO_TABLE:
+            if name in CAST_ORDER_OVERRIDES:
                 continue
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
@@ -567,7 +567,7 @@ class TestOrderStructure:
         edge_champions = 0
         nonbase_champions = 0
         for name in sorted(champion_by_name):
-            if name in COMBO_TABLE:
+            if name in CAST_ORDER_OVERRIDES:
                 continue
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)

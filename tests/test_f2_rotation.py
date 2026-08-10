@@ -21,13 +21,16 @@ from src.calculator.damage import DEFAULT_CAST_ORDER
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
 from src.calculator.rotation_resolver import (
-    COMBO_TABLE,
+    CAST_ORDER_OVERRIDES,
+    ORDER_OVERRIDE_REASONS,
+    ComboRule,
+    _validate_override_reasons,
     build_rotation_receipt,
     rank_ability_dps,
     resolve_cast_order,
 )
 
-_COMBO_CHAMPIONS = [
+_OVERRIDE_CHAMPIONS = [
     "Cassiopeia",
     "Varus",
     "Brand",
@@ -118,12 +121,42 @@ def _run(champion_data, level=11, one_rotation=True, duration=None, uptime=0.0):
 # ---------------------------------------------------------------------------
 
 
-class TestComboTable:
-    def test_batch_has_ten_combo_champions(self) -> None:
-        assert set(COMBO_TABLE) == set(_COMBO_CHAMPIONS)
+class TestCastOrderOverrides:
+    def test_the_table_holds_exactly_the_hand_seeds(self) -> None:
+        assert set(CAST_ORDER_OVERRIDES) == set(_OVERRIDE_CHAMPIONS)
+
+    def test_every_override_says_why_it_is_still_hand_held(self) -> None:
+        """P5-f: the retirement frontier is counted, not claimed.
+
+        A seed that cannot name its reason from the closed set is either a
+        mechanic its module should declare or a preference nobody wrote
+        down — and it would sit in the table forever either way.
+        """
+        for name, rule in CAST_ORDER_OVERRIDES.items():
+            assert (
+                rule.override_reason in ORDER_OVERRIDE_REASONS
+            ), f"{name} declares override_reason {rule.override_reason!r}"
+
+    def test_a_derived_rule_carries_no_override_reason(self) -> None:
+        assert (
+            ComboRule(champion="X", order=("Q",), rationale="").override_reason is None
+        )
+
+    def test_an_unreasoned_override_fails_at_import(self) -> None:
+        """The check is reachable: it fires on a table with a bad entry."""
+        original = dict(CAST_ORDER_OVERRIDES)
+        CAST_ORDER_OVERRIDES["Synthetic"] = ComboRule(
+            champion="Synthetic", order=("Q",), rationale="", override_reason="vibes"
+        )
+        try:
+            with pytest.raises(ValueError, match="override_reason"):
+                _validate_override_reasons()
+        finally:
+            CAST_ORDER_OVERRIDES.clear()
+            CAST_ORDER_OVERRIDES.update(original)
 
     def test_every_rule_has_order_rationale_and_sources(self) -> None:
-        for name, rule in COMBO_TABLE.items():
+        for name, rule in CAST_ORDER_OVERRIDES.items():
             assert rule.champion == name
             assert rule.order, f"{name} combo has an empty order"
             assert rule.rationale, f"{name} combo has no rationale"
@@ -157,7 +190,7 @@ class TestComboTable:
 
 
 class TestParseLevelRotations:
-    @pytest.mark.parametrize("champion", _COMBO_CHAMPIONS)
+    @pytest.mark.parametrize("champion", _OVERRIDE_CHAMPIONS)
     def test_derived_cast_order_matches_the_combo_table(
         self, champion, champion_by_name
     ) -> None:
@@ -166,7 +199,7 @@ class TestParseLevelRotations:
         assert rotation["cast_order"] == _EXPECTED_ORDERS[champion]
         assert rotation["order"] == _EXPECTED_ORDERS[champion]
 
-    @pytest.mark.parametrize("champion", _COMBO_CHAMPIONS)
+    @pytest.mark.parametrize("champion", _OVERRIDE_CHAMPIONS)
     def test_rationale_names_the_driving_mechanic(
         self, champion, champion_by_name
     ) -> None:

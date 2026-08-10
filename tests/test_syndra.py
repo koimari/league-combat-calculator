@@ -294,7 +294,7 @@ class TestUnleashedPowerSpheres:
 class TestRotationOrder:
     """E's stun exists only by scattering a Dark Sphere, so Q is E's setup —
     the reverse of the generic cc-setup-first ordering. The hand-verified
-    COMBO_TABLE seed pins the QE combo and keeps W/R inside the stun."""
+    CAST_ORDER_OVERRIDES seed pins the QE combo and keeps W/R inside the stun."""
 
     def test_cast_order_is_qe_combo(self, syndra_data) -> None:
         from src.calculator.rotation_resolver import resolve_cast_order

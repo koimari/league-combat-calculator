@@ -3,7 +3,7 @@
 Derives the fight's ``cast_order`` from the atomized ability data for ALL
 champions, replacing the naive ``DEFAULT_CAST_ORDER`` whenever the data
 supports a setup/consume structure.  The hand-verified seeds in
-:data:`COMBO_TABLE` remain as documented OVERRIDES; every other champion
+:data:`CAST_ORDER_OVERRIDES` remain as documented OVERRIDES; every other champion
 is derived on the fly by :func:`derive_champion_rule` — no combo database.
 
 Scoring model (see ``docs/rotation-design.md`` for the full write-up)
@@ -95,7 +95,12 @@ class ComboRule:
             champion.
         derived: ``True`` when the rule was produced algorithmically by
             :func:`derive_champion_rule` (F3), ``False`` for the
-            hand-verified seeds in :data:`COMBO_TABLE`.
+            hand-verified seeds in :data:`CAST_ORDER_OVERRIDES`.
+        override_reason: Why this order is still hand-held — a member of
+            :data:`ORDER_OVERRIDE_REASONS`, required on every entry of
+            :data:`CAST_ORDER_OVERRIDES` and ``None`` on a derived rule.
+            It is what makes the retirement frontier machine-countable
+            instead of doc-claimed (P5-f).
         dependencies: What the declared-vs-inferred merge did, for the
             public receipt.  ``None`` on a hand seed, which never ran a
             merge; an empty :class:`DependencyReceipt` on the 170
@@ -111,23 +116,48 @@ class ComboRule:
     aoe: dict[str, int] = field(default_factory=dict)
     derived: bool = False
     dependencies: DependencyReceipt | None = None
+    override_reason: str | None = None
 
 
 # ─────────────────────────────────────────────────────────────────────
-# Per-champion combo-priority table (F2 batch 1 — 10 champions)
+# Hand-held cast-order overrides
 #
 # Each entry is the curated output of the four-signal scoring above.
 # ``sources`` names the atom/attribute that drives the ordering so a
-# patch-day audit can re-verify the rule against the cached data.
+# patch-day audit can re-verify the rule against the cached data, and
+# ``override_reason`` says why the order is still held by hand rather
+# than derived — the frontier this phase drives down, counted by the
+# audit instead of claimed in prose (P5-f).
 # ─────────────────────────────────────────────────────────────────────
 
-COMBO_TABLE: dict[str, ComboRule] = {
+# Why an order is still hand-held.  Closed, because "some judgment" is
+# how a seed survives forever: a reason that is not one of these four is
+# either a mechanic the module should DECLARE or a preference nobody has
+# written down.
+ORDER_OVERRIDE_REASONS: frozenset[str] = frozenset(
+    {
+        # The order exists to start a cadence earlier on the shared cast
+        # timeline, not because a mechanic requires it.
+        "scheduling_preference",
+        # The order ranks abilities by damage per second in a way the
+        # matrix-consistency gate will not reproduce.
+        "dps_tiebreak",
+        # A defensive cast is placed before the engage.
+        "defensive_precast",
+        # The derivation already reproduces this order and the seed is
+        # held only until its deletion commit proves it on both baselines.
+        "pending_primitive",
+    }
+)
+
+CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
     # Q applies the 3s poison; E consumes it (poisoned bonus) and is the
     # 0.75s-cooldown spam tool; W/R close the burst.  Putting E before W
     # starts E's cadence earlier on the shared cast timeline, which is
     # strictly more E casts in timed fights (the scheduling tie-break).
     "Cassiopeia": ComboRule(
         champion="Cassiopeia",
+        override_reason="dps_tiebreak",
         order=("Q", "E", "W", "R"),
         rationale=(
             "Q (Noxious Blast) applies the 3s poison (7 ticks) first; E "
@@ -151,6 +181,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # kit: Q/E/R all detonate, so the detonator order is Q then E then R.
     "Varus": ComboRule(
         champion="Varus",
+        override_reason="dps_tiebreak",
         order=("Q", "E", "R", "W"),
         rationale=(
             "Basic attacks apply Blight stacks (W Blighted Quiver on-hit, max "
@@ -175,6 +206,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # The stacks feed P's 3-stack detonation (2% max HP per stack).
     "Brand": ComboRule(
         champion="Brand",
+        override_reason="dps_tiebreak",
         order=("Q", "R", "E", "W"),
         rationale=(
             "Q applies Blaze (and stuns an already-ablaze target); R "
@@ -200,6 +232,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # it must open so the whole burst sits inside the mark.
     "Vladimir": ComboRule(
         champion="Vladimir",
+        override_reason="dps_tiebreak",
         order=("R", "Q", "E", "W"),
         rationale=(
             "R (Hemoplague) marks the target for 4s, amplifying all damage "
@@ -221,6 +254,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # R grants bonus AD as a percentage of total AD before Q/W are priced.
     "Aatrox": ComboRule(
         champion="Aatrox",
+        override_reason="pending_primitive",
         order=("R", "Q", "W"),
         rationale=(
             "R (World Ender) grants bonus AD as a percentage of total AD — "
@@ -242,6 +276,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # missing-health bonus) from the auto stream; Q opens, W roots for R.
     "Jhin": ComboRule(
         champion="Jhin",
+        override_reason="pending_primitive",
         order=("Q", "W", "E", "R"),
         rationale=(
             "The rotation is anchored on Whisper's 4th shot — the guaranteed "
@@ -264,6 +299,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # opens the damage (initial blast + MR shred + aura + Tibbers autos).
     "Annie": ComboRule(
         champion="Annie",
+        override_reason="dps_tiebreak",
         order=("E", "R", "Q", "W"),
         rationale=(
             "E (Molten Shield) opens so the shield is up before the engage; "
@@ -287,6 +323,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # E slows so the root lands; Q roots; R consumes the Illumination mark.
     "Lux": ComboRule(
         champion="Lux",
+        override_reason="dps_tiebreak",
         order=("E", "Q", "R", "W"),
         rationale=(
             "E (Lucent Singularity) slows first so the root lands; Q (Light "
@@ -308,6 +345,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # burst and detonates 3s later for 100% AD + % of stored damage.
     "Zed": ComboRule(
         champion="Zed",
+        override_reason="dps_tiebreak",
         order=("W", "E", "Q", "R"),
         rationale=(
             "W (Living Shadow) places the shadow first so E and Q hit from "
@@ -331,6 +369,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # Q form unlocks; R fires with the weapon setup landed.
     "Aphelios": ComboRule(
         champion="Aphelios",
+        override_reason="pending_primitive",
         order=("Q", "W", "R"),
         rationale=(
             "The main-hand weapon's Q form opens (selected by the "
@@ -355,6 +394,7 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # a sphere-less (stun-less) E and push Q's recast cadence back a slot.
     "Syndra": ComboRule(
         champion="Syndra",
+        override_reason="pending_primitive",
         order=("Q", "Q2", "E", "W", "R"),
         rationale=(
             "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns "
@@ -376,6 +416,27 @@ COMBO_TABLE: dict[str, ComboRule] = {
         aoe={"E": 5},  # Scatter the Weak's cone
     ),
 }
+
+
+def _validate_override_reasons() -> None:
+    """Every override says why it is still hand-held, in the closed set.
+
+    Raises:
+        ValueError: An entry declares no ``override_reason`` or one
+            outside :data:`ORDER_OVERRIDE_REASONS`.
+    """
+    for name, rule in CAST_ORDER_OVERRIDES.items():
+        if rule.override_reason not in ORDER_OVERRIDE_REASONS:
+            raise ValueError(
+                f"{name}'s cast-order override declares override_reason "
+                f"{rule.override_reason!r}, which is not one of "
+                f"{sorted(ORDER_OVERRIDE_REASONS)} — a hand-held order that "
+                "cannot say why it is still hand-held is a seed nobody can "
+                "retire"
+            )
+
+
+_validate_override_reasons()
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -1843,7 +1904,7 @@ def resolve_cast_order(
 ) -> tuple[list[str], ComboRule | None]:
     """Resolve the fight's ``cast_order``: override → algorithmic derive.
 
-    The hand-verified :data:`COMBO_TABLE` seeds win (documented
+    The hand-verified :data:`CAST_ORDER_OVERRIDES` seeds win (documented
     overrides).  Every other champion with atomized data is derived
     algorithmically by :func:`derive_champion_rule`; a champion with no
     detectable setup/consume signal keeps its certified module order or
@@ -1869,7 +1930,7 @@ def resolve_cast_order(
         ``(cast_order, rule)`` — ``rule`` is ``None`` only for unknown
         names without atomized data.
     """
-    rule = COMBO_TABLE.get(champion_name)
+    rule = CAST_ORDER_OVERRIDES.get(champion_name)
     if rule is not None:
         return list(rule.order), rule
     if champion_data is None and not ability_damages:

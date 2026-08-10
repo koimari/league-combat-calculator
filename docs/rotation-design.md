@@ -31,12 +31,45 @@ other champion's order is computed per request by
 ### Resolution chain (explicit order wins)
 
 ```
-/api/calculate payload cast_order  (user-supplied, validated permutation)
-   -> COMBO_TABLE rule              (10 verified F2 seeds — documented overrides)
+/api/calculate payload cast_order  (user-supplied, validated permutation,
+                                    checked against the declarations)
+   -> CAST_ORDER_OVERRIDES rule     (hand seeds — each with an override_reason)
    -> ALGORITHMIC DERIVATION        (this module — every champion with atomized data)
+        declarations + inference merged  (resolved_edges, the precedence table)
         edges?  -> constrained topological order + matrix-consistent DPS tie-break
         no edges -> certified module CAST_ORDER or DEFAULT_CAST_ORDER (honest flat-kit)
 ```
+
+### The declared lane
+
+Two surfaces make ordering claims and `resolved_edges` is where they
+meet.  A champion module DECLARES what its own kit requires in
+`CAST_DEPENDENCIES` (`src/calculator/cast_dependency.py` owns the
+vocabulary: `cc_enabler`, `damage_enabler`, `resource_enabler`,
+`recast_of`); the detector INFERS ordering from the markers it parses
+(`INFERRED_EDGE_KINDS`, twelve kinds).  The two vocabularies are closed
+and asserted disjoint, and every merged edge carries an `origin` naming
+the surface that produced it.
+
+`merge_declared_edges` folds one over the other for an unordered pair
+{A, B}:
+
+| declared A→B | inferred A→B | inferred B→A | active suppression B→A | outcome |
+|---|---|---|---|---|
+| – | ✓ | – | – | inferred A→B — the 170 non-declaring champions' path |
+| ✓ | – | – | – | declared A→B |
+| ✓ | ✓ | – | – | declared A→B, deduped; receipt flags `confirmed_by_inference` |
+| ✓ | – | ✓ | ✓ | declared A→B; B→A dropped; receipt cites the suppression |
+| ✓ | – | ✓ | ✗ | **`ConflictingInferenceError`** |
+| ✓ | – | – | ✓ matching nothing | declared A→B; suppression `latent`, with its reason |
+
+A suppression nests inside its parent declaration and can express only
+the exact reverse pair, so an over-broad suppression is unwriteable
+rather than merely discouraged.  A declaration is *active* only when
+both endpoints exist in this parse — Syndra's `E requires Q2` is inert
+below 40 splinters — and an inactive declaration takes its suppression
+out of force with it.  What the merge did rides the response as
+`rotation.dependencies`.
 
 `resolve_cast_order` returns a rule for EVERY champion in the cached
 data.  The derived rule carries `derived=True`; the ten seeds are the
@@ -131,11 +164,16 @@ atomized ability data — no DoT/poison/mark/stack consumer, no resistance
 shred, no damage-amplifying buff, no missing-health execute".  This is
 the data-driven, honest fallback — not a hidden combo database.
 
-### The ten F2 seeds remain documented overrides
+### The hand seeds remain documented overrides
 
-`COMBO_TABLE` is unchanged from F2 (Cassiopeia, Varus, Brand, Vladimir,
-Aatrox, Jhin, Annie, Lux, Zed, Aphelios).  The resolver checks the table
-FIRST; the derivation never touches those ten.  Two seeds deliberately
+`CAST_ORDER_OVERRIDES` (renamed from `COMBO_TABLE`) holds the hand-verified
+seeds — Cassiopeia, Varus, Brand, Vladimir, Aatrox, Jhin, Annie, Lux, Zed,
+Aphelios, Syndra.  The resolver checks the table FIRST; the derivation
+never touches them.  Every entry carries an `override_reason` from the
+closed `ORDER_OVERRIDE_REASONS` set (`scheduling_preference`,
+`dps_tiebreak`, `defensive_precast`, `pending_primitive`), so "why is
+this order still held by hand?" is a countable field rather than a claim
+in this document.  Two seeds deliberately
 deviate from a detected data edge (the seed's judgment wins, documented
 in `tests/test_f3_rotation_all.py`):
 
