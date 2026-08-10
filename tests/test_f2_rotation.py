@@ -15,9 +15,14 @@ Covers the combo layer (src/calculator/rotation_resolver.py) end to end:
    Q cast that follows the auto-applied stacks.
 """
 
+import re
+from pathlib import Path
+from typing import Iterable
+
 import pytest
 
 from src.calculator.cast_dependency import CustomOrderViolatesDependencyError
+from src.calculator.champions import registered_champion_names
 from src.calculator.damage import DEFAULT_CAST_ORDER
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
@@ -131,6 +136,72 @@ def _run(champion_data, level=11, one_rotation=True, duration=None, uptime=0.0):
 # Combo table shape
 # ---------------------------------------------------------------------------
 
+_RESOLVER_PATH = (
+    Path(__file__).resolve().parents[1] / "src" / "calculator" / "rotation_resolver.py"
+)
+_OVERRIDES_LITERAL_OPEN = "CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {"
+_ENTRY_LINE = re.compile(r'^ {4}"([^"]+)": ComboRule\($')
+
+
+def resolver_source() -> str:
+    """The resolver module as text, for the source-shape assertions below."""
+    return _RESOLVER_PATH.read_text(encoding="utf-8")
+
+
+def seed_comment_blocks(source: str) -> tuple[tuple[str | None, tuple[str, ...]], ...]:
+    """Every comment block inside the ``CAST_ORDER_OVERRIDES`` literal.
+
+    Each pair is ``(the entry the block introduces, the block's lines)``.
+    A ``None`` champion is a block that introduces nothing — the shape a
+    retirement leaves behind when it takes the ``ComboRule`` and not the
+    paragraph above it.  Only column-4 comment lines are blocks; the
+    trailing notes inside an entry body sit deeper and are that entry's.
+    """
+    body = source.split(_OVERRIDES_LITERAL_OPEN, 1)[1].split("\n}\n", 1)[0]
+    blocks: list[tuple[str | None, tuple[str, ...]]] = []
+    block: list[str] = []
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#") and len(line) - len(line.lstrip()) == 4:
+            block.append(stripped.lstrip("#").strip())
+            continue
+        entry = _ENTRY_LINE.match(line)
+        if entry:
+            blocks.append((entry.group(1), tuple(block)))
+            block = []
+    if block:
+        blocks.append((None, tuple(block)))
+    return tuple(blocks)
+
+
+def seed_comment_faults(source: str, roster: Iterable[str]) -> tuple[str, ...]:
+    """Every seed comment that describes something other than its entry.
+
+    The empty tuple is the pass condition.  A block must introduce an
+    entry, name that entry's champion, and name no other champion in the
+    cached roster — which is what makes a retirement that leaves its
+    paragraph behind a failure instead of a reading hazard.
+    """
+    names = tuple(roster)
+    faults: list[str] = []
+    for champion, block in seed_comment_blocks(source):
+        text = " ".join(block)
+        if champion is None:
+            faults.append(f"a comment block introduces no entry: {text[:60]!r}")
+            continue
+        if not block:
+            faults.append(f"{champion} carries no comment block")
+            continue
+        named = [name for name in names if re.search(rf"\b{re.escape(name)}\b", text)]
+        if champion not in named:
+            faults.append(f"{champion}'s comment never names {champion}")
+        faults.extend(
+            f"{champion}'s comment describes {other}"
+            for other in named
+            if other != champion
+        )
+    return tuple(faults)
+
 
 class TestCastOrderOverrides:
     def test_the_table_holds_exactly_the_hand_seeds(self) -> None:
@@ -194,6 +265,53 @@ class TestCastOrderOverrides:
             assert (
                 retired not in named
             ), f"{retired} retired but the doc still lists it as a seed"
+
+    def test_every_seed_comment_describes_the_seed_it_introduces(self) -> None:
+        """The table's own prose is gated like the table.
+
+        The four retirements deleted their ``ComboRule`` entries and left
+        their comment paragraphs behind: Aatrox's and Jhin's ended up
+        directly above Annie's surviving entry, where two paragraphs about
+        two retired champions read as documentation of hers, and
+        Aphelios' dangled against the closing brace describing nothing.
+        No commit body mentioned them and nothing could see them — the
+        campaign's own prose-outruns-code shape, inside the table the
+        campaign counts.  This is what sees them.
+        """
+        assert seed_comment_faults(resolver_source(), registered_champion_names()) == ()
+
+    def test_the_comment_gate_sees_a_retirement_that_left_its_paragraph(self) -> None:
+        """R-05: the exact drift the retirements caused, made to happen."""
+        orphaned = resolver_source().replace(
+            '    "Annie": ComboRule(',
+            "    # Aatrox — R grants bonus AD as a percentage of total AD\n"
+            "    # before Q/W are priced.\n"
+            '    "Annie": ComboRule(',
+        )
+        faults = seed_comment_faults(orphaned, registered_champion_names())
+        assert any("describes Aatrox" in fault for fault in faults), faults
+
+    def test_the_comment_gate_sees_a_block_that_introduces_nothing(self) -> None:
+        """R-05: the dangling half of the same drift."""
+        closing = (
+            '        aoe={"E": 5},  # Shadow Slash around Zed and the shadow\n    ),\n}'
+        )
+        dangling = resolver_source().replace(
+            closing,
+            closing[:-1] + "    # Aphelios — the main-hand weapon's Q form opens.\n}",
+        )
+        faults = seed_comment_faults(dangling, registered_champion_names())
+        assert any("introduces no entry" in fault for fault in faults), faults
+
+    def test_the_comment_gate_sees_an_entry_nobody_introduced(self) -> None:
+        """R-05: the third shape — an entry whose block went away instead."""
+        unintroduced = resolver_source().replace(
+            "    # Lux — E slows so the root lands; Q roots; R consumes the\n"
+            "    # Illumination mark.\n",
+            "",
+        )
+        faults = seed_comment_faults(unintroduced, registered_champion_names())
+        assert faults == ("Lux carries no comment block",)
 
     def test_a_derived_rule_carries_no_override_reason(self) -> None:
         assert (

@@ -162,10 +162,11 @@ ORDER_OVERRIDE_REASONS: frozenset[str] = frozenset(
 )
 
 CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
-    # Q applies the 3s poison; E consumes it (poisoned bonus) and is the
-    # 0.75s-cooldown spam tool; W/R close the burst.  Putting E before W
-    # starts E's cadence earlier on the shared cast timeline, which is
-    # strictly more E casts in timed fights (the scheduling tie-break).
+    # Cassiopeia — Q applies the 3s poison; E consumes it (poisoned
+    # bonus) and is the 0.75s-cooldown spam tool; W/R close the burst.
+    # Putting E before W starts E's cadence earlier on the shared cast
+    # timeline, which is strictly more E casts in timed fights (the
+    # scheduling tie-break).
     "Cassiopeia": ComboRule(
         champion="Cassiopeia",
         override_reason="dps_tiebreak",
@@ -187,9 +188,10 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         consume=("E",),
         aoe={"W": 5, "R": 5},  # Miasma zone + Petrifying Gaze cone
     ),
-    # Autos apply Blight (W on-hit); Q detonates every stack as % max HP
-    # magic damage (post_hit_proc).  The consume relationship is the whole
-    # kit: Q/E/R all detonate, so the detonator order is Q then E then R.
+    # Varus — autos apply Blight (W on-hit); Q detonates every stack as
+    # % max HP magic damage (post_hit_proc).  The consume relationship is
+    # the whole kit: Q/E/R all detonate, so the detonator order is Q then
+    # E then R.
     "Varus": ComboRule(
         champion="Varus",
         override_reason="dps_tiebreak",
@@ -212,9 +214,10 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         consume=("Q", "E", "R"),
         aoe={"E": 5},  # Hail of Arrows ground zone
     ),
-    # Q applies Blaze; R applies one Blaze stack per bounce; only then E
-    # spreads the already-applied Blaze.  W is the biggest hit and closes.
-    # The stacks feed P's 3-stack detonation (2% max HP per stack).
+    # Brand — Q applies Blaze; R applies one Blaze stack per bounce; only
+    # then E spreads the already-applied Blaze.  W is the biggest hit and
+    # closes.  The stacks feed P's 3-stack detonation (2% max HP per
+    # stack).
     "Brand": ComboRule(
         champion="Brand",
         override_reason="dps_tiebreak",
@@ -239,8 +242,8 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         # already bounces per the r_bounces option (one target per bounce).
         aoe={"W": 5, "E": 5},
     ),
-    # R marks the target for 4s and amplifies ALL damage taken by 10% —
-    # it must open so the whole burst sits inside the mark.
+    # Vladimir — R marks the target for 4s and amplifies ALL damage taken
+    # by 10%; it must open so the whole burst sits inside the mark.
     "Vladimir": ComboRule(
         champion="Vladimir",
         override_reason="dps_tiebreak",
@@ -262,11 +265,9 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         consume=(),
         aoe={"W": 5, "E": 5, "R": 5},  # pool, charged explosion, hemoplague
     ),
-    # R grants bonus AD as a percentage of total AD before Q/W are priced.
-    # The rotation is anchored on Whisper's 4th shot (guaranteed crit +
-    # missing-health bonus) from the auto stream; Q opens, W roots for R.
-    # Molten Shield opens (buffs-first), Pyromania stuns with the burst, R
-    # opens the damage (initial blast + MR shred + aura + Tibbers autos).
+    # Annie — Molten Shield opens (buffs-first), Pyromania stuns with the
+    # burst, R opens the damage (initial blast + MR shred + aura +
+    # Tibbers autos).
     "Annie": ComboRule(
         champion="Annie",
         override_reason="dps_tiebreak",
@@ -290,7 +291,8 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         consume=(),
         aoe={"W": 5, "R": 5},  # Incinerate cone, Tibbers summon blast
     ),
-    # E slows so the root lands; Q roots; R consumes the Illumination mark.
+    # Lux — E slows so the root lands; Q roots; R consumes the
+    # Illumination mark.
     "Lux": ComboRule(
         champion="Lux",
         override_reason="dps_tiebreak",
@@ -311,8 +313,8 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         consume=("R",),
         aoe={"E": 5, "R": 5, "Q": 2},  # zone, Final Spark line, Light Binding
     ),
-    # W places the shadow first so E and Q hit from it; R stores that
-    # burst and detonates 3s later for 100% AD + % of stored damage.
+    # Zed — W places the shadow first so E and Q hit from it; R stores
+    # that burst and detonates 3s later for 100% AD + % of stored damage.
     "Zed": ComboRule(
         champion="Zed",
         override_reason="dps_tiebreak",
@@ -335,8 +337,6 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         consume=("R",),
         aoe={"E": 5},  # Shadow Slash around Zed and the shadow
     ),
-    # The main-hand weapon's Q form opens; W swaps the pair so the off-hand
-    # Q form unlocks; R fires with the weapon setup landed.
 }
 
 
