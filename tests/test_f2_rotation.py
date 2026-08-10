@@ -40,7 +40,6 @@ _OVERRIDE_CHAMPIONS = [
     "Annie",
     "Lux",
     "Zed",
-    "Aphelios",
 ]
 
 _EXPECTED_ORDERS = {
@@ -51,7 +50,6 @@ _EXPECTED_ORDERS = {
     "Annie": ["E", "R", "Q", "W"],
     "Lux": ["E", "Q", "R", "W"],
     "Zed": ["W", "E", "Q", "R"],
-    "Aphelios": ["Q", "W", "R"],
 }
 
 _RATIONALE_FRAGMENTS = {
@@ -62,7 +60,6 @@ _RATIONALE_FRAGMENTS = {
     "Annie": ("stun", "Tibbers", "shield"),
     "Lux": ("slow", "root"),
     "Zed": ("shadow", "Death Mark"),
-    "Aphelios": ("weapon", "swap"),
 }
 
 
@@ -150,6 +147,29 @@ class TestCastOrderOverrides:
             assert (
                 rule.override_reason in ORDER_OVERRIDE_REASONS
             ), f"{name} declares override_reason {rule.override_reason!r}"
+
+    def test_the_suite_agrees_with_the_published_frontier(self) -> None:
+        """Criterion 13: the frontier is counted, and the counts agree.
+
+        ``docs/cast-dependency-audit.json`` publishes which seeds survive
+        and why.  A suite that listed a different set would let the
+        frontier be driven down in the receipt while the tests kept
+        passing against a set nobody had retired.
+        """
+        import json
+        from pathlib import Path
+
+        receipt = json.loads(
+            (
+                Path(__file__).resolve().parents[1]
+                / "docs"
+                / "cast-dependency-audit.json"
+            ).read_text(encoding="utf-8")
+        )
+        frontier = receipt["order_override_frontier"]
+        assert sorted(_OVERRIDE_CHAMPIONS) == frontier["champions"]
+        assert frontier["entries"] == len(_OVERRIDE_CHAMPIONS)
+        assert frontier["reasons"]["pending_primitive"] == 0
 
     def test_a_derived_rule_carries_no_override_reason(self) -> None:
         assert (
@@ -241,6 +261,15 @@ class TestDerivedPathRotations:
                 {"Q": 5, "W": 1, "E": 5, "R": 1, "passive": 1},
                 ("no detectable setup/consume signal", "kept exactly as reviewed"),
             ),
+            # Aphelios is Jhin's case again: the weapon-swap story his seed
+            # told is a module OPTION, not a parsed setup/consume atom, so
+            # the derivation keeps the certified order and names the absence.
+            (
+                "Aphelios",
+                ["Q", "W", "R"],
+                {"Q": 5, "W": 1, "R": 5, "passive": 1},
+                ("no detectable setup/consume signal", "aphelios_main_weapon"),
+            ),
         ],
     )
     def test_the_derivation_reproduces_the_order_the_seed_pinned(
@@ -256,7 +285,7 @@ class TestDerivedPathRotations:
                 fragment.lower() in rationale
             ), f"{champion} rationale should mention {fragment!r}: {rationale}"
 
-    @pytest.mark.parametrize("champion", ["Syndra", "Aatrox", "Jhin"])
+    @pytest.mark.parametrize("champion", ["Syndra", "Aatrox", "Jhin", "Aphelios"])
     def test_the_rule_is_derived_and_carries_no_override_reason(
         self, champion, champion_by_name
     ) -> None:
@@ -335,13 +364,6 @@ class TestParseLevelRotations:
         assert rotation["setup"] == ["W"]
         assert rotation["consume"] == ["R"]
 
-    def test_aphelios_weapon_q_opens_then_swap_then_r(self, champion_by_name) -> None:
-        result = _run(champion_by_name["Aphelios"])
-        rotation = result["rotation"]
-        assert rotation["cast_order"] == ["Q", "W", "R"]
-        assert rotation["setup"] == ["Q", "W"]
-        assert "weapon" in rotation["rationale"].lower()
-
     @pytest.mark.parametrize(
         ("champion", "aoe_slots"),
         [
@@ -352,7 +374,6 @@ class TestParseLevelRotations:
             ("Annie", {"W": 5, "R": 5}),
             ("Lux", {"E": 5, "R": 5, "Q": 2}),
             ("Zed", {"E": 5}),
-            ("Aphelios", {"R": 5, "Q": 5}),
         ],
     )
     def test_receipt_carries_aoe_target_caps(

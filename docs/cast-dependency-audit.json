@@ -268,7 +268,6 @@
   "order_override_frontier": {
     "champions": [
       "Annie",
-      "Aphelios",
       "Brand",
       "Cassiopeia",
       "Lux",
@@ -276,11 +275,11 @@
       "Vladimir",
       "Zed"
     ],
-    "entries": 8,
+    "entries": 7,
     "reasons": {
       "defensive_precast": 0,
       "dps_tiebreak": 7,
-      "pending_primitive": 1,
+      "pending_primitive": 0,
       "scheduling_preference": 0
     },
     "unclassified": []

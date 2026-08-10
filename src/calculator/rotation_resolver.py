@@ -337,28 +337,6 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
     ),
     # The main-hand weapon's Q form opens; W swaps the pair so the off-hand
     # Q form unlocks; R fires with the weapon setup landed.
-    "Aphelios": ComboRule(
-        champion="Aphelios",
-        override_reason="pending_primitive",
-        order=("Q", "W", "R"),
-        rationale=(
-            "The main-hand weapon's Q form opens (selected by the "
-            "aphelios_main_weapon option — Calibrum marks for R, Gravitum "
-            "roots, Infernum spreads, Crescendum places a turret, Severum "
-            "sustains); W (Phase) swaps the weapon pair so the off-hand Q form "
-            "unlocks; R (Moonlight Vigil) fires with the weapon setup landed."
-        ),
-        sources=(
-            "Q weapon-form variants (q_variant / aphelios_main_weapon option)",
-            "W Phase weapon swap (0.25s cooldown)",
-            "R 'Magic Damage' initial blast + basic-attack follow-up",
-        ),
-        setup=("Q", "W"),
-        consume=("R",),
-        # Moonlight Vigil damages every enemy it passes through; Q's
-        # Infernum form spreads to all in the cone (weapon-dependent).
-        aoe={"R": 5, "Q": 5},
-    ),
 }
 
 

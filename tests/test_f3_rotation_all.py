@@ -64,7 +64,6 @@ _OVERRIDE_CHAMPIONS = [
     "Annie",
     "Lux",
     "Zed",
-    "Aphelios",
 ]
 
 # Documented seed exceptions: the verified F2 seed deliberately deviates
@@ -108,6 +107,8 @@ _EXPECTED_DERIVED_ORDERS = {
     # Retired seed (D-89): no edge is detected at all, so the certified
     # order survives untouched — the flat-kit path, honestly labelled.
     "Jhin": ["Q", "W", "E", "R"],
+    # Retired seed (D-89): same flat-kit path as Jhin's.
+    "Aphelios": ["Q", "W", "R"],
     # Syndra's retired seed (D-89): E requires Q and E requires Q2, declared
     # by her module, derive the order the hand seed used to pin.
     "Syndra": ["Q", "Q2", "E", "W", "R"],
@@ -248,6 +249,29 @@ def _edge_kinds(edges):
 class TestOverrideSeeds:
     def test_table_holds_exactly_the_verified_seeds(self) -> None:
         assert set(CAST_ORDER_OVERRIDES) == set(_OVERRIDE_CHAMPIONS)
+
+    def test_the_suite_agrees_with_the_published_frontier(self) -> None:
+        """Criterion 13: the frontier is counted, and the counts agree.
+
+        ``docs/cast-dependency-audit.json`` publishes which seeds survive
+        and why.  A suite that listed a different set would let the
+        frontier be driven down in the receipt while the tests kept
+        passing against a set nobody had retired.
+        """
+        import json
+        from pathlib import Path
+
+        receipt = json.loads(
+            (
+                Path(__file__).resolve().parents[1]
+                / "docs"
+                / "cast-dependency-audit.json"
+            ).read_text(encoding="utf-8")
+        )
+        frontier = receipt["order_override_frontier"]
+        assert sorted(_OVERRIDE_CHAMPIONS) == frontier["champions"]
+        assert frontier["entries"] == len(_OVERRIDE_CHAMPIONS)
+        assert frontier["reasons"]["pending_primitive"] == 0
 
     def test_seed_rules_are_not_marked_derived(self) -> None:
         for name, rule in CAST_ORDER_OVERRIDES.items():
