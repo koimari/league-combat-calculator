@@ -389,6 +389,62 @@ def require_event_view(result: Mapping[str, Any], names: Collection[str]) -> Non
     )
 
 
+def _support_quest_packets(attacker: Any, quest_item: str) -> list[dict[str, Any]]:
+    """One support-quest item's authored economy and vision outcomes.
+
+    World Atlas and Runic Compass carry the same quest, so the body was
+    written once inside a two-element loop with a ``not in names`` continue.
+    That guard form hides which names the compiler actually guards behind a
+    loop variable, and every projection of this module reads those names, so
+    the body moves here and each item gets its own literal guard at the call
+    site.  Byte-for-byte the same packets, in the same order.
+    """
+    packets: list[dict[str, Any]] = []
+    source_meta = ITEM_INPUT_OPTIONS[quest_item]
+    gold = max(0.0, _option(attacker, quest_item, "shared_riches_gold"))
+    gold_cap = required_effect_value(quest_item, "support_quest_threshold")
+    if gold > 0.0:
+        packets.append(
+            _packet(
+                attacker=attacker,
+                target=attacker,
+                time=0.0,
+                kind="economy",
+                source=f"{quest_item} — Shared Riches",
+                amount=min(gold, gold_cap),
+                target_scope="self",
+                gold_amount=min(gold, gold_cap),
+                quest_threshold=gold_cap,
+                source_url=source_meta["source_url"],
+                source_revision_id=source_meta["source_revision_id"],
+            )
+        )
+    ward_uses = max(
+        0.0,
+        min(
+            _option(attacker, quest_item, "ward_uses"),
+            required_effect_value(quest_item, "ward_charges"),
+        ),
+    )
+    if ward_uses > 0.0:
+        packets.append(
+            _packet(
+                attacker=attacker,
+                target=attacker,
+                time=0.0,
+                kind="vision",
+                source=f"{quest_item} — Ward",
+                amount=ward_uses,
+                target_scope="self",
+                ward_uses=ward_uses,
+                quest_threshold=gold_cap,
+                source_url=source_meta["source_url"],
+                source_revision_id=source_meta["source_revision_id"],
+            )
+        )
+    return packets
+
+
 def derive_item_support_effects(
     attacker: Any,
     result: Mapping[str, Any],
@@ -483,51 +539,10 @@ def derive_item_support_effects(
     # Support Quest is represented as explicit economy and vision outcomes.
     # The role-quest contract decides which transformed item is equipped; this
     # packet layer records only the authored progress/ward state for that item.
-    for quest_item in ("World Atlas", "Runic Compass"):
-        if quest_item not in names:
-            continue
-        source_meta = ITEM_INPUT_OPTIONS[quest_item]
-        gold = max(0.0, _option(attacker, quest_item, "shared_riches_gold"))
-        gold_cap = required_effect_value(quest_item, "support_quest_threshold")
-        if gold > 0.0:
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=attacker,
-                    time=0.0,
-                    kind="economy",
-                    source=f"{quest_item} — Shared Riches",
-                    amount=min(gold, gold_cap),
-                    target_scope="self",
-                    gold_amount=min(gold, gold_cap),
-                    quest_threshold=gold_cap,
-                    source_url=source_meta["source_url"],
-                    source_revision_id=source_meta["source_revision_id"],
-                )
-            )
-        ward_uses = max(
-            0.0,
-            min(
-                _option(attacker, quest_item, "ward_uses"),
-                required_effect_value(quest_item, "ward_charges"),
-            ),
-        )
-        if ward_uses > 0.0:
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=attacker,
-                    time=0.0,
-                    kind="vision",
-                    source=f"{quest_item} — Ward",
-                    amount=ward_uses,
-                    target_scope="self",
-                    ward_uses=ward_uses,
-                    quest_threshold=gold_cap,
-                    source_url=source_meta["source_url"],
-                    source_revision_id=source_meta["source_revision_id"],
-                )
-            )
+    if "World Atlas" in names:
+        packets.extend(_support_quest_packets(attacker, "World Atlas"))
+    if "Runic Compass" in names:
+        packets.extend(_support_quest_packets(attacker, "Runic Compass"))
 
     # Fimbulwinter's Everlasting is a self shield that fires only from an
     # explicitly marked immobilize, or a slow for a melee holder.  Its
@@ -797,32 +812,36 @@ def derive_item_support_effects(
                 )
             )
 
-    for takedown in takedown_events:
-        if "Cryptbloom" not in names:
-            break
-        amount = ally_item_effect_value("Cryptbloom", "life_from_death_base_heal") + (
-            float(attacker.stats.get("ability_power", 0.0) or 0.0)
-            * ally_item_effect_value("Cryptbloom", "life_from_death_ap_ratio")
-        )
-        for recipient in (attacker, *teammates):
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=recipient,
-                    time=_event_time(takedown),
-                    kind="heal",
-                    source="Cryptbloom — Life From Death",
-                    amount=amount,
-                    duration=ally_item_effect_value(
-                        "Cryptbloom", "life_from_death_nova_duration"
-                    ),
-                    target_scope="nova_allied_champions",
-                    trigger="explicit_takedown_within_damage_window",
-                    cooldown=ally_item_effect_value(
-                        "Cryptbloom", "life_from_death_cooldown"
-                    ),
-                )
+    # The holder guard sat *inside* the loop as a ``break``, which reads as a
+    # loop condition and is really a name guard — the one shape the capability
+    # projections cannot see.  Same packets, same order.
+    if "Cryptbloom" in names:
+        for takedown in takedown_events:
+            amount = ally_item_effect_value(
+                "Cryptbloom", "life_from_death_base_heal"
+            ) + (
+                float(attacker.stats.get("ability_power", 0.0) or 0.0)
+                * ally_item_effect_value("Cryptbloom", "life_from_death_ap_ratio")
             )
+            for recipient in (attacker, *teammates):
+                packets.append(
+                    _packet(
+                        attacker=attacker,
+                        target=recipient,
+                        time=_event_time(takedown),
+                        kind="heal",
+                        source="Cryptbloom — Life From Death",
+                        amount=amount,
+                        duration=ally_item_effect_value(
+                            "Cryptbloom", "life_from_death_nova_duration"
+                        ),
+                        target_scope="nova_allied_champions",
+                        trigger="explicit_takedown_within_damage_window",
+                        cooldown=ally_item_effect_value(
+                            "Cryptbloom", "life_from_death_cooldown"
+                        ),
+                    )
+                )
 
     # Triggered enchanter passives.  The target is carried by the authored
     # champion packet; no cursor or radius is guessed.
