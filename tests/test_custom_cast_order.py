@@ -253,6 +253,38 @@ class TestOrderableSlotsAnswerTheChampionQuestion:
         assert orderable_slots(cast_slot_surface(kit)) == ("Q", "W", "E", "R")
 
 
+class TestThePostParseCallSiteAsksOneQuestion:
+    """It has a parse, so it asks the parse's question and only that one.
+
+    ``validated=True`` is a caller-owned claim that
+    ``validate_for_champion`` already ran (the coupled search makes it
+    thousands of times per search).  A post-parse call that re-ran the whole
+    validator would silently revoke that claim for every caller that also
+    supplies a cast order — bis.py, the optimizer, and every roster ally,
+    whose ``cast_order`` ``roster_composition.actor_params`` forwards.
+    """
+
+    def test_a_prevalidated_caller_is_not_revalidated(self):
+        params = _fight_params(
+            cast_order=["Q", "W", "E", "R"],
+            ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+        )
+        with pytest.raises(ValueError, match="requires champion level"):
+            params.validate_for_champion("Syndra", 6)
+        result = run_fight(get_champion("Syndra"), 6, [], params, validated=True)
+        assert result["breakdown"]
+
+    def test_the_call_site_names_the_narrow_check(self):
+        source = (SRC / "pipeline.py").read_text(encoding="utf-8")
+        post_parse = source.split("The post-parse cast-order call site")[1][:600]
+        assert "validate_cast_order_for_kit(" in post_parse
+        assert "validate_for_champion(" not in post_parse
+
+    def test_a_request_with_no_cast_order_has_nothing_to_check(self):
+        params = _fight_params(cast_order=None)
+        params.validate_cast_order_for_kit("Syndra", _syndra_kit(120))
+
+
 class TestExpansionReinsertsTheRecast:
     """``expand_user_order`` folds a live recast in after its parent."""
 

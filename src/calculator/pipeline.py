@@ -823,11 +823,13 @@ class FightParams(FightConfig):
         three-rank ultimate layout. Transformation and auto-levelled kits fail
         closed until their individual allocation rules are represented.
 
-        ``kit`` is the parsed ability package. Which slots a request may name
-        is a property of the parsed kit, not of the champion's name, so the
-        callers that validate *before* the parse pass none and ``run_fight``
-        supplies it at its post-parse call site — the one place a cast order
-        turns into casts, so nothing reaches the engine unchecked.
+        ``kit`` is the parsed ability package.  Which slots a request may
+        name is a property of the parsed kit, not of the champion's name, so
+        every caller that validates *before* the parse passes none, and the
+        one caller that has a parse — ``run_fight``'s post-parse call site —
+        asks :meth:`validate_cast_order_for_kit` directly instead of running
+        this whole validator a second time.  Passing ``kit`` here is for a
+        caller that wants both halves in one call.
         """
         if level > max_champion_level(self.role, self.role_quest_complete):
             raise ValueError(f"Level {level} requires the completed top role quest")
@@ -836,8 +838,8 @@ class FightParams(FightConfig):
         custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)
         if self.cast_order is not None and custom_order_reason is not None:
             raise ValueError(custom_order_reason)
-        if self.cast_order is not None and kit is not None:
-            self._validate_cast_order_against_kit(champion_name, kit)
+        if kit is not None:
+            self.validate_cast_order_for_kit(champion_name, kit)
 
         if self.ability_ranks is None:
             return
@@ -872,14 +874,20 @@ class FightParams(FightConfig):
                 "Ability ranks spend more skill points than the champion level allows"
             )
 
-    def _validate_cast_order_against_kit(
+    def validate_cast_order_for_kit(
         self, champion_name: str, kit: Mapping[str, Any]
     ) -> None:
         """Every requested slot is one this champion's parse offers to a request.
 
-        Recast slots are absent from that set by construction: they ride
-        their parent's casts, so naming one would schedule it twice.  They
-        are folded back in by ``expand_user_order`` instead of being
+        The one question a *parse* answers, on its own, so the post-parse
+        call site can ask it without re-running the level, fight-mode and
+        rank checks its caller already ran — or, for a caller that passed
+        ``validated=True``, deliberately skipped.  A request with no cast
+        order has nothing to check and returns.
+
+        Recast slots are absent from the orderable set by construction: they
+        ride their parent's casts, so naming one would schedule it twice.
+        They are folded back in by ``expand_user_order`` instead of being
         silently dropped, which is the defect this check's other half fixes.
 
         Raises:
@@ -888,6 +896,8 @@ class FightParams(FightConfig):
                 that is neither a base slot nor stamped ``recast_of``, so
                 nothing can say whether a request may name it (D-11).
         """
+        if self.cast_order is None:
+            return
         surface = cast_slot_surface(kit)
         orderable = orderable_slots(surface)
         # A base slot whose parse produced no damage row — Aatrox's dash E,
@@ -1080,8 +1090,8 @@ def run_fight(
         # not name — Syndra's second Dark Sphere charge — silently vanished
         # from the damage breakdown (D-11).
         resolved_user_order = list(params.cast_order)
-        params.validate_for_champion(
-            champion_data.get("name", ""), level, kit=ability_damages
+        params.validate_cast_order_for_kit(
+            champion_data.get("name", ""), ability_damages
         )
         params = _params_with_cast_order(
             params, expand_user_order(resolved_user_order, ability_damages)
