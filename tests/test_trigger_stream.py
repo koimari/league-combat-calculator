@@ -269,6 +269,49 @@ def test_a_misspelled_cc_kind_cannot_enter_the_stream():
         ts.event_triggers(_row(cc_kind="stnu"))
 
 
+def test_a_misspelled_cc_kind_is_rejected_whichever_kind_was_asked_for():
+    """Classification is unconditional; only *construction* is lazy."""
+    for kinds in (
+        frozenset({ts.TriggerKind.CC}),
+        frozenset({ts.TriggerKind.DAMAGE}),
+    ):
+        with pytest.raises(ValueError, match="cc_kind"):
+            ts.event_triggers(_row(cc_kind="stnu"), kinds=kinds)
+
+
+def test_event_triggers_builds_only_the_kinds_asked_for():
+    """D-30's laziness, made real: an unasked kind is never constructed.
+
+    Not a micro-optimisation — an unbuilt trigger is also an unjudged one,
+    which is what lets a control-only holder read a row the damage stream's
+    stricter field contract would reject.
+    """
+    row = _row(cc_kind="stun")
+    only_cc = ts.event_triggers(row, kinds=frozenset({ts.TriggerKind.CC}))
+    assert [trigger.kind for trigger in only_cc] == [ts.TriggerKind.CC]
+    only_damage = ts.event_triggers(row, kinds=frozenset({ts.TriggerKind.DAMAGE}))
+    assert [trigger.kind for trigger in only_damage] == [ts.TriggerKind.DAMAGE]
+    assert ts.event_triggers(row, kinds=frozenset()) == ()
+
+
+def test_source_key_is_required_on_the_stream_that_dispatches_on_it():
+    """Damage rows are attributed by source; control rows are not.
+
+    Phage reads ``auto_attacks`` and Bloodsong reads
+    ``spellblade_Bloodsong`` off the damage stream, so an unattributed
+    damage row is one those two would price wrong.  Nothing dispatches on a
+    control row's source, and the live scanners accept control rows that
+    carry none — rejecting them would be a refactor changing behaviour.
+    """
+    unattributed = _row(source_key="", cc_kind="stun")
+    with pytest.raises(ValueError, match="source_key"):
+        ts.event_triggers(unattributed, kinds=frozenset({ts.TriggerKind.DAMAGE}))
+    (control,) = ts.event_triggers(unattributed, kinds=frozenset({ts.TriggerKind.CC}))
+    assert control.kind is ts.TriggerKind.CC
+    assert control.source_key == ""
+    assert control.cc is ts.CcClass.IMMOBILIZE
+
+
 def test_classification_agrees_with_the_vocabulary_it_replaces():
     """The bus predicate answers exactly what ``ability_spec``'s does.
 

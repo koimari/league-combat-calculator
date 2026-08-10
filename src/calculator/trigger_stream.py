@@ -185,6 +185,18 @@ class Pairing(Enum):
 # ledger, which is exactly what ``tuple_incapable_items`` projects.
 _RAW_STREAMS = frozenset({Stream.CC, Stream.DAMAGE, Stream.TAKEDOWN})
 
+# The two kinds one authored damage row can yield.  A takedown is its own
+# receipt row and never comes off this ledger.
+_ROW_KINDS = frozenset({TriggerKind.CC, TriggerKind.DAMAGE})
+
+# The classifications that *are* control, and therefore fire a CC trigger.
+# ``NONE`` is a reviewed "no control" statement and ``UNREVIEWED`` a silent
+# absence; neither may ever trigger, which is the whole point of keeping
+# them distinct.
+_CONTROL_CLASSES = frozenset(
+    {CcClass.SLOW, CcClass.IMMOBILIZE, CcClass.UNCLASSIFIED_CONTROL}
+)
+
 # The two fields the pair path supplies only under its enriched per-event
 # view; needing either is what puts a holder in ``enriched_view_items``.
 _ENRICHED_FIELDS = frozenset({Field.EVENT_ID, Field.TARGET_ID})
@@ -257,6 +269,16 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
     Every construction violation raises ``ValueError`` naming the field.  A
     ``cc_kind`` outside ``CC_KIND_VOCABULARY`` in particular cannot enter the
     stream at all: a misspelled kind must never author a no-op stun.
+
+    ``source_key`` is required on the **damage** stream and on it alone,
+    because that is the stream consumers dispatch on: Phage's Rage reads
+    ``"auto_attacks"`` and Bloodsong's Expose Weakness reads
+    ``"spellblade_Bloodsong"``, so an unattributed damage row is a row those
+    two would price wrong rather than skip.  Nothing dispatches on a control
+    row's source — Everlasting identifies a control row by its
+    ``ability_instance``, falling back to source-and-time — and requiring one
+    there would reject authored control the legacy scanner accepted, which a
+    refactor may not do.
     """
 
     kind: TriggerKind
@@ -295,7 +317,7 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
                 "Trigger cc must not be NONE on a CC trigger: NONE is a "
                 "reviewed 'no control' statement and can never fire one (D-33)"
             )
-        if self.kind is not TriggerKind.TAKEDOWN and not self.source_key:
+        if self.kind is TriggerKind.DAMAGE and not self.source_key:
             raise ValueError(
                 f"Trigger source_key is required on a {self.kind.value} trigger"
             )
@@ -993,19 +1015,31 @@ def _float(value: Any) -> float:
     return parsed if math.isfinite(parsed) else 0.0
 
 
-def event_triggers(row: Mapping[str, Any]) -> tuple[Trigger, ...]:
+def event_triggers(
+    row: Mapping[str, Any], *, kinds: frozenset[TriggerKind] = _ROW_KINDS
+) -> tuple[Trigger, ...]:
     """0-2 Triggers from one authored row — a stunning damage packet is both.
 
-    The damage trigger is unconditional for an authored row, because the
-    consumers disagree about which damage matters (Phage wants basic
-    attacks, Echoes of Helia wants every raw number, the stack ledgers want
-    non-reactive champion damage) and a bus that pre-filters would have to
-    pick one of them.  The CC trigger exists exactly when the row carries
-    real control: ``NONE`` and ``UNREVIEWED`` never fire one.
+    The damage trigger is unconditional for an authored row *of the kinds
+    asked for*, because the consumers disagree about which damage matters
+    (Phage wants basic attacks, Echoes of Helia wants every raw number, the
+    stack ledgers want non-reactive champion damage) and a bus that
+    pre-filters would have to pick one of them.  The CC trigger exists
+    exactly when the row carries real control: ``NONE`` and ``UNREVIEWED``
+    never fire one.
+
+    ``kinds`` is what makes D-30's lazy construction real rather than
+    documented: a caller asking only for control never *builds* the damage
+    trigger it would discard, so a control-only holder is neither charged
+    for it nor judged by its stricter field contract.  Classification runs
+    either way — the damage trigger carries the row's ``cc`` fields — so a
+    misspelled ``cc_kind`` is rejected whichever kind was asked for.
     """
     if not isinstance(row, Mapping):
         return ()
     cc_class, cc_kind, cc_reviewed = _classify_cc(row)
+    if not kinds & _ROW_KINDS:
+        return ()
     shared = {
         "time": _float(row.get("time")),
         "source_key": str(row.get("source_key", "") or ""),
@@ -1024,8 +1058,10 @@ def event_triggers(row: Mapping[str, Any]) -> tuple[Trigger, ...]:
         "cc_kind": cc_kind,
         "cc_reviewed": cc_reviewed,
     }
-    triggers = [Trigger(kind=TriggerKind.DAMAGE, **shared)]
-    if cc_class in {CcClass.SLOW, CcClass.IMMOBILIZE, CcClass.UNCLASSIFIED_CONTROL}:
+    triggers: list[Trigger] = []
+    if TriggerKind.DAMAGE in kinds:
+        triggers.append(Trigger(kind=TriggerKind.DAMAGE, **shared))
+    if TriggerKind.CC in kinds and cc_class in _CONTROL_CLASSES:
         triggers.append(Trigger(kind=TriggerKind.CC, **shared))
     return tuple(triggers)
 
@@ -1099,13 +1135,12 @@ def authored_triggers(
             "holder tuple_incapable_items() names",
         )
     triggers: list[Trigger] = []
-    if wanted & {Stream.CC, Stream.DAMAGE}:
+    row_kinds = frozenset(
+        kind for kind in _ROW_KINDS if _STREAM_OF_KIND[kind] in wanted
+    )
+    if row_kinds:
         for row in result.get("damage_events", ()) or ():
-            triggers.extend(
-                trigger
-                for trigger in event_triggers(row)
-                if _STREAM_OF_KIND[trigger.kind] in wanted
-            )
+            triggers.extend(event_triggers(row, kinds=row_kinds))
     if Stream.TAKEDOWN in wanted:
         for row in result.get("takedown_events", ()) or ():
             takedown = _takedown_trigger(row)
