@@ -377,13 +377,21 @@ displaces does not simply vanish: the `ast` walk becomes a **test-side** source 
 binding every `kind="damage_modifier"` call site's literal `source=` and `authority=` to the
 registry, and `_check_cross_participant_authority` gains the runtime half of that binding.
 
-**Two symbols P2c deletes that this list does not name**, recorded here rather than left to a
-reader's inference: `item_support_effects.EVENT_VIEW_STREAMS`, which is built from four of the
-five name sets and is itself a holder-to-stream table — the thing this phase's closing criterion
-reserves to `CAPABILITIES` — replaced by a `streams_for` ∩ `RAW_STREAMS` projection inside
-`require_event_view` that reproduces the starvation message character for character; and the
-private `_declared_authorities`, whose ast body is replaced by the `CAPABILITIES` projection
-above. `trigger_stream._RAW_STREAMS` becomes public `RAW_STREAMS` in the same commit, on
+**One symbol P2c deletes that this list does not name, and one it keeps**, recorded here rather
+than left to a reader's inference. The deletion is `item_support_effects.EVENT_VIEW_STREAMS`,
+which is built from four of the five name sets and is itself a holder-to-stream table — the thing
+this phase's closing criterion reserves to `CAPABILITIES` — replaced by a `streams_for` ∩
+`RAW_STREAMS` projection inside `require_event_view` that reproduces the starvation message
+character for character. The one it keeps is the private `_declared_authorities`, whose `ast`
+body is replaced by the `MappingProxyType` projection of `CAPABILITIES` described above: the
+retired symbol is the **public** `cross_participant_authorities` wrapper this list already names,
+and the private one is the site the single authority table lands on. **Corrected after the
+phase-2 sign-off, which found this paragraph claiming a deletion that did not happen** — flagged
+as a lane-authored plan-text change the way this phase's other four are. It read "Two symbols P2c
+deletes …; and the private `_declared_authorities`, whose ast body is replaced by the
+`CAPABILITIES` projection above", a sentence that deletes and replaces the same symbol in one
+breath; the symbol is live (`item_support_effects.py:1400`) and the projection is its body.
+`trigger_stream._RAW_STREAMS` becomes public `RAW_STREAMS` in the same commit, on
 `CROSS_PARTICIPANT_AUTHORITIES`'s precedent: a consumer that must name the raw streams reads the
 bus's own reading of them rather than re-spelling three members.
 
@@ -522,8 +530,11 @@ its red is reproducible on demand rather than remembered (R-05).
   between two boundaries the allowlisted differences are still standing **by design**, and
   `compare` against `scripts/golden_coupled_baseline.json` exits non-zero for reasons entirely
   inherited from earlier phases. It was already false at this phase's entry tip: extract
-  `146a69c`, the pre-phase tip `312ccd9`, and HEAD with `git archive` and run the compare in each,
-  and the three reports are byte-identical, so this phase contributes nothing to the standing set.
+  `146a69c` — the phase entry tip — `312ccd9`, the pre-P2b tip, and HEAD with `git archive` and
+  run the compare in each, and the three reports are byte-identical, so this phase contributes
+  nothing to the standing set. (This sentence called `312ccd9` "the pre-phase tip" until the
+  phase-2 sign-off corrected it; `146a69c` is the phase entry tip and `312ccd9` is one commit
+  into the phase, which is why the extract set is three trees and not two.)
 
   The pair half was always writable and holds: `compare scripts/golden_baseline.json` reports
   `OK: snapshot identical` at every commit.
