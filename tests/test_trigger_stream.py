@@ -17,6 +17,7 @@ import inspect
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -438,6 +439,119 @@ def test_the_derivation_lands_beside_the_live_legacy_set():
     assert ts.tuple_incapable_items() ^ EVENT_VIEW_SUPPORT_ITEMS == frozenset()
 
 
+# ---------------------------------------------------------------------------
+# The enrichment shrink, proved packet-for-packet rather than asserted
+# ---------------------------------------------------------------------------
+
+
+def _scan_actor(participant_id, team, item_names):
+    """One roster member the item scan can compile packets for."""
+    return SimpleNamespace(
+        participant_id=participant_id,
+        team=team,
+        level=18,
+        items=tuple({"name": name} for name in item_names),
+        stats={"mana": 1000.0, "max_mana": 1000.0, "is_melee": False},
+        request=SimpleNamespace(item_options={}, ally_effects_enabled=True),
+    )
+
+
+# One auto, one stunning ability and one plain ability — enough to reach
+# every branch the four shrinking holders own.
+_SCAN_ROWS = (
+    {
+        "time": 0.5,
+        "source_key": "auto_attacks",
+        "damage": 90.0,
+        "raw_damage": 120.0,
+        "damage_type": "physical",
+        "basic_attack": True,
+    },
+    {
+        "time": 1.5,
+        "source_key": "E",
+        "damage": 200.0,
+        "raw_damage": 260.0,
+        "damage_type": "magic",
+        "is_ability": True,
+        "cc_kind": "stun",
+    },
+    {
+        "time": 2.5,
+        "source_key": "Q",
+        "damage": 150.0,
+        "raw_damage": 150.0,
+        "damage_type": "magic",
+        "is_ability": True,
+    },
+)
+
+_HEAL_TRIGGER = {
+    "time": 1.0,
+    "kind": "heal",
+    "target": "ally:Lulu",
+    "amount": 200.0,
+    "duration": 0.0,
+}
+
+
+def _enriched_view(defender):
+    """The per-event copy ``participant_timeline`` builds for the scan."""
+    return {
+        "damage_events": [
+            {**row, "target": defender, "_event_id": f"main:{defender}:{index}"}
+            for index, row in enumerate(_SCAN_ROWS)
+        ],
+        # The enriched path also synthesises the first pair's takedown, so
+        # the proof carries it: a shrinking holder must be indifferent to
+        # that too, not merely to the two per-event fields.
+        "takedown_events": [
+            {"time": 2.5, "target": defender, "attacker": "main:Ahri"},
+        ],
+        "champion_stats": {"mana": 1000.0, "max_mana": 1000.0, "is_melee": False},
+    }
+
+
+def test_the_shrinking_holders_are_exactly_the_projection_difference():
+    """The four the enrichment set loses, read off the projections."""
+    assert ts.tuple_incapable_items() - ts.enriched_view_items() == frozenset(
+        {"Bandlepipes", "Echoes of Helia", "Phage", "Solstice Sleigh"}
+    )
+
+
+@pytest.mark.parametrize(
+    "holder_item", ["Bandlepipes", "Echoes of Helia", "Phage", "Solstice Sleigh"]
+)
+def test_the_enrichment_shrink_is_packet_for_packet(holder_item):
+    """The one membership change inside a pure-refactor phase, proved.
+
+    Each holder the enrichment set drops must author byte-identical
+    templates from the plain engine result and from the enriched per-event
+    copy — otherwise "the shrink is inert" is a claim about code nobody ran.
+    """
+    from src.calculator.item_support_effects import derive_item_support_effects
+
+    holder = _scan_actor("main:Ahri", "main", (holder_item,))
+    ally = _scan_actor("ally:Lulu", "ally", ())
+    enemy = _scan_actor("enemy:Aatrox", "enemy", ())
+    roster = [holder, ally, enemy]
+    enriched = _enriched_view(enemy.participant_id)
+    plain = {
+        "damage_events": [dict(row) for row in _SCAN_ROWS],
+        "champion_stats": enriched["champion_stats"],
+    }
+
+    from_plain = derive_item_support_effects(
+        holder, plain, roster, trigger_effects=[_HEAL_TRIGGER]
+    )
+    from_enriched = derive_item_support_effects(
+        holder, enriched, roster, trigger_effects=[_HEAL_TRIGGER]
+    )
+
+    assert from_plain, f"{holder_item} authored nothing — the proof would be vacuous"
+    assert from_plain == from_enriched
+
+
 def test_streams_for_and_holders_in_are_the_gate_call_shape():
     """The two functions the tuple gate and the enrichment gate will call."""
     assert ts.streams_for(frozenset({"Cryptbloom"})) == frozenset({ts.Stream.TAKEDOWN})
@@ -820,7 +934,6 @@ LEGACY_NAME_SET_SITES = {
     ],
     "has_event_view_support_items": [
         "src/calculator/item_support_effects.py",
-        "src/calculator/participant_timeline.py",
         "src/calculator/pipeline.py",
     ],
 }

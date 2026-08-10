@@ -37,9 +37,9 @@ from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
     derive_item_support_effects,
-    has_event_view_support_items,
     schedule_knights_vow,
 )
+from .trigger_stream import enriched_view_items, holders_in
 from .champions.skill_orders import get_ability_rank
 from .champions.slotlib import extract_named
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
@@ -2657,10 +2657,11 @@ def _score_with_search_context(
         # first pair's takedown synthesis.  Give it the same view the
         # receipt composition passes — a template it authors either
         # compiles or fails closed, never silently vanishes (issue #169).
-        # A tuple-ledger fight needs none of this: the pipeline's tuple
-        # predicate excludes every event-scanning holder.
-        if first_result.get("damage_events_tuple") or not has_event_view_support_items(
-            main.items
+        # ``enriched_view_items()`` is the projection of which holders
+        # declare one of those two fields in ``needs``, so the copy is made
+        # for a holder that reads it and for nobody else.
+        if first_result.get("damage_events_tuple") or not holders_in(
+            main.items, enriched_view_items()
         ):
             # Tuple-ledger fights carry no scannable rows by construction,
             # and a holder with no event-view item never reads the enriched
