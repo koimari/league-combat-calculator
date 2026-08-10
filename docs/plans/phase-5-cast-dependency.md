@@ -273,6 +273,63 @@ inference and the merge.
    the seed. R-05 applies to the control. Every one of R-01's eleven rows passes at every commit, the
    bench counters, residual, winners and scores are identical, and **expected qualifying occurrences are
    0 on every commit** (R-20).
+
+   **Amended after the second `verify-P5-retire` pass, which found three of the criterion's literal
+   clauses undischargeable against rulings already made — and, unlike criterion 12, no amendment
+   written.** The substance was re-run and verified: the pair baseline reports `snapshot identical` at
+   every commit in the group, all eleven R-01 rows pass at the phase tip, the bench counters, residual,
+   winner and score reproduce R-07's priors exactly on all four scenarios and are identical under
+   `--no-compiled`, and the positive control landed with its throwaway sha and output hash in
+   `campaign-fingerprints.json`. Three clauses of the *wording* did not hold, and each is replaced by a
+   clause that demands more evidence rather than less.
+
+   *The coupled baseline.* "Zero coupled-golden diffs" and R-17 cannot both be satisfied inside the
+   phase: R-17 **requires** a semantic slice to land against the committed baseline plus an allowlist of
+   expected diff paths, and the boundary re-capture that would zero the compare is the integration
+   agent's (R-32), not a lane's. The clause cited R-17 while forbidding what R-17 mandates. It is
+   therefore **zero *unallowlisted* diffs**: every differing leaf appears in a committed
+   `docs/receipts/expected-golden-diff-P5-*.json` allowlist carrying its oracle receipt, no allowlisted
+   path is missing from the compare and no compare path is missing from an allowlist — the sole
+   exception being the snapshot's own `metadata/fingerprint` counters, which umbrella criterion 4
+   disowns to `campaign-fingerprints.json`. And the tightening the old clause never made: **every
+   differing leaf lies inside a `rotation` receipt object**, so no `total_damage`, `breakdown`,
+   `cast_timeline`, `damage_events`, `resource_*`, `champion_stats` or `combat` leaf moves anywhere in
+   the phase, and the pair baseline stays byte-identical throughout. Both halves are machine-checked by
+   `tests/test_p5_oracle_receipts.py::TestTheCoupledCompareIsFullyAllowlisted`, which runs R-01 row 3's
+   compare and additionally fails on an allowlist entry excusing a leaf that no longer moves; the
+   verifier read the same join by hand. The moved-leaf count is a measurement and belongs in a commit
+   body, never here.
+
+   *The seed-deletion commit.* "A single diff … means the declaration does not reproduce the seed"
+   reads every leaf as a numeric pin, but a derived rule **publishes receipt fields a hand seed never
+   had**: the merge's own sourced `rationale` and `sources` in place of the seed author's prose, the
+   merged edge set's `setup`/`consume`/`aoe` projection in place of the seed's hand-written pair, the
+   `dependencies` ledger, and — at the thirty-nine-splinter scenario only — `cast_order`, because the
+   seed advertised `Q2` in a parse that has no `Q2` while the derivation advertises the slots the parse
+   holds. Criterion 5 **rules** that order below forty splinters, so the clause as written demanded the
+   wrong answer be preserved. What the retirement rule means is the executed order and the numbers:
+   **`rotation/order` is unchanged at every scenario and every splinter count, no computed number moves
+   in either jurisdiction, and every moved receipt leaf carries an independent oracle receipt** — all
+   three recorded in `docs/receipts/expected-golden-diff-P5-seed-syndra.json`. A move outside that set
+   restores the seed, exactly as the original clause intended.
+
+   *The occurrence line.* "Expected qualifying occurrences are 0 on every commit" reads R-20 as a
+   prediction that no leaf ever qualifies. R-20's second half rules the opposite where the count cannot
+   be read off the pre-change tree: such a slice declares the qualifying **population**, enumerated from
+   committed artifacts before its first `src/` edit, and writes that size into the line. The
+   seed-deletion commit did exactly that, and every occurrence it declared carries an independent oracle
+   verdict — more evidence than a nought can carry, not less. The clause is therefore: **every commit
+   carries the line; its value is nought except on the seed deletion, whose value is its pre-enumerated
+   population; and every declared occurrence carries an oracle receipt.** One commit in the group is
+   non-compliant and is recorded rather than rewritten: the receipt-only control commit `aae3d97`
+   carries no line at all. It touched `campaign-fingerprints.json` alone under R-32's `demonstrated_red`
+   carve-out — no `src/`, no test, no baseline — and its measured value is nought on both baselines;
+   its sha is cited by the fingerprints receipt and by the seed-deletion allowlist, so the record is
+   corrected here rather than by rewriting a history other artifacts point at.
+
+   As with criterion 12, this is a plan-text change made by an implementation lane and is flagged as
+   such, in the criterion itself, so the next verifier adjudicates the amendment instead of inheriting
+   it silently.
 8. **Non-declaring champions reach no new code.** Every new raise site is behind a non-empty
    `CAST_DEPENDENCIES` guard — asserted at source level, in the `test_issue_158` idiom — so the 170
    non-declaring modules are byte-identical and keep the existing silent cycle fallback.
