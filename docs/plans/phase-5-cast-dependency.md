@@ -294,10 +294,28 @@ inference and the merge.
     re-asserted here as a regression) and a timeline **distinct from** criterion 6's derived one; the
     permutation check lives in `validate_for_champion` against `orderable_slots`, not as a literal.
     No Phase-5 commit touches `pipeline.py:994`.
-12. **Every declaration is load-bearing.** Removing any one `CastDependency` changes the derived order
-    for ≥ 1 certified option state, or the declaration is tagged `confirmed_by_inference` and the
-    receipt says so. *Without this, Syndra's retired seed returns as four declarations with plausible
-    prose and c5–c7 all pass — seed dependence intact and now unfalsifiable.*
+12. **Every declaration is load-bearing, on a route the receipt publishes.** Removing any one
+    `CastDependency` is observable on at least one of three named surfaces, and
+    `docs/cast-dependency-audit.json` records which, per declaration, in
+    `declared_dependency_activation[].load_bearing_routes`; a declaration on none of them fails the
+    audit. The routes are `derived_order` (removing it changes the order the derivation returns, or
+    makes it refuse to return one, in ≥ 1 certified option state), `confirmed_by_inference` (an
+    inferred edge agrees and the merge receipt says so), and `custom_order_refusal` (removing it makes
+    a request order the engine currently refuses legal again, D-86). *Without this, Syndra's retired
+    seed returns as four declarations with plausible prose and c5–c7 all pass — seed dependence intact
+    and now unfalsifiable.*
+
+    **Amended after the first `verify-P5-retire` pass, which found the original two-route form
+    undischargeable against D-89 and declined to rule on the widening.** The original wording offered
+    `derived_order` or `confirmed_by_inference` only. D-89 *rules* that Zed and Brand carry head-only
+    declarations **whose seeds stay**, so their order is decided by `CAST_ORDER_OVERRIDES` before the
+    derivation is consulted at all: measured across `cast_dependency_audit.option_states` × levels 1–18,
+    removing any of their three declarations changes no derived order in any state, and no inferred edge
+    agrees with any of them, so tagging them `confirmed_by_inference` would be a false receipt. The two
+    rulings were therefore mutually unsatisfiable and one had to give; D-89 is ruled and this criterion
+    was not, so the criterion names the third route. It is a widening in count and a **tightening in
+    evidence**: the original demanded a receipt entry only for the `confirmed_by_inference` escape,
+    where every declaration now carries a published route, machine-measured and diff-gated.
 13. **The frontier is counted, not claimed.** `COMBO_TABLE` has zero occurrences in `src/` and `tests/`;
     **every one of the eleven entries is dispositioned** — four retired (Syndra, Aatrox, Jhin,
     Aphelios), two head-only (Zed, Brand), five Tier 3 (Cassiopeia, Vladimir, Lux, Annie, Varus) — so
