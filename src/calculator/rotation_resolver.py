@@ -1805,9 +1805,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             derived=True,
             dependencies=dependencies,
         )
-        rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
         _DERIVED_RULE_CACHE[cache_key] = rule
-        return rule
+        return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
 
     base_idx = {s: i for i, s in enumerate(base)}
     outgoing = {s: any(e.setup == s for e in edges) for s in base}
@@ -1850,9 +1849,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             derived=True,
             dependencies=dependencies,
         )
-        rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
         _DERIVED_RULE_CACHE[cache_key] = rule
-        return rule
+        return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
 
     fight_dps = rank_ability_dps(ability_damages, target_count=1, aoe=aoe)
     dps_idx = {s: i for i, (s, *_) in enumerate(fight_dps)}
@@ -1917,9 +1915,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         derived=True,
         dependencies=dependencies,
     )
-    rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
     _DERIVED_RULE_CACHE[cache_key] = rule
-    return rule
+    return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
 
 
 def resolve_cast_order(
