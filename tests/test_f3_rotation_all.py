@@ -860,6 +860,162 @@ class TestResolvedEdgesIsTheOneSurface:
             assert receipt == DependencyReceipt()
 
 
+# Syndra's certified splinter axis, split by whether Q2 is in the parse.
+# Below forty the second charge does not exist, so the recast declaration
+# is inactive and its suppression is inert with it.
+_SYNDRA_Q2_LIVE = (
+    (11, 40),
+    (11, 60),
+    (11, 120),
+    (18, 40),
+    (18, 60),
+    (18, 119),
+    (18, 120),
+)
+_SYNDRA_Q2_ABSENT = ((11, 0), (11, 39), (18, 0), (18, 39))
+
+
+def _syndra_declarations(**stripped):
+    """Syndra's real declarations, with one of them replaced.
+
+    ``stripped`` maps a ``requires`` slot to the replacement kwargs, so a
+    test says "her E-requires-Q declaration, minus its suppression" and
+    keeps every other field the module authored.  Rebuilding the
+    declaration by hand instead would test a fixture, which is exactly
+    what the synthetic negatives already do.
+    """
+    from src.calculator.champions import get_champion_cast_dependencies
+
+    return tuple(
+        replace(dep, **stripped[dep.requires]) if dep.requires in stripped else dep
+        for dep in get_champion_cast_dependencies("Syndra")
+    )
+
+
+def _syndra_merge(champion_data, level, splinters, declarations):
+    """One merge of *declarations* over the edges Syndra really produces."""
+    parsed = _parse(
+        champion_data, level, (), {}, champion_options={"splinters": splinters}
+    )
+    return resolved_edges(
+        "Syndra", parsed, champion_data, _slot_options("Syndra"), declarations
+    )
+
+
+class TestSyndrasSuppressionsAreLoadBearing:
+    """Criterion 4's Syndra clause, against the real declarations.
+
+    Every ``ConflictingInferenceError`` negative in this suite was
+    synthetic — a hand-built declaration meeting a hand-built edge.  That
+    proves the merge raises; it does not prove that Syndra's own
+    suppression is what holds her own conflict down, which is the claim
+    the criterion makes and the one a broadened or deleted suppression
+    would falsify.
+
+    Her two suppressions are not symmetric, and criterion 4's original
+    "either" could not be honoured as written.  ``E requires Q`` is
+    **matched**: the detector's ``cc_setup`` fan-out really does emit
+    ``E -> Q``, so removing the suppression is a direct red.  ``E requires
+    Q2`` is **latent** by D-84 — ``_castable()`` wants ``cooldown > 0``
+    and Q2 carries the ``0.0`` cast-exactly-once cooldown, so no
+    ``E -> Q2`` edge can exist and no removal can ever raise here.  Its
+    evidence is the other half of that same fact, and it is stricter than
+    a raise-on-removal: the latency is measured in every certified state,
+    and clearing the ``latent_reason`` makes the merge refuse the
+    unexplained claim rather than carry it.
+    """
+
+    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT)
+    def test_the_opposing_inference_is_one_syndra_really_produces(
+        self, champion_by_name, level, splinters
+    ) -> None:
+        """The premise: E -> Q cc_setup is in the detector's own output."""
+        data = champion_by_name["Syndra"]
+        parsed = _parse(data, level, (), {}, champion_options={"splinters": splinters})
+        inferred = detect_setup_consume_edges(
+            "Syndra", parsed, data, _slot_options("Syndra")
+        )
+        assert ("E", "Q", "cc_setup") in {
+            (e.setup, e.consume, e.kind) for e in inferred
+        }
+
+    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT)
+    def test_removing_the_matched_suppression_raises(
+        self, champion_by_name, level, splinters
+    ) -> None:
+        """D-82 on the live surface: the two surfaces disagree, loudly."""
+        declarations = _syndra_declarations(Q={"suppresses": ()})
+        with pytest.raises(ConflictingInferenceError) as caught:
+            _syndra_merge(champion_by_name["Syndra"], level, splinters, declarations)
+        message = str(caught.value)
+        assert "Syndra: the detector infers E -> Q (cc_setup" in message
+        assert "E requires Q (declared cc_enabler)" in message
+        assert "wiki.leagueoflegends.com/en-us/Syndra@" in message
+
+    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT)
+    def test_the_real_declarations_raise_nothing(
+        self, champion_by_name, level, splinters
+    ) -> None:
+        """The control: the raise is the removal's, not the state's."""
+        edges, receipt = _syndra_merge(
+            champion_by_name["Syndra"], level, splinters, _syndra_declarations()
+        )
+        assert ("E", "Q") not in _edges_to_slot_pairs(edges)
+        assert len(receipt.suppressed) == 1
+
+    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT)
+    def test_no_inference_opposes_the_recast_declaration_anywhere(
+        self, champion_by_name, level, splinters
+    ) -> None:
+        """D-84 measured, not quoted: the E -> Q2 edge exists in no state."""
+        data = champion_by_name["Syndra"]
+        parsed = _parse(data, level, (), {}, champion_options={"splinters": splinters})
+        inferred = detect_setup_consume_edges(
+            "Syndra", parsed, data, _slot_options("Syndra")
+        )
+        assert ("E", "Q2") not in {(e.setup, e.consume) for e in inferred}
+
+    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE)
+    def test_clearing_the_latent_reason_refuses_the_unexplained_claim(
+        self, champion_by_name, level, splinters
+    ) -> None:
+        """The latent half's red: a suppression matching nothing must say why.
+
+        This is what removal cannot test.  The suppression is live and
+        active — its parent declaration is active wherever Q2 is — and
+        the merge still finds it matched no inferred edge, which is D-84's
+        claim proven by the merge rather than asserted by the module.
+        """
+        suppression = _syndra_declarations()[1].suppresses[0]
+        declarations = _syndra_declarations(
+            Q2={"suppresses": (replace(suppression, latent_reason=None),)}
+        )
+        with pytest.raises(MissingLatentReasonError) as caught:
+            _syndra_merge(champion_by_name["Syndra"], level, splinters, declarations)
+        assert "E -> Q2 (cc_setup) matched no inferred edge" in str(caught.value)
+
+    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE)
+    def test_removing_the_latent_suppression_is_inert(
+        self, champion_by_name, level, splinters
+    ) -> None:
+        """And why criterion 4's "either" was half-undischargeable.
+
+        Nothing opposes ``E requires Q2``, so dropping its suppression
+        raises nothing and moves no edge — only the latent receipt row it
+        published goes with it.
+        """
+        data = champion_by_name["Syndra"]
+        real_edges, real_receipt = _syndra_merge(
+            data, level, splinters, _syndra_declarations()
+        )
+        edges, receipt = _syndra_merge(
+            data, level, splinters, _syndra_declarations(Q2={"suppresses": ()})
+        )
+        assert list(edges) == list(real_edges)
+        assert len(real_receipt.latent) == 1 and receipt.latent == ()
+        assert replace(receipt, latent=real_receipt.latent) == real_receipt
+
+
 class TestTheDerivationReadsDeclarations:
     """The merge is what ``derive_champion_rule`` orders against."""
 
