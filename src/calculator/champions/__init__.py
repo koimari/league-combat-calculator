@@ -9,6 +9,7 @@ archetype registration in the reviewed surface.
 import importlib
 from typing import Any
 
+from ..cast_dependency import CastDependency
 from .generic import GENERIC_SLOTS, parse_abilities as parse_generic_abilities
 from .module_contract import ChampionModuleContract, contract_from_module
 
@@ -346,6 +347,29 @@ def get_champion_cast_order(champion_name: str) -> list[str] | None:
         return None
     declared = getattr(module, "CAST_ORDER", None)
     return list(declared) if declared else None
+
+
+def get_champion_cast_dependencies(champion_name: str) -> tuple[CastDependency, ...]:
+    """The champion's declared ordering prerequisites, or ``()``.
+
+    A module declares ``CAST_DEPENDENCIES`` when its own kit makes an
+    order mandatory rather than preferable — Syndra's Scatter the Weak
+    stuns only through a Dark Sphere her Q put on the field, so E after Q
+    is the mechanic, not a scheduling taste.  A champion that declares
+    none constrains nothing and keeps the resolver's inferred edges alone.
+
+    The validated contract is the only source: reading ``CAST_DEPENDENCIES``
+    off the module would hand out declarations that never passed the
+    import gate.
+
+    Returns:
+        The validated declarations, empty for a champion with no module
+        or one that declares none.
+    """
+    try:
+        return get_champion_module_contract(champion_name).cast_dependencies
+    except KeyError:
+        return ()
 
 
 def get_champion_options_meta(champion_name: str) -> dict[str, Any]:

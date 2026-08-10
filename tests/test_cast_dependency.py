@@ -13,9 +13,20 @@ import subprocess
 import sys
 from dataclasses import FrozenInstanceError
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
+from src.calculator.champions import (
+    _CUSTOM_CHAMPION_MODULES,
+    get_champion_cast_dependencies,
+    get_champion_module_contract,
+)
+from src.calculator.champions.module_contract import (
+    ChampionModuleContractError,
+    contract_from_module,
+)
+from src.calculator.champions.packet_module import build_packet_module
 from src.calculator.cast_dependency import (
     BASE_CAST_SLOTS,
     DEPENDENCY_KINDS,
@@ -469,3 +480,127 @@ class TestCheckOrderSatisfiesDependencies:
 
     def test_no_declarations_never_rejects(self) -> None:
         check_order_satisfies_dependencies(["E", "Q", "W", "R"], [], {"Q", "E", "W"})
+
+
+def _champion_module(**attributes) -> ModuleType:
+    """The smallest module ``contract_from_module`` accepts, plus overrides."""
+    module = ModuleType(attributes.pop("__name__", "synthetic_champion"))
+    module.parse_abilities = lambda *args, **kwargs: {}
+    module.SLOTS = {
+        slot: (lambda ctx: None) for slot in ("P", "Q", "Q2", "W", "E", "R")
+    }
+    module.OPTIONS = []
+    module.ASSUMPTIONS = ["A synthetic module for the contract gate."]
+    module.SOURCES = [{"label": "synthetic", "url": SOURCE}]
+    module.MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
+    module.REVIEW_STATUS = "reviewed_module"
+    for name, value in attributes.items():
+        setattr(module, name, value)
+    return module
+
+
+class TestTheContractCarriesDeclarations:
+    """``module_contract`` validates at import and publishes the result."""
+
+    def test_a_declaring_module_lands_its_declarations_on_the_contract(self) -> None:
+        module = _champion_module(CAST_DEPENDENCIES=(_dep(),))
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == (_dep(),)
+
+    def test_a_non_declaring_module_carries_an_empty_tuple(self) -> None:
+        contract = contract_from_module("Synthetic", "synthetic", _champion_module())
+        assert contract.cast_dependencies == ()
+
+    def test_the_parser_carries_the_declaration_when_the_module_does_not(self) -> None:
+        """The PACKET_SPEC three-place lookup, for packet-compiled carriers."""
+        module = _champion_module()
+        module.parse_abilities.cast_dependencies = (_dep(),)
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == (_dep(),)
+
+    def test_a_declaration_outside_the_modules_own_slots_fails_at_import(self) -> None:
+        module = _champion_module(CAST_DEPENDENCIES=(_dep(requires="Z"),))
+        with pytest.raises(UnknownSlotError):
+            contract_from_module("Synthetic", "synthetic", module)
+
+    def test_a_declaration_that_is_not_a_cast_dependency_fails_at_import(self) -> None:
+        module = _champion_module(CAST_DEPENDENCIES=({"slot": "E"},))
+        with pytest.raises(ChampionModuleContractError, match="CAST_DEPENDENCIES"):
+            contract_from_module("Synthetic", "synthetic", module)
+
+    def test_a_cast_order_contradicting_a_declaration_fails_at_import(self) -> None:
+        """Jayce's shape: an order and a dependency that cannot both hold (P5-d)."""
+        module = _champion_module(
+            CAST_DEPENDENCIES=(_dep(),), CAST_ORDER=["E", "Q", "W", "R"]
+        )
+        with pytest.raises(CustomOrderViolatesDependencyError):
+            contract_from_module("Synthetic", "synthetic", module)
+
+    def test_a_cast_order_satisfying_its_declarations_passes(self) -> None:
+        module = _champion_module(
+            CAST_DEPENDENCIES=(_dep(),), CAST_ORDER=["Q", "E", "W", "R"]
+        )
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == (_dep(),)
+
+    def test_a_non_declaring_modules_cast_order_reaches_no_new_check(self) -> None:
+        """D-85: the 170 non-declaring champions must be byte-identical.
+
+        Jayce's live ``CAST_ORDER`` names ``Q2``, a slot his ``SLOTS`` does
+        not have, so a slot check that ran for every module would fail his
+        import today.  The guard is what keeps the migration diff-free.
+        """
+        module = _champion_module(CAST_ORDER=["Q", "Q2_absent", "W"])
+        module.SLOTS = {slot: (lambda ctx: None) for slot in ("P", "Q", "W", "E", "R")}
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == ()
+
+
+class TestTheRegistryAccessor:
+    def test_an_unknown_champion_declares_nothing(self) -> None:
+        assert get_champion_cast_dependencies("Not A Champion") == ()
+
+    def test_it_reads_the_validated_contract(self) -> None:
+        for name in ("Aatrox", "Jinx"):
+            assert (
+                get_champion_cast_dependencies(name)
+                is get_champion_module_contract(name).cast_dependencies
+            )
+
+    def test_every_registered_champion_answers_the_accessor(self) -> None:
+        for name in _CUSTOM_CHAMPION_MODULES:
+            assert isinstance(get_champion_cast_dependencies(name), tuple)
+
+
+class TestThePacketCompilerCarriesDeclarations:
+    """``build_packet_module`` gates its declarations on the compiled surface."""
+
+    SHA = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
+
+    def _packet_dependency(self) -> CastDependency:
+        _, slots, _, _, _ = build_packet_module("Jinx", self.SHA)
+        assert {"Q", "W", "E", "R"} <= set(slots)
+        return _dep(slot="E", requires="Q", kind="damage_enabler")
+
+    def test_it_attaches_to_both_carriers(self) -> None:
+        dependency = self._packet_dependency()
+        parser, slots, _, _, _ = build_packet_module(
+            "Jinx", self.SHA, cast_dependencies=(dependency,)
+        )
+        assert parser.cast_dependencies == (dependency,)
+        assert slots.cast_dependencies == (dependency,)
+
+    def test_declaring_nothing_leaves_both_carriers_empty(self) -> None:
+        parser, slots, _, _, _ = build_packet_module("Jinx", self.SHA)
+        assert parser.cast_dependencies == ()
+        assert slots.cast_dependencies == ()
+
+    def test_a_slot_the_packet_never_compiled_fails_closed(self) -> None:
+        with pytest.raises(UnknownSlotError):
+            build_packet_module(
+                "Jinx", self.SHA, cast_dependencies=(_dep(requires="Q2"),)
+            )
+
+    def test_the_digest_gate_still_fires_first(self) -> None:
+        with pytest.raises(RuntimeError, match="packet evidence drifted"):
+            build_packet_module("Jinx", "0" * 64, cast_dependencies=(_dep(),))

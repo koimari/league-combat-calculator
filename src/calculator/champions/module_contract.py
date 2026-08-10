@@ -12,6 +12,12 @@ from string import hexdigits
 from types import ModuleType
 from typing import Any, Callable
 
+from ..cast_dependency import (
+    CastDependency,
+    validate_cast_dependencies,
+    validate_cast_order_declaration,
+)
+
 REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
 VALID_COVERAGE = frozenset({"modeled", "no_damage", "out_of_scope"})
 
@@ -36,6 +42,63 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     review_status: str
     packet_spec: dict[str, Any] | None = None
     packet_sha256: str | None = None
+    cast_dependencies: tuple[CastDependency, ...] = ()
+
+
+def _cast_dependencies(
+    module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
+) -> tuple[CastDependency, ...]:
+    """The module's declared ordering prerequisites, validated at import.
+
+    Read from the same three places as ``PACKET_SPEC`` — the module, then
+    the parser, then the slot map — so a packet champion can carry its
+    declaration on the artifacts ``build_packet_module`` compiled instead
+    of restating it.
+
+    Both validators run against *this module's own* slot surface, never a
+    global slot list: a synthetic key like Syndra's ``Q2`` is legal
+    because the module declares it.  ``CAST_ORDER`` is validated by the
+    same gate (P5-d) rather than by the bare ``getattr`` that reads it at
+    runtime, so a module declaring an order contradicting a dependency it
+    also declares fails at import instead of surprising later.
+
+    Every check is gated on the module declaring something (D-85): a
+    champion that declares no dependency reaches no new failure mode.
+
+    Raises:
+        ChampionModuleContractError: The declaration is not a tuple of
+            ``CastDependency``.
+        CastDependencyError: One of the typed import-time failures.
+    """
+    declared = getattr(
+        module,
+        "CAST_DEPENDENCIES",
+        getattr(parser, "cast_dependencies", getattr(slots, "cast_dependencies", ())),
+    )
+    if not declared:
+        return ()
+    if not isinstance(declared, (tuple, list)) or any(
+        not isinstance(row, CastDependency) for row in declared
+    ):
+        raise ChampionModuleContractError(
+            f"{module.__name__} CAST_DEPENDENCIES must be a sequence of "
+            "CastDependency declarations"
+        )
+
+    dependencies = tuple(declared)
+    slot_surface = set(slots)
+    validate_cast_dependencies(
+        dependencies, slot_surface=slot_surface, module=module.__name__
+    )
+    cast_order = getattr(module, "CAST_ORDER", None)
+    if cast_order:
+        validate_cast_order_declaration(
+            cast_order,
+            dependencies,
+            slot_surface=slot_surface,
+            module=module.__name__,
+        )
+    return dependencies
 
 
 def _require_list(module: ModuleType, field: str) -> list[Any]:
@@ -129,6 +192,8 @@ def contract_from_module(
             f"{module.__name__} PACKET_SHA256 must be a SHA-256 hex digest"
         )
 
+    cast_dependencies = _cast_dependencies(module, parser, slots)
+
     return ChampionModuleContract(
         name=name,
         module_name=module_name,
@@ -142,4 +207,5 @@ def contract_from_module(
         review_status=review_status,
         packet_spec=packet_spec,
         packet_sha256=packet_sha256,
+        cast_dependencies=cast_dependencies,
     )

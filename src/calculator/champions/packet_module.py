@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..cast_dependency import CastDependency, validate_cast_dependencies
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
@@ -48,12 +49,23 @@ def packet_spec_sha256(packet_spec: dict[str, Any]) -> str:
 
 
 class PacketSlotMap(dict[str, Any]):
-    """Resolved slot parsers plus the evidence declaration they compile."""
+    """Resolved slot parsers plus the evidence declaration they compile.
 
-    def __init__(self, packet_spec: dict[str, Any], packet_sha256: str):
+    ``cast_dependencies`` rides here rather than in the digest: the module
+    that accepts this evidence also declares the ordering rules it implies,
+    and ``contract_from_module`` reads them off this carrier (P5-a).
+    """
+
+    def __init__(
+        self,
+        packet_spec: dict[str, Any],
+        packet_sha256: str,
+        cast_dependencies: tuple[CastDependency, ...] = (),
+    ):
         super().__init__()
         self.packet_spec = packet_spec
         self.packet_sha256 = packet_sha256
+        self.cast_dependencies = cast_dependencies
 
 
 def repeat_damage_parser(
@@ -516,11 +528,22 @@ def build_packet_module(
     slot_parsers: dict[str, Any] | None = None,
     variant_parsers: dict[tuple[str, int], Any] | None = None,
     packet_part_timings: dict[str, dict[str, Any]] | None = None,
+    cast_dependencies: tuple[CastDependency, ...] = (),
 ):
     """Compile one named module's reviewed packet declaration.
 
     Champion-specific timing, parser, and assumption choices are passed by
     the named champion module.  This compiler contains no champion switchboard.
+
+    ``cast_dependencies`` are the module's declared ordering prerequisites
+    (``src/calculator/cast_dependency.py``).  They are deliberately **not**
+    folded into ``packet_spec_sha256`` (P5-a): the digest pins reviewed
+    evidence, and a dependency is a module-authored rule *about* that
+    evidence carrying its own source, so folding it in would make every
+    dependency edit read as evidence drift.  They are validated against
+    the compiled slot surface — the same gate as the digest check — and
+    attached to both carriers, so ``contract_from_module`` finds them
+    whether it looks at the parser or the slot map.
     """
     champion = _packet_specs().get(champion_name)
     if champion is None:
@@ -536,7 +559,7 @@ def build_packet_module(
     slot_parsers = slot_parsers or {}
     variant_parser_overrides = variant_parsers or {}
     packet_part_timings = packet_part_timings or {}
-    slots = PacketSlotMap(champion, packet_sha256)
+    slots = PacketSlotMap(champion, packet_sha256, cast_dependencies)
     options: list[dict[str, Any]] = []
     for slot in ("Q", "W", "E", "R", "P"):
         spec = champion.get("slots", {}).get(slot)
@@ -649,6 +672,16 @@ def build_packet_module(
             )
         else:
             slots[slot] = no_damage_parser(slot)
+
+    # The digest above proves the evidence is the reviewed one; this
+    # proves the declarations are about slots that evidence compiled.  A
+    # dependency naming a slot this packet never built is a rule with no
+    # referent, and only a declaring module can reach the raise (D-85).
+    if cast_dependencies:
+        validate_cast_dependencies(
+            cast_dependencies, slot_surface=set(slots), module=champion_name
+        )
+
     parser = build_parser(slots, champion_name)
 
     def parse_abilities(*args, **kwargs):
@@ -668,4 +701,5 @@ def build_packet_module(
     sources = load_champion_sources(champion_name)
     parse_abilities.packet_spec = champion
     parse_abilities.packet_sha256 = packet_sha256
+    parse_abilities.cast_dependencies = cast_dependencies
     return parse_abilities, slots, assumptions, sources, options
