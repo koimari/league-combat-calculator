@@ -35,7 +35,7 @@ from src.calculator.damage import _in_cc_window, _merged_cc_windows
 from src.calculator.trigger_stream import is_immobilizing_event
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_support_effects import (
-    _declared_authorities as cross_participant_authorities,
+    _declared_authorities,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.survival.accumulate import accumulate_support_values
@@ -371,7 +371,7 @@ class TestCommandExpiryBoundaryDiverges:
             f"{sorted(timed)}; the boundary divergence now covers a "
             "different set of mechanics than the one this sentinel pins."
         )
-        assert timed < set(cross_participant_authorities())
+        assert timed < set(_declared_authorities())
 
     def test_the_pair_engine_amps_the_closing_instant(self):
         effect = item_effects.command_amp_effect([get_item_by_name("Imperial Mandate")])
@@ -444,7 +444,7 @@ class TestIsAttackOrSpellVersusFromAllSources:
             "attack classes it declares, and the divergence this pins is "
             f"now over {sorted(admitting_other)}"
         )
-        assert admitting_other < set(cross_participant_authorities())
+        assert admitting_other < set(_declared_authorities())
 
     def test_other_class_damage_is_declared_but_not_priced(self):
         """The divergence itself, at the one predicate that decides it."""
