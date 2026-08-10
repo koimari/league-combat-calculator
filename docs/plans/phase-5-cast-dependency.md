@@ -354,16 +354,33 @@ inference and the merge.
    seed-deletion commit did exactly that, and every occurrence it declared carries an independent oracle
    verdict — more evidence than a nought can carry, not less. The clause is therefore: **every commit
    carries the line; its value is nought except on the seed deletion, whose value is its pre-enumerated
-   population; and every declared occurrence carries an oracle receipt.** One commit in the group is
-   non-compliant and is recorded rather than rewritten: the receipt-only control commit `aae3d97`
-   carries no line at all. It touched `campaign-fingerprints.json` alone under R-32's `demonstrated_red`
-   carve-out — no `src/`, no test, no baseline — and its measured value is nought on both baselines;
-   its sha is cited by the fingerprints receipt and by the seed-deletion allowlist, so the record is
-   corrected here rather than by rewriting a history other artifacts point at.
+   population; and every declared occurrence carries an oracle receipt.**
+
+   **Corrected after the `verify-P5-signoff` pass.** The first version of this paragraph recorded one
+   non-compliant commit; the deviation set is **three**, and the correction is stated as a rule a
+   reader can re-run rather than as a recollection. The enumeration is over the lane's whole commit
+   range — from the phase's first commit, `c442d11`, to its tip — and the command is part of the
+   clause, not left to the checker:
+
+   ```bash
+   git rev-list --reverse c442d11~1..HEAD |
+     while read c; do
+       git show -s --format=%B "$c" | grep -q "Expected qualifying occurrences" || git show -s --oneline "$c"
+     done
+   ```
+
+   It reports `96ace20` (`test(rotation)`: the edge taxonomy), `33cdddb` (`test(champions)`: D-85's
+   guard) and `aae3d97` (`docs(receipts)`: the seed-retirement control). All three are recorded rather
+   than rewritten, and none is a number moving unexplained: each touches no `src/`, no baseline and no
+   allowlist — two are test-only, one is the `campaign-fingerprints.json` control commit under R-32's
+   `demonstrated_red` carve-out — and each body records both compares identical on its own tree. Their
+   shas are cited by the fingerprints receipt and the seed-deletion allowlist, so a rewrite would break
+   artifacts that point at them. Every commit after this correction carries the line.
 
    As with criterion 12, this is a plan-text change made by an implementation lane and is flagged as
    such, in the criterion itself, so the next verifier adjudicates the amendment instead of inheriting
-   it silently.
+   it silently. That an amended criterion could itself state a checkable universal claim that was false
+   is the reason the deviation set is now enumerated by a command rather than by counting from memory.
 8. **Non-declaring champions reach no new code.** Every new raise site is behind a non-empty
    `CAST_DEPENDENCIES` guard — asserted at source level, in the `test_issue_158` idiom — so the 170
    non-declaring modules are byte-identical and keep the existing silent cycle fallback.
