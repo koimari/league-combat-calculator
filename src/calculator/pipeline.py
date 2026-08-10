@@ -46,6 +46,7 @@ from .request_parsing import (
 )
 from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats, get_item_stats
+from .cast_dependency import BASE_CAST_SLOTS, expand_user_order, orderable_slots
 
 DEFAULT_TARGET: dict[str, float] = {
     "health": 1000.0,
@@ -559,6 +560,76 @@ def _bounded_request_float(
     return request_number(data, key, default, minimum, maximum)
 
 
+def validate_cast_order_shape(cast_order: Any, *, field: str) -> None:
+    """Reject a requested cast order no champion could satisfy.
+
+    Champion-agnostic on purpose: a cast order is a non-empty list of
+    distinct ability slots.  *Which* slots the champion actually offers is
+    a property of its parsed kit and is checked once, against
+    ``cast_dependency.orderable_slots``, in
+    :meth:`FightParams.validate_for_champion` (D-11).  Before that split
+    both request paths hard-coded ``sorted(order) == ["E","Q","R","W"]``,
+    which is why a Syndra order could never name the kit it actually has.
+
+    Args:
+        cast_order: The requested value, straight off the request.
+        field: How the caller's message names the field.
+
+    Raises:
+        ValueError: The value is not a list, holds a non-string, is empty,
+            or repeats a slot.
+    """
+    if cast_order is None:
+        return
+    if not isinstance(cast_order, list) or any(
+        not isinstance(slot, str) for slot in cast_order
+    ):
+        raise ValueError(f"{field} must be a list of ability slots")
+    if not cast_order:
+        raise ValueError(f"{field} must name at least one ability slot")
+    if len(set(cast_order)) != len(cast_order):
+        raise ValueError(f"{field} must not repeat an ability slot")
+
+
+def cast_slot_surface(
+    ability_damages: Mapping[str, Any],
+) -> dict[str, Mapping[str, Any]]:
+    """The parsed rows a cast order schedules, keyed as the cast vocabulary spells them.
+
+    Two adjustments separate the parse from ``cast_dependency``'s slot
+    vocabulary, and both are stated here rather than guessed at the call
+    site:
+
+    * The parse publishes the passive under ``"passive"``
+      (``champions/engine.py``'s ``_result_key``) while the cast vocabulary
+      spells it ``"P"``; both spellings occur across the roster because a
+      few modules build their results dict by hand.
+    * The parse also carries **rider rows** — Briar's Frenzy swing, Bel'Veth's
+      R on-hit, Annie's Tibbers attacks — which no cast order names and no
+      cast order drops, because the engine attributes them through their own
+      atoms.  They are not cast slots and are not offered to the request.
+
+    What remains is exactly the surface a cast order can schedule: the base
+    cast slots the parse produced, plus every row stamped ``recast_of``,
+    which is the one authority for recast parentage (D-11).
+
+    Args:
+        ability_damages: The parsed ability package for this fight.
+
+    Returns:
+        Parsed entries by cast-vocabulary slot name.
+    """
+    surface: dict[str, Mapping[str, Any]] = {}
+    for slot, entry in ability_damages.items():
+        if not isinstance(entry, Mapping):
+            continue
+        if slot in ("P", "passive"):
+            surface["P"] = entry
+        elif slot in BASE_CAST_SLOTS or entry.get("recast_of"):
+            surface[slot] = entry
+    return surface
+
+
 @dataclass(frozen=True)
 class FightParams(FightConfig):
     """FightConfig plus the parse-layer inputs the engine never sees.
@@ -684,14 +755,14 @@ class FightParams(FightConfig):
         return params
 
     def _validate_request_values(self) -> None:
-        """Reject malformed cast orders and ability ranks for every consumer."""
-        if self.cast_order is not None:
-            if not isinstance(self.cast_order, list) or any(
-                not isinstance(key, str) for key in self.cast_order
-            ):
-                raise ValueError("Cast order must be a permutation of Q, W, E, R")
-            if sorted(self.cast_order) != ["E", "Q", "R", "W"]:
-                raise ValueError("Cast order must be a permutation of Q, W, E, R")
+        """Reject malformed cast orders and ability ranks for every consumer.
+
+        The cast-order check here is deliberately champion-agnostic: a
+        request is a non-empty list of distinct ability slots, and *which*
+        slots a given champion may be told to cast is decided against its
+        parsed kit in :meth:`validate_for_champion` (D-11).
+        """
+        validate_cast_order_shape(self.cast_order, field="Cast order")
 
         if not self.ability_ranks:
             return
@@ -722,13 +793,25 @@ class FightParams(FightConfig):
             "roster_target_count": float(self.roster_target_count),
         }
 
-    def validate_for_champion(self, champion_name: str, level: int) -> None:
-        """Reject a rank allocation that cannot exist at ``level``.
+    def validate_for_champion(
+        self,
+        champion_name: str,
+        level: int,
+        *,
+        kit: Mapping[str, Any] | None = None,
+    ) -> None:
+        """Reject a rank allocation or a cast order this champion cannot run.
 
         Rank-free requests use the champion's sourced default order. Manual
         allocations are accepted only for the standard five-rank basic and
         three-rank ultimate layout. Transformation and auto-levelled kits fail
         closed until their individual allocation rules are represented.
+
+        ``kit`` is the parsed ability package. Which slots a request may name
+        is a property of the parsed kit, not of the champion's name, so the
+        callers that validate *before* the parse pass none and ``run_fight``
+        supplies it at its post-parse call site — the one place a cast order
+        turns into casts, so nothing reaches the engine unchecked.
         """
         if level > max_champion_level(self.role, self.role_quest_complete):
             raise ValueError(f"Level {level} requires the completed top role quest")
@@ -737,6 +820,8 @@ class FightParams(FightConfig):
         custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)
         if self.cast_order is not None and custom_order_reason is not None:
             raise ValueError(custom_order_reason)
+        if self.cast_order is not None and kit is not None:
+            self._validate_cast_order_against_kit(champion_name, kit)
 
         if self.ability_ranks is None:
             return
@@ -769,6 +854,40 @@ class FightParams(FightConfig):
         if sum(effective.values()) > min(level, 18):
             raise ValueError(
                 "Ability ranks spend more skill points than the champion level allows"
+            )
+
+    def _validate_cast_order_against_kit(
+        self, champion_name: str, kit: Mapping[str, Any]
+    ) -> None:
+        """Every requested slot is one this champion's parse offers to a request.
+
+        Recast slots are absent from that set by construction: they ride
+        their parent's casts, so naming one would schedule it twice.  They
+        are folded back in by ``expand_user_order`` instead of being
+        silently dropped, which is the defect this check's other half fixes.
+
+        Raises:
+            ValueError: A requested slot is not orderable for this kit.
+            cast_dependency.UnknownSlotError: The parse holds a cast slot
+                that is neither a base slot nor stamped ``recast_of``, so
+                nothing can say whether a request may name it (D-11).
+        """
+        surface = cast_slot_surface(kit)
+        orderable = orderable_slots(surface)
+        # A base slot whose parse produced no damage row — Aatrox's dash E,
+        # Aphelios's weapon-swap E — is still a slot the champion has, and
+        # naming it stays legal and casts nothing, exactly as before. What
+        # is refused is a slot the parse DOES hold and ``orderable_slots``
+        # did not return: the passive, or a declared recast that rides its
+        # parent instead of being scheduled on its own.
+        unparsed_base = {slot for slot in BASE_CAST_SLOTS if slot != "P"} - set(surface)
+        legal = set(orderable) | unparsed_base
+        refused = [slot for slot in self.cast_order or () if slot not in legal]
+        if refused:
+            raise ValueError(
+                f"Cast order names {', '.join(refused)}, which "
+                f"{champion_name} cannot be told to cast; "
+                f"orderable slots are {', '.join(orderable)}"
             )
 
 
@@ -938,7 +1057,19 @@ def run_fight(
             else None
         )
     else:
+        # The post-parse cast-order call site: the requested order is checked
+        # against the slots this parse actually offers, then every live recast
+        # slot is folded back in after its parent.  Before this, a requested
+        # order was passed to the engine verbatim and every recast row it did
+        # not name — Syndra's second Dark Sphere charge — silently vanished
+        # from the damage breakdown (D-11).
         resolved_user_order = list(params.cast_order)
+        params.validate_for_champion(
+            champion_data.get("name", ""), level, kit=ability_damages
+        )
+        params = _params_with_cast_order(
+            params, expand_user_order(resolved_user_order, ability_damages)
+        )
     resolved_uptime, auto_attack_policy = resolve_auto_attack_policy(
         champion_data,
         ability_damages,

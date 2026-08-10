@@ -26,7 +26,7 @@ from .item_coverage import (
 )
 from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
-from .pipeline import FightParams
+from .pipeline import FightParams, validate_cast_order_shape
 from .practice_dummy import (
     PRACTICE_DUMMY_KIND,
     PRACTICE_DUMMY_LEVEL,
@@ -254,17 +254,10 @@ class ChampionLoadout:
         cast_order = value.get("cast_order")
         if is_practice_dummy and cast_order is not None:
             raise ValueError(f"{field} practice dummies have no cast order")
-        if cast_order is not None:
-            if not isinstance(cast_order, list) or any(
-                not isinstance(slot, str) for slot in cast_order
-            ):
-                raise ValueError(
-                    f"{field}.cast_order must be a permutation of Q, W, E, R"
-                )
-            if sorted(cast_order) != ["E", "Q", "R", "W"]:
-                raise ValueError(
-                    f"{field}.cast_order must be a permutation of Q, W, E, R"
-                )
+        # Champion-agnostic shape only, exactly as the main attacker's path
+        # checks it; which slots this roster member may be told to cast is
+        # decided against its parsed kit in ``validate_for_champion`` (D-11).
+        validate_cast_order_shape(cast_order, field=f"{field}.cast_order")
 
         equipped_names = (*items, *((boots,) if boots else ()))
         if len(set(equipped_names)) != len(equipped_names):

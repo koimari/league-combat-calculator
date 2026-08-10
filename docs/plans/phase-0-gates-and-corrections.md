@@ -210,10 +210,12 @@ is part of the contract. Expected qualifying occurrences (R-20) are stated per c
   `FightParams.validate_for_champion` against `cast_dependency.orderable_slots(...)`; expansion calls
   `cast_dependency.expand_user_order`, which reinserts each live recast slot immediately after its
   parent. **Both functions are imported from the leaf Phase 5 merged at B0.5** — C6 declares neither.
-  **The literal exists twice**: `pipeline.py:693` (`sorted(self.cast_order) != ["E","Q","R","W"]`) and
-  `scenario.py:264` (the same test on the roster/coupled request path, which
-  `golden_coupled_baseline.json` covers). Both go, or a Syndra order containing `Q2` is still rejected
-  on the path the campaign's own new baseline exercises. *Why: a public parameter silently dropping a
+  **The literal existed twice** — once in `pipeline.py`'s `_validate_request_values` and once in
+  `scenario.py`'s loadout parser, the same test on the roster/coupled request path, which
+  `golden_coupled_baseline.json` covers. Both go, or a Syndra order containing `Q2` is still rejected
+  on the path the campaign's own new baseline exercises. *(Both spellings are deleted by C6, so this
+  bullet deliberately carries no `file:line` citation to them; `tests/test_custom_cast_order.py`
+  source-asserts both absences instead.)* *Why: a public parameter silently dropping a
   whole damage row is a correction, and `capabilities.py` already marks `cast_order` `supported=False`,
   so no user surface regresses.*
   **Expected qualifying occurrences: 0 on pair-engine golden; on the coupled baseline, declared by

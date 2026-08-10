@@ -182,13 +182,21 @@ class TestCitationChecks:
 
     def test_whitespace_inside_a_fragment_is_insignificant(self):
         """Documents compress code; the source is formatted."""
+        source = (REPO_ROOT / "src" / "calculator" / "cast_dependency.py").read_text(
+            encoding="utf-8"
+        )
+        line = next(
+            number
+            for number, text in enumerate(source.splitlines(), start=1)
+            if text.startswith("BASE_CAST_SLOTS")
+        )
         assert (
             plan_audit.check_citations(
                 plan_audit.parse_citations(
                     cite(
-                        "src/calculator/pipeline.py",
-                        693,
-                        'sorted(self.cast_order) != ["E","Q","R","W"]',
+                        "src/calculator/cast_dependency.py",
+                        line,
+                        'BASE_CAST_SLOTS: tuple[str, ...] = ("P","Q","W","E","R")',
                     ),
                     "d.md",
                 )

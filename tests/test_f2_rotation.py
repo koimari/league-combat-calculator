@@ -70,6 +70,14 @@ _RATIONALE_FRAGMENTS = {
 }
 
 
+# The engine's ``DEFAULT_CAST_ORDER`` still names ``Q2`` positionally, which
+# is the resolver's own fallback and not something a caller may request: a
+# requested order may name only slots the champion's parse offers, and
+# neither Cassiopeia nor Zed has a recast row (D-11).  The Q2 element was
+# always inert for them, so dropping it is what "the fixed order" meant here.
+FIXED_ORDER = [slot for slot in DEFAULT_CAST_ORDER if slot != "Q2"]
+
+
 @pytest.fixture(scope="module")
 def champion_by_name():
     champions = fetch_champion_data()
@@ -389,7 +397,7 @@ class TestTimedCadence:
             _params(
                 one_rotation=False,
                 duration=3.0,
-                cast_order=list(DEFAULT_CAST_ORDER),
+                cast_order=FIXED_ORDER,
             ),
         )
         assert combo["breakdown"]["E"]["casts"] > default["breakdown"]["E"]["casts"]
@@ -435,7 +443,7 @@ class TestTimedCadence:
                 one_rotation=False,
                 duration=5.0,
                 uptime=1.0,
-                cast_order=list(DEFAULT_CAST_ORDER),
+                cast_order=FIXED_ORDER,
             ),
         )
         assert combo["breakdown"]["E"]["casts"] > default["breakdown"]["E"]["casts"]

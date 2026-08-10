@@ -334,14 +334,23 @@ class TestSyndraPinScenarios:
         assert "Q2" in slots("syndra_derived_order_60")
         assert "Q2" in slots("syndra_derived_order_120")
 
-    def test_a_custom_order_drops_the_recast_slot_today(self, coupled):
-        """The defect C6 corrects, pinned so the correction has a before."""
+    def test_a_custom_order_keeps_the_recast_slot(self, coupled):
+        """The defect C6 corrected: the request used to delete this row.
+
+        The committed baseline still holds the pre-C6 timelines — R-17 keeps
+        a correction from moving a baseline — so this reads the live capture,
+        and the two values are reconciled by
+        ``docs/receipts/expected-golden-diff-C6.json`` until the phase
+        boundary re-captures.
+        """
         entries = coupled["coupled_scenarios"]
         for splinters in (60, 120):
             timeline = entries[f"syndra_custom_order_{splinters}"]["fights"][
                 "manual_target"
             ]["cast_timeline"]
-            assert "Q2" not in [cast["slot"] for cast in timeline]
+            assert [cast["slot"] for cast in timeline].count("Q2") == 1
+        untouched = entries["syndra_custom_order_39"]["fights"]["manual_target"]
+        assert "Q2" not in [cast["slot"] for cast in untouched["cast_timeline"]]
 
 
 def declared_exact_moves():

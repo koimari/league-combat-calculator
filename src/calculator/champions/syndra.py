@@ -161,6 +161,11 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     schedules it once at the first free moment; one-rotation mode casts
     every entry once anyway). Charge recharge beyond the opener is not
     simulated.
+
+    ``recast_of="Q"`` is the single authority for this row's parentage
+    (D-11): it is what keeps the charge riding Q's slot in a requested
+    cast order instead of being dropped, and what the rotation resolver
+    reads to place it after Q. Nothing may infer the link from the name.
     """
     if _splinters(ctx) < SPLINTERS_Q_SECOND_CHARGE:
         return None
@@ -174,6 +179,7 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     name = ability.get("name", "Dark Sphere")
     entry = damage_entry(f"{name} (2nd charge)", rank, 0.0, total, "magic")
+    entry["recast_of"] = "Q"
     # The engine can only auto-stamp cast time from the slot's own JSON
     # entry; a synthetic slot copies its parent's.
     cast_time = extract_cast_time(ability)

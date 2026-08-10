@@ -3062,6 +3062,23 @@ def _cooldown_ready_at(
 _CAST_SCHEDULE_EPS = 1e-9
 
 
+def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
+    """The slot whose cast COUNT this entry rides, or ``None``.
+
+    ``recast_of`` is the one authority for recast parentage (D-11), and
+    that is what the cast-order machinery reads. Riding the parent's cast
+    *count* is a narrower claim: it holds for a recast that shares the
+    parent's cooldown (Camille's and Ambessa's Q2), and not for an entry
+    declared with this scheduler's zero-cooldown cast-exactly-once idiom
+    — Syndra's 40-splinter second charge is ONE extra cast whose recharge
+    the module deliberately does not simulate, not one cast per Q.
+    """
+    parent = info.get("recast_of")
+    if not parent:
+        return None
+    return parent if float(info.get("cooldown", 0.0) or 0.0) > 0 else None
+
+
 def _schedule_shared_casts(
     state: "FightState",
     result: "RotationResult",
@@ -3091,7 +3108,7 @@ def _schedule_shared_casts(
         info = state.ability_damages.get(key)
         if info is None:
             continue
-        parent = info.get("recast_of")
+        parent = _ridden_parent_slot(info)
         if not (parent and parent in seen):
             keys.append(key)
         seen.add(key)
@@ -3234,8 +3251,9 @@ def _resolve_cast_plan(
         elif state.one_rotation:
             num_casts = 1
         else:
-            # Recasts (e.g. Q2) always match their parent ability's casts.
-            parent_key = ability_info.get("recast_of")
+            # A recast on its parent's cooldown (e.g. Camille's Q2) matches
+            # the parent ability's casts; a zero-cooldown charge does not.
+            parent_key = _ridden_parent_slot(ability_info)
             if parent_key and parent_key in counts:
                 num_casts = counts[parent_key]
                 scheduled = list(times[parent_key])

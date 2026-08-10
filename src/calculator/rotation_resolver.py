@@ -622,13 +622,15 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
         if a != b and a in corpora and b in corpora:
             edges.append(_Edge(a, b, kind, cite))
 
-    # recast adjacency: a recast rides its parent's casts on the timeline
+    # recast adjacency: a recast rides its parent's casts on the timeline.
+    # ``recast_of`` on the parsed entry is the ONLY authority for that link
+    # (D-11) — the name-based "Q plus Q2 means a recast" fallback that used
+    # to sit here masked every unstamped recast slot, so the fail-closed
+    # half of the rule could never fire.
     for s in slots:
         parent = infos.get(s, {}).get("recast_of")
         if parent and parent in corpora:
             add(parent, s, "recast", f"{s} is {parent}'s recast (recast_of atom)")
-    if "Q" in corpora and "Q2" in corpora:
-        add("Q", "Q2", "recast", "Q2 is Q's second cast")
 
     # ── typed apply atoms per slot ──
     apply_atoms: dict[str, list[str]] = {}
