@@ -32,10 +32,10 @@
     },
     "mandate_abyssal_curse_roster": {
       "combat/0:main/incoming": "1884.9",
-      "combat/0:main/outgoing": "2406.2",
+      "combat/0:main/outgoing": "2183.7",
       "combat/1:ally:Pantheon/incoming": "1615.7",
-      "combat/1:ally:Pantheon/outgoing": "863.4",
-      "combat/2:enemy:Aatrox/incoming": "3269.6",
+      "combat/1:ally:Pantheon/outgoing": "888.6",
+      "combat/2:enemy:Aatrox/incoming": "3072.3",
       "combat/2:enemy:Aatrox/outgoing": "3500.6",
       "fights/0:Aatrox": "2183.7"
     },
@@ -71,7 +71,7 @@
       "combat/0:/outgoing": "0.0",
       "combat/1:/incoming": "0.0",
       "combat/1:/outgoing": "0.0",
-      "fights/manual_target": "5472.5"
+      "fights/manual_target": "6185.5"
     },
     "syndra_custom_order_39": {
       "combat/0:/incoming": "0.0",
@@ -85,7 +85,7 @@
       "combat/0:/outgoing": "0.0",
       "combat/1:/incoming": "0.0",
       "combat/1:/outgoing": "0.0",
-      "fights/manual_target": "4998.4"
+      "fights/manual_target": "5648.4"
     },
     "syndra_derived_order_120": {
       "combat/0:/incoming": "0.0",
@@ -118,11 +118,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "e4716e40b39869d2fda0febf2767b49c8585fc73",
+    "git_head": "1483b46eed79e661902be95f3180fb301148b17c",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 13,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "66072eacfc496dbde2ce25b71085256e16e0c46a"
+    "src_tree_sha": "8cac3f5f5927137b5ca07725fa9298e6948650aa"
   }
 }

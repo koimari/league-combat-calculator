@@ -271,6 +271,28 @@ class TestCoupledCoverage:
         assert "Catalyst of Aeons" in equipped
 
 
+def _q2_row_was_absent_before_c6(scenario):
+    """Did an oracle receipt read this scenario's ``Q2`` row as absent (R-19)?
+
+    The pre-fix end of C6's transition, taken from the independent receipt
+    that adjudicated it rather than from a value restated here.  Exactly one
+    receipt covers the row, and it must both name the scenario and report the
+    old value as absent, so a receipt rewritten into agreement with the fix
+    stops discharging this pin instead of silently satisfying it.
+    """
+    receipts = [
+        json.loads(path.read_text(encoding="utf-8"))
+        for path in sorted((REPO_ROOT / "docs" / "receipts").glob("oracle-C6-*.json"))
+    ]
+    covering = [
+        receipt
+        for receipt in receipts
+        if receipt.get("scenario") == scenario
+        and receipt.get("leaf_path") == "fights/manual_target/breakdown/Q2"
+    ]
+    return len(covering) == 1 and covering[0]["old_value"] == "<absent>"
+
+
 class TestSyndraPinScenarios:
     """The cast-order pin C6 is measured against (Phase 0, slice 0A.2)."""
 
@@ -339,28 +361,45 @@ class TestSyndraPinScenarios:
 
         This test replaces the pre-C6 ``..._drops_the_recast_slot_today``,
         which pinned the defect and had to invert with the fix.  Both ends
-        of the transition are asserted, and only one of them can come from
-        the live capture: the committed baseline still holds the pre-C6
-        timelines, because R-17 keeps a correction from moving a baseline,
-        and the two are reconciled by
-        ``docs/receipts/expected-golden-diff-C6.json`` until the phase
-        boundary re-captures.  Reading the committed side from the file
-        rather than from a number typed here is what keeps this from
-        becoming a test that passes against itself.
+        of the transition are still asserted after the phase-boundary
+        re-capture, and neither end is a number typed here.  The corrected
+        end is the live capture, which the re-captured baseline now
+        reproduces.  The defective end is
+        ``docs/receipts/expected-golden-diff-C6.json`` and its oracle
+        receipts, which record the ``Q2`` breakdown row as ``<absent>``
+        before the fix for 60 and 120 splinters and declare nothing at all
+        for 39 — the committed evidence that the row is one C6 added rather
+        than one the baseline always held.  Until the boundary the committed
+        baseline was the defective end; reading that end from the allowlist
+        instead is what keeps the pin from becoming a test that passes
+        against itself.
         """
         committed = _load(COUPLED_BASELINE)["coupled_scenarios"]
         entries = coupled["coupled_scenarios"]
+        declared = set(
+            json.loads(
+                (
+                    REPO_ROOT / "docs" / "receipts" / "expected-golden-diff-C6.json"
+                ).read_text(encoding="utf-8")
+            )["expected_diff_paths"]["coupled_golden"]
+        )
 
         def slots(source, name):
             fight = source[name]["fights"]["manual_target"]
             return [cast["slot"] for cast in fight["cast_timeline"]]
 
+        def breakdown_path(name):
+            return f"/coupled_scenarios/{name}/fights/manual_target/breakdown/Q2"
+
         for splinters in (60, 120):
             name = f"syndra_custom_order_{splinters}"
-            assert slots(committed, name).count("Q2") == 0
             assert slots(entries, name).count("Q2") == 1
+            assert slots(committed, name) == slots(entries, name)
+            assert breakdown_path(name) in declared
+            assert _q2_row_was_absent_before_c6(name)
         assert "Q2" not in slots(entries, "syndra_custom_order_39")
         assert "Q2" not in slots(committed, "syndra_custom_order_39")
+        assert breakdown_path("syndra_custom_order_39") not in declared
 
 
 def declared_exact_moves():
@@ -406,8 +445,9 @@ class TestExactBaseline:
             assert set(captured[scenario]) == set(totals)
             for key, value in totals.items():
                 if key in allowed:
-                    assert allowed[key]["old"] == value
-                    assert captured[scenario][key] in (value, allowed[key]["new"])
+                    declared_pair = (allowed[key]["old"], allowed[key]["new"])
+                    assert value in declared_pair
+                    assert captured[scenario][key] in declared_pair
                 else:
                     assert captured[scenario][key] == value
 

@@ -8547,7 +8547,7 @@
             "healing_reduced": 0.0,
             "health_damage": 1884.9,
             "incoming_damage": 1884.9,
-            "outgoing_damage_before_death": 2406.2,
+            "outgoing_damage_before_death": 2183.7,
             "participant_id": "main",
             "shield_absorbed": 0.0,
             "sources": [
@@ -8557,7 +8557,7 @@
               },
               {
                 "name": "Orb of Deception",
-                "total_damage": 758.1
+                "total_damage": 676.9
               },
               {
                 "name": "Damage Amplification (Imperial Mandate \u2014 Command)",
@@ -8565,18 +8565,18 @@
               },
               {
                 "name": "Fox-Fire",
-                "total_damage": 758.0
+                "total_damage": 676.8
               },
               {
                 "name": "Spirit Rush",
-                "total_damage": 560.4
+                "total_damage": 500.3
               }
             ],
             "support_shield_received": 0.0,
             "support_value": 2.4,
             "survived_window": true,
             "team": "main",
-            "total_damage": 2406.2,
+            "total_damage": 2183.7,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -8618,7 +8618,7 @@
             "healing_reduced": 0.0,
             "health_damage": 1615.7,
             "incoming_damage": 1615.7,
-            "outgoing_damage_before_death": 863.4,
+            "outgoing_damage_before_death": 888.6,
             "participant_id": "ally:Pantheon",
             "shield_absorbed": 0.0,
             "sources": [
@@ -8632,18 +8632,18 @@
               },
               {
                 "name": "Grand Starfall",
-                "total_damage": 419.2
+                "total_damage": 469.5
               },
               {
                 "name": "Comet Spear",
-                "total_damage": 234.2
+                "total_damage": 209.1
               }
             ],
             "support_shield_received": 0.0,
             "support_value": 0.0,
             "survived_window": true,
             "team": "ally",
-            "total_damage": 863.4,
+            "total_damage": 888.6,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -8683,8 +8683,8 @@
             "healing_output": 0.0,
             "healing_received": 1120.2,
             "healing_reduced": 0.0,
-            "health_damage": 3269.6,
-            "incoming_damage": 3269.6,
+            "health_damage": 3072.3,
+            "incoming_damage": 3072.3,
             "outgoing_damage_before_death": 3500.6,
             "participant_id": "enemy:Aatrox",
             "shield_absorbed": 0.0,
@@ -8782,26 +8782,30 @@
           },
           {
             "attacker": "ally:Pantheon",
-            "damage": 419.2,
+            "damage": 469.5,
             "damage_type": "magic",
             "event_id": "ally:Pantheon:enemy:Aatrox:2",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 419.2,
+            "pair_damage": 469.5,
             "raw_damage": 700.0,
             "sequence": 2,
             "source": "R",
+            "support_damage_multiplier": {
+              "multiplier": 1.12,
+              "source": "Abyssal Mask \u2014 Unmake"
+            },
             "target": "enemy:Aatrox",
             "time": 0.0
           },
           {
             "attacker": "ally:Pantheon",
-            "damage": 234.2,
+            "damage": 209.1,
             "damage_type": "physical",
             "event_id": "ally:Pantheon:enemy:Aatrox:3",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 234.2,
+            "pair_damage": 209.1,
             "raw_damage": 430.0,
             "sequence": 3,
             "source": "Q",
@@ -8842,37 +8846,29 @@
           },
           {
             "attacker": "main",
-            "damage": 157.8,
+            "damage": 140.9,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:1",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 157.8,
+            "pair_damage": 140.9,
             "raw_damage": 197.5,
             "sequence": 1,
             "source": "Q",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 0.25
           },
           {
             "attacker": "main",
-            "damage": 221.2,
+            "damage": 197.5,
             "damage_type": "true",
             "event_id": "main:enemy:Aatrox:3",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 221.2,
+            "pair_damage": 197.5,
             "raw_damage": 197.5,
             "sequence": 2,
             "source": "Q",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 0.25
           },
@@ -8906,73 +8902,57 @@
           },
           {
             "attacker": "main",
-            "damage": 252.7,
+            "damage": 225.6,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:5",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 252.7,
+            "pair_damage": 225.6,
             "raw_damage": 102.0,
             "sequence": 5,
             "source": "W",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 0.5
           },
           {
             "attacker": "main",
-            "damage": 186.8,
+            "damage": 166.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:7",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 186.8,
+            "pair_damage": 166.8,
             "raw_damage": 218.8,
             "sequence": 8,
             "source": "R",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 0.5
           },
           {
             "attacker": "main",
-            "damage": 186.8,
+            "damage": 166.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:9",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 186.8,
+            "pair_damage": 166.8,
             "raw_damage": 218.8,
             "sequence": 9,
             "source": "R",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 0.5
           },
           {
             "attacker": "main",
-            "damage": 186.8,
+            "damage": 166.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:11",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 186.8,
+            "pair_damage": 166.8,
             "raw_damage": 218.8,
             "sequence": 10,
             "source": "R",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 0.5
           },
@@ -9062,19 +9042,15 @@
           },
           {
             "attacker": "main",
-            "damage": 252.7,
+            "damage": 225.6,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:13",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 252.7,
+            "pair_damage": 225.6,
             "raw_damage": 102.0,
             "sequence": 6,
             "source": "W",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 3.95
           },
@@ -9094,37 +9070,29 @@
           },
           {
             "attacker": "main",
-            "damage": 157.8,
+            "damage": 140.9,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:15",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 157.8,
+            "pair_damage": 140.9,
             "raw_damage": 197.5,
             "sequence": 3,
             "source": "Q",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 5.33
           },
           {
             "attacker": "main",
-            "damage": 221.2,
+            "damage": 197.5,
             "damage_type": "true",
             "event_id": "main:enemy:Aatrox:16",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 221.2,
+            "pair_damage": 197.5,
             "raw_damage": 197.5,
             "sequence": 4,
             "source": "Q",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 5.33
           },
@@ -9158,19 +9126,15 @@
           },
           {
             "attacker": "main",
-            "damage": 252.7,
+            "damage": 225.6,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:17",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 252.7,
+            "pair_damage": 225.6,
             "raw_damage": 102.0,
             "sequence": 7,
             "source": "W",
-            "support_damage_multiplier": {
-              "multiplier": 1.12,
-              "source": "Abyssal Mask \u2014 Unmake"
-            },
             "target": "enemy:Aatrox",
             "time": 7.4
           }
@@ -9285,7 +9249,7 @@
         "objective": {
           "enemy_team_damage_before_death": 3500.6,
           "enemy_team_effective_health": 3708.2,
-          "focus_damage_before_death": 2406.2,
+          "focus_damage_before_death": 2183.7,
           "focus_healing": 0.0,
           "focus_participant_id": "main",
           "focus_support_value": 2.4,
@@ -9386,7 +9350,7 @@
               "ward_uses": 0
             }
           },
-          "main_team_damage_before_death": 3269.6,
+          "main_team_damage_before_death": 3072.3,
           "main_team_effective_health": 5611.0,
           "surviving_main_team": 2,
           "total_healing_reduced": 0.0,
@@ -9678,14 +9642,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 3269.6,
+              "damage_taken": 3072.3,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 3708.2,
-              "ending_health": 438.6,
-              "ending_health_ratio": 0.17,
+              "ending_health": 635.9,
+              "ending_health_ratio": 0.25,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -9700,7 +9664,7 @@
               "healing_reduction_events": [],
               "healing_reduction_sources": [],
               "healing_reduction_until": 0.0,
-              "health_damage": 3269.6,
+              "health_damage": 3072.3,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -9753,6 +9717,7 @@
             "event_id": "enemy:Aatrox:support:0",
             "kind": "damage_modifier",
             "multiplier": 1.12,
+            "owner": "main",
             "persistent": true,
             "range_assumption": "within_700_units",
             "recipient": "enemy:Aatrox",
@@ -13268,7 +13233,7 @@
       },
       "fights": {
         "manual_target": {
-          "ability_damage": 5472.5,
+          "ability_damage": 6185.5,
           "auto_attack_damage": 0.0,
           "auto_attack_policy": {
             "assumptions": [
@@ -13313,6 +13278,19 @@
               "num_non_crits": null,
               "total_amount": null,
               "total_damage": 2139.0,
+              "unit": null
+            },
+            "Q2": {
+              "casts": 1,
+              "count": null,
+              "crit_damage_per_hit": null,
+              "damage_per_hit": null,
+              "name": "Dark Sphere (2nd charge)",
+              "non_crit_damage_per_hit": null,
+              "num_crits": null,
+              "num_non_crits": null,
+              "total_amount": null,
+              "total_damage": 713.0,
               "unit": null
             },
             "R": {
@@ -13370,6 +13348,16 @@
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
+              "time": 0.0
+            },
+            {
+              "name": "Dark Sphere (2nd charge)",
+              "ordinal": 1,
+              "resource_after": 1700.0,
+              "resource_before": 1700.0,
+              "resource_cost": 0.0,
+              "resource_restored": 0.0,
+              "slot": "Q2",
               "time": 0.0
             },
             {
@@ -13476,7 +13464,7 @@
             "ultimate_haste": 0.0
           },
           "damage_by_type": {
-            "magic": 5143.0,
+            "magic": 5856.0,
             "physical": 0.0,
             "true": 329.5
           },
@@ -13493,6 +13481,13 @@
               "damage_type": "magic",
               "phase": "effect",
               "source": "proc_Luden's Echo",
+              "time": 0.0
+            },
+            {
+              "damage": 713.0,
+              "damage_type": "magic",
+              "phase": "ability",
+              "source": "Q2",
               "time": 0.0
             },
             {
@@ -13555,7 +13550,7 @@
           "effective_armor": 0.0,
           "effective_mr": 0.0,
           "general_shield_absorbed": 0.0,
-          "health_damage": 5472.5,
+          "health_damage": 6185.5,
           "magic_shield_absorbed": 0.0,
           "notes": [],
           "overkill": 0.0,
@@ -13566,6 +13561,7 @@
             "aoe": {},
             "cast_order": [
               "Q",
+              "Q2",
               "W",
               "E",
               "R"
@@ -13573,6 +13569,7 @@
             "consume": [],
             "order": [
               "Q",
+              "Q2",
               "W",
               "E",
               "R",
@@ -13591,7 +13588,7 @@
           "shield_absorbed": 0.0,
           "target_effective_health": 10000.0,
           "target_effective_max_health": 10000.0,
-          "target_ending_health": 4527.5,
+          "target_ending_health": 3814.5,
           "target_healing_received": 0.0,
           "threshold_health_bonus_gained": 0.0,
           "threshold_health_triggered": false,
@@ -13603,13 +13600,14 @@
             "exact_sources": [
               "E",
               "Q",
+              "Q2",
               "R",
               "W",
               "proc_Luden's Echo"
             ],
             "note": "Every active damage source has authored event or cast-boundary order."
           },
-          "total_damage": 5472.5
+          "total_damage": 6185.5
         }
       }
     },
@@ -15342,7 +15340,7 @@
       },
       "fights": {
         "manual_target": {
-          "ability_damage": 4998.4,
+          "ability_damage": 5648.4,
           "auto_attack_damage": 0.0,
           "auto_attack_policy": {
             "assumptions": [
@@ -15387,6 +15385,19 @@
               "num_non_crits": null,
               "total_amount": null,
               "total_damage": 1950.0,
+              "unit": null
+            },
+            "Q2": {
+              "casts": 1,
+              "count": null,
+              "crit_damage_per_hit": null,
+              "damage_per_hit": null,
+              "name": "Dark Sphere (2nd charge)",
+              "non_crit_damage_per_hit": null,
+              "num_crits": null,
+              "num_non_crits": null,
+              "total_amount": null,
+              "total_damage": 650.0,
               "unit": null
             },
             "R": {
@@ -15444,6 +15455,16 @@
               "resource_cost": 60.0,
               "resource_restored": 0.0,
               "slot": "Q",
+              "time": 0.0
+            },
+            {
+              "name": "Dark Sphere (2nd charge)",
+              "ordinal": 1,
+              "resource_after": 1700.0,
+              "resource_before": 1700.0,
+              "resource_cost": 0.0,
+              "resource_restored": 0.0,
+              "slot": "Q2",
               "time": 0.0
             },
             {
@@ -15550,7 +15571,7 @@
             "ultimate_haste": 0.0
           },
           "damage_by_type": {
-            "magic": 4720.0,
+            "magic": 5370.0,
             "physical": 0.0,
             "true": 278.4
           },
@@ -15567,6 +15588,13 @@
               "damage_type": "magic",
               "phase": "effect",
               "source": "proc_Luden's Echo",
+              "time": 0.0
+            },
+            {
+              "damage": 650.0,
+              "damage_type": "magic",
+              "phase": "ability",
+              "source": "Q2",
               "time": 0.0
             },
             {
@@ -15629,7 +15657,7 @@
           "effective_armor": 0.0,
           "effective_mr": 0.0,
           "general_shield_absorbed": 0.0,
-          "health_damage": 4998.4,
+          "health_damage": 5648.4,
           "magic_shield_absorbed": 0.0,
           "notes": [],
           "overkill": 0.0,
@@ -15640,6 +15668,7 @@
             "aoe": {},
             "cast_order": [
               "Q",
+              "Q2",
               "W",
               "E",
               "R"
@@ -15647,6 +15676,7 @@
             "consume": [],
             "order": [
               "Q",
+              "Q2",
               "W",
               "E",
               "R",
@@ -15665,7 +15695,7 @@
           "shield_absorbed": 0.0,
           "target_effective_health": 10000.0,
           "target_effective_max_health": 10000.0,
-          "target_ending_health": 5001.6,
+          "target_ending_health": 4351.6,
           "target_healing_received": 0.0,
           "threshold_health_bonus_gained": 0.0,
           "threshold_health_triggered": false,
@@ -15677,13 +15707,14 @@
             "exact_sources": [
               "E",
               "Q",
+              "Q2",
               "R",
               "W",
               "proc_Luden's Echo"
             ],
             "note": "Every active damage source has authored event or cast-boundary order."
           },
-          "total_damage": 4998.4
+          "total_damage": 5648.4
         }
       }
     },
@@ -18905,15 +18936,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 13,
-      "leaves": 14163,
-      "numeric_leaves": 8323,
+      "leaves": 14200,
+      "numeric_leaves": 8334,
       "sections": "coupled_scenarios"
     },
-    "git_head": "e4716e40b39869d2fda0febf2767b49c8585fc73",
+    "git_head": "1483b46eed79e661902be95f3180fb301148b17c",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 13,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "66072eacfc496dbde2ce25b71085256e16e0c46a"
+    "src_tree_sha": "8cac3f5f5927137b5ca07725fa9298e6948650aa"
   }
 }
