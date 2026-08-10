@@ -977,57 +977,106 @@ class TestTheDerivationReadsDeclarations:
         assert rule.derived and rule.order
 
 
+# Two requests for one champion that the memo key cannot tell apart, per
+# row: ``(champion, narrow, wide)`` where a parse spec is ``(level,
+# options)``.  The key is ``(champion, option signature, data version)``, so
+# BOTH axes below collapse onto one cache row — the option axis whenever a
+# caller does not thread ``champion_options`` (the roster path does not),
+# and the LEVEL axis always, because no level component exists in the key at
+# all.  The level axis is the wide one: emulating the pre-fix store (cache
+# the fitted rule) and warming at level 1 changes the level-18 order for 54
+# of the 173 cached champions, 50 of them unseeded and therefore reachable
+# through ``resolve_cast_order`` today.  Ahri and Pantheon are two of those
+# 50, and neither declares a dependency — the defect is kit-wide and has
+# nothing to do with declarations or splinters.
+_MEMO_CROSS_TALK = (
+    ("Syndra", (18, {"splinters": 39}), (18, {"splinters": 120})),
+    ("Syndra", (1, None), (18, None)),
+    ("Ahri", (1, None), (18, None)),
+    ("Pantheon", (1, None), (18, None)),
+)
+
+
 class TestTheDerivedMemoHoldsTheFullKitRule:
     """A memoised rule must be the full-kit derivation, never one fight's fit.
 
     ``_fit_rule_to_fight`` narrows the full-kit order to the slots a
     particular parse holds, and it is applied on both the cold and the warm
     path exactly so the answer does not depend on cache warmth.  Storing the
-    *narrowed* rule defeats that: a Syndra priced below 40 splinters caches
-    an order with no second charge, and the next 120-splinter request gets
-    ``Q2`` appended after ``R`` instead of riding its parent — a cast order
-    no rule computed for that option state, served with nothing in the
-    response saying so.  The option signature does not save it, because a
-    caller that does not thread ``champion_options`` lands every option
-    state on one cache row.
+    *narrowed* rule defeats that: whichever request arrives first decides
+    what every later one is served, and nothing in the response says the
+    order was derived for a differently shaped fight.
+
+    Two axes reach it, and ``_MEMO_CROSS_TALK`` carries rows for both.  A
+    Syndra priced below 40 splinters caches an order with no second charge,
+    and the next 120-splinter request gets ``Q2`` appended after ``R``
+    instead of riding its parent.  A champion priced at level 1 caches an
+    order over the one or two slots that parse holds, and the next level-18
+    request gets the rest of the kit appended in fallback order — which is
+    the larger half of the defect, because the memo key holds no level
+    component for any champion.
     """
 
-    @pytest.mark.parametrize("champion", ["Syndra"])
-    def test_a_narrow_parse_does_not_poison_a_wider_one(
-        self, champion, champion_by_name
+    @staticmethod
+    def _rule(champion, data, spec):
+        """The derived rule for one request spec, against a warm cache."""
+        level, options = spec
+        parsed = _parse(data, level, (), {}, champion_options=options)
+        return derive_champion_rule(
+            champion,
+            parsed,
+            data,
+            get_champion_cast_order(champion),
+        )
+
+    @pytest.mark.parametrize(("champion", "narrow", "wide"), _MEMO_CROSS_TALK)
+    def test_the_two_requests_really_do_differ_in_shape(
+        self, champion, narrow, wide, champion_by_name
     ) -> None:
+        """Guard the guard: a row whose two requests agree tests nothing."""
         data = champion_by_name[champion]
-        narrow = _parse(data, 18, (), {}, champion_options={"splinters": 39})
-        wide = _parse(data, 18, (), {}, champion_options={"splinters": 120})
-        certified = get_champion_cast_order(champion)
         try:
             _DERIVED_RULE_CACHE.clear()
-            cold = derive_champion_rule(champion, wide, data, certified)
+            narrow_cold = self._rule(champion, data, narrow)
             _DERIVED_RULE_CACHE.clear()
-            derive_champion_rule(champion, narrow, data, certified)
-            warm = derive_champion_rule(champion, wide, data, certified)
+            wide_cold = self._rule(champion, data, wide)
+        finally:
+            _DERIVED_RULE_CACHE.clear()
+        assert set(narrow_cold.order) < set(wide_cold.order)
+
+    @pytest.mark.parametrize(("champion", "narrow", "wide"), _MEMO_CROSS_TALK)
+    def test_a_narrow_parse_does_not_poison_a_wider_one(
+        self, champion, narrow, wide, champion_by_name
+    ) -> None:
+        data = champion_by_name[champion]
+        try:
+            _DERIVED_RULE_CACHE.clear()
+            cold = self._rule(champion, data, wide)
+            _DERIVED_RULE_CACHE.clear()
+            self._rule(champion, data, narrow)
+            warm = self._rule(champion, data, wide)
         finally:
             _DERIVED_RULE_CACHE.clear()
         assert list(warm.order) == list(cold.order)
 
+    @pytest.mark.parametrize(("champion", "narrow", "wide"), _MEMO_CROSS_TALK)
     def test_the_wider_parse_does_not_shrink_the_narrower_one(
-        self, champion_by_name
+        self, champion, narrow, wide, champion_by_name
     ) -> None:
         """The other direction: a slot the fight does not hold stays out."""
-        data = champion_by_name["Syndra"]
-        narrow = _parse(data, 18, (), {}, champion_options={"splinters": 39})
-        wide = _parse(data, 18, (), {}, champion_options={"splinters": 120})
-        certified = get_champion_cast_order("Syndra")
+        data = champion_by_name[champion]
         try:
             _DERIVED_RULE_CACHE.clear()
-            cold = derive_champion_rule("Syndra", narrow, data, certified)
+            cold = self._rule(champion, data, narrow)
             _DERIVED_RULE_CACHE.clear()
-            derive_champion_rule("Syndra", wide, data, certified)
-            warm = derive_champion_rule("Syndra", narrow, data, certified)
+            wide_cold = self._rule(champion, data, wide)
+            _DERIVED_RULE_CACHE.clear()
+            self._rule(champion, data, wide)
+            warm = self._rule(champion, data, narrow)
         finally:
             _DERIVED_RULE_CACHE.clear()
         assert list(warm.order) == list(cold.order)
-        assert "Q2" not in warm.order
+        assert set(warm.order) < set(wide_cold.order)
 
 
 class TestTheRotationMemosInvalidateOnData:
