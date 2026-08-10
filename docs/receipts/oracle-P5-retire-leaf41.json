@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/sources[0]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[0]",
   "old_value": "E cc_kind='stun' authored in the module (sphere-collision stun; see the module's QE-combo assumption)",
   "new_value": "E requires Q (declared cc_enabler): ... [source: .../Syndra@4024662]",
   "verdict": "new_value_correct",

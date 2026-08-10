@@ -12,17 +12,26 @@
       "data/worklists/f2-task.md, data/worklists/f3-task.md (rotation receipt shape + setup/consume derivation contract)",
       "docs/math-foundations.md (searched; contains no Syndra-specific term)"
     ],
-    "scope_not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+    "scope_not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
   },
-
   "leaf": {
-    "path": "/coupled_scenarios/syndra_derived_order_39/rotation/setup[2]",
+    "path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[2]",
     "old_value": "<absent>",
     "new_value": "Q2"
   },
-
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[2]",
+  "old_value": "<absent>",
+  "new_value": "Q2",
   "question": "Should the derived rotation's setup group for Syndra contain a Q2 (second Dark Sphere charge) cast?",
-
   "independent_computation": {
     "step_1_what_Q2_is": {
       "claim": "Q2 is a real, wiki-sourced second Dark Sphere cast, not a synthetic invention.",
@@ -35,7 +44,6 @@
         "data/champion-audit/batch-6.json -> Syndra: modeled slots ['P','Q','Q2','W','E','R']; 'ammo (Q 2nd charge at 40 splinters)'; 'splinters option (0-120) gates Q2 second charge'"
       ]
     },
-
     "step_2_is_Q2_a_setup_cast": {
       "claim": "Q2 conjures a Dark Sphere with effects identical to Q, and every other Syndra ability consumes live Dark Spheres. Therefore Q2 is a setup (applier) cast under the same rule that makes Q one.",
       "sphere_producer": {
@@ -61,7 +69,6 @@
       ],
       "conclusion": "The setup/consume edge is Q(sphere) -> {W, E, R}. Q2 emits the same Dark Sphere object, so the identical edge Q2 -> {W, E, R} holds. A classification that puts Q in the setup group and leaves Q2 out is internally inconsistent."
     },
-
     "step_3_numeric_consequence": {
       "claim": "Each pre-placed live sphere is worth exactly one extra R barrage sphere (up to 4), so ordering Q2 before R is not cosmetic.",
       "source": "Syndra.abilities.R[0].effects[1].leveling",
@@ -81,7 +88,6 @@
         "R notes confirm freshly placed spheres count: 'A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown.'"
       ]
     },
-
     "step_4_availability_gate": {
       "claim": "The 40-splinter threshold that unlocks Q2 is met from skill points alone at any champion level >= 9, so a standard level-18 scenario always has Q2 available.",
       "source": "Syndra.abilities.P[0].effects[0].description",
@@ -95,13 +101,11 @@
       ],
       "note": "This is the passive floor before any combat-earned splinters (2 ability-damage instances within 4 s on a champion grant 1/2/3 based on level; large-minion kills grant 1)."
     },
-
     "residual_uncertainty": [
       "The scenario definition for 'syndra_derived_order_39' lives outside the permitted evidence tree (data/ and docs/math-foundations.md contain no 'coupled_scenarios', 'derived_order', or 'syndra_derived_order_39' string), so I could not read this scenario's champion level or splinters option. The '39' suffix is read as a corpus index, not a splinter count; if it were a splinter count of 39 the leaf would be wrong, but nothing in the cached data supports that reading, and 39 is not reachable from the rank-splinter ladder (multiples of 5).",
       "I verified the ORDERING invariant (every sphere-producing cast must precede W/E/R) and Q2's membership in the setup group. I could not verify that index 2 specifically is the right slot inside the setup list, only that Q2 belongs there rather than after the consumers."
     ]
   },
-
   "sources_quoted": [
     "data/champions.json -> Syndra.abilities.Q[0].effects[0].description (sphere conjure, 6 s ground duration)",
     "data/champions.json -> Syndra.abilities.Q[0].effects[1].description (Transcendent Bonus: 40 Splinters -> stock a Dark Sphere charge, max 2)",
@@ -115,7 +119,6 @@
     "data/worklists/f2-task.md and f3-task.md (rotation receipt contract: derive order from setup/consume edges; appliers must precede consumers)",
     "docs/math-foundations.md (checked end to end; no Syndra-specific formula, so no counter-evidence from there)"
   ],
-
   "verdict": "new_value_correct",
   "verdict_rationale": "Q2 is the wiki-sourced second stocked Dark Sphere charge (40-Splinter Transcendent Bonus, max 2 charges). It produces a live Dark Sphere identical to Q, and all three of Syndra's other damaging casts consume live spheres: W grabs and throws one, E's stun requires knocking one back, and R grabs up to 4 live ones at 80/120/160 (+20% AP) each (verified: min = 3x per-sphere, max = 7x per-sphere, exactly). So a sphere-producing cast must sit in the setup group ahead of W/E/R, and Q2 is such a cast. Leaving it out (the old <absent>) would let the second charge fire after the consumers, forfeiting one R barrage sphere and one E-stun enabler. The unlock threshold is also satisfied by construction at any level >= 9 from skill points alone (min(5*(level-1), 85) >= 40)."
 }

@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/sources[2]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[2]",
   "old_value": "Q2 recast_of Q (40+ splinter second charge)",
   "new_value": "Q2 is the recast of Q - Q2 is Q's recast (recast_of atom)",
   "verdict": "old_value_correct",

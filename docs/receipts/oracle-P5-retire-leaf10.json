@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf10",
   "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
   "date": "2026-08-10",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/setup[0]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[0]",
   "old_value": "Q",
   "new_value": "E",
   "verdict": "old_value_correct",

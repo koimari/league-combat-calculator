@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/setup[2]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[2]",
   "old_value": "<absent>",
   "new_value": "Q2",
   "verdict": "new_value_correct",

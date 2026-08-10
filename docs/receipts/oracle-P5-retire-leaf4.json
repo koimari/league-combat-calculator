@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_39",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/rationale",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/rationale",
   "evidence_tree": {
     "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
     "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_tree",
@@ -13,6 +13,8 @@
     "old": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target ...",
     "new": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's ... [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] ..."
   },
+  "old_value": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target ...",
+  "new_value": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's ... [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] ...",
   "independent_computation": {
     "claim_under_test": "Syndra's E (Scatter the Weak) cannot stun on its own; its stun is delivered by a Dark Sphere that the cone knocks into the target, so a sphere (Q) must exist before E for the rotation to contain a stun -> Q is ordered before E.",
     "derivation_steps": [

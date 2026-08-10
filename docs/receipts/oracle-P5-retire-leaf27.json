@@ -7,7 +7,7 @@
     "note": "Only data/ and docs/math-foundations.md were read. The scenario id 'syndra_derived_order_39' and the token 'recast_of' do not appear anywhere in the exported evidence tree, so the leaf was adjudicated purely against cached wiki text plus docs/math-foundations.md."
   },
   "scenario": "syndra_derived_order_39",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/sources[2]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[2]",
   "old_value": "Q2 recast_of Q (40+ splinter second charge)",
   "new_value": "Q2 is the recast of Q - Q2 is Q's recast (recast_of atom)",
   "independent_computation": {

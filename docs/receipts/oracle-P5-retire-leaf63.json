@@ -3,7 +3,7 @@
   "investigator": "fresh oracle subagent (no access to src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, diff or plan)",
   "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>  (worked only from this export)",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/aoe/passive",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/passive",
   "old_value": "<absent>",
   "new_value": 1,
   "verdict": "new_value_correct",

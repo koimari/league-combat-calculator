@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 independent oracle",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/aoe/W",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/W",
   "old_value": "<absent>",
   "new_value": 5,
   "verdict": "new_value_correct",

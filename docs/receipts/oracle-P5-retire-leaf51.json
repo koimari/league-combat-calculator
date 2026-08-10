@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf51",
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "date": "2026-08-10",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/aoe/W",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/W",
   "old_value": null,
   "old_value_note": "<absent> — the leaf did not exist in the previous baseline",
   "new_value": 5,

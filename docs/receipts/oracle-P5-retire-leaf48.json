@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf48",
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/sources[7]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[7]",
   "old_value": "<absent>",
   "new_value": "free slots ranked by per-rank DPS (total_raw / effective cooldown) - consistent across the matrix",
   "verdict": "new_value_correct",

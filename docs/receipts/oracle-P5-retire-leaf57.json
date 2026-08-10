@@ -3,7 +3,7 @@
   "receipt_id": "oracle-P5-retire-leaf57",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/aoe/R",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/R",
   "old_value": null,
   "old_value_note": "leaf absent from the previous baseline (no R entry under rotation.aoe)",
   "new_value": 1,

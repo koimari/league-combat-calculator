@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf33",
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/sources[0]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[0]",
   "old_value": "E cc_kind='stun' authored in the module (sphere-collision stun; see the module's QE-combo assumption)",
   "new_value": "E requires Q (declared cc_enabler): ... [source: .../Syndra@4024662]",
   "verdict": "new_value_correct",

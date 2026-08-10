@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_39",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/sources[1]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[1]",
   "evidence_tree": {
     "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
     "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle26",
@@ -16,13 +16,23 @@
       "data/staleness.json (Syndra row; cache patch)",
       "docs/math-foundations.md"
     ],
-    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ],
     "cache_patch": "16.15 (staleness.json), Syndra patchLastChanged 26.12"
   },
   "old_value_as_given": "Q 'Magic Damage' - the sphere E scatters",
+  "old_value": "Q 'Magic Damage' - the sphere E scatters",
   "new_value_as_given": "E requires Q2 (declared cc_enabler): ... [source: .../Syndra@4024662]",
+  "new_value": "E requires Q2 (declared cc_enabler): ... [source: .../Syndra@4024662]",
   "note_on_truncation": "Both values were supplied to me elliptically (the new one contains an unquoted '...'). The verdict below turns on the load-bearing, non-truncated claim of each string: old = 'Q is the source of the sphere E scatters'; new = 'E requires Q2'.",
-
   "independent_computation": {
     "question": "Per the cached wiki text, what does Syndra's E depend on, and is that dependency on Q or on the synthetic Q2 (second-charge) slot?",
     "step_1_what_creates_a_Dark_Sphere": {
@@ -59,7 +69,6 @@
     ],
     "correct_value": "The ordering source for E should cite Q as the sphere producer, e.g. Q's active row - 'Syndra conjures a Dark Sphere at the target location ... remains on the ground for 6 seconds' (data/champions.json abilities.Q[0].effects[0]) - paired with E's 'Dark Spheres can be knocked back ... Targets hit are also stunned for 1.25 seconds' (abilities.E[0].effects[1]). The old leaf's claim ('Q Magic Damage - the sphere E scatters') is exactly this and is wiki-faithful; the new leaf's claim ('E requires Q2') is not."
   },
-
   "sources_quoted": [
     {
       "file": "data/champions.json",
@@ -102,7 +111,6 @@
       "text": "shared-timeline renewal schedule; cast starts within window - EXACT. No provenance/coupling rule in math-foundations constrains this leaf; it contains no formula bearing on the E/Q dependency."
     }
   ],
-
   "verdict": "old_value_correct",
   "verdict_rationale": "Nothing in the cached wiki text makes Syndra's E depend on the second Dark Sphere charge. E casts, damages and knocks back with no sphere at all; its stun needs one sphere, which the base Q supplies at any splinter count. Q2 is a 40-splinter ammo slot with no wiki existence below that threshold, so 'E requires Q2' is both unsupported and unsatisfiable in the low-splinter regime. The old leaf named Q - the ability the wiki actually credits with conjuring the sphere E scatters - and is the wiki-faithful source for ordering Q before E.",
   "caveats": [

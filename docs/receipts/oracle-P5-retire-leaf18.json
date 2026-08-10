@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf18",
   "runbook": "R-18 / R-19 independent oracle",
   "date": "2026-08-10",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/consume[3]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/consume[3]",
   "old_value": "<absent>",
   "new_value": "W",
   "verdict": "new_value_correct",
@@ -24,7 +24,7 @@
     "step_4_W_also_trips_the_literal_keyword_test": "F3's consumer keyword taxonomy is \"enhanced/consume/detonate/bonus-vs/X-stack/%missing\". W's own row matches on two of them: \"Transcendent Bonus: Collecting 60 Splinters of Wrath ENHANCES Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage\" -- an 'enhanced' marker gated on an X-stack threshold, carried in the leveling rows as the attributes \"Bonus True Damage\" and \"Total Mixed Damage\" (Syndra.abilities.W[0].effects[3]). So W is a consumer under both the mechanical (sphere pool) and the literal (row-keyword) detectors.",
     "step_5_W_is_a_modeled_slot": "data/champion-audit/batch-6.json -> /Syndra/module_slots/modeled = [P, Q, Q2, W, E, R]; data/champion-audit/batch-e9-1.json -> /Syndra/slots/W = \"modeled\". W is in scope for the rotation, so its omission from the consume list was a gap, not a deliberate exclusion.",
     "step_6_consequence_of_the_old_value": "With W missing from the consume side, the F3 invariant \"the derived order never violates a detected setup/consume edge\" cannot constrain W: a derived order is free to place W before any Q cast. Per step 2 that order is unplayable in a champion-only fight -- Force of Will would have nothing to grab. Adding W to the consume list restores the Q-before-W edge, which is Syndra's canonical opener.",
-    "conclusion": "W belongs in /rotation/consume for Syndra. The new value is correct; the old <absent> was a missed producer/consumer edge.",
+    "conclusion": "W belongs in /fights/manual_target/rotation/consume for Syndra. The new value is correct; the old <absent> was a missed producer/consumer edge.",
     "residual_uncertainty": "The ordinal index (3) and the identities of consume[0..2] depend on the scenario fixture and on whether the list is slot-canonical or rotation-ordered; neither is readable from data/ or docs/math-foundations.md. If the list is rotation-ordered, W-last is consistent with the other three threshold-gated consumers (Q2 at 40 splinters, E at 80, R at 100) preceding it. Nothing in the permitted evidence contradicts index 3, and no reading of the schema makes W's presence wrong."
   },
   "sources": [

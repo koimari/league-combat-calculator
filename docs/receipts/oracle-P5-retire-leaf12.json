@@ -9,7 +9,7 @@
     "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
   },
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/setup[2]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[2]",
   "old_value": null,
   "old_value_note": "<absent> - index 2 did not exist; the derived rotation setup sequence had no third element",
   "new_value": "Q2",

@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf22",
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/consume[1]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/consume[1]",
   "old_value": "<absent>",
   "new_value": "Q2",
   "verdict": "new_value_correct",

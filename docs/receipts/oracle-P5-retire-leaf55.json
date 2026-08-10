@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf55",
   "runbook": "R-18 / R-19 independent oracle",
   "date": "2026-08-10",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/aoe/Q2",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/Q2",
   "old_value": "<absent>",
   "new_value": 5,
   "verdict": "new_value_correct",
@@ -60,7 +60,7 @@
       "result": 5,
       "note": "This reproduces the observed 5 exactly when the un-hasted 7 s recharge is used, which is what the cached cooldown flag 'affectedByCdr: false' prescribes. Sensitivity: if R's Dark-Sphere-only ability haste were also applied, recharge = 7*100/(100+AH) gives 11 casts at +10 AH (Q/Q2 = 6/5, Q2 still 5), 12 at +20 AH (6/6) and 13 at +30 AH (7/6). So 5 is exact for the sourced schedule and remains the value at R rank 1; only R ranks 2-3 with the haste applied would move it, and that is a Q-side modeling question, not a defect in the Q2 leaf."
     },
-    "step_3_value_under_aoe_weight_reading": "If '/rotation/aoe/<slot>' instead carries the per-slot AoE weight/target count that f3-task.md's ranking formula uses, Q2 is by construction the same spell as Q (spellEffects 'Aoe', effectRadius 210, identical damage row 90/125/160/195/230 + 70% AP), so its AoE entry must exist and must equal Q's - 5 for a full five-enemy AoE allocation. Both readings agree that the leaf must be present with a positive integer, and both land on 5.",
+    "step_3_value_under_aoe_weight_reading": "If '/fights/manual_target/rotation/aoe/<slot>' instead carries the per-slot AoE weight/target count that f3-task.md's ranking formula uses, Q2 is by construction the same spell as Q (spellEffects 'Aoe', effectRadius 210, identical damage row 90/125/160/195/230 + 70% AP), so its AoE entry must exist and must equal Q's - 5 for a full five-enemy AoE allocation. Both readings agree that the leaf must be present with a positive integer, and both land on 5.",
     "step_4_ruled_out": "A damage reading is impossible: Dark Sphere's minimum sourced magic damage is 90 (+70% AP) at rank 1, so no Q2 damage row can be 5. Under that reading the value would be nonsense in both the old and new baseline, but the absent->integer transition is a rotation-composition change, not a damage change, so this reading is rejected."
   },
 

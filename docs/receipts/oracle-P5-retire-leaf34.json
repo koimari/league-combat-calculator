@@ -8,7 +8,7 @@
     "isolation_note": "Only data/ and docs/math-foundations.md from the export were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were never opened."
   },
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/sources[1]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[1]",
   "old_value": "Q 'Magic Damage' - the sphere E scatters",
   "new_value": "E requires Q2 (declared cc_enabler): ... [source: .../Syndra@4024662]",
   "value_note": "Both strings were supplied to the oracle in truncated form; the adjudication is on the substantive claim each string encodes, which is fully checkable against the cached wiki text.",

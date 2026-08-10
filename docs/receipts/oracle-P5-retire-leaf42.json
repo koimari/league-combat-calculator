@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/sources[1]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[1]",
   "evidence_tree": {
     "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
     "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
@@ -13,6 +13,8 @@
     "old": "Q 'Magic Damage' - the sphere E scatters",
     "new": "E requires Q2 (declared cc_enabler): ... [source: .../Syndra@4024662]"
   },
+  "old_value": "Q 'Magic Damage' - the sphere E scatters",
+  "new_value": "E requires Q2 (declared cc_enabler): ... [source: .../Syndra@4024662]",
   "independent_computation": {
     "step_1_what_the_leaf_asserts": "sources[1] is the provenance string backing the second element of the derived cast order for Syndra at 120 Splinters of Wrath. The old string cites Q's damage row and glosses the Dark Sphere as the object E scatters. The new string asserts an ordering dependency: E requires Q2, with Q2 (or E) declared the cc_enabler.",
     "step_2_verify_the_old_string_claim_a": "Q 'Dark Sphere' leveling attribute is literally named \"Magic Damage\": values [90, 125, 160, 195, 230] plus a second modifier [70,70,70,70,70] with units '% AP'. CONFIRMED verbatim in data/champions.json -> Syndra.abilities.Q[0].effects[0].leveling.",

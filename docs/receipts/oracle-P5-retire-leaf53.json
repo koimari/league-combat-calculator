@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_39",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/aoe/passive",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/passive",
   "old_value": null,
   "old_value_note": "<absent> (no `passive` key under the AoE rotation record)",
   "new_value": 1,
@@ -61,7 +61,7 @@
   ],
 
   "independent_computation": {
-    "question": "Does Syndra's champion passive (Transcendent) contribute a non-zero quantity to the AoE branch of the derived rotation record, i.e. does a `passive` entry with value 1 belong under /rotation/aoe/?",
+    "question": "Does Syndra's champion passive (Transcendent) contribute a non-zero quantity to the AoE branch of the derived rotation record, i.e. does a `passive` entry with value 1 belong under /fights/manual_target/rotation/aoe/?",
     "step_1_what_the_passive_does": "S1+S2+S3: Transcendent is an innate with targeting 'Passive', affects 'Self', damageType null, no cost, no cooldown, no spellEffects and no onHitEffects. Its three concrete outputs are (a) Splinter accrual (a resource counter, cap 120), (b) mana restore 20:255 by level on collection, (c) +15% ability power at 120 Splinters. None of the three is an enemy-facing damage instance, a cast, or an area effect.",
     "step_2_damage_ledger": "Enumerating every leveling row Syndra owns in the cache: Q 'Magic Damage' 90/125/160/195/230 (+70% AP); W 'Magic Damage' 70/100/130/160/190 (+65% AP) and, at 60 Splinters, 'Bonus True Damage' (+ 'Total Mixed Damage'); E 'Magic Damage' 60/95/130/165/200 (+60% AP); R 'Magic Damage per Sphere' 80/120/160 (+20% AP) with Minimum/Maximum rows. The passive owns exactly one leveling row and it is the mana restore (S3). Passive damage in any rotation, AoE or single-target, is therefore 0 by summation over an empty set of damage rows.",
     "step_3_transcendent_damage_is_owned_by_W_not_by_P": "The only damage the Splinter system unlocks is W's Transcendent Bonus true damage (S4), and the cache authors it as W leveling rows ('Bonus True Damage', 'Total Mixed Damage'), not as passive rows. Attributing it to a `passive` slot would double-count it against W. Likewise R's 'Passive:' line (S5) is 10/20/30 ability haste on Q - a cooldown term consumed by `effective_cd = base_cd * 100/(100+AH)` (CLAUDE.md / math-foundations Section 5), not a damage or hit quantity, and it sits in the R slot, not a `passive` slot.",
@@ -73,7 +73,7 @@
       "hits or targets the passive lands in the AoE rotation -> 0; affects 'Self', no effectRadius (S3)",
       "the only readings under which 1 is defensible are a neutral weight / amplifier default (AoE weight 1, or the Transcendence AP multiplier 1.00 below 120 Splinters). Neither is derivable as a *new* fact from the cache: an ability with no damage rows contributes no term to the F3 ranking 'total_raw / effective cooldown x AoE weight' (S7), so it earns no weight entry; and the Transcendence multiplier is 1.15 at 120 Splinters (S2), i.e. 1 is only its trivial off-state."
     ],
-    "conclusion": "Every quantity the leaf could plausibly hold evaluates to 0 / not-applicable for Syndra's Transcendent, and the one family of readings that would justify 1 is a constant neutral default that the wiki cache gives no basis to newly materialize. The correct state of /rotation/aoe/passive for syndra_derived_order_39 is <absent>."
+    "conclusion": "Every quantity the leaf could plausibly hold evaluates to 0 / not-applicable for Syndra's Transcendent, and the one family of readings that would justify 1 is a constant neutral default that the wiki cache gives no basis to newly materialize. The correct state of /fights/manual_target/rotation/aoe/passive for syndra_derived_order_39 is <absent>."
   },
 
   "computed_value": null,

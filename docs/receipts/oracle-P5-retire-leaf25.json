@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_39",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/sources[0]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[0]",
   "evidence_tree": {
     "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
     "scope_read": [

@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 independent oracle",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/aoe/Q",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/Q",
   "old_value": null,
   "old_value_note": "<absent> — the leaf did not exist in the previous baseline",
   "new_value": 5,

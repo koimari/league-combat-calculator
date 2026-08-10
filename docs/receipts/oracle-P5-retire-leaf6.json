@@ -8,7 +8,7 @@
     "data_checked_at": "2026-08-06T12:36:09.630672+00:00"
   },
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/rationale",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/rationale",
   "old_value": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target ... (as quoted in the task prompt; tail elided)",
   "new_value": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's ... [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] ... (as quoted in the task prompt; tail elided)",
   "leaf_type": "prose rationale (not a number) — adjudicated as a factual claim about Syndra's E stun condition and the resulting Q-before-E cast order",

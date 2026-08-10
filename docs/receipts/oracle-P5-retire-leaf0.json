@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 independent oracle",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_39",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/cast_order[1]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[1]",
   "old_value": "Q2",
   "new_value": "E",
   "verdict": "new_value_correct",

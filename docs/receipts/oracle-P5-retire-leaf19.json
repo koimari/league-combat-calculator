@@ -3,7 +3,7 @@
   "investigator": "fresh oracle subagent (evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/consume[1]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/consume[1]",
   "old_value": null,
   "old_value_note": "<absent> - the derived rotation's consume list had no second element",
   "new_value": "Q2",

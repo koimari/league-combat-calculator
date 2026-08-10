@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
   "generated_utc": "2026-08-10",
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/rationale",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/rationale",
   "old_value": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target ...",
   "new_value": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's ... [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] ...",
   "evidence_tree": {

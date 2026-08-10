@@ -2,7 +2,7 @@
   "runbook": "R-18 / R-19 independent oracle",
   "generated": "2026-08-10",
   "scenario": "syndra_derived_order_39",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/aoe/Q2",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/Q2",
   "old_value": "<absent>",
   "new_value": 5,
   "verdict": "new_value_correct",
@@ -80,6 +80,6 @@
   "residual_uncertainty": [
     "The golden snapshot's leaf schema (order position vs. cast count vs. targets hit) lives in scripts/golden_snapshot.py, which runbook R-18/R-19 forbids reading, so the exact unit of '5' could not be pinned. The verdict rests on 5 being admissible under every reading the permitted sources allow, plus the mechanic itself being wiki-confirmed.",
     "Splinters gate: the scenario's splinters option is defined in src/ and could not be read. If 'syndra_derived_order_39' runs splinters < 40, Syndra has one Dark Sphere charge and the Q2 leaf should stay absent — that is the single condition that would flip this verdict to old_value_correct.",
-    "Charge-throughput caveat (cast-count reading only): the wiki charge system stocks at most 2 Dark Spheres and regenerates 1 per 7 s recharge, so total Dark Spheres over a window T is ~2 + floor(T / c), NOT 2 x (Q's own cast count). If the sibling leaf /rotation/aoe/Q both reads 5 under a cast-count encoding, the pair implies 10 spheres over the window and would over-count sustained Dark Sphere throughput. The sibling leaf lives in scripts/golden_baseline.json (forbidden), so this could not be checked; flagged for the orchestrator to verify."
+    "Charge-throughput caveat (cast-count reading only): the wiki charge system stocks at most 2 Dark Spheres and regenerates 1 per 7 s recharge, so total Dark Spheres over a window T is ~2 + floor(T / c), NOT 2 x (Q's own cast count). If the sibling leaf /fights/manual_target/rotation/aoe/Q both reads 5 under a cast-count encoding, the pair implies 10 spheres over the window and would over-count sustained Dark Sphere throughput. The sibling leaf lives in scripts/golden_baseline.json (forbidden), so this could not be checked; flagged for the orchestrator to verify."
   ]
 }

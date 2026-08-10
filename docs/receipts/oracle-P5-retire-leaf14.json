@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/setup[1]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[1]",
   "old_value": null,
   "old_value_note": "<absent> — the setup list had no index 1 (setup phase laid a single Dark Sphere)",
   "new_value": "Q",
@@ -30,7 +30,7 @@
     ]
   },
   "independent_computation": {
-    "step_1_what_the_leaf_means": "The rotation receipt is {order, setup, rationale} (data/worklists/f2-task.md deliverable 4; f3-task.md 1a defines 'setup/consume edges'). '/rotation/setup' is therefore the ordered setup-phase cast list — the applier casts that must precede their consumers. setup[1] is the second setup cast.",
+    "step_1_what_the_leaf_means": "The rotation receipt is {order, setup, rationale} (data/worklists/f2-task.md deliverable 4; f3-task.md 1a defines 'setup/consume edges'). '/fights/manual_target/rotation/setup' is therefore the ordered setup-phase cast list — the applier casts that must precede their consumers. setup[1] is the second setup cast.",
     "step_2_who_is_the_setup_ability": "From the cached wiki text, Dark Sphere (Q) is Syndra's only applier: 'Syndra conjures a Dark Sphere at the target location ... The Dark Sphere then remains on the ground for 6 seconds.' All three of her other actives consume a live sphere: W 'telekinetically grabs the nearest Dark Sphere ... Grabbing prioritizes Dark Spheres'; E 'Dark Spheres can be knocked back ... Targets hit are also stunned'; R 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones'. So every setup entry for Syndra must be Q, and at least one is required.",
     "step_3_how_many_setup_casts_are_sourced_at_120_splinters": "The scenario pins the splinters option at 120 (data/champion-audit/batch-6.json: 'splinters option (0-120)'; data/champions.json P: stacks 'up to 120 times'). At 120 splinters every Transcendent threshold is met, including Q's: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' Two stocked charges = exactly two back-to-back Dark Sphere casts available in the setup phase, hence setup = [Q, Q] and setup[1] = 'Q'.",
     "step_4_why_not_three_or_more": "The charge cap is explicitly 'a maximum of 2'. A third sphere requires waiting a full recharge: Q cooldown/rechargeRate = 7 s at every rank with affectedByCdr = false; only R's passive reduces it ('Dark Sphere's cooldown is reduced equivalent to an amount of ability haste', 10/20/30 by R rank), giving 7 x 100/(100+AH) = 6.364 / 5.833 / 5.385 s. That exceeds any burst setup window (Q castTime 'none', E castTime 0.25 s, R castTime 0.25 s), so 2 is both the ceiling and the value at 120 splinters.",

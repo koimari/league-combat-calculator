@@ -16,7 +16,7 @@
     "the plan"
   ],
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/sources[6]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[6]",
   "old_value": "<absent>",
   "new_value": {
     "option": "r_spheres",

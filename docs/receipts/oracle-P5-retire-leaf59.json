@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf59",
   "runbook": "R-18 / R-19 independent oracle",
   "date": "2026-08-10",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/aoe/Q",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/Q",
   "old_value": null,
   "old_value_note": "leaf absent from the previous baseline",
   "new_value": 5,
@@ -34,7 +34,7 @@
     "id": "syndra_derived_order_120",
     "champion": "Syndra",
     "the_120": "Splinters of Wrath at cap. data/champions.json Syndra P (Transcendent): \"Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times\" and \"At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.\" data/champion-audit/batch-6.json corroborates: \"P = 120-splinter +15% total AP BUFF\", \"splinters option (0-120)\".",
-    "the_derived_order": "the algorithmically derived cast order from the rotation resolver. data/worklists/f3-task.md (F3 workstream, prior to the change under test) specifies the derivation and its ranking term: \"RANK per-rank DPS at the fight's stats for the remaining abilities (total_raw / effective cooldown x AoE weight)\" - i.e. the rotation carries a per-ability AoE weight / target count, which is what the '/rotation/aoe/<slot>' subtree records.",
+    "the_derived_order": "the algorithmically derived cast order from the rotation resolver. data/worklists/f3-task.md (F3 workstream, prior to the change under test) specifies the derivation and its ranking term: \"RANK per-rank DPS at the fight's stats for the remaining abilities (total_raw / effective cooldown x AoE weight)\" - i.e. the rotation carries a per-ability AoE weight / target count, which is what the '/fights/manual_target/rotation/aoe/<slot>' subtree records.",
     "residual_uncertainty": "The exact serialization of the rotation receipt lives in src/ and scripts/, which this oracle is forbidden to read. The semantics of the 'aoe' node were therefore inferred from the cached F3 specification, not read off the emitter."
   },
   "independent_computation": {
@@ -62,7 +62,7 @@
         "R spheres: \"Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones\" -> 3..7 spheres, an R-slot quantity, not Q.",
         "Q max rank = 5 (five cooldown/damage entries). Note this alternate reading of the leaf ALSO evaluates to 5."
       ],
-      "conclusion": "Every reading of this leaf that the cached data supports evaluates to 5 (uncapped AoE target ceiling = 5; Q max rank = 5). No source value other than 5 is defensible for a '/rotation/aoe/Q' node."
+      "conclusion": "Every reading of this leaf that the cached data supports evaluates to 5 (uncapped AoE target ceiling = 5; Q max rank = 5). No source value other than 5 is defensible for a '/fights/manual_target/rotation/aoe/Q' node."
     }
   },
   "sources_quoted": [
@@ -99,7 +99,7 @@
   ],
   "verdict_rationale": "Two independent legs. (1) Existence: Syndra's Q is flagged and described in the cached wiki data as an uncapped circular area effect that damages all nearby enemies, so it belongs in a per-ability AoE listing - the old state (leaf absent) cannot be right. (2) Value: the only ceiling the game imposes on an uncapped enemy-champion AoE is the 5-champion enemy team, and the alternate reading of the node (Q's rank) is likewise 5; no cached source supports any other integer, and the cast-count reading is arithmetically excluded (a 120-unit window of any interpretation yields 18-43 Q casts, never 5).",
   "caveats": [
-    "The emitter for the '/rotation/aoe/*' subtree lives in src/ and scripts/, which this oracle did not read by design; the node's semantics were inferred from data/worklists/f3-task.md's specification of the AoE weight term plus the cached ability data.",
+    "The emitter for the '/fights/manual_target/rotation/aoe/*' subtree lives in src/ and scripts/, which this oracle did not read by design; the node's semantics were inferred from data/worklists/f3-task.md's specification of the AoE weight term plus the cached ability data.",
     "If the node were ever intended to hold the SCENARIO's live enemy count rather than the ability's target ceiling, 5 is still the maximum legal value and is only falsifiable by the scenario roster, which is not present anywhere under data/.",
     "verdict old_value_correct is excluded outright: an absent leaf asserts Q carries no AoE character, which contradicts data/champions.json (spellEffects=\"Aoe\", effectRadius 210, \"damage to nearby enemies\")."
   ]

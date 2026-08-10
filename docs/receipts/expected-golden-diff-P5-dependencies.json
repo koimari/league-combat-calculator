@@ -70,19 +70,29 @@
       "transition": "absent_to_value",
       "qualifies_under_R15": true,
       "oracle_receipt": [
-        "docs/receipts/oracle-P5-resolver-leaf0.json",
-        "docs/receipts/oracle-P5-resolver-leaf1.json",
-        "docs/receipts/oracle-P5-resolver-leaf2.json",
-        "docs/receipts/oracle-P5-resolver-leaf3.json",
-        "docs/receipts/oracle-P5-resolver-leaf4.json",
-        "docs/receipts/oracle-P5-resolver-leaf5.json",
-        "docs/receipts/oracle-P5-resolver-leaf6.json",
-        "docs/receipts/oracle-P5-resolver-leaf7.json"
+        "oracle-P5-resolver-leaf0.json",
+        "oracle-P5-resolver-leaf1.json",
+        "oracle-P5-resolver-leaf2.json",
+        "oracle-P5-resolver-leaf3.json",
+        "oracle-P5-resolver-leaf4.json",
+        "oracle-P5-resolver-leaf5.json",
+        "oracle-P5-resolver-leaf6.json",
+        "oracle-P5-resolver-leaf7.json"
       ],
       "prior_position_retired": "This row previously read `oracle_receipt: null` with a `why_no_oracle` argument that a receipt-shaped leaf is not a quantity an R-18 investigator can recompute. Eight investigators were nevertheless commissioned, so the gap is closed by receipts rather than by the argument, and the argument is retired here rather than left standing beside evidence that supersedes it.",
       "verdicts": {
-        "new_value_correct": [0, 1, 2, 5, 6, 7],
-        "both_wrong": [3, 4],
+        "new_value_correct": [
+          0,
+          1,
+          2,
+          5,
+          6,
+          7
+        ],
+        "both_wrong": [
+          3,
+          4
+        ],
         "old_value_correct": []
       },
       "adjudication": {
@@ -106,17 +116,25 @@
       "transition": "absent_to_value",
       "qualifies_under_R15": true,
       "oracle_receipt": [
-        "docs/receipts/oracle-P5-resolver-leaf8.json",
-        "docs/receipts/oracle-P5-resolver-leaf9.json",
-        "docs/receipts/oracle-P5-resolver-leaf10.json",
-        "docs/receipts/oracle-P5-resolver-leaf11.json",
-        "docs/receipts/oracle-P5-resolver-leaf12.json",
-        "docs/receipts/oracle-P5-resolver-leaf13.json"
+        "oracle-P5-resolver-leaf10.json",
+        "oracle-P5-resolver-leaf8.json",
+        "oracle-P5-resolver-leaf9.json",
+        "oracle-P5-resolver-leaf13.json",
+        "oracle-P5-resolver-leaf11.json",
+        "oracle-P5-resolver-leaf12.json"
       ],
       "prior_position_retired": "As in the row above: `oracle_receipt: null` and its `why_no_oracle` argument are retired because six investigators were commissioned and returned receipts.",
       "verdicts": {
-        "new_value_correct": [8, 9, 10],
-        "both_wrong": [11, 12, 13],
+        "new_value_correct": [
+          8,
+          9,
+          10
+        ],
+        "both_wrong": [
+          11,
+          12,
+          13
+        ],
         "old_value_correct": [],
         "split": "The three `syndra_custom_order_*` leaves pass; the three `syndra_derived_order_*` leaves dissent. The leaf value is identical on all six."
       },
@@ -160,5 +178,33 @@
     "syndra_mandate_3champ": "identical — evaluations 796, proposals 782, memo misses 775, pair calls 3014, residual 1422, rungs {receipt_walk_candidate: 775}, score 4642.3, same winner",
     "cause": "the rotation receipt is descriptive metadata built after the fight; no score, candidate or rung reads it"
   },
-  "note": "Every path above is inside the enumerated population and no path outside it moved. No baseline is re-captured here (R-17, R-32, D-97): the phase-boundary re-capture carries these declarations, and the two rows above record the oracle gap explicitly because a receipt-shaped leaf has no independent computation an R-18 investigator could perform."
+  "note": "Every path above is inside the enumerated population and no path outside it moved. No baseline is re-captured here (R-17, R-32, D-97): the phase-boundary re-capture carries these declarations, and the two rows above record the oracle gap explicitly because a receipt-shaped leaf has no independent computation an R-18 investigator could perform.",
+  "oracle_receipts": {
+    "prefix": "oracle-P5-resolver-",
+    "one_per_expected_diff_path": true,
+    "by_leaf_path": {
+      "/coupled_scenarios/catalyst_roster/fights/0:Aatrox/rotation/dependencies": "oracle-P5-resolver-leaf0.json",
+      "/coupled_scenarios/catalyst_roster/fights/1:Malphite/rotation/dependencies": "oracle-P5-resolver-leaf1.json",
+      "/coupled_scenarios/cleaver_bloodsong_roster/fights/0:Aatrox/rotation/dependencies": "oracle-P5-resolver-leaf2.json",
+      "/coupled_scenarios/dream_maker_roster/fights/0:Aatrox/rotation/dependencies": "oracle-P5-resolver-leaf3.json",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/rotation/dependencies": "oracle-P5-resolver-leaf4.json",
+      "/coupled_scenarios/score_event_scan_holder/fights/0:Aatrox/rotation/dependencies": "oracle-P5-resolver-leaf5.json",
+      "/coupled_scenarios/score_event_view_holder/fights/0:Aatrox/rotation/dependencies": "oracle-P5-resolver-leaf6.json",
+      "/coupled_scenarios/score_plain_tuple/fights/0:Aatrox/rotation/dependencies": "oracle-P5-resolver-leaf7.json",
+      "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/dependencies": "oracle-P5-resolver-leaf10.json",
+      "/coupled_scenarios/syndra_custom_order_39/fights/manual_target/rotation/dependencies": "oracle-P5-resolver-leaf8.json",
+      "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/dependencies": "oracle-P5-resolver-leaf9.json",
+      "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/dependencies": "oracle-P5-resolver-leaf13.json",
+      "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/dependencies": "oracle-P5-resolver-leaf11.json",
+      "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/dependencies": "oracle-P5-resolver-leaf12.json"
+    },
+    "verdict_tally": {
+      "new_value_correct": 9,
+      "old_value_correct": 0,
+      "both_wrong": 5,
+      "dissenting": 5,
+      "total": 14
+    },
+    "gate": "tests/test_p5_oracle_receipts.py asserts this block against the receipt files themselves: one receipt per expected diff path, every leaf_path literally equal to the path it covers, every verdict from R-19's closed set, and this tally recomputed rather than trusted."
+  }
 }

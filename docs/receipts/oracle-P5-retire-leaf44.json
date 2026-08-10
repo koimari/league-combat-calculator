@@ -2,7 +2,7 @@
   "receipt_id": "oracle-P5-retire-leaf44",
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/sources[3]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[3]",
   "old_value": "R 'Magic Damage' per sphere closes the burst",
   "new_value": "E applies cc_kind crowd control - setup before W",
   "verdict": "old_value_correct",

@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 (fresh independent oracle)",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_39",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/sources[7]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[7]",
   "old_value": "<absent>",
   "new_value": "free slots ranked by per-rank DPS (total_raw / effective cooldown) - consistent across the matrix",
   "verdict": "new_value_correct",

@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf7",
   "runbook": "R-18 / R-19 (independent oracle)",
   "date": "2026-08-10",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/setup[0]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[0]",
   "scenario": "syndra_derived_order_39",
   "old_value": "Q",
   "new_value": "E",

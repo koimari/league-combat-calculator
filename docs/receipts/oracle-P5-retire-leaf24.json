@@ -2,7 +2,7 @@
   "receipt": "oracle-P5-retire-leaf24",
   "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md, nothing else read)",
   "scenario": "syndra_derived_order_120",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/consume[3]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/consume[3]",
   "old_value": "<absent>",
   "new_value": "W",
   "verdict": "new_value_correct",

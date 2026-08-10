@@ -3,7 +3,7 @@
   "runbook": "R-18 / R-19 independent oracle",
   "date": "2026-08-10",
   "scenario": "syndra_derived_order_60",
-  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/sources[4]",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[4]",
   "old_value": "<absent>",
   "new_value": "E applies cc_kind crowd control - setup before R",
   "verdict": "both_wrong",
