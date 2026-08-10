@@ -60,7 +60,9 @@ from __future__ import annotations
 
 import re
 from collections.abc import Collection, Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
+from dataclasses import fields as dataclass_fields
+from dataclasses import replace
 from typing import Any, Literal, Mapping
 
 from .cast_dependency import (
@@ -1113,15 +1115,17 @@ class DependencyReceipt:
     unconsulted: tuple[str, ...] = ()
 
     def as_rows(self) -> dict[str, list[str]]:
-        """The six ledgers as JSON-safe lists, for the public receipt."""
+        """Every ledger as a JSON-safe list, for the public receipt.
+
+        Read off the dataclass fields rather than retyped: the hand copy
+        this replaces said "six" while returning seven, because
+        ``unconsulted`` was added to the class and to the literal and not
+        to the sentence above them.  A ledger the class declares is a
+        ledger the receipt publishes, by construction.
+        """
         return {
-            "active": list(self.active),
-            "inactive": list(self.inactive),
-            "suppressed": list(self.suppressed),
-            "latent": list(self.latent),
-            "confirmed_by_inference": list(self.confirmed_by_inference),
-            "conflicts": list(self.conflicts),
-            "unconsulted": list(self.unconsulted),
+            ledger.name: list(getattr(self, ledger.name))
+            for ledger in dataclass_fields(self)
         }
 
 

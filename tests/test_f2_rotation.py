@@ -891,6 +891,22 @@ class TestTheReceiptPublishesTheMerge:
         "unconsulted",
     )
 
+    def test_the_published_ledgers_are_the_declared_ledgers(self) -> None:
+        """An eighth ledger arrives here too, or it arrives unnoticed.
+
+        ``as_rows`` used to retype the field list beside the fields and
+        its own docstring counted six of the seven it returned.  The
+        method now reads the dataclass; this pins the suite's list to the
+        same source so all three cannot drift apart again.
+        """
+        from dataclasses import fields as dataclass_fields
+
+        from src.calculator.rotation_resolver import DependencyReceipt
+
+        declared = tuple(item.name for item in dataclass_fields(DependencyReceipt))
+        assert declared == self._LEDGERS
+        assert tuple(DependencyReceipt().as_rows()) == self._LEDGERS
+
     def test_a_non_declaring_champion_publishes_empty_ledgers(
         self, champion_by_name
     ) -> None:
