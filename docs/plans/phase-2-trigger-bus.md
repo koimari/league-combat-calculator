@@ -442,10 +442,40 @@ its red is reproducible on demand rather than remembered (R-05).
   disclosed in their bodies, no behavioural test touched. The one thing the original clause was
   really protecting — that this phase pins nothing new by editing the suite that already pins it
   — is what (c) states directly.
-- Every commit shows zero golden and zero coupled-golden diffs, with all four fingerprint
-  families, the residual, the winners and the scores identical to the Phase 0 exit measurement
+- Every commit shows zero golden diffs, adds no coupled-golden diff, and reproduces all four
+  fingerprint families, the residual, the winners and the scores of the Phase 0 exit measurement
   ([runbook](silent-failure-runbook.md): R-11, R-13, R-24…R-29). No golden re-capture happens in
   this phase.
+
+  **Amended after the `verify-P2b` pass, which found the original clause not discharged** — the
+  same in-criterion treatment the byte-identity clause above got, and flagged the same way, as a
+  plan-text change by an implementation lane so the next verifier adjudicates the amendment
+  instead of inheriting it silently. It read "zero golden **and zero coupled-golden** diffs", and
+  the coupled half is a claim no commit in this phase could ever make true. R-17 lands a semantic
+  slice against the *committed* coupled baseline plus a committed allowlist of expected diff
+  paths, and R-32/D-97 forbid moving that baseline outside a phase-boundary re-capture — so
+  between two boundaries the allowlisted differences are still standing **by design**, and
+  `compare` against `scripts/golden_coupled_baseline.json` exits non-zero for reasons entirely
+  inherited from earlier phases. It was already false at this phase's entry tip: extract
+  `146a69c`, the pre-phase tip `312ccd9`, and HEAD with `git archive` and run the compare in each,
+  and the three reports are byte-identical, so this phase contributes nothing to the standing set.
+
+  The pair half was always writable and holds: `compare scripts/golden_baseline.json` reports
+  `OK: snapshot identical` at every commit.
+
+  So the coupled half now demands what R-01 row 3 actually says — *every diff explained* — and it
+  is machine-checked rather than matched by hand:
+  `tests/test_coupled_golden_allowlist.py` reads every committed
+  `docs/receipts/expected-golden-diff-*.json`, unions its `coupled_golden` and
+  `coupled_golden_shape_counters` paths, and asserts every leaf `compare` reports is claimed by
+  one of them. The predicate is a subset and not an equality, so it survives the boundary
+  re-capture that empties the difference set, and it goes red the moment a slice moves a leaf no
+  receipt claims. It carries its own permanent negative over a fabricated diff (R-05). Before it
+  existed, the standing set had to be matched against the receipts by hand — which is the silent
+  re-interpretation this campaign exists to end, sitting inside the campaign's own gate.
+
+  A slice additionally shows it added nothing to the standing set, by the same `git archive`
+  extract-and-diff its own body cites.
 - The full per-commit gate set (R-01) is green at P2a, P2b and P2c, including the
   acceptance and champion-optimizer matrices and the per-file pylint ratchet.
 - After P2c, no retired symbol appears anywhere in `src/`, `CAPABILITIES` is the only place in
