@@ -23,6 +23,7 @@ from src.calculator.champions import (
     get_champion_module_contract,
     get_champion_option_rotation,
 )
+from src.calculator.champions import module_contract
 from src.calculator.champions.module_contract import (
     ChampionModuleContractError,
     contract_from_module,
@@ -61,6 +62,10 @@ from src.calculator.cast_dependency import (
 ROOT = Path(__file__).resolve().parent.parent
 LEAF = ROOT / "src" / "calculator" / "cast_dependency.py"
 RESOLVER = ROOT / "src" / "calculator" / "rotation_resolver.py"
+CONTRACT = ROOT / "src" / "calculator" / "champions" / "module_contract.py"
+PACKET = ROOT / "src" / "calculator" / "champions" / "packet_module.py"
+
+_VALIDATORS = ("validate_cast_dependencies", "validate_cast_order_declaration")
 
 SOURCE = "https://wiki.leagueoflegends.com/en-us/Syndra@4024662"
 SURFACE = {"P", "Q", "Q2", "W", "E", "R"}
@@ -98,6 +103,37 @@ def _detector_edge_kinds() -> tuple[set[str], int]:
         else:
             dynamic += 1
     return kinds, dynamic
+
+
+def _emptiness_guard_line(function: ast.FunctionDef, name: str) -> int:
+    """The line of the ``if not <name>: return`` guard that opens *function*.
+
+    D-85's shape: nothing below the guard runs for a champion that
+    declares nothing.
+    """
+    for node in function.body:
+        if (
+            isinstance(node, ast.If)
+            and isinstance(node.test, ast.UnaryOp)
+            and isinstance(node.test.op, ast.Not)
+            and isinstance(node.test.operand, ast.Name)
+            and node.test.operand.id == name
+            and len(node.body) == 1
+            and isinstance(node.body[0], ast.Return)
+        ):
+            return node.lineno
+    raise AssertionError(f"{function.name} has no `if not {name}: return` guard")
+
+
+def _validator_calls(node: ast.AST) -> list[ast.Call]:
+    """Every call to a cast-dependency validator inside *node*."""
+    return [
+        child
+        for child in ast.walk(node)
+        if isinstance(child, ast.Call)
+        and isinstance(child.func, ast.Name)
+        and child.func.id in _VALIDATORS
+    ]
 
 
 def _dep(slot: str = "E", requires: str = "Q", **overrides) -> CastDependency:
@@ -629,6 +665,105 @@ class TestTheContractCarriesDeclarations:
         module.SLOTS = {slot: (lambda ctx: None) for slot in ("P", "Q", "W", "E", "R")}
         contract = contract_from_module("Synthetic", "synthetic", module)
         assert contract.cast_dependencies == ()
+
+
+class TestNonDeclaringChampionsReachNoNewCode:
+    """D-85 asserted at source level, in the ``test_issue_158`` idiom.
+
+    "The 170 non-declaring champions are byte-identical" is what makes
+    the migration provably diff-free, and a behavioural test can only
+    show it for the modules that exist today.  These read the source and
+    assert the *shape*: every raise and every validator call on the
+    cast-dependency path is unreachable when no carrier declares
+    anything, so a future edit that hoists one above its guard fails
+    here rather than at some champion's import.
+    """
+
+    def test_the_contract_gates_every_failure_behind_its_guard(self) -> None:
+        for function_name, guarded in (
+            ("_declared_cast_dependencies", "declared"),
+            ("_cast_dependencies", "dependencies"),
+        ):
+            function = _function(CONTRACT, function_name)
+            guard = _emptiness_guard_line(function, guarded)
+            gated = [
+                node.lineno
+                for node in ast.walk(function)
+                if isinstance(node, ast.Raise)
+            ]
+            gated += [call.lineno for call in _validator_calls(function)]
+            assert gated, f"{function_name} has no raise or validator call to gate"
+            assert min(gated) > guard, (
+                f"{function_name} can raise before its emptiness guard at "
+                f"line {guard}"
+            )
+
+    def test_the_packet_compiler_gates_its_validation_behind_a_declaration(
+        self,
+    ) -> None:
+        function = _function(PACKET, "build_packet_module")
+        calls = _validator_calls(function)
+        assert len(calls) == 1
+        guards = [
+            node
+            for node in ast.walk(function)
+            if isinstance(node, ast.If)
+            and isinstance(node.test, ast.Name)
+            and node.test.id == "cast_dependencies"
+        ]
+        assert len(guards) == 1
+        inside = {
+            id(call)
+            for statement in guards[0].body
+            for call in _validator_calls(statement)
+        }
+        assert id(calls[0]) in inside
+
+    def test_the_guards_are_written_where_a_reader_finds_them(self) -> None:
+        contract_source = CONTRACT.read_text(encoding="utf-8")
+        assert "if not declared:\n        return ()" in contract_source
+        assert "if not dependencies:\n        return ()" in contract_source
+        packet_source = PACKET.read_text(encoding="utf-8")
+        assert (
+            "if cast_dependencies:\n        validate_cast_dependencies("
+            in packet_source
+        )
+
+    def test_only_declaring_modules_reach_a_validator(self, monkeypatch) -> None:
+        """The behavioural half, over the whole live registry.
+
+        The registry is resolved *before* the spies go in — building a
+        contract lazily would itself reach the validator and count twice.
+        """
+        registry = [
+            (name, get_champion_module_contract(name))
+            for name in _CUSTOM_CHAMPION_MODULES
+        ]
+        seen: list[tuple[str, str]] = []
+
+        def spy(name):
+            original = getattr(module_contract, name)
+
+            def record(*args, **kwargs):
+                seen.append((name, kwargs["module"]))
+                return original(*args, **kwargs)
+
+            return record
+
+        for validator in _VALIDATORS:
+            monkeypatch.setattr(module_contract, validator, spy(validator))
+
+        for champion, contract in registry:
+            contract_from_module(champion, contract.module_name, contract.module)
+
+        assert len(registry) == 173
+        declaring = {module for _, module in seen}
+        assert declaring == {
+            "src.calculator.champions.brand",
+            "src.calculator.champions.syndra",
+            "src.calculator.champions.zed",
+        }
+        assert [name for name, _ in seen] == ["validate_cast_dependencies"] * 3
 
 
 class _SlotMap(dict):
