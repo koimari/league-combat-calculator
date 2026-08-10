@@ -14,10 +14,25 @@ At level 18, rank 5/5/5/3, 600 total AP:
   (at 100 AP pre-buff: Q rank 5 = 230 + 0.70 x 115 = 310.5)
 """
 
+import importlib
+import json
+import sys
+from pathlib import Path
+
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _golden_snapshot():
+    """The capture instrument, imported from ``scripts/`` on first use."""
+    if str(_REPO_ROOT / "scripts") not in sys.path:
+        sys.path.insert(0, str(_REPO_ROOT / "scripts"))
+    return importlib.import_module("golden_snapshot")
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -304,6 +319,129 @@ class TestRotationOrder:
         assert order == ["Q", "Q2", "E", "W", "R"]
         assert rule is not None and rule.derived is False
         assert "sphere" in rule.rationale.lower()
+
+
+# ---------------------------------------------------------------------------
+# The two cast-order pins — Phase 5 criteria 6 and 11
+#
+# There is no bespoke Syndra pin fixture.  The parameter set lives once, in
+# the ``syndra_derived_order`` / ``syndra_custom_order`` coupled scenarios,
+# and the binding totals live once, in the committed
+# ``scripts/golden_coupled_baseline.json``.  These classes run the named
+# scenarios live and read that file; no number below is typed by hand.
+# ---------------------------------------------------------------------------
+
+
+def _coupled_baseline():
+    """The committed coupled baseline — the binding home of the totals."""
+    path = _REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
+    return json.loads(path.read_text(encoding="utf-8"))["coupled_scenarios"]
+
+
+def _scenario(name):
+    """One named coupled scenario; its request is the one parameter set."""
+    for scenario in _golden_snapshot().COUPLED_SCENARIOS:
+        if scenario.name == name:
+            return scenario
+    raise AssertionError(f"coupled scenario {name!r} is missing")
+
+
+def _capture(name):
+    """Run a named scenario live, rounded exactly as the baseline is."""
+    snapshot = _golden_snapshot()
+    return snapshot._rounded(  # pylint: disable=protected-access
+        snapshot.coupled_entry(_scenario(name))
+    )
+
+
+def _casts(entry):
+    """One captured fight's cast timeline as ``(time, slot)`` pairs."""
+    fight = entry["fights"]["manual_target"]
+    return [(cast["time"], cast["slot"]) for cast in fight["cast_timeline"]]
+
+
+def _priced(entry):
+    """Everything the scenario prices — the entry minus its rotation prose.
+
+    ``rotation`` is the receipt that says *why* the order is what it is;
+    every other leaf is what the engine computed under that order.  The
+    prose moves when a hand seed retires against a declaration and no
+    number may: splitting them here is what lets one assertion mean "the
+    retirement changed nothing" instead of "the wording is unchanged".
+    ``cast_order`` and ``order`` live inside ``rotation`` and are pinned
+    separately below by the cast timeline, which is the executed fact.
+    """
+    fights = {
+        key: {name: value for name, value in fight.items() if name != "rotation"}
+        for key, fight in entry["fights"].items()
+    }
+    return {**entry, "fights": fights}
+
+
+_PIN_SPLINTERS = (39, 60, 120)
+
+
+class TestTheDerivedOrderPinScenario:
+    """Criterion 6 — the 5.0 s Q recast, pinned by the coupled baseline.
+
+    The splinter count is load-bearing: Q's second charge arrives at 40
+    stacks and W's bonus true damage at 60, so the same run totals three
+    different numbers across the variants and a pin without that axis is
+    ambiguous.  Every expectation here is read from the committed
+    baseline; the suite retypes nothing.
+    """
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_the_live_run_reproduces_the_committed_entry(self, splinters) -> None:
+        name = f"syndra_derived_order_{splinters}"
+        assert _priced(_capture(name)) == _priced(_coupled_baseline()[name])
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_q_recasts_at_five_seconds(self, splinters) -> None:
+        """10 ability haste puts the recast at 5.0 s exactly."""
+        casts = _casts(_capture(f"syndra_derived_order_{splinters}"))
+        assert (5.0, "Q") in casts
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_the_second_charge_rides_its_parents_cast_times(self, splinters) -> None:
+        """C6's fold: Q2 never occupies a cast slot of its own."""
+        casts = _casts(_capture(f"syndra_derived_order_{splinters}"))
+        q_times = {time for time, slot in casts if slot == "Q"}
+        q2_times = [time for time, slot in casts if slot == "Q2"]
+        assert q2_times == ([0.0] if splinters >= 40 else [])
+        assert set(q2_times) <= q_times
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_the_derived_timeline_is_not_the_requested_one(self, splinters) -> None:
+        """A pin the fix and a fall-through both satisfy is not a pin."""
+        derived = _casts(_capture(f"syndra_derived_order_{splinters}"))
+        requested = _casts(_capture(f"syndra_custom_order_{splinters}"))
+        assert derived != requested
+
+
+class TestTheCustomOrderPinReadsTheBaseline:
+    """Criterion 11 — the requested order is whole, and the total is pinned.
+
+    ``tests/test_custom_cast_order.py`` asserts C6's behaviour structurally
+    (the recast survives, once).  This class binds the same scenario to the
+    committed number, so a change that keeps the shape and moves the damage
+    cannot pass both.
+    """
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_the_live_run_reproduces_the_committed_entry(self, splinters) -> None:
+        name = f"syndra_custom_order_{splinters}"
+        assert _priced(_capture(name)) == _priced(_coupled_baseline()[name])
+
+    def test_the_requested_order_keeps_the_second_charge(self) -> None:
+        entry = _capture("syndra_custom_order_120")
+        fight = entry["fights"]["manual_target"]
+        assert fight["breakdown"]["Q2"]["casts"] == 1
+        committed = _coupled_baseline()["syndra_custom_order_120"]
+        assert (
+            fight["total_damage"]
+            == committed["fights"]["manual_target"]["total_damage"]
+        )
 
 
 # ---------------------------------------------------------------------------

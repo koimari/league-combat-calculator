@@ -34,3 +34,32 @@ def test_serializer_withholds_an_event_without_a_valid_time() -> None:
     )
 
     assert [event["source"] for event in response["damage_events"]] == ["good"]
+
+
+def test_serializer_passes_the_whole_rotation_receipt_through() -> None:
+    """The rotation receipt is copied, not projected onto a key list.
+
+    Phase 5 adds ``dependencies`` to what ``build_rotation_receipt``
+    returns, and this suite is the API's front door.  It holds no
+    exact-key assertion on ``rotation`` — a fact worth an assertion
+    rather than an absence, because an exact-key check here would have
+    made a new ledger reach the engine and stop at the serializer, which
+    is a receipt the model computed and the response withheld.
+    """
+    receipt = {
+        "cast_order": ["Q", "E"],
+        "order": ["Q", "E"],
+        "rationale": "declared",
+        "sources": ("sourced",),
+        "setup": ["Q"],
+        "consume": ["E"],
+        "aoe": {"E": 5},
+        "dependencies": {"active": ["Q -> E"], "conflicts": []},
+    }
+    result = _result([])
+    result["rotation"] = receipt
+
+    response = serialize_fight_result(result)
+
+    assert response["rotation"] == receipt
+    assert response["rotation"]["dependencies"] == receipt["dependencies"]
