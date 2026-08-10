@@ -9,7 +9,7 @@ assumes an active or a trigger that is absent from the authored event stream.
 from __future__ import annotations
 
 import ast
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Collection, Iterable, Iterator, Mapping
 from functools import lru_cache
 import math
 from pathlib import Path
@@ -17,11 +17,23 @@ from types import MappingProxyType
 from typing import Any
 
 from .ability_spec import (
-    IMMOBILIZING_CC_KINDS,
     AttackClass,
     Authority,
     DamageClass,
-    is_immobilizing_event,
+)
+
+# The typed bus: one home for "what does this raw row mean?" and one for
+# "which streams does this holder read?".  Both used to be answered here, by
+# four scanners and five hand-maintained name sets that could drift from the
+# branches they gated (D-30, D-32).  ``trigger_stream``'s only intra-package
+# import is ``ability_spec``, so this edge adds no cycle.
+from .trigger_stream import (
+    CcClass,
+    Trigger,
+    TriggerKind,
+    authored_triggers,
+    streams_for,
+    tuple_incapable_items,
 )
 from .item_effects import (
     ALLY_ITEM_EFFECTS,
@@ -175,36 +187,35 @@ def _support_triggers(
     ]
 
 
-# Any authored cc_kind that means real crowd control — the immobilize
-# class plus slows. ("none" is a reviewed no-CC statement, never a trigger.)
-_CC_TRIGGER_KINDS = IMMOBILIZING_CC_KINDS | frozenset({"slow"})
+def _everlasting_trigger_kind(trigger: Trigger) -> str:
+    """Which of Everlasting's two rungs a control trigger takes, if any.
 
-
-def _cc_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """Return damage packets with an authored crowd-control marker."""
-    markers = {"immobilized", "crowd_control", "hard_cc"}
-    return [
-        event
-        for event in result.get("damage_events", [])
-        if isinstance(event, Mapping)
-        if any(bool(event.get(marker)) for marker in markers)
-        or str(event.get("cc_kind", "")).lower() in _CC_TRIGGER_KINDS
-    ]
-
-
-def _fimbulwinter_trigger_kind(event: Mapping[str, Any]) -> str:
-    """Return the explicitly reviewed Everlasting trigger kind, if any."""
-    kind = str(event.get("cc_kind", "")).lower().strip()
-    if kind in IMMOBILIZING_CC_KINDS:
+    The shield fires on an immobilize, or on a slow for a melee holder, and
+    the receipt records which.  A bare ``crowd_control`` marker —
+    ``UNCLASSIFIED_CONTROL`` on the bus — says control happened without
+    saying which rung it was, so it takes neither: an unnarrowed marker must
+    not be promoted into a narrowed one.
+    """
+    if trigger.cc is CcClass.IMMOBILIZE:
         return "immobilize"
-    if kind == "slow" or bool(event.get("slowed")) or bool(event.get("slow")):
+    if trigger.cc is CcClass.SLOW:
         return "slow"
-    if is_immobilizing_event(event):
-        # Legacy ``immobilized`` / ``hard_cc`` flags without a narrowed kind.
-        return "immobilize"
-    # A bare ``crowd_control`` flag does not distinguish Everlasting's
-    # immobilize/slow branches, so it is intentionally not enough here.
     return ""
+
+
+def _stack_triggers(triggers: Iterable[Trigger]) -> Iterator[Trigger]:
+    """Non-reactive champion damage that landed on a named target.
+
+    The bus emits a damage trigger for every authored row, because its
+    consumers disagree about which damage matters and one that pre-filtered
+    would have to pick a side.  This is the stack ledgers' own side — "a hit
+    that stacked" — stated where the ledgers read it instead of inside the
+    transport.
+    """
+    for trigger in triggers:
+        if trigger.damage <= 0.0 or trigger.reactive or not trigger.target_id:
+            continue
+        yield trigger
 
 
 def _current_mana_at(
@@ -237,29 +248,6 @@ def _current_mana_at(
         if math.isfinite(parsed):
             current = max(0.0, parsed)
     return current
-
-
-def _takedown_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """Return only explicit takedown receipts; never infer a kill from damage."""
-    return [
-        event
-        for event in result.get("takedown_events", [])
-        if isinstance(event, Mapping)
-        and event.get("time") is not None
-        and str(event.get("target", ""))
-    ]
-
-
-def _damage_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """Return authored non-reactive champion damage packets for item stacks."""
-    return [
-        event
-        for event in result.get("damage_events", [])
-        if isinstance(event, Mapping)
-        and float(event.get("damage", 0.0) or 0.0) > 0.0
-        and not event.get("_reactive")
-        and str(event.get("target", ""))
-    ]
 
 
 def _target_by_id(all_actors: Iterable[Any], participant_id: str) -> Any | None:
@@ -389,6 +377,32 @@ def require_event_view(result: Mapping[str, Any], names: Collection[str]) -> Non
     )
 
 
+def _bus_streams(
+    result: Mapping[str, Any], names: Collection[str]
+) -> tuple[list[Trigger], list[Trigger], list[Trigger]]:
+    """One engine result as the control, damage and takedown views of it.
+
+    The compiler reads each stream once and the bus builds only the streams
+    the held holders declare, so a holder reading none pays nothing — that
+    laziness is the whole reason the migration is performance-neutral
+    (D-30).  ``tuple_incapable_items()`` is exactly the set of holders that
+    read a raw stream, so intersecting first also bounds the projection's
+    cache key to those names rather than to every build the optimizer
+    explores.
+    """
+    scanning = frozenset(names) & tuple_incapable_items()
+    by_kind: dict[TriggerKind, list[Trigger]] = {kind: [] for kind in TriggerKind}
+    for trigger in authored_triggers(
+        result, streams=streams_for(scanning), holder=", ".join(sorted(scanning))
+    ):
+        by_kind[trigger.kind].append(trigger)
+    return (
+        by_kind[TriggerKind.CC],
+        by_kind[TriggerKind.DAMAGE],
+        by_kind[TriggerKind.TAKEDOWN],
+    )
+
+
 def _support_quest_packets(attacker: Any, quest_item: str) -> list[dict[str, Any]]:
     """One support-quest item's authored economy and vision outcomes.
 
@@ -461,13 +475,7 @@ def derive_item_support_effects(
     teammates = _teammates(attacker, all_actors)
     packets: list[dict[str, Any]] = []
     triggers = _support_triggers(trigger_effects, attacker)
-    # Each stream scans the full event ledger, so it is built only when a
-    # held item consumes it (the registries above own that knowledge).
-    cc_events = _cc_triggers(result) if names & CC_TRIGGER_ITEMS else []
-    takedown_events = (
-        _takedown_triggers(result) if names & TAKEDOWN_SCAN_SUPPORT_ITEMS else []
-    )
-    damage_events = _damage_triggers(result) if names & DAMAGE_TRIGGER_ITEMS else []
+    cc_events, damage_events, takedown_events = _bus_streams(result, names)
 
     # Reap is a progression/economy branch, not a guessed combat bonus.  The
     # authored minion-kill count is bounded by its sourced 100-kill quest and
@@ -512,18 +520,14 @@ def derive_item_support_effects(
         bonus_speed = required_effect_value("Phage", speed_key)
         duration = required_effect_value("Phage", "rage_duration")
         source_meta = ITEM_INPUT_OPTIONS["Phage"]
-        for event in result.get("damage_events", ()):
-            if not isinstance(event, Mapping):
-                continue
-            if str(event.get("source_key", "")) != "auto_attacks" and not bool(
-                event.get("basic_attack")
-            ):
+        for event in damage_events:
+            if event.source_key != "auto_attacks" and not event.basic_attack:
                 continue
             packets.append(
                 _packet(
                     attacker=attacker,
                     target=attacker,
-                    time=_event_time(event),
+                    time=event.time,
                     kind="movement",
                     source="Phage — Rage",
                     amount=bonus_speed,
@@ -569,13 +573,12 @@ def derive_item_support_effects(
         seen_casts: set[str] = set()
         source_meta = ITEM_INPUT_OPTIONS["Fimbulwinter"]
         for event in cc_events:
-            trigger_kind = _fimbulwinter_trigger_kind(event)
+            trigger_kind = _everlasting_trigger_kind(event)
             if not trigger_kind or (trigger_kind == "slow" and not is_melee):
                 continue
-            time = _event_time(event)
-            cast_identity = str(
-                event.get("ability_instance")
-                or f"{event.get('source_key', '')}:{round(time, 9)}"
+            time = event.time
+            cast_identity = (
+                event.ability_instance or f"{event.source_key}:{round(time, 9)}"
             )
             if cast_identity in seen_casts:
                 continue
@@ -615,7 +618,11 @@ def derive_item_support_effects(
                     ),
                     target_scope="self",
                     trigger=trigger_kind,
-                    _trigger_event_id=event.get("_event_id"),
+                    # ``None`` when the producer did not enrich: the survival
+                    # compiler's fail-closed ``support_trigger_link`` branch
+                    # keys on ``is not None``, so an unenriched shield must
+                    # carry an absent link and not an empty one (D-03).
+                    _trigger_event_id=event.event_id or None,
                     trigger_kind=trigger_kind,
                     current_mana=current_mana,
                     mana_threshold=maximum_mana * mana_threshold_ratio,
@@ -682,10 +689,10 @@ def derive_item_support_effects(
             if bool(attacker.stats.get("is_melee", False))
             else "expose_weakness_ranged"
         )
-        for event in damage_events:
-            if str(event.get("source_key", "")) != "spellblade_Bloodsong":
+        for event in _stack_triggers(damage_events):
+            if event.source_key != "spellblade_Bloodsong":
                 continue
-            target = _target_by_id(all_actors, str(event.get("target", "")))
+            target = _target_by_id(all_actors, event.target_id)
             if target is None:
                 continue
             rate = ally_item_effect_value("Bloodsong", expose_key)
@@ -693,7 +700,7 @@ def derive_item_support_effects(
                 _packet(
                     attacker=attacker,
                     target=target,
-                    time=_event_time(event),
+                    time=event.time,
                     kind="damage_modifier",
                     source="Bloodsong — Expose Weakness",
                     amount=rate,
@@ -717,100 +724,104 @@ def derive_item_support_effects(
                     # skip is what keeps the two halves from summing.
                     authority=Authority.SPLIT,
                     owner=attacker.participant_id,
-                    trigger_event_id=event.get("_event_id"),
+                    trigger_event_id=event.event_id or None,
                 )
             )
 
     reduction_stacks: dict[tuple[str, str], int] = {}
-    for event in damage_events:
-        target = _target_by_id(all_actors, str(event.get("target", "")))
-        if target is None:
-            continue
-        damage_type = str(event.get("damage_type", ""))
-        source_id = str(event.get("_event_id", ""))
-        if "Black Cleaver" in names and damage_type == "physical":
-            key = (target.participant_id, "armor")
-            stacks = min(
-                int(
-                    ally_item_effect_value(
-                        "Black Cleaver", "armor_reduction_max_stacks"
-                    )
-                ),
-                reduction_stacks.get(key, 0) + 1,
-            )
-            reduction_stacks[key] = stacks
-            percent = stacks * ally_item_effect_value(
-                "Black Cleaver", "armor_reduction_per_stack"
-            )
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=_event_time(event),
-                    kind="damage_modifier",
-                    source="Black Cleaver — Carve",
-                    amount=percent,
-                    duration=ally_item_effect_value(
-                        "Black Cleaver", "armor_reduction_duration"
+    # Both ledgers walk one stream; the guard is hoisted so a holder of
+    # neither never walks it at all, which is what the retired
+    # ``DAMAGE_TRIGGER_ITEMS`` gate bought before the registry existed.
+    if "Black Cleaver" in names or "Bloodletter's Curse" in names:
+        for event in _stack_triggers(damage_events):
+            target = _target_by_id(all_actors, event.target_id)
+            if target is None:
+                continue
+            damage_type = event.damage_type
+            source_id = event.event_id
+            if "Black Cleaver" in names and damage_type == "physical":
+                key = (target.participant_id, "armor")
+                stacks = min(
+                    int(
+                        ally_item_effect_value(
+                            "Black Cleaver", "armor_reduction_max_stacks"
+                        )
                     ),
-                    armor_reduction_percent=percent,
-                    resistance_type="armor",
-                    # "6% armor reduction": armour mitigates physical
-                    # damage, so that is the class the reduction reaches.
-                    damage_classes=frozenset({DamageClass.PHYSICAL}),
-                    attack_classes=frozenset(AttackClass),
-                    # The stack ledger is a roster fact and Carve's move to
-                    # coupled-authoritative is H1's to rule; until it is
-                    # ruled the pair engine keeps its own Cesàro
-                    # approximation and the walk skips the holder.
-                    authority=Authority.SPLIT,
-                    owner=attacker.participant_id,
-                    trigger_event_id=event.get("_event_id", source_id),
-                    stack_count=stacks,
+                    reduction_stacks.get(key, 0) + 1,
                 )
-            )
-        if (
-            "Bloodletter's Curse" in names
-            and damage_type == "magic"
-            and bool(event.get("is_ability"))
-        ):
-            key = (target.participant_id, "mr")
-            stacks = min(
-                int(
-                    ally_item_effect_value(
-                        "Bloodletter's Curse", "mr_reduction_max_stacks"
+                reduction_stacks[key] = stacks
+                percent = stacks * ally_item_effect_value(
+                    "Black Cleaver", "armor_reduction_per_stack"
+                )
+                packets.append(
+                    _packet(
+                        attacker=attacker,
+                        target=target,
+                        time=event.time,
+                        kind="damage_modifier",
+                        source="Black Cleaver — Carve",
+                        amount=percent,
+                        duration=ally_item_effect_value(
+                            "Black Cleaver", "armor_reduction_duration"
+                        ),
+                        armor_reduction_percent=percent,
+                        resistance_type="armor",
+                        # "6% armor reduction": armour mitigates physical
+                        # damage, so that is the class the reduction reaches.
+                        damage_classes=frozenset({DamageClass.PHYSICAL}),
+                        attack_classes=frozenset(AttackClass),
+                        # The stack ledger is a roster fact and Carve's move to
+                        # coupled-authoritative is H1's to rule; until it is
+                        # ruled the pair engine keeps its own Cesàro
+                        # approximation and the walk skips the holder.
+                        authority=Authority.SPLIT,
+                        owner=attacker.participant_id,
+                        trigger_event_id=source_id,
+                        stack_count=stacks,
                     )
-                ),
-                reduction_stacks.get(key, 0) + 1,
-            )
-            reduction_stacks[key] = stacks
-            percent = stacks * ally_item_effect_value(
-                "Bloodletter's Curse", "mr_reduction_per_stack"
-            )
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=_event_time(event),
-                    kind="damage_modifier",
-                    source="Bloodletter's Curse — Vile Decay",
-                    amount=percent,
-                    duration=ally_item_effect_value(
-                        "Bloodletter's Curse", "mr_reduction_duration"
-                    ),
-                    mr_reduction_percent=percent,
-                    resistance_type="magic_resistance",
-                    # "magic resistance reduction": the mirror of Carve.
-                    damage_classes=frozenset({DamageClass.MAGIC}),
-                    attack_classes=frozenset(AttackClass),
-                    # Vile Decay is Carve's shape, magic- and ability-gated,
-                    # and is H1-blocked with it.
-                    authority=Authority.SPLIT,
-                    owner=attacker.participant_id,
-                    trigger_event_id=event.get("_event_id", source_id),
-                    stack_count=stacks,
                 )
-            )
+            if (
+                "Bloodletter's Curse" in names
+                and damage_type == "magic"
+                and event.is_ability
+            ):
+                key = (target.participant_id, "mr")
+                stacks = min(
+                    int(
+                        ally_item_effect_value(
+                            "Bloodletter's Curse", "mr_reduction_max_stacks"
+                        )
+                    ),
+                    reduction_stacks.get(key, 0) + 1,
+                )
+                reduction_stacks[key] = stacks
+                percent = stacks * ally_item_effect_value(
+                    "Bloodletter's Curse", "mr_reduction_per_stack"
+                )
+                packets.append(
+                    _packet(
+                        attacker=attacker,
+                        target=target,
+                        time=event.time,
+                        kind="damage_modifier",
+                        source="Bloodletter's Curse — Vile Decay",
+                        amount=percent,
+                        duration=ally_item_effect_value(
+                            "Bloodletter's Curse", "mr_reduction_duration"
+                        ),
+                        mr_reduction_percent=percent,
+                        resistance_type="magic_resistance",
+                        # "magic resistance reduction": the mirror of Carve.
+                        damage_classes=frozenset({DamageClass.MAGIC}),
+                        attack_classes=frozenset(AttackClass),
+                        # Vile Decay is Carve's shape, magic- and ability-gated,
+                        # and is H1-blocked with it.
+                        authority=Authority.SPLIT,
+                        owner=attacker.participant_id,
+                        trigger_event_id=source_id,
+                        stack_count=stacks,
+                    )
+                )
 
     # The holder guard sat *inside* the loop as a ``break``, which reads as a
     # loop condition and is really a name guard — the one shape the capability
@@ -828,7 +839,7 @@ def derive_item_support_effects(
                     _packet(
                         attacker=attacker,
                         target=recipient,
-                        time=_event_time(takedown),
+                        time=takedown.time,
                         kind="heal",
                         source="Cryptbloom — Life From Death",
                         amount=amount,
@@ -988,12 +999,14 @@ def derive_item_support_effects(
                 )
             )
         if "Echoes of Helia" in names:
+            # Soul Charges read every authored row's raw number, so this
+            # branch reads the damage stream whole rather than the stack
+            # ledgers' filtered view — and reads it off the bus, where a row
+            # that is not a Mapping cannot reach a ``.get`` at all.  That
+            # missing guard is what made a tuple ledger an AttributeError
+            # here and a silent zero everywhere else.
             raw_damage = sum(
-                max(
-                    0.0,
-                    float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
-                )
-                for event in result.get("damage_events", [])
+                event.raw_damage or event.damage for event in damage_events
             )
             cap = ally_item_level_value(
                 "Echoes of Helia", "charge_cap_min", "charge_cap_max", target.level
@@ -1044,7 +1057,7 @@ def derive_item_support_effects(
     # champion module does not emit one, the effect is intentionally absent;
     # callers must not turn an arbitrary cast boundary into a slow/root.
     for cc in cc_events:
-        time = _event_time(cc)
+        time = cc.time
         if "Bandlepipes" in names:
             is_melee = bool(attacker.stats.get("is_melee", False))
             duration_key = (
@@ -1115,8 +1128,8 @@ def derive_item_support_effects(
                         ),
                     )
                 )
-        if "Imperial Mandate" in names and is_immobilizing_event(cc):
-            target = _target_by_id(all_actors, str(cc.get("target", "")))
+        if "Imperial Mandate" in names and cc.cc is CcClass.IMMOBILIZE:
+            target = _target_by_id(all_actors, cc.target_id)
             if target is not None:
                 packets.append(
                     _packet(

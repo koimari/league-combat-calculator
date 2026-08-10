@@ -615,9 +615,6 @@ CC_KIND_READERS = {
     "src/calculator/damage.py": frozenset(
         {"_fimbulwinter_event_coverage", "add_declared_events"}
     ),
-    "src/calculator/item_support_effects.py": frozenset(
-        {"_cc_triggers", "_fimbulwinter_trigger_kind"}
-    ),
     "src/calculator/survival/actions.py": frozenset({"survival_action_from_event"}),
     "src/calculator/trigger_stream.py": frozenset({"_classify_cc"}),
 }
@@ -683,11 +680,14 @@ RETIRED_SYMBOL_HOMES = {
         "src/calculator/ability_spec.py",
         "src/calculator/trigger_stream.py",
     ],
-    "_CC_TRIGGER_KINDS": ["src/calculator/item_support_effects.py"],
-    "_cc_triggers": ["src/calculator/item_support_effects.py"],
-    "_fimbulwinter_trigger_kind": ["src/calculator/item_support_effects.py"],
-    "_takedown_triggers": ["src/calculator/item_support_effects.py"],
-    "_damage_triggers": ["src/calculator/item_support_effects.py"],
+    # Retired by P2b: the four raw-row scanners and the kind set behind
+    # them.  ``event_triggers`` classifies the row now, and the branches
+    # they fed read ``Trigger.cc`` instead.
+    "_CC_TRIGGER_KINDS": [],
+    "_cc_triggers": [],
+    "_fimbulwinter_trigger_kind": [],
+    "_takedown_triggers": [],
+    "_damage_triggers": [],
     "EVENT_SCAN_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],
     "has_event_scan_support_items": ["src/calculator/item_support_effects.py"],
     "TAKEDOWN_SCAN_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],

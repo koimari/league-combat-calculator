@@ -1020,7 +1020,10 @@ class TestEventViewTupleGate:
         assert "Fimbulwinter" in item_support_effects.EVENT_VIEW_SUPPORT_ITEMS
         body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
         everlasting = body.split('if "Fimbulwinter" in names:')[1].split("\n    if ")[0]
-        assert '_trigger_event_id=event.get("_event_id")' in everlasting
+        # P2b moved the read off the raw row and onto the bus; the claim is
+        # the same one — the shield carries its trigger's event id, and an
+        # unenriched shield carries an absent link rather than an empty one.
+        assert "_trigger_event_id=event.event_id or None" in everlasting
 
     def test_every_event_view_holder_is_named_by_exactly_one_stream(self):
         """The stream map is the set's one home, so neither can drift."""
