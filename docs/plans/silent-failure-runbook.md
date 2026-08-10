@@ -184,6 +184,7 @@ The last sentence is the load-bearing one — it is the check that would have ca
 | `scripts/behavior_frontier.py` + `docs/behavior-frontier.json` | Phase 3 (L4) | frontier counters 1–4 **and** their committed exclusion lists (D-40, R-36) |
 | `scripts/migration_frontier.py` + `docs/migration-frontier.json` | Phase 4 (L5) | frontier counters 5–7 **and** their committed exclusion lists (D-40, R-36) |
 | `scripts/cast_dependency_audit.py` + `docs/cast-dependency-audit.json` | Phase 5 (L6) | declared-vs-inferred edges, suppressions, inferred-kind coverage, marker reach (R-36) |
+| `docs/receipts/escalated-defects-<slice>.json` | the lane whose oracle pass raised the dissent | Defects an oracle verdict surfaced that the slice may not fix — each entry dated, joined to the receipts that raised it, to its source sites and to a live reproducer, and gated by the lane's own suite. **Added by L6** so R-16's "only the files listed here enter the repo" stays true of an artifact the campaign now carries: an escalation living only in a commit body is absorbed by the next baseline re-capture, which is the one place the campaign's evidence chain had no artifact at all |
 | session scratchpad | any lane | leaf reports, diff dumps, exploratory runs (R-16) |
 
 **Types and functions.**

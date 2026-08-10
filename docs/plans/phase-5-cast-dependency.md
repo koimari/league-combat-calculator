@@ -347,6 +347,20 @@ inference and the merge.
    three recorded in `docs/receipts/expected-golden-diff-P5-seed-syndra.json`. A move outside that set
    restores the seed, exactly as the original clause intended.
 
+   *The dissents that were defects.* Two of those oracle verdicts dissented on defects **older than
+   this phase** — a cc-setup citation printing the field name where the authored marker belongs, and a
+   recast citation restating its own cite without the precondition. Neither is fixed here: each moves
+   committed baseline leaves and therefore owes its own R-20 population and its own oracle receipts,
+   which is a slice, not a paragraph in someone else's. But an escalation living only in a commit body
+   is absorbed by the phase-boundary re-capture — the leaves enter the new baseline and the compare
+   goes quiet — so it is carried as a dated ledger,
+   `docs/receipts/escalated-defects-P5-retire.json`, in the same idiom as the audit's acknowledged-gap
+   list. Each entry names the oracle receipts that raised it, the source sites that carry it and the
+   sentence production publishes today, and
+   `tests/test_p5_oracle_receipts.py::TestTheEscalatedDefectsAreStillTracked` re-derives all three
+   every session — so fixing a defect turns the ledger red and the entry is closed in the slice that
+   fixes it, rather than fading out with a re-capture.
+
    *The occurrence line.* "Expected qualifying occurrences are 0 on every commit" reads R-20 as a
    prediction that no leaf ever qualifies. R-20's second half rules the opposite where the count cannot
    be read off the pre-change tree: such a slice declares the qualifying **population**, enumerated from

@@ -253,3 +253,193 @@ class TestTheCoupledCompareIsFullyAllowlisted:
             for key in COMPARE_EXCLUDED_PROVENANCE:
                 snapshot.get("metadata", {}).pop(key, None)
         assert [diff.path for diff in leaf_report(baseline, current)] == []
+
+
+# ---------------------------------------------------------------------------
+# The escalation ledger: defects the slice found, refused to fix, and owes
+# ---------------------------------------------------------------------------
+
+ESCALATED = RECEIPTS / "escalated-defects-P5-retire.json"
+
+# Every field an entry must carry to be an escalation rather than a note.
+REQUIRED_FIELDS = (
+    "id",
+    "dated",
+    "origin",
+    "raised_by",
+    "site",
+    "defect",
+    "live_signature",
+    "not_fixed_here_because",
+    "resolution",
+)
+
+
+def _escalated():
+    return json.loads(ESCALATED.read_text(encoding="utf-8"))
+
+
+def _sites(entry):
+    """An entry's site records, whether it named one or several."""
+    site = entry["site"]
+    return list(site) if isinstance(site, list) else [site]
+
+
+def _syndra_edges():
+    """Syndra's merged edges, exactly as production publishes them."""
+    from scripts.cast_dependency_audit import slot_option_keys
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.data_fetcher import fetch_champion_data
+    from src.calculator.rotation_resolver import resolved_edges
+    from src.calculator.stats import calculate_total_stats
+
+    data = next(
+        champion
+        for champion in fetch_champion_data().values()
+        if champion.get("name") == "Syndra"
+    )
+    stats = calculate_total_stats(data, 18, [])
+    parsed = parse_champion_abilities(
+        data,
+        18,
+        stats["ability_power"],
+        ability_ranks=None,
+        champion_stats=stats,
+        target_stats={
+            "target_max_health": 2000.0,
+            "target_current_health": 2000.0,
+            "target_missing_health": 0.0,
+        },
+        champion_options={"splinters": 120},
+    )
+    return parsed, resolved_edges("Syndra", parsed, data, slot_option_keys("Syndra"))[0]
+
+
+def _cc_setup_citation_prints_the_field_name(entry) -> None:
+    """The published cc-setup sentence names the field, not the marker."""
+    signature = entry["live_signature"]
+    parsed, edges = _syndra_edges()
+    authored = {
+        part.cc_kind
+        for part in parsed[signature["setup_slot"]].get("parts", ())
+        if getattr(part, "cc_kind", None)
+    }
+    assert authored == {signature["authored_cc_kind"]}
+    published = [
+        edge.sentence()
+        for edge in edges
+        if edge.kind == "cc_setup" and edge.setup == signature["setup_slot"]
+    ]
+    assert published, "no cc_setup edge is published — the defect may be gone"
+    for sentence in published:
+        assert signature["published_sentence_contains"] in sentence
+        assert signature["published_sentence_omits"] not in sentence
+
+
+def _recast_citation_says_one_thing_twice(entry) -> None:
+    """The published recast sentence restates its own cite, unconditioned."""
+    signature = entry["live_signature"]
+    setup, consume, kind = signature["edge"]
+    _, edges = _syndra_edges()
+    published = [
+        edge.sentence()
+        for edge in edges
+        if (edge.setup, edge.consume, edge.kind) == (setup, consume, kind)
+    ]
+    assert published == [signature["published_sentence"]]
+    assert signature["published_sentence_omits"] not in published[0]
+
+
+# One reproducer per escalated defect, keyed by the receipt's own id.  A
+# closed registry rather than a loop over prose: an entry with no
+# reproducer is an escalation nothing can see, which is the shape this
+# ledger exists to prevent.
+REPRODUCERS = {
+    "cc_setup_citation_prints_the_field_name": _cc_setup_citation_prints_the_field_name,
+    "recast_citation_says_one_thing_twice": _recast_citation_says_one_thing_twice,
+}
+
+
+class TestTheEscalatedDefectsAreStillTracked:
+    """The two defects the P5-retire oracles found and this phase may not fix.
+
+    Both are older than the slice that surfaced them and correctly went
+    unfixed inside it — each moves committed baseline leaves and owes its
+    own R-20 population and its own oracle receipts.  But an escalation
+    that exists only in a commit body evaporates at the phase-boundary
+    re-capture: the moved leaves enter the new baseline, the compare goes
+    quiet, and no artifact anywhere says a defect is still shipping.  That
+    is the campaign's own failure shape, aimed at its own escalation path.
+
+    So the ledger is committed and joined to three things at once: the
+    oracle receipts that raised it, the source sites that carry it, and
+    the sentences production publishes today.  Fixing a defect turns this
+    red, which is the point — the entry is closed deliberately, in the
+    slice that fixes it, rather than fading out with a re-capture.
+    """
+
+    def test_every_entry_carries_what_an_escalation_needs(self) -> None:
+        entries = _escalated()["defects"]
+        assert entries, "the escalation ledger is empty"
+        for entry in entries:
+            for field in REQUIRED_FIELDS:
+                assert entry.get(field), f"{entry.get('id')} omits {field}"
+            assert len(entry["dated"]) == 10 and entry["dated"].count("-") == 2
+
+    def test_every_entry_names_the_oracle_verdicts_that_raised_it(self) -> None:
+        """The join to R-19: an escalation is a dissent somebody filed."""
+        allowlisted = set(
+            _load("expected-golden-diff-P5-seed-syndra.json")["expected_diff_paths"][
+                "coupled_golden"
+            ]
+        )
+        for entry in _escalated()["defects"]:
+            for raised in entry["raised_by"]:
+                receipt = json.loads(
+                    (RECEIPTS / raised["receipt"]).read_text(encoding="utf-8")
+                )
+                assert receipt["verdict"] == raised["verdict"], raised["receipt"]
+                assert receipt["verdict"] != "new_value_correct", raised["receipt"]
+                assert receipt["leaf_path"] in allowlisted, raised["receipt"]
+
+    def test_every_site_still_carries_the_defect(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        for entry in _escalated()["defects"]:
+            for site in _sites(entry):
+                source = (root / site["file"]).read_text(encoding="utf-8")
+                assert site["fragment"] in source, f"{entry['id']}: {site['file']}"
+
+    def test_every_entry_has_a_reproducer(self) -> None:
+        """Totality, in the D-52 idiom: no entry without a way to see it."""
+        assert {entry["id"] for entry in _escalated()["defects"]} == set(REPRODUCERS)
+
+    @pytest.mark.parametrize("entry_id", sorted(REPRODUCERS))
+    def test_the_defect_still_reproduces(self, entry_id) -> None:
+        entry = next(e for e in _escalated()["defects"] if e["id"] == entry_id)
+        REPRODUCERS[entry_id](entry)
+
+    def test_a_baseline_reaching_defect_is_still_in_the_committed_baseline(
+        self,
+    ) -> None:
+        """The clause the re-capture would otherwise silence.
+
+        A defect the committed coupled baseline already carries is one the
+        boundary re-capture absorbs.  The occurrence count is measured
+        here and written nowhere: a count of leaves in a committed
+        baseline belongs to ``campaign-fingerprints.json`` and to no
+        document (umbrella criterion 4).
+        """
+        baseline = json.loads(
+            (
+                Path(__file__).resolve().parents[1]
+                / "scripts"
+                / "golden_coupled_baseline.json"
+            ).read_text(encoding="utf-8")
+        )
+        for entry in _escalated()["defects"]:
+            if not entry.get("reaches_the_committed_coupled_baseline"):
+                continue
+            fragment = entry["live_signature"]["published_sentence_contains"]
+            # ``ensure_ascii=False`` because the citations carry em dashes,
+            # and the default escape would make every fragment miss.
+            assert fragment in json.dumps(baseline, ensure_ascii=False), entry["id"]
