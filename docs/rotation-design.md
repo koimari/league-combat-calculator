@@ -21,10 +21,11 @@ atomized ability data, never from a hand-maintained combo database**:
 > the go seems faster than having a database of every single possible
 > combo for every champion."
 
-F3 makes that derivation fully algorithmic for ALL 173 champions.  The
-ten F2 seeds stay as **documented overrides** (verified by hand); every
-other champion's order is computed per request by
-`src/calculator/rotation_resolver.py`.
+F3 makes that derivation fully algorithmic for ALL 173 champions.  What
+is left of the F2 seeds stays as **documented overrides** (verified by
+hand) — seven of them today, listed under *The hand seeds remain
+documented overrides* below; every other champion's order is computed per
+request by `src/calculator/rotation_resolver.py`.
 
 ## Design
 
@@ -72,8 +73,8 @@ out of force with it.  What the merge did rides the response as
 `rotation.dependencies`.
 
 `resolve_cast_order` returns a rule for EVERY champion in the cached
-data.  The derived rule carries `derived=True`; the ten seeds are the
-only `derived=False` rules.
+data.  The derived rule carries `derived=True`; the surviving seeds are
+the only `derived=False` rules.
 
 ### The four signals (unchanged priorities)
 
@@ -166,19 +167,30 @@ the data-driven, honest fallback — not a hidden combo database.
 
 ### The hand seeds remain documented overrides
 
-`CAST_ORDER_OVERRIDES` (renamed from `COMBO_TABLE`) holds the hand-verified
-seeds — Cassiopeia, Varus, Brand, Vladimir, Aatrox, Jhin, Annie, Lux, Zed,
-Aphelios.  The resolver checks the table FIRST; the derivation
-never touches them.  Syndra is no longer among them: her module declares
-`E requires Q` and `E requires Q2`, the derivation reproduces the order the
-seed pinned, and the seed retired against that declaration (D-89) — which
-is the only ground on which a seed may be retired.  Every entry carries an `override_reason` from the
-closed `ORDER_OVERRIDE_REASONS` set (`scheduling_preference`,
-`dps_tiebreak`, `defensive_precast`, `pending_primitive`), so "why is
-this order still held by hand?" is a countable field rather than a claim
-in this document.  Two seeds deliberately
-deviate from a detected data edge (the seed's judgment wins, documented
-in `tests/test_f3_rotation_all.py`):
+`CAST_ORDER_OVERRIDES` (renamed from `COMBO_TABLE`) holds the surviving
+hand-verified seeds — Annie, Brand, Cassiopeia, Lux, Varus, Vladimir, Zed.
+The resolver checks the table FIRST; the derivation never touches them.
+
+Four names left the table in Phase 5 and none of them may be named above.
+Syndra's module declares `E requires Q` and `E requires Q2`, the derivation
+reproduces the order the seed pinned, and the seed retired against that
+declaration (D-89) — which is the only ground on which a seed may be
+retired.  Aatrox, Jhin and Aphelios were **redundant** rather than
+converted: the derivation already returned their seeded order with no
+declaration at all, which their deletion commits proved on both baselines.
+Zed and Brand keep their seeds and additionally declare a head-only
+dependency, so a declaration is not by itself a retirement.
+
+Every surviving entry carries an `override_reason` from the closed
+`ORDER_OVERRIDE_REASONS` set (`scheduling_preference`, `dps_tiebreak`,
+`defensive_precast`, `pending_primitive`), so "why is this order still held
+by hand?" is a countable field rather than a claim in this document; the
+count and its reason histogram are published in
+`docs/cast-dependency-audit.json` under `order_override_frontier`, and this
+section's name list is asserted against the live table by
+`tests/test_f2_rotation.py`.  Two seeds deliberately deviate from a
+detected data edge (the seed's judgment wins, documented in
+`tests/test_f3_rotation_all.py`):
 
 - **Cassiopeia**: W (Miasma) also applies poison → data says W→E, but
   the seed casts E before W to start the 0.75s Twin Fang spam cadence
@@ -236,8 +248,8 @@ Unchanged from F2 (`static/js/eventorder.js` is self-contained).
   champions: (a) a derived order never violates a detected edge (setup
   before consume); (b) the rationale cites real atoms; (c) the order is
   deterministic and stable across the level/build matrix; (d) the order
-  is a permutation of the certified/base slots and the ten seeds stay as
-  overrides.  The two documented seed exceptions are pinned.
+  is a permutation of the certified/base slots and the surviving seeds
+  stay as overrides.  The two documented seed exceptions are pinned.
 - `tests/test_f2_rotation.py` — unchanged (F2 contract).
 - `docs/rotation-verification-gaps.md` — champions whose derivation is
   ambiguous (conflicting atoms, or no data signal where a known combo
