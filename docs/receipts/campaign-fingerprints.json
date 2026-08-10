@@ -411,7 +411,21 @@
     "non_legacy_count": 18
   },
   "frontier": {},
-  "demonstrated_red": {},
+  "demonstrated_red": {
+    "P5_syndra_seed_positive_control": {
+      "sha": "83198058fee10d90cd740f8b96cad45f5e073b3b",
+      "output_sha256": "61dabdc3d7b527dd1353e8c5846b0d9b7b89b0bbdc03c3b26a187757b0ca8a2d",
+      "provenance": "VERIFIED",
+      "gate": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json",
+      "perturbation": "Throwaway commit deleting CAST_ORDER_OVERRIDES[\"Syndra\"] and emptying champions/syndra.py's CAST_DEPENDENCIES, so the generic cc-setup fan-out derives E, Q, Q2, W, R where the seed and the declaration both give Q, Q2, E, W, R.  The commit was reset out of the branch; its object is still resolvable by the sha above (git show 8319805).",
+      "pair_golden_diff_count": 5,
+      "pair_golden_diff_sections": [
+        "registered_champion_fights"
+      ],
+      "why_this_is_not_a_shape_figure": "A measured diff count from a positive control is a measurement, not a count of a committed baseline's leaves or entries, and umbrella criterion 4 exempts it by name.",
+      "what_it_proves": "Phase 5 criterion 7: the pair baseline is sensitive to Syndra's cast order, so the seed-deletion commit's zero numeric diffs mean the declaration reproduces the seed and not that golden is blind."
+    }
+  },
   "pylint": {
     "scripts/bench_coupled_optimizer.py": 9.959514170040485,
     "scripts/golden_snapshot.py": 9.58128078817734,
