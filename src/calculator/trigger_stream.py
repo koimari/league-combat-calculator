@@ -1228,11 +1228,13 @@ def enriched_view_items() -> frozenset[str]:
     Black Cleaver, Bloodletter's Curse, Bloodsong, Cryptbloom, Fimbulwinter,
     Imperial Mandate (6).
 
-    Fimbulwinter is a member because it carries
-    ``_trigger_event_id=event.get("_event_id")`` onto its shield packet, and
-    dropping it both changes a serialized receipt field and disarms the
-    fail-closed ``support_trigger_link`` raise in the survival compiler
-    (D-03).
+    Fimbulwinter is a member because it carries ``_trigger_event_id`` onto
+    its shield packet — spelled ``event.event_id or None`` since P2b, where
+    the plan's D-03 text still quotes the retired raw-row
+    ``event.get("_event_id")`` — and dropping the enrichment both changes a
+    serialized receipt field and strips the only trigger link any support
+    author emits, which is the link the survival compiler's fail-closed
+    ``support_trigger_link`` branch exists to refuse (D-03).
     """
     return _projected_items(
         lambda cap: bool(cap.reads & RAW_STREAMS) and bool(cap.needs & _ENRICHED_FIELDS)

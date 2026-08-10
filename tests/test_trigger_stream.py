@@ -41,6 +41,11 @@ from src.calculator.item_support_effects import (
     derive_item_support_effects,
 )
 from src.calculator.survival.actions import survival_action_from_event
+from src.calculator.survival.compile import (
+    UncompilableActionError,
+    WalkCompiler,
+    unrepresentable_template_receipt,
+)
 
 ROOT = Path(__file__).parents[1]
 SRC = ROOT / "src"
@@ -1825,6 +1830,109 @@ def test_bloodsong_normalises_an_empty_trigger_event_id_to_none():
     assert expose(_event_id="e1") == ["e1"]
     assert expose(_event_id="") == [None]
     assert expose() == [None]
+
+
+class TestTheSupportTriggerLinkRaise:
+    """``survival/compile.py``'s ``support_trigger_link`` branch, in facts.
+
+    This phase's Shape table rules that the comment above that branch —
+    "No current support author emits a trigger link" — dies, because the
+    sentence is false and a false "nobody emits this" reads as a licence to
+    delete the guard.  Replacing one sentence with another only moves the
+    day it goes stale, so the replacement comment states three facts and
+    every one of them is asserted here instead: the link *is* emitted, the
+    emitted one is declined a branch earlier, and the branch is live for
+    anything the earlier receipt admits.
+    """
+
+    @staticmethod
+    def _everlasting(**extra):
+        """Fimbulwinter's shield packets from one authored immobilize."""
+        holder = _support_actor("main:Annie", "main", ("Fimbulwinter",))
+        enemy = _support_actor("enemy:Aatrox", "enemy", ())
+        row = {
+            "time": 0.5,
+            "source_key": "Q",
+            "damage_type": "magic",
+            "damage": 10.0,
+            "cc_kind": "stun",
+            "cc_reviewed": True,
+            "target": "enemy:Aatrox",
+            "attacker": "main:Annie",
+            **extra,
+        }
+        return derive_item_support_effects(
+            holder, {"damage_events": [row]}, [holder, enemy]
+        )
+
+    def test_a_support_author_does_emit_a_trigger_link(self):
+        """The enriched view stamps one; the plain view stamps ``None``.
+
+        ``event.event_id or None`` is the spelling, so the field is absent
+        as ``None`` rather than as ``""`` — which is what makes the
+        compiler's ``is not None`` read the enrichment and not the key.
+        """
+        (enriched,) = self._everlasting(_event_id="e1")
+        (plain,) = self._everlasting()
+        assert enriched["source"] == "Fimbulwinter — Everlasting"
+        assert enriched["_trigger_event_id"] == "e1"
+        assert plain["_trigger_event_id"] is None
+
+    def test_the_emitted_link_is_declined_one_branch_earlier(self):
+        """Everlasting's 3 s duration reaches the receipt first.
+
+        So the trigger-link branch is not what refuses today's one linked
+        packet, and a comment claiming it is would be the mirror image of
+        the one it replaced.  Pinned because the shadowing is a property of
+        Everlasting's duration, not of the guard: drop the duration and
+        this test says so.
+        """
+        (enriched,) = self._everlasting(_event_id="e1")
+        assert enriched["duration"] == 3.0
+        assert unrepresentable_template_receipt(enriched) == "support_duration=3.0"
+
+    def test_the_branch_still_refuses_a_link_the_receipt_admits(self):
+        """An instant linked heal reaches the guard and is refused by name.
+
+        This is the reachability the retired comment denied.  A shield or
+        heal with no duration and no amount formula clears
+        ``unrepresentable_template_receipt`` entirely, so the trigger link
+        is the only thing standing between it and a compiled action that
+        would silently ignore the link.
+        """
+        linked = {
+            "target": "main:Annie",
+            "kind": "heal",
+            "amount": 10.0,
+            "duration": 0.0,
+            "time": 0.5,
+            "source": "probe",
+            "_trigger_event_id": "e1",
+        }
+        assert unrepresentable_template_receipt(linked) is None
+        with pytest.raises(UncompilableActionError) as raised:
+            WalkCompiler().add_support_templates([linked], 0, {"main:Annie": 0})
+        assert raised.value.receipt == "support_trigger_link"
+        assert raised.value.source == "probe"
+
+    def test_the_same_template_without_the_link_compiles(self):
+        """R-05's seam: the link is what fires the raise, not the shape.
+
+        Without it the identical template compiles to one action, so the
+        test above cannot be passing for an unrelated reason.
+        """
+        unlinked = {
+            "target": "main:Annie",
+            "kind": "heal",
+            "amount": 10.0,
+            "duration": 0.0,
+            "time": 0.5,
+            "source": "probe",
+            "_trigger_event_id": None,
+        }
+        compiler = WalkCompiler()
+        compiler.add_support_templates([unlinked], 0, {"main:Annie": 0})
+        assert len(compiler.actions) == 1
 
 
 def test_a_support_scan_row_carrying_a_garbage_number_is_dropped_not_raised():

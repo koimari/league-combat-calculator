@@ -936,10 +936,20 @@ class WalkCompiler:
                     source=str(template.get("source", "")),
                 )
             if template.get("_trigger_event_id") is not None:
-                # No current support author emits a trigger link; resolving
-                # one would need the same cross-pair id map as heals, so
-                # fail closed instead of silently skipping what the legacy
-                # walk might apply.
+                # A support author *does* emit a trigger link: the
+                # Everlasting branch in ``item_support_effects`` stamps
+                # ``_trigger_event_id`` on every Fimbulwinter shield the
+                # enriched view produced (``None`` when it did not, which
+                # is what ``is not None`` reads).  That packet is declined
+                # one branch earlier for its 3 s duration, so this guard is
+                # the narrower second net: it catches a linked template the
+                # receipt above admits — an instant shield or heal with no
+                # amount formula.  Resolving the link would need the same
+                # cross-pair id map as heals, so fail closed rather than
+                # silently drop what the legacy walk would apply (D-03).
+                # Both halves are pinned by
+                # ``tests/test_trigger_stream.py``'s
+                # ``TestTheSupportTriggerLinkRaise``.
                 raise UncompilableActionError(
                     receipt="support_trigger_link",
                     source=str(template.get("source", "")),
