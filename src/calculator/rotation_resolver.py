@@ -8,10 +8,20 @@ is derived on the fly by :func:`derive_champion_rule` — no combo database.
 
 Scoring model (see ``docs/rotation-design.md`` for the full write-up)
 ----------------------------------------------------------------------
-For each champion the order of damaging abilities is ranked by four
-signals, in decreasing weight:
+Above every signal below sits the **declared** one: a champion module
+may state what its own kit requires in ``CAST_DEPENDENCIES``, and
+:func:`merge_declared_edges` folds those declarations over the inferred
+edges under the precedence table written at that function.  The two
+vocabularies are closed and disjoint — ``cast_dependency.DEPENDENCY_KINDS``
+is what a module may assert, ``INFERRED_EDGE_KINDS`` what this module may
+conclude — and every merged edge carries the ``origin`` that says which
+surface produced it.  :func:`resolved_edges` is the one detect-then-merge
+surface production and the suites both read.
 
-1. **Setup/consume relationships** (the strongest signal): an ability
+The order of damaging abilities is then ranked by four signals, in
+decreasing weight:
+
+1. **Setup/consume relationships** (the strongest inferred signal): an ability
    that applies a debuff/mark/poison/stun/shred/buff must cast BEFORE the
    abilities that consume it.  Detected from TYPED atoms only — the
    parsed keys (``dot_duration``, ``on_hit``, ``applies_dot_stack``,
