@@ -1079,6 +1079,71 @@ class TestTheDerivedMemoHoldsTheFullKitRule:
         assert set(warm.order) < set(wide_cold.order)
 
 
+class TestTheDeclarationProbeStaysOutOfTheMemo:
+    """``derive_champion_rule(declarations=...)`` asks a counterfactual.
+
+    "What order would this champion take without this dependency?" is the
+    question criterion 12 is made of, and the honest way to ask it is a
+    parameter rather than a monkey-patch on the champion package — a
+    patched lookup is not the code production runs.  The parameter carries
+    one obligation: a probe's answer is about a kit the module does not
+    declare, so it must never reach the memo, whose single row per
+    (champion, option signature, data version) would then serve it to
+    every later request.
+    """
+
+    def test_passing_the_module_s_own_declarations_changes_nothing(
+        self, champion_by_name
+    ) -> None:
+        from src.calculator.champions import get_champion_cast_dependencies
+
+        data = champion_by_name["Syndra"]
+        parsed = _parse(data, 18, (), {})
+        certified = get_champion_cast_order("Syndra")
+        try:
+            _DERIVED_RULE_CACHE.clear()
+            implicit = derive_champion_rule("Syndra", parsed, data, certified)
+            _DERIVED_RULE_CACHE.clear()
+            explicit = derive_champion_rule(
+                "Syndra",
+                parsed,
+                data,
+                certified,
+                declarations=get_champion_cast_dependencies("Syndra"),
+            )
+        finally:
+            _DERIVED_RULE_CACHE.clear()
+        assert list(explicit.order) == list(implicit.order)
+        assert explicit.rationale == implicit.rationale
+
+    def test_a_probe_is_live_and_leaves_no_trace(self, champion_by_name) -> None:
+        """A reduced probe answers differently and the memo stays clean."""
+        from src.calculator.champions import get_champion_cast_dependencies
+
+        data = champion_by_name["Syndra"]
+        parsed = _parse(data, 18, (), {}, champion_options={"splinters": 0})
+        certified = get_champion_cast_order("Syndra")
+        declared = get_champion_cast_dependencies("Syndra")
+        try:
+            _DERIVED_RULE_CACHE.clear()
+            probe = derive_champion_rule(
+                "Syndra",
+                parsed,
+                data,
+                certified,
+                {"splinters": 0},
+                declarations=(),
+            )
+            assert _DERIVED_RULE_CACHE == {}, "a probe was memoised"
+            real = derive_champion_rule(
+                "Syndra", parsed, data, certified, {"splinters": 0}
+            )
+        finally:
+            _DERIVED_RULE_CACHE.clear()
+        assert declared, "Syndra declares nothing — this probe proves nothing"
+        assert list(probe.order) != list(real.order)
+
+
 class TestTheRotationMemosInvalidateOnData:
     """D-49: both rotation caches key on ``data_version()``.
 

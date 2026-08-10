@@ -1552,12 +1552,14 @@ def _fit_rule_to_fight(
     )
 
 
-def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-arguments
     champion_name: str,
     ability_damages: Mapping[str, Any],
     champion_data: Mapping[str, Any],
     certified_order: list[str] | None = None,
     champion_options: Mapping[str, Any] | None = None,
+    *,
+    declarations: Sequence[CastDependency] | None = None,
 ) -> ComboRule:
     """Algorithmically derive the champion's optimal cast order.
 
@@ -1583,6 +1585,17 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     (Kalista's Soul-Marked W) and option-sensitive edges derive per option
     state instead of dropping out on a cold cache.
 
+    Args:
+        declarations: A declaration set to derive against *instead of* the
+            module's own — the probe seam.  Passing one asks a
+            counterfactual ("what order would this champion take without
+            this dependency?"), which is how the audit measures whether a
+            declaration is load-bearing without monkey-patching the
+            champion package.  A probe is never memoised: its answer is
+            about a kit the module does not declare, and the memo has one
+            row per (champion, option signature, data version) to serve it
+            to everybody from.
+
     Returns:
         The derived rule (``derived=True``).  The order is a permutation
         of the fight's base slots — no new slots, none dropped.
@@ -1592,9 +1605,24 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     }
     signature = _option_signature(champion_name, champion_options)
     cache_key = (champion_name, signature, data_version())
-    cached = _DERIVED_RULE_CACHE.get(cache_key)
+    memoised = declarations is None
+    cached = _DERIVED_RULE_CACHE.get(cache_key) if memoised else None
     if cached is not None:
         return _fit_rule_to_fight(cached, champion_name, fight_slots, certified_order)
+
+    def remember(rule: ComboRule) -> ComboRule:
+        """Memoise the FULL-KIT rule, then return this fight's fit.
+
+        The order of these two statements is the whole of the memo
+        contract: ``_fit_rule_to_fight`` narrows the order to the slots
+        one parse holds, so caching the *fitted* rule would let whichever
+        request arrived first decide what every later one is served.
+        Every exit from this function goes through here so the order
+        cannot drift apart again.
+        """
+        if memoised:
+            _DERIVED_RULE_CACHE[cache_key] = rule
+        return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
 
     # Derive from the CANONICAL full-kit parse (level 11, no items), not the
     # request's parse — the request may be a partial kit (level 1) and the
@@ -1657,7 +1685,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         elif role == "unsupported":
             option_receipts.append(f"option {key} (unsupported rotation semantics)")
 
-    declarations = get_champion_cast_dependencies(champion_name)
+    if declarations is None:
+        declarations = get_champion_cast_dependencies(champion_name)
     merged, dependencies = resolved_edges(
         champion_name, ability_damages, champion_data, slot_options, declarations
     )
@@ -1716,8 +1745,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             derived=True,
             dependencies=dependencies,
         )
-        _DERIVED_RULE_CACHE[cache_key] = rule
-        return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
+        return remember(rule)
 
     base_idx = {s: i for i, s in enumerate(base)}
     outgoing = {s: any(e.setup == s for e in edges) for s in base}
@@ -1760,8 +1788,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             derived=True,
             dependencies=dependencies,
         )
-        _DERIVED_RULE_CACHE[cache_key] = rule
-        return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
+        return remember(rule)
 
     fight_dps = rank_ability_dps(ability_damages, target_count=1, aoe=aoe)
     dps_idx = {s: i for i, (s, *_) in enumerate(fight_dps)}
@@ -1826,8 +1853,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         derived=True,
         dependencies=dependencies,
     )
-    _DERIVED_RULE_CACHE[cache_key] = rule
-    return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
+    return remember(rule)
 
 
 def resolve_cast_order(
