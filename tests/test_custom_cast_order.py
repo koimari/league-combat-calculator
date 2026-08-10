@@ -33,9 +33,13 @@ from src.calculator.cast_dependency import (  # noqa: E402
     expand_user_order,
     orderable_slots,
 )
-from src.calculator.champions import parse_champion_abilities  # noqa: E402
+from src.calculator.champions import (  # noqa: E402
+    parse_champion_abilities,
+    registered_champion_names,
+)
 from src.calculator.data_fetcher import get_champion  # noqa: E402
 from src.calculator.pipeline import (  # noqa: E402
+    CAST_SLOT_SPELLING,
     FightParams,
     cast_slot_surface,
     run_fight,
@@ -171,7 +175,57 @@ class TestOrderableSlotsAnswerTheChampionQuestion:
         kit = dict(_syndra_kit(120))
         kit["W2"] = {"name": "Invented recast", "cooldown": 4.0, "total_raw": 10.0}
         with pytest.raises(UnknownSlotError, match="W2"):
-            orderable_slots({**cast_slot_surface(kit), "W2": kit["W2"]})
+            orderable_slots(cast_slot_surface(kit))
+
+    def test_the_raise_is_reachable_from_the_request_path(self):
+        """The fail-closed half must fire where a request is decided.
+
+        ``cast_slot_surface`` used to drop an unstamped ``Q2`` as a rider
+        row, so the only thing that could reach ``orderable_slots``'s raise
+        was a hand-built surface — and a real kit carrying one was silently
+        deleted from the requested order instead, which is the exact defect
+        C6 exists to kill.
+        """
+        kit = dict(_syndra_kit(120))
+        kit["W2"] = {"name": "Invented recast", "cooldown": 4.0, "total_raw": 10.0}
+        assert "W2" in cast_slot_surface(kit)
+        params = _fight_params(cast_order=["Q", "W", "E", "R"])
+        with pytest.raises(UnknownSlotError, match="W2"):
+            params.validate_for_champion("Syndra", 18, kit=kit)
+
+    def test_the_surface_tells_cast_slots_from_riders_by_spelling(self):
+        """Reading ``recast_of`` here would answer the raise's own question."""
+        source = (SRC / "pipeline.py").read_text(encoding="utf-8")
+        surface = source.split("def cast_slot_surface(")[1].split("\ndef ")[0]
+        assert 'entry.get("recast_of")' not in surface
+        assert CAST_SLOT_SPELLING.pattern == "^[QWER][0-9]*$"
+        for spelling in ("Q", "Q2", "R2", "E3"):
+            assert CAST_SLOT_SPELLING.match(spelling), spelling
+        for rider in ("W_frenzy", "R_onhit", "tibbers_attacks", "passive", "P"):
+            assert not CAST_SLOT_SPELLING.match(rider), rider
+
+    def test_no_registered_champion_holds_an_unstamped_cast_slot(self):
+        """The raise's live population, measured over the whole roster.
+
+        Making the raise reachable is only safe because nothing reaches it
+        today, and that is a fact about 173 parses, not an assertion.
+        """
+        unstamped = []
+        cast_shaped = []
+        for name in registered_champion_names():
+            kit = _roster_kit(name)
+            for slot, entry in kit.items():
+                if not CAST_SLOT_SPELLING.match(slot) or slot in ("Q", "W", "E", "R"):
+                    continue
+                cast_shaped.append((name, slot))
+                if not entry.get("recast_of"):
+                    unstamped.append((name, slot))
+        assert unstamped == []
+        assert cast_shaped == [
+            ("Ambessa", "Q2"),
+            ("Camille", "Q2"),
+            ("Syndra", "Q2"),
+        ]
 
     def test_rider_rows_are_not_cast_slots(self):
         """Briar's Frenzy swing is priced through its own atoms, never ordered."""
@@ -321,6 +375,34 @@ class TestTheAllowlistIsCommitted:
             "syndra_custom_order_60",
             "syndra_custom_order_120",
         }
+
+
+def _roster_kit(champion):
+    """A level-18, item-free parse at the pin scenario's fight shape.
+
+    The sweep's parse: every champion's module defaults, so a slot that
+    only exists under an option (Syndra's second charge below 40 splinters)
+    appears exactly when its default makes it live.
+    """
+    data = get_champion(champion)
+    stats = calculate_total_stats(data, 18, [])
+    return parse_champion_abilities(
+        data,
+        18,
+        stats["ability_power"],
+        champion_stats=dict(stats),
+        target_stats={
+            "target_max_health": 10000.0,
+            "target_current_health": 10000.0,
+            "target_missing_health": 0.0,
+            "roster_target_index": 0.0,
+            "roster_target_count": 1.0,
+        },
+        champion_options={
+            "fight_duration_seconds": 12.0,
+            "auto_attack_uptime": 0.5,
+        },
+    )
 
 
 def _parsed_kit(champion):

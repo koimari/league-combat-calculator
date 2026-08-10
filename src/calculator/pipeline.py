@@ -6,6 +6,7 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 """
 
 import math
+import re
 from dataclasses import dataclass, replace
 from collections.abc import Mapping
 from typing import Any
@@ -591,6 +592,15 @@ def validate_cast_order_shape(cast_order: Any, *, field: str) -> None:
         raise ValueError(f"{field} must not repeat an ability slot")
 
 
+# How the cast vocabulary spells a castable slot: a base slot letter, plus an
+# optional charge index for a second or third cast of the same ability.  The
+# letters come from BASE_CAST_SLOTS rather than a second hand list, and "P" is
+# excluded because the passive is not castable and has its own spellings.
+CAST_SLOT_SPELLING = re.compile(
+    "^[" + "".join(slot for slot in BASE_CAST_SLOTS if slot != "P") + "][0-9]*$"
+)
+
+
 def cast_slot_surface(
     ability_damages: Mapping[str, Any],
 ) -> dict[str, Mapping[str, Any]]:
@@ -609,9 +619,15 @@ def cast_slot_surface(
       cast order drops, because the engine attributes them through their own
       atoms.  They are not cast slots and are not offered to the request.
 
-    What remains is exactly the surface a cast order can schedule: the base
-    cast slots the parse produced, plus every row stamped ``recast_of``,
-    which is the one authority for recast parentage (D-11).
+    The two are told apart by **spelling, never by the ``recast_of`` stamp**:
+    a cast slot is a base slot letter optionally carrying a charge index
+    (``Q``, ``Q2``, ``R2``), and a rider row carries a descriptive suffix
+    (``W_frenzy``, ``R_onhit``, ``tibbers_attacks``).  Reading the stamp here
+    would make this function answer the very question
+    ``cast_dependency.orderable_slots`` exists to fail closed on: an
+    unstamped ``Q2`` would be filtered out as a rider and silently dropped
+    from a requested order, which is the defect shape D-11 kills, not one it
+    may reproduce one call earlier.  The stamp is read once, downstream.
 
     Args:
         ability_damages: The parsed ability package for this fight.
@@ -625,7 +641,7 @@ def cast_slot_surface(
             continue
         if slot in ("P", "passive"):
             surface["P"] = entry
-        elif slot in BASE_CAST_SLOTS or entry.get("recast_of"):
+        elif CAST_SLOT_SPELLING.match(slot):
             surface[slot] = entry
     return surface
 
