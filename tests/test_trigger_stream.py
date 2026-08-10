@@ -16,6 +16,7 @@ import importlib.util
 import inspect
 import json
 import os
+import re
 import subprocess
 import sys
 import tarfile
@@ -1084,6 +1085,55 @@ def test_a4_has_a_permanent_injection_seam():
         "from .item_support_effects import CC_TRIGGER_ITEMS\n",
     )
     assert legacy_name_set_sites(injected) != LEGACY_NAME_SET_SITES
+
+
+# The closing criterion says "no retired symbol appears **anywhere** in
+# ``src/``", and A2/A4 above both read the parsed tree — definitions,
+# imports, names, attributes — so a retired name surviving as prose in a
+# comment or a docstring passes them.  That gap is not hypothetical: the
+# phase-2 sign-off found ``_cc_triggers`` still named in ``trigger_stream``'s
+# own ``Trigger`` docstring, describing what the retired scanner used to
+# accept.  Prose is exactly where a retired name does its remaining damage —
+# it is what a reader greps, and a docstring that discusses a symbol reads as
+# a symbol that still exists — so the criterion is checked as written rather
+# than narrowed to what the parser sees.
+#
+# ``EVENT_VIEW_STREAMS`` joins the list here because the phase's *Retired
+# symbols* section names it in prose ("one symbol P2c deletes that this list
+# does not name") rather than in the list ``RETIRED_SYMBOL_HOMES`` mirrors.
+# ``is_immobilizing_event`` stays out for A2's reason: the retired symbol is
+# ``ability_spec``'s and the bus's predicate is its live replacement, so a
+# text scan cannot tell the two apart and the definition scan already can.
+RETIRED_SYMBOL_TEXT = (*RETIRED_SYMBOL_HOMES, "EVENT_VIEW_STREAMS")
+
+
+def retired_symbol_prose(
+    sources: Mapping[str, str] | None = None,
+) -> dict[str, list[str]]:
+    """Every ``src/`` file naming a retired symbol in its *text*."""
+    found: dict[str, list[str]] = {}
+    for path, text in sorted((sources or live_sources()).items()):
+        for name in RETIRED_SYMBOL_TEXT:
+            if re.search(rf"\b{re.escape(name)}\b", text):
+                found.setdefault(name, []).append(path)
+    return found
+
+
+def test_no_retired_symbol_is_named_anywhere_in_src_not_even_in_prose():
+    """The closing criterion, read literally — comments and docstrings too."""
+    assert retired_symbol_prose() == {}
+
+
+def test_the_prose_scan_has_a_permanent_injection_seam():
+    """R-05: a retired name reappearing in a comment is a finding."""
+    injected = _with(
+        live_sources(),
+        "src/calculator/economy.py",
+        "# the retired _cc_triggers used to read this row\n",
+    )
+    assert retired_symbol_prose(injected) == {
+        "_cc_triggers": ["src/calculator/economy.py"]
+    }
 
 
 # ---------------------------------------------------------------------------

@@ -288,8 +288,9 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
     ``damage_type`` is enforced on that same stream and for the same reason.
     Carve dispatches on ``"physical"`` and Vile Decay on ``"magic"``, so a
     damage row typed outside the vocabulary is a row they would misprice;
-    nothing dispatches on a control row's type, and the retired ``_cc_triggers``
-    accepted a control row carrying any type at all — including the
+    nothing dispatches on a control row's type, and the retired control
+    scanner this classifier replaced accepted a control row carrying any
+    type at all — including the
     ``"mixed"`` that ``damage._damage_type_fields`` really does emit.  On the
     control stream the field is therefore carried verbatim as a receipt of
     what the row said, exactly as ``source_key`` is.
