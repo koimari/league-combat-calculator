@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Collection, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal, Mapping
 
 from .cast_dependency import (
@@ -1174,6 +1174,11 @@ class DependencyReceipt:
         conflicts: Oppositions between a declaration and an inference,
             each naming the suppression that covered it.  An *uncovered*
             opposition never reaches a receipt: it raises (D-82).
+        unconsulted: Declarations no merge ever saw, because a hand seed
+            in :data:`CAST_ORDER_OVERRIDES` decided the order first.  Six
+            empty ledgers would say "this module declares nothing", which
+            is a different fact — and this is the ledger the frontier
+            counts a still-seeded declarer by.
 
     Every ledger is empty for a champion that declares nothing.
     """
@@ -1184,6 +1189,7 @@ class DependencyReceipt:
     latent: tuple[str, ...] = ()
     confirmed_by_inference: tuple[str, ...] = ()
     conflicts: tuple[str, ...] = ()
+    unconsulted: tuple[str, ...] = ()
 
     def as_rows(self) -> dict[str, list[str]]:
         """The six ledgers as JSON-safe lists, for the public receipt."""
@@ -1194,6 +1200,7 @@ class DependencyReceipt:
             "latent": list(self.latent),
             "confirmed_by_inference": list(self.confirmed_by_inference),
             "conflicts": list(self.conflicts),
+            "unconsulted": list(self.unconsulted),
         }
 
 
@@ -1943,7 +1950,9 @@ def resolve_cast_order(
     """
     rule = CAST_ORDER_OVERRIDES.get(champion_name)
     if rule is not None:
-        return list(rule.order), rule
+        return list(rule.order), replace(
+            rule, dependencies=_unconsulted_receipt(champion_name, rule)
+        )
     if champion_data is None and not ability_damages:
         return list(DEFAULT_CAST_ORDER), None
     if certified_order is None:
@@ -1961,6 +1970,32 @@ def resolve_cast_order(
         champion_options=champion_options,
     )
     return list(derived.order), derived
+
+
+def _unconsulted_receipt(  # pylint: disable=import-outside-toplevel
+    champion_name: str, rule: ComboRule
+) -> DependencyReceipt:
+    """The declarations a hand seed decided the order without consulting.
+
+    A seeded champion that also declares dependencies never reaches the
+    merge, and publishing six empty ledgers for her would say "this
+    module declares nothing" — a different fact, and the campaign's own
+    failure shape wearing a receipt.  Naming them is also how the
+    retirement frontier counts a declarer whose seed still wins.
+    """
+    from .champions import get_champion_cast_dependencies
+
+    declarations = get_champion_cast_dependencies(champion_name)
+    if not declarations:
+        return DependencyReceipt()
+    return DependencyReceipt(
+        unconsulted=tuple(
+            f"{dep.slot} requires {dep.requires} ({dep.kind}) was not "
+            f"consulted: {champion_name}'s order is the hand seed in "
+            f"CAST_ORDER_OVERRIDES (override_reason={rule.override_reason})"
+            for dep in declarations
+        )
+    )
 
 
 def rank_ability_dps(
@@ -2028,8 +2063,10 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
 
     Returns:
         ``{"order", "rationale", "cast_order", "sources", "setup",
-        "consume", "aoe"}`` (JSON-safe; ``aoe`` maps each AoE slot to
-        the maximum enemy champions it can hit).
+        "consume", "aoe", "dependencies"}`` (JSON-safe; ``aoe`` maps each
+        AoE slot to the maximum enemy champions it can hit, and
+        ``dependencies`` is the declared-vs-inferred merge's six ledgers
+        — all empty for a champion that declares nothing).
     """
     order: list[str] = []
     for event in cast_timeline:
@@ -2084,4 +2121,14 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
         "setup": setup,
         "consume": consume,
         "aoe": aoe,
+        # The merge's own account of itself: which declarations were
+        # active, which were inert in this parse, which inferences a
+        # suppression dropped and why.  Published for every champion,
+        # empty for the ones that declare nothing, because "no
+        # declarations" and "the field is missing" must not read alike.
+        "dependencies": (
+            rule.dependencies.as_rows()
+            if rule is not None and rule.dependencies is not None
+            else DependencyReceipt().as_rows()
+        ),
     }

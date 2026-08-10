@@ -26,6 +26,7 @@ from src.calculator.rotation_resolver import (
     ComboRule,
     _validate_override_reasons,
     build_rotation_receipt,
+    derive_champion_rule,
     rank_ability_dps,
     resolve_cast_order,
 )
@@ -104,6 +105,27 @@ def _params(one_rotation=True, duration=None, uptime=0.0, cast_order=None):
         ability_ranks=None,
         champion_options=None,
         deterministic=True,
+    )
+
+
+def _parse_for(champion_data, *, level=18, splinters=None):
+    """One champion's parse, optionally at a splinter count, for receipts."""
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.stats import calculate_total_stats
+
+    stats = calculate_total_stats(dict(champion_data), level, [])
+    return parse_champion_abilities(
+        dict(champion_data),
+        level,
+        stats["ability_power"],
+        ability_ranks=None,
+        champion_stats=stats,
+        target_stats={
+            "target_max_health": 2000.0,
+            "target_current_health": 2000.0,
+            "target_missing_health": 0.0,
+        },
+        champion_options=None if splinters is None else {"splinters": splinters},
     )
 
 
@@ -520,3 +542,107 @@ class TestTimedCadence:
         assert rotation["cast_order"] == ["R", "E", "Q", "W"]
         assert rotation["order"] == ["R", "E", "Q", "W"]
         assert "Custom order" in rotation["rationale"]
+
+
+class TestTheReceiptPublishesTheMerge:
+    """``rotation.dependencies`` — what the merge did, on every response."""
+
+    _LEDGERS = (
+        "active",
+        "inactive",
+        "suppressed",
+        "latent",
+        "confirmed_by_inference",
+        "conflicts",
+        "unconsulted",
+    )
+
+    def test_a_non_declaring_champion_publishes_empty_ledgers(
+        self, champion_by_name
+    ) -> None:
+        """Empty and absent must not read alike."""
+        receipt = _run(champion_by_name["Ahri"])["rotation"]
+        assert set(receipt["dependencies"]) == set(self._LEDGERS)
+        assert all(rows == [] for rows in receipt["dependencies"].values())
+
+    def test_the_fallback_receipt_still_carries_the_shape(self) -> None:
+        receipt = build_rotation_receipt(
+            "NoSuchChampion",
+            cast_order=list(DEFAULT_CAST_ORDER),
+            cast_timeline=[],
+            rule=None,
+        )
+        assert set(receipt["dependencies"]) == set(self._LEDGERS)
+
+    def test_a_declaring_champion_publishes_its_mechanic_and_source(
+        self, champion_by_name
+    ) -> None:
+        """The rows name the mechanic, not the rule that produced them."""
+        rule = derive_champion_rule(
+            "Syndra",
+            _parse_for(champion_by_name["Syndra"], splinters=120),
+            champion_by_name["Syndra"],
+            None,
+            champion_options={"splinters": 120},
+        )
+        receipt = build_rotation_receipt(
+            "Syndra", cast_order=list(rule.order), cast_timeline=[], rule=rule
+        )
+        rows = receipt["dependencies"]
+        assert len(rows["active"]) == 2
+        assert "cc_enabler" in rows["active"][0]
+        assert "wiki.leagueoflegends.com" in rows["active"][0]
+        assert rows["suppressed"] and rows["latent"]
+        assert rows["conflicts"] and "covered" in rows["conflicts"][0]
+
+    def test_an_inactive_declaration_is_published_as_inactive(
+        self, champion_by_name
+    ) -> None:
+        rule = derive_champion_rule(
+            "Syndra",
+            _parse_for(champion_by_name["Syndra"], splinters=39),
+            champion_by_name["Syndra"],
+            None,
+            champion_options={"splinters": 39},
+        )
+        receipt = build_rotation_receipt(
+            "Syndra", cast_order=list(rule.order), cast_timeline=[], rule=rule
+        )
+        assert "Q2 not in this parse" in receipt["dependencies"]["inactive"][0]
+
+    def test_a_seeded_declarer_names_the_declarations_nobody_consulted(
+        self, champion_by_name
+    ) -> None:
+        """Syndra declares and is still seeded: her ledgers must say so.
+
+        Six empty ledgers would read "this module declares nothing",
+        which is a different fact — and this row is how the frontier
+        counts a declarer whose hand seed still wins.
+        """
+        order, rule = resolve_cast_order(
+            "Syndra",
+            _parse_for(champion_by_name["Syndra"], splinters=120),
+            champion_data=champion_by_name["Syndra"],
+        )
+        assert order == list(CAST_ORDER_OVERRIDES["Syndra"].order)
+        receipt = build_rotation_receipt(
+            "Syndra", cast_order=order, cast_timeline=[], rule=rule
+        )
+        rows = receipt["dependencies"]["unconsulted"]
+        assert len(rows) == 2
+        assert "hand seed" in rows[0] and "pending_primitive" in rows[0]
+        assert rows == receipt["dependencies"]["unconsulted"]
+        assert receipt["dependencies"]["active"] == []
+
+    def test_a_seeded_champion_that_declares_nothing_has_empty_ledgers(
+        self, champion_by_name
+    ) -> None:
+        order, rule = resolve_cast_order(
+            "Cassiopeia",
+            _parse_for(champion_by_name["Cassiopeia"]),
+            champion_data=champion_by_name["Cassiopeia"],
+        )
+        receipt = build_rotation_receipt(
+            "Cassiopeia", cast_order=order, cast_timeline=[], rule=rule
+        )
+        assert all(rows == [] for rows in receipt["dependencies"].values())

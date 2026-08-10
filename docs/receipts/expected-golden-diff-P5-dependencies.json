@@ -1,0 +1,112 @@
+{
+  "slice": "P5-dependencies",
+  "decisions": [
+    "D-80",
+    "D-82"
+  ],
+  "what_landed": "build_rotation_receipt gains rotation[\"dependencies\"] — the declared-vs-inferred merge's ledgers, published for every champion and empty for the ones that declare nothing.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17/R-32/D-97 — no baseline moves inside this commit"
+  },
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "rule": "The receipt gains one key, so the population is not readable as a count of moved numbers and R-20's second half applies: it is every serialized rotation receipt in the committed baselines. A new key on an object the baseline holds is an absent_to_value transition on exactly one leaf path per object, and on no other path.",
+    "method": "Enumerated from `git show HEAD:scripts/golden_coupled_baseline.json` — the committed artifact, not the working tree — by walking coupled_scenarios/*/fights/*/ for a `rotation` object and asserting none of them already holds a `dependencies` key. The pair baseline (scripts/golden_baseline.json) serializes champion stats, parsed abilities and breakdown totals and holds no rotation receipt at all, so its population is empty.",
+    "coupled_golden_rotation_objects": 14,
+    "pair_golden_rotation_objects": 0,
+    "predicted_qualifying_leaves": {
+      "coupled_golden": 14,
+      "golden": 0
+    }
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [
+      "/coupled_scenarios/catalyst_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/catalyst_roster/fights/1:Malphite/rotation/dependencies",
+      "/coupled_scenarios/cleaver_bloodsong_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/dream_maker_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/score_event_scan_holder/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/score_event_view_holder/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/score_plain_tuple/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_custom_order_39/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/dependencies"
+    ],
+    "coupled_exact": {}
+  },
+  "oracle_receipts_required": [
+    {
+      "paths": [
+        "/coupled_scenarios/catalyst_roster/fights/0:Aatrox/rotation/dependencies",
+        "/coupled_scenarios/catalyst_roster/fights/1:Malphite/rotation/dependencies",
+        "/coupled_scenarios/cleaver_bloodsong_roster/fights/0:Aatrox/rotation/dependencies",
+        "/coupled_scenarios/dream_maker_roster/fights/0:Aatrox/rotation/dependencies",
+        "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/rotation/dependencies",
+        "/coupled_scenarios/score_event_scan_holder/fights/0:Aatrox/rotation/dependencies",
+        "/coupled_scenarios/score_event_view_holder/fights/0:Aatrox/rotation/dependencies",
+        "/coupled_scenarios/score_plain_tuple/fights/0:Aatrox/rotation/dependencies"
+      ],
+      "old": "<absent>",
+      "new": "seven empty ledgers — Aatrox and Malphite declare no cast dependencies",
+      "transition": "absent_to_value",
+      "qualifies_under_R15": true,
+      "oracle_receipt": null,
+      "why_no_oracle": "R-18's investigator is given data/ and docs/math-foundations.md and asked to recompute a quantity. This leaf is not a quantity: it is the resolver's own account of a merge that consulted zero declarations, and no cached wiki text or quoted formula can adjudicate it. The independent check that does exist is the roster walk in tests/test_f3_rotation_all.py, which asserts every non-declaring champion's merged edge list is the detector's own list and its receipt empty. Recorded here so the phase-boundary re-capture inherits an explicit gap rather than a silent one."
+    },
+    {
+      "paths": [
+        "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/dependencies",
+        "/coupled_scenarios/syndra_custom_order_39/fights/manual_target/rotation/dependencies",
+        "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/dependencies",
+        "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/dependencies",
+        "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/dependencies",
+        "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/dependencies"
+      ],
+      "old": "<absent>",
+      "new": "six empty ledgers plus two `unconsulted` rows — Syndra declares E requires Q and E requires Q2, and her hand seed in CAST_ORDER_OVERRIDES (override_reason=pending_primitive) decided the order without consulting either",
+      "transition": "absent_to_value",
+      "qualifies_under_R15": true,
+      "oracle_receipt": null,
+      "why_no_oracle": "Same shape as the row above, and the same reason: the leaf reports which surface decided this fight's order, which is a fact about this repository's resolution chain rather than about League of Legends. It is asserted directly in tests/test_f2_rotation.py (the seeded declarer names both declarations and the override reason) and it is expected to change again on the seed-deletion commit, when the merge does run and these ledgers fill with the active declaration, its suppression and its latent row.",
+      "note": "No damage, order, cast timeline or resource leaf moves in any of these six scenarios; the committed baseline's numeric sections are reproduced exactly."
+    }
+  ],
+  "unexpected_occurrences": [
+    {
+      "path": "/metadata/fingerprint/leaves",
+      "baseline": "scripts/golden_coupled_baseline.json",
+      "transition": "value",
+      "qualifies_under_R15": false,
+      "why": "the fingerprint counts the snapshot's leaves, so publishing a new receipt key moves it; the value is docs/receipts/campaign-fingerprints.json's to state and never this file's (umbrella criterion 4)",
+      "oracle_receipt": null
+    }
+  ],
+  "measured": {
+    "golden": {
+      "differing_leaves": 0
+    },
+    "coupled_golden": {
+      "differing_leaves_attributable_to_this_slice": 14,
+      "qualifying_leaves": 14,
+      "metadata_fingerprint_leaves_moved": 1,
+      "outside_the_enumerated_population": 0
+    }
+  },
+  "bench": {
+    "instrument": "scripts/bench_coupled_optimizer.py --fixed-work --isolate --json",
+    "reference": "the C6 tip's recorded reading in docs/receipts/expected-golden-diff-C6.json",
+    "cassiopeia_3champ": "identical — evaluations 1324, proposals 1306, memo misses 1249, pair calls 2735, residual 87, rungs {compiled: 1074, receipt_walk_candidate: 175}, score 4003.1, same winner",
+    "cassiopeia_5champ": "identical — evaluations 1033, proposals 1015, memo misses 967, pair calls 3127, residual 28, rungs {compiled: 833, receipt_walk_candidate: 134}, score 5010.8, same winner",
+    "mundo_3champ": "identical — evaluations 706, proposals 688, memo misses 577, pair calls 1446, residual 34, rungs {compiled: 489, receipt_walk_candidate: 88}, score 3305.0, same winner",
+    "syndra_mandate_3champ": "identical — evaluations 796, proposals 782, memo misses 775, pair calls 3014, residual 1422, rungs {receipt_walk_candidate: 775}, score 4642.3, same winner",
+    "cause": "the rotation receipt is descriptive metadata built after the fight; no score, candidate or rung reads it"
+  },
+  "note": "Every path above is inside the enumerated population and no path outside it moved. No baseline is re-captured here (R-17, R-32, D-97): the phase-boundary re-capture carries these declarations, and the two rows above record the oracle gap explicitly because a receipt-shaped leaf has no independent computation an R-18 investigator could perform."
+}
