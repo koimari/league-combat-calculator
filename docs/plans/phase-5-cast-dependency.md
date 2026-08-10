@@ -233,10 +233,44 @@ inference and the merge.
    raises `SuppressionScopeError` at import, and no construction path produces a suppression outside a
    `CastDependency`.
 4. **Every typed failure has a negative test that reaches it**: the nine import-time errors on
-   synthetic modules, `ConflictingInferenceError` when either Syndra suppression is removed,
-   `ResolvedCycleError` on a synthetic declared cycle in a live parse, `DeclaredCycleError` at import,
+   synthetic modules, `ConflictingInferenceError` **on Syndra's real declarations with her matched
+   suppression removed** (see the amendment below), `ResolvedCycleError` on a synthetic declared cycle
+   in a live parse, `DeclaredCycleError` at import,
    and `CustomOrderViolatesDependencyError` on `["E","Q","W","R"]` for Syndra with the declaration's
    `reason` and `source` present in the message.
+
+   **Amended after the `verify-P5-signoff` pass, which found the Syndra clause neither discharged nor
+   amended.** The clause read "`ConflictingInferenceError` when *either* Syndra suppression is
+   removed", and the suite's only two `ConflictingInferenceError` negatives were synthetic — a
+   hand-built declaration meeting a hand-built edge, in `test_f3_rotation_all.py`'s
+   `TestPrecedenceTable`. Nothing removed either real suppression. As with criteria 7 and 12 this is a
+   plan-text change made by an implementation lane and is flagged as such, in the criterion itself, so
+   the next verifier adjudicates the amendment instead of inheriting it silently. The split is not
+   symmetric and the criterion now says so:
+
+   *The matched half is a direct red and is now written.* The detector's `cc_setup` fan-out really does
+   emit `E → Q`, so emptying `E requires Q`'s `suppresses` is a raise on the live surface.
+   `TestSyndrasSuppressionsAreLoadBearing` runs the real declarations through `resolved_edges` across
+   L11/L18 × splinters ∈ {0, 39, 40, 60, 119, 120}, replacing exactly one field of one real
+   declaration: the opposition is measured in the detector's own output, the removal raises with the
+   inferred edge, the declaration sentence and its wiki revision in the message, and the unmodified
+   declarations raise nothing — so the raise is the removal's and not the state's.
+
+   *The latent half is undischargeable against **D-84**, which this phase itself ruled.* No
+   `E → Q2` `cc_setup` inference can exist — `_castable()` requires `cooldown > 0` and Q2 carries the
+   `0.0` cast-exactly-once cooldown — so removing that suppression can never raise
+   `ConflictingInferenceError`. Demanding the raise would reverse a ruling; re-reading the clause into
+   the synthetic negatives, which is what happened, leaves the campaign's own prose-outruns-code shape
+   inside criterion 4. The clause is therefore replaced by one that demands **more** evidence than a
+   raise-on-removal, all three parts machine-checked in the same class: `E → Q2` appears in the
+   detector's output in **no** certified option state, which is D-84 measured rather than quoted;
+   clearing that suppression's `latent_reason` — leaving the suppression live and its parent active —
+   makes the merge raise `MissingLatentReasonError` in every state where Q2 exists, so a latent
+   suppression that stops explaining itself is refused; and removing it entirely is **inert**, the
+   merged edge list identical and only the latent receipt row gone, which is the shape of the fact.
+   Should Q2 ever gain a real charge cooldown, the reversed edge arrives with it, the suppression
+   becomes matched, and the removal red the criterion originally asked for becomes writable — the
+   suppression ledger in `docs/cast-dependency-audit.json` is where that transition shows up.
 5. **Syndra derives without her seed.** With `CAST_ORDER_OVERRIDES["Syndra"]` deleted,
    `derive_champion_rule` returns `Q, Q2, E, W, R` at L11 and L18 × {no items, magic, physical,
    spellblade} and at splinters ∈ {40, 60, 119, 120}; `Q, E, W, R` at splinters ∈ {0, 39}; `Q, Q2` at L1.
