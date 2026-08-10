@@ -21,12 +21,14 @@ from src.calculator.champions import (
     _CUSTOM_CHAMPION_MODULES,
     get_champion_cast_dependencies,
     get_champion_module_contract,
+    get_champion_option_rotation,
 )
 from src.calculator.champions.module_contract import (
     ChampionModuleContractError,
     contract_from_module,
 )
 from src.calculator.champions.packet_module import build_packet_module
+from src.calculator.rotation_resolver import _DIRECT_EDGE_KIND
 from src.calculator.cast_dependency import (
     BASE_CAST_SLOTS,
     DEPENDENCY_KINDS,
@@ -58,9 +60,44 @@ from src.calculator.cast_dependency import (
 
 ROOT = Path(__file__).resolve().parent.parent
 LEAF = ROOT / "src" / "calculator" / "cast_dependency.py"
+RESOLVER = ROOT / "src" / "calculator" / "rotation_resolver.py"
 
 SOURCE = "https://wiki.leagueoflegends.com/en-us/Syndra@4024662"
 SURFACE = {"P", "Q", "Q2", "W", "E", "R"}
+
+
+def _function(path: Path, name: str) -> ast.FunctionDef:
+    """The named top-level function of *path*, as an AST node."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node
+    raise AssertionError(f"{path.name} declares no {name}")
+
+
+def _detector_edge_kinds() -> tuple[set[str], int]:
+    """Every edge kind ``detect_setup_consume_edges`` can emit, from source.
+
+    ``add(setup, consume, kind, cite)`` is the detector's one edge
+    constructor, so its third positional argument is the whole emittable
+    vocabulary.  Returns the literal kinds and the number of call sites
+    whose kind is computed rather than written down.
+    """
+    detector = _function(RESOLVER, "detect_setup_consume_edges")
+    kinds: set[str] = set()
+    dynamic = 0
+    for node in ast.walk(detector):
+        if not isinstance(node, ast.Call):
+            continue
+        if not isinstance(node.func, ast.Name) or node.func.id != "add":
+            continue
+        assert len(node.args) == 4, f"unexpected add() arity at line {node.lineno}"
+        kind = node.args[2]
+        if isinstance(kind, ast.Constant):
+            kinds.add(str(kind.value))
+        else:
+            dynamic += 1
+    return kinds, dynamic
 
 
 def _dep(slot: str = "E", requires: str = "Q", **overrides) -> CastDependency:
@@ -152,6 +189,44 @@ class TestVocabularies:
     def test_the_two_vocabularies_are_disjoint(self) -> None:
         """One vocabulary would blur which surface owns a claim (D-80)."""
         assert not DEPENDENCY_KINDS & INFERRED_EDGE_KINDS
+
+    def test_it_equals_what_the_detector_can_emit(self) -> None:
+        """Set equality against the source, not membership over a roster.
+
+        The vocabulary was moved verbatim from ``detect_setup_consume_edges``
+        and nothing re-derives it, so a kind that stops being emitted — or
+        one emitted under a name the leaf never heard of — is invisible to
+        a roster walk: an edge that no champion produces asserts nothing.
+        This reads the third positional argument of every ``add(...)`` call
+        in the detector out of the AST and asserts the two sets are equal.
+        """
+        emitted, dynamic = _detector_edge_kinds()
+        assert emitted == set(INFERRED_EDGE_KINDS)
+        assert dynamic == 1, (
+            "a second dynamically-computed edge kind entered the detector; "
+            "its value population needs the assertion below"
+        )
+
+    def test_the_one_dynamic_kind_stays_inside_the_vocabulary(self) -> None:
+        """The detector's single non-constant kind is a verbatim pass-through.
+
+        A module OPTIONS rotation declaration carrying ``setup_slot`` hands
+        its own ``kind`` straight to ``add(...)``, so the emittable set is
+        not statically closed — the roster is what closes it.  Every
+        declaration across the registry, plus the fallback table the
+        pass-through falls back to, must name a kind the leaf knows.
+        """
+        assert set(_DIRECT_EDGE_KIND.values()) <= INFERRED_EDGE_KINDS
+        assert "mark_consume" in INFERRED_EDGE_KINDS
+        outside = {}
+        for name in _CUSTOM_CHAMPION_MODULES:
+            for key, decl in get_champion_option_rotation(name).items():
+                if not decl or not decl.get("setup_slot"):
+                    continue
+                kind = decl.get("kind")
+                if kind is not None and kind not in INFERRED_EDGE_KINDS:
+                    outside[f"{name}.{key}"] = kind
+        assert outside == {}
 
     def test_every_error_is_a_cast_dependency_error(self) -> None:
         """One base, so a boundary catches the family and keeps its 4xx."""

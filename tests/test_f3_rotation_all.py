@@ -27,6 +27,7 @@ EVERY champion:
 
 import pytest
 
+from src.calculator.cast_dependency import DEPENDENCY_KINDS, INFERRED_EDGE_KINDS
 from src.calculator.champions import get_champion_cast_order
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.rotation_resolver import (
@@ -282,26 +283,27 @@ class TestEdgeInvariants:
     def test_edge_kind_taxonomy_is_closed(
         self, champion_by_name, items_by_name
     ) -> None:
-        """Every edge the detector emits belongs to the documented taxonomy."""
-        allowed = {
-            "dot_consume",
-            "stack_consume",
-            "mark_consume",
-            "mark_applier",
-            "detonate",
-            "enhanced_consume",
-            "execute",
-            "recast",
-            "shred",
-            "buff",
-            "cc_setup",
-            "amp",
-        }
+        """Every edge the detector emits belongs to the documented taxonomy.
+
+        The vocabulary is read from ``cast_dependency``, never retyped: a
+        second copy here would keep passing after the leaf's set changed,
+        which is the whole failure this campaign audits for.  Set equality
+        against what the detector *can* emit is asserted at its source in
+        ``tests/test_cast_dependency.py``; this walk asserts the roster
+        stays inside it.
+        """
+        allowed = INFERRED_EDGE_KINDS
+        assert not allowed & DEPENDENCY_KINDS
+        observed = set()
         for name in sorted(champion_by_name):
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
             for edge in _detect_edges(name, data, parsed):
+                observed.add(edge.kind)
                 assert edge.kind in allowed, f"{name}: unknown edge kind {edge.kind}"
+                assert (
+                    edge.kind not in DEPENDENCY_KINDS
+                ), f"{name}: inferred edge wears a declared kind {edge.kind}"
                 assert edge.setup != edge.consume, f"{name}: self edge"
                 assert edge.setup in {
                     "Q",
@@ -317,6 +319,7 @@ class TestEdgeInvariants:
                     "E",
                     "R",
                 }, f"{name}: bad consume {edge.consume}"
+        assert observed, "the roster walk detected no edges at all"
 
     def test_setup_consume_receipt_matches_detected_edges(
         self, champion_by_name, items_by_name
