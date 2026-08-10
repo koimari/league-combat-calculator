@@ -15,6 +15,18 @@ So the join is machine-checked here.  For each committed
 one receipt whose ``leaf_path`` is that path *literally*, every receipt
 carries a verdict from R-19's closed set, and the allowlist's recorded
 tally is recomputed from the receipts rather than trusted.
+
+The second half joins the allowlists to the *tree*.  R-17 forbids
+re-capturing a baseline inside a semantic slice, so a phase's coupled-golden
+diffs stand against the committed baseline plus its allowlists until the
+boundary re-capture — which makes "zero diffs" uncheckable inside the phase
+and left it being checked by hand, one leaf at a time.
+``TestTheCoupledCompareIsFullyAllowlisted`` runs R-01 row 3's compare and
+asserts what the phase actually claims: no differing leaf outside a
+committed allowlist, none outside a ``rotation`` receipt object, no
+allowlist entry excusing a diff that no longer moves, and the pair baseline
+identical.  It survives the re-capture — an empty compare satisfies every
+clause.
 """
 
 from __future__ import annotations
@@ -106,3 +118,138 @@ class TestOracleReceiptsCoverTheirAllowlist:
             recorded["dissenting"]
             == measured["old_value_correct"] + measured["both_wrong"]
         ), name
+
+
+# ---------------------------------------------------------------------------
+# The other half of the join: the tree against the allowlists
+# ---------------------------------------------------------------------------
+
+# The two snapshot counters umbrella criterion 4 disowns to
+# ``campaign-fingerprints.json``: they count the snapshot's own leaves, so
+# publishing a receipt key moves them and no allowlist may state their value.
+DISOWNED_COUNTERS = (
+    "/metadata/fingerprint/leaves",
+    "/metadata/fingerprint/numeric_leaves",
+)
+
+
+def _live_coupled_diffs():
+    """Every differing leaf path in R-01 row 3's compare, right now."""
+    from scripts.golden_snapshot import (
+        COMPARE_EXCLUDED_PROVENANCE,
+        leaf_report,
+        rebuild_for,
+    )
+
+    baseline = json.loads(
+        (Path(__file__).resolve().parents[1] / "scripts")
+        .joinpath("golden_coupled_baseline.json")
+        .read_text(encoding="utf-8")
+    )
+    current = rebuild_for(baseline)
+    for snapshot in (baseline, current):
+        for key in COMPARE_EXCLUDED_PROVENANCE:
+            snapshot.get("metadata", {}).pop(key, None)
+    return tuple(diff.path for diff in leaf_report(baseline, current))
+
+
+def _allowlisted_paths():
+    """Every coupled-golden path any committed slice allowlist declares."""
+    paths: set[str] = set()
+    for path in sorted(RECEIPTS.glob("expected-golden-diff-*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        paths.update(data.get("expected_diff_paths", {}).get("coupled_golden", ()))
+    return paths
+
+
+def unallowlisted(diff_paths, allowlisted):
+    """Every differing leaf no committed allowlist declares.
+
+    The empty tuple is the pass condition.  Pure, so the negative tests
+    below can hand it a diff nobody allowed and watch it say so.
+    """
+    return tuple(sorted(set(diff_paths) - set(allowlisted) - set(DISOWNED_COUNTERS)))
+
+
+def outside_a_rotation_receipt(diff_paths):
+    """Every differing leaf that is not inside a ``rotation`` object."""
+    return tuple(
+        sorted(
+            path
+            for path in diff_paths
+            if "/rotation/" not in path and path not in DISOWNED_COUNTERS
+        )
+    )
+
+
+class TestTheCoupledCompareIsFullyAllowlisted:
+    """Phase 5 criterion 7 as amended: zero *unallowlisted* diffs.
+
+    R-17 forbids re-capturing a baseline inside a semantic slice, so a
+    phase's diffs stand against the committed baseline plus a committed
+    allowlist until the boundary re-capture.  "Zero diffs" was therefore
+    never checkable inside the phase and was checked by hand instead — the
+    verifier read all of them against both allowlists one at a time.  This
+    is that reading, mechanised, and it survives the re-capture: once the
+    boundary lands the compare is empty and every clause holds trivially.
+    """
+
+    def test_no_differing_leaf_is_outside_a_committed_allowlist(self) -> None:
+        assert unallowlisted(_live_coupled_diffs(), _allowlisted_paths()) == ()
+
+    def test_an_undeclared_diff_is_reported(self) -> None:
+        """R-05: the check fails on command, with a leaf nobody allowed."""
+        smuggled = "/coupled_scenarios/x/fights/manual_target/total_damage"
+        assert unallowlisted(
+            _live_coupled_diffs() + (smuggled,), _allowlisted_paths()
+        ) == (smuggled,)
+
+    def test_every_differing_leaf_is_inside_a_rotation_receipt(self) -> None:
+        """No computed number moves — the retirement's whole claim.
+
+        A leaf outside a ``rotation`` object is a damage, timeline, stat or
+        combat leaf, and one of those moving is the seed failing to be
+        reproduced rather than the receipt gaining a field.
+        """
+        assert outside_a_rotation_receipt(_live_coupled_diffs()) == ()
+
+    def test_a_moved_number_is_reported(self) -> None:
+        """R-05 for the second clause: a damage leaf is never excusable."""
+        moved = "/coupled_scenarios/x/fights/manual_target/breakdown/Q/total"
+        assert outside_a_rotation_receipt(_live_coupled_diffs() + (moved,)) == (moved,)
+
+    def test_the_allowlists_are_not_stale(self) -> None:
+        """Every P5 allowlist path still moves — until the re-capture.
+
+        A path that stopped moving is an allowlist entry excusing a diff
+        that no longer exists, which is how an allowlist grows into a
+        blanket.  After the phase-boundary re-capture the compare is empty
+        and this clause retires with it.
+        """
+        differing = set(_live_coupled_diffs())
+        if not differing:
+            return
+        declared: set[str] = set()
+        for path in sorted(RECEIPTS.glob("expected-golden-diff-P5-*.json")):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            declared.update(data["expected_diff_paths"]["coupled_golden"])
+        assert sorted(declared - differing) == []
+
+    def test_the_pair_baseline_is_identical(self) -> None:
+        """R-01 row 2's claim, pinned where the phase's other claims are."""
+        from scripts.golden_snapshot import (
+            COMPARE_EXCLUDED_PROVENANCE,
+            leaf_report,
+            rebuild_for,
+        )
+
+        baseline = json.loads(
+            (Path(__file__).resolve().parents[1] / "scripts")
+            .joinpath("golden_baseline.json")
+            .read_text(encoding="utf-8")
+        )
+        current = rebuild_for(baseline)
+        for snapshot in (baseline, current):
+            for key in COMPARE_EXCLUDED_PROVENANCE:
+                snapshot.get("metadata", {}).pop(key, None)
+        assert [diff.path for diff in leaf_report(baseline, current)] == []
