@@ -1,0 +1,89 @@
+{
+  "receipt": "oracle-P5-resolver-leaf11",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle11",
+    "isolation": "src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never read"
+  },
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/dependencies",
+  "old_value": "<absent> (leaf did not exist in the baseline)",
+  "new_value": "six empty dependency ledgers plus two rows marked `unconsulted`; the order was decided by a hand seed",
+
+  "independent_computation": {
+    "question_restated": "For Syndra, in a scenario whose own name declares it a *derived*-order case, may the rotation's dependency ledgers be empty/unconsulted because a hand seed decided the order?",
+    "step_1_is_syndra_a_hand_seed_champion": {
+      "finding": "No.",
+      "reasoning": "The hand-curated ComboRule seed set is enumerated in data/worklists/f2-task.md deliverable 3 as exactly ten champions: Cassiopeia, Varus, Brand, Vladimir, Aatrox, Jhin, Annie, Lux, Zed, Aphelios. Syndra is not among them. data/worklists/f3-task.md deliverable 3 then binds their role: they are kept 'as documented OVERRIDES (they are the verified seeds) but the table must no longer be the primary path for the other 163.' Syndra is one of the other 163, so her order must be derived algorithmically from atomized data, not seeded by hand."
+    },
+    "step_2_does_syndra_have_real_setup_consume_edges": {
+      "finding": "Yes - at least three hard edges, all rooted at Q (Dark Sphere), plus a passive stack gate on every ability.",
+      "edges": [
+        {
+          "edge": "Q -> W",
+          "kind": "consume",
+          "wiki_evidence": "W Force of Will: 'Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster ... If a Dark Sphere is grabbed, its duration is refreshed ... She prioritizes grabbing the nearest unit, then Dark Spheres.'",
+          "note": "W's intended payload is an object Q created; W also refreshes that sphere's 6s life, which is what keeps it alive for R."
+        },
+        {
+          "edge": "Q -> E",
+          "kind": "application -> enhanced consume",
+          "wiki_evidence": "E Scatter the Weak: 'Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra ... Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast.'",
+          "note": "The stun branch and the second damage instance exist only if a Dark Sphere from Q is on the ground first. This is exactly the 'stun'/'enhanced' row signature f3-task.md 1a instructs the resolver to detect."
+        },
+        {
+          "edge": "Q (and W-refreshed spheres) -> R",
+          "kind": "per-stack damage scaling",
+          "wiki_evidence": "R Unleashed Power: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.' Rows: 'Magic Damage per Sphere' 80/120/160 (+20% AP); 'Minimum Magic Damage' 240/360/480 (+60% AP); 'Maximum Magic Damage' 560/840/1120 (+140% AP).",
+          "arithmetic_proof": "min = 3 x per-sphere: 3x80=240, 3x120=360, 3x160=480 (all match); max = 7 x per-sphere: 7x80=560, 7x120=840, 7x160=1120 (all match). AP: 3x20=60 and 7x20=140 (both match). So R = N x (per-sphere) with N in [3,7], and the 4 swing spheres are precisely the ones Q placed (and W kept alive).",
+          "materiality": "Whether Q/W preceded R is worth up to 4 x (160 + 20% AP) = 640 raw + 80% AP at rank 3. The dependency is damage-bearing, not cosmetic."
+        },
+        {
+          "edge": "P -> Q/W/E/R",
+          "kind": "stack gate",
+          "wiki_evidence": "P Transcendent grants Splinters of Wrath (max 120); 'Transcendent Bonus: Collecting 40 Splinters' stocks Q charges; 60 gives W '12% (+2% per 100 AP) bonus true damage' (rows 'Bonus True Damage', 'Total Mixed Damage'); 80 enhances E's angle and adds a 70% slow; 100 lets R execute below 15% max health; 120 gives +15% AP.",
+          "note": "These are literal 'Transcendent Bonus'/'Enhanced'/'per stack' rows - the exact attribute vocabulary f3-task.md 1a names as edge signal."
+        }
+      ]
+    },
+    "step_3_correct_leaf_value": "A dependency record for Syndra's manual_target rotation must be CONSULTED and NON-EMPTY. At minimum it must carry the Q->W grab edge, the Q->E sphere-knockback (stun + second damage instance) edge, and the Q/W->R per-sphere count edge, with the passive Splinter gates recorded against each ability. An all-empty, seed-decided ledger asserts that Syndra's rotation has no ordering constraints, which the cached wiki text contradicts three times over.",
+    "verdict_reasoning": "The new value is wrong twice: (a) it routes a non-seed champion through the hand-seed path that f3-task.md deliverable 3 forbids as primary for the other 163, and it does so in a scenario whose name ('derived_order') declares derivation to be the thing under test; (b) even granting a seed, six empty ledgers plus two `unconsulted` rows record 'no dependencies were relevant', which is factually false for Syndra. The old value is not correct either: `<absent>` records nothing at all, so it neither states the true edges nor discloses that they were skipped. docs/math-foundations.md Section 4 sets the standard the new value fails - unmodeled or coarse mechanics must 'fail closed or are disclosed'; a silent `unconsulted` row on a champion with three damage-bearing edges is neither."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will)",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds. If a Dark Sphere is grabbed, its duration is refreshed ... She prioritizes grabbing the nearest unit, then Dark Spheres."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E (Scatter the Weak)",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R (Unleashed Power)",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. [rows] Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/worklists/f2-task.md (deliverable 3)",
+      "quote": "Per-champion combo table for the first batch (at least 10 champions with clear combos): Cassiopeia (Q->E spam), Varus (autos/blight->Q detonate), Brand (Q/R apply Blaze->E spread), Vladimir (R first->Q/E/W burst), Aatrox (R->damage), Jhin (4th shot setup), Annie (passive stun->W/R burst), Lux (E slow->Q root->R), Zed (W shadow->E->Q->R), Aphelios (weapon-pair Q priority)."
+    },
+    {
+      "source": "data/worklists/f3-task.md (deliverables 1a and 3)",
+      "quote": "DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing) ... KEEP the 10 ComboRule entries as documented OVERRIDES (they are the verified seeds) but the table must no longer be the primary path for the other 163."
+    },
+    {
+      "source": "docs/math-foundations.md Section 4 (Variance and confidence)",
+      "quote": "Model error: unmodeled mechanics (champions without named modules, coarse event ordering, vision boundaries such as Pyke's out-of-vision grey-health consume) fail closed or are disclosed; the number is only as good as the reviewed module set."
+    }
+  ],
+
+  "limits_of_this_oracle": "The exact serialization shape of the ledger (why eight rows, what the row keys are, how `unconsulted` is spelled) is engine-internal and is not derivable from data/ or docs/math-foundations.md; this receipt does not adjudicate the shape. It adjudicates the semantic claim the value makes - that Syndra's derived rotation had no dependencies worth consulting - which the cached wiki text refutes.",
+
+  "verdict": "both_wrong",
+  "committed": false
+}

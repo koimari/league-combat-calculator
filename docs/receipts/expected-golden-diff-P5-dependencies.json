@@ -69,8 +69,28 @@
       },
       "transition": "absent_to_value",
       "qualifies_under_R15": true,
-      "oracle_receipt": null,
-      "why_no_oracle": "R-18's investigator is given data/ and docs/math-foundations.md and asked to recompute a quantity. This leaf is not a quantity: it is the resolver's own account of a merge that consulted zero declarations, and no cached wiki text or quoted formula can adjudicate it. The independent check that does exist is the roster walk in tests/test_f3_rotation_all.py, which asserts every non-declaring champion's merged edge list is the detector's own list and its receipt empty. Recorded here so the phase-boundary re-capture inherits an explicit gap rather than a silent one."
+      "oracle_receipt": [
+        "docs/receipts/oracle-P5-resolver-leaf0.json",
+        "docs/receipts/oracle-P5-resolver-leaf1.json",
+        "docs/receipts/oracle-P5-resolver-leaf2.json",
+        "docs/receipts/oracle-P5-resolver-leaf3.json",
+        "docs/receipts/oracle-P5-resolver-leaf4.json",
+        "docs/receipts/oracle-P5-resolver-leaf5.json",
+        "docs/receipts/oracle-P5-resolver-leaf6.json",
+        "docs/receipts/oracle-P5-resolver-leaf7.json"
+      ],
+      "prior_position_retired": "This row previously read `oracle_receipt: null` with a `why_no_oracle` argument that a receipt-shaped leaf is not a quantity an R-18 investigator can recompute. Eight investigators were nevertheless commissioned, so the gap is closed by receipts rather than by the argument, and the argument is retired here rather than left standing beside evidence that supersedes it.",
+      "verdicts": {
+        "new_value_correct": [0, 1, 2, 5, 6, 7],
+        "both_wrong": [3, 4],
+        "old_value_correct": []
+      },
+      "adjudication": {
+        "outcome": "The two dissents are void on the facts and no change is absorbed from them.",
+        "reason": "Both computed against Aatrox's kit — leaf3 enumerates his Q1->Q2->Q3 chain, W tether re-hit, P cooldown-on-hit and R World Ender AD buff; leaf4 the same list plus the scenario's item couplings. Neither leaf is Aatrox's rotation: leaf3 is Lulu's (`dream_maker_roster` is `_roster_request(\"Lulu\", (\"Dream Maker\",), enemies=(\"Aatrox\",), allies=(\"Jax\",))`, and that fight's committed `rotation.sources` reads `option lulu_pix_bolts`), and leaf4 is Ahri's. The fight key is the defender. The misattribution is traceable to this file's own retired prose, corrected in the preceding commit.",
+        "residue_examined": "The claim that survives translation — an all-empty ledger reads as 'this rotation has no dependencies' — does not hold against the payload. The inferred lane is published in the same `rotation` object as `setup`, `consume`, `sources` and `rationale`; on leaf4's path those read `setup: [\"E\"]`, `consume: [\"Q\",\"R\",\"W\"]` and three `E applies cc_kind crowd control` source rows. `dependencies` is the declared-vs-inferred *merge's* account (D-80/D-82) and is empty exactly when a module declared nothing. R-18 hands an investigator one leaf path with no siblings, so the misreading is induced by the protocol's leaf isolation, not by the receipt.",
+        "not_reverted": "Reverting `488d295` would delete the ledgers this phase's Shape section and criterion 9 require, on the strength of a computation over the wrong champion."
+      }
     },
     {
       "paths": [
@@ -85,8 +105,28 @@
       "new": "six empty ledgers plus two `unconsulted` rows — Syndra declares E requires Q and E requires Q2, and her hand seed in CAST_ORDER_OVERRIDES (override_reason=pending_primitive) decided the order without consulting either",
       "transition": "absent_to_value",
       "qualifies_under_R15": true,
-      "oracle_receipt": null,
-      "why_no_oracle": "Same shape as the row above, and the same reason: the leaf reports which surface decided this fight's order, which is a fact about this repository's resolution chain rather than about League of Legends. It is asserted directly in tests/test_f2_rotation.py (the seeded declarer names both declarations and the override reason) and it is expected to change again on the seed-deletion commit, when the merge does run and these ledgers fill with the active declaration, its suppression and its latent row.",
+      "oracle_receipt": [
+        "docs/receipts/oracle-P5-resolver-leaf8.json",
+        "docs/receipts/oracle-P5-resolver-leaf9.json",
+        "docs/receipts/oracle-P5-resolver-leaf10.json",
+        "docs/receipts/oracle-P5-resolver-leaf11.json",
+        "docs/receipts/oracle-P5-resolver-leaf12.json",
+        "docs/receipts/oracle-P5-resolver-leaf13.json"
+      ],
+      "prior_position_retired": "As in the row above: `oracle_receipt: null` and its `why_no_oracle` argument are retired because six investigators were commissioned and returned receipts.",
+      "verdicts": {
+        "new_value_correct": [8, 9, 10],
+        "both_wrong": [11, 12, 13],
+        "old_value_correct": [],
+        "split": "The three `syndra_custom_order_*` leaves pass; the three `syndra_derived_order_*` leaves dissent. The leaf value is identical on all six."
+      },
+      "adjudication": {
+        "outcome": "The three dissents are void and no change is absorbed from them.",
+        "leaf11_and_leaf12": "Both rest on the premise that Syndra holds no hand seed, sourced from the ten-champion enumeration in `data/worklists/f2-task.md` — a worklist in the export, not the live tree. `rotation_resolver.CAST_ORDER_OVERRIDES[\"Syndra\"]` exists at `src/calculator/rotation_resolver.py:406` with `override_reason=\"pending_primitive\"`. The `unconsulted` rows report that seed truthfully; they are the disclosure, not the defect. That seed is the one D-89 retires and P5-e deletes in its own later commit, whose gate is zero diffs on both baselines.",
+        "leaf13": "Argues the ledger should carry the splinter and `r_spheres` edges, then concedes in its own `caveats` that it could not distinguish the narrow reading and that under it `empty + unconsulted could be a truthful report of no cross-scenario coupling`. A `both_wrong` resting on an admitted-undecidable scope question moves nothing. Its damage arithmetic (a 28.7% swing between 120 and 0 splinters) is about damage leaves; no damage leaf moved in this slice.",
+        "shared_scope_error": "All three read `dependencies` as the rotation's whole edge set. It is the declared-vs-inferred merge's account (D-80/D-82); the inferred kit edges they enumerate are published beside it as `setup`, `consume` and `sources`, none of which this slice touched.",
+        "aside_worth_keeping": "leaf13 flags, off-task, that Syndra W's cached `Total Mixed Damage` row prints a quadratic AP coefficient of 1.14% where expanding the wiki's own `(base + 65% AP) x (1 + 12% + 2% per 100 AP)` gives 1.3%. Constant and linear terms match exactly. Not this slice's business, and not acted on here."
+      },
       "note": "No damage, order, cast timeline or resource leaf moves in any of these six scenarios; the committed baseline's numeric sections are reproduced exactly."
     }
   ],
