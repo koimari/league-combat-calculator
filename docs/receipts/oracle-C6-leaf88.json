@@ -1,0 +1,100 @@
+{
+  "receipt": "oracle-C6-leaf88",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/ordinal",
+  "old_value": 2,
+  "new_value": 1,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6-leaf88",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/worklists/e3-stacks.json (Syndra Q)",
+      "data/worklists/f2-task.md, data/worklists/f3-task.md (cast_order semantics)",
+      "data/staleness.json (Syndra freshness)",
+      "docs/math-foundations.md sections 1.1 and 5"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, section 1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` - again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "CLAUDE.md domain knowledge / math-foundations audit table",
+      "quote": "Ability haste -> CDR: effective_cd = base_cd * 100 / (100 + ability_haste)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q (Dark Sphere)",
+      "quote": "cooldown: {values: [7,7,7,7,7], affectedByCdr: false}; castTime: 'none'; 'Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay...'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q, Transcendent Bonus row",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will)",
+      "quote": "cooldown: {values: [12,11,10,9,8], affectedByCdr: true}; castTime: 'none'; 'Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location...' ; 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E (Scatter the Weak)",
+      "quote": "cooldown: {values: [15,15,15,15,15], affectedByCdr: true}; castTime: '0.25'; 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R (Unleashed Power)",
+      "quote": "cooldown: {values: [120,100,80], affectedByCdr: true}; castTime: '0.25'; 'Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.' Ability Haste leveling row: [10, 20, 30]"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "modeled slots: P, Q, Q2, W, E, R ... 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)' ; notable atoms include 'ammo (Q 2nd charge at 40 splinters)'"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "data/worklists/f2-task.md (rotation/cast_order feature spec)",
+      "quote": "The /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: ...}"
+    },
+    {
+      "source": "data/staleness.json -> Syndra",
+      "quote": "\"stale\": false, ability_rows_checked 15, ability_rows_stale 0 - the cached Syndra rows used above are current for the pinned patch."
+    }
+  ],
+  "independent_computation": {
+    "what_the_leaf_is": "cast_timeline[4] is the 5th (0-indexed) cast event on the fight's shared cast timeline; 'ordinal' is the 1-based count of casts of that timeline slot so far (first cast of a slot => 1, a recast => >= 2).",
+    "step_1_effective_cooldowns": {
+      "rule": "effective_cd = base_cd * 100 / (100 + ability_haste)",
+      "Q_Dark_Sphere": "base 7 s at every rank, affectedByCdr = false, so generic ability haste does NOT apply. The only haste it receives is R's passive (10/20/30 by R rank): R1 -> 7*100/110 = 6.364 s, R2 -> 7*100/120 = 5.833 s, R3 -> 7*100/130 = 5.385 s.",
+      "W_Force_of_Will": "8 s at rank 5 (12/11/10/9/8), CDR-affected: 8 s at 0 haste, 5.0 s at 60 haste.",
+      "E_Scatter_the_Weak": "15 s flat, CDR-affected: 15 s at 0 haste, 9.375 s at 60 haste.",
+      "R_Unleashed_Power": "80 s at rank 3, CDR-affected.",
+      "conclusion": "No Syndra ability can repeat earlier than ~5.0-5.4 s into the fight under any plausible haste for this scenario."
+    },
+    "step_2_opening_block": {
+      "cast_times": "Q 'none' (0 s), W 'none' (0 s), E 0.25 s, R 0.25 s (all sourced from data/champions.json).",
+      "shared_timeline_rule": "math-foundations 1.1: mutual exclusion only; a cast starts as soon as its cooldown has elapsed and no other cast is in progress.",
+      "result": "Every slot that is off cooldown at t = 0 fires inside the first ~0.5 s (0 + 0 + 0.25 + 0.25). Therefore the timeline necessarily begins with one first-cast event per castable slot, and only afterwards (>= ~5.4 s) can any recast appear."
+    },
+    "step_3_how_many_castable_slots_syndra_has": {
+      "finding": "Five, not four: Q, the second Dark Sphere charge (module slot Q2), W, E, R. The Q charge is sourced - 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2' - and the cached module audit records it as a real slot ('ammo (Q 2nd charge at 40 splinters)', 'synthetic Q2 (2nd charge)', '40+ Q charges via Q2 slot'). The scenario's '60' sits above that 40-splinter threshold on Syndra's own threshold ladder (40 Q charge / 60 W true damage / 80 E / 100 R execute / 120 AP buff), and 60 is exactly the W-true-damage threshold.",
+      "ordering_constraint_from_wiki": "W 'grabs the nearest Dark Sphere' and E's full value comes from knocking a Dark Sphere ('Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned'), so any game-valid Syndra order must place a Dark Sphere cast before W/E. A four-entry permutation of Q,W,E,R is therefore either the default order itself or game-invalid - a 'custom order' scenario for Syndra is only meaningful if it encodes her real opener, which spends both Dark Sphere charges (Q, Q2, W, E, R)."
+    },
+    "step_4_index_4": "With five castable slots, timeline indices 0..4 are the five first casts (all starting inside the first ~0.5 s, comfortably within the window), so cast_timeline[4] is the first cast of the fifth slot in the custom order and its ordinal is 1. The earliest event that could carry ordinal 2 is the first Q recast at 5.385 s (R rank 3), which lands at index 5 or later.",
+    "value": 1
+  },
+  "why_the_old_value_is_wrong": "ordinal = 2 at index 4 is the signature of a four-slot timeline (Q,W,E,R with no second Dark Sphere charge), where the 5th event is the earliest recast - Q at 7*100/130 = 5.385 s. That drops the sourced 40-splinter Dark Sphere charge (module slot Q2) out of the opener, and it makes the 'custom order' scenario indistinguishable from the default Q,W,E,R rotation, since the only game-valid four-entry Syndra order is Q-first anyway (W must grab an existing Dark Sphere).",
+  "falsifier_stated_explicitly": "This computation is decided by one structural fact I could not read directly from the permitted evidence tree: how many casts the scenario's custom order contains. If 'syndra_custom_order_60' declares only four casts (a permutation of Q,W,E,R with the Q2 charge disabled, i.e. splinters < 40), then index 4 is the Q recast at t = 5.385 s and the old value 2 would be correct. Everything else in the derivation (cooldowns, cast times, the shared-timeline rule, the 40-splinter charge) is sourced; only the length of the declared order is inferred. Anyone re-checking this leaf should read cast_timeline[4]'s slot/time alongside its ordinal: a time of ~0.25-0.5 s confirms 1, a time of ~5.4 s confirms 2.",
+  "boundaries_checked": [
+    "both_wrong (ordinal 3+ at index 4) would require the custom order to list one ability three times before any other slot's first cast; Q's 5.385 s recast makes that a pathological order and nothing in the cached data suggests it - rejected.",
+    "Q's cooldown is explicitly affectedByCdr:false in the cache, so scenario ability haste cannot pull the first Q recast below 5.385 s; only R's passive (10/20/30) touches it.",
+    "Even at 60 ability haste, the fastest competing recast is W rank 5 at 8*100/160 = 5.0 s - still an order of magnitude later than the ~0.5 s opening block, so the 'first casts come first' conclusion is robust to the haste assumption."
+  ],
+  "not_committed": true
+}

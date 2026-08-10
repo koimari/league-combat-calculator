@@ -1,0 +1,127 @@
+{
+  "receipt_id": "oracle-C6-leaf73",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_by_type/magic",
+  "old_value": 4720.0,
+  "new_value": 5370.0,
+  "delta": 650.0,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (including scripts/golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / the diff / the plan"
+    ],
+    "note": "The scenario definition itself (build, level, target stats, fight length, cast order) lives outside the permitted export. The reconstruction below is derived only from the two golden numbers plus cached wiki text and the documented engine model."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0] (Unleashed Power, passive)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.",
+      "leveling": "attribute 'Ability Haste', modifier values [10, 20, 30] (R ranks 1/2/3)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q (Dark Sphere)",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location ... dealing magic damage to nearby enemies.",
+      "leveling": "attribute 'Magic Damage', modifiers [90,125,160,195,230] flat + [70]*5 '% AP'; cooldown [7,7,7,7,7], affectedByCdr false"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will, recast)",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land.",
+      "leveling": "attribute 'Magic Damage', modifiers [70,100,130,160,190] flat + [65]*5 '% AP'; cooldown [12,11,10,9,8], affectedByCdr true"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E (Scatter the Weak)",
+      "leveling": "attribute 'Magic Damage', modifiers [60,95,130,165,200] flat + [60]*5 '% AP'; cooldown [15,15,15,15,15], affectedByCdr true"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1] (Unleashed Power, active)",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "leveling": "attribute 'Magic Damage per Sphere', modifiers [80,120,160] flat + [20]*3 '% AP'; 'Minimum Magic Damage' [240,360,480] = 3 spheres"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[3] (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "why_quoted": "Establishes that at the 60-splinter threshold the added damage is TRUE, not magic - so no part of the +650 magic delta may come from the Transcendent W bonus."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[2] (Transcendent)",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "why_quoted": "Rules out the 'AP buff applied' explanation for the delta at any splinter count below 120."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...`"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)` ... | EXACT | R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.",
+      "why_quoted": "Confirms which Syndra knobs exist and that the 60-splinter effect is true damage, not magic."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_ap_is_zero": {
+      "reasoning": "Both golden values are exact multiples of 10, and every Syndra magic base is a multiple of 5/10 while the AP coefficients are 0.70/0.65/0.60/0.20. A no-item, AP=0 fight (the corpus convention seen throughout data/worklists/*.md: 'level 18, rank 5 / R rank 3, no items') reproduces integer multiples of 10 exactly; an arbitrary AP would not. Target mitigation is therefore identity (magic post-mitigation == raw) for this leaf.",
+      "max_rank_base_magic_at_level_18": {
+        "Q_rank5": 230,
+        "W_rank5": 190,
+        "E_rank5": 200,
+        "R_rank3_per_sphere": 160
+      }
+    },
+    "step_2_decomposition": {
+      "method": "Solve 230*q + 190*w + 200*e + 160*s for both totals, holding e and s at the values the wiki fixes independently (E: 15 s cooldown, 0 AH -> 4 casts in a 60 s window; R: single cast per fight per the documented model, conjuring the wiki's 3 Dark Spheres -> s = 3).",
+      "old_4720": "4720 - 4*200 - 3*160 = 3440 = 230*10 + 190*6  (UNIQUE non-negative solution)",
+      "new_5370": "5370 - 4*200 - 3*160 = 4090 = 230*12 + 190*7  (UNIQUE non-negative solution)",
+      "delta_decomposition": "5370 - 4720 = 650 = 2*230 (two extra Q casts) + 1*190 (one extra W cast)"
+    },
+    "step_3_which_q_count_is_right": {
+      "rule": "effective_cd = base_cd * 100 / (100 + AH)   [docs/math-foundations.md Section 5; CLAUDE.md domain knowledge]",
+      "inputs": "Q base cooldown 7 s at every rank (wiki). At level 18 R is rank 3, and R's passive grants Dark Sphere ability haste 10/20/30 by R rank -> AH = 30 for Q.",
+      "computation": "7 * 100 / 130 = 5.3846 s. Cast epochs 0, 5.3846, ..., counted when the cast STARTS inside a 60 s window: k * 5.3846 < 60 for k = 0..11 -> 12 casts.",
+      "table": {
+        "AH=0 (R passive ignored)": "eff_cd 7.0000 s -> 9 casts",
+        "AH=10 (R rank 1 row)": "eff_cd 6.3636 s -> 10 casts",
+        "AH=20 (R rank 2 row)": "eff_cd 5.8333 s -> 11 casts",
+        "AH=30 (R rank 3, CORRECT at level 18)": "eff_cd 5.3846 s -> 12 casts"
+      },
+      "conclusion": "The old value's implied Q count (10) is exactly the AH=10 / R-rank-1 row; the new value's implied Q count (12) is exactly the AH=30 / R-rank-3 row, which is the correct rank at level 18. The wiki-sourced ability-haste row therefore selects the NEW value."
+    },
+    "step_4_w_count": {
+      "free_schedule": "W rank 5 cooldown 8 s, affectedByCdr true, AH = 0 (no items) -> unconstrained epochs 0, 8, ..., 56 = 8 casts in 60 s.",
+      "observed": "old implies 6 W casts, new implies 7.",
+      "reading": "A 'custom order' fight walks a user-specified cast list, so an ability's first cast is offset from t=0 by its position in the order; with a first-W offset in (0, 4] s the epochs are t0, t0+8, ... -> exactly 7 casts. 6 casts requires a first-W offset above 4 s, i.e. more delay than an order containing at most a few zero/0.25 s cast times can produce. The new count is the one consistent with the wiki cooldown plus the documented shared-timeline schedule; the old count is one short.",
+      "confidence": "lower than the Q term - the exact cast order is not in the permitted evidence, so this is corroborating rather than decisive."
+    },
+    "step_5_cross_checks": {
+      "E_unchanged": "Both values imply e = 4, matching E's 15 s cooldown with 0 AH over a 60 s window (0, 15, 30, 45). A change that touched the fight length or the whole schedule would have moved E too; it did not, which is consistent with a Q-specific (ability-haste) correction plus a first-cast-offset correction on W.",
+      "R_unchanged": "Both values imply s = 3 spheres on a single R cast - the wiki's 'conjures 3 Dark Spheres' minimum, and the documented 'R casts exactly once per timed fight'.",
+      "splinters_60_thresholds": "At 60 splinters the only Transcendent effects active are Q charges (40+) and the W bonus TRUE damage (60+). The +15% AP capstone (120) and the R execute (100) are not active. None of these can add magic damage, so the +650 magic delta must be, and is, a cast-count effect - not a Transcendent amplification. This also rules out 'both values differ by a wrongly applied 1.15x AP buff'."
+    },
+    "reconstructed_correct_value": 5370.0,
+    "reconstructed_formula": "12 * 230 (Q rank 5) + 7 * 190 (W rank 5 recast) + 4 * 200 (E rank 5) + 3 * 160 (R rank 3, 3 spheres) = 2760 + 1330 + 800 + 480 = 5370"
+  },
+
+  "residual_uncertainty": [
+    "The scenario configuration (fight length, cast order, target stats, item build) is not present in the permitted evidence tree; the AP=0 / 60 s / level-18 reconstruction is inferred from the roundness of both values, the corpus convention quoted in data/worklists/*.md, and the fact that it makes E and R fall out exactly right while leaving unique decompositions for both totals.",
+    "If the fight window is not 60 s or the build carries AP, the decomposition changes and this verification does not apply. The reconstruction was accepted because three independent quantities (E = 4 casts, R = 3 spheres single cast, Q = 12 casts at AH 30) all land on integers that the two totals independently require.",
+    "The W term (6 -> 7) is corroborating, not independently decisive: without the cast order the first-W offset cannot be pinned. The Q term alone (R rank-1 vs rank-3 ability-haste row) is the load-bearing discriminator, and it favours the new value.",
+    "An unconstrained (non-custom-order) schedule would give 12/8/4/3 = 5560; the new value is 190 below that, i.e. exactly one W cast, which the custom order explains. Nothing in the permitted evidence supports 4720."
+  ],
+
+  "verdict_rationale": "The +650 delta decomposes uniquely as two extra Q casts plus one extra W cast at AP = 0. The Q cast count is fixed by wiki-sourced data alone: Dark Sphere's 7 s cooldown reduced by Unleashed Power's rank-3 ability haste of 30 gives 7*100/130 = 5.3846 s and 12 cast starts in a 60 s window. The old value encodes 10 Q casts, which is precisely the R rank-1 ability-haste row (10 AH, 6.3636 s) - wrong at level 18 where R is rank 3. The new value encodes the correct 12. No Transcendent effect available at 60 splinters can add magic damage, so no competing explanation of the delta survives."
+}

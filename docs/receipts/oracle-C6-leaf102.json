@@ -1,0 +1,130 @@
+{
+  "receipt": "oracle-C6-leaf102",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[2]/source",
+  "old_value": "W",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+  "confidence": "high on the mechanics, qualified on the scenario input (see caveats)",
+
+  "what_the_leaf_is": "The 'source' label of the third damage event emitted for the manual-target fight. It is an ORDERING leaf, not an amount leaf: the set of sources in the rotation is fixed by the champion's slots, and this leaf only says which slot occupies position 2 (0-indexed).",
+
+  "independent_computation": {
+    "step_1_decode_the_scenario_suffix_60": {
+      "claim": "'60' is Syndra's Splinters of Wrath count, not a level/haste/duration.",
+      "evidence": "data/champions.json Syndra P 'Transcendent': 'Syndra collects Splinters of Wrath ... stacking up to 120 times.' The per-ability Transcendent thresholds cached in the same file are Q=40, W=60, E=80, R=100, P=120. 60 is exactly the W threshold and is the only reading under which the suffix names a modeled input. Corroborated by data/champion-audit/batch-6.json Syndra: 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'.",
+      "consequence": "At 60 splinters BOTH the Q=40 and W=60 thresholds are crossed: the second Dark Sphere charge is live, and W carries its bonus true damage."
+    },
+    "step_2_what_Q2_is": {
+      "claim": "Q2 is not an invented source; it is the second stocked Dark Sphere charge, and it MUST appear in a 60-splinter rotation.",
+      "evidence": "data/champions.json Syndra Q, second effect: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' Same ability records rechargeRate [7,7,7,7,7] and castTime 'none'. data/champion-audit/batch-e9-1.json Syndra: '40+ Q charges via Q2 slot'; data/champion-audit/batch-6.json lists modeled slots ['P','Q','Q2','W','E','R'] with the note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'.",
+      "consequence": "60 >= 40, so a full rotation at 60 splinters contains exactly two Dark Sphere casts (Q and Q2) plus one each of W, E, R. Both the old and the new event list must therefore contain a Q2 somewhere; the disagreement is only about position."
+    },
+    "step_3_is_Q2_at_index_2_physically_reachable": {
+      "claim": "Yes. Nothing in the cached data forces Q2 to a later position, and a charge-recharge argument rules out the only competing mechanical placement.",
+      "arithmetic": [
+        "Q is charge-based, max 2 stocked charges, recharge 7 s (data/champions.json Syndra Q rechargeRate).",
+        "R passive supplies Q with ability haste 10/20/30 (data/champions.json Syndra R, 'Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste').",
+        "Ability-haste identity (CLAUDE.md / engine convention): recharge' = 7 * 100/(100+AH) -> 7.000 s at 0 AH, 6.364 s at 10, 5.833 s at 20, 5.385 s at 30.",
+        "docs/math-foundations.md line 471 records the one-rotation inter-cast spread as a 0.5 s GCD estimate; Syndra's cast times are Q 'none', W 'none', E 0.25 s, R 0.25 s. The third event of a rotation therefore lands at t ~ 1.0 s.",
+        "1.0 s << 5.385 s: if only ONE charge were stocked at fight start, Q2 could not occupy index 2 under any haste. It occupies index 2 only because both charges are stocked at t=0 -- which is exactly what the wiki text grants ('stock a Dark Sphere charge, up to a maximum of 2'), a fight opening at full resources."
+      ],
+      "consequence": "Q2 at index 2 is legal and requires no cooldown violation. Conversely the recharge arithmetic shows Q2 cannot have been moved by a cooldown/scheduling change -- the move must come from the declared cast order."
+    },
+    "step_4_which_order_is_correct": {
+      "claim": "For a scenario whose identity is 'custom_order', the emitted event order must be the scenario's declared cast order, and 'W third' is precisely the canonical/default order that a custom order is defined to override.",
+      "evidence": [
+        "docs/math-foundations.md L59-68: casts are scheduled on one shared timeline and the superposition is 'resolved greedily by cast order' -- the emitted order is the fight's cast order, not a canonical slot enumeration.",
+        "data/worklists/f2-task.md L7: 'src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events.' -- cast_order is an explicit per-fight input.",
+        "data/champion-audit/batch-p1-3.json shows cast_order used as a settable scenario input in exactly this form: 'Q 176/W 330/R 385 with cast_order R,Q,W,E'.",
+        "data/champion-audit/batch-6.json fixes Syndra's canonical SLOTS order as P,Q,Q2,W,E,R. Dropping the non-damaging P, canonical slot enumeration yields the damage sequence Q, Q2, W, E, R -- whose index 2 is W, the OLD value. The old value is therefore the signature of the DEFAULT enumeration, not of an honored custom order."
+      ],
+      "consequence": "The old value is what you get when a custom order is ignored and slots are emitted in canonical order. The new value can only be produced by an order that interleaves W between the two Dark Sphere casts (Q, W, Q2, ...). A regression would move a 'custom_order' scenario TOWARD the canonical order; the observed direction is away from it, which is the signature of the custom order being honored."
+    },
+    "step_5_gameplay_cross_check": {
+      "claim": "Q, W, Q2, E(, R) is the wiki-consistent Syndra sequence; Q, Q2, W, E is not better and is positionally worse.",
+      "evidence": [
+        "W (Force of Will), cached text: 'Syndra telekinetically grabs the nearest Dark Sphere ... and holds the target near her for 5 seconds ... Recast: Syndra throws the grabbed target towards the target location' -- W CONSUMES/relocates a sphere and requires one to exist first (against a lone manual target there are no minions or monsters to grab). So a Dark Sphere cast must precede W.",
+        "E (Scatter the Weak), cached text: 'Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra ... Targets hit are also stunned for 1.25 seconds' -- E's full value needs a live sphere sitting between Syndra and the target, i.e. a freshly placed one. W has just thrown the first sphere 'towards the target location' (past the target, away from the E cone), so the sphere E scatters is the second charge.",
+        "Net: Q (place) -> W (grab and throw that sphere) -> Q2 (place a fresh sphere in front) -> E (scatter it) -> R. Q2 is third."
+      ],
+      "damage_neutrality_note": "W's amount does not scale with sphere count, and R's sphere count is a separate user-set option (data/champion-audit/batch-6.json: \"R reads 'Magic Damage per Sphere' x user-set sphere count\"). So this reordering is damage-total-neutral -- consistent with a pure ordering leaf moving without the scenario's totals being at stake."
+    },
+    "per_event_identities_at_60_splinters": {
+      "Q and Q2": "each a Dark Sphere: 90/125/160/195/230 (+70% AP) magic damage (data/champions.json Syndra Q leveling). Q2 exists only because 60 >= 40.",
+      "W": "70/100/130/160/190 (+65% AP) magic damage, plus -- because 60 >= 60 -- 'Transcendent Bonus: ... deal 12% (+ 2% per 100 AP) bonus true damage' (cached bonus-true row 8.4/12/15.6/19.2/22.8 (+ ~9.2-11.6% AP) by rank).",
+      "E": "60/95/130/165/200 (+60% AP) magic damage.",
+      "R": "80/120/160 (+20% AP) per sphere, min 240/360/480 (+60% AP) = 3 spheres, max 560/840/1120 (+140% AP) = 7 spheres."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > Q > effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > Q (fields)",
+      "quote": "rechargeRate: [7,7,7,7,7]; castTime: \"none\"; cooldown.affectedByCdr: false; Magic Damage 90/125/160/195/230 (+70% AP)"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > W > effects[0] and effects[2]",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds. ... Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > E > effects[1]",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units ... Targets hit are also stunned for 1.25 seconds"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > R > effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. [10 / 20 / 30]"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra > module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... note: modeled = SLOTS keys incl. synthetic Q2 (2nd charge). ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP)"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra > gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"
+    },
+    {
+      "file": "data/champion-audit/batch-p1-3.json",
+      "locator": "gap_summary (Vladimir, cited only as proof that cast_order is a settable scenario input)",
+      "quote": "Verified: test_p1_review_3.py TestVladimir - Q 176/W 330/R 385 with cast_order R,Q,W,E"
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "locator": "line 7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R). ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "lines 59-68",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "line 471",
+      "quote": "One-rotation cast spread uses a 0.5 s GCD estimate (engine casts at t=0)"
+    },
+    {
+      "file": "CLAUDE.md domain rule (ability haste identity), applied to the R passive",
+      "locator": "effective_cd = base_cd * 100 / (100 + ability_haste)",
+      "quote": "7 * 100/(100+30) = 5.385 s -- far beyond the ~1.0 s third-event epoch, so index 2 is reachable only with both charges pre-stocked, never by a recharge."
+    }
+  ],
+
+  "caveats": [
+    "The scenario definition (its declared cast_order, ranks, AP, fight mode) lives outside the permitted evidence tree -- scenarios.json in data/practice-corpus contains no Syndra entry, and tests/, scripts/, src/ and git history were not read. The scenario's literal order string was therefore reconstructed, not observed.",
+    "The reconstruction is constrained from three independent directions that agree: (a) 60 splinters unlocks the Q2 charge (wiki, 40 threshold), so Q2 must appear; (b) the recharge arithmetic (5.385-7.0 s vs a ~1.0 s third-event epoch) shows the move cannot be a cooldown effect and must be a declared-order effect; (c) 'W third' is exactly the canonical SLOTS enumeration Q,Q2,W,E,R that a scenario named 'custom_order' exists to override, so the old value is the default-order artifact and the new value is the honored custom order.",
+    "This leaf is damage-total-neutral (W's amount is sphere-count-independent; R's sphere count is a separate option), so no amount cross-check was available to break the tie."
+  ]
+}

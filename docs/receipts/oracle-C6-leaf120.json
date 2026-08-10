@@ -1,0 +1,95 @@
+{
+  "receipt_id": "oracle-C6-leaf120",
+  "runbook": "R-18 / R-19 (independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[9]/damage_type",
+  "old_value": "magic",
+  "new_value": "true",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6-leaf120-fresh",
+    "read": ["data/champions.json", "data/items.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/wiki-atoms/*", "data/bin/behavior-index.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description (cached League Wiki text)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "id": "S2",
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].description (cached League Wiki text)",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land."
+    },
+    {
+      "id": "S3",
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].leveling / effects[3].leveling (cached League Wiki leveling table)",
+      "quote": "attribute 'Magic Damage': values [70,100,130,160,190] + [65% AP]; attribute 'Bonus True Damage': values [8.4,12,15.6,19.2,22.8] + [9.2,9.8,10.4,11,11.6]% AP + quadratic AP term; attribute 'Total Mixed Damage': values [78.4,112,145.6,179.2,212.8] + [74.2,74.8,75.4,76,76.6]% AP",
+      "significance": "The wiki itself tabulates the >=60-splinter W as THREE attributes: a Magic Damage component, a separate Bonus True Damage component, and their sum labelled 'Total Mixed Damage'. 'Mixed' is the wiki's own word: the W recast at >=60 splinters is not one retyped instance, it is a magic instance plus a distinct true instance."
+    },
+    {
+      "id": "S4",
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.",
+      "significance": "Establishes that '60' in the scenario id 'syndra_custom_order_60' is the Splinters-of-Wrath option value, and 60 is exactly the W Transcendent-Bonus threshold from S1."
+    },
+    {
+      "id": "S5",
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff"
+    },
+    {
+      "id": "S6",
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S7",
+      "source": "data/items.json (all items whose passives[].branches / active[].branches mention 'true damage')",
+      "quote": "15 matches: Reinforced Armor (turret), Base Turret Reinforced Armor, Crystalline Overgrowth, Fiendhunter Bolts, Bastionbreaker, Redemption, Umbral Glaive, Death's Daughter, Cosmic Drive, Shadowflame, Death's Dance, Darksteel Talons, Reaper's Toll, Detonation Orb, Kinkou Jitte",
+      "significance": "None of these DEALS true damage on an ordinary SR AP build. Shadowflame only says 'Your magic damage and true damage will critically strike...' and Cosmic Drive only says 'Dealing magic damage or true damage ... grants you 20 bonus movement speed' - both merely react to true damage. The remaining entries are turret/ARAM/Arena-only ('ar' mode) or AD/tank items outside an AP Syndra build. Conclusion: in this scenario the W Transcendent bonus is the ONLY source that can emit a true-damage event."
+    },
+    {
+      "id": "S8",
+      "source": "docs/math-foundations.md, section 5 formula-audit table",
+      "quote": "Resistance mitigation (apply_resistance) | m(R)=100/(100+R) ... EXACT",
+      "significance": "math-foundations.md contains no Syndra- or damage-type-specific rule; it only fixes how each typed instance is mitigated. It therefore neither supports nor contradicts the type flip, and the wiki text (S1-S3) is the governing source."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_threshold": "Scenario id 'syndra_custom_order_60' pins Splinters of Wrath = 60. S1: the W Transcendent Bonus arms at exactly 60 splinters. So this scenario is on the armed side of the threshold, by one splinter of margin.",
+    "step_2_formula_recovered": "Reading S1 as: bonus_true = (0.12 + 0.02 * AP/100) * (W_magic_raw), where W_magic_raw = base(rank) + 0.65*AP with base = [70,100,130,160,190].",
+    "step_3_formula_verified_against_wiki_table": "Expanding gives bonus_true = 0.12*base + (0.078 + 0.0002*base)*AP + 0.00013*AP^2. The flat term 0.12*base and the linear AP coefficient 100*(0.078 + 0.0002*base) were computed for all five ranks and compared to the cached wiki 'Bonus True Damage' row (S3):",
+    "step_3_table": [
+      {"rank": 1, "wiki_flat": 8.4,  "computed_flat": 8.4,  "wiki_ap_pct": 9.2,  "computed_ap_pct": 9.2,  "wiki_total_flat": 78.4,  "computed_total_flat": 78.4,  "wiki_total_ap_pct": 74.2, "computed_total_ap_pct": 74.2},
+      {"rank": 2, "wiki_flat": 12.0, "computed_flat": 12.0, "wiki_ap_pct": 9.8,  "computed_ap_pct": 9.8,  "wiki_total_flat": 112.0, "computed_total_flat": 112.0, "wiki_total_ap_pct": 74.8, "computed_total_ap_pct": 74.8},
+      {"rank": 3, "wiki_flat": 15.6, "computed_flat": 15.6, "wiki_ap_pct": 10.4, "computed_ap_pct": 10.4, "wiki_total_flat": 145.6, "computed_total_flat": 145.6, "wiki_total_ap_pct": 75.4, "computed_total_ap_pct": 75.4},
+      {"rank": 4, "wiki_flat": 19.2, "computed_flat": 19.2, "wiki_ap_pct": 11.0, "computed_ap_pct": 11.0, "wiki_total_flat": 179.2, "computed_total_flat": 179.2, "wiki_total_ap_pct": 76.0, "computed_total_ap_pct": 76.0},
+      {"rank": 5, "wiki_flat": 22.8, "computed_flat": 22.8, "wiki_ap_pct": 11.6, "computed_ap_pct": 11.6, "wiki_total_flat": 212.8, "computed_total_flat": 212.8, "wiki_total_ap_pct": 76.6, "computed_total_ap_pct": 76.6}
+    ],
+    "step_3_conclusion": "All 20 checks reproduce the cached wiki table exactly. The reading of S1 is confirmed, and - decisively for this leaf - the wiki's 'Total Mixed Damage' row equals magic + true term-by-term (78.4 = 70 + 8.4; 74.2% AP = 65% AP + 9.2% AP), proving the true portion is an ADDITIONAL instance layered on the magic one, not a retyping of it.",
+    "step_4_magnitudes": [
+      {"rank": 5, "AP": 0,   "W_magic_raw": 190.0, "W_bonus_true_raw": 22.80, "total_mixed": 212.80},
+      {"rank": 5, "AP": 200, "W_magic_raw": 320.0, "W_bonus_true_raw": 51.20, "total_mixed": 371.20},
+      {"rank": 5, "AP": 400, "W_magic_raw": 450.0, "W_bonus_true_raw": 90.00, "total_mixed": 540.00},
+      {"rank": 5, "AP": 600, "W_magic_raw": 580.0, "W_bonus_true_raw": 139.20, "total_mixed": 719.20}
+    ],
+    "step_5_uniqueness_of_the_true_source": "S7 shows no item reachable on an ordinary Summoner's Rift AP Syndra build deals true damage, and S1-S3 show Syndra's Q, E and R are all pure magic damage. Therefore the ONE and only damage event in this scenario that can legitimately carry damage_type = 'true' is the W Force of Will Transcendent bonus.",
+    "step_6_verdict_logic": "A correct model of scenario splinters=60 MUST contain a true-damage event for every W recast, alongside (not instead of) the W magic event. The new value places a 'true' event in the damage list; the old value contained magic at that position. Given that true damage is mechanically mandatory here and mechanically impossible from any other source in this build, 'true' at that position is the correct type and 'magic' cannot be.",
+    "step_7_residual_uncertainty": "The scenario definition and the fight walk live under scripts/ and src/, which runbook R-18/R-19 forbids me to read, so I could not simulate the event list and pin index 9 by construction. What I verified from data/ alone is (a) a true-damage event is mandatory in this scenario, (b) the W magic instance must SURVIVE alongside it (S3, 'Total Mixed Damage'), and (c) nothing else in the build can emit true damage. The only way the new value could be wrong is if the change collapsed the W's magic component into the true one rather than adding the bonus as its own instance - in that case the sibling leaf damage_events[8]/damage_type (or the W magic amount) would also have flipped, and the W's magic instance would have disappeared. That failure mode is checkable by confirming the scenario still carries a magic-typed W event with raw = base(rank) + 0.65*AP; it is flagged here as the one confirmation outside my read scope."
+  },
+
+  "cross_checks_that_found_nothing_contradictory": [
+    "docs/math-foundations.md contains no occurrence of 'Syndra', 'true damage', 'damage_type' or 'splinter' - it governs mitigation of typed instances only, and true damage ignoring resistances is consistent with it.",
+    "data/bin/behavior-index.json lists Syndra with no heal/shield behaviors - no competing mechanic at this index.",
+    "data/practice-corpus/scenarios.json contains no Syndra entry - no in-game-verified counterexample either way."
+  ],
+
+  "verdict_detail": "new_value_correct - Syndra's Force of Will at >=60 Splinters of Wrath deals a distinct bonus TRUE damage instance per the cached League Wiki text and its own leveling table, and no other source in this build can produce true damage."
+}

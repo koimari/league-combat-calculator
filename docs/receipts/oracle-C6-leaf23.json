@@ -1,0 +1,91 @@
+{
+  "receipt": "oracle-C6-leaf23",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[5]/time",
+  "old_value": 7.27,
+  "new_value": 5.0,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read_only_scope": "data/** and docs/math-foundations.md only; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never opened"
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7, 7, 7, 7, 7]}], \"affectedByCdr\": false}, \"rechargeRate\": [7, 7, 7, 7, 7]",
+      "use": "Q base cooldown / charge recharge = 7 s at every rank"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At 120 splinters (>= 40) Syndra holds 2 stocked Q charges, so the opening burst contains two Q casts back to back"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[0] (Unleashed Power passive)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.  leveling: attribute \"Ability Haste\", values [10, 20, 30]",
+      "use": "Q receives +10/20/30 ability haste from R rank; rank 3 => +30 AH on Q only"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (Force of Will)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [12, 11, 10, 9, 8]}], \"affectedByCdr\": true}",
+      "use": "W rank 5 base cooldown = 8 s, haste-affected"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] / R[0] cooldowns",
+      "quote": "E: [15,15,15,15,15] affectedByCdr true;  R: [120,100,80] affectedByCdr true",
+      "use": "Ruled out E and R as the source of either 5.0 or 7.27 at the fitted haste"
+    },
+    {
+      "source": "docs/math-foundations.md line 462 (verdict table)",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd\u00b7100/(100+AH)`; casts/unit time affine in AH | **EXACT** |",
+      "use": "Effective-cooldown formula"
+    },
+    {
+      "source": "docs/math-foundations.md lines 59-66 (Section 1.1)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...`",
+      "use": "Timeline semantics: cast_timeline entries are cast START times on one shared, mutually exclusive schedule"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)",
+      "use": "Identifies the '120' in the scenario name as splinters=120, which enables the second Q charge (synthetic Q2 slot)"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge)",
+      "use": "Confirms the second Q charge is a first-class castable slot, so it belongs on the shared cast timeline"
+    }
+  ],
+  "independent_computation": {
+    "step_0_problem": "The scenario definition lives outside data/ (forbidden to read), so the fight's ability haste and ability ranks were recovered by requiring BOTH the old and the new leaf values to be simultaneously producible from cached cooldowns under cd' = cd*100/(100+AH).",
+    "step_1_parameter_fit": {
+      "search": "AH swept 0..400 in 0.05 steps; candidate cooldowns = W ranks 1-5, E, R ranks 1-3, Q with and without R's rank-dependent +10/20/30 Q-only haste; required one candidate within 0.004 of 7.27273 and one within 0.004 of 5.0",
+      "unique_solution": "base ability haste = 10, W rank 5, R rank 3",
+      "why_unique": "No other (AH, rank) combination in the cached cooldown set produces both 7.27 and 5.00; all other AH values that hit 7.2727 (65, 51.25, 37.5, 23.75, 106.25) leave no candidate at 5.0, and all AH values that hit 5.0 (60, 100, 140, 200) leave no candidate at 7.2727."
+    },
+    "step_2_effective_cooldowns": {
+      "Q_Dark_Sphere": "7 * 100 / (100 + 10 (build AH) + 30 (R rank 3 passive, Q-only)) = 7 * 100 / 140 = 5.000 s",
+      "W_Force_of_Will_rank5": "8 * 100 / (100 + 10) = 800 / 110 = 7.27272... -> 7.27 s",
+      "E_Scatter_the_Weak": "15 * 100 / 110 = 13.64 s",
+      "R_Unleashed_Power_rank3": "80 * 100 / 110 = 72.73 s"
+    },
+    "step_3_shared_timeline": {
+      "opening_burst": "At splinters = 120 the Transcendent bonus has Syndra holding 2 stocked Dark Sphere charges at fight start, so the opening (all abilities off cooldown) fires FIVE casts before anything must wait: Q (charge 1), Q (charge 2, the synthetic Q2 slot), W, E, R -- indices 0..4, all inside the first ~1 s of cast-time occupancy (Q/W cast time 'none', E 0.25 s, R 0.25 s; the exact intra-burst packing does not matter because every one of them starts well before 5 s).",
+      "index_5": "The 6th cast (index 5) is therefore the first ability to come back up. Both Q charges were spent at t=0, so charge 1 returns one recharge later at t = 5.000 s; W is not up until 7.27 s, E until 13.64 s, R until 72.73 s. min(5.00, 7.27, 13.64, 72.73) = 5.00 s.",
+      "computed_value": 5.0
+    },
+    "step_4_diagnosis_of_old_value": "7.27 is exactly W rank 5's effective cooldown, i.e. the 7th cast under the corrected schedule. It can only occupy index 5 if the opening burst held FOUR casts instead of five -- that is, if the second stocked Dark Sphere charge (Q2) was absent from the shared timeline: [Q@0, W@0, E@0, R@0.25, Q@5.00 (idx 4), W@7.27 (idx 5)]. Dropping the second charge contradicts the cached Transcendent text at splinters=120, and it is exactly the one-cast index shift that turns 5.0 into 7.27. The per-ability cooldowns themselves are unchanged between old and new; only the cast count in the opening burst moved.",
+    "consistency_checks": [
+      "Both values are exact cached-cooldown images under the SAME haste (10), so no re-tuning of the fight parameters is needed to explain the change -- it is a pure index shift by one cast.",
+      "5.0 requires Q to receive haste; the wiki text for R's passive explicitly grants Dark Sphere ability haste, so the wiki's affectedByCdr=false flag on Q (a charge/recharge artifact of the scraper) must not be read as 'Q's recharge is a fixed 7 s'. A fixed 7 s Q would put the 6th cast at 7.00, which is neither reported value.",
+      "Cast-time packing is immaterial: even if every cast were charged the maximum sourced 0.25 s cast time, the five opening casts end by 1.25 s, still far below the 5.0 s Q recharge."
+    ]
+  },
+  "conclusion": "The 6th entry of the shared cast timeline is the first Dark Sphere charge returning after both stocked charges were spent in the opening burst: 7 s * 100/140 = 5.00 s. The new value is correct; the old 7.27 was W rank 5's cooldown sitting at index 5 because the second Q charge was missing from the opening burst.",
+  "caveats": [
+    "The scenario definition (level, build, ability ranks, custom cast order) was not read -- it lives outside data/. The parameters (10 ability haste, W rank 5, R rank 3, splinters 120) were reconstructed by over-determined fit to the two reported values and are unique in the cached cooldown space; the verdict does not depend on the exact custom order beyond the fact that both Q charges and W/E/R all fire in the opening burst.",
+    "This receipt asserts nothing about the damage leaves of the same scenario, only about the cast start time at index 5."
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "receipt_id": "oracle-C6-leaf108",
+  "runbook": "R-18 / R-19 (independent oracle, blind to the change under test)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[5]/damage",
+  "old_value": 840.0,
+  "new_value": 560.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6-leaf108-fresh",
+    "note": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were not read. A first scratch dir was discarded because it already contained non-exported files (docs/scenarios.json, syndra_abilities.txt) from an unrelated run; the tree was rebuilt clean.",
+    "contamination_note": "Neither golden baseline nor scenario definitions live under data/ or docs/math-foundations.md, so the scenario's champion level and ability ranks could not be observed. See 'residual_uncertainty'."
+  },
+
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0] 'Unleashed Power'",
+      "quote_effect": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "quote_leveling": [
+        "{\"attribute\": \"Magic Damage per Sphere\", \"modifiers\": [{\"values\": [80, 120, 160]}, {\"values\": [20, 20, 20], \"units\": [\"% AP\"]}]}",
+        "{\"attribute\": \"Minimum Magic Damage\", \"modifiers\": [{\"values\": [240, 360, 480]}, {\"values\": [60, 60, 60], \"units\": [\"% AP\"]}]}",
+        "{\"attribute\": \"Maximum Magic Damage\", \"modifiers\": [{\"values\": [560, 840, 1120]}, {\"values\": [140, 140, 140], \"units\": [\"% AP\"]}]}"
+      ]
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0] 'Transcendent'",
+      "quote": "Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85.",
+      "used_for": "Mapping the scenario suffix '60' to a champion level: 5 x (L - 1) = 60 => L = 13. The cap 85 = 5 x (18 - 1) confirms the 5-per-point-beyond-the-first reading."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.gap_summary",
+      "quote": "R reads 'Magic Damage per Sphere' x user-set sphere count",
+      "used_for": "Confirming the R damage event is one aggregate event = per-sphere damage x sphere count, so the golden leaf is a single number, not a per-sphere hit."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).",
+      "used_for": "Confirming 'splinters' is a scenario option with thresholds at 40/60/80/100/120, which is what the scenario suffix '60' selects."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section on the golden corpus (lines ~410-440)",
+      "quote": "The golden snapshot (scripts/golden_snapshot.py) and the E-series corpus pin point estimates against game-verified scenarios.",
+      "used_for": "Confirming the golden leaf is a pinned point estimate; the document contains no Syndra-specific or ability-rank formula, so it does not bear on the rank question."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_wiki_row_self_consistency": {
+      "claim": "The three R rows are one quantity at three sphere counts, so any golden R damage must be (per-sphere at rank r) x (sphere count n).",
+      "check": [
+        "rank 1: per-sphere 80 -> 3x80 = 240 = wiki Minimum; 7x80 = 560 = wiki Maximum",
+        "rank 2: per-sphere 120 -> 3x120 = 360 = wiki Minimum; 7x120 = 840 = wiki Maximum",
+        "rank 3: per-sphere 160 -> 3x160 = 480 = wiki Minimum; 7x160 = 1120 = wiki Maximum",
+        "AP ratios agree: 20% per sphere, 3x20 = 60% (min), 7x20 = 140% (max)"
+      ],
+      "sphere_bounds": "n in [3, 7]: 3 conjured always, plus up to 4 grabbed (wiki active text)."
+    },
+    "step_2_decomposition_of_the_two_values": {
+      "model": "damage = n x (base_per_sphere[r] + 0.20 x AP)",
+      "at_zero_AP": {
+        "840.0": ["/80 = 10.5 (illegal, non-integer and > 7)", "/120 = 7 (legal: rank 2, max spheres)", "/160 = 5.25 (illegal)"],
+        "560.0": ["/80 = 7 (legal: rank 1, max spheres)", "/120 = 4.667 (illegal)", "/160 = 3.5 (illegal)"]
+      },
+      "conclusion": "Exactly one reading survives for each value, and both share the same sphere count n = 7. The leaf is Unleashed Power's Maximum Magic Damage with 0 AP: 840.0 = rank 2, 560.0 = rank 1. The two values are adjacent cells of one wiki row - the change is a one-rank shift in R, not a formula or coefficient change.",
+      "nonzero_AP_alternatives_rejected": "A pure sphere-count change requires n_old/n_new = 1.5, i.e. (6,4) or (3,2); (3,2) is illegal (minimum 3 spheres), and (6,4) requires per-sphere exactly 140, i.e. AP exactly 100 (rank 2) or 300 (rank 1) - and with items of that size the other stats would not leave the product at a round 840.0/560.0. Rejected on parsimony: the zero-AP reading lands on two literal wiki cells with no free parameters."
+    },
+    "step_3_which_rank_is_correct": {
+      "level_derivation": "Scenario suffix '60' selects the 60-Splinter tier (the W Transcendent threshold). By the innate's rank-up clause, 5 x (L - 1) = 60 gives champion level 13.",
+      "game_rule": "Ultimate points are only spendable at levels 6, 11, 16. At level 13 the maximum attainable R rank is 2; any *custom* skill order can only place FEWER points in R than the level-derived default, never more.",
+      "consequence": "840.0 (rank 2) is precisely the value the engine produces if it ignores the scenario's custom order and falls back to level-derived default ranks. 560.0 (rank 1) is only reachable by honouring an explicit custom allocation that withholds the second R point - which is exactly what a scenario named 'custom_order' exists to exercise. A scenario whose distinguishing input is a custom order, producing the default-order number, is the bug; producing the strictly-lower custom-order number is the fix.",
+      "arithmetic_of_the_new_value": "R rank 1, 7 spheres (3 conjured + 4 grabbed), AP = 0: 7 x (80 + 0.20 x 0) = 7 x 80 = 560.0, identical to the wiki's own 'Maximum Magic Damage' cell for rank 1. Pre-mitigation/zero-MR (both golden values are exact multiples with no resistance factor)."
+    }
+  },
+
+  "residual_uncertainty": {
+    "what_is_fully_established": "From cached wiki text alone: 560.0 is exactly Unleashed Power rank 1 at 7 spheres and 0 AP, and 840.0 is exactly rank 2 at 7 spheres and 0 AP. Both are legal, correctly-computed numbers for their rank - the arithmetic is not in dispute for either value, and neither is a mis-scaled or stale coefficient.",
+    "what_is_inferred": "Which rank the scenario should be at. The scenario definition lives outside the permitted evidence tree (data/, docs/math-foundations.md), so the rank was inferred from the scenario name: level 13 via the Splinter rank-up formula, plus the rule that a custom order at level 13 can only lower R below the default rank 2.",
+    "confidence": "moderate-high on the verdict, high on the arithmetic. If the scenario in fact specifies two R points at level 13 or above, the old value would be the correct one; that reading, however, makes the 'custom_order' qualifier inert, since 840.0 is the number a default order already yields.",
+    "falsifier": "Read the scenario's ranks/order for 'syndra_custom_order_60'. If R rank is 1 -> new_value_correct confirmed. If R rank is 2 -> old_value_correct and this receipt is wrong. No other outcome is possible: no third rank produces either number at an integer, legal sphere count."
+  },
+
+  "verdict_statement": "new_value_correct - 560.0 = 7 x 80, Unleashed Power rank 1 Maximum Magic Damage at 0 AP, matching data/champions.json Syndra R 'Maximum Magic Damage' [560, 840, 1120] cell one-for-one. The old 840.0 is the rank-2 cell of the same row, i.e. the level-13 default-order rank, which a custom skill order should have overridden."
+}

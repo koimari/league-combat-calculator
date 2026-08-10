@@ -1,0 +1,94 @@
+{
+  "receipt": "oracle-C6-leaf16",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/name",
+  "old_value": "Dark Sphere",
+  "new_value": "Unleashed Power",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": [
+      "data/champions.json (Syndra abilities P/Q/W/E/R)",
+      "data/champion-audit/batch-6.json (Syndra slot inventory)",
+      "data/worklists/e3-stacks.json (Syndra Q Transcendent-bonus stack hint)",
+      "data/worklists/f2-task.md (DEFAULT_CAST_ORDER = Q,W,E,R; cast_order drives the event timeline)",
+      "docs/math-foundations.md (shared-timeline cast scheduling; R single-cast)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/champions.json -> Syndra.abilities.P[0].description (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "id": "S2",
+      "where": "data/champions.json -> Syndra.abilities.P[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "id": "S3",
+      "where": "data/champions.json -> Syndra.abilities.Q[1].description (also mirrored in data/worklists/e3-stacks.json)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S4",
+      "where": "data/champions.json -> Syndra.abilities.R[1].description (Unleashed Power active)",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "id": "S5",
+      "where": "data/champions.json -> Syndra.abilities.R[1].leveling",
+      "quote": "Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)"
+    },
+    {
+      "id": "S6",
+      "where": "data/champions.json -> Syndra.abilities.R[0] (Unleashed Power passive)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. Ability Haste 10/20/30"
+    },
+    {
+      "id": "S7",
+      "where": "data/champions.json -> Syndra cooldowns / cast times",
+      "quote": "Q cooldown 7/7/7/7/7 (affectedByCdr false, rechargeRate [7,7,7,7,7], castTime none); W 12/11/10/9/8 (castTime none); E 15 (castTime 0.25); R 120/100/80 (castTime 0.25)"
+    },
+    {
+      "id": "S8",
+      "where": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "module_slots.modeled = [P, Q, Q2, W, E, R] ... note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.' ... notable_atoms: 'ammo (Q 2nd charge at 40 splinters)' ... gap_summary: 'splinters option (0-120) gates Q2 second charge ... R reads Magic Damage per Sphere x user-set sphere count.'"
+    },
+    {
+      "id": "S9",
+      "where": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "id": "S10",
+      "where": "docs/math-foundations.md, section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_decode_the_scenario_name": "The trailing '120' is Syndra's Splinters-of-Wrath option at its cap: the passive stacks 'up to 120 times' and 120 is the Transcendence capstone threshold (S1, S2). The audit inventory confirms the option is exactly a 0-120 splinters knob (S8). So the scenario runs Syndra at maximum splinters, which turns on every Transcendent bonus: Q's 2nd charge at 40, W true damage at 60, E scatter at 80, R execute at 100 (documented not modeled), +15% AP at 120.",
+
+    "step_2_how_many_casts_are_in_the_opening_rotation": "At >=40 splinters Dark Sphere is a 2-charge ability (S3), which the module carries as the synthetic slot Q2 (S8). At splinters=120 the castable damage slots are therefore Q, Q2, W, E, R -> five casts. All five are off cooldown at fight start, and their sourced cast times are 0, 0, 0, 0.25, 0.25 (S7), so under the shared-timeline scheduler (S10) all five start inside the first ~0.5 s with no cooldown wait. Indices 0..4 of cast_timeline are exactly those five slots; index 4 is the LAST cast of the opening rotation.",
+
+    "step_3_when_would_a_6th_cast_land": "The first repeat is Dark Sphere: base cd 7 s, and R's passive grants Dark Sphere 10/20/30 ability haste (S6), so at R rank 3 the effective cd is 7 * 100/(100+30) = 5.3846 s (haste identity cd' = cd*100/(100+AH), docs/math-foundations.md formula-audit table). W returns at 8 s, E at 15 s, R is single-cast per the model. So nothing can preempt the opening five, and no repeat can appear before index 5.",
+
+    "step_4_which_slot_must_occupy_the_last_index": "Unleashed Power 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones ... each dealing magic damage upon hit' (S4). The leveling rows prove the damage is strictly proportional to the live-sphere count: per-sphere 80/120/160 (+20% AP), minimum = per-sphere x 3 = 240/360/480 (+60% AP), maximum = per-sphere x 7 = 560/840/1120 (+140% AP) (S5; verified arithmetically: 160*3=480, 160*7=1120, 20%*3=60%, 20%*7=140%). Both Dark Sphere charges therefore have to be spent BEFORE R, so that their spheres (ground duration 6 s) are alive to be grabbed. A Dark Sphere cast placed AFTER Unleashed Power contributes nothing to R -- it is the one ordering that provably destroys damage, and it is not how the ability is played. The correct rotation at 120 splinters is {Q, Q2, W, E} in some order, then R last: index 4 = R = 'Unleashed Power'.",
+
+    "step_5_diagnosis_of_the_old_value": "'Dark Sphere' at index 4 means the last cast of the five-slot rotation was a Dark Sphere and Unleashed Power sat at index <= 3 -- i.e. the synthetic second-charge slot Q2 was appended to the tail of the cast order (after R) instead of riding with its parent Q, which is both unplayable and strictly damage-negative by step 4. Under the alternative reading in which Q2 is not modeled at all, the rotation would be only four casts (Q,W,E,R) and index 4 would be the cooldown-gated Q repeat at t = 5.3846 s -- also 'Dark Sphere', and also wrong, because S3 + S8 say the second charge exists at 120 splinters and must be inside the opening rotation. Both routes to the old value are refuted by the same sources.",
+
+    "conclusion": "The fifth entry (index 4) of the opening cast timeline for Syndra at 120 splinters is Unleashed Power. The new value is correct."
+  },
+
+  "residual_uncertainty": "The scenario's literal custom cast_order list lives in scripts/tests, which this oracle is barred from reading. The computation above does not depend on the permutation of the non-ultimate slots: for any order that keeps R last -- which every damage-correct order must, by S4/S5 -- the five-slot rotation at 120 splinters puts Unleashed Power at index 4. The verdict would only flip if the scenario deliberately specified an R-before-Q order, which the wiki text shows is a strictly worse and non-canonical rotation.",
+
+  "verdict_final": "new_value_correct"
+}

@@ -1,0 +1,113 @@
+{
+  "receipt_id": "oracle-C6-leaf110",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[5]/time",
+  "old_value": 0.25,
+  "new_value": 0.0,
+  "verdict": "old_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra slot inventory)",
+      "data/champion-audit/batch-e9-1.json (Syndra splinter options)",
+      "data/worklists/f2-task.md, data/worklists/f3-task.md (cast_order is a fight input)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, S1.1 (Renewal theory for cast + auto timing schedules), lines 59-64",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`)."
+    },
+    {
+      "source": "docs/math-foundations.md, exactness table, row `Ability rotation casts`",
+      "quote": "shared-timeline renewal schedule; cast starts within window | **EXACT**"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].castTime",
+      "quote": "\"castTime\": \"none\"  (Dark Sphere - no cast time)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].castTime",
+      "quote": "\"castTime\": \"none\"  (Force of Will - no cast time)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].castTime",
+      "quote": "\"castTime\": \"0.25\"  (Scatter the Weak)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].castTime and R notes",
+      "quote": "\"castTime\": \"0.25\" ; notes: \"Unleashed Power's effect takes place at the start of the cast time.\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots.modeled",
+      "quote": "[\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge)"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "source": "data/champion-audit/batch-p1-3.json -> Vladimir (evidence that a fight takes an explicit cast order)",
+      "quote": "Verified: test_p1_review_3.py TestVladimir - Q 176/W 330/R 385 with cast_order R,Q,W,E"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_what_index_5_is": {
+      "reasoning": "The scenario suffix `_60` is the Syndra `splinters` option at the 60-Splinter threshold (the audit lists thresholds 40 / 60 / 80 / 100 / 120; 60 is exactly the Force-of-Will bonus-true-damage threshold, and it is the only reason to pick 60). At 60 splinters the opening rotation authors six damage events from five casts: Q (Dark Sphere), Q2 (second charge, unlocked at 40), W magic, W bonus TRUE (unlocked at 60), E, R. Indices 0..5 therefore cover the five opening casts, and damage_events[5] is the event of the LAST cast in the (custom) order.",
+      "note": "R multi-sphere is one event, not n: math-foundations S1.2.1 prices a part with h identical hits as h*m(R)*raw inside a single part (`_mitigate_hits`), so `r_spheres` scales one event rather than emitting several."
+    },
+    "step_2_sourced_cast_times": {
+      "Q": 0.0,
+      "Q2": 0.0,
+      "W": 0.0,
+      "E": 0.25,
+      "R": 0.25,
+      "source": "data/champions.json castTime fields; \"none\" == no cast time == 0 s"
+    },
+    "step_3_shared_timeline_recurrence": {
+      "formula": "s_1 = 0 ; s_{k+1} = s_k + castTime(cast_k)   (math-foundations S1.1: 'each cast occupies its sourced cast time ... a cast counts when it starts')",
+      "start_of_5th_cast": "s_5 = sum of the cast times of the first four casts = (sum of all five = 0.50) - castTime(5th cast)",
+      "case_5th_cast_is_E_or_R": "s_5 = 0.50 - 0.25 = 0.25 s",
+      "case_5th_cast_is_Q_Q2_or_W": "s_5 = 0.50 - 0.00 = 0.50 s"
+    },
+    "step_4_exhaustive_check": {
+      "method": "enumerated all 120 permutations of {Q, Q2, W, E, R} with the sourced cast times above and W emitting two events (magic + 60-splinter true), taking the time of the 6th authored event",
+      "result_set": [0.25, 0.5],
+      "conclusion": "0.0 is unreachable for damage_events[5] under ANY cast order once the sourced cast times are honored."
+    },
+    "step_5_which_of_the_two": {
+      "reasoning": "0.25 is obtained exactly when the last cast is E or R, i.e. when exactly one 0.25 s cast precedes it. The typical Syndra order ends on R (finisher), and R's own 0.25 s cast does not push its damage later - the wiki note 'Unleashed Power's effect takes place at the start of the cast time' pins R's damage to its cast START, which is precisely the engine's documented 'a cast counts when it starts' convention. So the correct time is s_5 = 0 + 0 + 0 + 0.25(E) = 0.25 s.",
+      "cross_check_on_convention": "If the engine instead timed damage at cast END, the same rotation would give damage_events[4] = E @ 0.25 and damage_events[5] = R @ 0.50 - which does not reproduce the old value either. Only the documented cast-START convention reproduces 0.25, confirming that convention is what the baseline was built on."
+    },
+    "computed_correct_value": 0.25
+  },
+
+  "why_the_new_value_is_wrong": "0.0 for damage_events[5] requires SIX simultaneous events at t = 0. Syndra can author at most five events at t = 0 (Q, Q2, W-magic, W-true, E - the only zero-cast-time sources), because E and R each occupy a sourced 0.25 s cast and the shared timeline blocks the next cast for that long. Collapsing the sixth event to t = 0 means the engine stopped charging the preceding ability's sourced 0.25 s cast time to the shared timeline, contradicting docs/math-foundations.md S1.1 and its exactness-table row (marked EXACT). Note also that re-ordering alone cannot produce this diff: every permutation leaves damage_events[5] at 0.25 or 0.5.",
+
+  "caveats": [
+    "The oracle cannot see the event LABEL at index 5 (only `time`), nor the engine source. The computation assumes damage_events[0..5] are the six ability events of the opening rotation, which follows from the 60-splinter slot inventory (Q, Q2, W-magic, W-true, E, R) and from the old value 0.25 itself - a value only reachable if exactly five events precede it at t = 0.",
+    "Residual alternative considered and rejected: if the fight ledger interleaved auto-attack swings (math-foundations S1.1: swing timestamps t_i = i*delta, i = 0..N(T)-1, so t_0 = 0), a swing at t = 0 could occupy index 5 and 0.0 would be correct. This is rejected because the OLD baseline shows only five events at t = 0 before a 0.25 event: had a t = 0 swing been in this ledger, the old damage_events[5] would itself have been 0.0, not 0.25. So this fight's early ledger contains no t = 0 auto for the index to land on.",
+    "Independently of the verdict, the correct value for the sixth opening damage event of Syndra at 60 splinters is 0.25 s."
+  ],
+
+  "verdict_detail": {
+    "verdict": "old_value_correct",
+    "correct_value": 0.25,
+    "confidence": "high on the arithmetic (0.0 is unreachable for any ability event that follows a 0.25 s cast), medium on the index-to-slot mapping (see caveats)"
+  }
+}

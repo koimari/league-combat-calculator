@@ -1,0 +1,99 @@
+{
+  "receipt_id": "oracle-C6-leaf29",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[6]/resource_cost",
+  "old_value": 60.0,
+  "new_value": 100.0,
+  "verdict": "new_value_correct",
+  "independent_value": 100.0,
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "restriction": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were not consulted."
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [60, 70, 80, 90, 100], \"units\": [\"\", \"\", \"\", \"\", \"\"]}]}",
+      "note": "Force of Will mana cost by rank: 60/70/80/90/100. Rank 5 = 100."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].cost / .cooldown / .rechargeRate",
+      "quote": "cost {\"values\": [40, 45, 50, 55, 60]} ; cooldown {\"values\": [7,7,7,7,7], \"affectedByCdr\": false} ; rechargeRate [7,7,7,7,7]",
+      "note": "Dark Sphere cost by rank 40/45/50/55/60 (rank 5 = 60); 7 s recharge."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].cost / Syndra.abilities.R[0].cost",
+      "quote": "E {\"values\": [50,50,50,50,50]} ; R {\"values\": [100,100,100]}",
+      "note": "Scatter the Weak 50 flat; Unleashed Power 100 flat at every rank."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85.",
+      "note": "120 is the maximum splinter count, i.e. the scenario suffix `_120` is the fully-stacked Transcendent configuration; 85 of those splinters come from 17 rank-ups, which requires a level-18 (Q5/W5/E5/R3) build."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "note": "At >= 40 splinters Dark Sphere gains a stocked second charge - i.e. an extra Q cast in the timeline."
+    },
+    {
+      "id": "S6",
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots / notable_atoms",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... \"modeled = SLOTS keys incl. synthetic Q2 (2nd charge)\" ... \"ammo (Q 2nd charge at 40 splinters)\" ... \"splinters option (0-120) gates Q2 second charge\"",
+      "note": "Cached audit confirms the 120-splinter configuration adds a distinct Q2 cast slot to the rotation."
+    },
+    {
+      "id": "S7",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. Ability Haste: [10, 20, 30]",
+      "note": "R rank 3 grants Dark Sphere 30 ability haste -> Q recast 7 * 100/130 = 5.3846 s."
+    },
+    {
+      "id": "S8",
+      "file": "docs/math-foundations.md",
+      "lines": "59-67",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "note": "Defines the cast_timeline ordering rule used below."
+    },
+    {
+      "id": "S9",
+      "file": "docs/math-foundations.md",
+      "line": "462",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)` ... R casts exactly once per timed fight (model constraint, documented)",
+      "note": "R appears once, so index 6 cannot be an R recast."
+    },
+    {
+      "id": "S10",
+      "file": "data/worklists/f2-task.md",
+      "line": "7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)",
+      "note": "Establishes the Q,W,E,R baseline priority that a `custom_order` scenario perturbs; the perturbation only re-orders the opening cycle, not which ability is available later."
+    }
+  ],
+  "computation": {
+    "step_1_legal_cost_set": "Syndra's only legal mana costs are Q 40/45/50/55/60 (S2), W 60/70/80/90/100 (S1), E 50 flat and R 100 flat (S3). Therefore 60 can only be Q at rank 5 or W at rank 1, and 100 can only be W at rank 5 or R at any rank.",
+    "step_2_rank_pin": "The scenario is the fully-stacked 120-splinter configuration (S4). Reaching 120 splinters requires the 85-splinter rank-up ceiling plus combat stacks, i.e. a level-18 build with Q5 / W5 / E5 / R3. At level 18 W is rank 5, so W at rank 1 (60) is impossible; W costs 100 and Q costs 60.",
+    "step_3_effective_cooldowns": "Q: 7 s recharge, +30 ability haste from R rank 3 (S7) -> 7*100/130 = 5.3846 s. W rank 5: 8 s. E: 15 s. R rank 3: 80 s, cast once (S9). Cast times: Q none (0), W none (0), E 0.25, R 0.25.",
+    "step_4_schedule_without_the_120_splinter_Q2_charge": "Greedy shared timeline (S8) from the Q,W,E,R priority (S10): t=0 Q [0], t=0 W [1], t=0 E [2], t=0.25 R [3], t=5.38 Q [4], t=8.0 W [5], t=10.77 Q [6]. Index 6 = Q at rank 5 = 60 mana. This reproduces the OLD leaf value exactly.",
+    "step_5_schedule_with_the_120_splinter_Q2_charge": "At >=40 splinters Dark Sphere stocks a second charge, modeled as the Q2 slot (S5, S6), which inserts exactly one extra cast into the opening cycle: t=0 Q [0], t=0 Q2 [1], t=0 W [2], t=0.25 E [3], t=0.5 R [4], t=5.38 Q [5], t=8.0 W [6]. Index 6 = W (Force of Will) at rank 5 = 100 mana. This reproduces the NEW leaf value exactly.",
+    "step_6_robustness": "The same one-cast shift holds without the R ability-haste assumption (Q recast at 7.0 s): old = Q(0),W(0),E(0),R(0.25),Q(7),W(8),Q(14) -> index 6 = Q = 60; new = Q(0),Q2(0),W(0),E(0.25),R(0.5),Q(7),W(8) -> index 6 = W = 100. Q's recast (5.38 or 7 s) always precedes W's (8 s), so the identity of index 6 is fixed by cooldowns rather than by which custom opening order is chosen - a pure re-ordering of the opening cycle cannot move index 6, only the insertion/removal of the Q2 charge can.",
+    "step_7_conclusion": "The scenario is explicitly the 120-splinter configuration, in which the Q2 second charge IS active (S5, S6). The timeline that includes Q2 is therefore the correct one, its index-6 cast is Force of Will's second cast, and Force of Will at rank 5 costs 100 mana (S1). The old value 60 is the Dark Sphere rank-5 cost that appears at index 6 only when the 120-splinter Q2 charge is absent from the rotation.",
+    "no_cost_modifier_check": "Nothing in Syndra's cached text reduces ability mana costs. The passive only restores mana on splinter pickup ('Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana'), which is a refund, not a cost change, so the per-cast resource_cost leaf is the raw sourced cost."
+  },
+  "residual_uncertainty": "The scenario's exact option payload (fight duration, explicit custom order, ability ranks) is defined outside data/ and was not read. The verdict rests on: (a) 100 being a legal Syndra cost only for W rank 5 or R, (b) R casting once and therefore not landing at index 6, (c) the 120-splinter configuration mandating the Q2 charge, and (d) both the old and new values being reproduced exactly by the same schedule with and without that one Q2 cast.",
+  "verdict_reason": "new_value_correct - index 6 of the correct 120-splinter rotation is Force of Will's recast, whose sourced rank-5 mana cost is 100."
+}

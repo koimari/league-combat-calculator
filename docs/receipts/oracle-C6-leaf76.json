@@ -1,0 +1,94 @@
+{
+  "receipt_id": "oracle-C6-leaf76",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[1]/slot",
+  "old_value": "W",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oc6b",
+    "read": ["data/champions.json (Syndra)", "data/worklists/e3-stacks.json", "data/worklists/e3-mechanics.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/wiki-atoms/stack-transform-summon-resource.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > Q 'Dark Sphere' > effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > P 'Transcendent' > effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > W 'Force of Will' > effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > E 'Scatter the Weak' > effects[2].description",
+      "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% ..."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > Q 'Dark Sphere' > notes",
+      "quote": "After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only."
+    },
+    {
+      "id": "S6",
+      "file": "data/worklists/e3-stacks.json",
+      "locator": "entry {champion: Syndra, slot: Q}",
+      "quote": "hint: Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge) ... ammo (Q 2nd charge at 40 splinters)"
+    },
+    {
+      "id": "S8",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"
+    },
+    {
+      "id": "S9",
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "locator": "atom 'Ammo / stocked charges'",
+      "quote": "stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    },
+    {
+      "id": "S10",
+      "file": "docs/math-foundations.md",
+      "locator": "section 1.1, shared-timeline paragraph (lines 59-68)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_slot": "'Q2' is not a fifth ability. Per S1/S6/S9 it is Syndra's SECOND STOCKED Dark Sphere charge; the calculator models the extra charge as a synthetic slot named Q2 (S7, S8). So the leaf question reduces to: at this scenario's splinter count, is a second Dark Sphere charge available to be cast as the second action of the rotation?",
+    "step_2_read_the_scenario_number": "The scenario id 'syndra_custom_order_60' carries the value 60, which in Syndra's kit is a Splinters-of-Wrath count: the cached wiki gives exactly four Transcendent thresholds - 40 (Q second charge, S1), 60 (W bonus true damage, S3), 80 (E scatter/slow, S4), 120 (+15% AP, S2). 60 is one of those thresholds, and the splinter option is the documented 0-120 knob (S7/S8). No other Syndra quantity in the cached data equals 60.",
+    "step_3_threshold_test": "splinters = 60. Q2 gate = 40. 60 >= 40 => TRUE. Therefore Dark Sphere is stocked up to a maximum of 2 charges (S1), i.e. the Q2 slot is unlocked and legal in this scenario. (Cross-check the other gates at 60: W true damage 60 >= 60 TRUE, E 60 >= 80 FALSE, P AP buff 60 >= 120 FALSE. A 60-splinter scenario is precisely the point where BOTH the second Q charge and the W true-damage upgrade are live - which is why W still belongs in the rotation, just not at index 1.)",
+    "step_4_castability_at_index_1": "Charges are stocked, not cooldown-gated at the moment of use: with 2 charges banked, the second Dark Sphere can be cast immediately after the first, with no cooldown wait. The shared-timeline model (S10) only requires that no other cast is in progress and that the ability's own gate is satisfied; a stocked charge satisfies its gate at t=0. So Q -> Q2 back-to-back at timeline indices 0 and 1 is mechanically legal. Q's listed cooldown (7s flat, plus R's 10/20/30 ability haste to Dark Sphere) never blocks the banked second charge.",
+    "step_5_which_value_is_right": "Both W and Q2 are individually legal casts at t~0, so legality alone does not settle the leaf; the discriminator is whether the second Dark Sphere charge is present in the timeline at all. Index 1 flipping from W to Q2 is an INSERTION of Q2 ahead of the still-present W, not a substitution of one ability for another - W's own 60-splinter upgrade (S3) is the reason the scenario sits at 60, so W cannot have been removed. The old timeline is exactly what you get when the Q2 slot is dropped from a rotation that names it: [Q, W, E, R]. The new timeline is what you get when the unlocked second charge is honored: [Q, Q2, W, E, R]. Since 60 >= 40 makes Q2 unlocked and castable (steps 3-4), dropping it is the error and honoring it is correct.",
+    "step_6_ordering_sanity_check": "Casting both Dark Sphere charges before W and R is also the sphere-consistent order: W 'telekinetically grabs the nearest Dark Sphere' and R 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones' (data/champions.json, Syndra W/R effect text). Front-loading Q and Q2 guarantees live spheres exist for W's grab and for R's collection, so Q2 at index 1 is at worst neutral and at best strictly better than deferring it. There is no wiki-grounded reading in which the second charge must be withheld until after W.",
+    "conclusion": "correct value at fights/manual_target/cast_timeline[1]/slot = 'Q2'"
+  },
+
+  "confidence": "high-on-mechanics, medium-on-scenario-intent",
+  "residual_uncertainty": "The scenario definition itself lives in scripts/ (golden snapshot), which this runbook forbids reading, so the requested cast order was not observed directly - the verdict is derived from (a) the cached wiki threshold 40 <= 60 making the Q2 charge unlocked and instantly castable, and (b) the fact that the flip is an insertion of Q2 ahead of a still-present W rather than a swap. The one reading that would make 'W' correct is a scenario whose splinter option is below 40, which contradicts the '60' in the scenario id and contradicts W's own 60-splinter upgrade being the point of the scenario.",
+  "verdict_enum": "new_value_correct"
+}

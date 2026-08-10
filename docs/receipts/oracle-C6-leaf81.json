@@ -1,0 +1,85 @@
+{
+  "receipt_id": "oracle-C6-leaf81",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[3]/name",
+  "old_value": "Unleashed Power",
+  "new_value": "Scatter the Weak",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra entry)",
+      "data/worklists/e3-stacks.json",
+      "data/wiki-atoms/stack-transform-summon-resource.json",
+      "data/practice-corpus/scenarios.json (naming conventions only)",
+      "docs/math-foundations.md §1.1"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json → Syndra.abilities.P[0].effects[0].description (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.Q[0].effects[1].description (Dark Sphere, Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.W[0].effects[3].description (Force of Will, Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.E[0].effects[2].description (Scatter the Weak, Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% ..."
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.R[0].effects[3].description (Unleashed Power, Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "source": "data/champions.json → Syndra ability names",
+      "quote": "P Transcendent | Q Dark Sphere | W Force of Will | E Scatter the Weak | R Unleashed Power"
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.W[0].notes",
+      "quote": "The initial cast does not count as an ability activation for the purposes of on-cast effects such as Spellblade ... Detonating the ability manually does."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json → Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json → atom `ammo`",
+      "quote": "... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere) ..."
+    },
+    {
+      "source": "docs/math-foundations.md §1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "data/champions.json → Syndra cooldowns / cast times / costs",
+      "quote": "Q 7/7/7/7/7 (affectedByCdr false), cast 0 (0.6 s sphere delay), cost 40-60; W 12/11/10/9/8, cost 60-100; E 15 flat, cast 0.25, cost 50; R 120/100/80, cast 0.25, cost 100"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_decode_scenario_suffix": "Syndra's only numeric module options per the audit record are `splinters` (0-120) and `r_spheres` (max 7: 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones'). 60 cannot be r_spheres. 60 IS a documented Splinters-of-Wrath threshold (the W true-damage threshold), so `_60` = splinters = 60. (The corpus writes durations with a unit — `time_based_10s`, `one_rotation` — not as a bare integer, so 60 is not a fight length. Note the conclusion below is unchanged even if 60 were seconds, as long as splinters >= 40.)",
+    "step_2_which_transcendent_bonuses_are_live_at_60": "40 (Q: stock a Dark Sphere charge, max 2) ACTIVE; 60 (W: bonus true damage) ACTIVE; 80 (E scatter/slow) inactive; 100 (R execute) inactive; 120 (+15% AP) inactive.",
+    "step_3_cast_inventory_of_one_rotation": "Because the 40-splinter bonus is live at 60 splinters, Syndra enters the fight holding a stocked Dark Sphere charge in addition to the ability itself ('up to a maximum of 2'), i.e. TWO Dark Sphere casts are available back-to-back before Q's 7 s cooldown gates further casts. The audit record confirms the engine represents exactly this as a separate 'Q2 slot' for splinters >= 40. Force of Will contributes ONE activation, not two: the wiki notes the initial grab 'does not count as an ability activation', so the grab+throw pair is a single cast in the timeline. R is single-cast.",
+    "step_4_order_on_the_shared_timeline": "Per math-foundations §1.1 the casts are laid on one shared timeline resolved greedily by cast order; at t=0 every ability is off cooldown, so the opening casts follow the order slot-by-slot with the stocked Q charge immediately following the Q cast: [0] Dark Sphere (Q), [1] Dark Sphere (Q stocked charge), [2] Force of Will (W), [3] Scatter the Weak (E), [4] Unleashed Power (R).",
+    "step_5_mana_check_no_cast_is_gated": "Rotation cost <= 60+60+100+50+100 = 370 mana. Syndra mana = 480 + 40 x (L-1) x (0.7025 + 0.0175 x (L-1)) = 918 at L13, 1160 at L18. No cast is dropped for mana, so the timeline is not truncated.",
+    "step_6_leaf": "cast_timeline[3].name = 'Scatter the Weak'.",
+    "consistency_with_the_observed_diff": "The old timeline placed R at index 3, i.e. a 4-cast rotation Q, W, E, R with E at index 2 — the sequence you get only if the stocked Dark Sphere charge is omitted. The new value shifts E from index 2 to index 3 and (necessarily) R from 3 to 4: exactly a single extra cast inserted at or before index 3. The only cast the cached wiki text mandates at 60 splinters and not at <40 is the stocked second Dark Sphere. Old and new therefore differ precisely by the 40-splinter Transcendent bonus, which is live at 60."
+  },
+
+  "counterfactual_check": "For the old value to be right, the rotation at 60 splinters would have to contain exactly three casts before R (Q, W, E). That requires ignoring 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2', which is unambiguously in force at 60 splinters. Alternative insertion candidates were ruled out: the W recast is not a second activation (W notes), and no E/R Transcendent bonus is live below 80 splinters. Both wrong is excluded because the fourth cast must be one of Syndra's five named abilities and 'Scatter the Weak' is the only one consistent with a five-cast opening in slot order.",
+
+  "residual_uncertainty": "The scenario definition itself lives outside the permitted evidence tree (scripts/tests), so the literal cast-order list passed by 'custom_order' was not read. The verdict does not depend on the exact permutation: it depends only on (a) the opening rotation containing two Dark Sphere casts at splinters >= 40, and (b) the observed old/new pair being a one-slot right shift of E and R, which pins the pre-change sequence to Q, W, E, R. Should the scenario's custom order not begin Q-first, the specific index-3 name could differ, but the old value's four-cast (charge-less) rotation would still be wrong.",
+
+  "verdict_rationale": "The 4th entry (0-indexed [3]) of a 60-splinter Syndra rotation is Scatter the Weak, because the stocked Dark Sphere charge granted at 40 Splinters of Wrath adds a Dark Sphere cast ahead of it. new_value_correct."
+}

@@ -1,0 +1,91 @@
+{
+  "receipt_id": "oracle-C6-leaf17",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/slot",
+  "old_value": "Q",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/worklists/f2-task.md",
+      "data/worklists/f3-task.md",
+      "docs/math-foundations.md sections 1.1, 1.2, 5"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].description (cached wiki text)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1].leveling",
+      "quote": "Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities cooldown/castTime rows",
+      "quote": "Q cooldown 7/7/7/7/7 (rechargeRate [7,7,7,7,7]); W 12/11/10/9/8; E 15 (castTime 0.25); R 120/100/80 (castTime 0.25)"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "source": "docs/math-foundations.md section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "data/worklists/f2-task.md (rotation/combo layer spec)",
+      "quote": "rank its damaging abilities by ... (b) setup/consume relationships (e.g. Cassiopeia Q poisons BEFORE E spam; Varus Q detonates Blight applied by autos/W ...), (c) cooldown gating (cast order must respect cooldowns), (d) buffs first"
+    },
+    {
+      "source": "data/worklists/f3-task.md",
+      "quote": "an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_reading": "The scenario suffix 120 is Syndra's splinter option at its cap: the cached passive text caps Splinters of Wrath at 120 and grants Transcendence (+15% AP) exactly at 120. Every Transcendent threshold is therefore active in this scenario: 40 (Q second charge), 60 (W true damage), 80 (E), 100 (R execute), 120 (AP buff).",
+    "step_2_castable_slots": "At splinters >= 40 the cached Q text stocks 'a Dark Sphere charge, up to a maximum of 2', so two Q casts are legal back-to-back from stocked charges (charge-based, not gated by the 7 s recharge). The opening therefore contains FIVE castable ability slots, not four: Q, Q(second charge, the module's synthetic Q2 slot per data/champion-audit/batch-6.json), W, E, R.",
+    "step_3_setup_consume_edge": "R is a sphere CONSUMER: 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones'. Verified against the leveling rows: Minimum / per-sphere = 240/80 = 360/120 = 480/160 = 3.0 and (60/20)=3.0 AP-ratio, i.e. the floor is exactly the 3 self-conjured spheres. Maximum / per-sphere = 560/80 = 840/120 = 1120/160 = 7.0 and (140/20)=7.0, i.e. the ceiling is exactly 3 conjured + 4 grabbed = 7 spheres. R's damage is therefore strictly increasing in the number of LIVE spheres on the ground at cast time, so every sphere-creating cast (Q, and Q's second charge) must precede R.",
+    "step_4_timing_feasibility": "Sphere lifetime is 6 s ('remains on the ground for 6 seconds'). Cast times: Q and W instant (castTime 'none'), E 0.25 s, R 0.25 s, so five casts on the one shared timeline (docs/math-foundations.md 1.1: one set of hands, greedy by cast order) complete in ~1-1.5 s, far inside the 6 s window. Both Q spheres are alive when R fires at index 4, so the setup is real, not nominal.",
+    "step_5_value_of_the_edge": "At R rank 3, R with the two Q spheres pre-placed grabs 5 spheres: 5 x (160 + 20% AP) = 800 + 100% AP. R fired before them takes the 3-sphere floor: 480 + 60% AP. Delta = 320 + 40% AP raw magic damage lost by casting R too early - a first-order error, not a rounding one.",
+    "step_6_index_arithmetic": "cast_timeline[4] is the 5th cast. With exactly five castable slots in the opening and R required last by the setup/consume edge above, slot(cast_timeline[4]) = R. The old value Q at index 4 can only arise from a four-slot cycle (Q, W, E, R then Q again), i.e. a timeline that either drops the 40-splinter second Dark Sphere charge or repeats Q after R - and in either arrangement R lands at index <= 3, firing at fewer live spheres than the scenario's own splinter state makes available. A cast-timeline that puts a Q AFTER R also violates the cooldown/renewal picture in docs/math-foundations.md 1.1 in spirit: that trailing sphere arrives too late to be grabbed and contributes nothing to R.",
+    "conclusion": "R is the correct slot at cast_timeline[4] for syndra_custom_order_120."
+  },
+
+  "caveats": [
+    "The golden scenario definition lives outside the permitted evidence tree (scripts/), so the scenario's literal cast-order input was never read. The computation above is grounded only in cached wiki text (data/champions.json), the cached audit facts about which slots exist (data/champion-audit/batch-6.json, batch-e9-1.json), and the scheduling semantics quoted from docs/math-foundations.md.",
+    "The audit cache notes R prices spheres from a user-set r_spheres option rather than from the live sphere count, so the ordering claim here is about the cast timeline's correctness as a rotation, not about R's damage number in this scenario.",
+    "Old value Q at index 4 would only be defensible if the scenario's custom order deliberately lists a post-R Q at position 5; nothing in the permitted evidence supports that, and it would be a strictly dominated rotation given the 3-vs-7 sphere arithmetic above."
+  ]
+}

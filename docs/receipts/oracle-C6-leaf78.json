@@ -1,0 +1,126 @@
+{
+  "receipt_id": "oracle-C6-leaf78",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[2]/name",
+  "old_value": "Scatter the Weak",
+  "new_value": "Force of Will",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "contamination_note": "A file 'syndra.txt' was present at the scratch root although 'git archive HEAD data docs/math-foundations.md' can only emit data/** and docs/math-foundations.md. It was NOT used as a source. Spot-check showed its ability text and notes are byte-identical in substance to data/champions.json['Syndra']; every quotation below is re-read from data/champions.json itself."
+  },
+
+  "question": "Which ability occupies cast_timeline index 2 (0-based, i.e. the third cast) of Syndra's fight rotation?",
+
+  "sourced_facts": [
+    {
+      "id": "F1-Q-setup",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds.",
+      "reading": "Q is the sphere PRODUCER. It is the setup atom for W, E and R, all three of which consume/interact with live Dark Spheres."
+    },
+    {
+      "id": "F2-Q2-charge",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "corroboration": "data/champion-audit/batch-6.json -> Syndra.module_slots.modeled = [P, Q, Q2, W, E, R], note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; data/worklists/e3-stacks.json Syndra/Q hint repeats the 40-splinter charge; data/champion-audit/batch-e9-1.json: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'.",
+      "reading": "At the scenario's splinter level (>=40, and the scenario's '60' matches the W 60-splinter Transcendent threshold exactly) TWO Dark Sphere casts (Q and the synthetic Q2 charge) are available and lead the rotation. That places the third cast at index 2 AFTER both sphere casts."
+    },
+    {
+      "id": "F3-W-consumes-sphere",
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[0] and effects[2]",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location ... She prioritizes grabbing the nearest unit, then Dark Spheres. | Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land.",
+      "reading": "W is a sphere CONSUMER with a 500-unit grab radius. Its damage packet exists only if a sphere (or unit) is inside that radius when W is cast."
+    },
+    {
+      "id": "F4-E-displaces-spheres",
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain.",
+      "reading": "E DISPLACES spheres 950-1200 units. That is 1.9x-2.4x W's 500-unit grab radius, so an E cast before W throws the setup sphere out of W's reach. The setup/consume edge therefore runs W BEFORE E, never E before W."
+    },
+    {
+      "id": "F5-R-sphere-count-scaling",
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1] (description + leveling rows)",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. | Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)",
+      "reading": "R's total is linear in the number of live spheres: min = 3 x per-sphere (3x160=480, 3x20=60 checks out at R3), max = 7 x per-sphere (7x160=1120, 7x20=140 checks out). Banking BOTH Q charges before R is worth +2 spheres = +320 (+40% AP). This is the sourced reason the two Dark Sphere casts lead the timeline."
+    },
+    {
+      "id": "F6-R-ignores-held-and-pushed-spheres",
+      "source": "data/champions.json -> Syndra.abilities.R[0].notes",
+      "quote": "Unleashed Power will not add a Sphere that Syndra is holding with Force of Will. | Spheres that are being pushed by Scatter the Weak (normally ones that were made late during the push) will not get picked up for Unleashed Power.",
+      "reading": "Two hard ordering constraints: (a) W's recast (the throw) must COMPLETE before R, or the held sphere is lost to R; (b) E's push must not be in flight when R fires. Both keep R last and keep W ahead of E; neither ever puts E ahead of W."
+    },
+    {
+      "id": "F7-cooldowns",
+      "source": "data/champions.json -> Syndra cooldown modifiers",
+      "quote": "Q 7/7/7/7/7 affectedByCdr=false; W 12/11/10/9/8 affectedByCdr=true; E 15/15/15/15/15 affectedByCdr=true; R 120/100/80. R passive: 'Dark Sphere's cooldown is reduced equivalent to an amount of ability haste' = 10/20/30.",
+      "reading": "At level 18 max ranks with no AH items: Q_eff = 7 x 100/(100+30) = 5.385 s, W = 8 s, E = 15 s, R = 80 s. Every ability is off cooldown at t=0, so the opening casts are laid down back-to-back and the timeline's first indices ARE the rotation order (see the scheduling law below)."
+    },
+    {
+      "id": "F8-scheduling-law",
+      "source": "docs/math-foundations.md lines 59-67",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "reading": "Ties at t=0 are broken by cast order, so cast_timeline[0..k] is exactly the opening rotation order. cast_timeline[2] = the third ability of the rotation."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_damage_per_effective_cooldown": {
+      "why": "The documented rotation-scoring signal (data/worklists/f2-task.md item 1a/1c: 'rank its damaging abilities by DPS contribution per rank ... cooldown gating') is damage per effective cooldown.",
+      "rank5_rows_from_data": {
+        "Q": "230 + 70% AP over 5.385 s",
+        "W": "190 + 65% AP over 8 s (>=60 splinters: Total Mixed Damage row 212.8 + 76.6% AP + 1.14 %AP-per-100-AP)",
+        "E": "200 + 60% AP over 15 s"
+      },
+      "at_AP_0": {"Q": 42.7, "W_base": 23.8, "W_60_splinters": 26.6, "E": 13.3},
+      "at_AP_600": {
+        "Q": "(230 + 0.70*600)/5.385 = 120.7",
+        "W_base": "(190 + 0.65*600)/8 = 72.5",
+        "W_60_splinters": "(212.8 + 0.766*600 + 0.0114*600*6)/8 = (212.8 + 459.6 + 41.0)/8 = 89.2",
+        "E": "(200 + 0.60*600)/15 = 37.3"
+      },
+      "conclusion": "Q > W > E at every AP >= 0. W out-throughputs E by 1.8x (AP 0) to 2.4x (AP 600, 60 splinters). No AP value flips the ranking, because W wins on both the numerator-per-second and the cooldown."
+    },
+    "step_2_setup_consume_edges": {
+      "edges": [
+        "Q (producer) -> W (consumer, 500-unit grab)  [F1, F3]",
+        "Q (producer) -> E (sphere knockback)         [F1, F4]",
+        "Q, Q2 (producers) -> R (grabs up to 4 live spheres, +320 +40% AP for the 2 banked spheres) [F5]",
+        "W (throw completes) -> R (a HELD sphere is not counted by R) [F6a]",
+        "W -> E (E displaces spheres 950-1200 units, 1.9x-2.4x beyond W's 500-unit grab radius; E-first strips W's setup) [F4, F3]",
+        "E -> R is the one soft edge (in-flight pushed spheres are skipped by R) [F6b]"
+      ],
+      "topological_result": "Q, Q2, W, E, R  (equivalently Q, Q2, W, R, E if the F6b soft edge is honored strictly). In BOTH orders index 0 = Dark Sphere, index 1 = Dark Sphere (2nd charge), index 2 = Force of Will."
+    },
+    "step_3_index_resolution": {
+      "index_convention": "0-based JSON list index, so cast_timeline[2] is the third cast.",
+      "t0_batch": "All of Q, Q2, W, E, R are off cooldown at t=0 (F7), so under the shared-timeline greedy law (F8) the first five timeline entries are the rotation order itself, before any recast at t=5.385 s (Q), 8 s (W) or 15 s (E).",
+      "answer": "cast_timeline[2].name = 'Force of Will'"
+    },
+    "step_4_what_would_have_to_be_true_for_the_old_value": "'Scatter the Weak' at index 2 requires either (a) E cast before W - directly contradicted by F4 vs F3 (950-1200 unit displacement vs a 500-unit grab radius) and by the strict W > E damage-per-cooldown ranking in step 1; or (b) a bare default Q,W,E,R order with the Q2 second charge absent from the timeline - contradicted by F2 (the charge is stocked at >=40 splinters and is a modeled slot) and by F5 (dropping a banked sphere costs R 160 + 20% AP, 280 magic damage at 600 AP). Both readings of the old value are unsupported by the cached source text."
+  },
+
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.Q[0].effects[0..1] (description + Magic Damage leveling 90/125/160/195/230 + 70% AP; cooldown 7 flat, affectedByCdr false)",
+    "data/champions.json -> Syndra.abilities.W[0].effects[0],[2],[3] (grab within 500 units; recast throw 70/100/130/160/190 + 65% AP; 60-splinter bonus true damage / Total Mixed Damage rows; cooldown 12/11/10/9/8)",
+    "data/champions.json -> Syndra.abilities.E[0].effects[0..1] (cone damage 60/95/130/165/200 + 60% AP; spheres knocked 950-1200 units; cooldown 15 flat)",
+    "data/champions.json -> Syndra.abilities.R[0].effects[0..2] + notes (10/20/30 ability haste to Q; conjures 3 + grabs up to 4 live spheres; 80/120/160 + 20% AP per sphere, min 240/360/480 + 60% AP, max 560/840/1120 + 140% AP; 'will not add a Sphere that Syndra is holding with Force of Will'; 'Spheres that are being pushed by Scatter the Weak ... will not get picked up')",
+    "data/champion-audit/batch-6.json -> Syndra.module_slots (P, Q, Q2, W, E, R; Q2 = synthetic 2nd charge)",
+    "data/champion-audit/batch-e9-1.json -> Syndra ('40+ Q charges via Q2 slot, 60+ W true damage', all five slots modeled)",
+    "data/worklists/e3-stacks.json -> Syndra Q hint (40-splinter Dark Sphere charge)",
+    "data/worklists/f2-task.md items 1a/1c (rotation scoring: DPS contribution per rank, setup/consume relationships, cooldown gating)",
+    "docs/math-foundations.md lines 59-67 (shared-timeline cast scheduling, ties resolved greedily by cast order)",
+    "docs/math-foundations.md line 465 (Ability rotation casts: shared-timeline renewal schedule, EXACT)"
+  ],
+
+  "confidence_and_caveats": [
+    "The scenario's own input tuple (its custom cast order, splinter count and fight length) lives outside the permitted evidence tree, so this receipt verifies the ORDERING LAW the leaf must satisfy rather than replaying the scenario config. Every reading of the scenario id that the cached data supports - splinters=60 (the exact W Transcendent threshold, which also unlocks the Q2 charge at 40) or a 60 s fight window - puts two Dark Sphere casts ahead of Force of Will and therefore Force of Will at index 2.",
+    "The only way 'Scatter the Weak' survives at index 2 is a bare, unmodified Q,W,E,R default with no second sphere charge - which is precisely the shape a scenario named 'custom_order' exists to move away from, and which the sourced setup/consume edges and R's sphere-count scaling both penalize.",
+    "W-before-E is independently over-determined: it holds on the damage-per-cooldown ranking (1.8x-2.4x), on the grab-radius-vs-knockback geometry (500 vs 950-1200 units), and on R's held/pushed-sphere exclusions. No cached source supports E before W."
+  ]
+}

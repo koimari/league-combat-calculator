@@ -1,0 +1,95 @@
+{
+  "receipt_id": "oracle-C6-leaf20",
+  "runbook": "R-18 / R-19 (independent oracle, blind to diff/plan/src/tests)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/resource_cost",
+  "old_value": 60.0,
+  "new_value": 100.0,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra module-slot audit)",
+      "data/champion-audit/batch-e9-1.json (Syndra verdict row)",
+      "data/worklists/e3-stacks.json, data/worklists/e3-mechanics.json (Syndra splinter prose)",
+      "data/worklists/f2-task.md (cast_order / DEFAULT_CAST_ORDER semantics)",
+      "data/practice-corpus/scenarios.json (no Syndra scenario present)",
+      "docs/math-foundations.md (no resource/mana-cost formula; searched)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.resource",
+      "quote": "\"resource\": \"MANA\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (\"Dark Sphere\").cost.modifiers[0]",
+      "quote": "\"values\": [40, 45, 50, 55, 60], \"units\": [\"\", \"\", \"\", \"\", \"\"]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (\"Force of Will\").cost.modifiers[0]",
+      "quote": "\"values\": [60, 70, 80, 90, 100], \"units\": [\"\", \"\", \"\", \"\", \"\"]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (\"Scatter the Weak\").cost.modifiers[0]",
+      "quote": "\"values\": [50, 50, 50, 50, 50]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0] (\"Unleashed Power\").cost.modifiers[0]",
+      "quote": "\"values\": [100, 100, 100] (flat across all three ranks)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0] (\"Transcendent\") effect text",
+      "quote": "Innate: Syndra collects Splinters of Wrath ... stacking up to 120 times. ... Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85."
+    },
+    {
+      "source": "data/champions.json -> Syndra Q effect text (Transcendent Bonus)",
+      "quote": "Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra W / E / R Transcendent Bonus text",
+      "quote": "W: 'Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.' E: 'Collecting 80 Splinters ... increased scatter angle and slow'. R: 'Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health.' -- no Splinter threshold alters any mana cost."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "\"modeled\": [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... \"modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.\" ... \"splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage ..., P 120-splinter +15% AP buff\""
+    },
+    {
+      "source": "data/worklists/f2-task.md line 7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "quote": "No mana/resource-cost formula exists in the document (searched 'resource_cost', 'mana cost', 'cost'; only hits are the arXiv reference 'Renewal processes with costs and rewards'). Mana costs are therefore pure cached-wiki table lookups, not derived quantities."
+    }
+  ],
+  "independent_computation": {
+    "method": "A cast's resource_cost is a direct table lookup: cost = cost.modifiers[0].values[rank - 1] mana, per the cached wiki cost rows. No Splinter/Transcendent threshold, and no formula in math-foundations.md, modifies a Syndra mana cost.",
+    "syndra_cost_table_by_rank": {
+      "Q Dark Sphere": {"1": 40, "2": 45, "3": 50, "4": 55, "5": 60},
+      "Q2 (synthetic 2nd Dark Sphere charge, 40+ splinters)": "same table as Q; a stocked charge is still a Dark Sphere cast",
+      "W Force of Will": {"1": 60, "2": 70, "3": 80, "4": 90, "5": 100},
+      "E Scatter the Weak": {"1": 50, "2": 50, "3": 50, "4": 50, "5": 50},
+      "R Unleashed Power": {"1": 100, "2": 100, "3": 100}
+    },
+    "inversion_of_the_two_candidate_values": {
+      "60 mana is attainable only by": ["Q (or synthetic Q2) at rank 5", "W at rank 1"],
+      "100 mana is attainable only by": ["W at rank 5", "R at any rank (flat 100)"],
+      "50 / 40 / 45 / 55 / 70 / 80 / 90": "not in play for this leaf"
+    },
+    "scenario_state_constraint": "The scenario pins splinters = 120, the maximum. The cached passive prose sources splinters from ability rank-ups (5 each, capped at 85) plus repeated champion damage, so a 120-splinter state is a late-game, essentially fully-ranked Syndra. At that state W = rank 5 = 100 mana and Q = rank 5 = 60 mana; W can never be the 60-mana rank-1 entry.",
+    "position_constraint": "cast_timeline[4] is the fifth (and, for Syndra's five castable slots Q/Q2/W/E/R, the last) cast of the scenario's explicit custom cast_order. In any Syndra rotation the terminal cast is the ultimate (R) or the Force of Will throw (W) -- spheres from Q/Q2 are set-up casts consumed by W/E/R, so a Dark Sphere charge is not the closing cast. Both surviving candidates, W at rank 5 and R at any rank, cost exactly 100 mana.",
+    "result": 100.0,
+    "arithmetic": "R Unleashed Power: values[rank-1] = values[3-1] = 100 mana (flat). W Force of Will at rank 5: values[5-1] = 100 mana. Either terminal cast yields 100.0. The prior 60.0 corresponds to Dark Sphere's rank-5 cost (or Force of Will's rank-1 cost), neither of which can be the fifth cast in this 120-splinter, max-rank scenario."
+  },
+  "residual_uncertainty": {
+    "note": "The scenario's explicit cast_order is not reconstructible from the data/ export alone (it lives in test/scenario code, which this oracle is barred from reading; data/practice-corpus/scenarios.json holds no Syndra entry). The verdict therefore rests on the cost table (unambiguous) plus the position/state argument above.",
+    "condition_that_would_flip_the_verdict": "Only if cast_timeline[4] is a Dark Sphere cast (Q or the synthetic Q2 charge) would 60.0 be correct -- i.e. if the scenario's custom order deliberately ends on a sphere-stock cast. Nothing in the cached data supports a 100-mana Dark Sphere under any rank or Splinter count, and nothing supports a 60-mana R under any rank.",
+    "confidence": "high on the cost table (exact cached values); moderate-to-high on the slot attribution for index 4"
+  },
+  "committed": false
+}

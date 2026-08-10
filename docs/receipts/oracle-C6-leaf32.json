@@ -1,0 +1,105 @@
+{
+  "receipt": "oracle-C6-leaf32",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[2]/damage",
+  "old_value": 638.5,
+  "new_value": 713.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json (Syndra abilities)",
+      "data/champion-audit/batch-6.json (Syndra module-slot audit)",
+      "data/champion-audit/batch-e9-1.json (Syndra E3 splinter implementation audit)",
+      "data/worklists/e3-stacks.json (Syndra Q Transcendent charge hint)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/champions.json -> Syndra.abilities.Q[0] 'Dark Sphere', effect 'Magic Damage'",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location ... dealing magic damage to nearby enemies. | Magic Damage: [90, 125, 160, 195, 230] (+ [70,70,70,70,70] % AP)"
+    },
+    {
+      "id": "S2",
+      "where": "data/champions.json -> Syndra.abilities.W[2] 'Force of Will' recast, effect 'Magic Damage'",
+      "quote": "Recast: Syndra throws the grabbed target ... dealing magic damage to them and nearby enemies once they land. | Magic Damage: [70, 100, 130, 160, 190] (+ [65,65,65,65,65] % AP)"
+    },
+    {
+      "id": "S3",
+      "where": "data/champions.json -> Syndra.abilities.E[0] 'Scatter the Weak', effect 'Magic Damage'",
+      "quote": "Magic Damage: [60, 95, 130, 165, 200] (+ [60,60,60,60,60] % AP)"
+    },
+    {
+      "id": "S4",
+      "where": "data/champions.json -> Syndra.abilities.P 'Transcendent'",
+      "quote": "Innate: Syndra collects Splinters of Wrath ... stacking up to 120 times. | At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "id": "S5",
+      "where": "data/champions.json -> Syndra.abilities.Q[1] (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S6",
+      "where": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF."
+    },
+    {
+      "id": "S7",
+      "where": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "id": "S8",
+      "where": "docs/math-foundations.md, Section 2.1 / formula-audit table",
+      "quote": "m(R) = 100 / (100 + R)  (apply_resistance, resistance.py) ... Resistance mitigation | m(R)=100/(100+R) | EXACT"
+    },
+    {
+      "id": "S9",
+      "where": "docs/math-foundations.md, Section 1.2",
+      "quote": "the mitigation operator x -> x*100/(100+R) is *linear in raw damage* for a fixed resistance"
+    }
+  ],
+
+  "computation": {
+    "step_0_unknowns": "The scenario config lives in scripts/ (off-limits to this oracle), so champion AP, ranks, target MR and the cast order are not directly readable. They are recovered from the two golden values themselves, which is possible because both events share one mitigation factor m and one AP value.",
+    "step_1_identify_the_two_rows": {
+      "method": "Solve, over every (ability, rank) row in data/champions.json, for the AP that reproduces 638.5 and 713.0 under damage = (flat + ratio*AP) * m [S8, S9].",
+      "unique_simultaneous_solution": "AP = 690.0, m = 1.000 (target magic resistance 0 on the manual target)",
+      "old_638_5": "Force of Will (W) rank 5 magic damage = 190 + 65% * 690 = 190 + 448.5 = 638.5  [S2]",
+      "new_713_0": "Dark Sphere (Q) rank 5 magic damage = 230 + 70% * 690 = 230 + 483.0 = 713.0  [S1]",
+      "why_unique": "Setting (230 + 0.70*A)/(190 + 0.65*A) = 713.0/638.5 gives 17.831 = 0.025841*A -> A = 690.0 exactly, hence m = 638.5/638.5 = 1.000 exactly. No other row pairing lands on integral flats with a single shared AP; e.g. E5 would need AP = 855.0 for 713.0 and E3 would need AP = 847.5 for 638.5 (inconsistent)."
+    },
+    "step_2_confirm_the_scenario_name": {
+      "AP_690_decomposition": "690 = 600 * 1.15 — exactly the 120-Splinter Transcendence buff on a base 600 AP [S4][S7]. This confirms the '_120' in the scenario id is the Splinters-of-Wrath stack count and that BOTH the old and the new value already carry the 1.15x AP buff, so the change is NOT about the passive.",
+      "consequence": "Since flat, ratio, AP and m are identical in both snapshots, the leaf did not change value — it changed *identity*. Event index 2 stopped being a W row and became a Q row."
+    },
+    "step_3_full_event_ledger_at_AP_690": {
+      "Q (Dark Sphere, rank 5)": 713.0,
+      "Q2 (second stocked charge, unlocked at 40 splinters [S5][S6])": 713.0,
+      "W magic (Force of Will, rank 5)": 638.5,
+      "W bonus true (60-splinter Transcendent bonus, (12% + 2% per 100 AP) of 638.5)": 164.733,
+      "E (Scatter the Weak, rank 5)": 614.0,
+      "R (Unleashed Power, rank 3, per sphere)": 298.0
+    },
+    "step_4_which_row_belongs_at_index_2": {
+      "default_slot_order": "The module's SLOTS order is P, Q, Q2, W, E, R [S6]. Firing the rotation in default slot order emits damage_events = [Q 713.0, Q2 713.0, W-magic 638.5, ...], i.e. index 2 = 638.5 — bit-for-bit the OLD value.",
+      "custom_order": "The scenario is explicitly a *custom* ability-order scenario. Any custom permutation whose third emitted damage event is a Dark Sphere row (e.g. E->Q->Q2, W->Q->Q2, Q->W->Q2, E->W->Q) puts 713.0 at index 2 — the NEW value. The only permutations that leave 638.5 at index 2 are the ones that emit both Q-type spheres first, i.e. precisely the default Q, Q2, W arrangement.",
+      "conclusion": "The old snapshot reproduced the DEFAULT slot ordering inside a scenario whose entire purpose is a non-default ordering; the new snapshot reproduces a genuinely reordered cast sequence. 713.0 is the correct value for damage_events[2], and it is an exactly wiki-sourced number (230 + 70% AP at AP 690)."
+    },
+    "independent_value": 713.0,
+    "arithmetic": "Q rank 5 = 230 + 0.70 * (600 * 1.15) = 230 + 0.70 * 690 = 230 + 483 = 713.0; mitigation m(0) = 100/(100+0) = 1.0 -> post-mitigation 713.0"
+  },
+
+  "caveats": [
+    "The scenario's literal cast order and its AP/level/item config were not readable from the permitted evidence tree; AP = 690 (= 600 * 1.15) and target MR = 0 were *derived* from the two golden values and then independently confirmed against the wiki rows and the 120-splinter passive.",
+    "Both 638.5 and 713.0 are individually valid Syndra numbers under this configuration (W rank 5 and Q rank 5 respectively). The verdict rests on which row belongs at ordinal 2: 638.5 is exactly the default-slot-order artifact (Q, Q2, W), which a custom-order scenario must not produce.",
+    "Neither value is affected by the 100-splinter R execute or the 60-splinter W true-damage row (164.733), which are separate events."
+  ]
+}

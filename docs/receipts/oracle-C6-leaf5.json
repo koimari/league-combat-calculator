@@ -1,0 +1,141 @@
+{
+  "receipt_id": "oracle-C6-leaf5",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/breakdown/Q2",
+  "old_value": "<absent>",
+  "new_value": {
+    "casts": 1,
+    "name": "Dark Sphere (2nd charge)",
+    "total_damage": 713.0
+  },
+  "verdict": "new_value_correct",
+
+  "evidence_isolation": {
+    "export_command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "path": "data/champions.json",
+      "pointer": "Syndra.abilities.Q[0].effects[0]",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds.",
+      "leveling": {
+        "attribute": "Magic Damage",
+        "modifiers": [
+          { "values": [90, 125, 160, 195, 230], "units": ["", "", "", "", ""] },
+          { "values": [70, 70, 70, 70, 70], "units": ["% AP", "% AP", "% AP", "% AP", "% AP"] }
+        ]
+      }
+    },
+    {
+      "id": "S2",
+      "path": "data/champions.json",
+      "pointer": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "note": "The Transcendent bonus on Q grants CHARGES ONLY. Its `leveling` array is empty — there is no damage modifier attached to the stocked charge anywhere in the cached wiki text."
+    },
+    {
+      "id": "S3",
+      "path": "data/champions.json",
+      "pointer": "Syndra.abilities.Q[0].{cooldown,rechargeRate,damageType}",
+      "quote": "cooldown.modifiers[0].values = [7,7,7,7,7], affectedByCdr=false; rechargeRate = [7,7,7,7,7]; damageType = MAGIC_DAMAGE",
+      "note": "Charge-recharge semantics (rechargeRate), i.e. a stocked charge is castable with no cooldown wait once stocked."
+    },
+    {
+      "id": "S4",
+      "path": "data/champions.json",
+      "pointer": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.",
+      "note": "Pins the meaning of the '120' in the scenario name: 120 = maximum Splinters of Wrath."
+    },
+    {
+      "id": "S5",
+      "path": "data/champions.json",
+      "pointer": "Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "id": "S6",
+      "path": "data/worklists/e3-stacks.json",
+      "pointer": "[166].hint, [167].hint (champion = 'Syndra')",
+      "quote": "[166] 'Innate: Syndra collects Splinters of Wrath ... stacking up to 120 times.' / [167] 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "note": "Independent second copy of S2/S4 inside the cache; corroborates the 40-splinter charge threshold and the 120 cap."
+    },
+    {
+      "id": "S7",
+      "path": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "pointer": "[34].description",
+      "quote": "... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere) ...",
+      "note": "Classifies Dark Sphere as a stocked-cast (ammo) resource — two stocked charges are two independent casts, not one cast with two hits."
+    },
+    {
+      "id": "S8",
+      "path": "docs/math-foundations.md",
+      "pointer": "Section 2.1 / Section 5 audit table (row: Resistance mitigation)",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)",
+      "note": "Mitigation operator applied to the raw magic packet."
+    },
+    {
+      "id": "S9",
+      "path": "docs/math-foundations.md",
+      "pointer": "Section 1.2, application 1",
+      "quote": "A part with `h` identical hits is mitigated per hit and summed: `Sigma_h m(R)*raw = h*m(R)*raw` ... This is exact because the mitigation operator `x -> x*100/(100+R)` is *linear in raw damage* for a fixed resistance.",
+      "note": "Justifies that two identical Dark Sphere packets against an unchanged resistance state must carry identical per-cast totals — Q2 == Q1 exactly."
+    },
+    {
+      "id": "S10",
+      "path": "docs/math-foundations.md",
+      "pointer": "Section 5 audit table (row: Stat rounding)",
+      "quote": "display-level integer rounding of health/AD/AP/armor/MR before damage",
+      "note": "AP entering the scaling term is an integer — which is why the reconstruction below lands on an exact .0 total."
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_should_the_leaf_exist": {
+      "reasoning": "The scenario name carries its own contract: 'syndra' + 'custom_order' (an explicit cast order) + '120' (S4: the Splinters of Wrath cap). At 120 splinters Syndra is 40 splinters past the Q threshold in S2, so Dark Sphere is stocked to its maximum of 2 charges. S3 gives Dark Sphere a rechargeRate (charge) rather than a plain cooldown, and S7 independently classifies it as a stocked-cast resource. A cast order that fires Q twice back-to-back is therefore legal in-game, and a breakdown of that fight MUST carry a second Dark Sphere row. An absent Q2 row is a dropped cast, not a modeling convention.",
+      "conclusion": "A Q2 leaf must be present in this scenario. `<absent>` is wrong on structure alone, before any number is checked."
+    },
+    "step_1_damage_identity_for_a_stocked_charge": {
+      "reasoning": "S2's Transcendent bonus text grants a CHARGE and nothing else; its `leveling` array is empty, so no cached wiki text attaches any damage modifier (bonus or penalty) to the second charge. The second charge is therefore an ordinary Dark Sphere cast and instantiates S1's identity unchanged.",
+      "formula_raw": "Q_raw(rank) = base[rank] + 0.70 * AP_effective,   base = [90, 125, 160, 195, 230]",
+      "formula_ap": "AP_effective = round(AP_raw * 1.15)   at 120 splinters (S5: Transcendence, +15% ability power)",
+      "formula_post_mitigation": "Q_post = Q_raw * 100 / (100 + MR_effective)   (S8)",
+      "invariant": "Q2_total == Q1_total for equal rank, equal AP and an unchanged MR state (S9: mitigation is linear in raw damage, so two identical packets carry identical totals)."
+    },
+    "step_2_reconstruction_of_713_0": {
+      "method": "Exhaustive search over the sourced parameter space: rank in 1..5 (base from S1), MR_effective in 0..200 step 5, AP_raw in 0..1200 (integer, per S10), Transcendence factor in {1.00, 1.15} (S5), solving (base + 0.70*round(AP_raw*factor)) * 100/(100+MR) == 713.0 to one decimal.",
+      "solutions_found": 19,
+      "unique_clean_solution": {
+        "rank": 5,
+        "base": 230,
+        "AP_raw": 600,
+        "transcendence_factor": 1.15,
+        "AP_effective": 690,
+        "MR_effective": 0,
+        "arithmetic": "0.70 * 690 = 483.0 ;  230 + 483.0 = 713.0 ;  713.0 * 100/(100+0) = 713.0",
+        "result": 713.0
+      },
+      "degenerate_twin": "The same 713.0 also falls out of rank 5 with AP_effective = 690 supplied directly (factor 1.00) — identical arithmetic, identical conclusion. Every other solution in the 19 requires a non-round AP (e.g. 774, 840, 891, 1176) and/or misses .0 exactly (the MR=5 family lands on 713.0476, i.e. 713.05, not 713.0).",
+      "note_on_mr": "Every exact-.0 solution has MR_effective = 0, i.e. the row is priced against zero post-penetration magic resist (or is the raw row). This is self-consistent: at MR>0 an integer AP essentially never lands the product on a clean .0."
+    },
+    "step_3_cross_checks_on_the_number": {
+      "not_a_double_application_of_transcendence": "230 + 0.70*600*1.15^2 = 230 + 555.45 = 785.45 != 713.0 — the +15% is applied exactly once.",
+      "not_a_missing_transcendence": "230 + 0.70*600 = 650.0 != 713.0 — the +15% IS applied, as S5 requires at 120 splinters.",
+      "not_an_r_sphere_row": "R (Unleashed Power) per-sphere is 80/120/160 (+20% AP) with min 240/360/480 (+60% AP) and max 560/840/1120 (+140% AP). At 690 AP: per-sphere r3 = 160+138 = 298; min r3 = 480+414 = 894; max r3 = 1120+966 = 2086. None is 713.0 — the row is a Dark Sphere, matching its name.",
+      "not_a_w_or_e_row": "W recast at 690 AP r5 = 190 + 0.65*690 = 638.5; E r5 = 200 + 0.60*690 = 614.0. Neither is 713.0.",
+      "name_field_consistent": "'Dark Sphere (2nd charge)' matches S1's ability name plus S2's charge mechanic; casts=1 is correct for a single stocked charge consumed once."
+    },
+    "conclusion": "713.0 is exactly the sourced Dark Sphere identity — rank-5 base 230 plus 70% of 690 effective AP (600 raw AP amplified by the 120-splinter Transcendence +15% of S5) — with no mitigation applied. It is also, by S9's linearity, necessarily equal to the first Dark Sphere row of the same fight. Both the existence of the Q2 leaf and its value are correct; the old state (no Q2 row at all) silently dropped a legal second stocked cast and understated the rotation by 713.0."
+  },
+
+  "residual_uncertainty": [
+    "The scenario definition itself lives in scripts/ (golden corpus), which this runbook forbids reading, so the scenario's AP, level, Q rank, item set and target MR were reconstructed from the number rather than read. The reconstruction is over-determined enough to be decisive (only one round-number solution exists, and it uses exactly the two sourced multipliers 0.70 and 1.15), but the AP_raw=600 / MR=0 split is an inference, not a quotation.",
+    "The verdict does not depend on that inference: the load-bearing claim is the invariant Q2 == Q1 (S2 grants a charge and no damage modifier; S9 makes mitigation linear in raw), plus the structural claim that at 120 splinters a two-charge Q order is legal (S2, S4, S7). Both hold for any AP/MR the scenario actually uses."
+  ]
+}

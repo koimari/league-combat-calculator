@@ -1,0 +1,100 @@
+{
+  "runbook": "R-18 / R-19 blind oracle",
+  "oracle_id": "oracle-C6-leaf118",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[8]/damage_type",
+  "old_value": "true",
+  "new_value": "magic",
+  "verdict": "new_value_correct",
+  "confidence": "moderate (~0.65) - see residual_risk; the leaf index alone is not resolvable to a named event from data/ + docs/math-foundations.md",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6b",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/worklists/e3-mechanics.json, e3-stacks.json",
+      "data/items.json (true-damage scan)",
+      "data/runes.json (true-damage scan)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "step_1_damage_type_census": {
+      "claim": "Every damaging component of Syndra's kit is MAGIC except exactly one component: the Force of Will (W) Transcendent bonus, which is gated at 60 Splinters of Wrath.",
+      "per_slot": {
+        "P Transcendent": "no damage (splinter collection; 120 splinters = +15% AP)",
+        "Q Dark Sphere": "magic ('dealing magic damage to nearby enemies'); 40 splinters adds a stocked 2nd charge (module slot Q2), still magic",
+        "W Force of Will (recast)": "magic 70/100/130/160/190 (+65% AP), PLUS at >=60 splinters a separate BONUS TRUE DAMAGE component",
+        "E Scatter the Weak": "magic; 80-splinter bonus is angle + slow only (no damage type change)",
+        "R Unleashed Power": "magic per sphere; 100-splinter bonus is an execute (audit records it as explicitly not modeled)",
+        "basic attacks": "physical (Syndra has no on-hit magic conversion), so a 'magic' leaf cannot be an auto"
+      }
+    },
+    "step_2_the_bonus_is_a_separate_component_not_a_retype_of_the_whole_W": {
+      "wiki_leveling_attributes_on_W_recast": ["Magic Damage", "Bonus True Damage", "Total Mixed Damage"],
+      "magic_damage": "70/100/130/160/190 (+65% AP)",
+      "bonus_true_damage_wiki_values": "8.4/12/15.6/19.2/22.8 + 9.2/9.8/10.4/11/11.6 %AP (+ ~1.14 %AP^2 term)",
+      "my_derivation": "bonus = (0.12 + 0.0002*AP) * (base + 0.65*AP) = 0.12*base + (0.12*0.65 + 0.0002*base)*AP + 0.0002*0.65*AP^2",
+      "check_flat_term": "0.12 * [70,100,130,160,190] = [8.4, 12.0, 15.6, 19.2, 22.8]  -> EXACT match to the wiki 'Bonus True Damage' flat values",
+      "check_AP_term": "(0.078 + 0.0002*base)*100% = [9.2, 9.8, 10.4, 11.0, 11.6] %AP -> EXACT match to the wiki 'Bonus True Damage' AP values",
+      "check_quadratic": "0.0002*0.65 = 1.30 %AP^2/100 vs wiki 1.14 (wiki's quadratic term rounds/derives slightly differently; does not affect the type question)",
+      "conclusion": "The 12% (+2% per 100 AP) is an ADD-ON computed FROM the W's magic damage. A correct event stream for one W recast at >=60 splinters therefore contains TWO events: one magic (the full 70..190 + 65% AP hit) and one true (the small bonus). 'Total Mixed Damage' is the wiki's convenience sum of the two and is not a damage type."
+    },
+    "step_3_no_other_true_damage_source_is_implied": {
+      "runes": "only Lethal Tempo (auto-attack true damage at the AS cap) and First Strike (7% bonus true damage) carry true damage in data/runes.json; neither is implied by the scenario id and neither would produce a 'magic' replacement label",
+      "items": "true-damage items exist in data/items.json (Detonation Orb 'The Bomb' detonation, Kinkou Jitte, Reaper's Toll, Sundered Sky-class on-hits), but nothing in the scenario id or in data/ ties this Syndra scenario to one; if the leaf were a Detonation Orb detonation the old value would be right (recorded as residual risk)"
+    },
+    "step_4_position_analysis_of_index_8": {
+      "modeled_slot_set_from_audit": "data/champion-audit/batch-6.json: modeled = [P, Q, Q2, W, E, R]; 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads Magic Damage per Sphere x user-set sphere count'",
+      "scenario_id_decoding": "'_60' matches the splinter threshold that is the ONLY thing special about 60 in Syndra's kit (thresholds are 40 / 60 / 80 / 100 / 120); 'custom_order' = a non-default cast order",
+      "event_budget_for_one_rotation_at_60_splinters": "Q (1 magic) + Q2 (1 magic) + W (1 magic + 1 true) + E (1 magic) + R (n magic, n = user-set sphere count, 3..7) = 5 + n events, i.e. 8 events at n=3 and 12 at n=7. Exactly one of them is true.",
+      "index_8_landing": "Under the common orderings, index 8 lands on a magic event: [Q,Q2,W,E,R7] -> R sphere #4; [Q,W,E,R7] -> R sphere #5; [R7,Q,W,E] -> W base magic (index 8); [R3,...] -> post-ability event (an auto would be physical, so a magic leaf implies an ability/proc). The single ordering that puts the true bonus at index 8 is R-first-with-7-spheres immediately followed by W ([R7, W, ...] -> 7 = W magic, 8 = W true).",
+      "base_rate": "1 of the 8-12 rotation events is true; a mid-list index is far more likely a magic ability event"
+    },
+    "step_5_failure_mode_that_the_flip_is_consistent_with": "This module is described in the audit as hand-written against wiki attribute NAMES ('R reads Magic Damage per Sphere'). The W recast exposes three attributes, two of which contain a damage-type word: 'Bonus True Damage' and 'Total Mixed Damage'. Emitting the W's primary hit under a true label (e.g. from the mixed/total attribute) is a live failure mode for exactly this ability, and correcting the primary hit to 'magic' while keeping the 12% add-on as a separate true event is what the wiki text requires. That is a coherent, source-supported reason for a true -> magic flip at a mid-list index.",
+    "conclusion": "The wiki requires: exactly one true-damage event per W recast at >=60 splinters (the 12% + 2%/100 AP add-on), and magic for every other Syndra damage event in this scenario. Index 8 is a magic event under every reconstruction of the event stream except one narrow ordering. The new value 'magic' is the value supported by the cached wiki text."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2..3].leveling attributes",
+      "quote": "'Magic Damage' = 70/100/130/160/190 (+65% AP); 'Bonus True Damage' = 8.4/12/15.6/19.2/22.8 (+9.2/9.8/10.4/11/11.6 %AP); 'Total Mixed Damage' = 78.4/112/145.6/179.2/212.8 (+74.2..76.6 %AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].damageType",
+      "quote": "MAGIC_DAMAGE"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] / E[0] / R[0] descriptions",
+      "quote": "Q: 'dealing magic damage to nearby enemies'; E: 'deals magic damage to enemies hit'; R: 'each dealing magic damage upon hit'"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary",
+      "quote": "All damage and splinter atom families covered: splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "source": "docs/math-foundations.md sec 1.2",
+      "quote": "Multi-hit abilities. A part with h identical hits is mitigated per hit and summed ... the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance"
+    }
+  ],
+  "residual_risk": [
+    "The leaf path carries only a list index, and neither data/ nor docs/math-foundations.md names the event at damage_events[8]; the scenario definition lives outside the permitted evidence tree.",
+    "If damage_events[8] is specifically the W Transcendent add-on (which requires the custom order to place the 7-sphere R barrage first and W immediately after), then 'true' was correct and the new value is a regression that erases the only true-damage component in the kit.",
+    "If the build carries a true-damage item (e.g. Detonation Orb's 'The Bomb' detonation, which is true damage), a true leaf could be legitimate at other indices as well.",
+    "Both risks are checkable in one step by whoever can read the scenario: confirm that the new event stream still contains exactly one true-damage event per Force of Will recast at 60 splinters. If it does, this verdict stands; if the true event is gone entirely, flip to old_value_correct."
+  ]
+}

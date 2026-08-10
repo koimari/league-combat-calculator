@@ -1,0 +1,108 @@
+{
+  "receipt_id": "oracle-C6-leaf52",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[9]/source",
+  "old_value": "Q",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+  "confidence": "high on the domain fact, medium on the index attribution (see residual_uncertainty)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "what_the_scenario_name_pins": {
+    "champion": "Syndra",
+    "the_120": "Splinters of Wrath = 120, the cap of Syndra's Transcendent passive. Confirmed independently by data/champions.json ('stacking up to 120 times', 'At 120 Splinters of Wrath ... increasing her ability power by 15%') and by data/champion-audit/batch-6.json ('splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff').",
+    "custom_order": "the fight runs a caller-supplied cast order rather than the DEFAULT_CAST_ORDER (fixed Q,W,E,R) described in data/worklists/f2-task.md. The order itself is not recoverable from data/ — see residual_uncertainty."
+  },
+
+  "independent_computation": {
+    "question_restated": "Which ability legitimately owns the 10th (0-indexed 9th) damage event of a Syndra fight at 120 Splinters of Wrath?",
+
+    "step_1_event_inventory_at_120_splinters": {
+      "reasoning": "The number and identity of damage events per cast is fixed by the cached wiki text for each slot at 120 splinters. Enumerating it bounds which sources can appear where.",
+      "Q_Dark_Sphere": "1 magic event per cast, BUT effect[1]: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' 120 >= 40 -> 2 stocked Q casts -> 2 Q events in a burst.",
+      "W_Force_of_Will": "effect[2] recast deals 'magic damage'; effect[3]: 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus TRUE damage.' 120 >= 60 -> a W cast at this splinter count carries TWO damage packets of DIFFERENT damage types -> 2 W events.",
+      "E_Scatter_the_Weak": "1 magic event (the 80-splinter bonus is scatter-angle + slow, i.e. CC only - no extra damage instance).",
+      "R_Unleashed_Power": "'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones', 'Magic Damage per Sphere' -> 3..7 per-sphere events (the audit notes R reads per-sphere damage x a user-set sphere count). The 100-splinter execute is documented not modeled.",
+      "P_Transcendent": "no damage event: 'At 120 Splinters of Wrath ... increasing her ability power by 15%' is a buff, not a damage instance."
+    },
+
+    "step_2_the_W_true_damage_packet_is_real_and_separate": {
+      "claim": "At >=60 splinters a single W cast MUST author two damage events, not one.",
+      "why_two_events_not_one": "The bonus is TRUE damage while the base is MAGIC damage. docs/math-foundations.md pins mitigation as a per-packet, per-resistance operator - 'Resistance mitigation (apply_resistance) | m(R)=100/(100+R)' with 'True damage ignores all resistances entirely' (CLAUDE.md domain rules). m(R) is linear in raw damage for a FIXED resistance ('Multi-hit abilities ... exact because the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance'), so packets may be merged ONLY when they share a resistance. A magic packet and a true packet do not, so they cannot be collapsed into one event without corrupting the mitigation.",
+      "arithmetic_check": "I re-derived the wiki's own 'Bonus True Damage' rows from the prose formula and reproduced them exactly. With base magic per rank B = [70,100,130,160,190] and 65% AP ratio, bonus true = (0.12 + 0.0002*AP) * (B + 0.65*AP) expands to: constant 0.12*B = [8.4, 12, 15.6, 19.2, 22.8] (cached row: [8.4, 12, 15.6, 19.2, 22.8] - MATCH); AP coefficient 0.12*0.65 + 0.0002*B = [9.2, 9.8, 10.4, 11.0, 11.6] %AP (cached row: [9.2, 9.8, 10.4, 11, 11.6] %AP - MATCH); AP-squared coefficient 0.0002*0.65 = 1.30e-4, which the wiki encodes as the product of two '% AP' units, sqrt(1.30e-4) = 0.01140 = 1.14 %AP (cached row: [1.14 ...] with units ['% AP','% AP'] - MATCH). The cached 'Total Mixed Damage' row [78.4, 112, 145.6, 179.2, 212.8] = B + 0.12*B confirms the wiki itself models the cast as magic + true summed, i.e. two components.",
+      "concrete_scenario_numbers": "At the corpus-standard fight tuple used throughout data/worklists (level 18, rank 5, R rank 3, no items -> AP = 0, so the 120-splinter x1.15 AP buff contributes 0): W magic = 190, W bonus true = 22.8, total mixed = 212.8 - exactly the cached rank-5 'Total Mixed Damage' constant. Q rank 5 = 230 (+70% AP) per charge, x2 charges at 120 splinters."
+    },
+
+    "step_3_index_transition_analysis": {
+      "observation": "A single leaf flipping Q -> W at index 9 is the signature of an INSERTION into the event stream immediately before a Q (new[9] = the inserted event, old[9] = Q slides to new[10]) or of an insertion one slot earlier (new[9] = old[8] = W). Both readings are insertions, not relabelings.",
+      "which_insertions_are_licensed_at_120_splinters": "Exactly the two the wiki grants at this splinter count and at no lower one: (a) the W bonus-true-damage packet (unlocked at 60), and (b) the second stocked Dark Sphere charge (unlocked at 40). Under reading (a) the inserted event IS the W true packet and index 8 is the W magic packet. Under reading (b) a Q2 event is inserted earlier and new[9] = old[8], which the transition requires to be a W event. Either way the value that correctly lands on index 9 is a W-sourced event.",
+      "worked_consistency_check": "A concrete stream that reproduces both observed values exactly, using the reversed-default custom order R,E,W,Q with the maximum 7 spheres ('conjures 3 ... and additionally grabs up to 4'): old (W as one packet) = [R,R,R,R,R,R,R, E, W, Q, Q] -> index 9 = Q; new (W as magic+true) = [R x7, E, W_magic, W_true, Q, Q] -> index 9 = W. The single wiki-mandated insertion reproduces the whole observed change; no other edit is needed.",
+      "what_would_make_the_OLD_value_right": "Only a DELETION of a legitimate earlier event (shifting the tail left so new[9] = old[10] = W) - i.e. the engine dropping either the second Q charge or the W true packet. Both deletions are forbidden by the cached wiki text at 120 splinters ('40 Splinters ... stock a Dark Sphere charge, up to a maximum of 2'; '60 Splinters ... bonus true damage'). So the old stream can only be right if the new one dropped something, and nothing is droppable at 120."
+    },
+
+    "conclusion": "The 120-splinter variant is precisely the configuration in which Syndra's stream gains extra damage events (2nd Q charge at 40, W true packet at 60), and a lone Q -> W flip at one index is the shape those insertions produce. The new value is the one consistent with the cached wiki text."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].leveling",
+      "quote": "attribute 'Bonus True Damage': [8.4, 12, 15.6, 19.2, 22.8] + [9.2, 9.8, 10.4, 11, 11.6] % AP + [1.14 ...] % AP (squared); attribute 'Total Mixed Damage': [78.4, 112, 145.6, 179.2, 212.8] + [74.2, 74.8, 75.4, 76, 76.6] % AP + [1.14 ...] % AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "source": "docs/math-foundations.md (Section 1.2, multi-hit abilities)",
+      "quote": "A part with h identical hits is mitigated per hit and summed: sum_h m(R)*raw = h*m(R)*raw (_mitigate_hits). This is exact because the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance."
+    },
+    {
+      "source": "docs/math-foundations.md (audit table, resistance row)",
+      "quote": "Resistance mitigation (apply_resistance) | m(R)=100/(100+R); EHP round-trip raw = post*(1+R/100) | EXACT"
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    }
+  ],
+
+  "residual_uncertainty": [
+    "The scenario definition for 'syndra_custom_order_120' lives outside the permitted evidence tree (scripts/ and tests/ are off-limits under R-18/R-19), so the exact custom cast order, r_spheres value, auto-attack count and fight window could not be read. The index-9 reconstruction in step 3 is therefore an existence proof (a wiki-consistent stream that reproduces both the old and the new value) rather than a unique derivation.",
+    "The verdict does not depend on that reconstruction: it rests on the direction of the change. A lone Q -> W flip is an insertion signature, every insertion licensed at 120 splinters (2nd Q charge, W true packet) is mandated by the cached wiki text, and the only transition that would make the OLD value right is a deletion of an event that 120 splinters forbids deleting.",
+    "Not ruled out by data/ alone: that index 9 should hold some third source entirely (an R sphere or an auto) under a different custom order. Nothing in the cached data suggests it, so 'both_wrong' is unsupported."
+  ]
+}

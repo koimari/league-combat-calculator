@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-C6-leaf114",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[7]/damage",
+  "old_value": 580.0,
+  "new_value": 650.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "data/worklists/e3-stacks.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/ (incl. golden_baseline.json)", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere), effect 'Magic Damage'",
+      "text": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies.",
+      "leveling": "base [90, 125, 160, 195, 230]; ratio [70, 70, 70, 70, 70] '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0], Transcendent Bonus branch",
+      "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (Force of Will), recast effect 'Magic Damage'",
+      "text": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land.",
+      "leveling": "base [70, 100, 130, 160, 190]; ratio [65, 65, 65, 65, 65] '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0], Transcendent Bonus branch, attributes 'Bonus True Damage' / 'Total Mixed Damage'",
+      "text": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "leveling": "Bonus True Damage flat [8.4, 12, 15.6, 19.2, 22.8] == 12% of the W base row; %AP [9.2, 9.8, 10.4, 11, 11.6]; Total Mixed [78.4, 112, 145.6, 179.2, 212.8] == 1.12x the W base row"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak) / R[1] (Unleashed Power)",
+      "leveling": "E base [60, 95, 130, 165, 200] + 60% AP; R 'Magic Damage per Sphere' base [80, 120, 160] + 20% AP (Minimum = 3 spheres, Maximum = 7 spheres)"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "text": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge) ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count"
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "text": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "source": "docs/math-foundations.md S1.2",
+      "text": "Multi-hit abilities. A part with h identical hits is mitigated per hit and summed ... mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_pin_the_attacker_AP": {
+      "method": "At level 18 every basic ability is rank 5 and R is rank 3, so the only free parameter is total AP. Solve for an AP that makes BOTH the pre-change value (580.0) and the post-change value (650.0) exactly equal sourced Syndra damage rows.",
+      "candidate_rows_at_rank_max": {
+        "Q5": "230 + 0.70*AP",
+        "W5_magic": "190 + 0.65*AP",
+        "E5": "200 + 0.60*AP",
+        "R3_per_sphere": "160 + 0.20*AP"
+      },
+      "sweep": "AP scanned 0..2000 in 0.1 steps; exactly one AP satisfies both targets",
+      "result": "AP = 600.0 (unique)",
+      "check": {
+        "Q5": "230 + 0.70*600 = 230 + 420 = 650.0",
+        "W5_magic": "190 + 0.65*600 = 190 + 390 = 580.0",
+        "W5_true_at_60_splinters": "(0.12 + 0.02*600/100) * 580 = 0.24 * 580 = 139.2",
+        "E5": "200 + 0.60*600 = 560.0",
+        "R3_per_sphere": "160 + 0.20*600 = 280.0 (3 spheres = 840.0, 7 spheres = 1960.0)"
+      },
+      "note": "Both numbers being integers, and matching un-mitigated rows exactly, indicates the manual target carries 0 magic resistance (or the ledger row is the raw row); with any other MR neither 580.0 nor 650.0 is reachable as an exact sourced row at a single AP."
+    },
+    "step_2_identify_the_two_rows": {
+      "old_580.0": "Force of Will (W) recast MAGIC damage, rank 5, at 600 AP = 190 + 65% AP",
+      "new_650.0": "Dark Sphere (Q) MAGIC damage, rank 5, at 600 AP = 230 + 70% AP",
+      "consequence": "Neither number is an arithmetic error: both are exact wiki-sourced Syndra rows at the same attacker stats. The leaf therefore did not change because a formula was recomputed - the EVENT OCCUPYING INDEX 7 CHANGED IDENTITY (an event-count / cast-order shift in fights/manual_target/damage_events)."
+    },
+    "step_3_which_identity_is_correct_at_splinters_60": {
+      "argument": "The scenario pins splinters = 60. Two wiki thresholds are live at that value: (a) >= 40 splinters -> Dark Sphere stocks a second charge (max 2), i.e. the rotation legitimately contains a SECOND Q cast (the module's synthetic Q2 slot, per data/champion-audit/batch-6.json); (b) >= 60 splinters -> Force of Will gains 12% + 2% per 100 AP bonus TRUE damage, i.e. the W cast legitimately emits a SECOND event of 139.2 at 600 AP.",
+      "shift_arithmetic": "Both live thresholds INSERT events into the ledger; neither removes any. Inserting the Q2 charge event (650.0, which immediately follows the first Q) one slot before position 7 moves a 650.0 into index 7 and pushes the W magic row (580.0) to index 8 - exactly the observed old->new transition (old[7]=580.0 -> new[7]=650.0, new[8]=580.0). The W true-damage insertion cannot explain the leaf on its own, because it lands immediately AFTER the W magic row and so cannot displace it.",
+      "counter_direction_rejected": "The reverse transition (650.0 -> 580.0) would require DELETING a Dark Sphere event before index 7. At 60 splinters the wiki explicitly grants the stocked second Dark Sphere charge ('Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so a ledger with fewer Dark Sphere events at splinters = 60 contradicts the cached source.",
+      "conclusion": "650.0 = 230 + 0.70 * 600 is the correct value for fights/manual_target/damage_events[7]/damage."
+    }
+  },
+
+  "residual_uncertainty": "The scenario's cast_order, level, item build and target stats live in scripts/ and tests/, which this runbook forbids reading. The AP = 600 / level-18 reconstruction is forced by the requirement that both leaf values be exact sourced rows (unique solution), and the direction of the index shift is forced by the fact that the two splinter thresholds at 60 only ADD events. If the scenario were instead below level 18 with a partial skill order, an alternative reading exists (Q rank 3 = 160 + 0.70*600 = 580 vs Q rank 5 = 650, same AP) - and that reading also lands on 650.0 as the maxed-rank Dark Sphere value.",
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "value": 650.0,
+    "formula": "Dark Sphere (Q) rank 5 magic damage = 230 + 70% AP = 230 + 0.70 * 600 = 650.0",
+    "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].leveling ('Magic Damage': [90,125,160,195,230] + [70% AP] x5)"
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "receipt_id": "oracle-C6-leaf121",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[9]/source",
+  "old_value": "Q",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6-leaf121-fresh",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-mechanics.json", "data/worklists/e3-stacks.json", "data/worklists/f2-task.md", "data/worklists/f3-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (other receipts)", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.W[0] name = \"Force of Will\", effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds.",
+      "leveling": {"attribute": "Magic Damage", "values": [70, 100, 130, 160, 190], "ratio": "65% AP"}
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.W[0].effects[3].description  (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "leveling": [
+        {"attribute": "Bonus True Damage", "values": [8.4, 12, 15.6, 19.2, 22.8], "ap_terms": ["9.2/9.8/10.4/11/11.6 % AP", "1.14 % AP (quadratic per-100-AP term)"]},
+        {"attribute": "Total Mixed Damage", "values": [78.4, 112, 145.6, 179.2, 212.8], "ap_terms": ["74.2/74.8/75.4/76/76.6 % AP", "1.14 % AP"]}
+      ]
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.W[0].blurb",
+      "quote": "Active: Syndra grabs the nearest Dark Sphere, enemy minion or non-epic monster from the target location, and holds it for a few seconds."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.Q[0] name = \"Dark Sphere\", effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds.",
+      "leveling": {"attribute": "Magic Damage", "values": [90, 125, 160, 195, 230], "ratio": "70% AP"},
+      "note": "Q's ONLY damage row is the conjure impact. A sphere sitting on the ground deals no further damage on its own."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.E[0] name = \"Scatter the Weak\", effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast.",
+      "note": "Damage delivered BY a Dark Sphere that E launches is explicitly 'Scatter the Weak's damage' (E), not Dark Sphere's damage."
+    },
+    {
+      "id": "S6",
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.R[0] name = \"Unleashed Power\", effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "leveling": {"attribute": "Magic Damage per Sphere", "values": [80, 120, 160], "ratio": "20% AP"},
+      "note": "Spheres thrown by R carry R's per-sphere damage row, not Q's."
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-6.json",
+      "locus": "Syndra.gap_summary + module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... All damage and splinter atom families covered: splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "id": "S8",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locus": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S9",
+      "file": "docs/math-foundations.md",
+      "locus": "Section 1.2, Linearity of expectation for multi-hit abilities",
+      "quote": "Multi-hit abilities. A part with `h` identical hits is mitigated per hit and summed: `\u03a3_h m(R)\u00b7raw = h\u00b7m(R)\u00b7raw` (`_mitigate_hits`). This is exact because the mitigation operator `x \u21a6 x\u00b7100/(100+R)` is *linear in raw damage* for a fixed resistance",
+      "note": "Establishes that one ability may emit several separately-mitigated damage events; magic and true components must be separate events because true damage skips the mitigation operator entirely (CLAUDE.md: 'True damage ignores all resistances entirely')."
+    },
+    {
+      "id": "S10",
+      "file": "docs/math-foundations.md",
+      "locus": "Section 1.1",
+      "quote": "Ability recasts are scheduled on **one shared timeline** ... a cast counts when it *starts* within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "note": "The index of an event in `damage_events` is a function of the fight's cast order; the SOURCE label of an event is a function of which ability owns the damage row."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_what_the_scenario_name_pins": "The suffix '60' matches exactly one Syndra quantity in the cache: the 60-Splinters-of-Wrath threshold on Force of Will (S2), confirmed as a modeled option by the audit rows (S7, S8: 'splinters option (0-120) ... 60+ W true damage'). 60 is not a level (cap 20), not a Syndra cooldown, and not any Q/W/E/R base-damage value at any rank except E rank 1 (60), which has no bearing on event ordering. The scenario is therefore a Syndra fight run at >= 60 splinters, i.e. with W's Transcendent bonus ACTIVE.",
+
+    "step_2_how_many_damage_events_a_W_cast_emits_at_60_splinters": {
+      "claim": "Exactly two, and both are sourced to W.",
+      "derivation": "S2 gives two leveling rows for W under the Transcendent bonus. Check that 'Bonus True Damage' is a separate additive component of W (not a replacement, not a Q term):",
+      "flat_check": [
+        "rank 1: 0.12 x 70  = 8.4   == row 8.4    ; 70  + 8.4  = 78.4   == 'Total Mixed Damage' 78.4",
+        "rank 2: 0.12 x 100 = 12.0  == row 12     ; 100 + 12   = 112.0  == 112",
+        "rank 3: 0.12 x 130 = 15.6  == row 15.6   ; 130 + 15.6 = 145.6  == 145.6",
+        "rank 4: 0.12 x 160 = 19.2  == row 19.2   ; 160 + 19.2 = 179.2  == 179.2",
+        "rank 5: 0.12 x 190 = 22.8  == row 22.8   ; 190 + 22.8 = 212.8  == 212.8"
+      ],
+      "ap_check": [
+        "rank 1: 65 + 9.2  = 74.2 == mixed-AP row 74.2",
+        "rank 2: 65 + 9.8  = 74.8 == 74.8",
+        "rank 3: 65 + 10.4 = 75.4 == 75.4",
+        "rank 4: 65 + 11.0 = 76.0 == 76.0",
+        "rank 5: 65 + 11.6 = 76.6 == 76.6"
+      ],
+      "conclusion": "'Total Mixed Damage' = W magic (S1) + W bonus true (S2) exactly, at every rank, on both the flat and the AP term. The true component is therefore an ADDITIONAL damage instance carried by Force of Will. It must be a separate `damage_events` entry because true damage bypasses the mitigation operator x -> x*100/(100+MR) (S9 / CLAUDE.md), and its source is Force of Will = W."
+    },
+
+    "step_3_can_any_syndra_damage_instance_legitimately_be_sourced_to_Q_other_than_Q_s_own_cast": {
+      "claim": "No.",
+      "derivation": "Q's sole damage row is the conjure impact (S4): the sphere damages nearby enemies once, on appearing after the 0.6 s delay, then 'remains on the ground for 6 seconds' inert. Every subsequent use of that sphere is priced on the LAUNCHING ability's own row: W's recast throw carries W's 'Magic Damage' 70/100/130/160/190 (+65% AP) (S1, S3); E knocking a sphere delivers \"Scatter the Weak's damage\" verbatim (S5); R's barrage carries R's 'Magic Damage per Sphere' 80/120/160 (+20% AP) (S6). The cache never routes sphere-delivered damage back to Dark Sphere. Therefore there is no Syndra mechanic under which W-delivered damage should be labelled Q."
+    },
+
+    "step_4_apply_to_the_leaf": "At 60 splinters the W cast contributes two consecutive W-sourced events (magic, then the 12% true), and the whole Force-of-Will payload -- thrown Dark Sphere included -- belongs to Force of Will. Both readings of the disputed slot land on W: (a) if event[9] is the 60-splinter bonus-true instance, its owner is W by S2; (b) if event[9] is the thrown-sphere impact, its owner is W by S1/S3, since Q's row covers only the conjure. A label of 'Q' at that slot is reachable only by attributing Force-of-Will payload to Dark Sphere, which S4/S5/S6 rule out."
+  },
+
+  "arithmetic_receipt": {
+    "W_rank5_at_60_splinters_total": "212.8 + 76.6% AP + 1.14% AP-quadratic term, decomposed as: magic event 190 + 65% AP (mitigated by MR) and true event 22.8 + 11.6% AP + 1.14 (unmitigated)",
+    "verified": "all five ranks reconcile exactly on both flat and AP terms; see step_2"
+  },
+
+  "confidence": "high on the source label, qualified on the index",
+  "limitations": [
+    "The scenario tuple for 'syndra_custom_order_60' (cast order, ranks, level, items, fight window, splinters/r_spheres option values) is defined outside the permitted evidence tree (scripts/), so the ORDINAL position 9 cannot be re-derived from data/ alone; docs/math-foundations.md S1.1 only establishes that the index is a function of the fight's cast order.",
+    "What IS fully determinable from the cache is the ownership question the leaf asks: which ability sources a Force-of-Will damage instance in a 60-splinter Syndra fight. That is W, unambiguously, and no Syndra damage instance other than Dark Sphere's own conjure impact may be sourced to Q.",
+    "Verdict would flip to 'old_value_correct' only if event[9] were a genuine Dark Sphere conjure impact that the change wrongly displaced -- which would require the Q cast COUNT to have dropped, a change that could not present as a source-only edit at a single leaf."
+  ]
+}

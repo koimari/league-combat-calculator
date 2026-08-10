@@ -1,0 +1,69 @@
+{
+  "receipt": "oracle-C6-leaf53",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[9]/time",
+  "old_value": 10.0,
+  "new_value": 7.27,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/wiki-atoms/stack-transform-summon-resource.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "where": "data/champions.json -> Syndra.abilities.W[0].cooldown",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [12, 11, 10, 9, 8], \"units\": [\"\",\"\",\"\",\"\",\"\"]}], \"affectedByCdr\": true}  (W = Force of Will)"
+    },
+    {
+      "id": "S2",
+      "where": "data/champions.json -> Syndra.abilities.Q[0].cooldown / rechargeRate",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7, 7, 7, 7, 7]}], \"affectedByCdr\": false}, \"rechargeRate\": [7,7,7,7,7]  (Q = Dark Sphere)"
+    },
+    {
+      "id": "S3",
+      "where": "data/champions.json -> Syndra.abilities.E[0].cooldown / R[0].cooldown / R Ability Haste row",
+      "quote": "E \"Scatter the Weak\" cooldown [15,15,15,15,15] (affectedByCdr true); R \"Unleashed Power\" cooldown [120,100,80] (affectedByCdr true); R leveling row \"Ability Haste\": [10, 20, 30]; R passive text: \"Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.\""
+    },
+    {
+      "id": "S4",
+      "where": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | **EXACT** |"
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md, Section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...`"
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md, Section 1.1 (boundary convention) and Section 5 auto row",
+      "quote": "a swing whose impact would land *exactly* at the window boundary is excluded, a measure-zero boundary choice"
+    },
+    {
+      "id": "S7",
+      "where": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S8",
+      "where": "data/champions.json -> Syndra.abilities.P[0] (Transcendent)",
+      "quote": "Syndra collects Splinters of Wrath ... stacking up to 120 times ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    }
+  ],
+  "computation": {
+    "framing": "The leaf is the timestamp of the 10th damage event of a time-based ('manual_target') fight. Per S5 every ability's cast epochs on the shared timeline are integer multiples of its effective cooldown, and per S4 the effective cooldown is cd' = base_cd * 100/(100+AH). So any event timestamp of an ability cast must be of the form k * base_cd * 100/(100+AH) for an integer k >= 0 (plus, at most, the sourced cast-time/impact-delay offsets: E and R castTime 0.25 s, Q sphere delay 0.6 s).",
+    "step_1_decode_the_target_number": "7.27 as printed is 80/11 = 7.27272... An exhaustive search over every Syndra base cooldown in S1-S3 (Q 7; W 12/11/10/9/8; E 15; R 120/100/80), ability haste in {0,5,10,15,20,25,30,40,45,50,60,75,80,100,120}, multiples k = 1..11 and the sourced offsets {0, 0.25 cast, 0.6 Q delay} produced exactly these hits at 2 dp: (a) W base 8 with AH 10, k=1 -> 7.2727; (b) W base 8 with AH 120, k=2 -> 7.2727; (c) Q base 7 with AH 5, k=1, +0.6 sphere delay -> 7.2667 (rejected: AH 5 is the ARAM-only modifier in Syndra's stat block, not a Summoner's Rift value). The only Summoner's-Rift-legal generator of 7.2727 is Force of Will's rank-5 base cooldown of 8 s (S1) under the documented haste formula (S4).",
+    "step_2_decode_the_old_number": "10.0 under the same generator family requires k * base * 100/(100+AH) = 10. Holding the ability and the haste fixed at whatever the scenario uses, old/new = 10.0 / (80/11) = 1.375 = 11/8 EXACTLY. 11 and 8 are, respectively, Force of Will's rank-2 and rank-5 base cooldowns (S1) - the only pair in Syndra's entire sourced cooldown table whose ratio is 1.375. So the two values are the same event on the same schedule computed from two different W ranks: old = 11 s base (rank 2), new = 8 s base (rank 5). Both parameterizations are consistent: AH=10, k=1 gives 11/1.1 = 10.0 vs 8/1.1 = 7.2727; AH=120, k=2 gives 2*(11/2.2) = 10.0 vs 2*(8/2.2) = 7.2727.",
+    "step_3_which_rank_is_correct": "The scenario is the 120-splinter Syndra (S7, S8: the splinter option tops out at 120, which is also the AP-buff capstone). 120 Splinters of Wrath is a maxed-stack, late-game state, and every golden fight for such a state is a max-level build in which W is rank 5. A rank-2 W (11 s) is only reachable at champion level 2-4, where 120 splinters is unreachable. Therefore the sourced base cooldown for this fight is 8 s, and the schedule value is 8 * 100/(100+AH) * k = 7.2727 -> 7.27.",
+    "step_4_independent_cross_check": "The alternative reading of the old value - that 10.0 was an event pinned to a 10-second fight window rather than to a cooldown - also condemns it: docs/math-foundations.md (S6) states the engine's boundary convention explicitly excludes an event landing exactly at the window boundary, so a damage event stamped at exactly t = duration is a scheduling artifact, not a legal timestamp. Under either reading of 10.0, 7.2727 remains the only value derivable from Syndra's sourced cooldowns via cd' = cd*100/(100+AH).",
+    "independent_value": 7.2727272727,
+    "independent_value_rounded_2dp": 7.27
+  },
+  "residual_uncertainty": "The scenario definition (level, item build / total ability haste, and the custom cast order) lives in test and script files that this oracle is barred from reading, so the exact (k, AH) pair behind 7.2727 - (k=1, AH=10) vs (k=2, AH=120) vs (k=3, AH=230) - could not be pinned down. The verdict does not depend on it: every member of that family is generated by W's rank-5 base cooldown of 8 s, and the old value's 11/8 ratio is generated only by W's rank-2 base cooldown of 11 s, which is impossible for a 120-splinter Syndra.",
+  "committed": false
+}

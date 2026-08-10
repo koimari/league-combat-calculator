@@ -1,0 +1,88 @@
+{
+  "receipt_id": "oracle-C6-leaf8",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[1]/resource_cost",
+  "old_value": 100.0,
+  "new_value": 0.0,
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "files_read": [
+      "data/champions.json (Syndra, Ahri, Teemo, Elise, Riven, Gangplank ability cost blocks)",
+      "data/champion-audit/batch-6.json (Syndra module slot inventory)",
+      "data/champion-audit/batch-e9-1.json (Syndra slot verdicts)",
+      "data/worklists/e3-stacks.json, e3-mechanics.json, f2-task.md (cast-order context)",
+      "data/practice-corpus/scenarios.json (no Syndra scenario present)",
+      "docs/math-foundations.md (S 1.1 shared cast timeline)"
+    ],
+    "not_read": "src/, tests/, scripts/ (incl. golden_baseline.json), docs/plans/, docs/receipts/, git history, the diff"
+  },
+  "independent_computation": {
+    "step_1_resource_type": "data/champions.json -> Syndra.resource = \"MANA\"; every ability block carries resource = \"MANA\". So resource_cost for a Syndra cast is a mana cost.",
+    "step_2_sourced_costs_per_rank": {
+      "Q Dark Sphere": [40, 45, 50, 55, 60],
+      "W Force of Will": [60, 70, 80, 90, 100],
+      "E Scatter the Weak": [50, 50, 50, 50, 50],
+      "R Unleashed Power": [100, 100, 100],
+      "P Transcendent": "cost = null (innate passive, never a cast)"
+    },
+    "step_3_ranks_at_the_scenario_level": "The suffix _120 is the splinters option (P Transcendent stacks up to 120; data/champion-audit/batch-6.json: 'splinters option (0-120)', '120-splinter +15% total AP BUFF'), not a level. Golden scenarios are level 18 unless named otherwise; at level 18 an 18-point skill order is R3 + Q5/W5/E5, giving costs Q=60, W=100, E=50, R=100.",
+    "step_4_candidate_identities_for_cast_timeline[1]": {
+      "note": "The scenario's cast order lives in scripts/ (forbidden to this oracle), so the second cast is identified by elimination over Syndra's modeled slots. data/champion-audit/batch-6.json pins the module's slots as P, Q, Q2 (synthetic 2nd Dark Sphere charge), W, E, R -- there is no separate W-recast slot.",
+      "Q": 60.0,
+      "Q2 (stocked 2nd Dark Sphere charge)": "60.0 -- a stocked charge still pays the ability's mana cost; the cached precedent is Teemo R Noxious Trap (cost 75/55/35 WITH rechargeRate 35/30/25), i.e. recharge/ammo abilities are charged per cast in this data set. The Syndra Q cost row carries no free-charge note.",
+      "W": 100.0,
+      "E": 50.0,
+      "R": 100.0,
+      "P (buff pseudo-slot)": "0.0, but P is an innate passive with cost = null; it is not a cast and would not sit at index 1 of a cast timeline (a buff-phase entry precedes the casts)."
+    },
+    "step_5_zero_check": "No Syndra mechanic zeroes or refunds a full ability cost. The whole P Transcendent text grants mana on splinter pickup ('Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana') -- a mana RESTORE, not a cost waiver -- and the only refund in the kit is W's 'Throwing the [Blue Sentinel] will refund 10 mana', which is 10 mana off a jungle-camp throw, not a 100 -> 0 waiver against a champion target. Syndra's cheapest cast at any rank is 40 mana (Q rank 1).",
+    "step_6_conclusion": "0.0 is not a sourced resource cost for ANY Syndra cast entry. 100.0 is exactly the sourced cost of W at rank 5 and of R at every rank -- the only two entries in the kit that can produce exactly 100.0 -- so the old value is reproducible from the cache while the new value is not. A 100.0 -> 0.0 move on a cast entry is the signature of a cost lookup that silently defaults to zero (the missing-key-defaults-to-a-wrong-number failure mode CLAUDE.md rule 5 forbids), not of a sourced mechanic."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [60, 70, 80, 90, 100], \"units\": [\"\", \"\", \"\", \"\", \"\"]}]}"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [100, 100, 100], \"units\": [\"\", \"\", \"\"]}]}"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [40, 45, 50, 55, 60], \"units\": [\"\", \"\", \"\", \"\", \"\"]}]}"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [50, 50, 50, 50, 50], \"units\": [\"\", \"\", \"\", \"\", \"\"]}]}"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[1].description",
+      "quote": "Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana. Splinters of Wrath are brought to Syndra from enemies over 0.6 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[*].notes",
+      "quote": "Force of Will has additional effects when targeting the Blue Sentinel and Red Brambleback. Throwing the former will refund 10 mana to Syndra upon cast and will reduce the cooldown of Force of Will by 1 second..."
+    },
+    {
+      "source": "data/champions.json -> Teemo.abilities.R[0] (recharge/ammo precedent)",
+      "quote": "cost = [75, 55, 35], rechargeRate = [35, 30, 25]  -- a stocked charge still pays the listed mana cost"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "\"module_slots\": {\"modeled\": [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... \"note\": \"No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.\"}"
+    },
+    {
+      "source": "docs/math-foundations.md S 1.1",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`)."
+    }
+  ],
+  "residual_uncertainty": "The scenario's explicit cast order is defined in scripts/ (out of bounds for this oracle), so cast_timeline[1] could not be resolved to a named slot directly. Under the two identities that can yield exactly 100.0 (W rank 5, R any rank) the old value is exact and the new value is wrong. Under the remaining identities (Q / Q2 = 60, E = 50) BOTH values would be wrong -- but in no branch is 0.0 correct, because Syndra has no zero-cost cast. The verdict is therefore reported as old_value_correct; the one alternative worth a human glance is 'both_wrong' if cast_timeline[1] turns out to be the Q or Q2 entry (correct value 60.0 at rank 5).",
+  "committed": false
+}

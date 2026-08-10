@@ -1,0 +1,113 @@
+{
+  "receipt_id": "oracle-C6-leaf112",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[6]/source",
+  "old_value": "Q",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c6",
+    "read": ["data/champions.json (Syndra)", "data/worklists/f2-task.md", "data/worklists/e3-stacks.json", "data/wiki-atoms/stack-transform-summon-resource.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/ (incl. golden_baseline.json)", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "text": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "id": "S2",
+      "where": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S3",
+      "where": "data/champions.json -> Syndra.abilities.W[0].effects[3] (description + leveling rows)",
+      "text": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. Leveling rows: 'Bonus True Damage' [8.4, 12, 15.6, 19.2, 22.8] + [9.2, 9.8, 10.4, 11, 11.6]% AP; 'Total Mixed Damage' [78.4, 112, 145.6, 179.2, 212.8] + [74.2, 74.8, 75.4, 76, 76.6]% AP"
+    },
+    {
+      "id": "S4",
+      "where": "data/champions.json -> Syndra.abilities.W[0].effects[2] (Recast)",
+      "text": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land. Magic Damage [70, 100, 130, 160, 190] + 65% AP"
+    },
+    {
+      "id": "S5",
+      "where": "data/champions.json -> Syndra.abilities.R[0].effects[1] (Active + leveling)",
+      "text": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. Magic Damage per Sphere [80, 120, 160] + 20% AP; Minimum [240, 360, 480] + 60% AP; Maximum [560, 840, 1120] + 140% AP"
+    },
+    {
+      "id": "S6",
+      "where": "data/champions.json -> Syndra.abilities.R[0].effects[3] and notes",
+      "text": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health. NOTE: 'A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown.'"
+    },
+    {
+      "id": "S7",
+      "where": "data/champions.json -> Syndra.abilities.Q[0].effects[0] and Q.rechargeRate",
+      "text": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. Magic Damage [90, 125, 160, 195, 230] + 70% AP; rechargeRate [7, 7, 7, 7, 7]"
+    },
+    {
+      "id": "S8",
+      "where": "docs/math-foundations.md §1.1 (lines 60-70)",
+      "text": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "id": "S9",
+      "where": "docs/math-foundations.md §5 formula-audit table",
+      "text": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast. And: Ability haste (`effective_cooldown`) ... 'R casts exactly once per timed fight (model constraint, documented)'."
+    },
+    {
+      "id": "S10",
+      "where": "data/worklists/f2-task.md (optimal-event-order engine spec)",
+      "text": "The event order shown in the UI comes from the fight's cast_order + breakdown damage_events ... setup/consume relationships (e.g. Cassiopeia Q poisons BEFORE E spam ...), cooldown gating (cast order must respect cooldowns), buffs first ... replacing the naive DEFAULT_CAST_ORDER (fixed Q,W,E,R) when a combo exists."
+    },
+    {
+      "id": "S11",
+      "where": "data/wiki-atoms/stack-transform-summon-resource.json[34]",
+      "text": "'Ammo / stocked charges' ... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    }
+  ],
+  "independent_computation": {
+    "step_1_which_thresholds_are_live_at_60_splinters": {
+      "reasoning": "Splinter thresholds in the cached wiki text are 40 (Q stocks charges), 60 (W bonus true damage), 80 (E slow), 100 (R execute), 120 (+15% AP). A scenario pinned at 60 Splinters has EXACTLY the 40 and 60 bonuses live; the 80/100/120 bonuses are not.",
+      "live": ["Q: up to 2 stocked Dark Sphere charges (S2)", "W: bonus true damage instance (S3)"],
+      "not_live": ["E slow (80)", "R execute (100)", "+15% AP Transcendence (120)"]
+    },
+    "step_2_W_emits_two_damage_instances_at_60": {
+      "claim": "At >=60 Splinters a single Force of Will recast produces TWO damage instances -- a magic instance and a separate true-damage instance -- so it occupies two slots in a damage-event ledger.",
+      "numeric_verification": "Model the wiki sentence as true = (0.12 + 0.02*AP/100) * (base + 0.65*AP), with base = [70,100,130,160,190] (S4). Expanding: flat = 0.12*base = [8.4, 12, 15.6, 19.2, 22.8] -- exactly the cached 'Bonus True Damage' flat row (S3). Linear AP term = 0.12*65 + 0.02*base = [9.2, 9.8, 10.4, 11.0, 11.6] %AP -- exactly the cached %AP row (S3). Two independent rows reproduced to the digit, so the decomposition (and hence the separate true instance) is confirmed from the cache, not assumed. (The cache's residual 1.14 %AP row is the AP^2 term, ~0.02*0.65*100 = 1.3, not load-bearing here.)"
+    },
+    "step_3_Q_can_open_with_three_back_to_back_casts": {
+      "claim": "At >=40 Splinters Q is a stocked-charge ability (S2, S11; Q.rechargeRate = 7s, S7), max 2 stocked charges. The opener therefore admits up to 3 Dark Sphere casts in immediate succession (the ready cast plus 2 stocked charges), each a separate damage instance and each leaving a sphere on the ground for 6 s."
+    },
+    "step_4_R_must_follow_the_sphere_setup": {
+      "claim": "Unleashed Power's damage is a strictly increasing function of the number of LIVE Dark Spheres at the moment of cast: 3 conjured + up to 4 grabbed (S5).",
+      "math": "damage(R) = n_spheres * (per_sphere), n_spheres = 3 + min(4, live). Rank 3, AP = 400: per sphere = 160 + 0.20*400 = 240. n=3 -> 480 + 0.60*400 = 720. n=6 (3 live spheres grabbed) -> 1440. n=7 (max) -> 1120 + 1.40*400 = 1680. Each Q cast moved from AFTER R to BEFORE R therefore adds a full sphere, 80/120/160 (+20% AP) = 240 at this sample, while the Q's own damage (S7) is unchanged by the reordering.",
+      "conclusion": "Ordering is not damage-neutral for Syndra: any cast order that puts a sphere-generating Q *after* R forfeits 80-160 (+20% AP) per forfeited sphere. R is a pure CONSUME step whose setup is Q (and W/E, which refresh or merely displace spheres rather than destroy them: 'Grabbing a Dark Sphere will cause the duration on it to refresh'; 'Scatter the Weak will delay the expiration of a Sphere until after it finishes being knocked back'). Under the engine's own stated rotation doctrine -- apply-before-consume, setup before payoff (S10) -- R belongs at the END of the setup prefix, not inside it."
+    },
+    "step_5_index_arithmetic": {
+      "claim": "The wiki-correct 60-Splinter opener produces exactly seven leading damage instances with R in slot 6 (0-indexed).",
+      "ledger": [
+        {"index": 0, "source": "Q", "why": "ready Dark Sphere cast; sphere #1"},
+        {"index": 1, "source": "Q", "why": "stocked charge 1 (40-Splinter bonus, S2); sphere #2"},
+        {"index": 2, "source": "Q", "why": "stocked charge 2 (40-Splinter bonus, S2); sphere #3"},
+        {"index": 3, "source": "W", "why": "Force of Will recast, magic instance (S4)"},
+        {"index": 4, "source": "W", "why": "Force of Will bonus TRUE instance, live only at >=60 Splinters (S3, verified in step 2)"},
+        {"index": 5, "source": "E", "why": "Scatter the Weak, single magic instance (80-Splinter slow not live at 60)"},
+        {"index": 6, "source": "R", "why": "Unleashed Power, cast once per fight (S9), consuming the 3 live spheres for 3+3 = 6 sphere hits (S5)"}
+      ],
+      "note": "R is single-cast per fight (S9) and every cast sits on one shared, greedily-ordered timeline (S8), so R appears exactly once in the ledger and its position is determined solely by where the cast order places it."
+    },
+    "step_6_what_the_old_value_implies": {
+      "reasoning": "old damage_events[6].source = 'Q' with R somewhere else in the ledger. Under the naive DEFAULT_CAST_ORDER (fixed Q,W,E,R -- S10) R lands in the first cycle, i.e. before the later Q recasts; the Q sitting at index 6 is then a sphere conjured AFTER the ultimate has already barraged. That sphere contributes nothing to R (S5), which is precisely the 'unrealistic event order' the rotation layer exists to remove (S10, Cassiopeia E-before-Q example). The old ordering is therefore mechanically wrong in the direction the wiki text settles, and the new ordering (R after the Q/W/E setup prefix) is the one the cached ability text supports."
+    }
+  },
+  "confidence": {
+    "level": "high on direction, medium on exact index",
+    "what_is_firmly_sourced": "That Syndra's R is a consume step whose damage strictly increases with spheres placed by earlier Q casts, so a correct/optimal cast order places R AFTER the Q setup, never before a sphere-generating Q; and that at exactly 60 Splinters W contributes an extra (true-damage) event, verified digit-for-digit against the cached leveling rows.",
+    "what_could_not_be_verified": "The scenario's own configuration (cast order, level, ranks, items, fight window) lives under scripts/ and tests/, which this oracle is forbidden to read, so the seven-event prefix in step 5 is a reconstruction from the cached wiki mechanics rather than a replay of the scenario. It fits the leaf exactly (R at index 6) and fits the scenario name (60 Splinters -> both the 40-charge and 60-true-damage bonuses live), but a different prefix of the same length would also put R at index 6. The verdict would flip only if the change had moved R EARLIER past a Q -- which is the opposite of what the cached mechanics reward and the opposite of the naive Q,W,E,R default the rotation layer replaces."
+  }
+}

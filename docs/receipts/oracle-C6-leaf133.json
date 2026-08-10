@@ -1,0 +1,104 @@
+{
+  "receipt": "oracle-C6-leaf133",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/order[7]",
+  "old_value": "<absent>",
+  "new_value": "Q",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "scope_not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "note": "A stray `syndra.json` (a sibling oracle run's scratch spill) appeared in the export directory; it was byte-equal to data/champions.json['Syndra']['abilities'] and was not used as a source."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0]",
+      "quote": "cooldown.modifiers[0].values = [7, 7, 7, 7, 7]; rechargeRate = [7, 7, 7, 7, 7]; castTime = \"none\"; cooldown.affectedByCdr = false"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].cooldown",
+      "quote": "values = [12, 11, 10, 9, 8], affectedByCdr = true (rank 5 -> 8 s); castTime = \"none\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].cooldown",
+      "quote": "values = [15, 15, 15, 15, 15], affectedByCdr = true; castTime = 0.25"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -- leveling 'Ability Haste' values = [10, 20, 30]; active cooldown values = [120, 100, 80]; castTime = 0.25"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge) ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage"
+    },
+    {
+      "source": "docs/math-foundations.md L59-67 (Section 1.1)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` -- again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md L462 (formula-audit table)",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | EXACT | R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (cross-check of the same identity)",
+      "quote": "Ability haste -> CDR: effective_cd = base_cd * 100 / (100 + ability_haste)"
+    }
+  ],
+
+  "independent_computation": {
+    "config_inferred_from_scenario_name": {
+      "champion": "Syndra",
+      "custom_order": "scenario supplies an explicit opener/cast order; the permutation only permutes the t=0 block, see invariance test below",
+      "60": "Splinters of Wrath = 60 (Syndra's module option; the wiki thresholds are 40 / 60 / 80 / 100 / 120, and 60 is exactly the Force of Will true-damage threshold). 60 >= 40, so Dark Sphere stocks up to 2 charges.",
+      "ranks": "level 18 max ranks Q5 / W5 / E5 / R3 (corpus convention, e.g. data/practice-corpus/scenarios.json e9-e8-rengar-battle-roar-grey uses Q5 W5 E5 R3 at level 18)",
+      "ability_haste_from_items": "0 (order-only scenario); result shown below to be invariant in AH anyway"
+    },
+    "effective_cooldowns": {
+      "formula": "c = cd * 100 / (100 + AH)",
+      "Q": "base recharge 7 s per charge, +30 ability haste from R rank 3's passive -> c_Q = 7*100/130 = 5.3846 s (2 charges at >= 40 splinters)",
+      "W": "8 s at rank 5, AH 0 -> c_W = 8.000 s",
+      "E": "15 s, AH 0 -> c_E = 15.000 s",
+      "R": "80 s at rank 3; the documented model constraint is one R cast per timed fight"
+    },
+    "schedule_new_model_2_charges": [
+      "t=0.000  Q  (charge 1)  -> order[0]",
+      "t=0.000  Q  (charge 2, Transcendent 40-splinter bonus) -> order[1]",
+      "t=0.000  W  -> order[2]",
+      "t=0.000  E  -> order[3]",
+      "t=0.250  R  -> order[4]",
+      "t=5.385  Q  (first recharged charge) -> order[5]",
+      "t=8.000  W  -> order[6]",
+      "t=10.769 Q  (second recharged charge) -> order[7]  <== the leaf",
+      "t=15.000 E  -> order[8] (first cast outside the old 7-cast window)"
+    ],
+    "schedule_old_model_1_charge": [
+      "t=0 Q, t=0 W, t=0 E, t=0.25 R, t=5.385 Q, t=8.000 W, t=10.769 Q  -> exactly 7 casts (order[0..6])",
+      "the next cast would be E at t=15.000, so order[7] is <absent> for any fight window ending in (10.769, 15.000]"
+    ],
+    "why_index_7_is_Q_robustly": {
+      "claim": "With the 2-charge opener, order[0..4] is the five-cast t=0 block and order[5..7] are the first three recast epochs, which are always Q, W, Q.",
+      "proof": "With H_R = 30 (R rank 3) and any item ability haste AH >= 0: c_Q = 700/(130+AH), c_W = 800/(100+AH), c_E = 1500/(100+AH). (i) c_Q < c_W  <=>  700(100+AH) < 800(130+AH), true for all AH >= 0. (ii) c_W < 2c_Q  <=>  800(130+AH) < 1400(100+AH)  <=>  104000+800AH < 140000+1400AH, true for all AH >= 0. (iii) 2c_Q < c_E  <=>  1400(100+AH) < 1500(130+AH), true for all AH >= 0. Hence the recast order is c_Q (Q), c_W (W), 2c_Q (Q) before E ever recasts, so order[7] = Q.",
+      "numeric_invariance_check": "Simulated for AH = 0,5,...,200: order[7] = 'Q' in every case; simulated over all 120 permutations of the t=0 custom opener {Q, Q(2nd charge), W, E, R}: order[7] = 'Q' in every case.",
+      "insensitivity_to_the_R_passive_reading": "If the engine instead ignores R's Dark-Sphere haste (Q cooldown flat 7 s, matching the JSON's cooldown.affectedByCdr = false) the sequence becomes Q,Q,W,E,R, Q@7, W@8, Q@14 -> order[7] = Q as well."
+    },
+    "conclusion": "Under either reading of Q's haste, and under any custom opener permutation, the eighth cast of Syndra's shared-timeline rotation at >= 40 Splinters of Wrath is a Dark Sphere. The only mechanism in the cached wiki text that lengthens Syndra's rotation by one cast is the Q Transcendent bonus (2 charges at 40+ splinters), which the scenario's 60 splinters satisfies; without it exactly 7 casts fit the window, which is precisely the old <absent>."
+  },
+
+  "caveats": [
+    "The scenario's exact fight window, item build and rank assignment were not readable from the permitted evidence tree (they live in scripts/, which runbook R-18/R-19 forbids). The computation above is therefore stated as an invariant: for any fight window whose last cast is the eighth (i.e. ending in (10.769 s, 15.000 s] at AH 0), any ability haste, and any custom opener permutation, order[7] = Q.",
+    "One inconsistent corner would give E instead: Q's cooldown treated as flat 7 s (affectedByCdr = false) *while* the build carries >= ~15 item ability haste, which shrinks W below Q. That reading contradicts R's own passive ('Dark Sphere's cooldown is reduced equivalent to an amount of ability haste'), and an order-only scenario carries no items.",
+    "If the 60 in the scenario name were a 60-second fight duration rather than 60 splinters, the rotation would contain ~22 casts and order[7] could not have been <absent> in the old baseline -- so the splinters reading is the only one consistent with the reported old value."
+  ]
+}

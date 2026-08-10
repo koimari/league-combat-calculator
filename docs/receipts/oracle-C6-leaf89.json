@@ -1,0 +1,102 @@
+{
+  "receipt_id": "oracle-C6-leaf89",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/resource_cost",
+  "old_value": 60.0,
+  "new_value": 100.0,
+  "verdict": "new_value_correct",
+  "confidence": "high, with one documented residual (see residual_uncertainty)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6b",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/worklists/e3-mechanics.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (other receipts)", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.resource",
+      "quote": "MANA"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] (Dark Sphere) .cost.modifiers[0].values",
+      "quote": "[40, 45, 50, 55, 60]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] (Force of Will) .cost.modifiers[0].values",
+      "quote": "[60, 70, 80, 90, 100]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0] (Scatter the Weak) .cost.modifiers[0].values",
+      "quote": "[50, 50, 50, 50, 50]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0] (Unleashed Power) .cost.modifiers[0].values",
+      "quote": "[100, 100, 100]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[1..2].description",
+      "quote": "Force of Will can be recast while the target is being held. / Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage",
+      "why": "W is one mana-charged cast plus a free recast; the throw is not separately priced, so no 0-mana entry is expected."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "why": "Identifies the '_60' in the scenario name as the splinters option = 60 (the Force of Will true-damage threshold)."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "why": "At splinters = 60 the synthetic second-charge cast (Q2) is available, so the cast timeline holds five castable entries (indices 0-4)."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots.modeled",
+      "quote": "[\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge)",
+      "why": "Confirms exactly five mana-costing cast slots (Q, Q2, W, E, R); P is passive and unpriced."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "grep for 'resource cost' / 'mana' / 'cast_timeline'",
+      "quote": "no ability-mana-cost rule is stated anywhere in the document (only line 66's 'resolved greedily by cast order' about mutual exclusion)",
+      "why": "The only authority for this leaf is the cached wiki cost table above."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_resource": "Syndra's casting resource is MANA, so resource_cost for any cast entry is that ability's mana cost at its current rank.",
+    "step_2_rank_table": "Rank distribution at the corpus's standard level 18: 18 skill points = 5/5/5 on the basics + 3 on the ultimate. So Q = rank 5, W = rank 5, E = rank 5, R = rank 3.",
+    "step_3_level_18_cost_table": {
+      "Q (Dark Sphere)": 60,
+      "Q2 (synthetic 2nd Dark Sphere charge, same spell, same cost)": 60,
+      "W (Force of Will)": 100,
+      "E (Scatter the Weak)": 50,
+      "R (Unleashed Power)": 100
+    },
+    "step_4_admissible_values": "The only correct resource_cost values anywhere in a level-18 Syndra cast timeline are {50, 60, 100}. 100 is correct for a Force of Will or an Unleashed Power cast; 60 is correct only for a Dark Sphere cast (Q or the Q2 charge).",
+    "step_5_which_reading_explains_60_to_100": [
+      "Reading A (same ability, corrected rank): 60 and 100 are exactly the first and last entries of ONE array - Force of Will's [60, 70, 80, 90, 100]. A cast that keeps its identity and moves from 60 to 100 is a Force of Will priced at rank 1 before and rank 5 after. At level 18 W is unambiguously rank 5, so 100 is the correct value and 60 was a rank-index defect. No other Syndra ability can produce the pair (60, 100) from its own cost array.",
+      "Reading B (order changed, so a different ability now sits at index 4): index 4 is the last of the five casts; under the new order it is a W or an R cast (100), under the old order it was a Q or Q2 cast (60). Both are individually well-formed prices, so this reading alone cannot rule either way - but it also gives no mechanism by which a Dark Sphere cast could ever be charged 100, whereas it does explain a 100-cost ability landing at the tail.",
+      "Synthesis: Reading A uniquely and exactly reproduces the observed (60 -> 100) pair from the cached cost table and points to 100. Reading B is neutral. There is no mechanism in the cached data by which 100 could be a wrong price for any cast that legitimately occupies index 4, while 60 is reproducible as a rank-1 defect. Therefore 100 is the defensible value."
+    ],
+    "step_6_ruled_out": [
+      "W's free recast: the wiki text prices the initial grab only ('Force of Will can be recast while the target is being held'), so a recast entry would read 0.0, not 60.0 or 100.0. Neither value is the recast, so this is not a recast-pricing question.",
+      "Passive mana restore ('Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana') is a resource gain, not a cast cost, and never nets against resource_cost.",
+      "No Transcendent bonus at any splinter threshold (40 / 60 / 80 / 100 / 120) alters a mana cost; they alter charges, true damage, scatter angle, execute and AP."
+    ]
+  },
+
+  "residual_uncertainty": "The scenario definition for 'syndra_custom_order_60' lives outside the permitted evidence tree (no file under data/ or docs/math-foundations.md contains 'custom_order', 'cast_timeline' or 'resource_cost'), so the identity of the ability at cast_timeline[4] could not be read directly. The verdict rests on the cost table above plus the fact that (60, 100) is precisely Force of Will's rank-1/rank-5 pair. The only world in which the old value is correct is one where index 4 is a Dark Sphere cast (Q or Q2) that the change re-priced at 100 - and the cached data offers no mechanism that would ever charge a Dark Sphere 100 mana.",
+
+  "conclusion": "Correct value at fights/manual_target/cast_timeline[4]/resource_cost is 100.0 mana."
+}

@@ -1,0 +1,78 @@
+{
+  "receipt_id": "oracle-C6-leaf49",
+  "runbook": "R-18 / R-19 (independent oracle, blind to the change under test)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[8]/damage_type",
+  "old_value": "true",
+  "new_value": "magic",
+  "verdict": "old_value_correct",
+  "confidence": 0.65,
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].leveling[*].attribute",
+      "quote": "attribute names on the W recast rows are exactly: 'Magic Damage', 'Bonus True Damage', 'Total Mixed Damage'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.{Q,W,E,R}[0].damageType",
+      "quote": "Q = MAGIC_DAMAGE, W = MAGIC_DAMAGE, E = MAGIC_DAMAGE, R = MAGIC_DAMAGE (Syndra carries no physical or true slot-level damage type)"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary (cached at the same HEAD)",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff"
+    },
+    {
+      "source": "data/items.json (all passives[].branches / active[].branches scanned for /true damage/i)",
+      "quote": "No ordinary Summoner's Rift AP item in the cache grants a true-damage instance. The only true-damage hits are turret/Arena/augment-scoped entries (Reinforced Armor, Crystalline Overgrowth, Darksteel Talons, Reaper's Toll, Death's Daughter, Bastionbreaker) plus type-conditional riders that do not create true damage (Cosmic Drive, Shadowflame)."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1 / audit table",
+      "quote": "m(R) = 100 / (100 + R) (apply_resistance, resistance.py) ... post = raw * m(R)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_reading": "The scenario id 'syndra_custom_order_120' pins the Syndra splinters option at its documented maximum, 120 (the wiki's own cap: 'stacking up to 120 times'; the cached audit records the option domain as 0-120). 120 >= 60, so the W Transcendent bonus is ACTIVE in this fight, and 120 >= 100/80/40 so every other Transcendent bonus is live too.",
+    "step_2_type_inventory": "Syndra's kit, per the cached wiki text, emits exactly one non-magic damage instance. Q ('dealing magic damage'), E ('deals magic damage'), R ('each dealing magic damage upon hit') and the W recast base ('dealing magic damage') are all MAGIC_DAMAGE at the slot level. The single true-damage instance in the entire kit is the W Transcendent bonus at >= 60 splinters.",
+    "step_3_row_decode": "Verified that the cached 'Bonus True Damage' leveling row is exactly 12% + 2% per 100 AP OF THE W MAGIC PACKET, i.e. bonus_true = (0.12 + 0.02*AP/100) * (base_W + 0.65*AP), with base_W = [70,100,130,160,190] by rank. Flat term 0.12*base = [8.4, 12.0, 15.6, 19.2, 22.8] -- matches the cached row 5/5. AP coefficient 0.12*65 + 0.02*base = [9.2, 9.8, 10.4, 11.0, 11.6] -- matches the cached row 5/5. This 10-of-10 match confirms the row is a genuine separate TRUE packet riding on the magic packet, and the sibling row 'Total Mixed Damage' (= magic + true, e.g. 78.4 = 70 + 8.4) confirms the W recast is authored as two instances of two different damage types, not one.",
+    "step_4_worked_number": "Worked example, W rank 5, 500 AP before Transcendence: total AP = 500 * 1.15 = 575 (P at 120 splinters). W magic = 190 + 0.65*575 = 563.75. Bonus true = (0.12 + 0.02*575/100) * 563.75 = 0.235 * 563.75 = 132.48. Cross-check against the wiki row form 22.8 + 11.6%AP + 1.3%AP^2/100 = 22.8 + 66.70 + 42.98 = 132.48. Identical. Under docs/math-foundations.md Section 2.1 the magic packet is then multiplied by 100/(100+MR) while the true packet is not -- so the damage_type label is load-bearing on the number, not cosmetic.",
+    "step_5_conclusion": "At 120 splinters a Syndra manual-target fight that casts W MUST contain exactly one damage event typed 'true' (the W Transcendent bonus) and no others, since no ordinary SR AP item in the cache adds a true-damage instance. Relabelling that event 'magic' both contradicts the wiki text verbatim ('bonus true damage') and understates it by the 100/(100+MR) mitigation factor. Nothing in the cached data converts Syndra's true damage into magic damage."
+  },
+
+  "residual_uncertainty": {
+    "what_i_could_not_verify": "The event INDEX. The scenario definition and the golden baseline live under tests/ and scripts/, which this runbook forbids me to read, so I cannot prove that damage_events[8] is the W bonus rather than some other event. Syndra's modeled slots are P/Q/Q2/W/E/R (data/champion-audit/batch-6.json) and R emits one event per sphere (r_spheres, up to 3 conjured + 4 grabbed), so index 8 could in principle land on an R sphere.",
+    "the_competing_hypothesis": "If the change under test reordered damage_events (the scenario name points at the custom cast_order path; data/worklists/f2-task.md documents a rotation/cast_order engine whose gates say 'cast orders change fight totals ... THIS IS EXPECTED AND DESIRED'), then index 8 could simply be a different event now, and 'magic' would be an artifact of a legitimate shuffle rather than a mistyping.",
+    "why_i_still_ruled_old_value_correct": "The only wiki-adjudicable fact bearing on this leaf is that Syndra's W bonus is TRUE damage and that it is live at 120 splinters. The scenario was deliberately pinned at the splinter value where that bonus exists; a fight in that state owes exactly one 'true' event, and the observed change removes a 'true' label without any cached evidence that a true instance should not exist. Absent a compensating magic->true flip at a neighbouring index (which I cannot see), 'magic' at this path is a downgrade of a wiki-mandated true instance. If the reviewer can confirm that the same diff contains a mirrored magic->true flip at damage_events[9] (or that the W true event survives at another index), this verdict should be re-read as new_value_correct -- that is the single discriminating check I was unable to run."
+  },
+
+  "asides": [
+    "Cached-data nit, unrelated to this leaf: the third modifier on Syndra's W 'Bonus True Damage' and 'Total Mixed Damage' rows is cached as 1.14 %AP for every rank. The quadratic term implied by the wiki text is 0.02 * 65% = 1.3 %AP^2 per 100 AP, and 1.3 is what reproduces the row's own totals exactly (see step_4). The 1.14 looks like a wiki/parser artifact. It affects magnitude, not damage type.",
+    "The same rows carry the unit string '  2' (a mangled superscript-2 for the AP-squared term) -- another sign this row survives the modifier parser only partially, consistent with the CLAUDE.md 'known-degraded wiki parses' class."
+  ]
+}

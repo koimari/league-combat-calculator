@@ -1,0 +1,105 @@
+{
+  "receipt": "oracle-C6-leaf45",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[7]/damage",
+  "old_value": 638.5,
+  "new_value": 713.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "note": "The golden scenario definition itself lives outside the permitted export, so the scenario's AP, target resistance and cast order were reconstructed by inversion from the two leaf values against the cached wiki rows (see independent_computation)."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].description (Transcendent, innate)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere), leveling attribute 'Magic Damage'",
+      "quote": "values [90, 125, 160, 195, 230] (flat) + values [70,70,70,70,70] units '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[2] (Force of Will, Recast), leveling attribute 'Magic Damage'",
+      "quote": "values [70, 100, 130, 160, 190] (flat) + values [65,65,65,65,65] units '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak), leveling attribute 'Magic Damage'",
+      "quote": "values [60, 95, 130, 165, 200] (flat) + values [60,60,60,60,60] units '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1] (Unleashed Power, Active)",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. -- leveling: 'Magic Damage per Sphere' [80,120,160] + 20% AP; 'Minimum Magic Damage' [240,360,480] + 60% AP; 'Maximum Magic Damage' [560,840,1120] + 140% AP"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "Resistance mitigation (apply_resistance) | m(R)=100/(100+R) ... EXACT"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "Stat rounding (calculate_total_stats) | display-level integer rounding of health/AD/AP/armor/MR before damage | APPROX"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_inversion": {
+      "method": "Exhaustive search over every Syndra damage row in data/champions.json (Q/W/E rank 1-5, R per-sphere / 3-sphere minimum / 7-sphere maximum rank 1-3), integer AP 0..2000, integer target MR 0..200 with the sourced mitigation identity m = 100/(100+MR), asking which (AP, MR) states can produce BOTH 638.5 and 713.0.",
+      "joint_solutions_found": 2,
+      "solutions": [
+        "(AP = 690, MR = 0): 638.5 = W rank 5, 713.0 = Q rank 5",
+        "(AP = 1656, MR = 65): 638.5 = E rank 1, 713.0 = W rank 2  -- rejected: 1656 AP is unreachable, and rank 1/rank 2 basics contradict a level-18 all-ranks-5 fight"
+      ],
+      "corroboration": "AP = 690 is exactly 600 x 1.15, i.e. a 600-AP Syndra under the scenario's own '_120' condition (120 Splinters of Wrath -> Transcendence, +15% ability power). Independent cross-check: at AP 690 the R 7-sphere aggregate computes 7 x (160 + 20% x 690) = 7 x 298 = 2086, which equals the wiki 'Maximum Magic Damage' row 1120 + 140% AP = 1120 + 966 = 2086 exactly. AP = 690 is therefore confirmed by a row I did not use to derive it."
+    },
+    "step_2_the_two_candidate_values": {
+      "638.5": "Syndra W (Force of Will, recast) rank 5 = 190 + 65% AP = 190 + 0.65 x 690 = 190 + 448.5 = 638.5",
+      "713.0": "Syndra Q (Dark Sphere) rank 5 = 230 + 70% AP = 230 + 0.70 x 690 = 230 + 483 = 713.0",
+      "also_at_this_state": "E rank 5 = 200 + 60% AP = 200 + 414 = 614.0 ; R per sphere rank 3 = 160 + 0.20 x 690 = 298.0",
+      "consequence": "Both leaf values are individually exact, wiki-faithful Syndra ability damages at the same fight state. The leaf therefore did NOT change because a number was recomputed -- the OCCUPANT of damage-event slot 7 changed from the W hit to the Q hit."
+    },
+    "step_3_ruling_out_a_value_change": {
+      "test": "Searched the same grid for any single (ability, rank) where damage(AP) = 638.5 and damage(round(1.15 x AP)) = 713.0 -- i.e. the hypothesis 'the Transcendence +15% AP buff started being applied'.",
+      "result": "ZERO matches anywhere in the grid.",
+      "conclusion": "The Transcendence buff is applied on BOTH sides (AP = 690 in both). The delta is positional, not arithmetic."
+    },
+    "step_4_which_occupant_is_correct": {
+      "reasoning": "The scenario name pins a custom cast order, and slot 7 sitting after a block of same-fight events means R leads the order (a Q,W,E-first order would put an R sphere, 298.0, at slot 7 -- neither value). With an R-first order and n sphere events occupying slots 0..n-1, slot n is the next ability. Under the sourced order-of-basics (DEFAULT_CAST_ORDER Q,W,E,R per data/worklists/f2-task.md, and Q > W > E by damage at this state: 713.0 > 638.5 > 614.0), slot n = Q and slot n+1 = W.",
+      "old_value_implies": "slot 7 = W  =>  n = 6 sphere events  =>  R fired 6 spheres.",
+      "new_value_implies": "slot 7 = Q  =>  n = 7 sphere events  =>  R fired 7 spheres.",
+      "wiki_ruling": "data/champions.json Syndra R: 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones' = 3 + 4 = 7, and the 'Maximum Magic Damage' row is 1120 + 140% AP = 7 x (160 + 20% AP) at rank 3 -- i.e. the sourced maximum sphere count is exactly 7, and 6 is an off-by-one below it.",
+      "verdict_reason": "7 spheres is the wiki maximum and the value the 'Maximum Magic Damage' row pins; 6 is not a sourced quantity. The new arrangement also restores Q-before-W, matching the documented Q,W,E basics order. Both readings put Q rank 5 = 713.0 in slot 7."
+    },
+    "arithmetic_shown": [
+      "Transcendence: AP = 600 x 1.15 = 690  (P: 'At 120 Splinters of Wrath ... increasing her ability power by 15%')",
+      "Q rank 5 magic damage = 230 + 0.70 x 690 = 230 + 483 = 713.0   <-- the new value",
+      "W rank 5 magic damage = 190 + 0.65 x 690 = 190 + 448.5 = 638.5 <-- the old value (a real quantity, but it belongs one slot later)",
+      "Mitigation check: target MR = 0 => m = 100/(100+0) = 1.0, so post-mitigation magic damage equals raw (docs/math-foundations.md, m(R)=100/(100+R), EXACT). This is the only mitigation state in which both leaf values land exactly on the sourced rows.",
+      "R sphere cross-check: 7 x (160 + 0.20 x 690) = 7 x 298 = 2086 = 1120 + 1.40 x 690 (wiki 'Maximum Magic Damage' rank 3) -- confirms both AP = 690 and 7 as the sourced sphere count."
+    ]
+  },
+
+  "caveats": [
+    "The scenario definition (level, item build, target stats, the literal custom cast order, the r_spheres option value) is not inside the permitted evidence tree, so slot 7's occupant is established by inversion plus the sourced sphere-count maximum rather than by reading the scenario config.",
+    "The reconstructed state (AP 690 = 600 x 1.15, target MR 0, all basics rank 5) is the unique sane joint solution over a 2000 x 200 x 21-row grid and is independently corroborated by the R 'Maximum Magic Damage' row, so the reconstruction is treated as sound.",
+    "If the scenario's custom order were literally R,W,Q,E rather than R,Q,W,E, the same slot arithmetic would instead imply the sphere count fell from 7 to 6 -- a move away from the wiki maximum. That reading makes the change a regression, but it requires an order that contradicts the documented Q,W,E basics sequence, so it is rejected."
+  ],
+
+  "conclusion": "713.0 is the correct value for fights/manual_target/damage_events[7]/damage: it is Syndra Dark Sphere rank 5 (230 + 70% AP) at 690 AP, where 690 AP is exactly the scenario's 600 AP under the 120-Splinter Transcendence +15% AP bonus, against an unmitigated (MR 0) manual target. The old 638.5 is Force of Will rank 5 at the same state -- a correct number sitting in the wrong slot, implied by a 6-sphere Unleashed Power that is one below the wiki-sourced maximum of 7 (3 conjured + up to 4 grabbed).",
+  "verdict_restated": "new_value_correct"
+}

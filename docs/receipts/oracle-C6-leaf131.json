@@ -1,0 +1,140 @@
+{
+  "receipt_id": "oracle-C6-leaf131",
+  "runbook": "R-18 / R-19 (independent oracle, blind to the change under test)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/order[5]",
+  "old_value": "W",
+  "new_value": "Q",
+  "verdict": "old_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "note": "src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were not read."
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.1, shared-timeline cast scheduling",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` - again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "id": "S2",
+      "file": "docs/math-foundations.md",
+      "locator": "line 462, verification table row 'Ability haste (`effective_cooldown`)'",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | EXACT | R casts exactly once per timed fight (model constraint, documented)",
+      "note": "This is the engine's ONE cooldown law. The document contains no static-cooldown / haste-immune carve-out anywhere (grep for 'static', 'charge', 'recharge', 'cdr' returns only this row)."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0] (Dark Sphere)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7, 7, 7, 7, 7]}], \"affectedByCdr\": false}, ... \"rechargeRate\": [7, 7, 7, 7, 7], \"castTime\": \"none\""
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0] (Force of Will)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [12, 11, 10, 9, 8]}], \"affectedByCdr\": true}, \"castTime\": \"none\""
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.E[0] (Scatter the Weak)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [15, 15, 15, 15, 15]}], \"affectedByCdr\": true}, \"castTime\": \"0.25\""
+    },
+    {
+      "id": "S6",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0] (Unleashed Power)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [120, 100, 80]}], \"affectedByCdr\": true}, \"castTime\": \"0.25\""
+    },
+    {
+      "id": "S7",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].effects[0].description + leveling attribute 'Ability Haste'",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.  ...  \"attribute\": \"Ability Haste\", \"values\": [10, 20, 30]",
+      "why_it_matters": "Decisive: an ability whose cooldown is genuinely STATIC in League cannot be shortened by ability haste from any source, spell-specific or global. Syndra's R passive exists solely to shorten Dark Sphere's cooldown by ability haste, so Dark Sphere's cooldown IS haste-responsive. The `affectedByCdr: false` flag on Q (S3) therefore cannot be read as 'ignores ability haste'."
+    },
+    {
+      "id": "S8",
+      "file": "data/champions.json",
+      "locator": "cross-champion survey of the `affectedByCdr` flag (741 abilities carry it; 55 are false)",
+      "quote": "The false set is dominated by passives and by CHARGE/AMMO abilities whose wiki `cd` field is the short static inter-cast gap while the haste-affected number is the recharge: Amumu Q (3), Gangplank E Powder Keg (0.5), Vi E (1), Milio E (0.5), Nilah E (0.5), Ivern W (0.5), Aphelios W Phase (0.8), Jinx Q Switcheroo (0.9), Karthus E (0.5), Singed Q (1), Zeri Q (1), Yasuo Q (4), Yone Q (4).",
+      "why_it_matters": "Syndra Q sits in this class - it carries BOTH `affectedByCdr: false` AND `rechargeRate: [7,7,7,7,7]`, and its own text says it becomes a stocked-charge ability. The flag is the wiki's charge-ability convention, not a claim that ability haste is ignored."
+    },
+    {
+      "id": "S9",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[1] (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S10",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra entry",
+      "quote": "\"modeled\": [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... \"modeled = SLOTS keys incl. synthetic Q2 (2nd charge)\" ... \"splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff\"",
+      "why_it_matters": "The second Dark Sphere charge is modeled as its own slot Q2, not as a repeated 'Q'. A rotation that scheduled the second charge would surface the literal token 'Q2', not a second 'Q'."
+    }
+  ],
+
+  "independent_computation": {
+    "model": "S1 shared-timeline greedy renewal schedule + S2 haste law cd' = cd*100/(100+AH). Casts occupy their sourced cast time (S3-S6: Q 0s, W 0s, E 0.25s, R 0.25s); an ability becomes eligible cd' after its own cast start; ties broken by the rotation's cast-order priority.",
+    "inputs": {
+      "Q_base_cd_s": 7.0,
+      "W_base_cd_s": [12, 11, 10, 9, 8],
+      "E_base_cd_s": 15.0,
+      "R_base_cd_s": [120, 100, 80],
+      "cast_times_s": {"Q": 0.0, "W": 0.0, "E": 0.25, "R": 0.25}
+    },
+    "worked_example_max_ranks_Q5_W5_E5_R3_priority_QWER": {
+      "AH_0": {
+        "effective_cds": {"Q": 7.0, "W": 8.0, "E": 15.0, "R": 80.0},
+        "cast_epochs": [["Q", 0.0], ["W", 0.0], ["E", 0.0], ["R", 0.25], ["Q", 7.0], ["W", 8.0]],
+        "order_index_5": "W"
+      },
+      "AH_60": {
+        "effective_cds": {"Q": "7*100/160 = 4.375", "W": "8*100/160 = 5.000", "E": "15*100/160 = 9.375", "R": "80*100/160 = 50.0"},
+        "cast_epochs": [["Q", 0.0], ["W", 0.0], ["E", 0.0], ["R", 0.25], ["Q", 4.375], ["W", 5.0]],
+        "order_index_5": "W"
+      },
+      "AH_60_plus_R3_passive_haste_on_Q": {
+        "note": "S7: R rank 3 grants Dark Sphere +30 ability haste, so Q sees AH = 90.",
+        "effective_cds": {"Q": "7*100/190 = 3.6842", "W": "5.000"},
+        "cast_epochs": [["Q", 0.0], ["W", 0.0], ["E", 0.0], ["R", 0.25], ["Q", 3.6842], ["W", 5.0]],
+        "order_index_5": "W"
+      }
+    },
+    "scale_invariance_argument": "Q (7s) and W (8s at rank 5, 12s at rank 1) are both haste-affected, so a common haste factor 100/(100+AH) divides BOTH. The comparison that decides index 5 - 'is the second Q (at 2*cQ) earlier than the first W recast (at cW)?' - is 2*7 < cW_base, i.e. 14 < cW_base. W's base cooldown never exceeds 12, so the inequality is FALSE at every rank and every ability-haste level. Index 5 is therefore W, independent of ability haste, independent of W's rank, and independent of the level. Adding R's own +30 haste to Q only makes 2*cQ shrink relative to nothing - it cannot help, because it also cannot advance W. Verified by exhaustive sweep.",
+    "exhaustive_sweep": {
+      "space": "all 24 cast-order permutations of {Q,W,E,R} x Q rank 1-5 x W rank 1-5 x E rank 1-5 x R rank 1-3 x AH in {0,10,20,30,40,50,60,80,100,150,200} = 99,000 configurations",
+      "result_index_5": {"W": 98550, "Q": 450},
+      "the_450_Q_cases": "Only priorities WERQ / WREQ (Q ranked LAST in the cast order) at AH >= 100, producing (W,E,R,Q,W,Q). Not reachable for any Syndra rotation that opens with Q, and requiring >=100 ability haste.",
+      "with_R_passive_haste_applied_to_Q": "360/360 configurations give index 5 = W."
+    },
+    "what_would_be_required_to_produce_Q": [
+      {
+        "mechanism": "Treat Dark Sphere's 7s as a STATIC cooldown immune to ability haste (a literal reading of S3's `affectedByCdr: false`).",
+        "effect": "At AH>0 the sequence becomes Q,W,E,R,W,Q (e.g. AH=60: Q@0, W@0, E@0, R@0.25, W@5.0, Q@7.0) -> index 5 = Q.",
+        "assessment": "REFUTED by S7. Syndra's R passive shortens Dark Sphere's cooldown by 10/20/30 ability haste; a static cooldown cannot be shortened by haste, so that passive would be inert. Also refuted by S8 (the flag is the wiki's charge-ability convention, and Q carries `rechargeRate: [7,7,7,7,7]` - recharge times are haste-reduced) and unsupported by S2 (the engine documents exactly one cooldown law, with no static carve-out). At AH=0 this mechanism produces no change at all, so it cannot even explain a diff in a haste-free build."
+      },
+      {
+        "mechanism": "Schedule Dark Sphere's Transcendent second charge (S9) in the rotation, giving Q,Q,W,E,R,Q.",
+        "effect": "index 5 = Q at every haste level.",
+        "assessment": "Conditionally real but NOT supported here: it requires >= 40 Splinters of Wrath in this scenario, and S10 shows the second charge is modeled as a distinct slot Q2 - a scheduled second charge would print the token 'Q2' at index 1, not a second 'Q'. Nothing in the cached data establishes that the scenario's trailing '60' is a splinter count rather than a fight length, target resistance, or ability-haste figure."
+      }
+    ],
+    "conclusion": "Under the cached Syndra cooldowns and the engine's own documented scheduler and haste law, the 6th cast (order[5]) of a Syndra rotation is W. The old value W is what correct physics produces; the new value Q requires either a haste-immune Dark Sphere - which the cached wiki text of Unleashed Power's passive directly refutes - or a second-charge slot that would surface as 'Q2'."
+  },
+
+  "confidence": {
+    "level": "high on the physics, medium on the scenario binding",
+    "proved": "Dark Sphere's cooldown IS reduced by ability haste (S7), and under a single Dark Sphere charge index 5 = W for 98,550 of 99,000 swept configurations, including every configuration whose rotation opens with Q.",
+    "not_verifiable_from_the_permitted_evidence_tree": "The scenario's own inputs (its custom cast order list, ability haste, ranks, and the `splinters` option value - i.e. what the trailing '60' denotes) live outside data/ and docs/math-foundations.md and were not read.",
+    "falsifier": "If scenario syndra_custom_order_60 sets the module's `splinters` option to 60 (>= the 40 threshold in S9) AND the rotation now schedules the stocked second charge, then Q at index 5 is correct - but in that case the rotation should also show the Q2 slot token, and index 1 should have changed to Q2. Check the sibling leaves order[1]..order[4]: an adjacent-swap pattern (order[4] Q->W, order[5] W->Q) confirms the refuted static-cooldown mechanism; a four-leaf shift introducing Q2 confirms the charge mechanism."
+  },
+
+  "verdict_detail": "old_value_correct - W is the value the cached wiki cooldowns and the documented shared-timeline/haste model produce for fights/manual_target/rotation/order[5]."
+}

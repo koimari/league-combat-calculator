@@ -1,0 +1,104 @@
+{
+  "receipt_id": "oracle-C6-leaf137",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/timeline_coverage/exact_sources[5]",
+  "old_value": null,
+  "old_value_note": "<absent> — the list had no element at index 5",
+  "new_value": "proc_Luden's Echo",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read": ["data/items.json", "data/item-atoms/6655.json", "data/champions.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "question": "Should a source named proc_Luden's Echo appear in the exactly-modeled source list of a 60-second single-target Syndra fight timeline?",
+    "step_1_item_exists_and_is_legally_buildable": {
+      "source": "data/items.json id 6655",
+      "facts": {
+        "name": "Luden's Echo",
+        "tier": 3,
+        "rank": "LEGENDARY",
+        "shop.purchasable": true,
+        "shop.tags": ["MAGE"],
+        "modes": {"classic sr 5v5": true, "aram": true, "nb": true, "ar": true},
+        "championRestriction": [],
+        "acquisitionNote": "",
+        "sourceWarnings": []
+      },
+      "conclusion": "Per the project rule that item availability is decided from the cached modes table + champion restriction + acquisition note, Luden's Echo is available on ordinary Summoner's Rift and unrestricted, so a Syndra build may hold it. Item stats: 100 AP / 600 mana / 10 ability haste."
+    },
+    "step_2_the_passive_is_a_damage_source": {
+      "source": "data/items.json id 6655 -> passives[0] (name 'Echo', unique true, cooldown '12'), branches[0]",
+      "quoted_wiki_text": "Gain 6 ''Echo'' stacks. Dealing [[ability damage]] to an enemy consumes all ''Echo'' stacks to deal {{as|75|magic damage}} {{as|(+ 5% AP)}} {{as|'''bonus''' magic damage}} to them and, for each stack consumed beyond the first, an additional enemy within {{tip|cr|icononly=true}} 600 units of them, firing an orb at each secondary target that impacts after {{rutngt|0.5}} to deal the damage. If the number of additional targets fired at is less than the number of stacks consumed,{{ft|deal an additional {{as|{{pp|75*0.2 to 75*5*0.2 for 5|1 to 5|changedisplay=true|type=remaining ''Echo'' stacks}}|magic damage}} {{as|(+ {{pp|key=%|5*0.2 to 5*5*0.2 for 5|1 to 5|type=remaining ''Echo'' stacks|changedisplay=true|showtype=false}} AP)}} {{as|magic damage}} to the primary target, for a total of {{as|{{pp|(75*0.2)+75 to (75*5*0.2)+75 for 5|1 to 5|type=remaining ''Echo'' stacks|changedisplay=true|showtype=false}}|magic damage}} {{as|(+ {{pp|key=%|(5*0.2)+5 to (5*5*0.2)+5 for 5|1 to 5|type=remaining ''Echo'' stacks|changedisplay=true|showtype=false}} AP)}}|deal an additional 20% damage to the primary target for each remaining ''Echo'' stack}}",
+      "corroboration": "data/item-atoms/6655.json carries atom 'damage.magic' with behavior 'Echo', provenance evidence 'passive:Echo' — the cached decomposition already classifies Echo as a magic-damage source, not a pure stat line.",
+      "riot_description_cross_check": "\"Damaging Abilities fire 6 Echoes that deal bonus magic damage to the target and nearby enemies. Remaining Echoes fire on the primary target, dealing 20% damage.\""
+    },
+    "step_3_single_target_per_proc_value": {
+      "setup": "manual_target fight = one enemy, so zero secondary targets within 600 units; 6 stacks are consumed, 1 hits the primary as the base hit and the remaining 5 convert to 20%-value hits on the primary.",
+      "flat": "75 + 5 x (75 x 0.20) = 75 + 5 x 15 = 75 + 75 = 150 magic damage",
+      "ap_ratio": "5% + 5 x (5% x 0.20) = 5% + 5 x 1% = 10% AP",
+      "wiki_closed_form_check": "the branch's own totals expression '(75*5*0.2)+75 for 5' = 150 and '(5*5*0.2)+5 for 5' = 10% AP — matches the term-by-term sum exactly",
+      "per_proc_raw": "150 + 0.10 x AP magic damage (pre-mitigation); e.g. with the item's own 100 AP alone that is 160 raw magic per proc",
+      "mitigation": "resolved by the standard magic path raw x 100/(100+MR) after magic penetration — no special-casing"
+    },
+    "step_4_proc_count_in_a_60s_fight": {
+      "cooldown": "12 s (passives[0].cooldown = '12'; unique passive, not affected by the item's own ability haste, which only touches champion abilities)",
+      "trigger_availability": "Syndra's Q Dark Sphere is Magic Damage with a 7 s cooldown at every rank (data/champions.json -> Syndra.abilities.Q leveling: Magic Damage 90/125/160/195/230 (+70% AP), cooldown [7,7,7,7,7]); W 12/11/10/9/8, E 15. Ability damage is therefore available continuously, so the Echo cooldown, not the trigger, is the binding constraint.",
+      "proc_times": [0, 12, 24, 36, 48],
+      "count": "5 procs inside the 60 s window (a nominal 6th at t = 60 s falls on the fight-end boundary, which docs/math-foundations.md Section 5 documents as excluded: 'swing exactly at T excluded (measure-zero boundary)')",
+      "conclusion": "The source fires at least five times in this fight; it cannot legitimately be absent from the fight's source list."
+    },
+    "step_5_why_exact_and_not_approx": {
+      "reasoning": "Echo is fully deterministic on this fight shape: fixed 12 s internal cooldown, fixed 6-stack budget, no RNG (unlike crit), no uptime estimate, no cast-spread heuristic, and — with a single target — no 0.5 s secondary-orb travel and no target-count branch. Its per-proc damage is a closed-form affine function of AP, so mitigation commutes with it. That places it in the EXACT column by the same criterion docs/math-foundations.md Section 5 applies to the other deterministic proc families (e.g. on-hit stacking's 'modular every-Nth counting ... affine => exact' and phantom hits' 'deterministic cadence'), and away from the APPROX rows, which are approximate only because of GCD/uptime/spread estimates that do not apply here.",
+      "naming": "'proc_Luden's Echo' uses the exact cached item name from data/items.json id 6655 ('Luden's Echo'), which is the project's required naming source for items."
+    },
+    "conclusion": "A 60 s single-target Syndra fight whose build holds Luden's Echo contains 5 Echo procs of 150 (+10% AP) magic damage each, each one deterministic and exactly computable. The source belongs in exact_sources; its absence at index 5 in the old baseline was an omission of real, exactly-modelable damage."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "item id 6655 'Luden's Echo' -> passives[0] name 'Echo', unique true, cooldown '12', branches[0]",
+      "used_for": "proc trigger condition, 12 s cooldown, 6-stack budget, 75 (+5% AP) base and 20%-per-remaining-stack single-target conversion, and the wiki's own '(75*5*0.2)+75 for 5' total"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item id 6655 -> shop.purchasable, shop.tags, modes, championRestriction, acquisitionNote, sourceWarnings, stats (100 AP / 600 mana / 10 AH)",
+      "used_for": "availability of the item on Summoner's Rift for an unrestricted mage build"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "item id 6655 -> riotDescription",
+      "used_for": "independent cross-check of the Echo mechanic wording"
+    },
+    {
+      "file": "data/item-atoms/6655.json",
+      "locator": "atoms[] -> atom_id 'damage.magic', behavior 'Echo', provenance.evidence 'passive:Echo'",
+      "used_for": "corroboration that the cached decomposition already treats Echo as a magic damage source"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra -> abilities.Q 'Dark Sphere' (Magic Damage 90/125/160/195/230 (+70% AP), cooldown [7,7,7,7,7]); W 'Force of Will' [12,11,10,9,8]; E 'Scatter the Weak' [15]; R 'Unleashed Power' [120,100,80]",
+      "used_for": "confirming Syndra deals ability damage often enough that the Echo cooldown is the binding constraint on proc count"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5 formula-audit table — 'Auto DPS / auto count' row ('swing exactly at T excluded (measure-zero boundary)'), 'On-hit stacking' row ('modular every-Nth counting ... affine => exact'), 'Phantom hits' row ('deterministic cadence')",
+      "used_for": "the fight-end boundary convention used in the proc count, and the project's stated criterion for classifying a deterministic proc family as EXACT rather than APPROX"
+    }
+  ],
+
+  "caveats": [
+    "The scenario definition for 'syndra_custom_order_60' lives outside the permitted evidence tree (data/ and docs/math-foundations.md only; data/practice-corpus/scenarios.json contains no Syndra or Luden's entry), so the build list itself was not read. The finding is conditional in exactly one direction: a source-attributed timeline can only emit 'proc_Luden's Echo' if the scenario build holds item 6655, and given it does, every fact above forces the source to be present and exact. The old baseline's absence is the anomaly, not the new entry.",
+    "Index 5 specifically is a list-position artifact (the entry is the sixth element); the oracle judges the presence and identity of the value, not its ordinal slot.",
+    "Per-proc damage is stated as the closed form 150 + 0.10 x AP because the scenario's total AP is not determinable from the permitted evidence tree."
+  ],
+
+  "verdict_restated": "new_value_correct"
+}

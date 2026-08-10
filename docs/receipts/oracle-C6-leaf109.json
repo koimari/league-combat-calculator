@@ -1,0 +1,98 @@
+{
+  "receipt_id": "oracle-C6-leaf109",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[5]/source",
+  "old_value": "R",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c6",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra slot/atom audit)",
+      "data/champion-audit/batch-e9-1.json (Syndra module summary)",
+      "data/champion-audit/batch-p1-3.json (cast_order precedent)",
+      "data/worklists/f2-task.md (DEFAULT_CAST_ORDER = Q,W,E,R; custom/derived cast_order feature)",
+      "data/practice-corpus/scenarios.json (fight-name convention, e.g. time_based_10s)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1].effects[].leveling",
+      "quote": "Magic Damage per Sphere = 80/120/160 (+20% AP); Minimum Magic Damage = 240/360/480 (+60% AP); Maximum Magic Damage = 560/840/1120 (+140% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0]",
+      "quote": "Scatter the Weak: cooldown 15/15/15/15/15 (affectedByCdr true), castTime 0.25, Magic Damage 60/95/130/165/200 (+60% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].cooldown / Q rechargeRate / W cooldown",
+      "quote": "R cooldown 120/100/80 (affectedByCdr true); Q rechargeRate 7 (affectedByCdr false); W cooldown 12/11/10/9/8"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table (Ability haste row)",
+      "quote": "R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 (Ability rotation casts row)",
+      "quote": "shared-timeline renewal schedule; cast starts within window ... R single-cast"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed and no other cast is in progress ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "module_slots.modeled = [P, Q, Q2, W, E, R] ... R reads 'Magic Damage per Sphere' x user-set sphere count"
+    },
+    {
+      "source": "data/champion-audit/batch-p1-3.json -> Vladimir",
+      "quote": "Q 176 / W 330 / R 385 with cast_order R,Q,W,E (precedent that a scenario may pin a non-default cast order)"
+    }
+  ],
+  "independent_computation": {
+    "step_1_sphere_block_size": {
+      "claim": "Syndra R authors a block of 3..7 per-sphere damage events; 3 is the count when no Dark Sphere is live.",
+      "arithmetic": [
+        "rank 1: min 240 / per-sphere 80 = 3.0 ; max 560 / 80 = 7.0",
+        "rank 2: min 360 / 120 = 3.0 ; max 840 / 120 = 7.0",
+        "rank 3: min 480 / 160 = 3.0 ; max 1120 / 160 = 7.0",
+        "AP terms agree: 60%AP / 20%AP = 3.0 ; 140%AP / 20%AP = 7.0"
+      ],
+      "conclusion": "The wiki's own min/max rows pin the sphere count to exactly [3, 7]: 3 conjured + up to 4 grabbed live spheres. At fight start (t=0) no Dark Sphere exists, so an R cast that precedes any Q cast fires exactly 3 spheres -> a 3-event block."
+    },
+    "step_2_event_stream_layout": {
+      "syndra_damage_authoring_slots": "Q, Q2 (2nd charge at 40+ splinters), W (magic; + bonus true damage at 60+ splinters), E, R (per-sphere block)",
+      "single_event_casts_available_before_E_in_the_opening_burst": "at most 4 (Q, Q2, W-magic, W-true)",
+      "therefore": "For E to sit at index 5 the five preceding events MUST include R's multi-sphere block (>=3 events); i.e. R is cast before E, and the block is small (3, or 4 with a single preceding Q). E at index 5 is fully consistent with the sourced 3-sphere minimum, e.g. R(0,1,2) + Q(3) + Q2-or-W(4) + E(5).",
+      "old_value_layout": "R at index 5 is exactly the layout produced by the DEFAULT cast order Q,W,E,R: Q(0), W(1), E(2), then the R sphere block at (3,4,5,...) for any sphere count >= 3. E is at index 2 under the default order and can never reach index 5 there."
+    },
+    "step_3_single_cast_constraint": {
+      "claim": "R cannot re-enter the stream later in the fight, so an 'R' at index 5 must be part of the single R block.",
+      "basis": "docs/math-foundations.md pins 'R casts exactly once per timed fight' / 'R single-cast'; independently, R's cooldown is 120/100/80 s, so even a 60 s window admits one cast. E, by contrast, has a 15 s cooldown -> casts at 0, 15, 30, 45 (4 casts) in a 60 s window, so E is a recurring event source."
+    },
+    "step_4_discriminator": {
+      "reasoning": "The scenario id declares a CUSTOM cast order (the engine's default is DEFAULT_CAST_ORDER = Q,W,E,R, per data/worklists/f2-task.md; scenarios pinning a non-default order are an established pattern, e.g. Vladimir 'cast_order R,Q,W,E'). The old leaf value (R at index 5) is precisely the fingerprint of the DEFAULT order layout - the R sphere block starting at index 3 after Q,W,E. The new value (E at index 5) is the fingerprint of an order in which R fires before E with a minimal 3-sphere block (the sourced count when no Dark Sphere is live, which is exactly the case when R leads the rotation). A custom-order scenario whose golden reproduces the default-order layout is the inconsistent one.",
+      "conclusion": "E is the value consistent with a honoured non-default cast order plus the wiki-pinned 3-sphere minimum; R at index 5 reproduces the default-order layout the scenario is named to avoid."
+    }
+  },
+  "limits_and_uncertainty": [
+    "The scenario's own configuration (its cast_order list, splinters value, r_spheres option, fight length - whether '60' is 60 seconds or 60 Splinters of Wrath) lives outside the permitted evidence tree (scripts/, tests/), so the cast order could not be read, only inferred from the scenario id and the default-order fingerprint.",
+    "Both readings of '60' (60 s timed fight; 60 splinters enabling W's bonus true damage) were worked through and both converge on the same layout conclusion: E can only reach index 5 behind an R sphere block, and R at index 5 is the default-order arrangement.",
+    "No sourced number in data/ or docs/math-foundations.md contradicts E as the index-5 source; the verdict is therefore 'new_value_correct' at moderate (not certain) confidence rather than 'both_wrong'."
+  ]
+}

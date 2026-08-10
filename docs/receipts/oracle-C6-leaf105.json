@@ -1,0 +1,99 @@
+{
+  "receipt_id": "oracle-C6-leaf105",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[4]/damage",
+  "old_value": 560.0,
+  "new_value": 139.2,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/champions.json (Syndra abilities)",
+      "data/champion-audit/batch-e9-1.json (Syndra module audit entry)",
+      "data/practice-corpus/scenarios.json (scenario-shape reference only)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (other)", "git history", "the diff", "the plan"],
+    "limitation": "The scenario definition for 'syndra_custom_order_60' does not exist anywhere under data/, so the build/target inputs were not read but SOLVED FOR from the two golden values themselves (see independent_computation). No engine source was consulted."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (Force of Will), effect 4",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "leveling_rows": {
+        "Magic Damage": "[70, 100, 130, 160, 190] (+ 65% AP)",
+        "Bonus True Damage": "[8.4, 12, 15.6, 19.2, 22.8] (+ [9.2, 9.8, 10.4, 11, 11.6]% AP) (+ (1.14% AP)^2)",
+        "Total Mixed Damage": "[78.4, 112, 145.6, 179.2, 212.8] (+ [74.2, 74.8, 75.4, 76, 76.6]% AP) (+ (1.14% AP)^2)"
+      }
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak), effect 1",
+      "quote": "Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit ...",
+      "leveling_rows": { "Magic Damage": "[60, 95, 130, 165, 200] (+ 60% AP)" }
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q/R (used to rule out other identities for 139.2)",
+      "quote": "Q Dark Sphere Magic Damage [90, 125, 160, 195, 230] (+ 70% AP); R Unleashed Power Magic Damage per Sphere [80, 120, 160] (+ 20% AP), Minimum [240, 360, 480] (+ 60% AP), Maximum [560, 840, 1120] (+ 140% AP)"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (restated in docs/math-foundations.md Section 2.1)",
+      "quote": "Resistance math: actual_damage = raw x 100 / (100 + resistance) ... True damage ignores all resistances entirely."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2 / formula-audit table",
+      "quote": "Multi-hit abilities. A part with h identical hits is mitigated per hit and summed ... the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance"
+    }
+  ],
+
+  "independent_computation": {
+    "method": "The scenario inputs are not in data/, so both golden values were treated as unknown-identity damage instances and solved against every sourced Syndra damage row. Requiring ONE ability power to explain both numbers pins the build uniquely.",
+    "step_1_solve_AP_from_the_new_value": {
+      "hypothesis": "139.2 is Force of Will's Transcendent bonus TRUE damage (gated at 60 splinters -- matching the '_60' in the scenario id), rank 5.",
+      "formula": "true(AP) = (0.12 + 0.02 * AP/100) * (190 + 0.65 * AP)",
+      "expanded": "0.00013*AP^2 + 0.116*AP + 22.8 = 139.2",
+      "positive_root": "AP = 600.0 (unique positive root; discriminant 0.073984, sqrt = 0.272)",
+      "check": "(0.12 + 0.12) * (190 + 390) = 0.24 * 580 = 139.2 EXACT",
+      "note_on_the_wiki_precomputed_row": "The wiki's own rounded row gives 22.8 + 0.116*600 + (0.0114*600)^2 = 139.1856. The exact composition (12% + 2% per 100 AP) x (190 + 65% AP) gives exactly 139.2; the 0.0144 gap is the wiki's rounding of the AP^2 coefficient (0.0114^2 = 0.00012996 vs the exact 0.02% x 65% = 0.00013). The new golden matches the exact composition, which is the correct one.",
+      "true_damage_is_unmitigated": "139.2 carries no 100/(100+MR) factor, as required -- true damage ignores resistances."
+    },
+    "step_2_identify_the_old_value_at_the_same_AP": {
+      "AP": 600,
+      "E_rank5": "200 + 0.60 * 600 = 560.0  <-- EXACTLY the old golden value",
+      "W_magic_rank5": "190 + 0.65 * 600 = 580.0",
+      "Q_rank5": "230 + 0.70 * 600 = 650.0",
+      "R_per_sphere": "rank1 80 + 0.20*600 = 200.0 ; rank3 160 + 0.20*600 = 280.0",
+      "conclusion": "560.0 is Scatter the Weak (E) rank 5 at AP 600, delivered at full value -- which additionally forces the manual target's post-penetration magic resist to 0 (560 * 100/(100+MR) = 560 => MR = 0). The whole picture is self-consistent at a single AP."
+    },
+    "step_3_rule_out_the_alternative": {
+      "could_560_be_the_W_true_damage": "No. Solving (0.12 + 0.0002*AP)*(190 + 0.65*AP) = 560 requires AP = 1635.0, which is impossible for the same fight that produces 139.2, and inconsistent with every other row.",
+      "could_139_2_be_any_other_sourced_Syndra_row_at_AP_600": "No. At AP 600 the complete sourced set is Q 650, W magic 580, W true 139.2, E 560, R/sphere 200 (r1) or 280 (r3), R min 600/1080, R max 1400/1960. 139.2 maps to the W true-damage instance and nothing else.",
+      "could_139_2_be_560_mitigated": "No. 139.2/560 = 0.248571 would require post-penetration MR = 302.3, contradicted by the E row landing at exactly 560."
+    },
+    "step_4_why_the_index_moved": {
+      "reading": "Both 560.0 and 139.2 are legitimate sourced instances of the same fight; what changed at index 4 is which instance occupies the slot. Force of Will at >= 60 splinters is a MIXED-damage cast: a magic instance (580, mitigated by MR) plus a true instance (139.2, unmitigated). Emitting the true portion as its own damage event pushes every later event down one slot, so the E magic instance that used to sit at index 4 (560.0) moves to index 5 and the W true instance takes index 4.",
+      "why_the_new_arrangement_is_the_correct_one": "The true portion CANNOT share an event with the magic portion: the mitigation operator 100/(100+R) applies to the magic part and must not touch the true part (CLAUDE.md: 'True damage ignores all resistances entirely'). A merged 'Total Mixed Damage' event (580 + 139.2 = 719.2) would be mitigated as one packet and is wrong on any target with MR > 0; a missing true event would silently drop a sourced, wiki-documented 24%-of-W damage instance. Separating them is the only arrangement that mitigates each instance at its own rule, and it is what the reviewed module is audited to do ('60+ W true damage', batch-e9-1.json).",
+      "residual_uncertainty": "Because the scenario's cast order is not readable from data/, the exact set of instances preceding index 4 could not be enumerated. The verdict rests on the identity and magnitude of the value itself, both of which are exact and sourced, plus the mitigation argument above -- not on a reconstruction of the ordering."
+    },
+    "derived_scenario_inputs_(solved,_not_read)": {
+      "ability_power": 600,
+      "W_rank": 5,
+      "E_rank": 5,
+      "splinters_of_wrath": ">= 60 (Transcendent W true damage active; matches the '_60' scenario suffix)",
+      "manual_target_post_penetration_magic_resist": 0
+    }
+  },
+
+  "answer": {
+    "correct_value_for_the_leaf": 139.2,
+    "identity": "Syndra W (Force of Will) Transcendent bonus true damage, rank 5, AP 600",
+    "arithmetic": "(12% + 2% per 100 AP) x (190 + 65% AP) = (0.12 + 0.12) x (190 + 390) = 0.24 x 580 = 139.2, unmitigated"
+  }
+}

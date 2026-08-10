@@ -1,0 +1,63 @@
+{
+  "receipt": "oracle-C6-leaf128",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/order[2]",
+  "old_value": "E",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+  "confidence": "medium-high",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json (Syndra)", "data/champion-audit/batch-e9-1.json (Syndra)", "data/worklists/e3-mechanics.json (Syndra)", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "scenario_name_decoding": {
+    "claim": "the '_60' suffix is Syndra's Splinters-of-Wrath stack count (the module's 0-120 'splinters' option), not level (cap 20), not sphere count (R caps at 3+4=7)",
+    "support": "data/champion-audit/batch-6.json gap_summary: 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'; 60 is exactly one of Syndra's five wiki thresholds (40 / 60 / 80 / 100 / 120)",
+    "note": "the scenario definition itself lives outside the permitted evidence tree (nothing in data/ or docs/math-foundations.md mentions 'syndra_custom_order', 'custom_order' or 'manual_target'), so the exact custom cast list could not be read; the computation below is therefore threshold-based and is robust to any splinters >= 60"
+  },
+  "independent_computation": {
+    "step_1_thresholds_active_at_60_splinters": {
+      "Q (40)": "ACTIVE - 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' 60 >= 40, so the second Dark Sphere charge (the module's synthetic Q2 slot, per data/champion-audit/batch-6.json module_slots.modeled = [P, Q, Q2, W, E, R]) exists and is castable in the rotation.",
+      "W (60)": "ACTIVE - 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.' 60 >= 60 (threshold met exactly).",
+      "E (80)": "INACTIVE - 'Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow...' 60 < 80, and the bonus is utility only (no damage) in any case.",
+      "R (100) / P (120)": "INACTIVE at 60."
+    },
+    "step_2_W_overtakes_E_in_damage_at_exactly_this_threshold": {
+      "wiki_rows_quoted_from_data/champions.json": {
+        "W base Magic Damage (rank 1-5)": "[70, 100, 130, 160, 190] + 65% AP",
+        "W Total Mixed Damage at 60 splinters (rank 1-5)": "[78.4, 112, 145.6, 179.2, 212.8] + [74.2, 74.8, 75.4, 76, 76.6]% AP + 1.14% AP (per 100 AP, quadratic term)",
+        "W Bonus True Damage at 60 splinters (rank 1-5)": "[8.4, 12, 15.6, 19.2, 22.8] + [9.2, 9.8, 10.4, 11, 11.6]% AP + 1.14% AP per 100 AP",
+        "E Magic Damage (rank 1-5)": "[60, 95, 130, 165, 200] + 60% AP"
+      },
+      "consistency_check": "the wiki's 'Total Mixed Damage' row is exactly 1.12x the base row (70*1.12=78.4, 100*1.12=112, 130*1.12=145.6, 160*1.12=179.2, 190*1.12=212.8), confirming the '12% bonus true damage' reading and that the parsed table is self-consistent",
+      "rank5_table_AP_vs_damage": [
+        {"AP": 0,   "W_no_bonus": 190.0, "W_at_60_splinters": 212.80, "E": 200.0, "winner_at_60": "W"},
+        {"AP": 100, "W_no_bonus": 255.0, "W_at_60_splinters": 290.54, "E": 260.0, "winner_at_60": "W"},
+        {"AP": 200, "W_no_bonus": 320.0, "W_at_60_splinters": 370.56, "E": 320.0, "winner_at_60": "W"},
+        {"AP": 400, "W_no_bonus": 450.0, "W_at_60_splinters": 537.44, "E": 440.0, "winner_at_60": "W"}
+      ],
+      "algebra": "without the bonus, W - E = (190 + 0.65*AP) - (200 + 0.60*AP) = 0.05*AP - 10, so E leads for AP < 200. With the 60-splinter bonus, W - E = (212.8 + 0.766*AP + 0.0114*AP^2/100) - (200 + 0.60*AP) = 12.8 + 0.166*AP + 0.0114*AP^2/100 > 0 for every AP >= 0, at every equal rank (rank 1: 78.4 + 0.742*AP vs 60 + 0.60*AP, also strictly W). The W/E ordering therefore flips at exactly the 60-Splinter threshold this scenario pins.",
+      "true_damage_note": "docs/math-foundations.md and CLAUDE.md domain knowledge: true damage ignores all resistances, so the 12% (+2%/100 AP) true component is not shrunk by the target's MR while E's whole packet is multiplied by m(R)=100/(100+MR). Against any MR > 0 the post-mitigation gap is strictly larger than the raw gap above, so the ordering conclusion only strengthens."
+    },
+    "step_3_ordering_argument": "Every mechanism that can place an ability at rotation index 2 points to W at splinters=60, and none points to E: (a) SLOT-COUNT: with the 40-splinter charge active the castable sequence gains the Q2 slot, so the head of the rotation is Q, Q2, W, ... and index 2 (0-based) is W, where a rotation that ignored the second charge would read Q, W, E, ... and put E at index 2 - exactly the old value; (b) DAMAGE PRIORITY: if slots are ordered by damage, step 2 shows W strictly outdamages E at 60 splinters at every rank and every AP, so W precedes E; (c) COOLDOWN AVAILABILITY: W's cooldown [12, 11, 10, 9, 8] is shorter than E's flat [15, 15, 15, 15, 15] at every rank, so on the shared-timeline renewal schedule (docs/math-foundations.md 1.1, '_schedule_shared_casts' / '_compute_ability_rotation': casts on one shared timeline, an ability recasts when its effective cooldown has elapsed) W always recurs before E. Ability haste is a common scale factor (cd' = cd*100/(100+AH)) and cannot reverse that inequality.",
+    "conclusion": "E at fights/manual_target/rotation/order[2] requires either dropping the 40-splinter second Dark Sphere charge or ignoring the 60-splinter Force of Will enhancement - both wiki-sourced effects that are active at exactly splinters = 60. W is the correct value."
+  },
+  "sources_quoted": [
+    {"file": "data/champions.json", "path": "Syndra.abilities.Q[0].effects[1].description", "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.W[0].effects[3].description", "text": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.W[0].effects[3].leveling[1]", "text": "Total Mixed Damage: [78.4, 112, 145.6, 179.2, 212.8] + [74.2, 74.8, 75.4, 76, 76.6]% AP + 1.14% AP"},
+    {"file": "data/champions.json", "path": "Syndra.abilities.E[0].effects[0].leveling[0]", "text": "Magic Damage: [60, 95, 130, 165, 200] + 60% AP"},
+    {"file": "data/champions.json", "path": "Syndra.abilities.E[0].effects[2].description", "text": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% ..."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.W[0].cooldown / Syndra.abilities.E[0].cooldown", "text": "W [12, 11, 10, 9, 8] (affectedByCdr true); E [15, 15, 15, 15, 15] (affectedByCdr true)"},
+    {"file": "data/champion-audit/batch-6.json", "path": "Syndra.module_slots.modeled + gap_summary", "text": "modeled = [P, Q, Q2, W, E, R] ... 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'"},
+    {"file": "data/champion-audit/batch-e9-1.json", "path": "Syndra.gap_summary", "text": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"},
+    {"file": "docs/math-foundations.md", "path": "section 1.1 / verdict table row 'Ability rotation casts'", "text": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts)."},
+    {"file": "docs/math-foundations.md", "path": "verdict table row 'Ability haste'", "text": "cd' = cd*100/(100+AH); casts/unit time affine in AH"}
+  ],
+  "caveats": [
+    "The scenario definition (its custom cast list, ranks, items, AP and fight mode) is not reachable from the permitted evidence tree; the argument is therefore threshold- and inequality-based rather than a re-run of the scenario. It holds for any splinters >= 60 and any AP >= 0 at equal ability ranks.",
+    "If '_60' were instead ability haste rather than Splinters, the cooldown argument (c) still orders W before E at every rank, since haste scales both cooldowns by the same factor 100/(100+AH); no reading of '60' found in the cached data produces E at this slot."
+  ]
+}

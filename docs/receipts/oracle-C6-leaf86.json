@@ -1,0 +1,82 @@
+{
+  "receipt_id": "oracle-C6-leaf86",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/slot",
+  "old_value": "Q",
+  "new_value": "R",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle86",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-e9-1.json", "data/champion-audit/batch-p1-3.json", "data/worklists/f2-task.md", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md lines 58-67 (Section 1.1, renewal theory for cast timing schedules)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` - again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md line 462 (formula-audit table, Ability haste row)",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | EXACT | R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "source": "docs/math-foundations.md line 465 (formula-audit table, Ability rotation casts row)",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities (cached wiki cooldown modifiers)",
+      "quote": "Q Dark Sphere cooldown {'values': [7, 7, 7, 7, 7], 'affectedByCdr': False}; W Force of Will cooldown [12, 11, 10, 9, 8] affectedByCdr True; E Scatter the Weak cooldown [15, 15, 15, 15, 15] affectedByCdr True; R Unleashed Power cooldown [120, 100, 80] affectedByCdr True. Cast times: Q 'none', W 'none', E 0.25, R 0.25."
+    },
+    {
+      "source": "data/champions.json -> Syndra R Unleashed Power, passive effect + leveling row",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -- Ability Haste [10, 20, 30]"
+    },
+    {
+      "source": "data/champion-audit/batch-p1-3.json (only observed literal cast_order value in the evidence tree)",
+      "quote": "... Verified: test_p1_review_3.py TestVladimir - Q 176/W 330/R 385 with cast_order R,Q,W,E ...",
+      "why": "establishes that a scenario 'cast order' is a 4-slot permutation (a priority order over Q/W/E/R), not an arbitrary-length literal cast script"
+    }
+  ],
+  "independent_computation": {
+    "step_1_castable_slots": "Syndra's damaging, castable slots are Q, W, E, R (P Transcendent is a passive: 'Innate: Syndra collects Splinters of Wrath...'). A custom cast order for this scenario is therefore a permutation of those four slots.",
+    "step_2_opening_burst": "Per math-foundations 1.1, every ability is off cooldown at t=0 and casts are 'resolved greedily by cast order', each occupying its sourced cast time (Q/W instant, E 0.25 s, R 0.25 s). So cast_timeline[0..3] are exactly the four slots in the scenario's custom order, all starting inside t in [0, ~0.5] s. cast_timeline[4] is therefore necessarily the FIRST RECAST, i.e. the ability whose effective cooldown elapses first.",
+    "step_3_effective_cooldowns": {
+      "formula": "cd' = cd * 100/(100 + AH)  (math-foundations line 462; CLAUDE.md domain rule 'effective_cd = base_cd x 100/(100 + ability_haste)')",
+      "syndra_R_passive": "R grants Dark Sphere (Q) an extra 10/20/30 ability haste by rank.",
+      "table_no_items_level_18_ranks_Q5_W5_E5_R3": {
+        "Q": "7 * 100/(100+0+30) = 5.385 s",
+        "W": "8 * 100/100 = 8.000 s",
+        "E": "15 * 100/100 = 15.000 s",
+        "R": "80 * 100/100 = 80.000 s"
+      },
+      "with_60_ability_haste_if_'60'_means_haste": {
+        "Q": "7 * 100/190 = 3.684 s",
+        "W": "8 * 100/160 = 5.000 s",
+        "E": "15 * 100/160 = 9.375 s",
+        "R": "80 * 100/160 = 50.000 s"
+      },
+      "monotone_proof_Q_beats_W_for_every_build": "Q_eff < W_eff  <=>  7*100/(100+AH+h_R) < 8*100/(100+AH)  <=>  700 + 7*AH < 800 + 8*AH + 8*h_R, true for all AH >= 0, h_R >= 0. So Q is the first ability to come back up at any ability haste and at any W rank (W is 8-12 s base vs Q's flat 7 s)."
+    },
+    "step_4_conclusion": "cast_timeline[4] = Q, cast at t ~= 5.4 s (no items, R3) or ~3.7 s at 60 AH. Q is the shortest-cooldown ability in Syndra's kit at every rank and every haste level, and her own R passive makes it shorter still.",
+    "step_5_why_R_is_impossible_at_index_4": [
+      "(a) Documented model constraint, twice stated: 'R casts exactly once per timed fight' / 'R single-cast'. R therefore appears exactly once in the timeline, and since it is off cooldown at t=0 like everything else, that single appearance falls inside the opening burst at index 0-3 (its position in the custom order).",
+      "(b) Even ignoring (a), R's cooldown is 80 s at rank 3 (100 s / 120 s at ranks 2 / 1), longer than a 60 s window; it only drops under 60 s at >33 AH, and even then a second R would land at t ~= 50-57 s, after roughly a dozen Q/W/E recasts - nowhere near index 4.",
+      "(c) There is no configuration of ranks, level, or ability haste in the cached data under which R's effective cooldown is the smallest of the four."
+    ]
+  },
+  "alternative_hypothesis_considered_and_rejected": {
+    "hypothesis": "cast_timeline[4] could legitimately be R if the opening burst contained FIVE casts before any recast - e.g. if Syndra's 40-splinter Transcendent bonus ('Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2', modelled per data/champion-audit/batch-e9-1.json as a 'Q2 slot') put a second stocked Q charge in the opening, shifting the order's last slot to index 4; or if 'custom order' were a literal arbitrary-length cast script such as Q,W,E,Q,R rather than a priority permutation.",
+    "why_rejected": [
+      "The only cast_order value observable anywhere in the permitted evidence tree is a 4-slot permutation ('cast_order R,Q,W,E', data/champion-audit/batch-p1-3.json); nothing in data/ or docs/math-foundations.md documents repeat entries in a cast order.",
+      "docs/math-foundations.md - the sole permitted formula source - describes the schedule as a renewal superposition with cast epochs 0, c_i, 2c_i, ... 'resolved greedily by cast order', i.e. an ability fires as soon as it is up. That is a priority model, not a literal script, and it has no charge/ammo mechanic anywhere in Section 1.1 or in the formula-audit table.",
+      "Under the greedy model the fifth timeline entry is by construction a recast, and the recast identity (Q) is forced by the cooldown table with no free parameters."
+    ],
+    "residual_uncertainty": "The scenario's own input tuple (its cast order, level/ranks, items, and what '60' denotes - 60 s window, 60 ability haste, or 60 splinters) lives outside the permitted evidence tree (scripts/, tests/). The conclusion is invariant to level, ranks, items and haste, and invariant across every 4-slot permutation; it would only flip if the scenario's 'order' is a >4-entry literal cast script whose 5th entry is R, a form for which the permitted sources give no evidence."
+  },
+  "computed_value": "Q",
+  "notes": [
+    "Aside (off-task, from the cached data): data/champions.json marks Syndra Q with affectedByCdr:false while her R passive text explicitly reduces Dark Sphere's cooldown 'equivalent to an amount of ability haste'. If any code path honours that flag literally, Q would sit at a flat 7 s and W (8 s at rank 5) would overtake it at roughly >26 ability haste (R1) / >49 (R3) - which would make cast_timeline[4] = W, not Q and not R. Worth a look; it does not change this verdict, since R is excluded either way."
+  ]
+}

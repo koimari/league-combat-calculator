@@ -1,0 +1,109 @@
+{
+  "receipt": "oracle-C6-leaf50",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[9]/damage",
+  "old_value": 713.0,
+  "new_value": 164.7,
+  "verdict": "new_value_correct",
+  "confidence": {
+    "numeric_identification": "high - both values reproduce to the last digit from cached wiki text at one and the same stat state",
+    "slot_assignment": "moderate - the scenario definition (level, items, target, custom cast order) lives in scripts/tests, which this oracle is forbidden to read; the slot argument is a structural inference stated explicitly below"
+  },
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-C6-leaf50-a5d13eb4",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "contamination_note": "The first scratch directory name (oracle-c6) collided with a sibling agent's directory in the shared scratchpad; a stray syndra.json appeared and then vanished there. All numbers in this receipt were re-derived from a second, uniquely-named export (path above) to guarantee the evidence tree is exactly the git-archive content."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q 'Dark Sphere', effect 1, leveling attribute 'Magic Damage'",
+      "quote": "values [90, 125, 160, 195, 230] (flat) + [70, 70, 70, 70, 70] '% AP'",
+      "text": "Active: Syndra conjures a Dark Sphere at the target location ... dealing magic damage to nearby enemies."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W 'Force of Will', recast effect, leveling attribute 'Magic Damage'",
+      "quote": "values [70, 100, 130, 160, 190] (flat) + [65, 65, 65, 65, 65] '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W 'Force of Will', Transcendent Bonus effect",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "leveling_row_bonus_true_damage": "[8.4, 12, 15.6, 19.2, 22.8] + [9.2, 9.8, 10.4, 11, 11.6] '% AP' + [1.14 x5] '% AP' (per 100 AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P 'Transcendent', effect 3",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R 'Unleashed Power', 'Magic Damage per Sphere'",
+      "quote": "[80, 120, 160] + [20, 20, 20] '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E 'Scatter the Weak', 'Magic Damage'",
+      "quote": "[60, 95, 130, 165, 200] + [60, 60, 60, 60, 60] '% AP'"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF. ... W 60-splinter true-damage (12%+2%/100 AP)"
+    },
+    {
+      "source": "docs/math-foundations.md sec. 2.1 / formula-audit table",
+      "quote": "m(R) = 100 / (100 + R) (apply_resistance, resistance.py)",
+      "relevance": "true damage is unmitigated, so the new value is independent of the manual target's MR; the old value (raw magic damage) would additionally require MR = 0 to survive to the leaf"
+    },
+    {
+      "source": "docs/math-foundations.md formula-audit table, 'Ability haste (effective_cooldown)' row",
+      "quote": "R casts exactly once per timed fight (model constraint, documented)",
+      "relevance": "constrains how many R packets can appear in the event list"
+    }
+  ],
+  "independent_computation": {
+    "step_0_fight_state": {
+      "reasoning": "The scenario name pins splinters = 120, which by the P quote multiplies ability power by 1.15. Solving each candidate ability formula for total AP shows a single value that explains BOTH the old and the new leaf exactly: total AP A = 690 = 600 x 1.15. The old leaf pins it algebraically (A = (713.0 - 230)/0.70 = 690.0 exactly) and the new leaf independently pins it (root of 0.00013A^2 + 0.116A + 22.8 = 164.7 gives A = 689.9). Two independent leaves agreeing on A = 690 is the cross-check that the fight's stat state is unchanged between old and new; the leaf moved for a structural reason, not a stat reason.",
+      "total_AP": 690.0,
+      "base_AP_implied": 600.0
+    },
+    "step_1_identify_old_value": {
+      "formula": "Q Dark Sphere rank 5 = 230 + 70% x AP",
+      "arithmetic": "230 + 0.70 x 690 = 230 + 483 = 713.0",
+      "conclusion": "713.0 is exactly Syndra's Q packet (raw / pre-mitigation). It is a legitimate number for this fight, but it is a Q packet, not the packet the new baseline puts at slot 9."
+    },
+    "step_2_identify_new_value": {
+      "formula": "W Force of Will Transcendent bonus true damage = (12% + 2% per 100 AP) x (W magic damage), W magic rank 5 = 190 + 65% x AP",
+      "arithmetic": [
+        "W magic (rank 5) = 190 + 0.65 x 690 = 190 + 448.5 = 638.5",
+        "true-damage fraction = 0.12 + 0.02 x (690/100) = 0.12 + 0.138 = 0.258",
+        "bonus true damage = 0.258 x 638.5 = 164.733 -> 164.7"
+      ],
+      "conclusion": "164.7 is exactly Syndra's W Transcendent bonus true-damage packet at rank 5 with 690 AP."
+    },
+    "step_3_cross_check_against_the_wiki_precomputed_row": {
+      "row": "'Bonus True Damage' rank 5 = 22.8 flat + 11.6% AP + 1.14% AP per 100 AP",
+      "arithmetic": "22.8 + 0.116 x 690 + 0.0114 x 690 x 6.90 = 22.8 + 80.04 + 54.27 = 157.1",
+      "with_corrected_quadratic": "22.8 + 0.116 x 690 + 0.0130 x 690 x 6.90 = 22.8 + 80.04 + 61.89 = 164.733",
+      "finding": "The wiki's own expansion reproduces 164.733 exactly once the quadratic coefficient is the one implied by the current AP ratio: 2% x 65% = 1.30% AP per 100 AP. The cached row carries 1.14%, which is 2% x 57% - a stale AP ratio left over from an older W. The row's flat term (0.12 x 190 = 22.8) and linear term (0.12 x 65 + 0.02 x 190 = 7.8 + 3.8 = 11.6) both use the current 65% ratio, so the row is internally inconsistent. ASIDE / DATA BUG worth flagging: any code that prices W's true damage off the cached 'Bonus True Damage' or 'Total Mixed Damage' modifier list rather than off the live W magic damage will under-report the AP-squared term (157.1 instead of 164.7 here, a 4.6% shortfall that grows with AP)."
+    },
+    "step_4_exhaustive_uniqueness_check": {
+      "method": "Evaluated every Syndra damage packet at A = 690 across all ranks: Q [573.0, 608.0, 643.0, 678.0, 713.0]; W magic [518.5, 548.5, 578.5, 608.5, 638.5]; W true [133.8, 141.5, 149.3, 157.0, 164.7]; E [474.0, 509.0, 544.0, 579.0, 614.0]; R per sphere [218.0, 258.0, 298.0]; auto attack ~103-111 (54 + 2.9 growth, level 18-20, no AD items on an AP build).",
+      "result": "713.0 matches Q rank 5 and nothing else; 164.7 matches W-true rank 5 and nothing else. Both identifications are unique."
+    },
+    "step_5_which_packet_belongs_at_slot_9": {
+      "premise_1": "Both values are correct numbers for their own packets, so this leaf did not change because a formula changed - the packet occupying slot 9 changed identity.",
+      "premise_2": "At 120 splinters (>= the 60 the wiki requires) the W bonus true damage MUST be dealt. Its value is exactly 164.7, and being true damage it is independent of the manual target's resistances (docs/math-foundations.md sec. 2.1: mitigation only applies m(R) to non-true damage). So a 164.7 packet must exist somewhere in this fight's event list.",
+      "premise_3": "Damage packets belonging to one cast are emitted adjacently (W emits its magic packet then its bonus true packet). Under the ADD reading, new[8] = W magic 638.5, new[9] = W true 164.7, new[10] = old[9] = Q 713.0 - a coherent list. Under the REMOVE reading (new = old minus an earlier packet, so new[9] = old[10]), the old list would have to read ... W magic, Q, W true ..., splitting one cast's two packets across an intervening Q cast. That is not a list any per-cast emitter produces.",
+      "premise_4": "Secondary: 713.0 is Q's RAW damage. For it to survive to a golden 'damage' leaf the manual target must have 0 MR. The new value needs no such assumption.",
+      "conclusion": "The new baseline emits Syndra's W Transcendent bonus true damage where the old baseline did not (or emitted it one slot later than the ordering implies), pushing the Q packet from index 9 to index 10. 164.7 is the wiki-correct value for the packet now at index 9."
+    }
+  },
+  "caveats": [
+    "This oracle could not read the scenario definition (champion level, item build, ranks, manual-target resistances, the custom cast order) because it lives outside data/ and docs/math-foundations.md. Total AP = 690, Q rank 5 and W rank 5 are INFERRED by solving the two leaf values, not read from a spec; they are over-determined (two independent leaves agree to within 0.02%), which is why the inference is reported as high-confidence.",
+    "The slot-9 assignment is the one inferential step. If the change under test deliberately reordered a user-pinned custom cast order (rather than adding the missing W true-damage packet), the same two numbers could appear at this slot for a different and less defensible reason. That possibility cannot be excluded from data/ alone - but it would require the old list to interleave one cast's packets, which is why it is rejected above."
+  ]
+}

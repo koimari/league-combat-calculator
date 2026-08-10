@@ -1,0 +1,99 @@
+{
+  "receipt_id": "oracle-C6-leaf95",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[6]/slot",
+  "old_value": "Q",
+  "new_value": "W",
+  "verdict": "old_value_correct",
+  "confidence": "medium — see sensitivity_envelope; the scenario's own config (cast order, items/ability haste, splinters option) lives in scripts/, which this investigation was forbidden to read, so the recomputation is done at the canonical configuration",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle95",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json (Syndra)", "data/champion-audit/batch-e9-1.json (Syndra)", "data/wiki-atoms/stack-transform-summon-resource.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q (Dark Sphere)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7, 7, 7, 7, 7]}], \"affectedByCdr\": false}, \"castTime\": \"none\", \"rechargeRate\": [7,7,7,7,7]",
+      "reading": "Dark Sphere has a STATIC 7 s cooldown at every rank; generic ability haste / CDR does NOT shorten it."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R (Unleashed Power), effects[0]",
+      "quote": "\"Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.\" leveling attribute \"Ability Haste\" values [10, 20, 30]",
+      "reading": "The ONLY haste that reaches Q is R's rank-scaled passive: 10/20/30 AH at R1/R2/R3."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q effects[1]",
+      "quote": "\"Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\"",
+      "reading": "A second Q charge exists ONLY at >= 40 Splinters of Wrath, and is stocked periodically (not handed out at fight start)."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [12, 11, 10, 9, 8]}], \"affectedByCdr\": true}, \"castTime\": \"none\"",
+      "reading": "W is 8 s at rank 5 and IS haste-scaled."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E / .R",
+      "quote": "E cooldown [15,15,15,15,15] affectedByCdr true, castTime 0.25; R cooldown [120,100,80] affectedByCdr true, castTime 0.25",
+      "reading": "E is 15 s flat (haste-scaled); R is 80 s at rank 3."
+    },
+    {
+      "source": "docs/math-foundations.md section 1.1",
+      "quote": "Ability recasts are scheduled on **one shared timeline** ... each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "reading": "The cast timeline is a greedy superposition of per-ability deterministic renewal schedules; the cast order only breaks ties among simultaneously-ready abilities."
+    },
+    {
+      "source": "docs/math-foundations.md section 5, ability-haste row",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)` ... R casts exactly once per timed fight (model constraint, documented)",
+      "reading": "Effective cooldown formula, and R contributes exactly one cast to a 60 s timed fight."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "\"modeled\": [\"P\",\"Q\",\"Q2\",\"W\",\"E\",\"R\"] ... \"splinters option (0-120) gates Q2 second charge\"",
+      "reading": "The second Dark Sphere charge is a distinct Q2 slot gated behind the splinters option; with the option below 40 there is exactly one Q charge."
+    }
+  ],
+
+  "independent_computation": {
+    "configuration_assumed": "level 18, ranks Q5/W5/E5/R3, 60 s timed fight, no ability haste from items (AH = 0), splinters below 40 (single Dark Sphere charge, Q2 unavailable), custom cast order = some permutation of {Q, W, E, R}",
+    "effective_cooldowns": {
+      "Q": "7 s static base; affectedByCdr = false so item/rune haste does not apply; R rank 3 passive grants 30 AH to Dark Sphere only => 7 * 100/(100+30) = 5.3846 s",
+      "W": "8 * 100/(100+0) = 8.000 s",
+      "E": "15 * 100/(100+0) = 15.000 s",
+      "R": "80 s, and one cast per timed fight by model constraint"
+    },
+    "cast_times": {"Q": 0.0, "W": 0.0, "E": 0.25, "R": 0.25},
+    "shared_timeline": [
+      {"index": 0, "t": 0.0, "slot": "Q or W or E (all up at t=0; the custom order breaks this tie)"},
+      {"index": 1, "t": 0.0, "slot": "(second of the t=0 tie)"},
+      {"index": 2, "t": 0.0, "slot": "(third of the t=0 tie)"},
+      {"index": 3, "t": 0.25, "slot": "R (blocked behind the 0.25 s E cast; single R cast)"},
+      {"index": 4, "t": 5.385, "slot": "Q (2nd Q: 1 * 5.3846)"},
+      {"index": 5, "t": 8.0, "slot": "W (2nd W: 1 * 8.0)"},
+      {"index": 6, "t": 10.769, "slot": "Q (3rd Q: 2 * 5.3846) — beats E@15.00, W@16.00, Q@16.15"},
+      {"index": 7, "t": 15.0, "slot": "E"},
+      {"index": 8, "t": 16.0, "slot": "W"}
+    ],
+    "result": "index 6 = Q at t = 10.769 s",
+    "why_the_permutation_does_not_matter": "All of Q/W/E/R are off cooldown at t=0, so the custom order only decides which of them fills indices 0-2; the opening always consumes 4 slots, and indices 4,5,6 are then fixed by cooldown arithmetic as Q, W, Q.",
+    "robustness_check": "The same index-6 = Q result holds even if the engine ignores R's Q-haste passive (Q = 7 s flat): schedule becomes Q@0, W@0, E@0, R@0.25, Q@7, W@8, Q@14 -> index 6 = Q. It also holds if generic haste were (wrongly) applied to Q. At AH = 0 with a four-ability order, every Q-cooldown model tested yields Q at index 6."
+  },
+
+  "sensitivity_envelope": {
+    "when_W_would_be_correct": [
+      "Total ability haste > 48.6 (so W's 8 s base falls below Q's static 5.3846 s) AND the custom cast order excludes E — at AH >= ~40 with E present, index 6 becomes E (E's 2nd cast at 15*100/(100+AH) lands before W's 3rd), not W.",
+      "An E-free three-slot order that includes R (e.g. Q,W,R): the opening then consumes only 3 slots and index 6 lands on W@16.0."
+    ],
+    "when_both_would_be_wrong": "An E-containing order with total ability haste >= ~40: the source-correct index 6 is E (e.g. AH = 50 -> E@10.0 precedes W@10.67 and Q@10.77).",
+    "sweep": "38 cast orders (all permutations of subsets of {Q,W,E,R} containing both Q and W) x AH in {0,10,...,80} were simulated under four Q-cooldown/charge models. Under the source-correct model (Q = 5.3846 s static, single charge) index 6 is Q for 27/38 orders at AH = 0 (including all 24 four-ability permutations) and W for only 5/38; W at index 6 requires exactly the corner cases listed above."
+  },
+
+  "reasoning_for_verdict": "Every sourced fact about Dark Sphere is a restriction on how often it can be cast (static 7 s cooldown immune to item haste; a second charge only past 40 Splinters of Wrath), and the one fact that speeds it up (R's 10/20/30 ability haste, 30 at rank 3) is rank-based and present from the fight's start. Feeding those cooldowns into the shared-timeline renewal schedule of docs/math-foundations.md section 1.1 at the canonical configuration puts the third Dark Sphere at t = 10.769 s in slot 6, ahead of Force of Will's third cast at t = 16.0 s. W can only occupy index 6 if the scenario carries >48.6 ability haste with Scatter the Weak excluded from the custom order, or if the opening consumes three slots instead of four (an E-free order containing R), or if a second Dark Sphere charge is legitimately unlocked (>= 40 splinters, which would in fact push W later, not earlier). Absent evidence that the scenario sits in one of those corners, the correct index-6 slot is Q and the new value is a regression. Caveat recorded above: the scenario definition is outside the permitted evidence tree, so if it turns out the custom order omits Scatter the Weak and the build carries >= 49 ability haste, the new value W is the correct one instead.",
+
+  "committed": false
+}

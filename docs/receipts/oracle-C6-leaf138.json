@@ -1,0 +1,82 @@
+{
+  "receipt": "oracle-C6-leaf138",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-09",
+  "scenario": "pair-engine golden (scripts/golden_baseline.json) - UNEXPECTED: outside C6's declared structural zero, which was argued from cast_order=None and is blind to the champion_baselines ability-entry dump",
+  "leaf_path": "champion_baselines/Syndra/abilities_level_11/Q2/recast_of",
+  "old_value": "<absent>",
+  "new_value": "Q",
+  "verdict": "new_value_correct",
+
+  "independent_computation": {
+    "question": "Given only cached wiki source data, what is the correct parent-ability value of `recast_of` on Syndra's synthetic `Q2` ability entry?",
+    "step_1_what_is_Syndra_Q2": [
+      "data/champions.json Syndra has exactly five wiki ability slots: P (Transcendent), Q (Dark Sphere), W (Force of Will), E (Scatter the Weak), R (Unleashed Power). No champion in data/champions.json carries a raw 'Q2' key (checked all 173 entries) - 'Q2' is therefore a calculator-side synthetic slot, not a wiki slot.",
+      "The cached audit evidence names it explicitly: data/champion-audit/batch-6.json, Syndra.module_slots.note = 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)', and gap_summary = 'splinters option (0-120) gates Q2 second charge'. data/champion-audit/batch-e9-1.json Syndra = '40+ Q charges via Q2 slot'.",
+      "So Q2 is the SECOND CAST OF DARK SPHERE unlocked by the 40-Splinter Transcendent bonus. Its damage, mana cost and recharge are Dark Sphere's - i.e. Q's."
+    ],
+    "step_2_parent_is_uniquely_Q": [
+      "Wiki Q text: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "The stocked charge is a charge OF DARK SPHERE. The only admissible parent slot for the Q2 entry is Q; P/W/E/R are ruled out by the source text (P = Splinters/AP capstone, W = Force of Will grab+throw, E = Scatter the Weak, R = Unleashed Power).",
+      "Therefore, if the field is populated at all, the only correct value is 'Q'. The new value is the unique non-null candidate the source supports."
+    ],
+    "step_3_absent_is_strictly_worse": [
+      "Q's cached cooldown/recharge row is a SINGLE shared clock: cooldown = [7,7,7,7,7] (affectedByCdr false) and rechargeRate = [7,7,7,7,7]. Both stocked spheres draw from that one Dark Sphere recharge pool ('up to a maximum of 2' charges on one recharge timer), not from two parallel clocks.",
+      "docs/math-foundations.md Sec 1.1 (quoted below) schedules casts on ONE shared timeline with a per-ability effective cooldown c_i and cast epochs 0, c_i, 2c_i, ...  An ability entry with no declared parent is an independent ability i with its own c_i.",
+      "So leaving `recast_of` absent asserts that Q2 is an independent ability with its own 7 s clock running in parallel with Q - which would let Dark Sphere be cast twice as often as the wiki allows, indefinitely. Declaring `recast_of = 'Q'` binds the Q2 entry to Dark Sphere's own slot/clock, which is what the source text describes.",
+      "Hence: absent = wrong (implies an unbound second ability), 'Q' = correct (binds the extra cast to Dark Sphere)."
+    ],
+    "step_4_caveat_on_the_word_recast": [
+      "Under the LoL wiki's STRICT vocabulary, 'Recast' is an explicitly labelled follow-up of a held cast. In Syndra's kit that label appears only on W: 'Force of Will can be recast while the target is being held.' / 'Recast: Syndra throws the grabbed target towards the target location...'. Dark Sphere carries no 'Recast:' line; its second sphere is an ammo/stock mechanic (rechargeRate present, 'stock a Dark Sphere charge, up to a maximum of 2'), and the charges persist without a preceding cast, unlike a true recast window (cf. Riven Broken Wings: 'If Riven does not recast the ability within 4 seconds of the previous cast, it goes on cooldown').",
+      "But this repo's own documented vocabulary is the loose one: docs/math-foundations.md Sec 1.1 - 'an ability recasts when its effective cooldown has elapsed and no other cast is in progress'. Under that definition, 'recast' = a subsequent cast of the same ability on the shared timeline, which is exactly what the Q2 stocked-charge cast is.",
+      "The caveat therefore concerns the NAME of the field, not its value: on the field's own terms the pointer must be 'Q', and no reading of the source data makes '<absent>' or any other slot correct."
+    ],
+    "conclusion": "recast_of = 'Q'. new_value_correct."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].notes",
+      "quote": "After Syndra gains the  Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (cooldown / rechargeRate / cost)",
+      "quote": "cooldown.modifiers[0].values = [7,7,7,7,7], affectedByCdr = false; rechargeRate = [7,7,7,7,7]; cost.modifiers[0].values = [40,45,50,55,60]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects (the only 'recast' wording in Syndra's kit)",
+      "quote": "Force of Will can be recast while the target is being held. | Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land."
+    },
+    {
+      "source": "data/champions.json -> ability-key census over all 173 champions",
+      "quote": "keys present = {P:173, Q:173, W:173, E:173, R:173}; champions with a raw 'Q2' key = [] (none). 'Q2' is calculator-synthetic."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... note: \"No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.\""
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "source": "data/worklists/e3-stacks.json -> Syndra / slot Q",
+      "quote": "{\"champion\": \"Syndra\", \"slot\": \"Q\", \"ability\": \"Dark Sphere\", \"hint\": \"Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\"}"
+    },
+    {
+      "source": "docs/math-foundations.md, Sec 1.1 (lines 59-65)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...`"
+    },
+    {
+      "source": "data/champions.json -> Riven.abilities.Q[0].effects[0].description (contrast case: a genuine recast chain)",
+      "quote": "Active: Riven can activate Broken Wings three times before the ability goes on cooldown, with a 0.3125-second static cooldown between casts. If Riven does not recast the ability within 4 seconds of the previous cast, it goes on cooldown."
+    }
+  ],
+
+  "methodology_note": "Evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`; only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were not consulted.",
+  "residual_risk": "The field's exact contract lives in src/ and was deliberately not read. If `recast_of` is defined narrowly as 'strict wiki-labelled Recast', the Syndra Q2 tag is a naming category error (Syndra's only strict Recast is W's Force of Will throw) - but even then the correction would be to rename/remove the field convention, not to change the value, since the source data fixes Dark Sphere (Q) as the sole possible parent of the Q2 stocked-charge cast."
+}

@@ -1,0 +1,112 @@
+{
+  "receipt_id": "oracle-C6-leaf101",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[2]/damage",
+  "old_value": 580.0,
+  "new_value": 650.0,
+  "delta": 70.0,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "data/worklists/e3-stacks.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "limitation": "The scenario definition for 'syndra_custom_order_60' does not exist anywhere in the permitted export (grep for 'syndra_custom_order', 'custom_order', 'manual_target', 'damage_events' over data/ + docs/math-foundations.md returns only data/worklists/f2-task.md, which describes the cast_order/damage_events plumbing but names no scenario). Attacker AP, ability ranks and cast order therefore had to be recovered by solving the sourced formulas against the two candidate values rather than read off a config."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere)",
+      "text": "Active: Syndra conjures a Dark Sphere at the target location ... dealing magic damage to nearby enemies.",
+      "leveling": "attribute 'Magic Damage': values [90, 125, 160, 195, 230] (flat) + values [70,70,70,70,70] units '% AP'",
+      "formula": "Q(rank r, AP) = base_Q[r] + 0.70 * AP,  base_Q = [90, 125, 160, 195, 230]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[2] (Force of Will, recast)",
+      "text": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land.",
+      "leveling": "attribute 'Magic Damage': values [70, 100, 130, 160, 190] (flat) + [65]*5 units '% AP'",
+      "formula": "W_magic(rank r, AP) = base_W[r] + 0.65 * AP,  base_W = [70, 100, 130, 160, 190]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[3] (Transcendent Bonus)",
+      "text": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "leveling": "attribute 'Bonus True Damage' base [8.4, 12, 15.6, 19.2, 22.8] (= 12% of base_W) ; attribute 'Total Mixed Damage' base [78.4, 112, 145.6, 179.2, 212.8] (= 1.12 x base_W)",
+      "formula": "W_true = (0.12 + 0.0002 * AP) * W_magic ; W_total = W_magic * (1.12 + 0.0002 * AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak)",
+      "leveling": "values [60, 95, 130, 165, 200] + [60]*5 '% AP'",
+      "formula": "E(rank r, AP) = base_E[r] + 0.60 * AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1] (Unleashed Power)",
+      "leveling": "'Magic Damage per Sphere': [80, 120, 160] + [20,20,20] '% AP'; 'Minimum Magic Damage' [240,360,480] + 60% AP (3 spheres); 'Maximum Magic Damage' [560,840,1120] + 140% AP (7 spheres)",
+      "formula": "R_sphere(rank r, AP) = base_R[r] + 0.20 * AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[1] (Transcendent Bonus)",
+      "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "note": "At the scenario's 60 splinters this threshold is already met, so Dark Sphere is castable twice; the second charge is the SAME ability and must be priced at Dark Sphere's own rank."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "text": "modeled slots [P, Q, Q2, W, E, R] ... 'No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge).' ... 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP)'",
+      "note": "Confirms that at splinters=60 exactly two damage-side mechanics are live: the synthetic Q2 charge (>=40) and W's bonus true damage (>=60). Nothing else in the kit changes damage at 60 (P's +15% AP needs 120, R's execute needs 100)."
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "text": "The event order shown in the UI comes from the fight's cast_order + breakdown damage_events.",
+      "note": "Establishes that damage_events[] is indexed by the fight's cast order, so 'custom_order' in the scenario name refers to a non-default order/rank set."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2",
+      "text": "A part with h identical hits is mitigated per hit and summed: sum_h m(R)*raw = h*m(R)*raw (_mitigate_hits). This is exact because the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance.",
+      "note": "Mitigation is a pure scalar on raw damage, so an exactly-round event value implies either a 0-resistance target or a raw ledger; either way the event equals the sourced raw expression up to one common scalar."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_constraint_solve": {
+      "method": "Both endpoints must be instances of a sourced Syndra expression base[r] + coeff*AP evaluated at ONE common AP (the two values come from the same fight). Enumerated every (family, rank) x (family, rank) pair over Q(0.70), W(0.65), E(0.60), R/sphere(0.20) and solved for AP.",
+      "complete_solution_set": [
+        "AP = 600  ->  580 = Q rank 3 (160 + 0.70*600) ; 650 = Q rank 5 (230 + 0.70*600)",
+        "AP = 600  ->  580 = W rank 5 magic (190 + 0.65*600) ; 650 = Q rank 5 (230 + 0.70*600)",
+        "AP = 650  ->  580 = Q rank 2 ; 650 = Q rank 4",
+        "AP = 700  ->  580 = Q rank 1 ; 650 = Q rank 3",
+        "AP = 750  ->  580 = E rank 3 ; 650 = E rank 5 (or Q rank 2)",
+        "AP = 808.33 -> 580 = E rank 2 ; 650 = E rank 4",
+        "AP = 866.67 -> 580 = E rank 1 ; 650 = E rank 3"
+      ],
+      "selection": "AP = 600 is the only solution at a round AP, and is the only one under which both values are simultaneously maxed-rank outputs (W r5 = 580.0 and Q r5 = 650.0 exactly). The non-round-AP branches (808.33, 866.67) would additionally require the fight AP to be a repeating decimal while every event still printed to a clean .0; discarded.",
+      "value_table_at_AP_600": {
+        "Q": [510.0, 545.0, 580.0, 615.0, 650.0],
+        "W_magic": [460.0, 490.0, 520.0, 550.0, 580.0],
+        "W_total_mixed_60_splinters_r5": 719.2,
+        "E": [420.0, 455.0, 490.0, 525.0, 560.0],
+        "R_per_sphere": [200.0, 240.0, 280.0]
+      }
+    },
+    "step_2_rule_out_the_obvious_60_splinter_story": {
+      "hypothesis": "The +70 is W's newly-applied 60-splinter bonus true damage (i.e. old = W magic only, new = W magic + true).",
+      "algebra": "Require (0.12 + 0.0002*AP) * W_magic = 70 while W_magic >= 580. The multiplier is >= 0.12, so W_magic <= 70/0.12 = 583.3, forcing 0.12 + 0.0002*AP <= 0.1207, i.e. AP <= 3.4; but then W_magic = base_W[r] + 0.65*AP <= 190 + 2.2 = 192.2 < 580. Contradiction.",
+      "per_rank_check": "Solving (0.12+0.0002A)(base_W[r]+0.65A) = 70 gives AP = 420.1/390.0/360.6/331.8/303.6 for ranks 1..5, with W_magic = 343.1/353.5/364.4/375.6/387.3 - none of which is 580, and mitigation can only shrink raw, never grow 387 into 580.",
+      "conclusion": "REJECTED. The 70.0 delta is provably not the W true-damage term. At AP 600 the correct W r5 total with the 60-splinter bonus is 580 * (1.12 + 0.12) = 719.2, which is neither candidate."
+    },
+    "step_3_what_the_delta_actually_is": {
+      "finding": "70.0 = 230 - 160 = exactly two Dark Sphere ranks (base_Q step is 35), and 650.0 = 230 + 0.70*600 is Dark Sphere at RANK 5 - the ability's maxed, fully-sourced value. 580.0 is either Dark Sphere at rank 3 or Force of Will's magic component at rank 5.",
+      "mechanism_reading": "The only damage-side mechanic the scenario's splinters=60 unlocks besides the (rejected) W true damage is the synthetic Q2 slot - Dark Sphere's second stocked charge from the 40-splinter Transcendent Bonus. A second charge of Dark Sphere is the same ability and must be priced with Dark Sphere's own rank; any event that prices it at a fallback/default rank (rank 3 -> 580.0) understates it by exactly 2 ranks = 70.0 flat, independent of AP. The competing AP-600 reading (event[2] resolving from Force of Will r5 to Dark Sphere r5) is the same correction seen from the cast-order side: in both, 650.0 is the sourced Dark Sphere r5 value and 580.0 is a value belonging to a different rank or a different ability.",
+      "sourced_value": "Q rank 5 = 230 + 0.70 * 600 AP = 230 + 420 = 650.0"
+    },
+    "result": 650.0
+  },
+
+  "caveats": [
+    "The scenario configuration (AP, ranks, cast order, target resistances) is not present in the permitted evidence tree, so AP = 600 is inferred, not read. Under AP = 650 / 700 / 750 / 808.33 / 866.67 the same delta is also expressible as a 2-rank shift of Dark Sphere or Scatter the Weak; in every one of those branches the larger value is likewise the higher (more-ranked) sourced output, so the verdict direction is unchanged - only the identification of which ability/rank pair is involved would change.",
+    "Because the delta is exactly two ability ranks and AP-independent, the one reading that would flip the verdict is a scenario whose custom order deliberately pins Dark Sphere BELOW max rank while the new value prices it at max. That cannot be excluded from data/ alone; it is the residual risk behind the 'moderate' confidence.",
+    "Verified NOT the cause: the 60-splinter W true damage (proved impossible in step 2), the 120-splinter +15% AP passive (threshold not met at 60), and the 100-splinter R execute (threshold not met, and audit records it as documented-not-modeled)."
+  ]
+}

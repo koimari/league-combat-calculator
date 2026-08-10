@@ -1,0 +1,103 @@
+{
+  "receipt_id": "oracle-C6-leaf94",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[6]/name",
+  "old_value": "Dark Sphere",
+  "new_value": "Force of Will",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle94",
+    "not_consulted": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "source": "docs/math-foundations.md, section 1.1 (lines 59-67)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, …`",
+      "used_for": "the scheduling model used to place cast_timeline entries"
+    },
+    {
+      "source": "docs/math-foundations.md, formula-audit table (line 462)",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd·100/(100+AH)` ... R casts exactly once per timed fight (model constraint, documented)",
+      "used_for": "effective-cooldown formula; R contributes exactly one cast (the opener), never a recast"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q ('Dark Sphere')",
+      "quote": "cooldown.modifiers[0].values = [7, 7, 7, 7, 7]; rechargeRate = [7, 7, 7, 7, 7]; cost = [40,45,50,55,60]; castTime = \"none\"",
+      "used_for": "Dark Sphere cooldown / recharge = 7 s at every rank"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q, effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "used_for": "at >= 40 Splinters Dark Sphere is a 2-charge ability, so the opening burst contains TWO Dark Sphere casts"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R ('Unleashed Power'), effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. | Ability Haste: [10, 20, 30]",
+      "used_for": "Dark Sphere's cooldown IS haste-reducible (the R passive works by granting Q-specific ability haste), and gets +30 AH at R rank 3 (level 18). This also settles the `affectedByCdr: false` flag on the cached Q cooldown object: it is the wiki charge/recharge template artifact shared with Gangplank E, Vel'Koz W, Amumu Q, Ivern W, Vi E, Milio E, Nilah E (all `static cd` + `rechargeRate`), not a claim that Dark Sphere ignores haste — a passive granting haste to an ability immune to haste would be a no-op."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W ('Force of Will')",
+      "quote": "cooldown.modifiers[0].values = [12, 11, 10, 9, 8], affectedByCdr = true; cost = [60,70,80,90,100]",
+      "used_for": "W cooldown 8 s at rank 5 (level 18)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E ('Scatter the Weak') and .R",
+      "quote": "E cooldown = [15,15,15,15,15] (affectedByCdr true); R cooldown = [120,100,80] (affectedByCdr true)",
+      "used_for": "E and R cooldowns"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W, effects[2]",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "used_for": "identifies the scenario suffix '60' as the Splinters-of-Wrath option value (60 is exactly the W true-damage threshold, and >= the 40 threshold for the second Dark Sphere charge)"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... 'ammo (Q 2nd charge at 40 splinters)' ... note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'",
+      "used_for": "confirms the second Dark Sphere charge is a real, sourced cast slot (Q2) gated on the splinters option, not an invention"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)",
+      "used_for": "the splinters option is 0-120 with thresholds at 40 / 60 / 100 / 120, so scenario suffix '60' is a splinters setting"
+    }
+  ],
+
+  "independent_computation": {
+    "assumptions_stated": [
+      "Level 18 => ranks Q5 / W5 / E5 / R3 (the corpus convention).",
+      "Scenario suffix '60' = the Syndra `splinters` option = 60 (>= the 40-splinter charge threshold). The fight variant is carried by the fights key ('manual_target'), not by the scenario suffix.",
+      "The opening burst fires every available cast at t=0 (shared timeline, zero/near-zero cast times: Q and W castTime 'none', E and R 0.25 s), then each ability recasts at multiples of its effective cooldown; R contributes exactly one cast."
+    ],
+    "step_1_effective_cooldowns": {
+      "Q_Dark_Sphere": "7 s base; R rank 3 grants +30 ability haste to Dark Sphere => q = 7·100/(130+h) where h = the build's ability haste",
+      "W_Force_of_Will": "8 s at rank 5 => w = 8·100/(100+h)",
+      "E_Scatter_the_Weak": "15 s => e = 15·100/(100+h)",
+      "R_Unleashed_Power": "80 s at rank 3; one cast per fight by model constraint"
+    },
+    "step_2_opener_size": "At 60 Splinters of Wrath Syndra holds up to 2 stocked Dark Sphere charges (quoted Q Transcendent Bonus, threshold 40). The opening burst is therefore FIVE casts — Dark Sphere, Dark Sphere (2nd charge), Force of Will, Scatter the Weak, Unleashed Power — occupying cast_timeline[0..4]. With only one charge the opener is four casts, occupying [0..3].",
+    "step_3_post_opener_order": "After the opener, the identity of each subsequent entry depends only on the cooldowns, not on the opener's permutation (every ability is simultaneously on cooldown at t=0+). Two inequalities decide index 6, and both hold for EVERY ability-haste value h >= 0: (a) q < w  <=>  700·(100+h) < 800·(130+h)  <=>  70000+700h < 104000+800h — always true; (b) w < 2q  <=>  800·(130+h) < 1400·(100+h)  <=>  104000+800h < 140000+1400h — always true. Also 2q < e for all h. So the first two post-opener casts are always Dark Sphere (at q) then Force of Will (at w).",
+    "step_4_index_6": {
+      "five_cast_opener_60_splinters": "[0]=Dark Sphere, [1]=Dark Sphere (2nd charge), [2]=Force of Will, [3]=Scatter the Weak, [4]=Unleashed Power, [5]=Dark Sphere @ q, [6]=Force of Will @ w  =>  index 6 = Force of Will",
+      "four_cast_opener_charge_ignored": "[0]=Dark Sphere, [1]=Force of Will, [2]=Scatter the Weak, [3]=Unleashed Power, [4]=Dark Sphere @ q, [5]=Force of Will @ w, [6]=Dark Sphere @ 2q  =>  index 6 = Dark Sphere"
+    },
+    "numeric_check": "Simulated at h = 0 / 20 / 40 / 60 / 100 ability haste (q = 5.385 / 4.667 / 4.118 / 3.684 / 3.043 s; w = 8.000 / 6.667 / 5.714 / 5.000 / 4.000 s; e = 15.000 / 12.500 / 10.714 / 9.375 / 7.500 s). Index 6 = Force of Will in all five cases with the 60-splinter (two-charge) opener, and Dark Sphere in all five cases with the one-charge opener. The answer is invariant in ability haste, in the opener's permutation, and in the target's stats — it is decided purely by the opener size.",
+    "conclusion": "The old value 'Dark Sphere' at index 6 is exactly the schedule you get when Syndra's second Dark Sphere charge is absent from the timeline — i.e. when the 40-splinter Transcendent charge is not cast even though the scenario sets 60 splinters. Restoring the second charge shifts every later entry one slot and puts Force of Will's first recast at index 6. The cached wiki text grants that charge at 60 splinters, so the new value is the correct one."
+  },
+
+  "sensitivity_and_caveats": [
+    "The scenario definition itself is out of the oracle's evidence tree (golden scenarios live under scripts/, which R-18/R-19 forbids reading). The reading '60 = Splinters of Wrath' is inferred from data/: Syndra's only documented module knob is `splinters` (0-120) with thresholds at 40/60/80/100/120, 60 is exactly the W true-damage threshold, and the fight variant is already carried by the fights key ('manual_target').",
+    "If '60' were instead an ability-haste setting with splinters left at 0, the opener would be four casts and index 6 would be Dark Sphere (old value). That reading is disfavoured: haste belongs to the build, not the champion-option suffix, and 60 is not a distinguished haste value for Syndra whereas it is a named Splinter threshold.",
+    "Under the two-charge opener the verdict does NOT depend on ability haste, on the custom order's permutation, or on the target: q < w < 2q holds for all h >= 0 at W rank 5 (level 18). At W rank 1-2 (cd 12/11) the w < 2q inequality would need h > 80 / h > 10 respectively, so the result is stated for the level-18 max-rank scenario.",
+    "The cached Q cooldown object carries `affectedByCdr: false` alongside `rechargeRate: [7,...]`. That pairing is the lolstaticdata charge-ability shape (same as Gangplank E 0.5+17, Vel'Koz W 1.5+19, Amumu Q 3+16, Ivern W, Vi E, Milio E, Nilah E), where the haste-reducible number is the recharge. Reading it as 'Dark Sphere ignores ability haste' contradicts the quoted R passive, which reduces Dark Sphere's cooldown by granting 10/20/30 ability haste. Note that even under the literal static reading with h = 0, the two-charge opener still yields Force of Will at index 6 (q = 7 < w = 8 < 2q = 14)."
+  ],
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "correct_value": "Force of Will",
+    "confidence": "high on the mechanic (the 40-splinter second Dark Sphere charge and the ordering inequalities are both directly sourced and haste-invariant); the residual risk is entirely the '60 = splinters' reading of the scenario id, which the oracle could not read directly."
+  }
+}

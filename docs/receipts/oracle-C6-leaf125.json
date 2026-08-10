@@ -1,0 +1,95 @@
+{
+  "receipt_id": "oracle-C6-leaf125",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/cast_order[3]",
+  "old_value": "R",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-c6-clean",
+    "contents_verified": "archive contains only data/** and docs/math-foundations.md; no src/, tests/, scripts/, docs/plans/, docs/receipts/, no diff, no git history was read",
+    "note": "A first scratch directory was discarded because it contained two pre-existing stray files (syndra_abilities.txt, syndra_ab_export.json) that are NOT in the archive (verified via `git archive ... | tar -tf -`). Nothing from them was used; the investigation was redone in a clean directory."
+  },
+  "independent_computation": {
+    "step_0_scenario_reading": "The scenario id decomposes as champion=Syndra, feature='custom cast order', parameter=60. 60 is a meaningful Syndra parameter only as the Splinters of Wrath stack count: the wiki text gives Transcendent thresholds at 40 (Q second charge), 60 (W bonus true damage), 80 (E scatter angle/slow), 100 (R execute), 120 (Transcendence +15% AP). 60 is exactly the W threshold and is the smallest scenario value that is simultaneously >= 40, i.e. the Q second charge is unlocked.",
+    "step_1_which_cast_slots_exist_at_60_splinters": {
+      "Q": "available (base ability)",
+      "Q2": "AVAILABLE - unlocked at 40 splinters. Wiki (data/champions.json Syndra.abilities.Q effect[1]): 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' 60 >= 40, so the second charge is stocked and is a real, castable second Q in the rotation.",
+      "W": "available; at 60 splinters it additionally carries the bonus true damage (wiki W effect[3]: 'Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage'). Threshold met exactly at 60.",
+      "E": "available (its 80-splinter Transcendent bonus is NOT active at 60, but E itself is castable and deals damage)",
+      "R": "available; its 100-splinter execute is not active at 60 (and is documented as not modeled)"
+    },
+    "step_2_slot_set_confirmed_by_cached_audit": "data/champion-audit/batch-6.json Syndra.module_slots.modeled = [P, Q, Q2, W, E, R], with note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)' and gap_summary 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'. P is a passive/buff slot, not a cast. Therefore the castable slots at 60 splinters are exactly the five: Q, Q2, W, E, R.",
+    "step_3_ordering": {
+      "constraint_A": "Q and Q2 must precede W. Wiki W effect[0]: 'Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location' - W's Dark-Sphere throw requires a sphere on the ground, which only a Q cast produces.",
+      "constraint_B": "Q and Q2 must precede E. Wiki E effect[1]: 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast.' The sphere-carrying E likewise requires a live sphere.",
+      "constraint_C": "R is the terminal cast of a rotation. Wiki R effect[1]: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres' - R consumes/collects the live spheres, so it is cast after the sphere generators, and docs/math-foundations.md pins the engine convention 'R single-cast' twice (Section 5 rows 'Ability haste (effective_cooldown)': 'R casts exactly once per timed fight (model constraint, documented)' and 'Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) ... R single-cast').",
+      "resulting_order": ["Q", "Q2", "W", "E", "R"],
+      "indexing": "0-based: [0]=Q, [1]=Q2, [2]=W, [3]=E, [4]=R  =>  cast_order[3] = E"
+    },
+    "step_4_why_the_old_value_was_R": "The old list was the four-slot canonical rotation [Q, W, E, R] (0-based [3]=R), i.e. the synthetic Q2 second-charge cast was missing from the rotation even though the scenario sits at 60 splinters, comfortably above the 40-splinter charge threshold. Inserting the missing Q2 at position 1 shifts every later element by exactly one, which reproduces the observed single-leaf change R -> E at index 3 (and would put R at index 4). This shift-by-one signature is consistent with a fix that adds/honors the Q2 slot in the custom cast order rather than with a reordering regression.",
+    "step_5_alternative_hypothesis_tested": "The competing reading is that the scenario's user-supplied custom order genuinely ended in R and a regression scrambled it. This is rejected because the old value is exactly the canonical Q/W/E/R slot order: a scenario whose entire purpose is to exercise a *custom* cast order and whose recorded output is the default canonical order would have had no discriminating power. Under either surviving reading (Q2 newly inserted, or a custom order that includes Q2 no longer being silently dropped) the corrected index-3 element is E."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds..."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].effects[2].description",
+      "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70%..."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots.modeled / note / gap_summary",
+      "quote": "modeled = [P, Q, Q2, W, E, R]; 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP)'"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 5, row 'Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation)'",
+      "quote": "shared-timeline renewal schedule; cast starts within window | EXACT | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1",
+      "quote": "each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    }
+  ],
+  "confidence": "high on the value (E), medium-high on the precise mechanism. The scenario's own input tuple is not present anywhere under data/, so the requested custom order could not be read directly; the derivation reconstructs it from the 60-splinter slot set (Q, Q2, W, E, R) plus the wiki-imposed sphere-generation ordering. Every reconstruction consistent with a 60-splinter Syndra rotation places E at index 3.",
+  "committed": false
+}

@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-C6-leaf127",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/order[1]",
+  "old_value": "W",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6b",
+    "contents": ["data/", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "docs/rotation-design.md", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q (\"Dark Sphere\").effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q.notes",
+      "quote": "After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q.rechargeRate / .cooldown",
+      "quote": "rechargeRate: [7, 7, 7, 7, 7]; cooldown.modifiers[0].values: [7, 7, 7, 7, 7] (affectedByCdr: false)"
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q.effects[0].leveling[0] (\"Magic Damage\")",
+      "quote": "values [90, 125, 160, 195, 230] plus [70,70,70,70,70] units \"% AP\" -- i.e. 90/125/160/195/230 (+70% AP) magic damage per Dark Sphere"
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W (\"Force of Will\").effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "id": "S6",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots",
+      "quote": "modeled: [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... note: \"No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge).\""
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.gap_summary / notable_atoms",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP capstone ... \"ammo (Q 2nd charge at 40 splinters)\""
+    },
+    {
+      "id": "S8",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"
+    },
+    {
+      "id": "S9",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.1, shared-timeline cast scheduling",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "id": "S10",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q.castTime",
+      "quote": "castTime: \"none\" (Dark Sphere has no cast time, so a second charge cast is not blocked by an in-progress cast on the shared timeline)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_read_scenario_name": "'syndra_custom_order_60' = Syndra, custom (user-specified) rotation order, splinter count 60. The '60' resolves against Syndra's own Splinters-of-Wrath threshold ladder, which is the only 60 in her kit: 40 (Q second charge, S1), 60 (W bonus true damage, S5), 80 (E scatter/slow), 100 (R execute), 120 (P +15% AP). The audit calls the knob exactly that: 'splinters option (0-120)' (S7).",
+    "step_2_charge_availability": "60 splinters >= 40, so Syndra has the Transcendent bonus on Dark Sphere and stocks up to 2 Dark Sphere charges (S1, S2). Both charges are stocked before the fight opens (recharge 7 s per charge, S3, and the fight starts from a full kit), so two Dark Sphere casts are available at t = 0.",
+    "step_3_shared_timeline_admissibility": "Under the engine's shared-timeline convention (S9) a cast is admissible when its cooldown/ammo has elapsed and no other cast is in progress. Dark Sphere's castTime is 'none' (S10), so the second charge is castable immediately after the first -- nothing on the shared timeline blocks it. Therefore two consecutive Dark Sphere casts at the head of the rotation are physically realizable in game and admissible in the model.",
+    "step_4_slot_label": "The Syndra module's slot list is P, Q, Q2, W, E, R, where Q2 is the explicitly synthetic slot for the second Dark Sphere charge, gated on splinters >= 40 (S6, S7, S8). The correct label for that second charge cast is therefore 'Q2', and its canonical position is immediately after Q and before W.",
+    "step_5_resolve_the_leaf": "order[1] is the cast slot adjacent to the opening Q. At splinters = 60 the available slot sequence is [Q, Q2, W, E, R]; order[1] = Q2. The old value 'W' corresponds to [Q, W, E, R] -- the Q2 slot dropped out and every later entry shifted left by one, the classic signature of a slot name that failed to resolve against the base ability table (Q2 exists only as a synthetic slot, not as a wiki ability key).",
+    "step_6_magnitude_of_the_old_error": "Dropping Q2 removes one entire Dark Sphere from the rotation: 90 / 125 / 160 / 195 / 230 (+70% AP) magic damage by Q rank (S4). At rank 5 with 400 AP that is 230 + 0.70 x 400 = 510 raw magic damage omitted per rotation (pre-mitigation); against 50 MR it is 510 x 100/150 = 340.0 damage. The old value is not a labeling nit -- it silently deletes a full ability instance from a 60-splinter Syndra's rotation.",
+    "conclusion": "order[1] = 'Q2' is correct."
+  },
+
+  "counter_hypothesis_considered": {
+    "hypothesis": "'custom_order' means the scenario hand-lists the cast order, and that hand-list legitimately named W second (no Q2), so inserting Q2 would violate the user's explicit order.",
+    "why_rejected": "Rejected on two grounds. (a) A custom order that names Q, W, ... at 60 splinters would still leave Q2 out of the rotation entirely, and no ordinary Summoner's Rift Syndra at >= 40 splinters declines a stocked, zero-cast-time Dark Sphere charge -- the scenario would be encoding a strictly dominated rotation as its golden. (b) The observed edit is a pure left-shift insertion at the position where the slot table itself places Q2 (P, Q, Q2, W, E, R per S6), which is what a slot that failed to resolve and then began resolving looks like, not what an unrequested insertion looks like. Under either reading of the '60' suffix, Q2 is available and belongs adjacent to Q.",
+    "residual_uncertainty": "The scenario definition itself lives outside the permitted evidence tree (scripts/, tests/), so the exact custom order string was not read. The verdict rests on the kit data and the module's own audited slot table, both of which put Q2 between Q and W whenever splinters >= 40."
+  },
+
+  "verification_notes": "Cross-checked that Syndra has no wiki ability literally named 'Q2' (data/champions.json Syndra.abilities keys are exactly P, Q, W, E, R), confirming Q2 is the engine's synthetic second-charge slot rather than a data key. Confirmed 60 >= 40 crosses the Q-charge threshold and simultaneously sits exactly on the W true-damage threshold, which is why 60 is a meaningful scenario point."
+}

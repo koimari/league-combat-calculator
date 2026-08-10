@@ -1,0 +1,110 @@
+{
+  "receipt_id": "oracle-C6-leaf77",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[1]/resource_cost",
+  "old_value": 100.0,
+  "new_value": 0.0,
+  "verdict": "old_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle77",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/worklists/f2-task.md (cast_order semantics)",
+      "data/worklists/e3-stacks.json (Syndra splinter hints)",
+      "data/wiki-atoms/stack-transform-summon-resource.json (ammo/charges atom)",
+      "docs/math-foundations.md (searched: no resource/mana-cost formula present)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [40, 45, 50, 55, 60], \"units\": [\"\",\"\",\"\",\"\",\"\"]}]}",
+      "meaning": "Dark Sphere (Q) costs 40/45/50/55/60 mana by rank."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [60, 70, 80, 90, 100], \"units\": [\"\",\"\",\"\",\"\",\"\"]}]}",
+      "meaning": "Force of Will (W) costs 60/70/80/90/100 mana by rank; 100 at rank 5."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [50, 50, 50, 50, 50], \"units\": [\"\",\"\",\"\",\"\",\"\"]}]}",
+      "meaning": "Scatter the Weak (E) costs a flat 50 mana at every rank."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].cost",
+      "quote": "{\"modifiers\": [{\"values\": [100, 100, 100], \"units\": [\"\",\"\",\"\"]}]}",
+      "meaning": "Unleashed Power (R) costs a flat 100 mana at all three ranks."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0]",
+      "quote": "\"cost\": null, \"targeting\": \"Passive\"",
+      "meaning": "Transcendent is the only Syndra slot with no resource cost; it is a passive, not a cast."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[1].description",
+      "quote": "Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana.",
+      "meaning": "Syndra's only zero/negative mana interaction is a RESTORE, not a zero-cost cast; it does not make any cast free."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "meaning": "The synthetic Q2 (2nd charge) slot is still a Dark Sphere cast: a stocked charge bypasses the cooldown, and no cached text grants it a mana exemption. Its cost is Q's cost (40-60), not 0 and not 100."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2] and .notes",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... | The initial cast does not count as an ability activation for the purposes of on-cast effects such as Spellblade ...",
+      "meaning": "W is grab + recast-throw. Mana is paid once, on the initial grab; the recast is free. This is the ONLY construction under which a 0.0 entry could be legitimate, and it requires the timeline entry to be a W recast rather than a fresh cast."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots.modeled",
+      "quote": "[\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"]",
+      "meaning": "The castable slot set is Q, Q2, W, E, R (P is a buff). Every castable slot has a strictly positive sourced mana cost."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage",
+      "meaning": "Reading of the scenario name: 'syndra_custom_order_60' most plausibly = custom cast order with splinters=60 (the W bonus-true-damage threshold). Splinters change damage riders, never mana costs."
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... the fight's cast_order ... {order: [Q,E,E,E,...], rationale: ...}",
+      "meaning": "cast_timeline entries are one-per-slot-cast derived from a cast order; a 'custom_order' scenario supplies a non-default order of SLOT CASTS. Each such entry is a real ability activation and therefore pays mana."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "quote": "(no match for 'resource_cost', 'cast_timeline', 'mana cost')",
+      "meaning": "math-foundations carries no resource-cost formula; the cached wiki cost table is the sole authority for this leaf."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_enumerate_sourced_costs": {
+      "Q (Dark Sphere)": [40, 45, 50, 55, 60],
+      "Q2 (stocked Dark Sphere charge)": "same as Q at Q's rank (40-60); no cached exemption exists",
+      "W (Force of Will, initial grab)": [60, 70, 80, 90, 100],
+      "E (Scatter the Weak)": [50, 50, 50, 50, 50],
+      "R (Unleashed Power)": [100, 100, 100],
+      "P (Transcendent)": "null - passive, never a cast"
+    },
+    "step_2_admissible_values": "The set of admissible resource_cost values for a Syndra ABILITY CAST is {40,45,50,55,60,70,80,90,100}. 0.0 is not a member of that set at any rank of any ability.",
+    "step_3_match_the_old_value": "100.0 is an exact member of the sourced table and is reachable two ways: R at every rank (100/100/100), or W at rank 5 (100). Both are ordinary states for a maxed-out Syndra scenario, so the old value is a correctly-sourced cost, not a stale literal.",
+    "step_4_can_0_be_reached": "0.0 is reachable only for a non-cast: (a) the P passive slot (cost null), or (b) a W recast/throw, or (c) a secondary R sphere in a multi-sphere barrage - mana is paid once on the initial activation. All three require cast_timeline[1] to be something other than a fresh ability activation. The field is a CAST timeline in a scenario whose distinguishing feature is a custom order of slot casts, so each index should map to one activation.",
+    "step_5_mana_pool_sanity": "Syndra mana = 480 + 40 x (L-1) x (0.7025 + 0.0175 x (L-1)) -> 1160.0 at L18, 1266.6 at L20. A full Q(60)+W(100)+E(50)+R(100) = 310 rotation is far inside the pool, so no mana-starvation rule could legitimately drive a cast's recorded cost to 0; an unaffordable cast would be dropped from the timeline, not recorded at cost 0.",
+    "conclusion": "The correct value is a strictly positive sourced mana cost - 100.0 if cast_timeline[1] is R (any rank) or W at rank 5, which is exactly what the old baseline recorded. 0.0 corresponds to no Syndra ability cast at any rank and is the signature of a cost lookup that silently defaulted (the failure mode CLAUDE.md rule 5 exists to prevent)."
+  },
+
+  "residual_uncertainty": {
+    "note": "Per the runbook I could not read the scenario definition (tests/, scripts/, docs/plans/ are off-limits), so the slot identity of cast_timeline[1] is inferred, not observed.",
+    "verdict_would_flip_to_new_value_correct_if": "cast_timeline[1] is provably NOT a fresh activation - i.e. it is the W recast/throw, a secondary R sphere of the same barrage, or a P/buff-phase entry inserted into the timeline. In that case mana is paid on the preceding entry and 0.0 is right.",
+    "verdict_would_be_both_wrong_if": "cast_timeline[1] is a Q/Q2 (40-60) or E (50) cast, in which case the old 100.0 was also wrong.",
+    "confidence": "moderate-to-high that 0.0 is wrong (no Syndra cast costs 0); moderate that 100.0 is the exact right number (it is an exact sourced value and the field name plus the scenario's custom-cast-order framing both point at a genuine activation)."
+  }
+}

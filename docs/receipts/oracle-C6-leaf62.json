@@ -1,0 +1,108 @@
+{
+  "receipt_id": "oracle-C6-leaf62",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/rotation/order[5]",
+  "old_value": "W",
+  "new_value": "Q",
+  "verdict": "new_value_correct",
+
+  "question": "Is the 6th cast on Syndra's shared-timeline rotation, at 120 Splinters of Wrath, a W (Force of Will) or a Q (Dark Sphere)?",
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].cooldown / .rechargeRate",
+      "quote": "cooldown.modifiers[0].values = [7, 7, 7, 7, 7] (affectedByCdr: false); rechargeRate = [7, 7, 7, 7, 7]; castTime = \"none\""
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -- Ability Haste modifier values = [10, 20, 30] (R ranks 1/2/3)"
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].cooldown / E[0].cooldown / R[0].cooldown",
+      "quote": "W \"Force of Will\" = [12, 11, 10, 9, 8] (affectedByCdr: true, castTime \"none\"); E \"Scatter the Weak\" = [15,15,15,15,15] (castTime 0.25); R \"Unleashed Power\" = [120, 100, 80] (castTime 0.25)"
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0] and [2]",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "id": "S6",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1, lines 59-68",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` -- again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "id": "S8",
+      "file": "docs/math-foundations.md",
+      "path": "Section 5 audit table, line 462",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | EXACT | R casts exactly once per timed fight (model constraint, documented) |"
+    }
+  ],
+
+  "scenario_reading": {
+    "champion": "Syndra",
+    "suffix_120": "The `_120` token is the Splinters of Wrath option at its cap: the passive stacks 'up to 120 times' and 120 is the Transcendence threshold (S5), and the audit records the option's domain explicitly as 'splinters option: 120' (S6). 120 >= 40, so the Q charge threshold of S1 is active in this scenario.",
+    "custom_order": "The scenario overrides the cast priority with a user-supplied order; under S7 that only fixes the greedy tie-break among simultaneously-ready abilities, not the cooldown epochs. The computation below is therefore run over three different opener permutations and is invariant to the choice."
+  },
+
+  "independent_computation": {
+    "effective_cooldowns": {
+      "formula": "cd' = cd * 100 / (100 + AH)  (S8)",
+      "Q_recharge": "7 s base (S2), plus R's Dark-Sphere-only ability haste of 10/20/30 (S3): 7*100/130 = 5.385 s at R3 (6.364 s at R1, 7.000 s with no R). ",
+      "W": "rank 5: 8 s at 0 external AH (S4); rank 1 would be 12 s",
+      "E": "15 s (S4)",
+      "R": "80 s at rank 3, and the model casts R once per fight anyway (S8)"
+    },
+    "charge_state": "At 120 splinters Q is a stocked (ammo) ability with max 2 charges recharging at the rate above (S1, S2). Syndra therefore enters the fight with 2 Dark Spheres in stock; spending one at t=0 leaves a second castable immediately, and charges return at t = t_spend + 5.385 s, +10.77 s, ...",
+    "shared_timeline_simulation": {
+      "assumptions": "level 18, ranks Q5/W5/E5/R3, no external ability haste, 0.25 s inter-cast occupancy (Q/W castTime 'none', E/R castTime 0.25), greedy earliest-available with the custom order as tie-break (S7).",
+      "openers_QWER_2charges": {
+        "sequence": ["Q@0.00", "W@0.25", "E@0.50", "R@0.75", "Q@1.00 (2nd stocked charge)", "Q@5.385 (1st charge recharged)", "Q@10.77", "W@8.25 -> pushed behind"],
+        "order_index_5": "Q at t = 5.385 s"
+      },
+      "openers_EWQR_2charges": {"order_index_5": "Q at t = 5.885 s"},
+      "openers_RQWE_2charges": {"order_index_5": "Q at t = 5.635 s"},
+      "counterfactual_single_charge_Q": {
+        "sequence": ["Q@0", "W@0.25", "E@0.50", "R@0.75", "Q@5.385", "W@8.25", "Q@10.77", "E@15.5"],
+        "order_index_5": "W at t = 8.25 s",
+        "note": "This is exactly the old value. The old 'W' is the answer produced by a model in which Dark Sphere has no stocked second charge -- i.e. by ignoring S1, which the 120-splinter scenario explicitly satisfies."
+      }
+    },
+    "decisive_inequality": "The 6th cast is Q iff a second Dark Sphere becomes available before Force of Will comes off cooldown. With the charge stock: the spare charge is spent as cast #5 and the first recharge lands at 5.385 s < 8.25 s (W), so cast #6 is Q. Without the charge stock: the second Q epoch is 2*5.385 = 10.77 s > 8.25 s, so cast #6 is W. Since the scenario pins splinters = 120 >= 40, the charge stock is active and Q is correct.",
+    "robustness": [
+      "R rank: Q wins at every R rank -- Q recharge is 7.000 / 6.364 / 5.833 / 5.385 s for R0/R1/R2/R3, all strictly below W rank 5's 8 s.",
+      "W rank: Q wins at every W rank, since W's shortest possible base cooldown (8 s at rank 5) still exceeds Q's longest recharge (7 s).",
+      "Ability haste: under a common haste divisor the ordering is preserved and widens, because R's +10/20/30 applies only to Q. Q_eff = 7*100/(100+AH+30) vs W_eff = 8*100/(100+AH) -> 5.385 vs 8.000 at AH 0, 4.118 vs 5.714 at AH 40, 3.043 vs 4.000 at AH 100. Q is first at every AH tested (0/10/20/30/40/60/80/100).",
+      "Opener permutation: index 5 is Q for all three permutations simulated (QWER, EWQR, RQWE); the custom order shifts only the absolute timestamps (5.385 / 5.885 / 5.635 s), never the identity."
+    ]
+  },
+
+  "residual_uncertainty": [
+    "The scenario definition itself lives outside the permitted evidence tree (scripts/ and tests/ were not read), so the exact rank/item/duration tuple is inferred: '120' is read as the splinters option at cap (S5, S6), and the computation is then shown to be invariant to R rank, W rank, ability haste, and opener permutation.",
+    "One narrow configuration could flip the result: if the engine honoured the cached `affectedByCdr: false` flag on Q (S2) literally -- freezing Q's recharge at 7 s while W scales with haste -- a build carrying roughly 14+ ability haste would bring W back before Q. That reading contradicts S3 (R's passive reduces Dark Sphere's cooldown 'equivalent to an amount of ability haste', i.e. Q does respond to haste) and in-game ammo recharge does scale with ability haste, so it is not the intended model. It is recorded here as the only branch under which 'W' could be defended.",
+    "Only the identity of index 5 was adjudicated; the surrounding indices and any damage leaves were not audited."
+  ],
+
+  "conclusion": "At 120 Splinters of Wrath, Dark Sphere is a 2-charge stocked ability with a 5.385 s effective recharge (7 s base reduced by R's 30 Dark-Sphere ability haste), while Force of Will's shortest cooldown is 8 s. On the shared-timeline renewal schedule of docs/math-foundations.md Section 1.1, the 6th cast is therefore a Dark Sphere at ~5.4-5.9 s, not a Force of Will at ~8.25 s. The new value Q is correct; the old value W corresponds to a single-charge Dark Sphere, which the 120-splinter scenario rules out."
+}

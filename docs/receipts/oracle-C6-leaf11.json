@@ -1,0 +1,131 @@
+{
+  "receipt_id": "oracle-C6-leaf11",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[2]/resource_cost",
+  "old_value": 50.0,
+  "new_value": 100.0,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/champion-audit/batch-p1-3.json (Vladimir - cast_order receipt shape)",
+      "data/worklists/f2-task.md (DEFAULT_CAST_ORDER / custom cast_order semantics)",
+      "data/staleness.json (Syndra)",
+      "docs/math-foundations.md (no resource-cost rule; searched)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "computation": {
+    "step_1_cost_tables_from_cached_wiki": {
+      "source": "data/champions.json -> Syndra.abilities.<slot>[0].cost.modifiers[0].values (resource: MANA for all four)",
+      "Q_Dark_Sphere": [40, 45, 50, 55, 60],
+      "W_Force_of_Will": [60, 70, 80, 90, 100],
+      "E_Scatter_the_Weak": [50, 50, 50, 50, 50],
+      "R_Unleashed_Power": [100, 100, 100]
+    },
+    "step_2_no_cost_modifier_exists": {
+      "claim": "Syndra has no cost-reduction / cost-scaling mechanic, so a timeline entry's resource_cost must be a literal table entry.",
+      "check": "Full cached prose for P Transcendent, Q, W, E, R was read. The only mana interaction is the passive's REFUND ('Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana') and a W note ('Throwing the [Blue Sentinel] will refund 10 mana'). Neither alters a cast's posted cost. No Transcendent threshold (40/60/80/100/120) touches cost."
+    },
+    "step_3_rank_configuration": {
+      "canonical_golden_config": "level 18, rank 5 / R rank 3 (the repo's standing fight config, quoted verbatim in data/worklists/e4-task-1.md and e5-task-1.md)",
+      "legal_cost_set_at_that_config": {"Q": 60, "W": 100, "E": 50, "R": 100},
+      "consequence": "At the canonical config the value 100 is reachable only as W (rank 5) or R (any rank); the value 50 is reachable only as E (any rank). Q at rank 5 is 60, so 50 cannot be a Q cast here, and no rank of any slot other than W/R yields 100. Therefore the 50 -> 100 move is NOT a numeric re-pricing of one ability - the slot occupying cast_timeline[2] changed identity (or the timeline gained a preceding entry)."
+    },
+    "step_4_which_slot_belongs_at_index_2": {
+      "default_order": "data/worklists/f2-task.md: 'src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)' - explicitly framed as the naive fallback. Under that fixed order the third cast (index 2) is E, cost 50 == the OLD value exactly.",
+      "scenario_name": "The scenario is named 'syndra_custom_order_120'. 'custom_order' is the fight's caller-supplied cast_order (the same receipt field seen for Vladimir in data/champion-audit/batch-p1-3.json: 'Q 176/W 330/R 385 with cast_order R,Q,W,E'). A custom-order scenario whose index 2 coincides with the DEFAULT_CAST_ORDER's index 2 is a scenario that exercises nothing - the old value is precisely the default-order artifact.",
+      "splinters_120_forces_an_extra_Q_cast": "The '120' is the splinters option. data/champions.json Syndra Q: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' data/champion-audit/batch-6.json confirms the module carries a synthetic Q2 slot for it ('modeled: P, Q, Q2, W, E, R ... ammo (Q 2nd charge at 40 splinters)'), and batch-e9-1.json: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot'. At 120 splinters the second Dark Sphere charge is unconditionally available, so a full-rotation timeline is [Q, Q2, W, E, R], not [Q, W, E, R]. Index 2 is then W.",
+      "cost_at_index_2": "W Force of Will at rank 5 = 100 mana. (If instead the custom order places R third, R = 100 at every rank - the same answer.) Only E at index 2 yields 50, and E-at-index-2 is exactly the Q2-less, default-ordered timeline."
+    },
+    "result": 100.0
+  },
+
+  "quoted_sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].cost.modifiers[0].values",
+      "quote": "[60, 70, 80, 90, 100]",
+      "use": "W Force of Will mana cost by rank; rank 5 = 100."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].cost.modifiers[0].values",
+      "quote": "[100, 100, 100]",
+      "use": "R Unleashed Power mana cost = 100 at every rank."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].cost.modifiers[0].values",
+      "quote": "[50, 50, 50, 50, 50]",
+      "use": "E Scatter the Weak = 50 at every rank - the only Syndra ability that can produce the old value at the canonical rank config."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].cost.modifiers[0].values",
+      "quote": "[40, 45, 50, 55, 60]",
+      "use": "Q = 60 at rank 5, so 50 is not a Q cast at level 18; rules out the 'Q at rank 3' reading of the old value."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At splinters=120 the second Q charge exists, so the rotation carries an extra Q cast ahead of W."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[1..2].description",
+      "quote": "Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "use": "The only mana term in the passive is a refund and the 120 threshold is an AP buff - neither modifies a cast's resource_cost."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots / notable_atoms",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... ammo (Q 2nd charge at 40 splinters) ... buff (120-splinter +15% AP capstone)",
+      "use": "Confirms the Q2 slot and that 120 is the splinters option value named in the scenario id."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.",
+      "use": "Same."
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "path": "line 7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R).",
+      "use": "The old value 50 is exactly the third cast of this fixed fallback order (E), i.e. the value a scenario gets when its custom order is not in force."
+    },
+    {
+      "file": "data/champion-audit/batch-p1-3.json",
+      "path": "Vladimir.gap_summary",
+      "quote": "Q 176/W 330/R 385 with cast_order R,Q,W,E",
+      "use": "Establishes that a per-fight custom cast_order is a real, supported input - what 'custom_order' in the scenario id names."
+    },
+    {
+      "file": "data/worklists/e4-task-1.md / e5-task-1.md",
+      "quote": "a /api/calculate fight (level 18, rank 5 / R rank 3, no items)",
+      "use": "The repo's canonical fight config, fixing the legal cost set to {Q:60, W:100, E:50, R:100}."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "quote": "(no rule for ability resource cost; grep for 'resource|mana|cast_timeline|cast order' returns only an unrelated cast-order tiebreak note at line 66 and a BIS-score row at line 476)",
+      "use": "Confirms there is no derived formula for resource_cost - it is a straight table lookup, so the cached cost table is the whole authority."
+    }
+  ],
+
+  "residual_uncertainty": {
+    "note": "The scenario's literal cast_order lives in scripts/ (golden_snapshot), which this runbook forbids reading, so the slot at index 2 was inferred, not read.",
+    "why_the_inference_is_still_decisive": "Every reading available from the cached data puts W (rank 5) or R at the third cast and both cost 100: (a) splinters=120 unlocks the Q2 charge, making the rotation [Q, Q2, W, E, R] with W third; (b) a scenario explicitly named 'custom_order' is by construction not the fixed Q,W,E,R order whose third cast is E. The old value 50 is reachable only as E at index 2 - which is precisely the DEFAULT_CAST_ORDER artifact that this scenario exists to displace, and which also drops the Q2 charge the 120-splinter option guarantees.",
+    "falsifier": "If the scenario's declared cast_order literally places E third (e.g. 'W,Q,E,R'), the old value would be right. Nothing in data/ supports that ordering, and it would make the scenario's index-2 leaf indistinguishable from the default order."
+  },
+
+  "independent_result": 100.0,
+  "committed": false
+}

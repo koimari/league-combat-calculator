@@ -1,0 +1,74 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh oracle subagent (no access to src/, tests/, scripts/, plans, receipts, or git history)",
+  "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/time",
+  "old_value": 5.0,
+  "new_value": 0.25,
+  "verdict": "new_value_correct",
+
+  "what_the_leaf_means": "cast_timeline entries are cast START timestamps on the champion's single shared cast timeline. docs/math-foundations.md S1.1: 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts).' Index [4] is therefore the start time of the 5th cast of the custom order.",
+
+  "independent_computation": {
+    "step_1_sourced_cast_times": {
+      "source": "data/champions.json -> Syndra.abilities[*].castTime",
+      "Q Dark Sphere": "none  -> 0.00 s of hand-occupancy",
+      "W Force of Will": "none -> 0.00 s of hand-occupancy",
+      "E Scatter the Weak": "0.25 s",
+      "R Unleashed Power": "0.25 s"
+    },
+    "step_2_shared_timeline_rule": "start(cast_k) = max( end(cast_{k-1}), ready(ability_k) ), end(cast_j) = start(cast_j) + castTime(ability_j). With the first four casts of the order comprising three zero-cast-time casts (Q/W, castTime 'none') and exactly one 0.25 s cast (E or R), cumulative hand-occupancy before the 5th cast = 0.00 + 0.00 + 0.00 + 0.25 = 0.25 s.",
+    "step_3_no_cooldown_gate": "The 5th cast is not cooldown-gated: (a) if it is the first cast of E or R, its cooldown clock has never started; (b) if it is a second Dark Sphere, the scenario is at 120 Splinters of Wrath, above the 40-Splinter Transcendent threshold, so a second Q charge is in stock at t=0 (see quote 3). Either way ready(ability_4) <= 0.25 s.",
+    "step_4_result": "start(cast[4]) = max(0.25, 0) = 0.25 s.",
+    "why_5_0_is_wrong": "5.0 s is not derivable as any cast START under the shared-timeline rule with wiki-sourced numbers. The only exact 5.0 constant anywhere in Syndra's kit is Force of Will's HOLD duration ('holds the target near her for 5 seconds'), and that is a leash on the grabbed sphere, not on Syndra's hands: the same wiki entry states 'Force of Will can be recast while the target is being held' and 'If the ability is not recast within the duration, Syndra will release the unit or Dark Sphere' - i.e. 5 s is a MAXIMUM hold, not an occupancy. Charging the shared timeline 5.0 s for W contradicts W's sourced castTime of 'none' and delays every subsequent cast by 5 s.",
+    "cross_check_on_the_rejected_alternative": "The other conceivable source of a 5.0 s gate is a Dark Sphere recharge. It does not reproduce 5.0 from cached data: Q's cached cooldown/rechargeRate is 7 s at every rank with affectedByCdr=false, and the only kit-internal haste applied to it is Unleashed Power's passive (10/20/30 AH), giving 7*100/(100+30) = 5.385 s at R rank 3, 7*100/(100+20) = 5.833 s at rank 2, 7*100/(100+10) = 6.364 s at rank 1 - never 5.000 s. A 5.000 s Q gate would require exactly 40 total ability haste on Q, and even then it is superseded at 120 Splinters by the 2-charge stock. So no correct model yields 5.0."
+  },
+
+  "sources_quoted": [
+    {
+      "id": 1,
+      "file": "docs/math-foundations.md",
+      "section": "1.1 Renewal theory for cast + auto timing schedules",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`)."
+    },
+    {
+      "id": 2,
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.{Q,W,E,R}[0].castTime",
+      "quote": "Q: \"none\", W: \"none\", E: \"0.25\", R: \"0.25\""
+    },
+    {
+      "id": 3,
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": 4,
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%. (confirms the scenario suffix '120' = the max Splinter option, which is >= the 40-Splinter Q-charge threshold)"
+    },
+    {
+      "id": 5,
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[0].description and [1] and notes",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere ... and holds the target near her for 5 seconds. / Force of Will can be recast while the target is being held. / If the ability is not recast within the duration, Syndra will release the unit or Dark Sphere that she is holding."
+    },
+    {
+      "id": 6,
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.{Q,R}[0].cooldown / R[0].effects[0].leveling",
+      "quote": "Q cooldown {values:[7,7,7,7,7], affectedByCdr:false}, rechargeRate [7,7,7,7,7]; R Passive: \"Dark Sphere's cooldown is reduced equivalent to an amount of ability haste\", Ability Haste [10, 20, 30]."
+    },
+    {
+      "id": 7,
+      "file": "data/staleness.json",
+      "quote": "patch 16.15 (cache vintage of the quoted wiki text)"
+    }
+  ],
+
+  "residual_uncertainty": "The scenario's exact custom cast order and build are defined outside the permitted evidence tree (data/ + docs/math-foundations.md), so the identity of the 5th ability could not be read directly. The conclusion does not depend on it: every order consistent with a 0.25 s value (three castTime-'none' Q/W casts plus one 0.25 s E/R cast ahead of an un-gated 5th cast) yields 0.25 s, while no wiki-sourced quantity places a legitimate cast START at 5.0 s.",
+  "committed": false
+}

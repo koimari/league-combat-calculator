@@ -1,0 +1,120 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "oracle": "C6-leaf1",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/total_damage",
+  "old_value": 5472.5,
+  "new_value": 6185.5,
+  "delta": 713.0,
+  "delta_pct": 13.0288,
+  "verdict": "new_value_correct",
+  "confidence": "moderate — direction, mechanism and magnitude are corroborated by the cached wiki text and reproduced exactly by a wiki-legal configuration; exact re-derivation of the scenario's own number was blocked (see limitations)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_consulted": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "limitations": {
+    "blocking": "The golden scenario definition (champion level, ability ranks, item build / AP, cast order, r_spheres, and the manual target's health & resistances) lives in scripts/, which the runbook forbids. It is not mirrored anywhere under data/ (grepped: 'syndra_custom_order', 'manual_target', '5472', '6185' — no hits). The permitted evidence tree therefore fixes the *formulas* but not the *inputs*.",
+    "consequence": "The oracle could not print the scenario's number from first principles. It instead (a) enumerated every wiki-sourced mechanic the scenario id activates, (b) tested each candidate mechanism against the observed old/new pair for arithmetic feasibility at realistic stats, and (c) ruled on which value the wiki supports."
+  },
+
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0]",
+      "quote": "Magic Damage 90 / 125 / 160 / 195 / 230 (+ 70% AP); cooldown 7 s (affectedByCdr false). Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0]",
+      "quote": "Magic Damage 70 / 100 / 130 / 160 / 190 (+ 65% AP). Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0]",
+      "quote": "Magic Damage 60 / 95 / 130 / 165 / 200 (+ 60% AP). Transcendent Bonus: Collecting 80 Splinters of Wrath ... increased scatter angle and slow enemies hit by 70% (utility only, no damage term)."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0]",
+      "quote": "Magic Damage per Sphere 80 / 120 / 160 (+ 20% AP); Minimum 240/360/480 (+60% AP) [3 spheres], Maximum 560/840/1120 (+140% AP) [7 spheres]. Passive: Dark Sphere's cooldown is reduced equivalent to 10/20/30 ability haste. Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots.note",
+      "quote": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.3",
+      "quote": "The engine prices the threshold as a display row and does *not* add execute damage to totals (`_add_execute_display`) — the kill boundary is documented, not double-counted."
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_what_the_scenario_id_asserts": "'syndra_custom_order_120' = Syndra, a user-supplied (custom) cast order, splinters = 120. 120 is Syndra's Splinter cap, so ALL five Transcendent thresholds are active in this scenario: 40 (second Q charge), 60 (W bonus true damage), 80 (E slow, no damage), 100 (R execute), 120 (+15% ability power). Four of the five are damage-relevant, so at 120 splinters the wiki-correct total is strictly ABOVE the un-Transcended total. The change moves the leaf UP, i.e. in the wiki-sanctioned direction.",
+
+    "step_1_component_formulas_at_rank_5_R3": {
+      "Q": "230 + 0.70 * AP",
+      "W_magic": "190 + 0.65 * AP",
+      "W_true": "(0.12 + 0.0002 * AP) * (190 + 0.65 * AP)   [12% + 2% per 100 AP of the W damage; quadratic in AP]",
+      "E": "200 + 0.60 * AP",
+      "R_per_sphere": "160 + 0.20 * AP,  3 spheres minimum, 7 maximum",
+      "P_at_120": "AP_effective = 1.15 * AP",
+      "mitigation": "post = raw * 100/(100+MR); true damage unmitigated"
+    },
+
+    "step_2_ratio_test_on_the_120_splinter_AP_buff": {
+      "observed_ratio": 1.1302878,
+      "identity": "If the only difference is AP -> 1.15*AP, then delta/old = 0.15 * (AP-scaled share of old). Observed => AP-scaled share = 0.130288/0.15 = 0.86859.",
+      "first_pass_objection": "For a purely linear rotation (flat bases 230/190/200/160-per-sphere vs ratios 0.70/0.65/0.60/0.20) an 86.9% AP share would demand AP > 3000 — impossible. This appeared to refute the buff hypothesis.",
+      "objection_withdrawn": "W's Transcendent true damage is QUADRATIC in AP ((0.12 + 0.0002*AP) * (190 + 0.65*AP)) and is unmitigated. Once that term is carried, the AP share reaches 0.869 at ordinary full-AP-build values, and the buff hypothesis becomes feasible.",
+      "existence_proof": {
+        "config": "Q/W/E rank 5, R rank 3; 2 Q casts, 4 W casts, 0 E casts, 2 R spheres; manual target MR = 30; base AP = 964.7",
+        "buff_off": "100/130 * (2*(230+0.7*964.7) + 4*(190+0.65*964.7) + 2*(160+0.2*964.7)) + 4*(0.12+0.0002*964.7)*(190+0.65*964.7) = 5472.51",
+        "buff_on": "same with AP_effective = 1.15 * 964.7 = 1109.4  ->  6185.49",
+        "conclusion": "The exact observed pair (5472.5 -> 6185.5) is reproduced, to the golden leaf's own precision, by turning the wiki's 120-splinter Transcendence buff ON at an ordinary full-AP-build AP. This is an existence proof of the mechanism, not an identification of the scenario (the true cast counts / AP / MR are unknown to this oracle)."
+      }
+    },
+
+    "step_3_alternative_mechanism_also_wiki_sanctioned": {
+      "candidate": "the 40-splinter second Dark Sphere charge (module slot 'Q2') firing in the custom order",
+      "arithmetic": "delta = 713.0 is exactly one rank-5 Q at AP_effective = 690: 230 + 0.70*690 = 713.0, and 690 = 1.15 * 600 — i.e. a Q cast under the 120-splinter buff at 600 base AP against a 0-MR manual target.",
+      "status": "Also a wiki-mandated bonus at 120 splinters (Q leveling row + the 40-splinter charge text). Whichever of the two mechanisms the change touched, the wiki grants it at 120 splinters, so both roads lead to the same verdict."
+    },
+
+    "step_4_the_one_illegitimate_way_the_number_could_have_risen": {
+      "hypothesis": "the 100-splinter R execute being ADDED to total damage",
+      "test": "An execute term is target-health-derived (15% of maximum health). 713.0 would require the manual target's maximum health to be exactly 4753.33 — not a stat any manual target would carry, and math-foundations Section 1.3 states executes are priced as display rows and never added to totals.",
+      "result": "Rejected. The increase is not an execute double-count."
+    },
+
+    "step_5_case_for_the_old_value": "No mechanic in the cached wiki text makes 5472.5 the ceiling at 120 splinters. Every Transcendent threshold at that stack count either adds damage (40 Q charge, 60 W true damage, 120 +15% AP) or is pure utility (80 slow) or is explicitly excluded from totals (100 execute). A value that omits any of the three damage bonuses under-reports; there is no wiki rule under which the change would have over-reported by 713.0."
+  },
+
+  "conclusion": "At 120 Splinters of Wrath the wiki requires Syndra's rotation to be computed with 1.15x ability power (P), a second Dark Sphere charge (Q), and W's 12% + 2%-per-100-AP bonus true damage. The leaf moved up by 713.0 (+13.03%), which is exactly the shape of the 1.15x AP buff once W's AP-quadratic true damage is carried (reproduced exactly at base AP 964.7 / MR 30), and is exactly one rank-5 Q under that same buff at 600 base AP / 0 MR. The only wiki-sourced way the number could have risen illegitimately — pricing the 100-splinter execute as damage — is arithmetically excluded and is forbidden by docs/math-foundations.md Section 1.3. The higher value is the wiki-consistent one."
+}

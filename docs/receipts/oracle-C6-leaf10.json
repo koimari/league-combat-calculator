@@ -1,0 +1,58 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[2]/slot",
+  "old_value": "E",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle",
+    "read_only_from": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "step_0_scenario_reading": "The scenario name pins two things that are decidable from cached data: the champion (Syndra) and the Splinters of Wrath stack count (120, Syndra's maximum / Transcendence cap). The leaf asks which ability slot occupies the third cast (index 2) of the shared cast timeline.",
+    "step_1_which_slots_exist_at_120_splinters": "Syndra's Q wiki text (data/champions.json -> Syndra.abilities.Q[0].effects[1].description) states: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' At 120 splinters (>= 40) Syndra therefore enters the fight with TWO stocked Dark Sphere charges, i.e. two back-to-back Q casts are legal with no cooldown wait. Every other Transcendent threshold is also live at 120 (W true damage at 60, E scatter/slow at 80, R execute at 100, +15% AP at 120), but only the Q charge threshold adds a CAST to the timeline.",
+    "step_2_cast_slot_inventory": "data/champion-audit/batch-6.json, entry 'Syndra', records the champion module's slot inventory as modeled = [P, Q, Q2, W, E, R], with the note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)' and notable atom 'ammo (Q 2nd charge at 40 splinters)'; the gap summary adds 'splinters option (0-120) gates Q2 second charge'. So the damaging cast slots, in slot order, are Q, Q2, W, E, R -- P is a buff phase, not a cast.",
+    "step_3_timing": "Cast times from the cached wiki rows (data/champions.json): Q castTime 'none' (0 s), W castTime 'none' (0 s), E castTime 0.25 s, R castTime 0.25 s. Cooldowns: Q 7 s flat (affectedByCdr false; rechargeRate 7 at every rank -- it is a charge/recharge ability, and R's passive states 'Dark Sphere's cooldown is reduced equivalent to an amount of ability haste'), W 12/11/10/9/8 s, E 15 s flat, R 120/100/80 s. Under docs/math-foundations.md Sec. 1.1: 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.' Since every ability is off cooldown at t = 0 and cast times are 0-0.25 s, the FIRST pass of the timeline is exactly the cast order, back to back -- no cooldown can reorder the first five casts. Hence timeline index 2 is decided purely by which slot is third in the order.",
+    "step_4_ordering_of_the_first_three": "Sphere economy from the cached wiki text forces both Q casts ahead of every consumer: W 'Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units ... Grabbing prioritizes Dark Spheres' -- in a manual_target 1v1 there are no minions/monsters, so W has nothing to throw until a Q sphere exists; E 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage' -- the sphere-carried portion likewise needs a live sphere; R 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones', so it also wants spheres already down (and note 'Unleashed Power will not add a Sphere that Syndra is holding with Force of Will'). With two charges stocked, the apply-before-consume opener is Q, Q2, then the first consumer. Among the consumers, W precedes E in the module slot order (Q, Q2, W, E, R) and in the engine's default Q, W, E, R relative order; nothing in the wiki text puts E ahead of W.",
+    "step_5_result": "cast_timeline = [Q @ t=0, Q2 @ t~0, W, E, R]  =>  cast_timeline[2].slot = W.",
+    "why_the_old_value_is_the_bug": "'E' at index 2 is exactly what a FOUR-cast timeline Q, W, E, R produces -- i.e. a rotation that omits the second Dark Sphere charge. That timeline contradicts the cached Q text at 120 splinters, where the 40-splinter charge threshold is long since met and Syndra has 2 stocked charges. Inserting the Q2 cast at index 1 shifts W from index 1 to index 2, which is precisely the observed E -> W change at index 2."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0]/[2].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[0].description and notes",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location ... She prioritizes grabbing the nearest unit, then Dark Spheres. / Grabbing prioritizes Dark Spheres."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity ... Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[0]/[1].description and notes",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. / Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. / Unleashed Power will not add a Sphere that Syndra is holding with Force of Will."
+    },
+    {
+      "source": "data/champions.json -> Syndra cooldown / castTime rows",
+      "quote": "Q cooldown [7,7,7,7,7] affectedByCdr=false, rechargeRate [7,7,7,7,7], castTime 'none'; W cooldown [12,11,10,9,8] affectedByCdr=true, castTime 'none'; E cooldown [15,15,15,15,15], castTime 0.25; R cooldown [120,100,80], castTime 0.25"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R]; note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'; notable atom: 'ammo (Q 2nd charge at 40 splinters)'; gap_summary: 'splinters option (0-120) gates Q2 second charge'"
+    },
+    {
+      "source": "docs/math-foundations.md, Sec. 1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    }
+  ],
+  "residual_uncertainty": "The scenario definition itself lives outside the permitted evidence tree, so the literal cast-order list could not be inspected. The conclusion does not depend on it: at 120 splinters the cached Q text mandates a second stocked Dark Sphere charge, the module slot inventory places that Q2 cast between Q and W, and the zero/0.25 s cast times make the first pass of the shared timeline reproduce the order verbatim -- so the third cast is W. The only way 'E' could be right is a rotation that drops the second Q charge (contradicting the 40-splinter wiki threshold) or one that hoists E ahead of W, for which no cached text or formula gives any basis."
+}

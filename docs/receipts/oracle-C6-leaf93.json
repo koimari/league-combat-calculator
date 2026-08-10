@@ -1,0 +1,77 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "oracle_id": "oracle-C6-leaf93",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[5]/resource_cost",
+  "old_value": 100.0,
+  "new_value": 60.0,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6-fresh",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/practice-corpus/scenarios.json", "data/.champions.json.meta", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q ('Dark Sphere')",
+      "quote": "cost: {\"modifiers\": [{\"values\": [40, 45, 50, 55, 60], \"units\": [\"\",\"\",\"\",\"\",\"\"]}]}, resource: \"MANA\", cooldown values [7,7,7,7,7], rechargeRate [7,7,7,7,7]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W ('Force of Will')",
+      "quote": "cost values [60, 70, 80, 90, 100]; cooldown [12, 11, 10, 9, 8], affectedByCdr true"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E ('Scatter the Weak')",
+      "quote": "cost values [50, 50, 50, 50, 50]; cooldown [15,15,15,15,15]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R ('Unleashed Power')",
+      "quote": "cost values [100, 100, 100]; cooldown [120, 100, 80]; Passive leveling 'Ability Haste' values [10, 20, 30] ('Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.')"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q effects[1] (Transcendent Bonus)",
+      "quote": "Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W effects[3] (Transcendent Bonus)",
+      "quote": "Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; notable_atoms includes 'ammo (Q 2nd charge at 40 splinters)'"
+    },
+    {
+      "source": "docs/math-foundations.md lines 59-67",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md line 465",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast"
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (ability haste -> CDR)",
+      "quote": "effective_cd = base_cd * 100 / (100 + ability_haste)"
+    },
+    {
+      "source": "data/.champions.json.meta + Syndra.patchLastChanged",
+      "quote": "cached wiki pull; Syndra patchLastChanged = 26.12"
+    }
+  ],
+  "independent_computation": {
+    "step_1_scenario_reading": "'order' is the repo's own documented term for the shared-timeline tie-break ('resolved greedily by cast order', math-foundations L66), so 'custom_order' = a user-supplied cast order, and '60' = the Splinters-of-Wrath stack count (60 is exactly Syndra's W Transcendent threshold, a natural test point, and is >= the 40 threshold that stocks a second Dark Sphere charge).",
+    "step_2_castable_slots": "At 60 splinters Syndra has five castable actions available at t~0: Q, Q2 (the stocked second Dark Sphere charge, audit-confirmed as a modeled synthetic slot), W, E, R. Their cast times are 0 / 0 / 0 / 0.25 s / 0.25 s (data/champions.json castTime), so all five start within the first ~1 s, well before any cooldown elapses. Whatever permutation the custom order specifies, those five occupy cast_timeline indices 0..4.",
+    "step_3_who_returns_first": "cast_timeline[5] is therefore the first *repeat* cast, i.e. whichever ability comes off cooldown first. Q recharge = 7 s reduced by R's passive ability haste (10/20/30): 7*100/(100+10)=6.364 s, 7*100/(100+20)=5.833 s, 7*100/(100+30)=5.385 s. W = 8 s at rank 5 (12 s at rank 1). E = 15 s. R is single-cast (math-foundations L465, and 80-120 s anyway). Q returns strictly first at every R rank, so cast_timeline[5] is a Dark Sphere (Q) cast.",
+    "step_4_cost": "Q's mana cost is 40/45/50/55/60 by rank; a level-18 mid Syndra has Q maxed (rank 5) => 60 mana. resource_cost = 60.0.",
+    "step_5_falsifying_the_old_value": "100.0 is not attainable for a Q cast at any rank (max 60). 100 is only produced by R (100 flat, single-cast, already consumed at index <=4) or by W at rank 5. A W at index 5 would require the opening rotation to contain only four casts, i.e. the Q2 charge slot missing from the timeline - which contradicts the 60-splinter (>=40) state that stocks the second Dark Sphere charge. The old 100.0 is therefore the signature of an opening rotation that dropped the second Q charge (or of a max-rank/wrong-slot cost lookup); either way it cannot be the cost of the 6th cast in this scenario."
+  },
+  "result": {
+    "computed_value": 60.0,
+    "matches": "new_value"
+  },
+  "confidence": "high on the arithmetic (Q rank-5 cost = 60 is a direct cached-wiki value; Q-returns-first is strict at every R rank); medium on the slot identification, since the scenario definition lives in scripts/tests and was deliberately not read. The residual risk is confined to one branch: if the custom order omits the Q2 charge slot entirely (only four opening casts), index 5 would be W at rank 5 = 100 and the old value would stand. At 60 splinters that branch contradicts the champion's own Transcendent text and the audited Q2 slot, so it is rejected.",
+  "caveats": [
+    "No src/, tests/, scripts/, docs/plans/, docs/receipts/, diff or git history was consulted; the scenario's exact cast order, item build and ability ranks were inferred structurally from cached data only.",
+    "If ranks were non-default, Q could cost 40/45/50/55 - still never 100 - so the old value is falsified under every rank assignment for a Q cast."
+  ]
+}

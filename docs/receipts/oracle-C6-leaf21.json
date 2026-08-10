@@ -1,0 +1,112 @@
+{
+  "receipt_id": "oracle-C6-leaf21",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[5]/name",
+  "old_value": "Force of Will",
+  "new_value": "Dark Sphere",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "isolation_note": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were never opened. The scenario's literal input tuple (custom order list, fight duration, level/ranks/haste) therefore was NOT available; the computation below is made order-invariant and swept over the whole plausible parameter space instead."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.",
+      "use": "Confirms 120 is the maximum Splinter count, so the scenario suffix '_120' denotes a fully-stacked Transcendent Syndra."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "use": "Second confirmation that 120 is the max-stack Transcendence state."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "DECISIVE. 120 >= 40, so in this scenario Dark Sphere is a 2-charge (ammo) ability, not a single-cast cooldown ability."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].notes",
+      "quote": "After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only.",
+      "use": "Corroborates that the Transcendent Q is a charge-stocked ability."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0]",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7,7,7,7,7]}], \"affectedByCdr\": false}, \"rechargeRate\": [7,7,7,7,7], \"castTime\": \"none\"",
+      "use": "Q charge recharge = 7 s at every rank; external ability haste does not apply (affectedByCdr false); zero cast time."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. (Ability Haste: 10 / 20 / 30)",
+      "use": "The only haste that reaches Q. At R3 the charge recharge is 7 * 100/130 = 5.3846 s."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] / E[0] / R[0]",
+      "quote": "W Force of Will cooldown [12,11,10,9,8] affectedByCdr true, castTime none; E Scatter the Weak cooldown [15,15,15,15,15] affectedByCdr true, castTime 0.25; R Unleashed Power cooldown [120,100,80] affectedByCdr true, castTime 0.25",
+      "use": "Cooldowns and cast times feeding the shared-timeline schedule."
+    },
+    {
+      "source": "data/champions.json -> Syndra ability names",
+      "quote": "Q = \"Dark Sphere\", W = \"Force of Will\", E = \"Scatter the Weak\", R = \"Unleashed Power\"",
+      "use": "Name mapping for the cast_timeline leaf. Both the old and the new value are legitimate Syndra ability names, so the leaf is a scheduling question, not a naming typo."
+    },
+    {
+      "source": "docs/math-foundations.md, section 1.1 (lines 59-68)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` -- again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "use": "The scheduling rule reproduced in the independent simulation below: greedy pick by cast order among off-cooldown abilities, cast time occupies the shared timeline."
+    },
+    {
+      "source": "docs/math-foundations.md, section 4 table (line 462, 465)",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)` ... Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT",
+      "use": "Haste formula applied to W/E/R and to the R-passive haste on Q's recharge."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)",
+      "use": "Cached audit record independently confirming that '120' in a Syndra scenario name is the splinters option value, and that the >=40 branch is a second Dark Sphere cast slot."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_scenario_state": "The '_120' suffix is the Splinters of Wrath count. The wiki text caps splinters at 120 and grants Transcendence exactly at 120, and the cached champion audit records the splinters option value 120 for Syndra. So the scenario is a max-stack Transcendent Syndra.",
+    "step_2_apply_the_transcendent_gate": "Q's Transcendent Bonus triggers at 40 splinters. 120 >= 40 is TRUE, therefore Dark Sphere is stocked as charges, maximum 2, recharging at rechargeRate = 7 s (reduced only by R's passive haste, since Q's cooldown carries affectedByCdr = false).",
+    "step_3_effective_recharge": "R rank 3 grants 30 ability haste to Dark Sphere: 7 * 100/(100+30) = 5.3846 s per charge. (R1: 7*100/110 = 6.3636 s; R0/none: 7 s. The conclusion below is invariant across all three.)",
+    "step_4_schedule": "Reproduced docs/math-foundations.md 1.1 verbatim as a discrete-event simulation: greedy pick by cast order among available abilities; a charge ability is 'available' iff charges > 0; the recharge timer starts on the first cast that drops below full and chains (t+R, t+2R) until full; each cast advances the shared clock by its cast time.",
+    "step_5_result_for_a_representative_order_QWER": {
+      "one_charge_model": [
+        "[0] t=0.0000 Dark Sphere",
+        "[1] t=0.0000 Force of Will",
+        "[2] t=0.0000 Scatter the Weak",
+        "[3] t=0.2500 Unleashed Power",
+        "[4] t=5.3846 Dark Sphere",
+        "[5] t=8.0000 Force of Will   <-- OLD golden value"
+      ],
+      "two_charge_model": [
+        "[0] t=0.0000 Dark Sphere",
+        "[1] t=0.0000 Dark Sphere      <-- second stocked charge",
+        "[2] t=0.0000 Force of Will",
+        "[3] t=0.0000 Scatter the Weak",
+        "[4] t=0.2500 Unleashed Power",
+        "[5] t=5.3846 Dark Sphere      <-- NEW golden value"
+      ]
+    },
+    "step_6_order_invariance": "The scenario's literal custom order is not readable from the evidence tree, so all 24 permutations of {Q,W,E,R} were simulated at level-max ranks (W5=8s, E=15s, R3=80s, R-passive 30 haste). Result: the 1-charge model yields 'Force of Will' at index 5 in 24/24 orders; the 2-charge model yields 'Dark Sphere' at index 5 in 24/24 orders. The leaf's value is a pure signature of the charge count and does not depend on the custom order.",
+    "step_7_parameter_sweep": "Swept W rank (12/11/10/9/8), R rank (120/100/80), R-passive haste (0/10/20/30) and external ability haste (0/20/40) across all 24 orders = 4320 cases. 1-charge model: 'Force of Will' at index 5 in 3738/4320 (86.5%). 2-charge model: 'Dark Sphere' at index 5 in 3930/4320 (91.0%). The old and new golden values are exactly the modal signatures of the wrong and right charge model respectively.",
+    "step_8_conclusion": "The mechanism separating the two values is whether Dark Sphere is stocked to 2 charges at 120 splinters. The cached wiki text states this without ambiguity ('Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), and 120 >= 40. The second Dark Sphere therefore belongs in the opening burst, pushing the Force of Will recast out of index 5 and putting the first recharged Dark Sphere there instead."
+  },
+
+  "why_not_old_value": "'Force of Will' at index 5 is precisely what the schedule produces when Dark Sphere is treated as a single-cast 7 s ability -- i.e. when the >=40-splinter Transcendent charge bonus is not applied. At 120 splinters that gate is unambiguously open, so the old timeline was one Dark Sphere short in the opening rotation.",
+
+  "why_not_both_wrong": "Both candidate strings are exact Syndra ability names from data/champions.json, and the new value is reproduced by the documented shared-timeline scheduler (docs/math-foundations.md 1.1) fed only with sourced wiki numbers, under every cast order tried. No third value is derivable.",
+
+  "caveats": [
+    "The scenario's exact input tuple (custom cast order, fight duration, level, ranks, ability haste, item build) lives outside the permitted evidence tree, so it was not read. The verdict is made robust to that by the 24-permutation order sweep and the 4320-case rank/haste sweep, in which the old and new values map cleanly onto the 1-charge and 2-charge models.",
+    "Absolute cast timestamps quoted above are the oracle's own reconstruction under assumed max ranks; they are illustrative. The load-bearing claim is the ability identity at index 5, which is order- and timing-robust.",
+    "Aside (off-task, flagged per convention): data/champions.json gives Syndra W's Transcendent Bonus leveling modifiers the unit string '  2' (two spaces then '2') rather than a real unit -- e.g. Bonus True Damage values [8.4, 12, 15.6, 19.2, 22.8] with units ['  2', ...]. That is the wiki modifier parser half-parsing a superscript/footnote marker. It does not affect this leaf, but it is the same failure class as the known-degraded parses listed in CLAUDE.md and is not on that list."
+  ]
+}

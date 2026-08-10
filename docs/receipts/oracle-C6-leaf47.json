@@ -1,0 +1,105 @@
+{
+  "receipt": "oracle-C6-leaf47",
+  "runbook": "R-18 / R-19 (independent oracle, blind to diff and plan)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[7]/time",
+  "old_value": 7.27,
+  "new_value": 5.0,
+  "verdict": "both_wrong",
+  "independent_value": 5.38,
+  "independent_value_exact": 5.384615384615385,
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "%TEMP%/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6-leaf47-1991",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/worklists/f2-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].cooldown",
+      "quote": "{\"modifiers\": [{\"values\": [7, 7, 7, 7, 7], \"units\": [\"\",\"\",\"\",\"\",\"\"]}], \"affectedByCdr\": false}",
+      "reading": "Dark Sphere's cooldown is 7 s at every rank AND is flagged static -- generic ability haste does NOT reduce it."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].rechargeRate",
+      "quote": "[7, 7, 7, 7, 7]",
+      "reading": "The charge recharge (the timer that matters at >=40 Splinters) is the same 7 s."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -- leveling: Ability Haste [10, 20, 30]",
+      "reading": "The only haste Dark Sphere receives is 10/20/30 by R rank."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1]",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "reading": "At the scenario's 120 Splinters Q is charge-based (2 charges), so the fight contains Dark Sphere recasts driven by the 7 s recharge."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].cooldown",
+      "quote": "{\"modifiers\": [{\"values\": [12, 11, 10, 9, 8]}], \"affectedByCdr\": true}",
+      "reading": "Force of Will rank 5 = 8 s and IS haste-affected. This is what pins the scenario's generic ability haste at 10 (see computation step 2)."
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "path": "Section 5, row 'Ability haste (effective_cooldown)'",
+      "quote": "`cd' = cd*100/(100+AH)`; casts/unit time affine in AH -- EXACT",
+      "reading": "The cooldown formula to apply (identical to CLAUDE.md: effective_cd = base_cd * 100 / (100 + ability_haste))."
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1",
+      "quote": "each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window",
+      "reading": "Ability damage-event times are cast epochs 0, c, 2c, ... on one shared timeline, so a mid-fight damage_events[i].time is an effective cooldown, not a travel/delay artifact."
+    },
+    {
+      "id": "S8",
+      "file": "data/champions.json",
+      "path": "Belveth.abilities.Q[0] (control case)",
+      "quote": "\"Each cardinal direction has a unique cooldown that is reduced equivalent to 0.2 ability haste per 1% bonus attack speed\" with cooldown.affectedByCdr = true",
+      "reading": "Control that validates S1: the phrase 'reduced equivalent to an amount of ability haste' does NOT by itself imply staticness -- Bel'Veth Q carries the same phrasing and is still flagged CDR-affected. Syndra Q is the one flagged static, so the flag is a deliberate, discriminating annotation and not a parser artifact of the phrasing or of the charge system (Caitlyn W, Corki R, Jhin E, Kled Q, Teemo R, Ashe E, Azir W, Kalista W, Taric Q, Rumble E are all charge abilities flagged true)."
+    },
+    {
+      "id": "S9",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).",
+      "reading": "Confirms the scenario suffix '120' is the Splinters option (max stacks), i.e. Q is in its 2-charge mode in this fight."
+    }
+  ],
+
+  "computation": {
+    "step_1_what_the_leaf_is": "damage_events[7] is the first post-opener event of the manual_target fight. The 120-Splinter opener authors 7 events at t~0 (Q, Q2 second charge, W, E, and R's spheres -- R casts once per timed fight per math-foundations Section 5), so index 7 is the first recast on the shared timeline (S7).",
+    "step_2_pin_the_scenario_haste": "The OLD value 7.27 is reproduced exactly by Force of Will rank 5 at 10 ability haste: 8 * 100/(100+10) = 7.27272... -> 7.27 (S5, S6). No other Syndra cooldown reproduces 7.27 at a sane haste (E r5 would need AH=106.25, W r1 would need AH=65). So the scenario carries 10 generic ability haste, W is maxed (rank 5) and the fight is long enough for a W recast.",
+    "step_3_the_new_value_decomposed": "5.00 is reproduced exactly by Dark Sphere at 40 ability haste: 7 * 100/(100+40) = 5.000. 40 = 10 (scenario generic haste) + 30 (R rank 3 passive). i.e. the new value adds the champion's generic ability haste on top of R's grant.",
+    "step_4_the_sourced_value": "S1 flags Dark Sphere's cooldown as NOT affected by generic ability haste; S3 makes R's 10/20/30 the only haste it receives. Therefore the sourced Dark Sphere recast is 7 * 100/(100 + 10*R_rank): 6.36 (R1) / 5.83 (R2) / 5.38 (R3). With R rank 3 (implied by the engine's own 40 = 10+30): 7 * 100/130 = 5.3846 -> 5.38.",
+    "step_5_rank_independent_bound": "Even without assuming an R rank, the sourced model bounds every Dark Sphere event time to the closed interval [5.3846, 7.0] (max haste 30 at R rank 3, min haste 0). BOTH leaf values fall outside it: 5.00 < 5.3846 (below the floor) and 7.27 > 7.0 (above the un-hasted base). Neither can be a correct Dark Sphere recast time.",
+    "step_6_what_each_value_actually_is": "OLD 7.27 = Force of Will's rank-5 recast (8*100/110) -- a correct time for a W event, but it is not the correct occupant of index 7 once the Dark Sphere recharge (which precedes it) is authored. NEW 5.00 = the Dark Sphere recharge with the scenario's 10 generic haste double-counted onto a static cooldown; the correct time is 5.38."
+  },
+
+  "verdict_rationale": "The change moves the leaf in the right direction -- a Dark Sphere recast does belong at index 7, ahead of the 7.27 s Force of Will recast, so the old value was wrong for this slot. But the new time over-reduces the cooldown: it applies the scenario's 10 generic ability haste to Dark Sphere, whose cooldown data/champions.json flags as not CDR-affected (affectedByCdr: false), with R's 10/20/30 as its only haste source. The sourced value is 7 * 100/130 = 5.38 s at R rank 3 (5.83 at rank 2, 6.36 at rank 1). Hence both_wrong.",
+
+  "sensitivity": [
+    "If Dark Sphere's cooldown IS reduced by generic ability haste -- i.e. data/champions.json Syndra.Q.cooldown.affectedByCdr = false is a stale/incorrect wiki annotation -- then 40 total haste is right and the new value 5.00 is correct. That single flag is the whole hinge; S8 is the control that convinced me the flag is deliberate rather than an artifact (same 'equivalent ability haste' phrasing on Bel'Veth Q is flagged true; charge abilities are otherwise flagged true).",
+    "The R rank (3) and generic haste (10) are inferred from the leaf values themselves (5.00 = 7*100/140 and 7.27 = 8*100/110), not from a scenario definition -- scripts/ was deliberately not read. The rank-independent bound in step_5 is what makes the verdict robust to those inferences.",
+    "Two alternative identities for an exact 5.00 were considered and rejected: (a) Force of Will's 5-second hold ('holds the target near her for 5 seconds') used as the throw delay -- rejected because the rotation layer schedules casts greedily for DPS (data/worklists/f2-task.md) and delaying the throw 5 s is anti-optimal, and no W-hold latency appears in the Syndra audit coverage; (b) an auto-attack epoch -- rejected because Syndra's base AS 0.658 with AS ratio 0.625 yields no level at which k/AS equals 5.00 and 7.27 simultaneously."
+  ],
+
+  "recommended_action": "Re-derive Dark Sphere's effective cooldown from R's passive haste alone (10/20/30 by R rank) rather than adding it to the champion's generic ability haste, and re-capture this scenario's golden leaf at 5.38 (R3). If the intent was that Dark Sphere is haste-affected, the wiki cache's affectedByCdr flag for Syndra Q must be corrected first so the code and the data agree on one source of truth.",
+
+  "committed": false
+}

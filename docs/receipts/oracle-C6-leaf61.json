@@ -1,0 +1,96 @@
+{
+  "receipt_id": "oracle-C6-leaf61",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/rotation/order[4]",
+  "old_value": "Q",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json",
+      "data/champion-audit/batch-e9-1.json",
+      "data/worklists/f2-task.md",
+      "data/worklists/f3-task.md",
+      "docs/math-foundations.md"
+    ],
+    "scope_not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "what_the_scenario_is": {
+    "champion": "Syndra",
+    "suffix_120": "splinters = 120, the Splinters-of-Wrath cap. data/champions.json Syndra P: 'stacking up to 120 times' and 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.' data/champion-audit/batch-e9-1.json Syndra: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'.",
+    "why_120_makes_this_leaf_live": "At >= 40 splinters Q stocks a second charge (data/champions.json Syndra Q: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'), so the opening rotation has FIVE cast slots (Q, Q2, W, E, R) and index [4] is the terminal cast. At <40 splinters there is no index [4] to argue about.",
+    "custom_order": "'custom_order' = the algorithmically derived (non-DEFAULT Q,W,E,R) cast order. data/worklists/f2-task.md and f3-task.md define the resolver: order is derived from atomized data with '(b) setup/consume relationships' and the invariant that 'the derived order never violates a detected setup/consume edge (E-before-poison, detonate-before-stack-application, amp-after-the-burst)'."
+  },
+  "independent_computation": {
+    "step_1_R_is_a_sphere_consumer": "data/champions.json Syndra R active effect: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.' => R's damage is a function of how many Dark Spheres are alive when R is cast. Spheres are produced by Q ('Syndra conjures a Dark Sphere at the target location ... remains on the ground for 6 seconds'). This is exactly a setup(Q) -> consume(R) edge.",
+    "step_2_R_damage_is_exactly_linear_in_sphere_count": {
+      "cached_rows": {
+        "Magic Damage per Sphere": "80 / 120 / 160 (+ 20% AP)",
+        "Minimum Magic Damage": "240 / 360 / 480 (+ 60% AP)",
+        "Maximum Magic Damage": "560 / 840 / 1120 (+ 140% AP)"
+      },
+      "check": "3 spheres x (80,120,160) = (240,360,480) and 3 x 20% AP = 60% AP -> reproduces the Minimum row exactly. 7 spheres x (80,120,160) = (560,840,1120) and 7 x 20% AP = 140% AP -> reproduces the Maximum row exactly.",
+      "conclusion": "R_raw(n) = n x (per_sphere_flat + 0.20 x AP) for n in [3, 7] (3 self-conjured + up to 4 grabbed). Strictly increasing in n, with no diminishing term."
+    },
+    "step_3_marginal_value_of_casting_Q_before_R": {
+      "identity": "dR_raw/dsphere = per_sphere_flat + 0.20 x AP = 80 (R1) / 120 (R2) / 160 (R3) plus 20% of total AP.",
+      "with_the_120_splinter_capstone": "Transcendence multiplies total AP by 1.15, so the marginal sphere is worth 160 + 0.20 x (1.15 x AP) = 160 + 0.23 x AP_pre-capstone raw magic damage at R rank 3.",
+      "cost_of_moving_that_Q_after_R": "Zero. Q's own damage row is position-independent: 'Magic Damage 90/125/160/195/230 (+70% AP)' with no dependence on R, spheres, or splinters. So swapping the Q charge from after-R to before-R is a strict, non-negative damage gain of one full sphere, capped only by R's 4-grab ceiling (3 self + Q + Q2 = 5 spheres, well under the 7 max, so the grab cap does not bind here).",
+      "wiki_confirms_the_timing_is_legal": "Syndra R notes: 'A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown.' A sphere conjured AFTER R cannot be, since R's effect 'takes place at the start of the cast time' (same notes block)."
+    },
+    "step_4_what_index_4_must_be": "The 120-splinter opening has five casts {Q, Q2, W, E, R}. R is the only slot whose damage depends on prior casts; every other slot's damage row is position-independent. A damage-maximizing (and setup/consume-respecting) order therefore terminates in R, i.e. order[4] = 'R'. The old value 'Q' places a sphere-generating Dark Sphere charge AFTER the ultimate that would have thrown it, which both violates the detected setup->consume edge and strictly loses 160 + 0.23 x AP raw magic damage at R rank 3 (80 / 120 at ranks 1 / 2).",
+    "step_5_schedule_consistency": "docs/math-foundations.md 1.1: casts sit on 'one shared timeline ... resolved greedily by cast order', and the audit table pins 'R single-cast' ('R casts exactly once per timed fight (model constraint, documented)'). So R occupies exactly one index in the order, and with five slots the greedy opening places it at the last index, [4] - consistent with the new value and inconsistent with an order in which a Q follows R.",
+    "counter-hypothesis_checked": "Could R belong EARLIER as a 'buffs-first' cast (docs/math-foundations / f2-task rule (d))? No. Syndra's R passive is 'Dark Sphere's cooldown is reduced equivalent to an amount of ability haste' (10/20/30) - that is granted by RANKING R, not by casting it, and it changes Q's cooldown, not any damage row. Nothing about casting R amplifies a later cast. The only cross-cast coupling in Syndra's kit runs Q -> R (spheres), which forces R late, not early."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[].leveling",
+      "quote": "Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].notes",
+      "quote": "Unleashed Power's effect takes place at the start of the cast time. ... A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[].description / leveling",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. | Magic Damage 90/125/160/195/230 (+70% AP) | Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath ... stacking up to 120 times. | At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "path": "deliverable 2(a)",
+      "quote": "a regression suite that asserts, for EVERY champion: (a) the derived order never violates a detected setup/consume edge (E-before-poison, detonate-before-stack-application, amp-after-the-burst)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "1.1 / audit table",
+      "quote": "Ability recasts are scheduled on one shared timeline ... resolved greedily by cast order. | Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) ... R single-cast"
+    }
+  ],
+  "residual_uncertainty": [
+    "The scenario's literal input tuple (level, ranks, items, fight window, and the exact five-slot list) lives outside the permitted evidence tree (scripts/, tests/), so the reconstruction of the opening as {Q, Q2, W, E, R} is inferred from the 120-splinter Q-charge rule plus the five modeled slots recorded in data/champion-audit/batch-6.json ('modeled = SLOTS keys incl. synthetic Q2 (2nd charge)').",
+    "That uncertainty does not affect the verdict: whatever the other four slots are, the only slot whose damage depends on what preceded it is R, and a Dark Sphere cast after R is strictly worse than the same Dark Sphere cast before it. 'Q' at the terminal index is wrong under the cached wiki text; 'R' is right.",
+    "Not adjudicated here: the relative placement of W vs E among indices [2]/[3] (W's grab can consume a live sphere - 'She prioritizes grabbing the nearest unit, then Dark Spheres' - which is a separate, non-load-bearing leaf)."
+  ]
+}

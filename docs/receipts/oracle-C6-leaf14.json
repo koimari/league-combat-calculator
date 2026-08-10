@@ -1,0 +1,49 @@
+{
+  "receipt_id": "oracle-C6-leaf14",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[3]/time",
+  "old_value": 0.25,
+  "new_value": 0.0,
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json (Syndra)", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources": [
+    {
+      "source": "data/champions.json -> Syndra.abilities",
+      "quote": "Q 'Dark Sphere': castTime = \"none\"; W 'Force of Will': castTime = \"none\"; E 'Scatter the Weak': castTime = \"0.25\"; R 'Unleashed Power': castTime = \"0.25\"",
+      "note": "Cached wiki cast-time field. Corpus-wide the field takes the values 'none' (304 abilities), '0.25' (243), '0.5' (35), '0.4', '0.35', ... — so 'none' is a real wiki value meaning no cast time (0 s) and the numeric strings are seconds. Syndra Q's separate '0.6-second delay' in the effect text is the sphere's landing delay, not a cast time, and does not occupy the champion's hands."
+    },
+    {
+      "source": "docs/math-foundations.md, section 1.1 (lines 59-66)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md, line 465 (fidelity table)",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | **EXACT**"
+    }
+  ],
+  "independent_computation": {
+    "model": "Per docs 1.1, casts are mutually exclusive on one shared timeline and each cast occupies its sourced cast time. At fight start (t = 0) every ability of the opening rotation is off cooldown, so the greedy schedule packs the opening casts back-to-back: start(k) = sum of the sourced cast times of the k casts that precede it.",
+    "sourced_cast_times_seconds": {"Q": 0.0, "W": 0.0, "E": 0.25, "R": 0.25},
+    "formula": "start(index 3) = d(cast0) + d(cast1) + d(cast2) = 0.50 - d(cast3), because the four opening casts of a Syndra order sum to 0.0 + 0.0 + 0.25 + 0.25 = 0.50 s",
+    "exhaustive_enumeration_of_all_24_cast_orders": {
+      "index3_start_when_4th_cast_is_E_or_R": 0.25,
+      "index3_start_when_4th_cast_is_Q_or_W": 0.5,
+      "attainable_set": [0.25, 0.5],
+      "examples": {
+        "Q,W,E,R": [0.0, 0.0, 0.0, 0.25],
+        "Q,E,W,R": [0.0, 0.0, 0.25, 0.25],
+        "E,Q,W,R": [0.0, 0.25, 0.25, 0.25],
+        "E,R,Q,W": [0.0, 0.25, 0.5, 0.5]
+      }
+    },
+    "conclusion": "0.0 s is unreachable for the 4th cast of a Syndra rotation. Syndra has only two instant abilities (Q and W, castTime 'none'); E and R each occupy 0.25 s. Any ordering of her four abilities therefore puts at least one 0.25 s cast among the first three, so the 4th cast can start no earlier than 0.25 s. The canonical order Q,W,E,R reproduces the old snapshot exactly — [0.0, 0.0, 0.0, 0.25] — which also explains why this is the only leaf of the timeline that moved: indices 0-2 were already 0.0, and only the 4th cast, the one pushed back by E's 0.25 s cast time, carried a nonzero start. The new 0.0 is what you get if the 0.25 s occupancy stops delaying the following cast, i.e. if cast-time occupancy is dropped from the shared timeline; that contradicts both the cached wiki cast time for E/R and the documented one-set-of-hands model.",
+    "alternative_reading_checked": "If 'time' were read as the entry's own cast duration rather than its start timestamp, the answer is the same: this is a single-leaf change, so the ability sitting at index 3 is unchanged between runs, and its recorded 0.25 is exactly the wiki's sourced cast time for Scatter the Weak / Unleashed Power. Zeroing it still contradicts data/champions.json, where only Q and W carry castTime 'none'.",
+    "residual_uncertainty": "The scenario definition (the actual custom cast order and the meaning of '120') lives outside the permitted evidence tree, so the specific ability at index 3 could not be confirmed. The conclusion does not depend on it: 0.0 is unattainable for the 4th cast under every one of the 24 orderings of Syndra's kit, and reaching 0.0 would require three consecutive instant casts, which her kit cannot supply (only Q and W are instant)."
+  }
+}

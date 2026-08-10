@@ -1,0 +1,86 @@
+{
+  "receipt_id": "oracle-C6-leaf65",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/timeline_coverage/exact_sources[2]",
+  "old_value": "R",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were never opened."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q ('Dark Sphere') effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q cooldown / rechargeRate / castTime",
+      "quote": "cooldown.modifiers[0].values = [7,7,7,7,7], affectedByCdr = false; rechargeRate = [7,7,7,7,7]; castTime = \"none\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P ('Transcendent') effects[0] and effects[2]",
+      "quote": "Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E effects[2].description",
+      "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle ..."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R ('Unleashed Power') effects[0], effects[3], castTime, cooldown",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. ... Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health. | castTime = 0.25; cooldown = [120,100,80] (affectedByCdr true); R 'Ability Haste' leveling = [10,20,30]"
+    },
+    {
+      "source": "docs/math-foundations.md, section 1.1 (lines 58-67)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md, exactness table (line 465)",
+      "quote": "| Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | **EXACT** | ... R single-cast |"
+    },
+    {
+      "source": "docs/math-foundations.md, ability-haste convention (CLAUDE.md domain rule mirrored in section 2 tables)",
+      "quote": "effective_cd = base_cd * 100 / (100 + ability_haste)"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra (cached audit of the modelled slot set)",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... note: 'No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.' ... gap_summary: 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_decoding": "The scenario id 'syndra_custom_order_120' names a custom cast order at splinters = 120. 120 is the cached maximum of the Transcendent stack ('stacking up to 120 times') and the top rung of the splinter ladder. At 120 splinters every threshold in the cached wiki text is satisfied: 40 (Q second charge), 60 (W true damage), 80 (E scatter), 100 (R execute), 120 (+15% AP).",
+    "step_2_the_decisive_wiki_fact": "Q's cached Transcendent Bonus reads: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' 120 >= 40, so at this scenario's stack count Dark Sphere is a TWO-CHARGE ability. A second Q cast is therefore a real, sourced event, castable back-to-back with the first (both charges are stocked before the fight; the 7 s rechargeRate governs restocking, not the use of an already-stocked charge).",
+    "step_3_shared_timeline_schedule": {
+      "rule": "docs/math-foundations.md 1.1: casts occupy their sourced cast time, mutual-exclusion on one timeline, resolved greedily by cast order; a cast counts when it starts within the window.",
+      "sourced_cast_times": {"Q": "none (0 s; sphere impact +0.6 s delay)", "W": "none (0 s)", "E": "0.25 s", "R": "0.25 s"},
+      "worked_schedule_for_a_QEQ...R_custom_order": [
+        "t = 0.00  Q  (Dark Sphere, charge 1)",
+        "t = 0.00 -> 0.25  E  (Scatter the Weak, cast time 0.25)",
+        "t = 0.25  Q2 (Dark Sphere, charge 2 - available immediately, no 7 s wait, per the 40-splinter charge text)",
+        "t = 0.25 -> 0.50  R  (Unleashed Power, cast time 0.25; 'R single-cast' per the exactness table)"
+      ],
+      "conclusion": "The second Dark Sphere charge occupies a timeline slot ahead of R. Indexing the exact-timed sources from 0, the third entry (index 2) is the Q2 event, and R shifts to index 3. Old and new lists differ by exactly one inserted element at position 2, which is the signature of the previously-missing Q2 charge event being scheduled: old [.., .., R, ..] -> new [.., .., Q2, R, ..]."
+    },
+    "step_4_independent_corroboration_without_the_charge_system": "Even ignoring charges, a second Q is inevitable in any window longer than one Q cooldown, because R's passive ('Dark Sphere's cooldown is reduced equivalent to an amount of ability haste', R Ability Haste leveling = [10,20,30]) makes Q's effective cooldown 7 * 100/(100+AH): 6.364 s at R rank 1, 5.833 s at rank 2, 5.385 s at rank 3. So Q recasts well inside a normal fight window while R (cooldown 120/100/80 s) is explicitly single-cast. Both routes agree that a second Q event exists and R does not repeat.",
+    "step_5_why_the_old_value_is_wrong": "'R' at index 2 can only be produced by a source list that omits the second Dark Sphere charge entirely - i.e. a timeline where the custom order's second Q was dropped (single-cast Q) and R slid up one position. That contradicts the cached Q text at 40+ splinters, and contradicts the cached audit note that the Q2 slot is the modelled second charge gated by the splinters option. R itself is not deleted by the change; it is merely displaced to index 3, which is consistent with 'R single-cast' remaining true.",
+    "step_6_no_double_counting_check": "Only ONE Q2 appears: a third Q cast would require the 7 s recharge to elapse (t ~ 5.4-7.0 s), so within a burst/custom-order rotation exactly two Dark Sphere casts fit. The new list therefore adds exactly one element, matching the observed single-position shift."
+  },
+
+  "residual_uncertainty": "The scenario definition and the engine's source-label/ordering code were deliberately not read (oracle isolation), so the exact index arithmetic rests on the observed single-element insertion at position 2 plus the sourced schedule above. What is established directly from the cached wiki text, independent of any code, is the load-bearing claim: at 120 splinters Syndra has two Dark Sphere charges, so a second Q ('Q2') is a genuine sourced timeline event that precedes the single R cast in a custom order - and a list in which R occupies that slot is missing it.",
+
+  "verdict_reason": "The cached wiki text for Dark Sphere grants a second charge at 40+ splinters, and this scenario runs at the 120-splinter cap; the shared-timeline rule in docs/math-foundations.md places that second cast before the single R cast. The new leaf value Q2 is correct; the old value R was the result of the Q2 charge event being absent from the exact-timed source list."
+}

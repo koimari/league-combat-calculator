@@ -1,0 +1,105 @@
+{
+  "receipt": "oracle-C6-leaf27",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[6]/time",
+  "old_value": 10.0,
+  "new_value": 7.27,
+  "verdict": "new_value_correct",
+
+  "evidence_isolation": {
+    "export_command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > W > Force of Will > cooldown",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [12, 11, 10, 9, 8], \"units\": [\"\",\"\",\"\",\"\",\"\"]}], \"affectedByCdr\": true}",
+      "use": "Sourced W cooldown per rank; rank 5 = 8 s, and W IS reduced by ability haste."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > Q > Dark Sphere > cooldown / rechargeRate",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7,7,7,7,7]}], \"affectedByCdr\": false}, \"rechargeRate\": [7,7,7,7,7]",
+      "use": "Q is a charge ability on a 7 s recharge that is NOT reduced by haste -> its recast epoch is exactly 7.00 s, which fixes the index-5 slot and makes index 6 the second W."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > Q > effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At the scenario's 120 splinters (>= 40) Q holds 2 charges, so the t=0 opener can fire 5 casts (Q, Q2, W, E, R) before any cooldown gates."
+    },
+    {
+      "id": "S4",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra > module_slots.note / gap_summary",
+      "quote": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF. ... splinters option (0-120) gates Q2 second charge",
+      "use": "Confirms the '120' in the scenario name is the splinters option (late-game capstone), i.e. a maxed-ability configuration, and that Q2 is a real timeline slot."
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "locator": "line 462 (Exactness table, 'Ability haste' row)",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd\u00b7100/(100+AH)`; casts/unit time affine in AH | **EXACT** |",
+      "use": "The cooldown-from-haste formula used in the computation."
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "locator": "lines 59-66 (Section 1.1)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** ... an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress ... With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, \u2026`",
+      "use": "Timeline semantics: the second cast of ability i lands at exactly c_i (its EFFECTIVE cooldown) when no other cast is blocking, so this leaf must equal an effective cooldown."
+    }
+  ],
+
+  "computation": {
+    "step_1_identify_the_slot": {
+      "reasoning": "Under S6 the cast epochs are cooldown-determined. With 120 splinters (S3/S4) the t=0 opener is 5 casts: Q, Q2 (second charge), W, E, R -> indices 0-4. The first recast is Q's charge, whose recharge is haste-immune (S2), at t = 7.00 -> index 5. The next epoch is the second W. Therefore cast_timeline[6] is the second W cast and its time must equal W's effective cooldown c_W.",
+      "index_map": ["0-4: Q, Q2, W, E, R at t~0", "5: Q recharge at 7.00 (static, S2)", "6: second W at c_W"]
+    },
+    "step_2_apply_the_formula": {
+      "formula": "c_W = cd_W * 100 / (100 + AH)   [S5]",
+      "rank": "W at rank 5 (scenario is the 120-splinter late-game configuration, S4) -> cd_W = 8 s [S1]",
+      "solved_haste": "7.2727... = 8 * 100 / (100 + AH)  =>  AH = 10",
+      "result": "8 * 100 / 110 = 7.272727... -> 7.27 (2 dp)"
+    },
+    "step_3_feasibility_screen": {
+      "method": "Item ability haste in data/items.json is integer-valued at every tier (5, 10, 15, 20, 25, 30, 40), so total AH must be a non-negative integer. Enumerated every sourced Syndra cooldown value against both candidate leaf values.",
+      "reaches_7.2727_with_integer_AH": [
+        "W rank 5 (8 s) @ AH = 10  -> 8*100/110 = 7.272727",
+        "W rank 1 (12 s) @ AH = 65 -> 12*100/165 = 7.272727",
+        "R (80/100/120 s) @ AH = 1000/1275/1550 (physically impossible)"
+      ],
+      "reaches_10.0_with_integer_AH": [
+        "W rank 2 (11 s) @ AH = 10",
+        "W rank 3 (10 s) @ AH = 0",
+        "W rank 1 (12 s) @ AH = 20",
+        "E (15 s) @ AH = 50",
+        "R @ AH = 700/900/1100 (physically impossible)"
+      ],
+      "killer_argument": "Ability haste can only SHORTEN a cooldown (AH >= 0 => c' <= cd). For the second W at max rank, cd_W = 8 s is the hard upper bound on the leaf, so 10.0 s is unreachable: 8*100/(100+AH) = 10 requires AH = -20. The old value can only be produced by an off-rank W (rank 2 or 3) or by a haste-free / literal 10 s cooldown, none of which is consistent with a 120-splinter maxed-ability Syndra scenario.",
+      "joint_consistency": "AH = 10 is the ONLY non-negative integer haste at which both 10.0 and 7.2727 are sourced Syndra effective cooldowns at all (W rank 2 -> 10.00, W rank 5 -> 7.2727). At a fixed build, the move 10.0 -> 7.27 is exactly the move from an off-rank/unhasted W to the sourced max-rank W with the documented haste formula."
+    },
+    "independent_value": 7.2727272727272725,
+    "independent_value_rounded": 7.27
+  },
+
+  "residual_uncertainty": [
+    "The scenario's build/haste and cast order live in scripts/ (out of bounds for this oracle), so the total ability haste was solved for rather than read: AH = 10 is inferred as the unique integer haste consistent with the sourced max-rank W cooldown and the observed leaf.",
+    "The conclusion does not depend on that inference: 10.0 s exceeds W's rank-5 BASE cooldown of 8 s, and ability haste is monotonically cooldown-reducing, so the old value is infeasible for the second W under any non-negative haste, while 7.27 s is feasible (0 < 7.27 < 8).",
+    "If the leaf were instead E's second cast (15 s base), 10.0 would need AH = 50 and 7.2727 would need AH = 106.25 (non-integer, unreachable from integer item haste) - but the index-6 slot resolves to W once the 5-cast 120-splinter opener and Q's haste-immune 7.00 s recharge are placed."
+  ],
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "confidence": "high",
+    "one_line": "cast_timeline[6] is the second Force of Will; W rank 5 = 8 s (affectedByCdr true) gives 8*100/110 = 7.27 s, while 10.0 s exceeds W's un-hasted base cooldown and is therefore impossible."
+  }
+}

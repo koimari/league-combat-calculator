@@ -1,0 +1,95 @@
+{
+  "receipt_id": "oracle-C6-leaf134",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/timeline_coverage/exact_sources[2]",
+  "old_value": "R",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_honored": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never opened."
+  },
+  "independent_computation": {
+    "step_1_what_the_leaf_is": "timeline_coverage reports which damage sources in the fight carry authored (exact) event timing vs. coarse timing. data/worklists/e9-bis-a-task.md and e9-bis-b-task.md show the two sibling fields exact_sources / coarse_sources and treat them as a de-duplicated set of source names ('timeline_coverage complete==true, coarse_sources==[]'), with named source identifiers such as muramana_ability, proc_Eclipse, shaped_charge_Bastionbreaker. Champion contributions are identified by ability slot key.",
+    "step_2_syndras_slot_set": "data/champion-audit/batch-6.json records Syndra's module slots as exactly [P, Q, Q2, W, E, R], with the note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'. data/champion-audit/batch-e9-1.json repeats it: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'. So 'Q2' is not 'the second cast of Q' -- it is the module's named slot for Syndra's second Dark Sphere charge, gated on the Splinters-of-Wrath count.",
+    "step_3_the_gate_from_cached_wiki_text": "data/champions.json, Syndra Q (Dark Sphere), Transcendent Bonus: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' The scenario parameter is 60. 60 >= 40, therefore the second charge is stocked and the Q2 slot is live. Independently, 60 is exactly the next Splinter threshold in the same champion's kit -- data/champions.json Syndra W: 'Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage' -- which is what identifies the scenario's trailing '_60' as the splinters option (documented range 0-120 in data/champion-audit/batch-6.json), not a level (cap 20) or a fight length (corpus fight modes are spelled 'one_rotation' / 'time_based_10s' in data/practice-corpus/scenarios.json).",
+    "step_4_cross_check_that_60_is_the_splinter_count": "Recomputing the W 60-splinter bonus from the quoted prose at rank 5 with AP=0: magic 190, bonus true = 190 * (0.12 + 0.02*0/100) = 22.8, total = 212.8. The cached wiki leveling row 'Total Mixed Damage' for Syndra W is [78.4, 112, 145.6, 179.2, 212.8] -- rank 5 = 212.8, an exact match. The 60-splinter branch reproduces the cached numbers, confirming the threshold reading.",
+    "step_5_q2_is_a_damage_bearing_source_with_authored_timing": "Q2 fires a Dark Sphere, so it carries Q's sourced payload: data/champions.json Syndra Q 'Magic Damage' = [90, 125, 160, 195, 230] (+ 70% AP). Worked values at rank 5: AP=0 -> 230.0; AP=500 -> 230 + 0.70*500 = 580.0. Its event timing is also sourced rather than coarse: the same Q prose authors the impact delay -- 'conjures a Dark Sphere at the target location that appears after a 0.6-second delay'. A source with a sourced impact offset belongs in exact_sources, not coarse_sources.",
+    "step_6_index_arithmetic": "exact_sources is a deterministic (sorted, de-duplicated) list of source names; ASCII ordering gives 'Q' < 'Q2' < 'R' (ord Q=81, R=82; 'Q' is a proper prefix of 'Q2'). Lowercase item/auto source names (auto_attack, muramana_ability, ...) sort after all uppercase slot keys, so the head of the list is the ability slots. Without Q2 the damaging slots are {Q, W, E, R} -> sorted ['E', 'Q', 'R', 'W'] -> index 2 = 'R' (this reproduces the OLD leaf exactly). With Q2 live the slots are {Q, Q2, W, E, R} -> sorted ['E', 'Q', 'Q2', 'R', 'W'] -> index 2 = 'Q2' (this reproduces the NEW leaf exactly). The single difference between the two baselines is therefore the presence of the Q2 source, and the wiki gate says it must be present at 60 splinters.",
+    "step_7_ruling_out_both_wrong": "A third value at index 2 would require a source name sorting strictly between 'Q' and 'R' other than 'Q2' -- i.e. a 'Q3'. The cached wiki text caps the charge system at two spheres ('up to a maximum of 2'), so no Q3 slot can exist. Syndra's P is a mana/stat/AP-buff passive (its own Transcendence bonus needs 120 splinters and is inactive at 60), so it contributes no damage source. index 2 is therefore either 'R' or 'Q2', and the threshold decides it.",
+    "conclusion": "At splinters = 60 the 40-splinter Transcendent Bonus is satisfied, the second Dark Sphere charge exists, and the module's Q2 slot is a live, sourced, authored-timing damage source. It sorts between 'Q' and 'R', displacing 'R' from index 2 to index 3. The new value 'Q2' is correct; the old baseline omitted a source the cached wiki text says is active."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > Q (Dark Sphere) > effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds.",
+      "leveling": "Magic Damage = [90, 125, 160, 195, 230] (+ [70]% AP)"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > Q (Dark Sphere) > effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > W (Force of Will) > Transcendent Bonus effect",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "leveling": "Total Mixed Damage = [78.4, 112, 145.6, 179.2, 212.8] (+ AP terms) -- rank 5 = 212.8, matched by the independent recomputation"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > P (Transcendent)",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "role_in_argument": "confirms the 120 capstone is NOT active at 60, so P contributes no damage source"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra > module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R]; note: 'No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'; gap_summary: 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'; notable_atoms includes 'ammo (Q 2nd charge at 40 splinters)'"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "data/worklists/e9-bis-a-task.md",
+      "quote": "Verify with: /api/calculate (timeline_coverage complete==true, coarse_sources==[]) ... multi-part procs (blight_detonation) carry DamagePart(time_offset=...) so damage.py's _apply_post_hit_proc marks timing_is_authored and the timeline coverage goes exact.",
+      "role_in_argument": "establishes exact_sources / coarse_sources semantics: a source lands in exact_sources when its event timing is authored"
+    },
+    {
+      "file": "data/worklists/e9-bis-b-task.md",
+      "quote": "EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES in src/calculator/timeline_coverage.py: muramana_ability, proc_Eclipse, shaped_charge_Bastionbreaker - coarse sources with no authored event timing.",
+      "role_in_argument": "shows source identifiers are names in a set, and that non-ability sources are lowercase (they sort after uppercase slot keys)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.1, lines 59-68",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "role_in_argument": "the cast-order layer the scenario's 'custom_order' exercises; it schedules slots, it does not invent slot names"
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... a rotation resolver ... computes the fight's cast_order ... {order: [Q,E,E,E,...], rationale: ...}",
+      "role_in_argument": "confirms repeated casts of one ability are rendered as repeated slot keys (E,E,E), never renumbered into 'E2' -- so 'Q2' cannot mean 'the second Q cast'; it can only be Syndra's charge slot"
+    }
+  ],
+  "alternative_hypotheses_considered": [
+    {
+      "hypothesis": "'Q2' means the second cast of Q in a 60-second fight, and the scenario's '60' is a fight duration.",
+      "rejected_because": "data/worklists/f2-task.md shows repeat casts are emitted as repeated slot keys (order: [Q,E,E,E,...]), not renumbered; and data/champion-audit/batch-6.json fixes 'Q2' as a literal SLOTS key for the second Dark Sphere charge. Corpus fight modes are also spelled 'one_rotation' / 'time_based_10s' (data/practice-corpus/scenarios.json), not a bare '_60'."
+    },
+    {
+      "hypothesis": "exact_sources is in cast/event order rather than sorted, so index 2 depends on the unknown custom order.",
+      "rejected_as_load_bearing": "Under sorted-set semantics both the old and the new value are reproduced exactly with zero assumptions about the custom order (['E','Q','R','W'][2]='R'; ['E','Q','Q2','R','W'][2]='Q2'). A cast-order reading would additionally require the unknown custom order to place R third AND place Q2 immediately before it. Either way the substantive question is identical -- whether Q2 is a live source at 60 splinters -- and the wiki gate answers it the same way."
+    },
+    {
+      "hypothesis": "both_wrong (some third source belongs at index 2).",
+      "rejected_because": "only a name sorting strictly between 'Q' and 'R' could displace both, i.e. a 'Q3'; the cached Q prose caps the charge system at 'a maximum of 2'."
+    }
+  ],
+  "residual_uncertainty": "The scenario definition itself lives outside the permitted evidence tree (it is not in data/practice-corpus/scenarios.json), so the reading of the trailing '_60' as the splinters option is an inference. It is supported by three independent facts inside the tree: 60 is a documented Splinter threshold in Syndra's own cached wiki text, the audit records the splinters option's range as 0-120, and no other Syndra scenario parameter can take the value 60 (level cap is 20 and fight durations are named 'time_based_Ns'). If the scenario instead ran splinters below 40, the Q2 source would be spurious and the verdict would invert -- but nothing in the evidence tree supports that reading.",
+  "committed": false
+}

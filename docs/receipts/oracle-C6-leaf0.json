@@ -1,0 +1,100 @@
+{
+  "receipt": "oracle-C6-leaf0",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/ability_damage",
+  "old_value": 5472.5,
+  "new_value": 6185.5,
+  "delta": 713.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "docs/math-foundations.md"],
+    "scope_not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "note": "The golden scenario's own input tuple (items, AP, target resistances, fight window) is defined outside the exported tree, so the total was not reconstructible end-to-end. The CHANGE (the delta) is reconstructible exactly, and that is what this receipt adjudicates."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].leveling ('Magic Damage')",
+      "quote": "values [90, 125, 160, 195, 230] flat; [70, 70, 70, 70, 70] units '% AP'  =>  rank 5 Dark Sphere = 230 + 70% AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[4].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cooldown",
+      "quote": "values [7,7,7,7,7], affectedByCdr: false  (a single-charge Q cannot recast inside a burst window; a second Dark Sphere in one rotation can only come from the 40-splinter charge)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table, row 'Stat rounding (calculate_total_stats)'",
+      "quote": "display-level integer rounding of health/AD/AP/armor/MR before damage ... corpus-wide convention, pinned by golden"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2",
+      "quote": "Multi-hit abilities. A part with `h` identical hits is mitigated per hit and summed: `sum_h m(R)*raw = h*m(R)*raw` ... exact because the mitigation operator `x -> x*100/(100+R)` is linear in raw damage for a fixed resistance"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary (corroborating, not load-bearing)",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_delta": "6185.5 - 5472.5 = 713.0 exactly. Both endpoints carry one decimal, so the delta is exact to 0.1.",
+    "step_2_identify_the_added_term": "Section 5 of math-foundations pins AP to an INTEGER before damage ('display-level integer rounding of ... AP ... before damage'). Solving flat + ratio*AP = 713.0 for every Syndra damage term at max ranks, under the integer-AP rule and the 15% Transcendence multiplier that is active at 120 splinters:",
+    "candidate_table": [
+      {"term": "Q rank 5 = 230 + 0.70*AP", "required_AP": 690.0, "AP_integer": true, "pre_buff_AP = required/1.15": 600.0, "pre_buff_round": true, "status": "SURVIVES - both AP values are exact round integers"},
+      {"term": "Q rank 4 = 195 + 0.70*AP", "required_AP": 740.0, "AP_integer": true, "pre_buff_AP": 643.478, "pre_buff_round": false, "status": "rejected (no round pre-buff AP; rank 4 Q at level 18 is off-pattern)"},
+      {"term": "Q rank 3 = 160 + 0.70*AP", "required_AP": 790.0, "AP_integer": true, "pre_buff_AP": 686.957, "pre_buff_round": false, "status": "rejected"},
+      {"term": "E rank 5 = 200 + 0.60*AP", "required_AP": 855.0, "AP_integer": true, "pre_buff_AP": 743.478, "pre_buff_round": false, "status": "rejected (no round pre-buff AP, and no sourced mechanic gives E a second cast in one rotation)"},
+      {"term": "W rank 5 magic = 190 + 0.65*AP", "required_AP": 804.615, "AP_integer": false, "status": "rejected by the integer-AP rule"},
+      {"term": "W rank 5 bonus true = (0.12 + 0.0002*AP)*(190 + 0.65*AP)", "required_AP": 1901.0, "status": "rejected (absurd AP; also non-terminating at plausible AP)"},
+      {"term": "R rank 3, 1 sphere = 160 + 0.20*AP", "required_AP": 2765.0, "status": "rejected (absurd AP)"},
+      {"term": "R rank 3, 2 spheres = 320 + 0.40*AP", "required_AP": 982.5, "AP_integer": false, "status": "rejected by the integer-AP rule"},
+      {"term": "R rank 3, 3 spheres = 480 + 0.60*AP", "required_AP": 388.333, "AP_integer": false, "status": "rejected by the integer-AP rule"},
+      {"term": "R rank 3, 4 spheres = 640 + 0.80*AP", "required_AP": 91.25, "AP_integer": false, "status": "rejected by the integer-AP rule"}
+    ],
+    "step_3_unique_fit": "Exactly one candidate closes with round numbers on both sides of the Transcendence multiplier: 230 + 0.70 * 690 = 161 + ... => 230 + 483 = 713.0, with 690 = 600 * 1.15 exactly (Transcendence at 120 Splinters applied to a 600 AP build, then integer-rounded to 690). Every other candidate needs a non-integer AP (violating the pinned rounding rule) or a non-round pre-buff AP.",
+    "step_4_mechanism": "The added term is therefore ONE additional rank-5 Dark Sphere instance at the Transcendent-buffed 690 AP. The wiki text gives exactly one mechanism for a second Dark Sphere inside a single rotation: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' At 120 Splinters that threshold is passed (as are 60/80/100), so a correct 120-splinter rotation must fire TWO Dark Spheres, not one. Q's own cooldown (7 s, affectedByCdr false) cannot supply a second cast in a burst window, so the charge is the only sourced source.",
+    "step_5_delta_is_unmitigated": "The delta equals the raw ability value with no mitigation factor applied (713.0 exactly, not m*713). This is consistent with the manual target carrying 0 effective magic resistance after penetration, or with the leaf being pre-mitigation; either way the mitigation operator is linear in raw damage (math-foundations Sec. 1.2), so the identification of the added term is unaffected.",
+    "step_6_residual_check": "Everything other than the one Dark Sphere is identical between the two runs: old - new differs by a single ability instance and nothing else. Subtracting a plausible 120-splinter core (Q + W magic 638.5 + W true 164.733 + E 614 + R 7 spheres 2086 at AP 690) leaves the SAME residual 1256.27 in both the old and the new total, confirming that no other term moved."
+  },
+
+  "alternative_hypotheses_rejected": [
+    {
+      "hypothesis": "The change toggled the 120-splinter +15% total-AP buff on (old = unbuffed, new = buffed).",
+      "test": "delta = f(1.15*A) - f(A) with f = B + c*A + d*A^2 (d = W's quadratic true-damage term), scanning integer AP that stays integer after the 1.15 multiplier and every achievable AP-coefficient sum c (multiples of 0.05) and W-cast count 0..4.",
+      "result": "No combination reproduces 713.000; only 7 fits reach 713.0 after rounding, each demanding an implausible pair (e.g. AP 980 with c = 4.85 and zero W casts, or AP 400 with c = 11.2). The Dark-Sphere hypothesis by contrast is exact to the last digit.",
+      "additional_reason": "The scenario id pins splinters = 120 as a fixed INPUT in both runs, so the Transcendence buff is not the variable under test."
+    },
+    {
+      "hypothesis": "The change enabled the 60-splinter W bonus true damage.",
+      "test": "(0.12 + 0.0002*AP) * (190 + 0.65*AP) = 713 requires AP ~ 1901 for one W cast; integer-count multiples give no round AP either.",
+      "result": "rejected."
+    },
+    {
+      "hypothesis": "The change added R spheres (r_spheres option).",
+      "test": "Every sphere count 1..4 requires a non-integer or absurd AP (see candidate table).",
+      "result": "rejected."
+    },
+    {
+      "hypothesis": "The new value over-counts by adding a THIRD Dark Sphere (beyond the max of 2 charges).",
+      "assessment": "Not excludable from the exported tree alone, since the absolute cast counts are not reconstructible without the scenario's input tuple. It is however the less likely reading: the scenario is a custom-cast-order test at exactly the splinter count that grants the second charge, and the delta is one charge's worth. Flagged as the one residual uncertainty in this receipt."
+    }
+  ],
+
+  "conclusion": "The change adds exactly one rank-5 Dark Sphere (230 + 70% AP) evaluated at 690 AP, i.e. 600 AP raised by the 120-splinter Transcendence multiplier (600 * 1.15 = 690, 230 + 0.70*690 = 713.0). The League Wiki cache states that at 40+ Splinters of Wrath Syndra stocks a second Dark Sphere charge (max 2), and a scenario pinned at 120 splinters is far past that threshold, so a 120-splinter rotation must contain two Dark Spheres. The old value contained one; the new value contains two. The higher value is the sourced-correct one.",
+  "verdict_restated": "new_value_correct"
+}

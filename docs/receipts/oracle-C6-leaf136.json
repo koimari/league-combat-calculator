@@ -1,0 +1,96 @@
+{
+  "receipt": "oracle-C6-leaf136",
+  "runbook": "R-18 / R-19 (independent oracle; blind to diff, plan, src/, tests/, scripts/, git history)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/timeline_coverage/exact_sources[4]",
+  "old_value": "proc_Luden's Echo",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json (Syndra)", "data/items.json (6655 Luden's Echo)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e9-bis-b-task.md", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_0_what_the_leaf_is": "`exact_sources` is the timeline-coverage receipt's list of damage sources that carry authored (exact) event timing, as opposed to `coarse_sources`. data/worklists/e9-bis-b-task.md names three coarse members verbatim -- `muramana_ability`, `proc_Eclipse`, `shaped_charge_Bastionbreaker` -- establishing the label grammar: champion sources are bare uppercase ability-slot keys, item sources are lowercase-prefixed (`proc_<exact cached item name>`, `shaped_charge_<item>`, `muramana_ability`). data/items.json id 6655 has name exactly \"Luden's Echo\", so `proc_Luden's Echo` follows that convention.",
+
+    "step_1_list_is_lexicographically_sorted": "A set-derived coverage list. Under Python/ASCII ordering every bare uppercase slot key (E=69, Q=81, R=82, W=87) precedes every lowercase-initial label (auto_attack a=97, proc_... p=112). The observed old/new pair is exactly the adjacency this predicts: `W` and `proc_Luden's Echo` neighbouring at indices 4-5. The first-appearance-order alternative is ruled out on mechanism: Luden's Echo fires on the FIRST instance of ability damage (see step 3), so under chronological ordering it would occupy index 0 or 1, never index 4.",
+
+    "step_2_syndra_damage_source_set": "data/champion-audit/batch-6.json, Syndra: module_slots.modeled = [P, Q, Q2, W, E, R], note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.' data/champion-audit/batch-e9-1.json confirms all five wiki slots modeled. P is therefore NOT a damage source -- data/champions.json Syndra P 'Transcendent' grants Splinters of Wrath, mana (20:255 by level) and, at 120 splinters, +15% AP; it authors no damage row. Damage-emitting sources = {Q, Q2, W, E, R}.",
+
+    "step_3_the_scenario_suffix_60_is_60_splinters": "data/champions.json Syndra thresholds, quoted below: Q 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'; W 'Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage'; E 80 splinters (slow, utility); R 100 splinters (execute); P 120 splinters (+15% AP). The Syndra module exposes a splinters option 0-120 (batch-e9-1: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'). At splinters = 60 the 40-splinter threshold is passed, so the second Dark Sphere charge is stocked and the synthetic Q2 slot casts; the 80/100/120 thresholds are not.",
+
+    "step_4_sorted_reconstruction": {
+      "champion_sources_at_60_splinters": ["E", "Q", "Q2", "R", "W"],
+      "item_source": "proc_Luden's Echo (Luden's Echo passive 'Echo', 12 s cooldown, consumes 6 stacks on ability damage -- data/items.json 6655)",
+      "sorted": ["E", "Q", "Q2", "R", "W", "proc_Luden's Echo"],
+      "indices": {"0": "E", "1": "Q", "2": "Q2", "3": "R", "4": "W", "5": "proc_Luden's Echo"},
+      "note_on_autos": "Any auto-attack label ('auto_attack', 'basic_attack') is lowercase-initial and sorts after 'W', so it cannot occupy index 4. It would only push proc_Luden's Echo further right.",
+      "result": "exact_sources[4] = \"W\""
+    },
+
+    "step_5_what_the_old_value_implies": "proc_Luden's Echo at index 4 requires exactly four labels sorting before it and, since no lowercase label may precede it there, exactly four uppercase slot keys and no auto label. That is one champion source short of the {E, Q, Q2, R, W} set the 60-splinter configuration must emit. The single most likely omission is Q2 -- the second Dark Sphere charge that the scenario's '60' (>= the 40 threshold) exists to exercise; the arithmetic is identical if instead W itself was the missing exact source. Either way the old list under-covered the timeline by one champion source, and the corrected list places W at index 4.",
+
+    "cross_check_math_foundations": "docs/math-foundations.md does not name exact_sources, but two rows of the Section-5 audit table pin the mechanism the fix rests on: 'Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT', and Section 1.1 'Ability recasts are scheduled on one shared timeline ... a cast counts when it starts within the window' -- i.e. every ability cast that starts in the window is an authored, exactly-timed event, so a stocked second Q charge cast in-window owes an exact source entry rather than being dropped. Nothing in the document licenses omitting a cast ability from exact timing."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] leveling",
+      "quote": "Magic Damage 70/100/130/160/190 (+65% AP); cooldown 12/11/10/9/8, affectedByCdr true; damageType MAGIC_DAMAGE -- W is unambiguously a damage-emitting source."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities ... Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%. (no damage row -> P is not an exact_source)"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R]; note: 'No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "data/items.json",
+      "path": "6655",
+      "quote": "name: \"Luden's Echo\"; passive \"Echo\", unique, cooldown 12: 'Gain 6 Echo stacks. Dealing ability damage to an enemy consumes all Echo stacks to deal 75 magic damage (+ 5% AP) bonus magic damage...' -- fires on the first ability-damage instance, hence never a late first-appearance."
+    },
+    {
+      "file": "data/worklists/e9-bis-b-task.md",
+      "path": "line 7",
+      "quote": "Bastionbreaker, Eclipse, Muramana - explicitly-audited timing exclusions (EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES in src/calculator/timeline_coverage.py: muramana_ability, proc_Eclipse, shaped_charge_Bastionbreaker - coarse sources with no authored event timing). [establishes the exact_sources/coarse_sources split and the lowercase item-label grammar]"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1 / Section 5 table row 'Ability rotation casts'",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). ... | shared-timeline renewal schedule; cast starts within window | EXACT"
+    }
+  ],
+
+  "confidence": {
+    "level": "high",
+    "load_bearing_assumption": "exact_sources is lexicographically sorted (supported by the W / proc_Luden's Echo adjacency, the label grammar, and the mechanism-based exclusion of chronological ordering for a 12 s first-ability-damage proc).",
+    "would_flip_if": "the list were ordered by first event time, or a build-side source with an uppercase-initial label (e.g. a rune named without a lowercase prefix) sorted before 'E'. Neither is consistent with the observed old value, which requires exactly four uppercase-initial predecessors and no auto label."
+  },
+
+  "verdict_statement": "At splinters = 60 the correct Syndra source set is {E, Q, Q2, R, W} plus the lowercase-prefixed proc_Luden's Echo; sorted, index 4 is 'W'. The old value 'proc_Luden's Echo' at index 4 implies one champion damage source (most plausibly the 40-splinter Q2 second charge, the very mechanic this scenario's '60' exercises) was missing from exact timing.",
+  "committed": false
+}

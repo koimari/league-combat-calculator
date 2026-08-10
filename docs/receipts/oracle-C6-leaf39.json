@@ -1,0 +1,115 @@
+{
+  "receipt_id": "oracle-C6-leaf39",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[5]/damage",
+  "old_value": 894.0,
+  "new_value": 614.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_honored": "Only data/ and docs/math-foundations.md from the export were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never opened."
+  },
+
+  "reconstruction_of_the_scenario": {
+    "method": "The scenario definition is not reachable from the permitted export, so the fight configuration was solved for from the two candidate leaf values themselves, using only sourced Syndra rows from data/champions.json.",
+    "search": "Every sourced Syndra damage row (Q/W/E per rank, R per-sphere x 1..7 spheres, R Minimum, R Maximum per rank) was inverted for the ability power that makes 894.0 exact, and likewise for 614.0, then intersected. Exactly two AP values admit both numbers; one of them (AP = 38.571) requires R to change rank between the old and the new snapshot of the same scenario and is therefore rejected. The surviving solution is AP = 690.0.",
+    "solved_configuration": {
+      "total_ability_power": 690.0,
+      "pre_buff_ability_power": 600.0,
+      "transcendence_multiplier": 1.15,
+      "why_it_matches_the_scenario_name": "690 = 600 x 1.15. The '120' in 'syndra_custom_order_120' is the Splinters of Wrath option at its cap, which is exactly the threshold at which P Transcendent grants +15% ability power. The scenario name and the solved AP agree independently.",
+      "ability_ranks": "E rank 5 and R rank 3 (co-existing from level 16 upward), consistent with a max-level fight",
+      "effective_magic_resistance_at_the_event": 0.0,
+      "mitigation_multiplier": 1.0,
+      "how_mitigation_was_pinned": "docs/math-foundations.md 2.1 gives m(R) = 100/(100+R), linear in raw damage. The observed difference 894.0 - 614.0 = 280.0 equals the difference of the two rows' flat bases (480 - 200 = 280) with no scaling, so m = 1 exactly; the manual target is unmitigated (0 effective MR after penetration)."
+    }
+  },
+
+  "independent_computation": {
+    "candidate_for_the_new_value": {
+      "identity": "E - Scatter the Weak, rank 5",
+      "sourced_row": "Magic Damage = 200 (+ 60% AP) at rank 5",
+      "arithmetic": "200 + 0.60 x 690.0 = 200 + 414.0 = 614.0",
+      "post_mitigation": "614.0 x 100/(100+0) = 614.0",
+      "result": 614.0,
+      "matches_new_value": true
+    },
+    "candidate_for_the_old_value": {
+      "identity": "R - Unleashed Power, rank 3, fired with the minimum 3 spheres",
+      "sourced_row": "Magic Damage per Sphere = 160 (+ 20% AP) at rank 3; Minimum Magic Damage = 480 (+ 60% AP)",
+      "arithmetic": "per sphere 160 + 0.20 x 690.0 = 298.0; 3 spheres -> 3 x 298.0 = 894.0, which reproduces the wiki's Minimum row 480 + 0.60 x 690.0 = 894.0",
+      "post_mitigation": "894.0 x 100/(100+0) = 894.0",
+      "result": 894.0,
+      "matches_old_value": true
+    },
+    "key_finding": "Both numbers are arithmetically correct sourced Syndra rows at the same solved configuration, but they belong to DIFFERENT abilities. At AP = 690 the value 614.0 is uniquely E rank 5 (no R sphere count yields 614: the sphere quantum is 298, giving 298/596/894/1192/...), and 894.0 is uniquely R at 3 spheres (no E rank yields 894: the E ladder at this AP is 474/509/544/579/614). Therefore the leaf did not change by an arithmetic correction - the damage-event ledger was re-ordered (or an event was inserted/removed ahead of index 5), so slot 5 now holds a different ability.",
+    "which_ordering_is_right": {
+      "default_slot_order": "data/champion-audit/batch-6.json records the Syndra module's modeled slots as [P, Q, Q2, W, E, R] - i.e. the default emission order ends Q, Q2, W, E, R, with R last.",
+      "old_ledger_is_the_default_order": "With 120 splinters the W row splits into its magic and its 60-splinter true-damage part, giving six ability damage events in the default order Q, Q2, W-magic, W-true, E, R. Under that order index 5 is R = 894.0 - exactly the old value. The old snapshot is bit-for-bit what you get when the scenario's custom ordering is NOT applied and the module's default slot order is used instead.",
+      "new_ledger_is_a_non_default_order": "The new value places E at index 5, i.e. the ledger no longer ends on R. That is only reachable when the ordering actually differs from the module default - which is precisely what a scenario named 'custom_order' is built to exercise.",
+      "conclusion": "A scenario whose entire purpose is a custom (non-default) ability order should not reproduce the default order's ledger. The old snapshot did; the new one does not. The new value is the one consistent with the scenario's own premise, and 614.0 is an exactly sourced E rank-5 number at the scenario's AP.",
+      "residual_uncertainty": "The scenario's explicit cast order is not visible from the permitted export, so the ordering argument rests on (a) the recorded default slot order [P, Q, Q2, W, E, R] and (b) the scenario name. Every alternative mechanism that could produce this shift - honoring a previously-ignored custom order, dropping a spurious event ahead of index 5, or inserting a legitimate missing event ahead of index 5 - points the same way. The only reading that would favour the old value is a regression that inserted a spurious event, for which nothing in the permitted evidence gives support."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak), effects[0].leveling 'Magic Damage'",
+      "quote": "Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit ... values [60, 95, 130, 165, 200], units ['','','','',''] ; values [60, 60, 60, 60, 60], units ['% AP', ...]",
+      "used_for": "E rank 5 = 200 + 60% AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1] (Unleashed Power), effects[1].leveling",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones ... each dealing magic damage upon hit. 'Magic Damage per Sphere' values [80, 120, 160] + [20, 20, 20] % AP ; 'Minimum Magic Damage' values [240, 360, 480] + [60, 60, 60] % AP ; 'Maximum Magic Damage' values [560, 840, 1120] + [140, 140, 140] % AP",
+      "used_for": "R rank 3 with the minimum 3 spheres = 3 x (160 + 20% AP) = 480 + 60% AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[2] (Transcendent)",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "used_for": "total AP = 600 x 1.15 = 690, and the meaning of the '120' in the scenario name"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0] (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.",
+      "used_for": "confirming 120 is the cap of the splinters option"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (Force of Will), 'Transcendent Bonus'",
+      "quote": "Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "used_for": "establishing that at 120 splinters W contributes two damage events (magic + true), which fixes the six-event ledger length used in the ordering argument"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "\"module_slots\": {\"modeled\": [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ...} ... \"R reads 'Magic Damage per Sphere' x user-set sphere count\" ... \"P = 120-splinter +15% total AP BUFF\"",
+      "used_for": "the module's default slot order (R last), and confirmation that R is priced as per-sphere x sphere count rather than as a fixed Minimum row"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).",
+      "used_for": "confirming the splinters option semantics and the existence of the Q2 slot at 40+ splinters"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1 'The 100/(100+R) identity'",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py)",
+      "used_for": "pinning the mitigation multiplier at exactly 1.0 from the observed difference 894 - 614 = 280 = 480 - 200"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2 'Linearity of expectation for multi-hit abilities'",
+      "quote": "A part with h identical hits is mitigated per hit and summed: sum_h m(R)*raw = h*m(R)*raw (_mitigate_hits). This is exact because the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance.",
+      "used_for": "justifying that R's 3 spheres may be summed into one 894.0 event without changing the post-mitigation total"
+    }
+  ],
+
+  "verification_arithmetic": {
+    "total_ap": "600.0 * 1.15 = 690.0",
+    "E_rank5": "200 + 0.60 * 690.0 = 614.0",
+    "R_rank3_per_sphere": "160 + 0.20 * 690.0 = 298.0",
+    "R_rank3_three_spheres": "3 * 298.0 = 894.0",
+    "cross_check_against_wiki_minimum_row": "480 + 0.60 * 690.0 = 894.0 (identical)",
+    "difference_check": "894.0 - 614.0 = 280.0 = 480 - 200, so the mitigation multiplier is exactly 1",
+    "uniqueness_at_this_ap": "E ladder at AP 690 = {474, 509, 544, 579, 614}; R sphere ladder at rank 3 = {298, 596, 894, 1192, 1490, 1788, 2086}. 614 is E-only; 894 is R-only."
+  }
+}

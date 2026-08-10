@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-C6-leaf30",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[7]",
+  "old_value": "<absent> (cast timeline had only 7 entries; no third Dark Sphere)",
+  "new_value": {
+    "name": "Dark Sphere",
+    "ordinal": 3,
+    "resource_after": 1273.2,
+    "note": "remaining fields of the leaf were not supplied to the oracle and were not evaluated"
+  },
+  "verdict": "new_value_correct",
+
+  "evidence_isolation": {
+    "method": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "%LOCALAPPDATA%/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "note": "The scenario definition (champion level, build, ability haste, fight window, cast order) does not live under data/. Both claims below were therefore established from cached wiki text plus the quoted formulas, and the numeric claim was closed by solving the model lattice for which (level, fight time) can even represent 1273.2."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0]",
+      "text": "cost.modifiers[0].values = [40, 45, 50, 55, 60]; cooldown.modifiers[0].values = [7,7,7,7,7] (affectedByCdr: false); rechargeRate = [7,7,7,7,7]; castTime: \"none\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "text": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[2].description",
+      "text": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%. (fixes the scenario suffix `_120` as the splinter count: 120 is simultaneously the stack cap and the capstone threshold, and 120 >= the 40 needed for Dark Sphere charges)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[1]",
+      "text": "Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana. Per-level values [20,25,30,35,40,48,56,64,72,80,95,110,125,140,155,175,195,215,235,255] -> 215 at level 18. All integers."
+    },
+    {
+      "source": "data/champions.json -> Syndra.stats",
+      "text": "mana = {flat: 480, perLevel: 40}; manaRegen = {flat: 8, perLevel: 0.8}"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table (Stat growth row)",
+      "text": "Stat growth (`growth_stat`) | `base + growth·(L−1)·(0.7025 + 0.0175·(L−1))` | EXACT | Level cap 20"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1",
+      "text": "Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...`"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 (Ability haste row)",
+      "text": "Ability haste (`effective_cooldown`) | `cd' = cd·100/(100+AH)` | EXACT | R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "source": "data/items.json (scan of stats.mana)",
+      "text": "Every item's mana bonus is an integer flat value; no item in the cache has mana.perLevel, mana.percent, mana.percentPerLevel, mana.percentBase or mana.percentBonus. The 600-mana AP items are Blackfire Torch, Archangel's Staff, Malignance, Luden's Echo, Crown of the Shattered Queen, Everfrost, Detonation Orb. Larger pools: Seraph's Embrace / Muramana / Fimbulwinter / Diadem of Songs = 1000."
+    }
+  ],
+
+  "independent_computation": {
+    "claim_1_the_entry_should_exist": {
+      "question": "Should the cast timeline contain a THIRD Dark Sphere at all?",
+      "derivation": [
+        "The scenario suffix `_120` is the Splinters-of-Wrath count (P: stacks 'up to 120 times'; 'At 120 Splinters of Wrath, Syndra achieves Transcendence').",
+        "120 >= 40, so the sourced Q Transcendent Bonus is active: Dark Sphere stocks charges 'up to a maximum of 2', with rechargeRate = 7 s.",
+        "Charge model over a window T (docs 1.1: a cast counts when it starts within the window): 2 charges are available at t = 0, a third arrives one recharge later, i.e. at t = 7 s. Casts startable in [0, 10) = 3.",
+        "No-charge model (Q as a plain 7 s cooldown ability, cast epochs 0, c, 2c, ...): casts startable in [0, 10) = {0, 7} = 2.",
+        "Delta between the two models over a 10 s window is exactly +1 Dark Sphere, and the added one is the third. This is precisely the observed leaf change (a new entry named 'Dark Sphere' with ordinal 3)."
+      ],
+      "conclusion": "A third Dark Sphere is mandated by the cached wiki text for a 120-splinter Syndra. The old state (absent) is what a model that ignores the 2-charge Transcendent Bonus produces."
+    },
+    "claim_2_the_resource_value": {
+      "question": "Is resource_after = 1273.2 the right remaining mana?",
+      "step_1_pool": "Max mana(L) = 480 + 40·(L−1)·(0.7025 + 0.0175·(L−1))  [quoted growth formula]. L=18 -> 1160.0 exactly; L=19 -> 1212.6; L=20 -> 1266.6. Fractional parts across L=1..20 are only {.0, .6, .8} — never .2. Item mana is integer-only (items.json scan), ability costs are integers (40/45/50/55/60, 60..100, 50, 100), and the splinter mana restore is an integer (215 at L18). So the observed .2 must come from the one non-integer term in the resource ledger: base mana regeneration, manaRegen(L) = 8 + 0.8·(L−1)·(0.7025+0.0175·(L−1)) per 5 s.",
+      "step_2_lattice_solve": "Solve 1273.2 = max_mana(L) + (manaRegen(L)/5)·t + integer, over L = 1..20 and t = 0, 0.5, ..., 30 s. Solutions: L=1 (degenerate — rules out: a level-1 Syndra cannot have 120 splinters, which require ability rank-ups and champion-damage collections, nor 8 casts), and otherwise ONLY L=18 at t = 10.0 s (integer residual 70) and L=18 at t = 22.5 s (residual 16). No level-19 or level-20 solution exists at any half-second fight time ≤ 30 s.",
+      "step_3_closure": "Take the unique canonical solution, L=18 with a 10.0 s timed fight: 1160.0 (base mana, L18) + 600 (one 600-mana AP item — Luden's Echo / Malignance / Blackfire Torch / Archangel's Staff / Everfrost / Crown / Detonation Orb all carry exactly 600) + 43.2 (mana regen: 21.6 per 5 s at L18 = 4.32/s × 10 s) − 530 (mana spent over the 8 casts) = 1273.2. Exact.",
+      "step_4_spend_consistency": "530 − 3×60 (three Dark Spheres at rank 5) = 350, a multiple of 50 — consistent with the remaining casts being drawn from Force of Will (60/70/80/90/100), Scatter the Weak (50) and Unleashed Power (100, and docs Section 5: 'R casts exactly once per timed fight'). Conversely, crediting a 215-mana splinter restore inside the window would force a spend of 745, whose residual above the three Q casts (565) is not a multiple of 50 and is therefore unreachable from Syndra's cost table — so the ledger correctly credits no in-window splinter restore, which matches the passive's gating ('cannot occur on the same target more than once every few seconds', onTargetCdStatic 8).",
+      "step_5_decrement": "The entry is a Dark Sphere at rank 5 (cost 60 at level 18), so the timeline must show resource_after = resource_before − 60, i.e. a pre-cast value of 1333.2. Internally consistent; no contradiction available in the cached data.",
+      "convergence": "Two independent lines land on the same window: the fractional-part/lattice solve pins a 10.0 s fight at level 18, and the sourced 2-charge + 7 s recharge mechanic yields exactly 3 Dark Spheres in [0, 10) versus 2 without charges. The leaf's ordinal (3) and its resource_after (1273.2) are mutually consistent under one and the same parameterization."
+    }
+  },
+
+  "what_could_not_be_closed": [
+    "The scenario's own definition (level, item set, ability haste, cast order, fight length) lives outside data/ and was deliberately not read, so the level-18 / 600-mana-item / 10.0 s reconstruction is inferred from the value's position on the model lattice rather than read off the scenario.",
+    "The leaf's unquoted fields (elided as '...' in the question) were not evaluated.",
+    "Syndra Q carries cooldown.affectedByCdr = false in the cache. That flag is the wiki's convention for ammo/charge abilities (8 of the 55 false-flagged entries in champions.json are recharge abilities: Syndra Q, Gangplank E, Amumu Q, Ivern W, Milio E, Nilah E, Vel'Koz W, Vi E; the rest are passives with static internal cooldowns). Whether the engine haste-scales the 7 s recharge could change the Dark Sphere count for a haste-heavy build, but it cannot remove the third sphere: at zero haste the charge model already yields 3 in a 10 s window."
+  ],
+
+  "verdict_rationale": "The added entry is exactly the cast that the cached Q Transcendent Bonus (2 stocked charges at >= 40 splinters, 7 s recharge) requires of a 120-splinter Syndra over a 10 s fight, and its resource_after reproduces to the digit under the one level/fight-time pair on which 1273.2 is representable at all (level 18, t = 10.0 s: 1160.0 + 600 + 43.2 − 530 = 1273.2). The old state — no third Dark Sphere — is the signature of a plain 7 s-cooldown Q, which contradicts the cached wiki text for this scenario.",
+  "committed": false
+}

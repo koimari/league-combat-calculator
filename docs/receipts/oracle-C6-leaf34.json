@@ -1,0 +1,82 @@
+{
+  "receipt_id": "oracle-C6-leaf34",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[3]/damage",
+  "old_value": 164.7,
+  "new_value": 638.5,
+  "verdict": "new_value_correct",
+  "confidence": "moderate-high",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-mechanics.json", "data/worklists/e3-stacks.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[1] (Unleashed Power, Active)",
+      "text": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "leveling": {
+        "Magic Damage per Sphere": "80 / 120 / 160 (+ 20% AP)",
+        "Minimum Magic Damage (3 spheres)": "240 / 360 / 480 (+ 60% AP)",
+        "Maximum Magic Damage (7 spheres)": "560 / 840 / 1120 (+ 140% AP)"
+      }
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P (Transcendent)",
+      "text": "Innate: Syndra collects Splinters of Wrath ... stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "note": "Pins the meaning of the '120' in the scenario id: the max-splinter (Transcendence) variant of the Syndra module's splinter option."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q / W / E leveling",
+      "text": "Q Dark Sphere 90/125/160/195/230 (+70% AP); W Force of Will 70/100/130/160/190 (+65% AP), 60-splinter bonus true damage 12% (+2% per 100 AP); E Scatter the Weak 60/95/130/165/200 (+60% AP)"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "text": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 2.1",
+      "text": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py); post = raw * m(R)"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2 (multi-hit abilities)",
+      "text": "A part with h identical hits is mitigated per hit and summed: sum_h m(R)*raw = h*m(R)*raw ... exact because the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 (formula-audit table)",
+      "text": "Stat rounding (calculate_total_stats): display-level integer rounding of health/AD/AP/armor/MR before damage."
+    }
+  ],
+  "method": {
+    "limitation": "The golden scenario's own configuration (level, item/AP total, target resistances, the custom cast order) lives in scripts/ and tests/, which this runbook forbids reading. The exported data/ tree contains no scenario tuple for 'syndra_custom_order_120' (checked data/practice-corpus/scenarios.json and every data/worklists/* file). A direct forward evaluation is therefore not available; the computation below is a constraint solve: both the old and the new leaf must be Syndra damage events produced by ONE configuration (same effective AP A, same post-penetration MR, hence the same mitigation multiplier m = 100/(100+MR)).",
+    "constraint": "new/old = 638.5 / 164.7 = 3.87675. Because m cancels, this fixes the ratio of the two RAW ability rows.",
+    "search": "Enumerated every Syndra damage row from the cached wiki leveling arrays (Q ranks 1-5, W magic ranks 1-5, E ranks 1-5, R ranks 1-3 x 1..7 spheres), solved each ordered pair for the AP value that reproduces the ratio 3.87675, and kept solutions with AP >= 0 and 0.2 <= m <= 1 (MR >= 0). Repeated the sweep with the 120-splinter +15% AP buff applied to the post-fix side only."
+  },
+  "independent_computation": {
+    "result": "In EVERY self-consistent solution, the larger value (638.5) is an Unleashed Power multi-sphere barrage and the smaller value (164.7) is a single Q/W/E nuke (or a single sphere). No solution exists in the other direction.",
+    "level_18_solutions_all_ranks_max": [
+      {"old_row": "E rank 5 (200 + 60% AP)", "new_row": "R rank 3 x 5 spheres", "effective_AP": 18.6, "MR_eff": 28.2},
+      {"old_row": "W rank 5 magic (190 + 65% AP)", "new_row": "R rank 3 x 5 spheres", "effective_AP": 41.7, "MR_eff": 31.8},
+      {"old_row": "Q rank 5 (230 + 70% AP)", "new_row": "R rank 3 x 6 spheres", "effective_AP": 45.2, "MR_eff": 58.8},
+      {"old_row": "E rank 5 (200 + 60% AP)", "new_row": "R rank 3 x 6 spheres", "effective_AP": 164.0, "MR_eff": 81.2},
+      {"old_row": "W rank 5 magic (190 + 65% AP)", "new_row": "R rank 3 x 6 spheres", "effective_AP": 169.3, "MR_eff": 82.2},
+      {"old_row": "Q rank 5 (230 + 70% AP)", "new_row": "R rank 3 x 7 spheres", "effective_AP": 173.8, "MR_eff": 113.5},
+      {"old_row": "E rank 5 (200 + 60% AP)", "new_row": "R rank 3 x 7 spheres", "effective_AP": 372.2, "MR_eff": 157.0}
+    ],
+    "worked_example_the_only_integer_AP_solution": {
+      "config": "level 18 (Q5/W5/E5/R3), effective AP = 164 (i.e. 143 base AP x 1.15 Transcendence, rounded per the stat-rounding convention), post-penetration MR = 81.18",
+      "old_leaf_as_E": "raw = 200 + 0.60 x 164 = 298.4 ; m = 100/(100+81.18) = 0.551944 ; 298.4 x 0.551944 = 164.70",
+      "new_leaf_as_R": "per sphere = 160 + 0.20 x 164 = 192.8 ; 6 spheres (3 conjured + 3 grabbed, inside the wiki's 3..7 band) = 1156.8 raw ; 1156.8 x 0.551944 = 638.49 -> 638.5",
+      "cross_check_against_wiki_rows": "at AP 164 the wiki's own R rank-3 aggregate rows are min (3 spheres) 480 + 60% AP = 578.4 and max (7 spheres) 1120 + 140% AP = 1349.6; the 1156.8 raw used above lies inside that band, as it must."
+    },
+    "exclusion_bounds": {
+      "164.7_cannot_be_the_R_barrage": "The smallest possible rank-3 Unleashed Power barrage is the wiki's Minimum Magic Damage row, 480 + 60% AP, i.e. >= 480 raw at 0 AP. Post-mitigation 164.7 then demands m <= 0.3431, i.e. post-penetration MR >= 191.4 - outside any ordinary Summoner's Rift target. So 164.7 is not a well-formed Unleashed Power value for a level-18 (rank 3) Syndra.",
+      "638.5_cannot_be_a_single_nuke_in_the_same_config": "As a single nuke, 638.5 post-mitigation needs raw >= 638.5 even at MR = 0: E rank 5 would need AP >= 730.8, Q rank 5 would need AP >= 583.6. In the configuration that reproduces the old 164.7 for a single nuke (AP ~ 18-372, MR ~ 28-157), no single nuke can reach 638.5.",
+      "no_R_to_R_explanation": "R rank 3 with N spheres -> M spheres gives an integer ratio M/N (or, with the +15% AP Transcendence buff applied on one side only, a ratio strictly greater than M/N). 3.87675 is neither, so the pair cannot be the same R row at two sphere counts - the change is an identity change at index 3, not a sphere-count retune."
+    },
+    "conclusion": "damage_events[3] is the Unleashed Power barrage. 638.5 is the value a correct Unleashed Power row produces (rank 3, 5-7 spheres, ordinary AP/MR); 164.7 is a single-nuke-magnitude number that no correct rank-3 Unleashed Power row can produce short of ~191 post-penetration MR. The new value is the correct one."
+  },
+  "residual_uncertainty": "Because the scenario tuple is outside the permitted evidence tree, the identity of damage_events[3] is inferred (from the pair-consistency solve plus the natural Q/W/E/R event order of a four-cast rotation) rather than read. If damage_events[3] were in fact a single Q/W/E nuke - which would require the corrected 120-splinter run to place an extra event (e.g. the 40-splinter second Dark Sphere charge) before it AND the new value to be an R barrage misfiled at index 3 - the verdict would flip. The pair-consistency solve rules out every reading in which 164.7 is the R barrage, which is why the verdict is new_value_correct rather than old_value_correct or both_wrong."
+}

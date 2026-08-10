@@ -1,0 +1,110 @@
+{
+  "receipt_id": "oracle-C6-leaf111",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[6]/damage",
+  "old_value": 650.0,
+  "new_value": 840.0,
+  "verdict": "new_value_correct",
+  "confidence": "moderate (~0.8) - see limitation below; the scenario input tuple is not reachable from the permitted evidence tree",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": [
+      "data/champions.json (Syndra entry: base stats + P/Q/W/E/R ability rows)",
+      "data/champion-audit/batch-6.json (Syndra module-slot audit)",
+      "data/champion-audit/batch-e9-1.json (Syndra E9 verdict)",
+      "data/worklists/e3-stacks.json, e3-mechanics.json (Splinters of Wrath thresholds)",
+      "data/staleness.json (Syndra rows verified against game files)",
+      "data/practice-corpus/scenarios.json (searched; no Syndra scenario)",
+      "docs/math-foundations.md (mitigation / penetration / rounding identities)"
+    ],
+    "not_read": "src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff, the plan",
+    "anomaly": "A stray file 'syndra_abilities.txt' was already present at the scratch root before extraction (17898 bytes, not tracked at repo HEAD root, not produced by git archive). Its content is a plain re-dump of the same data/champions.json Syndra ability block, so it changed nothing, but it is NOT part of the sanctioned export and is reported as evidence-tree contamination."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1] (Unleashed Power, Active)",
+      "text": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "leveling": {
+        "Magic Damage per Sphere": "[80, 120, 160] (+ 20% AP)",
+        "Minimum Magic Damage": "[240, 360, 480] (+ 60% AP)  == 3 spheres",
+        "Maximum Magic Damage": "[560, 840, 1120] (+ 140% AP) == 7 spheres"
+      }
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere)",
+      "leveling": "Magic Damage [90, 125, 160, 195, 230] (+ 70% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (Force of Will, Recast)",
+      "leveling": "Magic Damage [70, 100, 130, 160, 190] (+ 65% AP)",
+      "transcendent_bonus": "Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage; wiki Bonus True Damage row = [8.4, 12, 15.6, 19.2, 22.8] (+ [9.2, 9.8, 10.4, 11, 11.6]% AP), reproduced exactly by true = (0.12 + 0.0002*AP) * (base + 0.65*AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak)",
+      "leveling": "Magic Damage [60, 95, 130, 165, 200] (+ 60% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0] (Transcendent)",
+      "text": "Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary",
+      "text": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "source": "docs/math-foundations.md, formula-audit table",
+      "text": "Resistance mitigation m(R)=100/(100+R) ... Stat rounding (calculate_total_stats): display-level integer rounding of health/AD/AP/armor/MR before damage"
+    }
+  ],
+
+  "independent_computation": {
+    "method": "The scenario input tuple (level, ability-rank order, items -> AP, splinters, r_spheres, target MR) is defined in scripts/golden_snapshot.py, which runbook R-18 forbids reading and which is absent from data/. I therefore inverted the problem: enumerate every damage value Syndra's wiki rows can produce, for every ability, every rank, every sphere count 1..7, over integer AP 0..1600, and ask which of {650.0, 840.0} is wiki-conforming and under which configurations.",
+    "closed_forms_used": [
+      "Q = base_Q[r] + 0.70*AP",
+      "W_magic = base_W[r] + 0.65*AP ; W_true = (0.12 + 0.0002*AP)*W_magic  (60+ splinters)",
+      "E = base_E[r] + 0.60*AP",
+      "R = n_spheres * (base_R[r] + 0.20*AP), n in 1..7  (audit: 'per Sphere x user-set sphere count')"
+    ],
+    "exact_hits_for_840": {
+      "AP=0": "R rank 2 x 7 spheres = 7*(120 + 0) = 840  -- identically the wiki's 'Maximum Magic Damage' rank-2 row",
+      "AP=100": "R rank 2 x 6 = 840",
+      "AP=200": "R rank 1 x 7 = 840",
+      "AP=250": "R rank 3 x 4 = 840",
+      "AP=300": "R rank 1 x 6 = 840",
+      "AP=450": "R rank 2 x 4 = 840",
+      "AP=600": "R rank 3 x 3 = 3*(160+120) = 840",
+      "AP=650": "R rank 1 x 4 = 840",
+      "AP=800": "R rank 2 x 3 = 840",
+      "AP=1000": "W rank 5 magic = 190 + 0.65*1000 = 840 ; also R rank 1 x 3",
+      "AP=1300": "E rank 1 = 840 ; R rank 3 x 2",
+      "AP=1500": "R rank 2 x 2 = 840"
+    },
+    "exact_hits_for_650": {
+      "AP=50": "R rank 2 x 5 = 650",
+      "AP=250": "R rank 1 x 5 = 650",
+      "AP=600": "Q rank 5 = 230 + 420 = 650",
+      "AP=650": "Q rank 4 = 650",
+      "AP=700": "Q rank 3 = 650",
+      "AP=750": "Q rank 2 = 650 ; E rank 5 = 650",
+      "AP=800": "Q rank 1 = 650 ; W rank 3 magic = 650"
+    },
+    "discriminating_observations": [
+      "840 is a verbatim wiki quantity: Unleashed Power rank 2 'Maximum Magic Damage' = 840 = 7 spheres x 120 per sphere, and it is the only Syndra value equal to 840 in a no-item (AP=0) configuration -- the configuration golden/champion-mechanic probes in this repo customarily use ('level 18, no items', data/worklists/e9-audit-task-1.md step 6).",
+      "650 is reachable by NO Syndra row at AP=0; it requires AP to land on one of exactly seven values in 0..1600.",
+      "840 - 650 = 190, which is exactly Force of Will's rank-5 base damage, and 650 = 0.65*1000 is exactly Force of Will's AP term at AP=1000. So the second self-consistent reconstruction is: the leaf is the W rank-5 magic hit at AP=1000, correct value 190 + 650 = 840, with the old 650 having dropped the flat base term. That reconstruction is thematically consistent with the scenario name's '60' (60 Splinters of Wrath is precisely the Force-of-Will threshold, per the P/W wiki text).",
+      "A pure rank change at fixed AP cannot explain the delta for any single ability (Q/E steps are 35, W steps 30, R steps 40 per rank; 190 is a multiple of none), and a pure sphere-count change cannot either (650/840 = 65/84 is not a ratio of two integers <= 7). So the two values are not the same event under one flipped parameter: either the event identity at index 6 shifted (both values on-formula, AP in {250,600,650,800}), or one value is off-formula.",
+      "Enumerating the union of admissible APs: 8 APs make only 840 wiki-conforming, 3 make only 650 conforming, 4 make both conforming (in which case the index-6 identity shifted and the post-fix value is the engine's answer). Every self-consistent reconstruction I could build leaves 840 on-formula."
+    ],
+    "conclusion": "840.0 is a wiki-conforming Syndra damage value in the plausible configurations (most cleanly: Unleashed Power rank 2 with 7 spheres at 0 AP = the wiki's 'Maximum Magic Damage' row, or Force of Will rank 5 magic at 1000 AP = 190 + 65%*1000). 650.0 is conforming only for a narrow set of AP values and is unreachable in the no-item configuration; nothing in the cached wiki text supports 650 as the correct value for this leaf."
+  },
+
+  "limitations": [
+    "The scenario input tuple for 'syndra_custom_order_60' is not present anywhere under data/ (grep for 'custom_order' and 'manual_target' across the whole export returns nothing) and is not derivable from docs/math-foundations.md. The computation above is therefore a configuration-inverted argument, not a point evaluation of the scenario.",
+    "If the scenario's true AP is 700 or 750 (both plausible full-build AP totals) and the leaf is a Dark Sphere / Scatter the Weak hit, then 650 would be the conforming value and 840 would not be reachable from any Syndra row; that is the single world in which this verdict is wrong. A follow-up with access to the scenario tuple (AP, ability ranks, r_spheres, target MR) settles it in one evaluation."
+  ]
+}

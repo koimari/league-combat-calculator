@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-C6-leaf87",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/time",
+  "old_value": 5.0,
+  "new_value": 0.25,
+  "verdict": "new_value_correct",
+  "independent_value": 0.25,
+  "units": "seconds (cast start epoch on the shared cast timeline)",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6b",
+    "read": ["data/champions.json (Syndra)", "data/wiki-atoms/stack-transform-summon-resource.json", "data/champion-audit/batch-e9-1.json (Syndra row)", "data/practice-corpus/scenarios.json (scenario shape only)", "data/worklists/f2-task.md (cast_order semantics)", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, Section 1.1 (lines 59-66)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`)."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere)",
+      "quote": "castTime: \"none\"; cooldown: {values: [7,7,7,7,7], affectedByCdr: false}; rechargeRate: [7,7,7,7,7]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (Force of Will)",
+      "quote": "castTime: \"none\"; cooldown: {values: [12,11,10,9,8], affectedByCdr: true}; \"...holds the target near her for 5 seconds\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak)",
+      "quote": "castTime: \"0.25\"; cooldown: {values: [15,15,15,15,15], affectedByCdr: true}"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0] (Unleashed Power)",
+      "quote": "castTime: \"0.25\"; cooldown: {values: [120,100,80], affectedByCdr: true}; \"Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste\" -> Ability Haste [10, 20, 30]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[1] (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[3] (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json -> stack-transform-summon-resource.ammo",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)..."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R). ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_reading": "The scenario id 'syndra_custom_order_60' = Syndra + an explicit (non-default) cast_order + the champion's 'splinters' option set to 60. 60 is one of Syndra's own sourced Splinter-of-Wrath thresholds (40 Q charges / 60 W true damage / 80 E / 100 R / 120 AP), and the audit row confirms the module exposes exactly that option. 60 >= 40, so Dark Sphere is charge-stocked in this scenario (up to 2 stocked casts).",
+    "step_2_sourced_cast_times": {
+      "Q": 0.0,
+      "W": 0.0,
+      "E": 0.25,
+      "R": 0.25,
+      "note": "castTime 'none' means the cast occupies no time on the shared timeline; E and R are the only Syndra casts with a nonzero sourced cast time, both 0.25 s."
+    },
+    "step_3_scheduling_rule": "Per math-foundations 1.1, cast epoch(k) = sum of the cast times of casts 0..k-1, pushed later only if the ability being cast is still on cooldown. Consequence: every legal Syndra cast epoch is an integer multiple of 0.25 s, and the earliest epoch for cast index 4 in an opening containing exactly one 0.25 s cast (E or R) is 0 + 0 + 0 + 0.25 = 0.25 s.",
+    "step_4_is_0_25_legal": "Syndra has four castable slots, so a 5-cast opening must repeat one slot. The only Syndra slot that repeats without waiting on a cooldown is Dark Sphere, because at >= 40 Splinters it stocks charges ('up to a maximum of 2') and a stocked charge is spent immediately (corroborated by the ammo atom, which names Syndra's Dark Sphere as a stocked-cast resource). A custom cast order is exactly the mechanism needed to spend that second charge, since DEFAULT_CAST_ORDER is a flat Q,W,E,R. Hence a fifth cast at t = 0.25 s is legal and is the earliest epoch the model permits.",
+    "step_5_can_5_0_be_derived": {
+      "as_cast_time_prefix_sum": "No. 5.0 s = 20 x 0.25 s would require twenty prior 0.25 s casts (E or R only), impossible with E on 15 s and R on 80 s.",
+      "as_a_cooldown_wait_at_level_18_ranks_Q5_W5_E5_R3_zero_external_haste": {
+        "Q": "7.0 s base (affectedByCdr false); with R's own sourced passive haste of 30 at rank 3: 7 x 100/(100+30) = 5.3846 s",
+        "W": "8.0 s",
+        "E": "15.0 s",
+        "R": "80.0 s",
+        "conclusion": "None equals 5.0 s. The nearest candidate, the Dark Sphere recast, is 5.3846 s (or 7.0 s if R's passive haste is not applied) - not 5.0 s."
+      },
+      "coincidences_checked_and_rejected": [
+        "8 s (W rank 5) x 100/160 = 5.0 s requires exactly 60 ABILITY HASTE - i.e. it only works if the trailing '60' in the scenario id means haste, which nothing in the cached data supports and which would leave 'custom_order' doing no work (a greedy W recast at 5.0 s is what the default order already produces).",
+        "7 s (Q) x 100/140 = 5.0 s requires exactly 40 ability haste - same objection.",
+        "W's sourced 5-second hold duration ('holds the target near her for 5 seconds') is a buff window, not a cast epoch; the audit confirms Syndra is modeled with one cast slot per ability (all five slots modeled), so there is no separate W-recast cast entry that could legitimately sit at +5.0 s."
+      ]
+    },
+    "step_6_result": "cast_timeline[4].time = 0.25 s. Old 5.0 s is a cooldown wait that no sourced Syndra cooldown produces at this scenario's configuration, and it contradicts the charge-stocked Dark Sphere the 60-Splinter setting enables."
+  },
+
+  "confidence": "moderate-high on the arithmetic, moderate on the scenario reading",
+  "caveats": [
+    "The scenario definition itself lives outside the permitted evidence tree (scripts/golden_snapshot.py), so the exact custom cast_order and option values were inferred from the scenario id plus the cached Syndra data. The inference rests on '60' being the splinters option (a Syndra-specific sourced threshold that the module is documented to expose) rather than an ability-haste value.",
+    "Under the alternative reading '60 = 60 ability haste with no stocked charges', 5.0 s would be exactly W's rank-5 effective cooldown (8 x 100/160) and the OLD value would be correct. That reading was rejected because it makes the 'custom_order' half of the scenario id inert and because no cached Syndra source ties the number 60 to ability haste, whereas 60 is a literal Splinter-of-Wrath threshold in the cached W text.",
+    "0.25 s is a sourced constant (E and R castTime) and is a reachable epoch under the documented shared-timeline model; 5.0 s is not reachable from cast times at all and is not equal to any sourced Syndra cooldown at zero external haste. That asymmetry is the load-bearing part of the verdict."
+  ]
+}
