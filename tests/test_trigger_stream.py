@@ -14,6 +14,7 @@ import builtins
 import importlib
 import importlib.util
 import inspect
+import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
@@ -27,15 +28,18 @@ from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
     IMMOBILIZING_CC_KINDS,
     Authority,
+    DamagePart,
     Disposition,
 )
 from src.calculator.ability_spec import is_immobilizing_event as legacy_immobilizing
+from src.calculator.champions.engine import _validate_cc_event_contract
 from src.calculator.item_support_effects import (
     EVENT_VIEW_SUPPORT_ITEMS,
     EventViewStarvationError,
     cross_participant_authorities,
     derive_item_support_effects,
 )
+from src.calculator.survival.actions import survival_action_from_event
 
 ROOT = Path(__file__).parents[1]
 SRC = ROOT / "src"
@@ -1756,3 +1760,284 @@ def test_the_stack_ledgers_carry_a_coerced_string_trigger_event_id():
     assert carve() == [""]
     assert carve(_event_id=42) == ["42"]
     assert carve(_event_id=None) == [""]
+
+
+def test_bloodsong_normalises_an_empty_trigger_event_id_to_none():
+    """Expose Weakness spells its link ``event.event_id or None``.
+
+    Three producers in this module now spell one thing three ways:
+    Fimbulwinter and Bloodsong coerce an empty id to ``None``, Carve and
+    Vile Decay pass the bus's ``str`` through as ``""``.  The retired code
+    passed ``event.get("_event_id")`` through everywhere, so a
+    present-but-empty id stayed ``""`` on all four.  44e10ea's body covers
+    Fimbulwinter's ``or None`` and Carve/Vile Decay's ``""`` and not this
+    one, so it is pinned here.
+
+    Inert: every ``_event_id`` writer in ``src/`` builds one with an
+    f-string, and both spellings are falsy, which is all the walk's
+    trigger-link check reads.
+    """
+    holder = _support_actor("main:Annie", "main", ("Bloodsong",))
+    enemy = _support_actor("enemy:Aatrox", "enemy", ())
+
+    def expose(**extra):
+        row = {
+            "time": 0.5,
+            "source_key": "spellblade_Bloodsong",
+            "damage_type": "physical",
+            "damage": 100.0,
+            "target": "enemy:Aatrox",
+            **extra,
+        }
+        packets = derive_item_support_effects(
+            holder, {"damage_events": [row]}, [holder, enemy]
+        )
+        return [packet["trigger_event_id"] for packet in packets]
+
+    assert expose(_event_id="e1") == ["e1"]
+    assert expose(_event_id="") == [None]
+    assert expose() == [None]
+
+
+def test_a_support_scan_row_carrying_a_garbage_number_is_dropped_not_raised():
+    """``_float`` softened the damage numbers the way it softened ``time``.
+
+    The retired ``_damage_triggers`` read
+    ``float(event.get("damage", 0.0) or 0.0) > 0.0``: a garbage number
+    raised ``ValueError`` out of the scan, and an infinite one compared
+    greater than zero and was admitted.  The bus coerces both to 0.0 —
+    non-finite included, since ``Trigger`` refuses a non-finite number —
+    and ``_stack_triggers`` then drops the row for carrying no damage.
+    44e10ea named this softening for ``time`` only.
+
+    So the direction moved twice, and opposite ways: garbage no longer
+    raises, and infinity no longer stacks.
+    """
+    holder = _support_actor("main:Annie", "main", ("Black Cleaver",))
+    enemy = _support_actor("enemy:Aatrox", "enemy", ())
+
+    def carve(**extra):
+        row = {
+            "time": 0.5,
+            "source_key": "Q",
+            "damage_type": "physical",
+            "damage": 100.0,
+            "target": "enemy:Aatrox",
+            **extra,
+        }
+        return derive_item_support_effects(
+            holder, {"damage_events": [row]}, [holder, enemy]
+        )
+
+    assert len(carve()) == 1
+    assert carve(damage="a lot") == []
+    assert carve(damage=float("inf")) == []
+    assert carve(damage=float("nan")) == []
+    # raw_damage rides the same coercion, and it does not decide the stack.
+    assert len(carve(raw_damage="a lot")) == 1
+
+
+def test_the_receipt_token_is_the_rows_own_token_on_every_rung():
+    """b2882ec reordered the ladder and moved no ``cc_kind`` token.
+
+    ``verify-P2b``'s second pass read the reorder as also propagating the
+    token onto rungs that used to blank it — ``{"cc_kind": "none",
+    "hard_cc": True}`` yielding ``cc_kind="none"`` where it once yielded
+    ``""``.  It does not: the retired ladder returned the normalised token
+    whenever it was non-empty and ``""`` exactly when it was empty, which
+    is the same function as returning it unconditionally.  What b2882ec
+    moved is the *class* on that row, from ``NONE`` to ``IMMOBILIZE``, and
+    that move is what its body describes.
+
+    The pin is the property rather than the two rows: over the vocabulary
+    crossed with the five legacy booleans, the token the bus publishes is
+    always the row's own token, normalised.
+    """
+    flags = ("immobilized", "hard_cc", "slowed", "slow", "crowd_control")
+    rows = 0
+    for kind in sorted(CC_KIND_VOCABULARY) + [""]:
+        for bits in range(1 << len(flags)):
+            row = {
+                "cc_kind": kind,
+                **{flag: bool(bits & (1 << index)) for index, flag in enumerate(flags)},
+            }
+            rows += 1
+            assert ts._classify_cc(row)[1] == kind, row
+    assert rows == (len(CC_KIND_VOCABULARY) + 1) * (1 << len(flags))
+    # The two rows the signoff named, stated outright.
+    assert ts._classify_cc({"cc_kind": "none", "hard_cc": True}) == (
+        ts.CcClass.IMMOBILIZE,
+        "none",
+        True,
+    )
+    assert ts._classify_cc({"cc_kind": "none"}) == (ts.CcClass.NONE, "none", True)
+
+
+def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
+    """The walk gained a raise it did not have, and this is where it fires.
+
+    All three retired predicates coerced an unknown ``cc_kind`` to "not
+    immobilizing" and carried on, so a kind outside the vocabulary priced
+    zero in silence.  P2b routed four consumers onto ``_classify_cc``,
+    which refuses it — the ruling in Phase 2's Types section, and the right
+    answer: a misspelled kind must never author a no-op stun.  None of the
+    nine slice bodies says the walk started raising, so the pin says it.
+
+    The control is the sibling authoring path: a ``cc_kind`` on a *part* is
+    already refused at parse time, by a message naming the champion, the
+    entry and the kind.  The gap between the two paths — a module-authored
+    ``damage_events`` row reaches the walk unchecked — is the escalation in
+    ``docs/receipts/escalated-defects-P2b.json``.
+    """
+    row = {
+        "time": 0.5,
+        "source_key": "Q",
+        "damage_type": "magic",
+        "damage": 100.0,
+        "target": "enemy:Aatrox",
+        "attacker": "main:Annie",
+        "is_ability": True,
+        "cc_kind": "silence",
+    }
+    with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+        ts.is_immobilizing_event(row)
+    with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+        damage._fimbulwinter_event_coverage([{"name": "Fimbulwinter"}], [row])
+    with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+        survival_action_from_event(row, 0.0, 0, {"enemy:Aatrox": 0})
+    holder = _support_actor("ally:Lulu", "ally", ("Imperial Mandate",))
+    enemy = _support_actor("enemy:Aatrox", "enemy", ())
+    with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+        derive_item_support_effects(holder, {"damage_events": [row]}, [holder, enemy])
+    # The fourth path is reached through a FightState the walk builds; the
+    # control is that it reads the same predicate and no other.
+    command_amp = inspect.getsource(damage._apply_command_amp)
+    assert "is_immobilizing_event(event)" in command_amp
+    assert "from .trigger_stream import" in (
+        SRC / "calculator" / "damage.py"
+    ).read_text(encoding="utf-8")
+    # ...and the control that this is a refusal, not a regression: the part
+    # spelling of the same kind never gets near the walk.
+    with pytest.raises(ValueError, match="unknown cc_kind"):
+        _validate_cc_event_contract(
+            "Fakechamp",
+            "Q",
+            {"parts": (DamagePart("magic", 100.0, cc_kind="silence"),)},
+        )
+
+
+class TestTheEscalatedDefectIsStillTracked:
+    """The one gap P2b's pins cannot close, held as an artifact.
+
+    The bus's refusal is ruled and correct, and the champion contract
+    already refuses the part-authored spelling at parse time.  The
+    module-authored ``damage_events`` spelling reaches the walk unchecked,
+    where the refusal lands as a plain ``ValueError`` the campaign's single
+    request-boundary catch does not name.  Fixing that is a new parse-time
+    rejection in a file outside this phase's Shape table, inside a phase
+    ruled a pure refactor, so the slice may not do it.
+
+    An escalation that lives only in a commit body is absorbed by the next
+    baseline re-capture.  This one is joined to the signoff that raised it,
+    to the source sites that carry it, and to a reproducer that turns red
+    the moment the defect stops reproducing — which is how the entry gets
+    closed deliberately rather than fading out.
+    """
+
+    RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-P2b.json"
+    REQUIRED = (
+        "id",
+        "dated",
+        "origin",
+        "raised_by",
+        "site",
+        "defect",
+        "live_signature",
+        "not_fixed_here_because",
+        "resolution",
+    )
+
+    def _entries(self):
+        return json.loads(self.RECEIPT.read_text(encoding="utf-8"))["defects"]
+
+    def test_every_entry_carries_what_an_escalation_needs(self):
+        entries = self._entries()
+        assert entries, "the escalation ledger is empty"
+        for entry in entries:
+            for field in self.REQUIRED:
+                assert entry.get(field), f"{entry.get('id')} omits {field}"
+            assert len(entry["dated"]) == 10 and entry["dated"].count("-") == 2
+
+    def test_every_site_still_carries_the_defect(self):
+        for entry in self._entries():
+            for site in entry["site"]:
+                source = (ROOT / site["file"]).read_text(encoding="utf-8")
+                assert site["fragment"] in source, f"{entry['id']}: {site['file']}"
+
+    def test_the_defect_still_reproduces(self):
+        """Parse time refuses one spelling of the kind and not the other."""
+        (entry,) = self._entries()
+        kind = entry["live_signature"]["unknown_kind"]
+        assert kind not in CC_KIND_VOCABULARY
+        with pytest.raises(ValueError, match="unknown cc_kind"):
+            _validate_cc_event_contract(
+                "Fakechamp", "Q", {"parts": (DamagePart("magic", 1.0, cc_kind=kind),)}
+            )
+        # The same kind, authored as a declared event, passes parse time...
+        _validate_cc_event_contract(
+            "Fakechamp",
+            "Q",
+            {"parts": (), "damage_events": [{"time": 0.0, "cc_kind": kind}]},
+        )
+        # ...is copied onto the ledger row verbatim...
+        assert 'row["cc_kind"] = str(event["cc_kind"])' in (
+            SRC / "calculator" / "damage.py"
+        ).read_text(encoding="utf-8")
+        # ...and raises a bare ValueError, not the type the one request
+        # boundary names, on every walk path the receipt lists.
+        with pytest.raises(ValueError) as excinfo:
+            ts.is_immobilizing_event({"cc_kind": kind})
+        assert not isinstance(excinfo.value, ts.ProjectionStarvation)
+        assert entry["live_signature"]["caught_at_the_request_boundary"] is False
+        assert except_projection_starvation_sites() == ("src/app.py",)
+
+    def test_the_caller_is_told_a_champion_defect_is_a_bad_request(self):
+        """What the endpoint actually does with it — measured, not reasoned.
+
+        The signoff that raised this expected an unnamed 500.  It is a 400
+        whose body is the vocabulary message, because ``/api/calculate``
+        wraps its engine call in ``except ValueError``.  Milder than
+        reported and still wrong: an authoring defect inside a champion
+        module is billed to the caller, and it carries none of the
+        ``STARVED`` receipt the sibling condition gets one boundary away.
+
+        The seam injects the *exception*, not the outcome: the raise is the
+        one ``_classify_cc`` produces, verbatim.
+        """
+        import src.app as app_module
+
+        (entry,) = self._entries()
+        with pytest.raises(ValueError) as excinfo:
+            ts.is_immobilizing_event(
+                {"cc_kind": entry["live_signature"]["unknown_kind"]}
+            )
+        raised = excinfo.value
+
+        def _raise_the_walks_error(_data):
+            raise raised
+
+        original = app_module.calculate_payload
+        app_module.calculate_payload = _raise_the_walks_error
+        try:
+            response = app_module.app.test_client().post(
+                "/api/calculate", json={"champion": "Ahri", "level": 1}
+            )
+        finally:
+            app_module.calculate_payload = original
+        surfaced = entry["live_signature"]["surfaced_to_the_caller_as"]
+        assert response.status_code == surfaced["status"]
+        payload = response.get_json()
+        assert sorted(payload) == sorted(surfaced["body_keys"])
+        assert str(raised) == payload["error"]
+        assert "disposition" not in payload and "starved" not in payload
+        assert surfaced["carries_disposition"] is False
