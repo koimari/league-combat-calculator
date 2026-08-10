@@ -599,6 +599,33 @@ its red is reproducible on demand rather than remembered (R-05).
   exactly one red commit between the shift and the refresh, and refreshing first only
   moves the red onto the doc commit. The runbook is not this lane's file, so the clause
   is stated here and escalated rather than written there.
+
+  **The ratchet half of row 7 is green over two inline pylint disables P2c added, and the
+  numbers behind that are here rather than in a commit body**, because the sign-off is
+  right that a lint gate held green by a suppression inside the slice the ratchet polices
+  is a claim the lane should not adjudicate alone. R-32 makes the ratchet baseline
+  unwritable by this lane, so the choice — bless the two disables, or re-seed the two
+  scores at the phase boundary — is the integration agent's, and this is the measurement
+  it needs. Every figure is one `scripts/pylint_ratchet.py --scores` run on the named
+  tree.
+
+  | file | ratchet baseline | pre-P2c (`3635952`) | P2c as landed | P2c with the two disables stripped |
+  |---|---|---|---|---|
+  | `ability_spec.py` | 9.850746 | 9.850746 | 10.0 | 9.843750 |
+  | `item_support_effects.py` | 9.857143 | 9.857482 | 9.867374 | 9.840849 |
+
+  Both messages predate P2c — at `3635952`, `pylint --disable=all
+  --enable=too-many-instance-attributes,too-many-arguments` already reports
+  `DamagePart` and `_packet`, unsuppressed. Neither disable therefore hides a message
+  this phase created; what moved is the denominator, because pylint scores messages per
+  statement and P2c deletes statements without deleting messages. The `ability_spec.py`
+  row is the sharp one: its baseline was seeded at exactly the score it then held, so
+  *any* deletion from that file breaks its ratchet — a property of a density ratchet over
+  a shrinking file, not of this slice, and the second thing worth an integration ruling.
+  The suppressions themselves are the house idiom for these two messages on these two
+  shapes: `Combatant`, `ChampionModuleContract` and `trigger_stream`'s own `Trigger` and
+  `MechanicCapability` carry the first, and `capabilities._field`,
+  `healing.derive_self_healing` and `trigger_stream._walk_item` the second.
 - After P2c, no retired symbol appears anywhere in `src/`, `CAPABILITIES` is the only place in
   the repo stating which holders read which stream, and it is the only authority table —
   `cross_participant_authorities` is gone and no second `Authority` enum exists, because
