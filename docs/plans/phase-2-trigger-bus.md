@@ -363,8 +363,29 @@ def holders_in(items: Iterable[Mapping[str, Any]], names: frozenset[str]) -> boo
 `has_takedown_scan_support_items`, `CC_TRIGGER_ITEMS`, `DAMAGE_TRIGGER_ITEMS`,
 `EVENT_VIEW_SUPPORT_ITEMS`, `has_event_view_support_items`,
 `cross_participant_authorities` (its two readers — the owner-iff-`SPLIT` check and
-`capture_coupled`'s producer source — both move to `CAPABILITIES` in P2a, so leaving it would
+`capture_coupled`'s producer source — both move to `CAPABILITIES`, so leaving it would
 ship two authority tables and make "one registry" false).
+
+**Corrected after P2c, which found the schedule in that last parenthesis wrong** — flagged the
+same way this phase's two amended criteria are, as a plan-text change by an implementation lane,
+so the next verifier adjudicates it rather than inheriting it. It read "both move to
+`CAPABILITIES` in P2a". Only one did: `capture_coupled`'s producer source became
+`golden_snapshot.cross_participant_producers()` at P2a, while the owner-iff-`SPLIT` check inside
+`_packet` still read the module's own `ast` derivation over its `_packet` call sites at the P2c
+entry tip. P2c moves it, so the deletion is a deletion and not a rename — and the derivation it
+displaces does not simply vanish: the `ast` walk becomes a **test-side** source assertion
+binding every `kind="damage_modifier"` call site's literal `source=` and `authority=` to the
+registry, and `_check_cross_participant_authority` gains the runtime half of that binding.
+
+**Two symbols P2c deletes that this list does not name**, recorded here rather than left to a
+reader's inference: `item_support_effects.EVENT_VIEW_STREAMS`, which is built from four of the
+five name sets and is itself a holder-to-stream table — the thing this phase's closing criterion
+reserves to `CAPABILITIES` — replaced by a `streams_for` ∩ `RAW_STREAMS` projection inside
+`require_event_view` that reproduces the starvation message character for character; and the
+private `_declared_authorities`, whose ast body is replaced by the `CAPABILITIES` projection
+above. `trigger_stream._RAW_STREAMS` becomes public `RAW_STREAMS` in the same commit, on
+`CROSS_PARTICIPANT_AUTHORITIES`'s precedent: a consumer that must name the raw streams reads the
+bus's own reading of them rather than re-spelling three members.
 
 There is no `trigger_stream._LEGACY_TUPLE_EXCLUSION`: P2a's witness is the imported live set,
 and P2c's one-symbol flip deletes `EVENT_VIEW_SUPPORT_ITEMS` itself.
@@ -460,12 +481,32 @@ its red is reproducible on demand rather than remembered (R-05).
 
   Every blob change it reports must be (a) confined to source-assertion **literals and
   docstrings** inside `TestEventViewTupleGate`, (b) disclosed in its own commit body, and (c)
-  accompanied by no change to any test that executes calculator behaviour. Run over the phase to
-  date the set is two: `44e10ea` (`4afce97` → `54c6b32`, the Everlasting link literal) and
+  accompanied by no change to any test that executes calculator behaviour. Run over P2a and P2b
+  the set is two: `44e10ea` (`4afce97` → `54c6b32`, the Everlasting link literal) and
   `a966a99` (`54c6b32` → `25fd763`, the pipeline gate literal), three hunks in total, both
   disclosed in their bodies, no behavioural test touched. The one thing the original clause was
   really protecting — that this phase pins nothing new by editing the suite that already pins it
   — is what (c) states directly.
+
+  **Clause (a) is widened at P2c, and this is the third in-criterion amendment by an
+  implementation lane in this phase** — flagged as such for the same reason the other two are, so
+  the next verifier adjudicates it rather than inheriting it. The deviation set gains a third
+  entry, `4d32995` (`25fd763` → `94dc13d`), and it reaches outside `TestEventViewTupleGate`,
+  which clause (a) as written forbids. It has to: the retired symbols are read by two *other*
+  classes in that file. `EVENT_VIEW_STREAMS` is `TestEventViewStarvation`'s parametrize source,
+  and `cross_participant_authorities` is what all nine tests of
+  `TestCrossParticipantAuthorities` call. A clause that confines the P2c edit to one class is a
+  clause the deletion cannot satisfy, exactly as the original byte-identity clause was.
+
+  So (a) now reads: **confined to source-assertion literals, docstrings, and the registry a
+  parametrize or a helper reads from** — the last phrase being what admits re-pointing a
+  generator at the projection that replaced the deleted set. (b) and (c) are unchanged and are
+  what carries the weight at P2c: `TestEventViewStarvation` runs the same `(item, stream)` pairs
+  with the same parametrized ids through the same `derive_item_support_effects` call, and
+  `TestCrossParticipantAuthorities` keeps every claim it made — one row per call site, Dream
+  Maker present, every value an `Authority`, no hand-written producer list — re-expressed against
+  `CAPABILITIES`, plus one new claim the old shape could not make: that each call site's literal
+  `authority=` equals what the registry declares for its `packet_source`.
 - Every commit shows zero golden diffs, adds no coupled-golden diff, and reproduces all four
   fingerprint families, the residual, the winners and the scores of the Phase 0 exit measurement
   ([runbook](silent-failure-runbook.md): R-11, R-13, R-24…R-29). No golden re-capture happens in
