@@ -37,7 +37,6 @@ _OVERRIDE_CHAMPIONS = [
     "Varus",
     "Brand",
     "Vladimir",
-    "Aatrox",
     "Jhin",
     "Annie",
     "Lux",
@@ -50,7 +49,6 @@ _EXPECTED_ORDERS = {
     "Varus": ["Q", "E", "R", "W"],
     "Brand": ["Q", "R", "E", "W"],
     "Vladimir": ["R", "Q", "E", "W"],
-    "Aatrox": ["R", "Q", "W"],
     "Jhin": ["Q", "W", "E", "R"],
     "Annie": ["E", "R", "Q", "W"],
     "Lux": ["E", "Q", "R", "W"],
@@ -63,7 +61,6 @@ _RATIONALE_FRAGMENTS = {
     "Varus": ("Blight", "detonat"),
     "Brand": ("Blaze", "spread"),
     "Vladimir": ("amplif", "mark"),
-    "Aatrox": ("bonus AD", "buff"),
     "Jhin": ("4th shot", "crit"),
     "Annie": ("stun", "Tibbers", "shield"),
     "Lux": ("slow", "root"),
@@ -210,42 +207,48 @@ class TestCastOrderOverrides:
 
 
 class TestDerivedPathRotations:
-    """Champions whose order comes from their own declarations, not a seed.
+    """Champions whose order the derivation computes, not a hand seed.
 
-    Syndra's rows lived in ``_OVERRIDE_CHAMPIONS`` until her seed retired
-    against ``CAST_DEPENDENCIES`` (D-89).  They move here rather than
-    being deleted: the same order, the same mechanic, now asserted on the
-    path that computes it — and the rationale has to cite the declared
-    kind and the wiki revision it was read from, which a hand seed's
-    prose never could.
+    Every row here used to live in ``_OVERRIDE_CHAMPIONS``.  A retirement
+    moves its assertions rather than deleting them: the same order, the
+    same mechanic, now asserted on the path that computes it.  Syndra's
+    row additionally demands the declared kind and the wiki revision in
+    the rationale, which a hand seed's prose never carried; the others
+    were seeds the derivation already reproduced, held only until a
+    deletion commit proved it on both baselines (``pending_primitive``).
     """
 
     @pytest.mark.parametrize(
-        ("champion", "order"),
-        [("Syndra", ["Q", "Q2", "E", "W", "R"])],
+        ("champion", "order", "aoe", "fragments"),
+        [
+            (
+                "Syndra",
+                ["Q", "Q2", "E", "W", "R"],
+                {"Q": 5, "Q2": 5, "W": 5, "E": 5, "R": 1, "passive": 1},
+                ("sphere", "stun", "cc_enabler", "@4024662"),
+            ),
+            (
+                "Aatrox",
+                ["R", "Q", "W"],
+                {"Q": 5, "W": 1, "R": 1, "passive": 1},
+                ("stat_buff(bonus_attack_damage)", "amplifies ability damage"),
+            ),
+        ],
     )
-    def test_the_declaration_derives_the_order_the_seed_used_to_pin(
-        self, champion, order, champion_by_name
+    def test_the_derivation_reproduces_the_order_the_seed_pinned(
+        self, champion, order, aoe, fragments, champion_by_name
     ) -> None:
-        result = _run(champion_by_name[champion])
-        rotation = result["rotation"]
+        rotation = _run(champion_by_name[champion])["rotation"]
         assert rotation["cast_order"] == order
         assert rotation["order"][: len(order)] == order
-
-    @pytest.mark.parametrize(
-        ("champion", "fragments"),
-        [("Syndra", ("sphere", "stun", "cc_enabler", "@4024662"))],
-    )
-    def test_the_rationale_cites_the_kind_and_the_revision(
-        self, champion, fragments, champion_by_name
-    ) -> None:
-        rationale = _run(champion_by_name[champion])["rotation"]["rationale"]
+        assert rotation["aoe"] == aoe
+        rationale = rotation["rationale"].lower()
         for fragment in fragments:
             assert (
-                fragment.lower() in rationale.lower()
+                fragment.lower() in rationale
             ), f"{champion} rationale should mention {fragment!r}: {rationale}"
 
-    @pytest.mark.parametrize("champion", ["Syndra"])
+    @pytest.mark.parametrize("champion", ["Syndra", "Aatrox"])
     def test_the_rule_is_derived_and_carries_no_override_reason(
         self, champion, champion_by_name
     ) -> None:
@@ -310,13 +313,6 @@ class TestParseLevelRotations:
         assert rotation["setup"] == ["R"]
         assert "10%" in rotation["rationale"]
 
-    def test_aatrox_buffs_with_r_before_damage(self, champion_by_name) -> None:
-        result = _run(champion_by_name["Aatrox"])
-        rotation = result["rotation"]
-        assert rotation["cast_order"][0] == "R"
-        assert rotation["setup"] == ["R"]
-        assert "bonus AD" in rotation["rationale"]
-
     def test_lux_slows_roots_then_ults(self, champion_by_name) -> None:
         result = _run(champion_by_name["Lux"])
         rotation = result["rotation"]
@@ -345,7 +341,6 @@ class TestParseLevelRotations:
             ("Varus", {"E": 5}),
             ("Brand", {"W": 5, "E": 5}),
             ("Vladimir", {"W": 5, "E": 5, "R": 5}),
-            ("Aatrox", {"Q": 5, "W": 2}),
             ("Jhin", {"Q": 4, "E": 5}),
             ("Annie", {"W": 5, "R": 5}),
             ("Lux", {"E": 5, "R": 5, "Q": 2}),

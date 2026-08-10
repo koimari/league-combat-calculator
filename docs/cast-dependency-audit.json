@@ -267,7 +267,6 @@
   },
   "order_override_frontier": {
     "champions": [
-      "Aatrox",
       "Annie",
       "Aphelios",
       "Brand",
@@ -278,11 +277,11 @@
       "Vladimir",
       "Zed"
     ],
-    "entries": 10,
+    "entries": 9,
     "reasons": {
       "defensive_precast": 0,
       "dps_tiebreak": 7,
-      "pending_primitive": 3,
+      "pending_primitive": 2,
       "scheduling_preference": 0
     },
     "unclassified": []

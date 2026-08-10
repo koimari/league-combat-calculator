@@ -263,26 +263,6 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         aoe={"W": 5, "E": 5, "R": 5},  # pool, charged explosion, hemoplague
     ),
     # R grants bonus AD as a percentage of total AD before Q/W are priced.
-    "Aatrox": ComboRule(
-        champion="Aatrox",
-        override_reason="pending_primitive",
-        order=("R", "Q", "W"),
-        rationale=(
-            "R (World Ender) grants bonus AD as a percentage of total AD — "
-            "the buff resolves before Q/W so The Darkin Blade and Infernal "
-            "Chains scale off the buffed AD. Q is the primary damage (three "
-            "sweetspot casts); W (Infernal Chains) lands its initial + "
-            "pull-back damage after."
-        ),
-        sources=(
-            "R stat_buff 'Bonus Attack Damage' percent_of attack_damage",
-            "Q 'First/Second/Third Sweetspot Damage' (sweetspot option)",
-            "W 'Total Damage' (initial + pull-back)",
-        ),
-        setup=("R",),
-        consume=(),
-        aoe={"Q": 5, "W": 2},  # Darkin Blade sweetspot arc, Infernal Chains
-    ),
     # The rotation is anchored on Whisper's 4th shot (guaranteed crit +
     # missing-health bonus) from the auto stream; Q opens, W roots for R.
     "Jhin": ComboRule(
