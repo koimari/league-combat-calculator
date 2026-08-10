@@ -942,14 +942,15 @@ class WalkCompiler:
                 # enriched view produced (``None`` when it did not, which
                 # is what ``is not None`` reads).  That packet is declined
                 # one branch earlier for its 3 s duration, so this guard is
-                # the narrower second net: it catches a linked template the
-                # receipt above admits — an instant shield or heal with no
-                # amount formula.  Resolving the link would need the same
-                # cross-pair id map as heals, so fail closed rather than
-                # silently drop what the legacy walk would apply (D-03).
-                # Both halves are pinned by
+                # the narrower second net: it catches a linked template
+                # ``unrepresentable_template_receipt`` admits — whatever
+                # clears every clause it checks.  Resolving the link would
+                # need the same cross-pair id map as heals, so fail closed
+                # rather than silently drop what the legacy walk would
+                # apply (D-03).  All three facts are pinned by
                 # ``tests/test_trigger_stream.py``'s
-                # ``TestTheSupportTriggerLinkRaise``.
+                # ``TestTheSupportTriggerLinkRaise`` rather than left here
+                # to go stale the way the sentence this replaced did.
                 raise UncompilableActionError(
                     receipt="support_trigger_link",
                     source=str(template.get("source", "")),
