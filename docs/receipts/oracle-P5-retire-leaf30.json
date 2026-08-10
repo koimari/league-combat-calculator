@@ -1,0 +1,85 @@
+{
+  "receipt": "oracle-P5-retire-leaf30",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/sources[5]",
+  "old_value": "<absent>",
+  "new_value": "option splinters (self_state, slot P)",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_tree",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/worklists/e3-mechanics.json", "data/wiki-atoms/stack-transform-summon-resource.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/*", "git history", "the diff", "the plan"]
+  },
+  "claim_under_test": "The Syndra rotation has a coupled option source named 'splinters', of kind self_state, declared on slot P.",
+  "independent_computation": {
+    "step_1_option_exists_and_lives_on_slot_P": {
+      "finding": "Syndra's innate (slot P, 'Transcendent') is a 0-120 stacking self-counter, 'Splinters of Wrath'. The counter itself is defined by the innate; the Q/W/E/R effects are 'Transcendent Bonus' riders that read the innate's stack count. Canonical declaring slot = P.",
+      "quote": "data/champions.json > Syndra.abilities.P[0].effects[0].description: \"Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.\"",
+      "corroboration": "data/worklists/e3-stacks.json: {\"champion\": \"Syndra\", \"slot\": \"P\", \"ability\": \"Transcendent\", ...} — the stack worklist files the Splinters counter under slot P, not under Q/W/E/R."
+    },
+    "step_2_kind_is_self_state": {
+      "finding": "The option's value is a state of the attacker herself (a stack count on Syndra, 0-120), not a target condition, not a per-cast variant, and not an item/rune toggle. Its downstream effects are all self-buffs / self-ability upgrades. Classification 'self_state' is the correct kind.",
+      "quotes": [
+        "data/champions.json > Syndra.abilities.P[0].effects[2].description: \"At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.\" (affects: \"Self\", targeting: \"Passive\")",
+        "data/champions.json > Syndra.abilities.Q[0].effects[1].description: \"Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\"",
+        "data/champions.json > Syndra.abilities.W[0].effects[3].description: \"Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.\""
+      ]
+    },
+    "step_3_the_option_genuinely_couples_into_the_rotation": {
+      "why_it_matters": "A rotation source list that omits 'splinters' asserts the rotation output is invariant to the splinter count. The cached wiki tables falsify that: the W ability table carries a whole damage row ('Bonus True Damage') that only exists at >= 60 splinters, Q gains a second charge at >= 40, and total AP is multiplied by 1.15 at 120.",
+      "wiki_rows_quoted_from_data_champions_json": {
+        "Q Magic Damage": "[90, 125, 160, 195, 230] (+ 70% AP)",
+        "W Magic Damage": "[70, 100, 130, 160, 190] (+ 65% AP)",
+        "W Bonus True Damage": "[8.4, 12, 15.6, 19.2, 22.8] (+ ~11.6% AP) (+ AP^2 term) — exists only under the 60-splinter Transcendent Bonus; 22.8 = 0.12 x 190 confirms the row is literally 12% of the W magic row",
+        "R Magic Damage per Sphere": "[80, 120, 160] (+ 20% AP)",
+        "R Minimum Magic Damage": "[240, 360, 480] (+ 60% AP)"
+      },
+      "worked_example": {
+        "setup": "Syndra Q5/W5/R3, AP = 500 (arbitrary but explicit), R at its minimum 3-sphere row, one Q + one W + R.",
+        "formulae_used": [
+          "AP_eff = 1.15 x AP  if splinters >= 120 else AP   (P: 'increasing her ability power by 15%')",
+          "Q = 230 + 0.70 x AP_eff, cast twice if splinters >= 40 (second stocked charge)",
+          "W_magic = 190 + 0.65 x AP_eff",
+          "W_true  = (0.12 + 0.02 x AP_eff/100) x W_magic  if splinters >= 60 else 0",
+          "R_min   = 480 + 0.60 x AP_eff"
+        ],
+        "results": {
+          "splinters=0":   {"AP_eff": 500.0, "Q": 580.0,  "Q_casts": 1, "W_magic": 515.0,  "W_true": 0.0,    "R_min": 780.0, "rotation_raw": 1875.00},
+          "splinters=40":  {"AP_eff": 500.0, "Q": 580.0,  "Q_casts": 2, "W_magic": 515.0,  "W_true": 0.0,    "R_min": 780.0, "rotation_raw": 2455.00},
+          "splinters=60":  {"AP_eff": 500.0, "Q": 580.0,  "Q_casts": 2, "W_magic": 515.0,  "W_true": 113.30, "R_min": 780.0, "rotation_raw": 2568.30},
+          "splinters=120": {"AP_eff": 575.0, "Q": 632.50, "Q_casts": 2, "W_magic": 563.75, "W_true": 132.48, "R_min": 825.0, "rotation_raw": 2786.23}
+        },
+        "conclusion": "The rotation moves +911.23 raw (+48.6%) from splinters=0 to splinters=120, with three distinct discontinuities at 40 / 60 / 120. The rotation is a function of the splinters option, so the option must appear among the rotation's coupled sources. The old <absent> state under-reported the coupling."
+      }
+    },
+    "step_4_naming_check": {
+      "finding": "The option name 'splinters' (rather than e.g. 'splinters_of_wrath' or 'transcendence') is the name the cached audit records for this champion, so the new leaf's label matches the project's own recorded vocabulary.",
+      "quote": "data/champion-audit/batch-6.json > Syndra.gap_summary: \"All damage and splinter atom families covered: splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count.\"",
+      "quote_2": "data/champion-audit/batch-6.json > Syndra.module_slots.note: \"modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.\" — slot P is a modeled slot, so a source attributed to slot P is not a phantom slot.",
+      "quote_3": "data/champion-audit/batch-e9-1.json > Syndra.gap_summary: \"E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.\""
+    }
+  },
+  "scope_and_limits": [
+    "This oracle verifies the existence, name, kind and slot attribution of the new source entry against the cached wiki text and the cached champion-audit records. The bracket index [5] is a positional artifact of the source list's ordering; ordering could not be checked from data/ alone (the full sibling list is not in the evidence tree).",
+    "docs/math-foundations.md contains no statement about Syndra, splinters, option kinds, or the semantics of a rotation 'sources' list, so nothing in it bears on this leaf either way; the arithmetic above is derived entirely from data/champions.json wiki rows.",
+    "The 100-splinter R execute is documented in the cached audit as deliberately not modeled ('the fight target never dies'), so its absence from the computation above is intentional and does not change the verdict."
+  ],
+  "sources_quoted": [
+    "data/champions.json > Syndra.abilities.P[0].effects[0].description (Splinters of Wrath, stacking up to 120)",
+    "data/champions.json > Syndra.abilities.P[0].effects[2].description (120 splinters -> +15% ability power)",
+    "data/champions.json > Syndra.abilities.P[0].targeting = \"Passive\", affects = \"Self\"",
+    "data/champions.json > Syndra.abilities.Q[0].effects[1].description (40 splinters -> 2 stocked Dark Sphere charges)",
+    "data/champions.json > Syndra.abilities.W[0].effects[3].description (60 splinters -> 12% + 2% per 100 AP bonus true damage)",
+    "data/champions.json > Syndra.abilities.W[0] leveling rows 'Magic Damage' and 'Bonus True Damage'",
+    "data/champions.json > Syndra.abilities.R[0] leveling rows 'Magic Damage per Sphere' / 'Minimum Magic Damage'",
+    "data/worklists/e3-stacks.json (Syndra / slot P / Transcendent stack entry)",
+    "data/worklists/e3-mechanics.json (Syndra P Transcendent mechanic summaries)",
+    "data/champion-audit/batch-6.json > Syndra",
+    "data/champion-audit/batch-e9-1.json > Syndra",
+    "docs/math-foundations.md (checked: no bearing on this leaf)"
+  ],
+  "committed": false
+}

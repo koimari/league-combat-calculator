@@ -1,0 +1,73 @@
+{
+  "receipt_id": "oracle-P5-retire-leaf29",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/sources[4]",
+  "old_value": "<absent>",
+  "new_value": "E applies cc_kind crowd control - setup before R",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "isolation": "Only data/** and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were not read."
+  },
+  "independent_computation": {
+    "step_1_what_cc_does_syndra_E_apply": {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak), effects[]",
+      "quotes": [
+        "Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit and knocks them back for 400 units and up to 800 units away from Syndra based on proximity, though not through terrain.",
+        "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast.",
+        "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% for 1.25 seconds starting after the knock back ends or if the target was hit by a pushed Dark Sphere, after the stun has ended."
+      ],
+      "conclusion": "Syndra E applies exactly three crowd-control kinds: knockback (400-800 units, base cast), stun (1.25 s, sphere-knockback branch), and, at 80 Splinters, a 70% slow for 1.25 s. There is no CC kind on E called 'cc_kind'."
+    },
+    "step_2_cc_taxonomy_check": {
+      "source": "data/wiki-atoms/crowd-control-mobility.json (44 atoms)",
+      "atom_ids_relevant": [
+        "crowd-control-mobility.knockback",
+        "crowd-control-mobility.airborne",
+        "crowd-control-mobility.stun",
+        "crowd-control-mobility.slow"
+      ],
+      "quote_stun": "Stun - Full disable: cannot move, attack, cast, or activate items for the duration; interrupts channels and attack windups; reduced by tenacity.",
+      "quote_airborne": "Airborne - Forced-displacement crowd control: the unit is flung in a direction (knock up/back/aside/pull) and cannot move, attack, or cast for the duration; tenacity does not affect it.",
+      "conclusion": "The full cached CC atom taxonomy contains no atom named 'cc_kind'. 'cc_kind' is therefore not a crowd-control kind at all."
+    },
+    "step_3_what_cc_kind_actually_is": {
+      "sources": [
+        "data/worklists/f2-task.md line 7: '... the champion modules in src/calculator/champions/ (options, parts with DamagePart metadata, dot_duration, post_hit_proc, empowers_next_auto, on_hit, cc_kind)'",
+        "data/worklists/f3-task.md line 11: '... read the actual attributes from data/champions.json (... post_hit_proc, on_hit, dot_duration, stat_buff, AMP slots, cc_kind on parts)'",
+        "data/champion-audit/batch-0.json -> Ahri.module_slots.out_of_scope[]: 'CC charm/slow (utility, cc_kind marker on E)'"
+      ],
+      "conclusion": "'cc_kind' is the NAME of a module-metadata field whose VALUE is the CC kind (Ahri E: charm/slow). The emitted string interpolated the field name instead of the field value - an unsubstituted placeholder."
+    },
+    "step_4_correct_rendering": {
+      "source": "data/champion-audit/batch-6.json -> Syndra: notable_atoms 'cc (E stun/knockback, W slow, 11 atoms)'; module_slots.out_of_scope 'E/W CC (stun, knockback, slow - utility only)'",
+      "correct_value_would_be": "E applies knockback crowd control - setup before R  (base cast; or '... stun ...' for the sphere-knockback branch)",
+      "requirement_violated": "data/worklists/f3-task.md deliverable 1c ('EMIT a rationale string citing the specific atoms that drove the order') and invariant 2b ('the rationale cites real atoms'). 'cc_kind' is not a real atom."
+    },
+    "step_5_is_the_ordering_claim_itself_supported": {
+      "sources": [
+        "data/champions.json -> Syndra.abilities.E[0].targeting = 'Direction'; notes: 'Enemies and spheres will be knocked into the direction directly away from Syndra, and the knock back has no dispersion.'",
+        "data/champions.json -> Syndra.abilities.R[0].targeting = 'Unit'; effects: 'Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.'",
+        "data/champions.json -> Syndra.abilities.Q[0]: 'The Dark Sphere then remains on the ground for 6 seconds.' (targeting 'Location', cooldown 7 s at all ranks)"
+      ],
+      "analysis": "R is Unit-targeted (point-and-click) and therefore cannot be 'missed'; it needs no CC to land, and E's base effect pushes the target 400-800 units directly AWAY from Syndra, i.e. toward or past R's range edge. The wiki-attested setup edge for R is sphere COUNT, not CC: R grabs up to 4 live spheres, and Q (7 s cooldown, spheres persist 6 s) plus W are what put live spheres on the ground. So 'E ... setup before R' is at best a weak generic CC-before-ultimate heuristic and is not the edge the cached data supports.",
+      "conclusion": "Even ignoring the placeholder token, the specific justification ('setup before R') is not derivable from the cached wiki text; the derivable pre-R setup is Q/W sphere placement."
+    },
+    "result": "The value at this leaf is wrong as emitted. The substantive fact 'Syndra E applies crowd control' is TRUE, but the CC kind is knockback (and stun on the sphere branch, slow at 80 Splinters) - never 'cc_kind', which is a module field name, not a CC kind and not an atom in the cached taxonomy."
+  },
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak) effects[] and notes",
+    "data/champions.json -> Syndra.abilities.R[0] (Unleashed Power) effects[], targeting, notes",
+    "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere) effects[], cooldown",
+    "data/wiki-atoms/crowd-control-mobility.json (full 44-atom CC taxonomy; .knockback/.airborne/.stun/.slow present, no 'cc_kind')",
+    "data/champion-audit/batch-6.json -> Syndra (notable_atoms, out_of_scope CC listing)",
+    "data/champion-audit/batch-0.json -> Ahri ('cc_kind marker on E' for charm/slow)",
+    "data/worklists/f2-task.md (cc_kind listed as module part metadata)",
+    "data/worklists/f3-task.md (deliverable 1c rationale-cites-atoms; invariant 2b)"
+  ],
+  "docs_math_foundations_check": "docs/math-foundations.md contains no formula or rule governing rotation-rationale source strings; its only rotation entry is the '_compute_ability_rotation' row (shared-timeline renewal schedule, R single-cast), which does not constrain this leaf. No formula there supports or refutes the string, so the verdict rests on the cached wiki text.",
+  "verdict": "both_wrong",
+  "verdict_rationale": "New value is wrong: 'cc_kind' is an unsubstituted metadata field name, not a crowd-control kind - Syndra E's kinds per cached wiki text are knockback (400-800 units), stun (1.25 s via knocked-back Dark Spheres) and, at 80 Splinters, a 70% slow; and the 'setup before R' justification is itself unsupported since R is Unit-targeted while E displaces the target away from Syndra (the real pre-R setup is Q/W sphere count). Old value is also not correct: E demonstrably does apply crowd control, so the absence of any CC-setup source line left a genuine, wiki-attested signal unrecorded. The correct leaf would read '<slot> applies <actual atom> crowd control ...' with a real atom value (knockback / stun), which neither the old nor the new state contains."
+}

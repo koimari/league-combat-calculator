@@ -1,0 +1,76 @@
+{
+  "receipt": "oracle-P5-retire-leaf58",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/aoe/passive",
+  "scenario": "syndra_derived_order_60",
+  "old_value": null,
+  "old_value_note": "leaf absent from the baseline",
+  "new_value": 1,
+  "verdict": "old_value_correct",
+
+  "independent_computation": {
+    "question": "What does Syndra's passive contribute to the AoE side of a one-rotation fight at the 60-splinter state?",
+    "step_1_read_the_passive": "data/champions.json -> Syndra.abilities.P (\"Transcendent\") has exactly four effect branches. Branch 1: splinter accrual rules (2 ability-damage instances on an enemy champion within 4s -> 1/2/3 splinters by level, on an 8s per-target cooldown per `onTargetCdStatic: \"8\"`; ability rank-up beyond level 1 -> 5 splinters up to 85; large minion kill -> 1 splinter; cap 120). Branch 2: mana restore 20 : 255 (based on level) on collection, travel 0.6s. Branch 3: \"At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.\" Branch 4: over-cap collection restores mana only. `damageType: null`, `affects: \"Self\"`, `targeting: \"Passive\"`.",
+    "step_2_damage_check": "No branch of P carries a damage instance, a `leveling` damage row, an AoE shape, or any `affects: Enemies` term. The only damage-bearing `leveling` row on P is a mana row (\"Per-Level Scaling\" 20..255). Therefore P's damage output is identically 0 at every splinter count, and its AoE footprint (targets hit / damage instances) is identically 0.",
+    "step_3_state_at_60_splinters": "The scenario pins 60 splinters. The 4 Transcendent thresholds in the cached wiki text are Q@40 (stocked Dark Sphere charge, max 2), W@60 (bonus true damage), E@80 (scatter angle + 70% slow), R@100 (execute below 15% max health), P@120 (+15% ability power). At 60 splinters the only threshold crossed with a numeric damage consequence is the W one, and the +15% AP Transcendence on P is NOT active (needs 120). So P's stat effect at 60 splinters is a strict no-op: AP multiplier 1.00x.",
+    "step_4_where_the_60_splinter_number_actually_belongs": "The 60-splinter bonus is W-attributed, not passive-attributed, and the cached leveling table proves it arithmetically. Wiki W prose: \"Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage\", applied to W's own magic damage 70/100/130/160/190 (+65% AP). Reconstructing the cached \"Bonus True Damage\" row from that rule: flat = 0.12 x base = 8.4 / 12 / 15.6 / 19.2 / 22.8 (matches the cached row exactly); AP coefficient = (0.12 x 0.65 + 0.02 x base/100) x 100 = 9.20 / 9.80 / 10.40 / 11.00 / 11.60 %AP (matches the cached row exactly at all five ranks); plus the quadratic 0.02 x 0.65 term the parser stores as 1.14 %AP. Every digit of the 60-splinter bonus is therefore accounted for inside the W entry (cached \"Total Mixed Damage\" row = W magic + this true-damage row). Nothing of it is left over to be booked against a `passive` line.",
+    "step_5_conclusion": "Syndra's passive contributes zero to the AoE rotation at 60 splinters: 0 damage, 0 AoE damage instances, 0 targets, and a 1.00x (inactive) AP factor. In a leaf that lives under an `aoe` node - whose siblings can only be AoE damage amounts or AoE instance/target counts - the no-op representation is 0 or, as the baseline had it, absent. A value of 1 asserts a passive contribution to the AoE rotation that no cached wiki quantity supports.",
+    "computed_correct_value": 0,
+    "computed_correct_representation": "absent (equivalently 0); the baseline's prior state"
+  },
+
+  "why_not_both_wrong": "The one plausible alternative - that `passive` is meant to carry the 60-splinter Transcendent bonus - is excluded by step 4: the bonus reconstructs exactly and completely as W's own true-damage row (all five ranks, flat and AP terms), and data/champion-audit/batch-e9-1.json attributes it to W (\"60+ W true damage\"). If it were the intended contents of this leaf the correct value would be a three-figure damage number, not 1. So the correct value is 0/absent, not some third number.",
+
+  "residual_uncertainty": "The oracle export deliberately excludes src/, tests/ and scripts/, so the golden leaf's unit is inferred from its path rather than read from the snapshot writer. Under the two readings consistent with an `aoe` parent node (per-slot AoE damage, or per-slot AoE instance/target count) the correct value is 0/absent, which is the verdict recorded here. There is one reading under which 1 would be the no-op - if the leaf were an AP multiplicative factor (1.00x, Transcendence inactive at 60 splinters) - but a multiplicative stat factor does not belong under an `aoe` damage node, and its no-op would have been present in the baseline rather than absent. Flagged so the reviewer can settle it in one glance at the snapshot writer.",
+
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0] (\"Transcendent\"), effects[0]",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. She gains Splinters of Wrath from the following:\\nDealing two instances of ability damage to an enemy champion within 4 seconds grants 1 / 2 / 3 (based on level) Splinters. This cannot occur on the same target more than once every few seconds.\\nRanking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85.\\nKilling a large minion grants 1 Splinter."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0], effects[2]",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0] scalar fields",
+      "quote": "\"damageType\": null, \"targeting\": \"Passive\", \"affects\": \"Self\", \"onTargetCdStatic\": \"8\", \"spellEffects\": null, \"onHitEffects\": null"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0] (\"Force of Will\"), effects[3] + leveling \"Bonus True Damage\"",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. -- leveling values [8.4, 12, 15.6, 19.2, 22.8] and [9.2, 9.8, 10.4, 11, 11.6] %AP and [1.14 x5] %AP; base W Magic Damage [70, 100, 130, 160, 190] + 65% AP"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q/E/R Transcendent Bonus branches",
+      "quote": "Q: \"Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\" / E: \"Collecting 80 Splinters of Wrath ... increased scatter angle and slow enemies hit by 70% ...\" / R: \"Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health.\""
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots.note",
+      "quote": "No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5, formula-audit table, \"Ability rotation casts\" row",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5, formula-audit table, \"Crit expectation\" row (linearity-of-expectation basis for per-slot damage attribution)",
+      "quote": "E[swing] = (1-p)*1 + p*CM = 1+p*(CM-1); mitigation commutes with expectation (linear in raw)"
+    }
+  ],
+
+  "method_note": "Evidence tree built exactly as specified: `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`. Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were not opened. Nothing was committed."
+}

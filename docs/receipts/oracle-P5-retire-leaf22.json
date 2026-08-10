@@ -1,0 +1,127 @@
+{
+  "receipt": "oracle-P5-retire-leaf22",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/consume[1]",
+  "old_value": "<absent>",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json -> Syndra.abilities (P/Q/W/E/R descriptions, notes, cooldown, rechargeRate, castTime)",
+      "docs/math-foundations.md (consumption-order convention; rotation/cast-schedule rows)"
+    ],
+    "not_read": [
+      "src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/*", "git history", "the diff", "the plan",
+      "data/worklists/*-task.md (deliberately skipped: task briefs could leak the change under test)"
+    ]
+  },
+  "question": "At 120 Splinters of Wrath, does the Syndra rotation's sphere-consumption list have a second entry, and is that entry 'Q2'?",
+  "independent_computation": {
+    "step_1_stack_count_unlocks_every_transcendent_threshold": {
+      "source": "data/champions.json Syndra.P / Q / W / E / R 'Transcendent Bonus' effects",
+      "quotes": [
+        "P: 'Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.'",
+        "P: 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'",
+        "Q: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+        "W: 'Transcendent Bonus: Collecting 60 Splinters of Wrath ...'",
+        "E: 'Transcendent Bonus: Collecting 80 Splinters of Wrath ...'",
+        "R: 'Transcendent Bonus: Collecting 100 Splinters of Wrath ...'"
+      ],
+      "arithmetic": "scenario stack count S = 120; thresholds T = {40 (Q), 60 (W), 80 (E), 100 (R), 120 (P)}; S >= max(T) = 120, so ALL five bonuses are active. In particular S = 120 >= 40, so the Q charge-stock bonus is active.",
+      "conclusion": "Dark Sphere charge capacity at S=120 is 2 (max stated by the wiki), not 1."
+    },
+    "step_2_two_charges_means_two_spheres_exist_in_one_rotation": {
+      "source": "data/champions.json Syndra.Q",
+      "quotes": [
+        "Q cooldown modifiers = [7,7,7,7,7], 'affectedByCdr': false; 'rechargeRate': [7,7,7,7,7]",
+        "Q notes: 'There is no limit as to how many Dark Spheres can be active at a time.'",
+        "Q notes: 'After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar.'",
+        "Q: 'Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay ... The Dark Sphere then remains on the ground for 6 seconds.'"
+      ],
+      "arithmetic": "Base Q recharge is 7 s and is NOT reduced by CDR, so with 1 charge only one Q sphere could exist per 7 s window; a second sphere inside a single rotation is possible ONLY via the 40-splinter charge stock. With capacity 2 and a full stock at fight start, casts Q1 and Q2 are both available at t=0 with no cooldown wait. Cast times: Q 'none', W 'none', E 0.25 s, R 0.25 s; using the engine's documented 0.5 s inter-cast GCD estimate for one-rotation spread (math-foundations, burn row), a Q-Q-W(-recast)-E-R rotation spans ~2.0-3.0 s < the 6 s sphere ground duration (and W's grab refreshes that duration). Both spheres are therefore live for the whole rotation. Charge cap = 2 also bounds it from above: no 'Q3' exists.",
+      "conclusion": "Exactly two Dark Spheres, from Q cast 1 and Q cast 2, exist and are available to be consumed. |consume| = 2, so index 1 must be populated (old value <absent> is under-length)."
+    },
+    "step_3_both_spheres_are_actually_consumed": {
+      "source": "data/champions.json Syndra.W / E / R",
+      "quotes": [
+        "W: 'Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster ... She prioritizes grabbing the nearest unit, then Dark Spheres.' / notes: 'Grabbing prioritizes Dark Spheres.' -> W removes and throws one sphere.",
+        "R: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones.' -> R consumes up to 4 live ground spheres; 2 <= 4.",
+        "R notes: 'Unleashed Power will not add a Sphere that Syndra is holding with Force of Will.'",
+        "E: 'Dark Spheres can be knocked back for 950 units ...' / notes: 'Scatter the Weak will delay the expiration of a Sphere until after it finishes being knocked back.' -> E displaces a sphere, it does not consume it."
+      ],
+      "arithmetic": "Consumers in the rotation: W throw (1 sphere) + R grab (up to 4 live spheres). If W is holding one sphere at R time, R skips that one (R note) but W's throw still consumes it. Either partition -- {W: Q1, R: Q2} or {W: Q2, R: Q1} or {R: Q1, Q2} -- consumes 2 spheres total. E consumes 0.",
+      "conclusion": "Total consumed spheres = 2 under every legal partition."
+    },
+    "step_4_ordering_convention_puts_Q2_at_index_1": {
+      "source": "docs/math-foundations.md (engine consumption-order convention) + Syndra Q sphere lifetime",
+      "quotes": [
+        "math-foundations, Shield absorption row: 'Consumption order = earliest-expiring timed shields first, then untimed pools (FIFO proxy)'",
+        "math-foundations, Ability rotation casts row: 'shared-timeline renewal schedule; cast starts within window ... R single-cast'",
+        "Q: 'The Dark Sphere then remains on the ground for 6 seconds.'"
+      ],
+      "arithmetic": "Every sphere carries the same 6 s timer started at its own creation, so earliest-expiring == oldest == creation order: Q1 (cast at t0) expires at t0+6, Q2 (cast at t0+dt, dt>0) expires at t0+6+dt. The engine's documented consumption convention is earliest-expiring-first / FIFO, and W's real tiebreak ('nearest') is spatial and not derivable in a positionless model, so creation order is the only derivable total order. FIFO => consume = [Q1, Q2] => consume[0] = 'Q1', consume[1] = 'Q2'. A LIFO convention (which would put 'Q1' at index 1) has no support anywhere in the wiki text: W grabs the NEAREST sphere, R grabs ALL nearby live ones, and neither is newest-first.",
+      "conclusion": "consume[1] = 'Q2'."
+    },
+    "result": "consume = ['Q1', 'Q2']; consume[1] = 'Q2', matching the new value. The old state (leaf absent, i.e. a 1-element consume list) is inconsistent with the 40-splinter Dark Sphere charge stock being active at S=120."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0].effects[0].description",
+      "text": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0].effects[2].description",
+      "text": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[1].description",
+      "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[0].description",
+      "text": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].cooldown / rechargeRate / notes",
+      "text": "cooldown values [7,7,7,7,7] with affectedByCdr=false; rechargeRate [7,7,7,7,7]; notes: 'There is no limit as to how many Dark Spheres can be active at a time.'"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0].effects[0].description and W[0].notes",
+      "text": "Active: Syndra telekinetically grabs the nearest Dark Sphere ... She prioritizes grabbing the nearest unit, then Dark Spheres. / notes: 'Grabbing prioritizes Dark Spheres.'"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].effects[1].description and R[0].notes",
+      "text": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. / notes: 'Unleashed Power will not add a Sphere that Syndra is holding with Force of Will.'; 'Spheres that are being pushed by Scatter the Weak ... will not get picked up for Unleashed Power.'"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.E[0].notes",
+      "text": "Scatter the Weak will delay the expiration of a Sphere until after it finishes being knocked back."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5 audit table, 'Shield absorption (survival walk)' row",
+      "text": "Consumption order = earliest-expiring timed shields first, then untimed pools (FIFO proxy)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5 audit table, 'Ability rotation casts' row",
+      "text": "shared-timeline renewal schedule; cast starts within window ... R single-cast"
+    }
+  ],
+  "caveats": [
+    "The scenario definition itself is not present under data/, so the rotation's exact cast list could not be read; the derivation therefore establishes (a) that two Dark Spheres necessarily exist and are consumed at S=120, and (b) that the engine's documented FIFO/earliest-expiring consumption convention orders them Q1 then Q2. Both are needed for consume[1]='Q2'.",
+    "W's real in-game tiebreak is 'nearest', which is spatial and not representable in a positionless damage model; FIFO by creation is the only order derivable from the cached sources, and it agrees with math-foundations' stated consumption convention.",
+    "The charge cap of 2 also bounds the list from above: a third entry ('Q3') would be wrong."
+  ],
+  "committed": false
+}

@@ -1,0 +1,77 @@
+{
+  "receipt": "oracle-P5-retire-leaf5",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "generated_utc": "2026-08-10",
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/rationale",
+  "old_value": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target ...",
+  "new_value": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's ... [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] ...",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle5",
+    "read": [
+      "data/champions.json (Syndra P/Q/W/E/R ability text and notes)",
+      "data/.champions.json.meta (provenance)",
+      "data/wiki/article-index.json (Syndra pageid 641379)",
+      "data/champion-audit/batch-6.json, data/champion-audit/batch-e9-1.json",
+      "docs/math-foundations.md (searched: no rotation-ordering / cc_enabler rule)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/*", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "claim_under_test": "This leaf is a prose rationale, not a number. The verifiable proposition is: does Syndra's E (Scatter the Weak) stun come from the cone itself, or only from a Dark Sphere (Q) that the cone knocks into the target — i.e. must Q precede E for the stun to exist?",
+    "step_1_read_E_effect_texts_verbatim": [
+      "Effect 1 (the cone): 'Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit and knocks them back for 400 units and up to 800 units away from Syndra based on proximity, though not through terrain.' -- damage + knockback only; the word stun does not appear.",
+      "Effect 2 (the spheres): 'Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast.' -- the 1.25 s stun is carried by the knocked-back Dark Sphere, not by the cone.",
+      "Effect 3 (Transcendent Bonus, 80 Splinters): '... increased scatter angle and slow enemies hit by 70% for 1.25 seconds starting after the knock back ends or if the target was hit by a pushed Dark Sphere, after the stun has ended.' -- the only CC the cone itself ever gains is a slow (and the knockback); still no cone stun."
+    ],
+    "step_2_where_spheres_come_from": [
+      "Q (Dark Sphere): 'Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay ... The Dark Sphere then remains on the ground for 6 seconds.' -- Q is the on-demand sphere source, with a 0.6 s spawn delay, so it must land before E for E to have a sphere to scatter.",
+      "W (Force of Will): grabs an already-existing Dark Sphere (or a minion/monster); it creates no sphere, so it cannot substitute for Q as the sphere source.",
+      "R (Unleashed Power): 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones ... The Dark Spheres will then remain on the ground next to the target's current location for 6 seconds.' -- R also leaves spheres on the ground, so R is a secondary (post-R) sphere source. This does not weaken the ordering claim: an E cast with no sphere on the ground still cannot stun, and Q is the ability whose purpose in the rotation is to place that sphere."
+    ],
+    "step_3_conclusion": "Both wordings assert the same, wiki-correct proposition: E's stun is a Dark-Sphere effect, so a sphere (canonically from Q) must exist before E if the rotation is to include a stun; hence Q is ordered before E. The cone contributes damage + knockback (and, at 80 Splinters, a slow) but never a stun.",
+    "delta_between_old_and_new": "No factual disagreement. The new value restates the same rule in dependency vocabulary ('E requires Q (declared cc_enabler)'), sharpens the mechanism ('the stun is the Dark Sphere's, not the cone's' -- exactly the cone/sphere split the two E effect texts make), and attaches a wiki citation. The old value's mechanism clause ('stuns only by scattering a sphere into the target') is also true.",
+    "caveats": [
+      "Both leaf values were supplied to this investigator truncated ('...'); only the visible clauses could be checked. Every visible clause of the new value is consistent with the cached wiki text; so is every visible clause of the old value.",
+      "The revision pin in the new value's citation (Syndra@4024662) cannot be validated from the export -- data/wiki/article-index.json records Syndra as pageid 641379 with no revision ids, and this runbook forbids leaving the export. The substantive claim the citation supports is independently confirmed by the cached ability text.",
+      "docs/math-foundations.md contains no rule governing rotation ordering or cc_enabler declarations (its rotation row covers only cast scheduling, '_schedule_shared_casts' / '_compute_ability_rotation'), so the wiki text in data/ is the only governing source for this leaf."
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[0].description (cached League Wiki, patchLastChanged 26.12, fetched_at 1786113324.862417)",
+      "quote": "Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit and knocks them back for 400 units and up to 800 units away from Syndra based on proximity, though not through terrain."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[2].description",
+      "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% for 1.25 seconds starting after the knock back ends or if the target was hit by a pushed Dark Sphere, after the stun has ended."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1..2].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. / The Dark Spheres will then remain on the ground next to the target's current location for 6 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].notes",
+      "quote": "Spheres spawned at close range of the ability are more likely to be hit. ... Scatter the Weak will delay the expiration of a Sphere until after it finishes being knocked back."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "| Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... | (no cc_enabler / ordering-rationale rule stated anywhere in the document)"
+    }
+  ],
+  "verdict": "new_value_correct",
+  "verdict_note": "The new rationale is correct and better sourced: the cached wiki text puts the 1.25 s stun exclusively on the knocked-back Dark Sphere and gives the cone only damage + knockback (+ a 70% slow at 80 Splinters), which is exactly the 'the stun is the Dark Sphere's, not the cone's' claim, and it is what forces Q before E. The old value's mechanism clause was not false -- it asserted the same dependency in looser wording -- so this is a sharpening plus citation, not a factual correction; 'old_value_correct' is nevertheless the wrong verdict because it would imply the new value is wrong, and no clause of the new value contradicts the source data."
+}

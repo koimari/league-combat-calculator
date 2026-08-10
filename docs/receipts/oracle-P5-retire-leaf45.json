@@ -1,0 +1,109 @@
+{
+  "receipt": "oracle-P5-retire-leaf45",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/sources[4]",
+  "old_value": "<absent>",
+  "new_value": "E applies cc_kind crowd control - setup before R",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle45",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never opened."
+  },
+
+  "claim_decomposition": [
+    {
+      "claim": "Syndra's E carries a crowd-control effect (a cc_kind marker is factually warranted).",
+      "status": "TRUE",
+      "basis": "data/champions.json -> Syndra.abilities.E 'Scatter the Weak' effect text names a knockback on the base cast, a 1.25 s stun via pushed Dark Spheres, and a 70% / 1.25 s slow at the Transcendent bonus. All three are crowd control per the cached CC vocabulary."
+    },
+    {
+      "claim": "Knockback / stun / slow are 'crowd control' in this repo's cached vocabulary (not merely flavor text).",
+      "status": "TRUE",
+      "basis": "data/wiki-atoms/crowd-control-mobility.json defines atoms 'crowd-control-mobility.knockback' (Forced displacement away from the source), 'crowd-control-mobility.stun' (Full disable: cannot move, attack, cast...), and 'crowd-control-mobility.slow'. data/atoms/classification-report.json independently attributes 11 'crowd-control-mobility' atoms to champion 'syndra' out of 43 total atoms."
+    },
+    {
+      "claim": "The CC ability belongs BEFORE R in the derived order ('setup before R').",
+      "status": "TRUE",
+      "basis": "R 'Unleashed Power' is targeting=Unit, castTime 0.25 s, a single-target sphere barrage and the only finisher; it applies no crowd control of its own (its only non-damage clause is a passive granting Dark Sphere ability haste). E's stun is 1.25 s > R's 0.25 s cast, so the CC window strictly covers the ultimate. The documented derivation rule (data/worklists/f3-task.md, deliverable 1a) states an ability whose rows indicate application ('...slow/root/stun/on-hit ... cc_kind on parts') must precede the abilities it sets up. Nothing in the cached data supports the reverse (R before E) ordering."
+    },
+    {
+      "claim": "A 5th source line (index 4) is warranted rather than the previous 4-entry list.",
+      "status": "TRUE (the rationale it carries is sourced and non-duplicative)",
+      "basis": "The added line states a distinct, independently sourced fact about the order (CC setup) that no damage/cooldown rationale expresses. Its ordinal position within the receipt array is a presentation detail; the assertion it makes is correct."
+    }
+  ],
+
+  "independent_computation": {
+    "method": "Ability-text derivation, not numeric. The leaf is a rotation-receipt rationale string, so the oracle question is whether the cached wiki text for Syndra supports (a) a crowd-control marker on E and (b) E preceding R.",
+    "step_1_read_E": "data/champions.json -> Syndra.abilities.E[0]: name 'Scatter the Weak', targeting 'Direction', castTime 0.25, cooldown 15/15/15/15/15, damageType MAGIC_DAMAGE. Effect 1: 'propels a wave of force in a cone ... deals magic damage to enemies hit and KNOCKS THEM BACK for 400 units and up to 800 units away from Syndra based on proximity'. Effect 2: 'Dark Spheres can be knocked back for 950 units ... knocking back enemies they hit over 70 units ... Targets hit are also STUNNED for 1.25 seconds'. Effect 3 (Transcendent, 80 Splinters): '... SLOW enemies hit by 70% for 1.25 seconds'.",
+    "step_2_classify": "Map each named effect onto data/wiki-atoms/crowd-control-mobility.json: knockback -> crowd-control-mobility.knockback; stun -> crowd-control-mobility.stun; 70% slow -> crowd-control-mobility.slow. => E carries crowd control on its BASE cast (knockback), not only conditionally. cc_kind on E is correct.",
+    "step_3_read_R": "data/champions.json -> Syndra.abilities.R 'Unleashed Power': targeting 'Unit', castTime 0.25, cooldown 120/100/80, 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones ... barrages the target enemy champion'. Leveling rows: Magic Damage per Sphere 80/120/160 (+20% AP), Minimum Magic Damage 240/360/480 (+60% AP), Maximum 560/840/1120 (+140% AP). No crowd-control clause anywhere in R; its passive grants only Dark Sphere ability haste 10/20/30.",
+    "step_4_order": "R is a targeted, uninterruptible single-target finisher with no self-provided CC and the longest cooldown (120 s at rank 1 - consistent with the scenario id suffix '120'). E is the only base-cast hard-CC in the kit (W's 25% / 1.5 s slow is a recast-only soft CC). Stun duration 1.25 s exceeds R's 0.25 s cast time, so E-then-R keeps the target disabled through the ultimate. Therefore the derived order must place E before R, and a rationale line saying exactly that is correct.",
+    "conclusion": "The statement 'E applies cc_kind crowd control - setup before R' is fully supported by the cached wiki text. Its absence (old value) left the derived order's CC-setup justification unstated. new_value_correct."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.E[0] 'Scatter the Weak'",
+      "quote": "Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit and knocks them back for 400 units and up to 800 units away from Syndra based on proximity, though not through terrain."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.E[0] second effect",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.E[0] Transcendent bonus",
+      "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% for 1.25 seconds starting after the knock back ends or if the target was hit by a pushed Dark Sphere, after the stun has ended."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R 'Unleashed Power' (targeting: Unit, castTime 0.25, cooldown 120/100/80)",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W 'Force of Will' recast (the only other CC in the kit, soft)",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... All targets hit are slowed by 25% for 1.5 seconds."
+    },
+    {
+      "file": "data/wiki-atoms/crowd-control-mobility.json",
+      "locator": "atom crowd-control-mobility.knockback",
+      "quote": "Knockback - Forced displacement away from the source (Trait_KnockBack)."
+    },
+    {
+      "file": "data/wiki-atoms/crowd-control-mobility.json",
+      "locator": "atom crowd-control-mobility.stun",
+      "quote": "Stun - Full disable: cannot move, attack, cast, or activate items for the duration; interrupts channels and attack windups; reduced by tenacity."
+    },
+    {
+      "file": "data/atoms/classification-report.json",
+      "locator": "champion 'syndra' family_counts",
+      "quote": "\"champion\": \"syndra\", \"atom_count\": 43, \"family_counts\": {\"crowd-control-mobility\": 11, \"damage\": 19, \"stack-transform-summon-resource\": 13}"
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "locator": "deliverable 1a (setup/consume edge detection rule)",
+      "quote": "DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume ... cc_kind on parts."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "engine-family audit table, 'Ability rotation casts' row",
+      "quote": "Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast",
+      "relevance": "Confirms R is modeled as a single cast per rotation, so its placement relative to the CC setup is a one-shot ordering decision, not a cadence question."
+    }
+  ],
+
+  "caveats_flagged": [
+    "The receipt line is a rationale string, not a number; it cannot be checked against a closed-form formula. Its correctness is an ability-text question, and the cached text answers it unambiguously.",
+    "Aside (does not change this verdict): data/champions.json Syndra R notes say 'Spheres that are being pushed by Scatter the Weak (normally ones that were made late during the push) will not get picked up for Unleashed Power.' Casting E in the same instant as R can therefore, in the real game, shrink R's sphere count below the 7-sphere maximum (Maximum Magic Damage 560/840/1120 + 140% AP). Whether the engine models sphere positions at all is a separate leaf; the CC-setup ordering rationale itself remains correct.",
+    "Aside: W's recast slow (25% / 1.5 s) is also crowd control by the same atom vocabulary. If the resolver marks cc_kind only on E, that is a defensible modeling choice (E is the only base-cast hard CC), but it means the source list understates rather than overstates the kit's CC.",
+    "The array index (4) could not be verified from data/ alone, since the preceding four rationale strings are produced by code outside this evidence tree. Only the truth of the added statement was adjudicated."
+  ]
+}

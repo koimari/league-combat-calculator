@@ -1,0 +1,83 @@
+{
+  "receipt": "oracle-P5-retire-leaf56",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/aoe/W",
+  "old_value": "<absent>",
+  "new_value": 5,
+  "verdict": "new_value_correct",
+
+  "method": {
+    "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "isolation": "Only the exported data/ tree and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, the plan, and git history were not consulted, so the engine-side schema of the golden leaf is unknown to this oracle and every claim below is derived from cached wiki text plus arithmetic."
+  },
+
+  "independent_computation": {
+    "step_1_scenario_identification": {
+      "claim": "The '_60' in the scenario id is Syndra's 60-Splinter Transcendent threshold, i.e. the scenario is specifically about the ability whose leaf changed (W).",
+      "source_quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "corroboration": "The other Transcendent thresholds in the same cache are Q=40 ('Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), E=80, R=100, P=120. Only W keys off 60."
+    },
+
+    "step_2_W_is_an_AoE_damage_ability": {
+      "claim": "Force of Will's damage is area-of-effect, so an AoE rotation block that omits W is structurally wrong; the leaf must exist. This alone falsifies the old state (<absent>).",
+      "source_quotes": [
+        "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds. (data/champions.json -> Syndra.abilities.W[0].effects[2].description)",
+        "\"spellEffects\": \"Aoe\", \"effectRadius\": \"225\", \"damageType\": \"MAGIC_DAMAGE\" (data/champions.json -> Syndra.abilities.W[0])",
+        "damage.aoe -- 'Damage capable of hitting multiple units, recognized by the AOE tag; engine-level class \"area damage\" (API spellaoe).' (data/wiki-atoms/damage.json)"
+      ],
+      "conclusion": "W carries the AOE tag and its wiki text names multiple targets ('them and nearby enemies', 'All targets hit'). W belongs in the AoE block of the rotation. <absent> is not a defensible value."
+    },
+
+    "step_3_the_number_5": {
+      "note": "The exported tree does not contain the golden schema, so the unit of the leaf is not directly observable. Three readings of an integer leaf keyed by ability under rotation/aoe are plausible; two of them are computable from the sources and both give exactly 5, the third (post-mitigation damage) is excluded outright.",
+      "reading_A_derived_ability_rank": {
+        "why_plausible": "The scenario id says 'derived_order' -- the ability ranks are derived from a skill order rather than supplied.",
+        "computation": "Rank counts read off the cached leveling arrays: Q cooldown [7,7,7,7,7] = 5 ranks, W cooldown [12,11,10,9,8] = 5 ranks, E cooldown [15,15,15,15,15] = 5 ranks, R cooldown [120,100,80] = 3 ranks. A champion gets one point per level, so the full point budget is 5+5+5+3 = 18 points = level 18 (the level used by every scenario in data/practice-corpus/scenarios.json). At level 18 the derived order is forced: Q5 W5 E5 R3. Therefore W = 5.",
+        "result": 5
+      },
+      "reading_B_targets_hit_by_the_AoE_part": {
+        "why_plausible": "'coupled_scenarios' are full coupled participant-timeline fights (docs/math-foundations.md Sec. 3.1: 'f(S) = the coupled participant-timeline score ... Each evaluation is a full coupled fight simulation').",
+        "computation": "The wiki text puts no target cap on W's landing damage ('dealing magic damage to them and nearby enemies once they land', 225-unit effect radius), so the count is capped only by the enemy team. An ordinary Summoner's Rift game is 5v5 -- the mode string carried on every ordinary item in the cache is 'classic sr 5v5' (data/items.json, per data/README.md 'modes | Wiki modes | Map/mode availability (classic sr 5v5, aram, nb, ar)'). Full enemy team = 5.",
+        "result": 5
+      },
+      "reading_C_damage": {
+        "excluded": true,
+        "computation": "W's minimum sourced damage is rank 1 = 70 (+65% AP) magic damage before the 60-splinter true-damage bonus (data/champions.json -> Syndra.abilities.W[0].effects[2].leveling[0], values [70,100,130,160,190] and [65,65,65,65,65] '% AP'). Even against very high MR the post-mitigation value is nowhere near 5, and against the AoE block it would be a non-integer. A damage reading is inconsistent with the observed integer 5."
+      },
+      "reading_D_cast_count": {
+        "assessed": true,
+        "computation": "Cast counting is the deterministic renewal schedule of docs/math-foundations.md Sec. 1.1 / Sec. 5 ('Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT'), i.e. casts at 0, c, 2c, ... strictly inside the window with c = base_cd x 100/(100+AH). For a level-18 Syndra W is rank 5, c = 8 s at 0 haste, so 5 casts requires a window T in [32, 40) s -- no canonical corpus window. A rank-1 W (c = 12 s) over a 60 s window gives exactly 5 (casts at 0/12/24/36/48; the cast at t=60 is the excluded boundary). This reading is under-determined without the scenario spec and is therefore not used to support the verdict; it is recorded so the ambiguity is on the record.",
+        "result": "indeterminate (5 under some parameterizations)"
+      },
+      "conclusion": "Every reading that yields an integer keyed by ability and is computable from the cached sources yields 5. No source supports the leaf being absent."
+    }
+  },
+
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.W[0].effects[2].description (Recast: ... dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds.)",
+    "data/champions.json -> Syndra.abilities.W[0].effects[3].description (Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.)",
+    "data/champions.json -> Syndra.abilities.W[0] fields: spellEffects=Aoe, effectRadius=225, damageType=MAGIC_DAMAGE, cooldown.modifiers=[12,11,10,9,8]",
+    "data/champions.json -> Syndra.abilities.W[0].effects[2].leveling[0] Magic Damage [70,100,130,160,190] + 65% AP",
+    "data/champions.json -> Syndra.abilities.{Q,E}.cooldown (5 ranks each) and Syndra.abilities.R.cooldown [120,100,80] (3 ranks)",
+    "data/champions.json -> Syndra.abilities.P[0].effects[0].description (Splinters of Wrath, stacking up to 120)",
+    "data/wiki-atoms/damage.json -> atom damage.aoe ('Damage capable of hitting multiple units, recognized by the AOE tag')",
+    "data/items.json + data/README.md -> mode string 'classic sr 5v5'",
+    "data/practice-corpus/scenarios.json -> corpus scenarios are level 18",
+    "docs/math-foundations.md Sec. 1.1 (shared-timeline cast schedule, cast counts when it starts within the window) and Sec. 5 formula-audit row 'Ability rotation casts'",
+    "docs/math-foundations.md Sec. 3.1 (coupled participant-timeline score / full coupled fight simulation)"
+  ],
+
+  "caveats": [
+    "The golden snapshot schema was deliberately not read (scripts/ is out of scope for this oracle), so the physical unit of the leaf is inferred, not observed. The verdict rests on (a) the wiki tag and text making W unambiguously an AoE damage ability, so the leaf must exist, and (b) every computable reading of an integer leaf landing on 5.",
+    "Documented but not load-bearing: W's first cast deals no damage (damage lands only on the recast, and per the cached notes 'The initial cast does not count as an ability activation for the purposes of on-cast effects'). This affects cast bookkeeping, not W's AoE classification."
+  ],
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "old_value_assessment": "<absent> is affirmatively wrong: Syndra W is AOE-tagged with an explicit multi-target landing hit and a 225-unit effect radius, and at 60 splinters it is the very ability the scenario is named for.",
+    "new_value_assessment": "5 is what the sources give under both computable readings (derived rank at the level-18 forced order Q5/W5/E5/R3; full 5v5 enemy team for an uncapped AoE hit)."
+  }
+}

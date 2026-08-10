@@ -1,0 +1,121 @@
+{
+  "receipt_id": "oracle-P5-retire-leaf9",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-10",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra slot inventory)",
+      "data/champion-audit/batch-e9-1.json (Syndra gap summary)",
+      "data/wiki-atoms/stack-transform-summon-resource.json (ammo/stocked-charge atom)",
+      "data/worklists/f2-task.md, data/worklists/f3-task.md (rotation receipt shape + setup/consume derivation contract)",
+      "docs/math-foundations.md (searched; contains no Syndra-specific term)"
+    ],
+    "scope_not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "leaf": {
+    "path": "/coupled_scenarios/syndra_derived_order_39/rotation/setup[2]",
+    "old_value": "<absent>",
+    "new_value": "Q2"
+  },
+
+  "question": "Should the derived rotation's setup group for Syndra contain a Q2 (second Dark Sphere charge) cast?",
+
+  "independent_computation": {
+    "step_1_what_Q2_is": {
+      "claim": "Q2 is a real, wiki-sourced second Dark Sphere cast, not a synthetic invention.",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "corroboration": [
+        "data/champions.json -> Syndra.abilities.Q[0].notes: 'After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only.'",
+        "data/champions.json -> Syndra.abilities.Q[0].rechargeRate = [7,7,7,7,7] (charge recharge, distinct from a plain cooldown)",
+        "data/wiki-atoms/stack-transform-summon-resource.json: ammo atom description names 'stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)'",
+        "data/champion-audit/batch-6.json -> Syndra: modeled slots ['P','Q','Q2','W','E','R']; 'ammo (Q 2nd charge at 40 splinters)'; 'splinters option (0-120) gates Q2 second charge'"
+      ]
+    },
+
+    "step_2_is_Q2_a_setup_cast": {
+      "claim": "Q2 conjures a Dark Sphere with effects identical to Q, and every other Syndra ability consumes live Dark Spheres. Therefore Q2 is a setup (applier) cast under the same rule that makes Q one.",
+      "sphere_producer": {
+        "source": "Syndra.abilities.Q[0].effects[0].description",
+        "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+      },
+      "sphere_consumers": [
+        {
+          "slot": "W",
+          "source": "Syndra.abilities.W[0].effects[0] / effects[2]",
+          "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location ... Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land."
+        },
+        {
+          "slot": "E",
+          "source": "Syndra.abilities.E[0].effects[1]",
+          "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+        },
+        {
+          "slot": "R",
+          "source": "Syndra.abilities.R[0].effects[1]",
+          "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+        }
+      ],
+      "conclusion": "The setup/consume edge is Q(sphere) -> {W, E, R}. Q2 emits the same Dark Sphere object, so the identical edge Q2 -> {W, E, R} holds. A classification that puts Q in the setup group and leaves Q2 out is internally inconsistent."
+    },
+
+    "step_3_numeric_consequence": {
+      "claim": "Each pre-placed live sphere is worth exactly one extra R barrage sphere (up to 4), so ordering Q2 before R is not cosmetic.",
+      "source": "Syndra.abilities.R[0].effects[1].leveling",
+      "rows": {
+        "Magic Damage per Sphere": "80 / 120 / 160 (+ 20% AP)",
+        "Minimum Magic Damage": "240 / 360 / 480 (+ 60% AP)",
+        "Maximum Magic Damage": "560 / 840 / 1120 (+ 140% AP)"
+      },
+      "arithmetic": [
+        "Minimum / per-sphere = 240/80 = 360/120 = 480/160 = 3.0 spheres; AP: 60/20 = 3.0 -> the 3 self-conjured spheres.",
+        "Maximum / per-sphere = 560/80 = 840/120 = 1120/160 = 7.0 spheres; AP: 140/20 = 7.0 -> 3 conjured + 4 grabbed live spheres.",
+        "Therefore each live sphere on the ground at R time adds exactly 80/120/160 (+20% AP) raw magic damage, up to 4."
+      ],
+      "timing_feasibility": [
+        "Sphere ground duration is 6 s (Q effects[0]); R's spheres also 'remain on the ground next to the target's current location for 6 seconds' (R effects[2]).",
+        "Because the 40-splinter bonus STOCKS a charge (max 2), Q and Q2 can be cast back-to-back with no 7 s wait, so both spheres are alive simultaneously inside the 6 s window before W/E/R.",
+        "R notes confirm freshly placed spheres count: 'A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown.'"
+      ]
+    },
+
+    "step_4_availability_gate": {
+      "claim": "The 40-splinter threshold that unlocks Q2 is met from skill points alone at any champion level >= 9, so a standard level-18 scenario always has Q2 available.",
+      "source": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85.",
+      "arithmetic": [
+        "rank_splinters(level) = min(5 * (level - 1), 85)",
+        "level 8  -> 35  (< 40, Q2 unavailable)",
+        "level 9  -> 40  (= threshold, Q2 available)",
+        "level 18 -> 85  (>> 40)",
+        "level 20 -> 85  (>> 40)"
+      ],
+      "note": "This is the passive floor before any combat-earned splinters (2 ability-damage instances within 4 s on a champion grant 1/2/3 based on level; large-minion kills grant 1)."
+    },
+
+    "residual_uncertainty": [
+      "The scenario definition for 'syndra_derived_order_39' lives outside the permitted evidence tree (data/ and docs/math-foundations.md contain no 'coupled_scenarios', 'derived_order', or 'syndra_derived_order_39' string), so I could not read this scenario's champion level or splinters option. The '39' suffix is read as a corpus index, not a splinter count; if it were a splinter count of 39 the leaf would be wrong, but nothing in the cached data supports that reading, and 39 is not reachable from the rank-splinter ladder (multiples of 5).",
+      "I verified the ORDERING invariant (every sphere-producing cast must precede W/E/R) and Q2's membership in the setup group. I could not verify that index 2 specifically is the right slot inside the setup list, only that Q2 belongs there rather than after the consumers."
+    ]
+  },
+
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.Q[0].effects[0].description (sphere conjure, 6 s ground duration)",
+    "data/champions.json -> Syndra.abilities.Q[0].effects[1].description (Transcendent Bonus: 40 Splinters -> stock a Dark Sphere charge, max 2)",
+    "data/champions.json -> Syndra.abilities.Q[0].notes and rechargeRate [7,7,7,7,7]",
+    "data/champions.json -> Syndra.abilities.P[0].effects[0].description (5 Splinters per rank-up beyond level 1, up to 85)",
+    "data/champions.json -> Syndra.abilities.W[0].effects[0] and effects[2] (grab nearest Dark Sphere; recast throw damage)",
+    "data/champions.json -> Syndra.abilities.E[0].effects[1] (Dark Spheres knocked back; 1.25 s stun)",
+    "data/champions.json -> Syndra.abilities.R[0].effects[1] + leveling rows (3 conjured + up to 4 live; per-sphere / minimum / maximum damage) and R notes",
+    "data/wiki-atoms/stack-transform-summon-resource.json (ammo atom naming Syndra's Dark Sphere as a stocked ability cast)",
+    "data/champion-audit/batch-6.json -> Syndra (Q2 as the modeled 2nd-charge slot, gated by the splinters option)",
+    "data/worklists/f2-task.md and f3-task.md (rotation receipt contract: derive order from setup/consume edges; appliers must precede consumers)",
+    "docs/math-foundations.md (checked end to end; no Syndra-specific formula, so no counter-evidence from there)"
+  ],
+
+  "verdict": "new_value_correct",
+  "verdict_rationale": "Q2 is the wiki-sourced second stocked Dark Sphere charge (40-Splinter Transcendent Bonus, max 2 charges). It produces a live Dark Sphere identical to Q, and all three of Syndra's other damaging casts consume live spheres: W grabs and throws one, E's stun requires knocking one back, and R grabs up to 4 live ones at 80/120/160 (+20% AP) each (verified: min = 3x per-sphere, max = 7x per-sphere, exactly). So a sphere-producing cast must sit in the setup group ahead of W/E/R, and Q2 is such a cast. Leaving it out (the old <absent>) would let the second charge fire after the consumers, forfeiting one R barrage sphere and one E-stun enabler. The unlock threshold is also satisfied by construction at any level >= 9 from skill points alone (min(5*(level-1), 85) >= 40)."
+}

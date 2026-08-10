@@ -1,0 +1,120 @@
+{
+  "receipt": "oracle-P5-retire-leaf11",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/setup[1]",
+  "scenario": "syndra_derived_order_60",
+  "old_value": null,
+  "old_value_note": "<absent> (setup list had no index 1)",
+  "new_value": "Q",
+  "verdict": "new_value_correct",
+
+  "evidence_isolation": {
+    "method": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle11",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "question_restated": "For Syndra's derived cast order at 60 Splinters of Wrath, should the rotation's `setup` list carry a second entry, and should that entry be Q (Dark Sphere)?",
+
+  "independent_computation": {
+    "step_1_what_60_means": {
+      "claim": "60 is Syndra's Splinters-of-Wrath threshold, and the ability it gates is W (Force of Will).",
+      "derivation": "The cached passive text enumerates Splinter thresholds one per ability. Reading each ability's 'Transcendent Bonus' effect in data/champions.json gives: Q = 40 Splinters (Dark Sphere charges, max 2), W = 60 Splinters (bonus true damage), E = 80 Splinters (scatter angle + 70% slow), R = 100 Splinters (15%-max-HP execute), P capstone = 120 Splinters (+15% AP). Therefore the 60 scenario is exactly the state in which W's enhanced damage row turns on."
+    },
+    "step_2_only_Q_creates_the_consumed_resource": {
+      "claim": "Every consume edge in Syndra's kit consumes a Dark Sphere, and Dark Spheres are created only by Q. No other ability can occupy a setup slot.",
+      "derivation": [
+        "Q is the sole producer: 'Syndra conjures a Dark Sphere at the target location ... The Dark Sphere then remains on the ground for 6 seconds.' (Q effect 0)",
+        "W consumes a sphere: 'Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units ... She prioritizes grabbing the nearest unit, then Dark Spheres.' (W effect 0). W's damage is on the RECAST throw (W effect 2), so with no minion/monster in a champion-vs-champion coupled fight, W deals ZERO damage unless a Q sphere already exists.",
+        "E consumes a sphere for its full payload: 'Dark Spheres can be knocked back ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast.' (E effect 1)",
+        "R consumes live spheres: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones.' (R effect 1)",
+        "W and E are DISQUALIFIED as setup-side abilities by explicit cached notes: R's notes say 'Unleashed Power will not add a Sphere that Syndra is holding with Force of Will' and 'Spheres that are being pushed by Scatter the Weak ... will not get picked up for Unleashed Power.' Both W and E are strictly consumers of the sphere resource, never producers.",
+        "=> Any element of Syndra's setup list, at any index, must be Q. There is no alternative candidate in her kit."
+      ]
+    },
+    "step_3_there_are_at_least_two_distinct_setup_edges_at_60": {
+      "claim": "At 60 Splinters the derived order carries at least two independent Q-before-consumer edges, so a setup list of length >= 2 is right.",
+      "edges": [
+        {
+          "edge": "Q -> W (newly load-bearing at 60 Splinters)",
+          "why": "W's 60-Splinter row is a real parsed damage row, not flavor: leveling attributes 'Bonus True Damage' and 'Total Mixed Damage' exist only under W effect 3 ('Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage').",
+          "numeric_check": "Bonus True Damage base per rank = [8.4, 12, 15.6, 19.2, 22.8]; W magic base per rank = [70, 100, 130, 160, 190]. bonus/base = 0.12 exactly at every rank, matching the quoted 12%. Total Mixed Damage = [78.4, 112, 145.6, 179.2, 212.8] = base + bonus exactly at every rank. The row is internally consistent and active at 60.",
+          "consequence": "All of that (78.4 -> 212.8 flat, +74.2%-76.6% AP) is contingent on there being a grabbable Dark Sphere; against a lone champion that means a preceding Q. Q must precede W."
+        },
+        {
+          "edge": "Q -> R (sphere count)",
+          "why": "R conjures 3 spheres itself and collects up to 4 live ones.",
+          "numeric_check": "From the cached R rows: per-sphere = [80,120,160] (+20% AP); Minimum = [240,360,480] (+60% AP); Maximum = [560,840,1120] (+140% AP). Minimum / per-sphere = 3.0 at every rank (flat AND AP term) and (Maximum - Minimum) / per-sphere = 4.0 at every rank (flat AND AP term). The cache therefore arithmetically confirms 3 self-conjured + up to 4 Q-supplied spheres. Each pre-placed Q sphere is worth a full extra sphere of R damage, e.g. R rank 3 with 500 AP: 480 + 0.6*500 = 780 at 0 live spheres vs 1120 + 1.4*500 = 1820 at 4 live spheres (+1040 = 4 * (160 + 0.2*500)).",
+          "consequence": "Q must precede R."
+        }
+      ],
+      "availability_check": "Two back-to-back Q casts are physically available in this exact state: Q's 40-Splinter Transcendent Bonus ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2') is already satisfied at 60 Splinters, and the cached Q rows give cooldown 7s / rechargeRate 7s with R's passive granting Dark Sphere 10/20/30 ability haste. So a two-Q setup phase is legal, not hypothetical."
+    },
+    "conclusion": "The setup side of Syndra's derived order at 60 Splinters is Q for every detected edge, and at 60 Splinters there are at least two such edges (Q->W, newly enabled by the 60-Splinter true-damage row, and Q->R). A setup list containing a second entry whose value is 'Q' is correct. The only reading under which <absent> could be right is a de-duplicated set of setup abilities -- but a de-duplicated set could never hold 'Q' twice, and de-duplicating would also erase the fact that the 60-Splinter W enhancement is itself gated behind a Q. Independently of index semantics, no ability other than Q can ever legally appear in a Syndra setup slot, so 'Q' is the only value this leaf could correctly hold."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds. ... She prioritizes grabbing the nearest unit, then Dark Spheres."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, ... dealing magic damage to them and nearby enemies once they land."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].leveling",
+      "quote": "'Bonus True Damage' = [8.4, 12, 15.6, 19.2, 22.8] (+9.2..11.6% AP); 'Total Mixed Damage' = [78.4, 112, 145.6, 179.2, 212.8]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds, ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[2].description",
+      "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak ..."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].leveling",
+      "quote": "'Magic Damage per Sphere' = [80,120,160] (+20% AP); 'Minimum Magic Damage' = [240,360,480] (+60% AP); 'Maximum Magic Damage' = [560,840,1120] (+140% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].notes",
+      "quote": "Unleashed Power will not add a Sphere that Syndra is holding with Force of Will. / Spheres that are being pushed by Scatter the Weak ... will not get picked up for Unleashed Power. / A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "source": "data/worklists/f3-task.md (setup/consume edge semantics, in-tree under data/)",
+      "quote": "DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application ... must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing) ... the derived order never violates a detected setup/consume edge"
+    }
+  ],
+
+  "caveats": [
+    "The engine-side shape of the `rotation.setup` list (per-edge vs de-duplicated) was not inspected -- src/, tests/ and scripts/ were deliberately not read, per the runbook. The verdict rests on the kit-level fact that Q is the sole producer of the resource every Syndra consumer needs, so no non-Q value could be correct at this index, and on the 60-Splinter W row being a genuine, arithmetically self-consistent damage row that is unreachable without a preceding Q.",
+    "Aside (off-task, flagged per house rules): the Q->W setup edge is not actually specific to 60 Splinters -- W has needed a Dark Sphere to deal any damage in a champion-only fight at every Splinter count. If the sibling scenarios at 0/40 Splinters do not also carry a Q setup entry for W, that is a separate under-detection worth checking."
+  ]
+}

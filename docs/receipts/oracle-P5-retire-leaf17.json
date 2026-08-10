@@ -1,0 +1,76 @@
+{
+  "receipt": "oracle-P5-retire-leaf17",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md`, nothing else read)",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/consume[2]",
+  "old_value": null,
+  "old_value_note": "<absent> — the consume list had only 2 entries; index 2 did not exist",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+
+  "what_the_leaf_means": {
+    "derivation": "The only definition of a rotation `consume` list inside the evidence tree is data/worklists/f3-task.md, which specifies the optimal-event-order engine's setup/consume edge detector.",
+    "quote": "DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing); read the actual attributes from data/champions.json (e.g. 'Bonus Damage', 'Enhanced', 'Total Enhanced', 'per stack', 'poisoned', '% of target's', ...)",
+    "source": "data/worklists/f3-task.md, DELIVERABLES 1a (see also invariant 2a: 'the derived order never violates a detected setup/consume edge')",
+    "consequence": "`rotation.consume` is the set of slots detected as consumers of state applied earlier in the rotation. The question reduces to: does Syndra's R consume state that an earlier cast applies?"
+  },
+
+  "independent_computation": {
+    "step_1_cached_wiki_text_for_R": {
+      "source": "data/champions.json -> Syndra.abilities.R[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "reading": "R draws up to 4 pre-existing (live) Dark Spheres off the field and expends them in the barrage. Dark Spheres are applied to the field by Q (Q creates one that 'remains on the ground for 6 seconds') and refreshed by W ('If a Dark Sphere is grabbed, its duration is refreshed')."
+    },
+    "step_2_leveling_rows_confirm_per_sphere_consumption": {
+      "source": "data/champions.json -> Syndra.abilities.R[1].leveling",
+      "rows": {
+        "Magic Damage per Sphere": "80 / 120 / 160 (+ 20% AP)",
+        "Minimum Magic Damage": "240 / 360 / 480 (+ 60% AP)",
+        "Maximum Magic Damage": "560 / 840 / 1120 (+ 140% AP)"
+      },
+      "arithmetic": {
+        "min_is_3_spheres": "3 x 80 = 240; 3 x 120 = 360; 3 x 160 = 480; 3 x 20% = 60% AP  -> all match the Minimum row exactly",
+        "max_is_7_spheres": "7 x 80 = 560; 7 x 120 = 840; 7 x 160 = 1120; 7 x 20% = 140% AP -> all match the Maximum row exactly",
+        "sphere_count_identity": "7 = 3 conjured + 4 grabbed live ones, exactly the prose",
+        "closed_form": "R_damage(n_live) = (3 + min(n_live, 4)) x (80/120/160 + 20% AP)",
+        "sensitivity": "max/min = 560/240 = 840/360 = 1120/480 = 2.3333x at every rank; the 4 consumed live spheres are +133.3% damage on R"
+      },
+      "conclusion": "R's damage is a strict, first-order, per-unit function of Dark Spheres already on the field. That is a 'per-stack / X-stack' consume row under the f3 detector, and a real Q-before-R ordering edge: casting R before the spheres exist costs up to 57% of R's damage."
+    },
+    "step_3_second_independent_ground": {
+      "source": "data/champions.json -> Syndra.abilities.R[3].description",
+      "quote": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health.",
+      "reading": "Matches the detector's 'enhanced' and '% of their maximum health' keyword classes independently of the sphere argument."
+    },
+    "step_4_index_2_is_consistent": {
+      "slot_order": "Syndra's modeled slots are P, Q, Q2, W, E, R (data/champion-audit/batch-6.json: modeled = [P, Q, Q2, W, E, R]).",
+      "pre_existing_consumers": "W and E each carry a Transcendent 'enhances' row -- W: 'Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage' with 'Bonus True Damage' / 'Total Mixed Damage' rows; E: 'Collecting 80 Splinters of Wrath enhances Scatter the Weak ...'. Two pre-existing entries -> the old list was length 2 (indices 0,1), so a newly detected R appends at index 2 in slot order [W, E, R].",
+      "conclusion": "index 2 is the correct position for R; the change is an append, not a reordering."
+    },
+    "step_5_counter_argument_considered": {
+      "objection": "R is not a NET destroyer of the sphere pool -- data/champions.json Syndra.abilities.R[2]: 'The Dark Spheres will then remain on the ground next to the target's current location for 6 seconds.' Net pool change is +3.",
+      "rebuttal": "The f3 detector classifies by damage dependence on previously applied state, not by net resource bookkeeping (its own examples -- 'detonate-before-stack-application', 'amp-after-the-burst' -- are ordering edges, and Braum/Vayne-style detonations likewise re-emit state). R's per-sphere row makes R strictly better after Q, which is precisely the invariant the consume list exists to protect. The objection does not survive.",
+      "residual_risk": "None material to this leaf. If a future model wants net-pool semantics it would need a separate field; under the documented setup/consume semantics R is a consumer."
+    }
+  },
+
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.R[1] (description + leveling rows 'Magic Damage per Sphere' 80/120/160 +20% AP, 'Minimum Magic Damage' 240/360/480 +60% AP, 'Maximum Magic Damage' 560/840/1120 +140% AP)",
+    "data/champions.json -> Syndra.abilities.R[2] ('The Dark Spheres will then remain on the ground ... for 6 seconds.')",
+    "data/champions.json -> Syndra.abilities.R[3] (100-Splinter execute, 'enhances ... below 15% of their maximum health')",
+    "data/champions.json -> Syndra.abilities.Q[0] ('conjures a Dark Sphere ... remains on the ground for 6 seconds') -- the setup side of the edge",
+    "data/champions.json -> Syndra.abilities.W[0] and W[3] (sphere grab / duration refresh; 60-Splinter 'enhances' bonus true damage)",
+    "data/champions.json -> Syndra.abilities.E[2] (80-Splinter 'enhances' Scatter the Weak)",
+    "data/worklists/f3-task.md, DELIVERABLES 1a and invariant 2a (definition of a detected setup/consume edge and the consume keyword class)",
+    "data/champion-audit/batch-6.json -> Syndra (modeled slots P/Q/Q2/W/E/R; \"R reads 'Magic Damage per Sphere' x user-set sphere count\")",
+    "docs/math-foundations.md line 465 (ability rotation casts row: 'R single-cast') -- consistency check only; the doc defines no consume list"
+  ],
+
+  "verdict_rationale": "Syndra's R consumes up to 4 live Dark Spheres placed by Q, and the cached leveling rows confirm the consumption exactly (min = 3 spheres, max = 7 spheres, per-sphere 80/120/160 + 20% AP, a 2.3333x swing). R therefore satisfies the documented consume-edge test on two independent grounds (per-sphere stack row; 100-Splinter 'enhances' + %-max-health execute). Its absence from the consume list was a detector false negative that would permit an order violating Q-before-R. Adding 'R' at index 2, after the two pre-existing consumers W and E in slot order, is correct.",
+
+  "scope_notes": [
+    "Evidence tree built only with: git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were not read.",
+    "Nothing was committed."
+  ]
+}

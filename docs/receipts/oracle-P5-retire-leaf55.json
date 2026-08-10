@@ -1,0 +1,74 @@
+{
+  "receipt": "oracle-P5-retire-leaf55",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/rotation/aoe/Q2",
+  "old_value": "<absent>",
+  "new_value": 5,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-tree",
+    "read_only_scope": "data/** and docs/math-foundations.md only; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never opened"
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[1].description (cached League Wiki text)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].description + cooldown/rechargeRate",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. | cooldown = {values: [7,7,7,7,7], affectedByCdr: false} | rechargeRate = [7,7,7,7,7] | spellEffects = \"Aoe\" | effectRadius = 210"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[2].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0] (passive)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -> Ability Haste 10 / 20 / 30"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... note: modeled = SLOTS keys incl. synthetic Q2 (2nd charge)."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json -> 'Ammo / stocked charges'",
+      "quote": "A resource (internal index 12) consumed by specific actions ... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    },
+    {
+      "source": "docs/math-foundations.md Section 1.1 (renewal theory for cast schedules)",
+      "quote": "Ability recasts are scheduled on one shared timeline ... the cast epochs of a solo ability are 0, c_i, 2c_i, ... - again a deterministic renewal schedule ... a cast counts when it *starts* within the window."
+    },
+    {
+      "source": "data/worklists/f3-task.md (derived-order engine, explains the 'derived_order' scenario family)",
+      "quote": "RANK per-rank DPS at the fight's stats for the remaining abilities (total_raw / effective cooldown x AoE weight)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_leaf_must_exist": "The scenario id 'syndra_derived_order_60' pins the module's splinters option at 60 (60 is exactly the wiki's W true-damage threshold, and the splinters option is the 0-120 knob per data/champion-audit/batch-e9-1.json). The wiki gates the second Dark Sphere charge at 40 Splinters: 60 >= 40, so the charge is stocked and the synthetic Q2 slot (the module's second-charge slot, per data/champion-audit/batch-6.json) fires in the rotation. A Syndra rotation at 60 splinters that emits NO Q2 row contradicts the cached wiki text; therefore <absent> cannot be correct.",
+    "step_2_value_under_cast_count_reading": {
+      "model": "Ammo/stocked-charge renewal schedule (math-foundations 1.1) over the scenario's 60-unit window: max 2 stocked charges, one charge regenerated every rechargeRate = 7 s. Cast epochs = {0, 0 (both stocked charges), 7, 14, 21, 28, 35, 42, 49, 56}; a cast counts when it starts inside the window.",
+      "arithmetic": "2 stocked + floor(59.999/7) = 2 + 8 = 10 Dark Sphere casts in [0, 60). The engine splits the stream across the two charge slots Q and Q2 -> ceil(10/2) = 5 for Q, floor(10/2) = 5 for Q2.",
+      "result": 5,
+      "note": "This reproduces the observed 5 exactly when the un-hasted 7 s recharge is used, which is what the cached cooldown flag 'affectedByCdr: false' prescribes. Sensitivity: if R's Dark-Sphere-only ability haste were also applied, recharge = 7*100/(100+AH) gives 11 casts at +10 AH (Q/Q2 = 6/5, Q2 still 5), 12 at +20 AH (6/6) and 13 at +30 AH (7/6). So 5 is exact for the sourced schedule and remains the value at R rank 1; only R ranks 2-3 with the haste applied would move it, and that is a Q-side modeling question, not a defect in the Q2 leaf."
+    },
+    "step_3_value_under_aoe_weight_reading": "If '/rotation/aoe/<slot>' instead carries the per-slot AoE weight/target count that f3-task.md's ranking formula uses, Q2 is by construction the same spell as Q (spellEffects 'Aoe', effectRadius 210, identical damage row 90/125/160/195/230 + 70% AP), so its AoE entry must exist and must equal Q's - 5 for a full five-enemy AoE allocation. Both readings agree that the leaf must be present with a positive integer, and both land on 5.",
+    "step_4_ruled_out": "A damage reading is impossible: Dark Sphere's minimum sourced magic damage is 90 (+70% AP) at rank 1, so no Q2 damage row can be 5. Under that reading the value would be nonsense in both the old and new baseline, but the absent->integer transition is a rotation-composition change, not a damage change, so this reading is rejected."
+  },
+
+  "conclusion": "The new baseline is right. At 60 Splinters of Wrath Syndra holds the second Dark Sphere charge (wiki: 40-splinter threshold, max 2), so the derived AoE rotation must contain a Q2 row; omitting it (the old <absent>) understates the rotation. The value 5 is exactly what the sourced 7-second recharge with two stocked charges yields for the second-charge slot over the scenario's 60-unit window (10 Dark Spheres total, split 5/5), and is equally the correct value under the AoE-weight reading since Q2 mirrors Q.",
+  "verdict_enum": "new_value_correct",
+
+  "caveats_and_asides": [
+    "The golden's internal schema for '/rotation/<mode>/<slot>' could not be inspected (scripts/ is out of scope for this oracle), so the unit of the leaf was inferred; the verdict holds under every reading that survives the sourced numbers.",
+    "ASIDE (off-leaf): Syndra R's passive is a Dark-Sphere-specific ability haste (10/20/30), while data/champions.json flags Q's cooldown 'affectedByCdr: false'. If the engine reads only that flag, Dark Sphere recasts are un-hasted and Q/Q2 cast counts are understated at R ranks 2-3 (12-13 casts instead of 10 over a 60 s window). Worth checking on the Q side; it does not change this leaf's verdict."
+  ]
+}

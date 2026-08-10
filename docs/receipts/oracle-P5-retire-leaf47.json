@@ -1,0 +1,132 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh oracle subagent; evidence tree built solely from `git archive --format=tar HEAD data docs/math-foundations.md`",
+  "evidence_tree_scope": [
+    "data/**",
+    "docs/math-foundations.md"
+  ],
+  "not_consulted": [
+    "src/",
+    "tests/",
+    "scripts/",
+    "docs/plans/",
+    "docs/receipts/",
+    "git history",
+    "the diff",
+    "the plan"
+  ],
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/rotation/sources[6]",
+  "old_value": "<absent>",
+  "new_value": {
+    "option": "r_spheres",
+    "kind": "self_state",
+    "slot": "R"
+  },
+  "verdict": "new_value_correct",
+
+  "question_restated": "Does the rotation for scenario `syndra_derived_order_120` genuinely take a self-state option `r_spheres` on slot R as a declared source, or is index 6 a spurious addition?",
+
+  "independent_computation": {
+    "step_1_identify_the_slot_R_ability": {
+      "source": "data/champions.json -> Syndra.abilities.R[0]",
+      "name": "Unleashed Power",
+      "quoted_active_text": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "reading": "Sphere count N used by R is 3 (guaranteed conjured) + 0..4 (grabbed live spheres) => N is an integer in {3,4,5,6,7}. The wiki text fixes the range but NOT the value."
+    },
+    "step_2_cached_leveling_rows": {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].leveling",
+      "rows": {
+        "Magic Damage per Sphere": "80 / 120 / 160 (+ 20% AP)",
+        "Minimum Magic Damage": "240 / 360 / 480 (+ 60% AP)",
+        "Maximum Magic Damage": "560 / 840 / 1120 (+ 140% AP)"
+      }
+    },
+    "step_3_linearity_identity_check": {
+      "claim": "Minimum = 3 x per-sphere and Maximum = 7 x per-sphere, in BOTH the flat and the %AP component, at every rank. This proves R total damage is exactly N x per-sphere with N free over {3..7}.",
+      "per_rank_check": [
+        {"rank": 1, "per_sphere": "80 + 20% AP", "min_over_per": {"flat": 3.0, "ap": 3.0}, "max_over_per": {"flat": 7.0, "ap": 7.0}},
+        {"rank": 2, "per_sphere": "120 + 20% AP", "min_over_per": {"flat": 3.0, "ap": 3.0}, "max_over_per": {"flat": 7.0, "ap": 7.0}},
+        {"rank": 3, "per_sphere": "160 + 20% AP", "min_over_per": {"flat": 3.0, "ap": 3.0}, "max_over_per": {"flat": 7.0, "ap": 7.0}}
+      ],
+      "conclusion": "Exact at all three ranks with zero residual. R_total(N) = N * (base_R_rank + 0.20 * AP)."
+    },
+    "step_4_worked_numeric_instance_at_120_splinters": {
+      "why_120": "Scenario suffix '120' matches Syndra's passive cap. data/champions.json -> Syndra.abilities.P[0].effects[0]: 'Splinters of Wrath ... stacking up to 120 times', and effects[2]: 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'",
+      "assumed_inputs": {"R_rank": 3, "AP_before_transcendence": 500.0},
+      "AP_after_transcendence": "500.0 * 1.15 = 575.0",
+      "per_sphere_damage": "160 + 0.20 * 575.0 = 160 + 115 = 275.0",
+      "R_total_by_sphere_count": {
+        "N=3": 825.0,
+        "N=4": 1100.0,
+        "N=5": 1375.0,
+        "N=6": 1650.0,
+        "N=7": 1925.0
+      },
+      "cross_check_against_cached_rows": {
+        "wiki_Minimum_at_rank3_575AP": "480 + 1.40*... -> 480 + 0.60*575 = 825.0  == N=3 result",
+        "wiki_Maximum_at_rank3_575AP": "1120 + 1.40*575 = 1925.0  == N=7 result"
+      },
+      "spread": "max/min = 1925.0 / 825.0 = 2.3333x"
+    },
+    "step_5_is_N_derivable_instead_of_a_free_input": {
+      "verdict": "Not derivable. It must be an explicit declared input.",
+      "quoted_notes_from_cached_data": [
+        "Unleashed Power will not add a Sphere that Syndra is holding with Force of Will.",
+        "Spheres that are being pushed by Scatter the Weak (normally ones that were made late during the push) will not get picked up for Unleashed Power.",
+        "Depending on how many spheres are on the map and how far away the enemy is upon casting Unleashed Power it is possible that Syndra would conjure the sphere behind her as if she was going to throw it, but she won't."
+      ],
+      "reasoning": "The grabbed-sphere count depends on positional/field state (which live spheres are in range, whether one is W-held, whether E pushed it, the 6s sphere lifetime vs. cast timing). None of that is recoverable from level, rank, AP, or the cast sequence alone, so the rotation cannot derive N. Note also that Q's Transcendent bonus ('Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2') makes the live-sphere pool itself splinter-dependent and burst-timing-dependent, further ruling out a derivation."
+    },
+    "step_6_kind_and_slot_are_correct": {
+      "kind_self_state": "N describes Syndra's OWN field state (how many of her live Dark Spheres are grabbable at cast), not target state and not a build stat. `self_state` is the right kind.",
+      "slot_R": "The option is consumed only by Unleashed Power (slot R). Q/W/E damage rows carry no sphere-count multiplier in the cached leveling data, so no other slot claims it."
+    }
+  },
+
+  "why_the_old_value_is_wrong": "With sources[6] absent, an R-containing rotation reports a single R number while its cached formula admits a 2.3333x spread (825.0 -> 1925.0 at rank 3 / 575 AP) purely from an undeclared sphere count. The rotation would be silently pinning N to some unstated value — an undeclared dependency of exactly the kind the repo's no-hidden-literal rule exists to prevent. Declaring `r_spheres` as a source makes the dependency explicit.",
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].effects[1].description",
+      "text": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].effects[1].leveling",
+      "text": "Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].notes",
+      "text": "Unleashed Power will not add a Sphere that Syndra is holding with Force of Will. / Spheres that are being pushed by Scatter the Weak ... will not get picked up for Unleashed Power. / Depending on how many spheres are on the map and how far away the enemy is upon casting Unleashed Power ..."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0].effects[0].description and effects[2].description",
+      "text": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. / At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[1].description",
+      "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "text": "CP-era ok carried forward; E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "line 465, formula-audit table",
+      "text": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast",
+      "relevance": "Confirms the rotation family treats R as a single cast whose magnitude comes wholly from the R row — so the sphere-count multiplier is not absorbed by cast repetition and must enter as its own declared input."
+    }
+  ],
+
+  "scope_and_limits": [
+    "The evidence tree contains no golden baseline (scripts/ was excluded by instruction), so sources[0..5] were not observable. This receipt verifies the CONTENT of the added leaf (option name, kind, slot, and that it is a real, non-derivable input), not its ordinal position within the sources list.",
+    "The worked numeric instance uses an assumed AP of 500 and R rank 3 to illustrate magnitude; the linearity identity in step 3 is assumption-free and holds exactly at every rank for every AP."
+  ]
+}

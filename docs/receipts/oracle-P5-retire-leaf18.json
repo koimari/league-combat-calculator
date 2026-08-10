@@ -1,0 +1,88 @@
+{
+  "receipt": "oracle-P5-retire-leaf18",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/consume[3]",
+  "old_value": "<absent>",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "%LOCALAPPDATA%/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "data/worklists/f3-task.md", "data/worklists/e3-stacks.json", "data/wiki-atoms/stack-transform-summon-resource.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "what_the_leaf_means": {
+    "derivation": "The scenario id ('*_derived_order_*') and the field name ('rotation/consume') resolve, from the cached worklists alone, to the optimal-event-order engine's rotation receipt. data/worklists/f2-task.md deliverable 4 defines the receipt: \"The /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: \\\"Q poisons, E consumes\\\"}\". data/worklists/f3-task.md deliverable 1a defines the classification whose output the setup/consume lists hold: \"DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing)\".",
+    "claim_under_test": "Syndra's W (Force of Will) is a CONSUMER slot in her derived rotation. The old golden recorded no entry at consume[3] (W absent from the consume side of the setup/consume edge set); the new golden records W.",
+    "scope_note": "The scenario's own definition lives outside the permitted evidence tree (tests/scripts), so this oracle verifies MEMBERSHIP -- whether W is genuinely a consumer of Syndra's rotation -- not the ordinal position 3 within the list. An appended entry at the tail of a previously length-3 list is a pure membership addition, so membership is the load-bearing question."
+  },
+  "independent_computation": {
+    "step_1_what_syndra_produces": "Q (Dark Sphere) is the producer: \"Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds.\" (data/champions.json -> Syndra.abilities.Q[0].effects[0].description). Dark Spheres are therefore the consumable resource the setup/consume edge must be drawn over.",
+    "step_2_W_requires_a_pre_existing_sphere": "\"Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds.\" (Syndra.abilities.W[0].effects[0].description). W has NO effect of its own without an existing grab target. In this calculator's fight model the participants are champions, so no minion or non-epic monster exists as an alternative target -- W's only legal target is a Dark Sphere produced by Q (or by R). That is a hard producer->consumer edge Q -> W.",
+    "step_3_W_removes_the_sphere_from_the_pool": "R's cached notes state the removal explicitly: \"Unleashed Power will not add a Sphere that Syndra is holding with Force of Will.\" (Syndra.abilities.R[0].notes). Held/thrown spheres leave the shared pool. Contrast the two non-consuming interactions, both explicit in the same cache: E -- \"Scatter the Weak will delay the expiration of a Sphere until after it finishes being knocked back\" (Syndra.abilities.E[0].notes), i.e. the sphere survives; and R -- \"The Dark Spheres will then remain on the ground next to the target's current location for 6 seconds\" (Syndra.abilities.R[0].effects[2].description), i.e. R's grabbed spheres are returned. W is the one Syndra ability whose cached text never returns the sphere and that R's notes confirm is withheld from the pool while held.",
+    "step_4_W_also_trips_the_literal_keyword_test": "F3's consumer keyword taxonomy is \"enhanced/consume/detonate/bonus-vs/X-stack/%missing\". W's own row matches on two of them: \"Transcendent Bonus: Collecting 60 Splinters of Wrath ENHANCES Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage\" -- an 'enhanced' marker gated on an X-stack threshold, carried in the leveling rows as the attributes \"Bonus True Damage\" and \"Total Mixed Damage\" (Syndra.abilities.W[0].effects[3]). So W is a consumer under both the mechanical (sphere pool) and the literal (row-keyword) detectors.",
+    "step_5_W_is_a_modeled_slot": "data/champion-audit/batch-6.json -> /Syndra/module_slots/modeled = [P, Q, Q2, W, E, R]; data/champion-audit/batch-e9-1.json -> /Syndra/slots/W = \"modeled\". W is in scope for the rotation, so its omission from the consume list was a gap, not a deliberate exclusion.",
+    "step_6_consequence_of_the_old_value": "With W missing from the consume side, the F3 invariant \"the derived order never violates a detected setup/consume edge\" cannot constrain W: a derived order is free to place W before any Q cast. Per step 2 that order is unplayable in a champion-only fight -- Force of Will would have nothing to grab. Adding W to the consume list restores the Q-before-W edge, which is Syndra's canonical opener.",
+    "conclusion": "W belongs in /rotation/consume for Syndra. The new value is correct; the old <absent> was a missed producer/consumer edge.",
+    "residual_uncertainty": "The ordinal index (3) and the identities of consume[0..2] depend on the scenario fixture and on whether the list is slot-canonical or rotation-ordered; neither is readable from data/ or docs/math-foundations.md. If the list is rotation-ordered, W-last is consistent with the other three threshold-gated consumers (Q2 at 40 splinters, E at 80, R at 100) preceding it. Nothing in the permitted evidence contradicts index 3, and no reading of the schema makes W's presence wrong."
+  },
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds. If a Dark Sphere is grabbed, its duration is refreshed; if a minion or monster is grabbed, it is put in stasis. She prioritizes grabbing the nearest unit, then Dark Spheres."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].notes",
+      "quote": "Unleashed Power will not add a Sphere that Syndra is holding with Force of Will."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[2].description",
+      "quote": "The Dark Spheres will then remain on the ground next to the target's current location for 6 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].notes",
+      "quote": "Scatter the Weak will delay the expiration of a Sphere until after it finishes being knocked back."
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "path": "deliverable 4",
+      "quote": "The /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: \"Q poisons, E consumes\"} so the UI can show WHY the order is optimal."
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "path": "deliverable 1a / 2a",
+      "quote": "DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing) ... assert, for EVERY champion: (a) the derived order never violates a detected setup/consume edge"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "/Syndra/module_slots/modeled",
+      "quote": "[P, Q, Q2, W, E, R]"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "/Syndra/slots/W",
+      "quote": "modeled"
+    }
+  ],
+  "math_foundations_check": "docs/math-foundations.md contains no formula governing setup/consume classification; its rotation row (\"Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT\") governs cast TIMING only, not cast ORDER derivation. No quoted formula there contradicts or supports the leaf; the determination rests on the cached wiki text."
+}

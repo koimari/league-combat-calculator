@@ -1,0 +1,67 @@
+{
+  "receipt": "oracle-P5-retire-leaf4",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/rationale",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_tree",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never opened."
+  },
+  "values": {
+    "old": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target ...",
+    "new": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's ... [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] ..."
+  },
+  "independent_computation": {
+    "claim_under_test": "Syndra's E (Scatter the Weak) cannot stun on its own; its stun is delivered by a Dark Sphere that the cone knocks into the target, so a sphere (Q) must exist before E for the rotation to contain a stun -> Q is ordered before E.",
+    "derivation_steps": [
+      "Step 1 - Read the cached E effect branches for Syndra from data/champions.json (abilities.E[0].effects[*].description). Branch 1 (the cone itself): 'Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit and knocks them back for 400 units and up to 800 units away from Syndra based on proximity, though not through terrain.' -> the cone's own effects are exactly {magic damage, knockback}. The word 'stun' does not appear in this branch.",
+      "Step 2 - Branch 2 (the sphere-scatter branch): 'Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast.' -> the 1.25s stun is attached to 'targets hit' by a knocked-back Dark Sphere, not to the cone.",
+      "Step 3 - The stun therefore has a strict precondition: a Dark Sphere must already be on the ground inside the cone at cast time. Confirmed by the Transcendent branch of E, which distinguishes the two cases explicitly: 'slow enemies hit by 70% for 1.25 seconds starting after the knock back ends or if the target was hit by a pushed Dark Sphere, after the stun has ended' - i.e. plain cone hit ends in a knockback (no stun), sphere hit ends in a stun.",
+      "Step 4 - Sphere provenance from the same cached page: Q (Dark Sphere) 'conjures a Dark Sphere at the target location ... The Dark Sphere then remains on the ground for 6 seconds' (6s window, 7s base cooldown). R (Unleashed Power) also leaves spheres, but only after its own cast, and W (Force of Will) holds/throws one that already exists. Q is the only slot that creates a ground sphere ahead of E in a normal rotation.",
+      "Step 5 - Ordering conclusion: for the E cast in this rotation to contribute its stun (and its 'dealt Scatter the Weak's damage if they were not damaged by the initial cast' branch), Q must be cast first and must land within the sphere's 6s lifetime. Q -> E. Both the old and the new rationale strings assert exactly this ordering and exactly this reason.",
+      "Step 6 - Corroboration inside data/: data/champion-audit/batch-6.json lists Syndra 'notable_atoms' including 'cc (E stun/knockback, W slow, 11 atoms)' and marks 'E/W CC (stun, knockback, slow - utility only)' out_of_scope for damage - consistent with E's stun being a separate, sphere-gated effect rather than an inherent cone effect. data/wiki-atoms/stack-transform-summon-resource.json corroborates that Dark Sphere is a stocked/conjured entity, not a hit effect of E."
+    ],
+    "numeric_check": "No numeric quantity is at stake in this leaf; it is a rotation-ordering rationale string. The only numbers quoted by either value (implicitly, the stun) check out against the cache: stun 1.25 s, sphere lifetime 6 s, E cone knockback 400-800 units, sphere knockback 950-1200 units, enemies pushed by a struck sphere 70 units.",
+    "result": "Q before E, because E's stun belongs to the Dark Sphere and not to the cone. VERIFIED against cached wiki text."
+  },
+  "assessment_of_each_value": {
+    "old": "Mechanically accurate. 'E (Scatter the Weak) stuns only by scattering a sphere into the target' is a faithful reading of the cached branch-2 text; the derived order Q-then-E follows.",
+    "new": "Mechanically accurate and strictly better sourced. 'Scatter the Weak's stun is the Dark Sphere's, not the cone's' is a direct restatement of the two-branch split in the cached effect text, and it carries an explicit revision-pinned source. Framing it as a declared cc_enabler dependency (E requires Q) is the same fact stated as a constraint rather than as a narrative.",
+    "difference": "Substantively identical claims. The change is a provenance and framing upgrade (declared cc_enabler + revision-pinned citation), not a correctness fix. Neither wording contradicts the cache.",
+    "caveats": [
+      "Both values were supplied to me truncated with '...', so only the visible core clause of each could be adjudicated.",
+      "Strictly, E's stun requires *a Dark Sphere*, which in principle can also come from R's conjured spheres or a sphere W is not holding; the new value's 'E requires Q' is exact for this rotation (Q is the only pre-E sphere source) but is a slight narrowing in full generality. This does not make it wrong for this scenario.",
+      "The revision id in the new value's citation (Syndra@4024662) could not be confirmed from the export - data/wiki/article-index.json records Syndra pageid 641379 with no revision ids, and the runbook forbids reading outside the export. The *content* the citation is used to support does match the cached page (data/.champions.json.meta fetched_at 1786113324.86; Syndra patchLastChanged 26.12)."
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[0].description",
+      "quote": "Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit and knocks them back for 400 units and up to 800 units away from Syndra based on proximity, though not through terrain."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[2].description (Transcendent Bonus)",
+      "quote": "Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% for 1.25 seconds starting after the knock back ends or if the target was hit by a pushed Dark Sphere, after the stun has ended."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.notable_atoms / module_slots.out_of_scope",
+      "quote": "cc (E stun/knockback, W slow, 11 atoms) / E/W CC (stun, knockback, slow - utility only)"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "quote": "No formula governing cc_enabler ordering or rotation rationale text exists in this document (searched for 'cc_enabler', 'rationale', 'derived_order', 'coupled_scenario'); the only rotation references are the reward-rate line at L75 and the fidelity-table rows at L465/L471. Ground truth for this leaf is therefore the cached wiki text under data/."
+    }
+  ],
+  "verdict": "new_value_correct",
+  "verdict_note": "The new value is correct and independently reproducible from the cached wiki text. The old value was not factually wrong - it asserted the same Q-before-E dependency for the same reason - so this is a retire-as-superseded, not a bug fix: the new wording pins the dependency as a declared cc_enabler and attaches a source. If the receipt vocabulary had a 'both correct, new is better sourced' option, that would be the tighter label."
+}

@@ -1,0 +1,127 @@
+{
+  "receipt": "oracle-P5-retire-leaf16",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md, nothing else read)",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/rotation/consume[1]",
+  "scenario": "syndra_derived_order_39",
+  "old_value": "<absent>",
+  "new_value": "Q2",
+  "verdict": "both_wrong",
+  "independently_computed_value": "E",
+  "computed_value_confidence": "The *set* is certain: Syndra's consume slots are exactly {W, E, R}. The index-1 element depends on the list's ordering convention, which is not knowable from data/ alone; under the canonical slot order (P, Q, W, E, R) the consumers are [W, E, R] and index 1 is E. Under any ordering of {W, E, R}, index 1 is a real Dark-Sphere consumer -- never Q2, and never absent.",
+
+  "semantics_established_from_sources": {
+    "what_the_consume_list_is": "The rotation receipt's setup/consume edge lists. data/worklists/f2-task.md deliverable 4 defines the receipt as \"{order: [Q,E,E,E,...], rationale: 'Q poisons, E consumes'}\". data/worklists/f3-task.md 1(a) defines the detection: \"an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing)\". So `consume` holds the slots on the *downstream* side of an ordering edge -- abilities that need something already applied/placed.",
+    "syndra_slot_inventory": "data/champion-audit/batch-6.json, Syndra.module_slots.modeled = [P, Q, Q2, W, E, R], with note \"modeled = SLOTS keys incl. synthetic Q2 (2nd charge)\". data/champion-audit/batch-e9-1.json: \"40+ Q charges via Q2 slot\". Q2 is therefore a second cast of Dark Sphere, not a distinct ability."
+  },
+
+  "independent_computation": {
+    "step_1_what_Q_and_Q2_do": {
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds.",
+      "quote_2": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "conclusion": "Q *produces* a Dark Sphere. Q2 is the second stocked charge of that same production. Both are on the SETUP side of every Syndra edge."
+    },
+    "step_2_keyword_scan_over_the_cached_wiki_text": {
+      "method": "Applied the f3-task.md consume-keyword taxonomy (enhanc*/consum*/detonat*/bonus-vs/per-stack/%missing) to every effects[].description and leveling[].attribute in data/champions.json -> Syndra.abilities.",
+      "results": {
+        "P Transcendent": "consume-kw hit: 'enhance' (\"Splinters of Wrath that enhance each of her abilities\") -- this is the stack SOURCE, the setup side.",
+        "Q Dark Sphere": "consume-kw hits: NONE. attributes: ['Magic Damage'] only. Q is the only Syndra slot with zero consume signal.",
+        "W Force of Will": "consume-kw hit: 'enhances'. attributes: ['Magic Damage', 'Bonus True Damage', 'Total Mixed Damage'].",
+        "E Scatter the Weak": "consume-kw hit: 'enhances'. attributes: ['Magic Damage'].",
+        "R Unleashed Power": "consume-kw hit: 'enhances'. attributes: ['Ability Haste', 'Magic Damage per Sphere', 'Minimum Magic Damage', 'Maximum Magic Damage']."
+      },
+      "conclusion": "The documented detection rule cannot classify Q -- and therefore cannot classify its synthetic charge slot Q2 -- as a consumer. It classifies W, E, R."
+    },
+    "step_3_the_real_consume_edge_is_the_Dark_Sphere_not_the_splinter": {
+      "W": "\"Syndra telekinetically grabs the nearest Dark Sphere ... and holds the target near her for 5 seconds\" + notes \"Grabbing prioritizes Dark Spheres.\" -> W consumes a sphere Q placed.",
+      "E": "\"Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra ... Targets hit are also stunned for 1.25 seconds\" -> E consumes a sphere Q placed (the canonical Q->E stun combo).",
+      "R": "\"Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.\" -> R consumes up to 4 pre-placed spheres.",
+      "splinters_are_never_consumed": "P: \"stacking up to 120 times\" and \"Syndra can collect Splinters of Wrath from enemies even if she is at maximum stacks.\" Splinters are permanent thresholds (40 -> Q charge, 60 -> W true damage, 80 -> E slow, 100 -> R execute, 120 -> +15% AP); nothing in the kit spends them. So the only genuinely consumable object in the kit is the on-ground Dark Sphere, and Q/Q2 are its only producers."
+    },
+    "step_4_numeric_proof_that_Q2_is_on_the_producer_side": {
+      "claim": "R's own cached leveling rows arithmetically encode the Q->R consume edge, and price each extra Q (i.e. each Q2 cast) as one more R sphere.",
+      "rows_from_cache": {
+        "Magic Damage per Sphere": "80 / 120 / 160 (+20% AP)",
+        "Minimum Magic Damage": "240 / 360 / 480 (+60% AP)",
+        "Maximum Magic Damage": "560 / 840 / 1120 (+140% AP)"
+      },
+      "check_min": "3 self-conjured spheres x (80/120/160) = 240/360/480, and 3 x 20% AP = 60% AP -- matches the Minimum row exactly.",
+      "check_max": "(3 conjured + 4 grabbed) = 7 spheres x (80/120/160) = 560/840/1120, and 7 x 20% AP = 140% AP -- matches the Maximum row exactly.",
+      "marginal_value_of_a_Q2_cast": "One additional pre-placed sphere for R to grab = +80 / +120 / +160 (+20% AP) at R ranks 1/2/3 (valid while grabbed spheres < 4).",
+      "conclusion": "R's damage is a strictly increasing function of the number of Q/Q2 spheres already on the ground. That is the definition of Q2 being the SETUP and R being the CONSUMER. Placing Q2 in the consume list inverts a numerically verified production relationship."
+    },
+    "step_5_index_resolution": {
+      "correct_consume_set": ["W", "E", "R"],
+      "canonical_slot_order": "P, Q, (Q2), W, E, R -> filtered to consumers = [W, E, R] -> index 0 = W, index 1 = E, index 2 = R.",
+      "why_new_value_fails": "Q2 is not a member of the consume set under any sourced reading -- neither the f3 keyword taxonomy (Q has zero consume-keyword hits) nor the game mechanic (Q2 conjures a sphere; it does not grab, knock, or detonate one).",
+      "why_old_value_fails": "'<absent>' at index 1 means the list carried at most one element. The cached wiki text gives three mutually distinct Dark-Sphere consumers -- W grabs and throws one, E knocks one back for the stun, R grabs up to four -- so a correctly derived consume list has length 3 and index 1 must be populated."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].description",
+      "text": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[0].description",
+      "text": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds. ... She prioritizes grabbing the nearest unit, then Dark Spheres."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].notes",
+      "text": "Grabbing prioritizes Dark Spheres."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[1].description",
+      "text": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].description",
+      "text": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].leveling",
+      "text": "Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0,3].description",
+      "text": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... Syndra can collect Splinters of Wrath from enemies even if she is at maximum stacks. These Splinters do not grant any stacks, but will still restore mana for Syndra."
+    },
+    {
+      "source": "data/worklists/f3-task.md, deliverable 1(a)",
+      "text": "DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing)"
+    },
+    {
+      "source": "data/worklists/f2-task.md, deliverable 4",
+      "text": "The /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: \"Q poisons, E consumes\"} so the UI can show WHY the order is optimal."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "text": "modeled: [P, Q, Q2, W, E, R]; note: \"No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge).\"; notable_atoms includes \"ammo (Q 2nd charge at 40 splinters)\""
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "text": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "source": "data/worklists/e3-stacks.json -> Syndra/Q hint",
+      "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    }
+  ],
+
+  "alternative_reading_considered_and_rejected": {
+    "reading": "'consume' might mean 'slots that spend an ammo/charge resource', under which Q2 (spending a stocked Dark Sphere charge) would belong and index 1 could legitimately be Q2 after index 0 = Q.",
+    "why_rejected": [
+      "The f3-task.md definition is explicitly an ORDERING edge between an applying ability and a consuming ability ('must precede'), with the invariant 'the derived order never violates a detected setup/consume edge'. A [Q, Q2] ammo list encodes a degenerate self-edge that constrains nothing.",
+      "Under that reading the detection keywords (enhanced/consume/detonate/bonus-vs/X-stack/%missing) would have to fire on Q's rows; they do not -- Q's only attribute is 'Magic Damage' and its text contains none of them.",
+      "The reading also gets the mechanic backwards: an extra Q charge ADDS a sphere to the pool that W/E/R draw from, which step 4 prices exactly (+80/120/160 +20% AP of R damage per extra sphere)."
+    ]
+  },
+
+  "scope_note": "Judged strictly on the one leaf named. This receipt does not assert what the other leaves under /coupled_scenarios/syndra_derived_order_39/rotation/ should hold, beyond the implication that a correct consume list is [W, E, R] and Q2 belongs on the setup side.",
+  "committed": false
+}
