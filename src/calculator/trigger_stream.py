@@ -279,6 +279,15 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
     ``ability_instance``, falling back to source-and-time — and requiring one
     there would reject authored control the legacy scanner accepted, which a
     refactor may not do.
+
+    ``damage_type`` is enforced on that same stream and for the same reason.
+    Carve dispatches on ``"physical"`` and Vile Decay on ``"magic"``, so a
+    damage row typed outside the vocabulary is a row they would misprice;
+    nothing dispatches on a control row's type, and the retired ``_cc_triggers``
+    accepted a control row carrying any type at all — including the
+    ``"mixed"`` that ``damage._damage_type_fields`` really does emit.  On the
+    control stream the field is therefore carried verbatim as a receipt of
+    what the row said, exactly as ``source_key`` is.
     """
 
     kind: TriggerKind
@@ -321,7 +330,11 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
             raise ValueError(
                 f"Trigger source_key is required on a {self.kind.value} trigger"
             )
-        if self.damage_type and self.damage_type not in _DAMAGE_TYPES:
+        if (
+            self.kind is TriggerKind.DAMAGE
+            and self.damage_type
+            and self.damage_type not in _DAMAGE_TYPES
+        ):
             raise ValueError(
                 f"Trigger damage_type {self.damage_type!r} is not one of "
                 f"{sorted(_DAMAGE_TYPES)}"

@@ -1576,6 +1576,77 @@ def test_the_certification_gate_propagates_the_damage_field_contract():
     ), "both ledger builders must keep the filter that makes 'mixed' unreachable"
 
 
+def test_a_control_trigger_is_not_judged_by_the_damage_type_contract():
+    """The damage stream's type vocabulary stops at the damage stream.
+
+    ``Trigger.__post_init__`` used to check ``damage_type`` for every kind,
+    so a control-only holder — one whose ``reads`` never mentions
+    ``Stream.DAMAGE`` — was judged by a contract it does not consume: a
+    control row typed ``"mixed"`` raised out of
+    ``derive_item_support_effects`` where the retired ``_cc_triggers``
+    accepted it.  That is precisely the move ``source_key``'s own narrowing
+    refused — "requiring one there would reject authored control the legacy
+    scanner accepted, which a refactor may not do" — and the two fields now
+    say the same thing.
+
+    ``damage._damage_type_fields`` really does emit ``"mixed"``, so the
+    reading matters even though the ledger filter keeps it off the engine's
+    stream.  The controls: the type is still enforced on the damage stream,
+    and it still reaches the control trigger as a verbatim receipt token.
+    """
+    row = {
+        "time": 0.5,
+        "source_key": "Q",
+        "damage": 10.0,
+        "damage_type": "mixed",
+        "cc_kind": "stun",
+        "cc_reviewed": True,
+        "target": "enemy:Aatrox",
+        "attacker": "main:Annie",
+    }
+    (control,) = ts.event_triggers(row, kinds=frozenset({ts.TriggerKind.CC}))
+    assert control.kind is ts.TriggerKind.CC
+    assert control.damage_type == "mixed"
+    with pytest.raises(ValueError, match="damage_type"):
+        ts.event_triggers(row, kinds=frozenset({ts.TriggerKind.DAMAGE}))
+    assert "mixed" in (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "item",
+    ["Solstice Sleigh", "Bandlepipes", "Imperial Mandate", "Fimbulwinter"],
+)
+def test_a_control_only_holder_scans_a_mixed_typed_row(item):
+    """The four holders that read control and no damage, through the seam.
+
+    Each declares ``Stream.CC`` and not ``Stream.DAMAGE``, which is the
+    condition the narrowing turns on; the assertion below reads that off the
+    registry rather than trusting the list.  Before the narrowing every one
+    of them raised ``ValueError`` on this row.
+    """
+    reads = ts.streams_for(frozenset({item}))
+    assert ts.Stream.CC in reads and ts.Stream.DAMAGE not in reads
+    holder = _support_actor("ally:Lulu", "ally", (item,))
+    ally = _support_actor("main:Ahri", "main", ())
+    enemy = _support_actor("enemy:Aatrox", "enemy", ())
+    result = {
+        "damage_events": [
+            {
+                "time": 0.5,
+                "source_key": "Q",
+                "damage": 10.0,
+                "damage_type": "mixed",
+                "cc_kind": "stun",
+                "cc_reviewed": True,
+                "target": "enemy:Aatrox",
+                "attacker": "ally:Lulu",
+                "_event_id": "e1",
+            }
+        ]
+    }
+    derive_item_support_effects(holder, result, [holder, ally, enemy])
+
+
 def test_echoes_of_helia_clamps_each_number_before_its_branch_chooses():
     """A negative raw number now contributes the row's mitigated damage.
 
