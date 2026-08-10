@@ -543,6 +543,51 @@ its red is reproducible on demand rather than remembered (R-05).
   extract-and-diff its own body cites.
 - The full per-commit gate set (R-01) is green at P2a, P2b and P2c, including the
   acceptance and champion-optimizer matrices and the per-file pylint ratchet.
+
+  **Not discharged at P2a — the phase-2 sign-off is right, and the P2a body said
+  otherwise.** This is the fourth in-criterion note by an implementation lane in this
+  phase and the only one recording a breach rather than an unwritable clause, flagged
+  the same way for the same reason: the next verifier adjudicates it instead of
+  inheriting it. R-01 row 1 was red at `969bd4f`. The measurement, not the memory:
+  `tests/test_plan_audit.py` is 44 passed at the phase entry tip `146a69c` and
+  2 failed / 42 passed at `969bd4f`, where `scripts/plan_audit.py` exits 1 on four
+  citation findings — the `/api/bis` and `/api/optimize` locators in the umbrella and
+  in phase 4, whose decorators that commit's own request-boundary handler pushed 47
+  lines down `src/app.py`. The P2a body called them "2 pre-existing plan_audit
+  citation-locator failures". They were not pre-existing: the commit that called them
+  so is the commit that caused them, and its own next clause — "caused by app.py's line
+  shift" — says as much in the same sentence. The word is withdrawn here.
+
+  The red is one commit wide, and the range is enumerated by a command rather than
+  recalled:
+
+  ```bash
+  git rev-list --reverse 146a69c^..HEAD | while read -r c; do \
+    d=$(mktemp -d); \
+    git archive --format=tar "$c" docs scripts src tests .github | tar -x -C "$d"; \
+    (cd "$d" && python scripts/plan_audit.py >/dev/null 2>&1); code=$?; \
+    printf '%s %s\n' "$(git log -1 --format=%h "$c")" "$code"; done
+  ```
+
+  Every commit of the range reports 0 except `969bd4f`; `312ccd9`, the doc-only refresh,
+  reports 0 again one commit later.
+
+  The breach is recorded as `docs/receipts/escalated-defects-P2a.json` and gated by
+  `tests/test_trigger_stream.py::TestTheP2aGateBreachIsStillTracked`, which extracts
+  those three trees and re-runs the audit — an escalation living only in a commit body
+  is what the next baseline re-capture absorbs, which is the argument that created this
+  artifact family in the first place. Two actions close it, both outside this lane and
+  both named in the receipt with their owner. The integration agent folds the locator
+  refresh into the commit that shifted the lines, which makes R-01 row 1 green at every
+  commit of the integrated tip R-34 actually gates on, and costs no ruling because a
+  locator refresh is not a semantic correction and R-30 does not bind it. And R-37 gains
+  the clause it is missing: a slice that shifts a line a plan document cites refreshes
+  that locator **in the same commit**, the doc-only form being for drift the slice did
+  not cause. As written, R-37's "refreshed in a doc-only commit" and R-01 row 1's
+  per-commit green cannot both hold for a slice that shifts a cited line — there is
+  exactly one red commit between the shift and the refresh, and refreshing first only
+  moves the red onto the doc commit. The runbook is not this lane's file, so the clause
+  is stated here and escalated rather than written there.
 - After P2c, no retired symbol appears anywhere in `src/`, `CAPABILITIES` is the only place in
   the repo stating which holders read which stream, and it is the only authority table —
   `cross_participant_authorities` is gone and no second `Authority` enum exists, because

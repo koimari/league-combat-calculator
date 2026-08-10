@@ -15,7 +15,10 @@ import importlib
 import importlib.util
 import inspect
 import json
+import os
+import subprocess
 import sys
+import tarfile
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType, SimpleNamespace
@@ -2066,3 +2069,132 @@ class TestTheEscalatedDefectIsStillTracked:
         assert str(raised) == payload["error"]
         assert "disposition" not in payload and "starved" not in payload
         assert surfaced["carries_disposition"] is False
+
+
+class TestTheP2aGateBreachIsStillTracked:
+    """The one red this phase shipped, held as an artifact instead of a word.
+
+    P2a's own 54 lines in ``src/app.py`` pushed the two score-serving route
+    decorators past ``CITATION_WINDOW``, four plan citations drifted with
+    them, and R-01 row 1 was red at that commit.  Its body called the
+    failures pre-existing.  The tree at that commit cannot be repaired by a
+    commit after it, and this lane may not rewrite a range the sign-off, the
+    phase document and the sibling receipt all cite by sha.
+
+    So the record is corrected and made reproducible: the entry tip is
+    clean, the P2a tree reports exactly the four findings the receipt
+    records, and the repair commit is clean again.  Commits are resolved by
+    subject rather than by sha, so an integration rebase moves the handles
+    with the history.
+
+    Like its sibling, the reproducer turns red the moment the breach stops
+    reproducing -- which is how the entry gets closed deliberately rather
+    than fading out.  The named resolution is exactly that: the integration
+    agent folds the locator refresh into the commit that caused the shift,
+    R-01 row 1 goes green at every commit of the integrated history, and
+    this class and its receipt are retired in the same pass.
+    """
+
+    RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-P2a.json"
+    REQUIRED = TestTheEscalatedDefectIsStillTracked.REQUIRED
+    ARCHIVED_PATHS = ("docs", "scripts", "src", "tests", ".github")
+
+    def _entries(self):
+        return json.loads(self.RECEIPT.read_text(encoding="utf-8"))["defects"]
+
+    @staticmethod
+    def _commit(handle: Mapping[str, str]) -> str:
+        """The commit carrying ``handle["subject"]``, whatever its sha is now."""
+        log = subprocess.run(
+            ["git", "log", "--format=%H%x1f%s"],
+            cwd=ROOT,
+            capture_output=True,
+            check=True,
+        ).stdout.decode("utf-8", "replace")
+        found = [
+            line.split("\x1f", 1)[0]
+            for line in log.splitlines()
+            if line.split("\x1f", 1)[1:] == [handle["subject"]]
+        ]
+        assert len(found) == 1, (
+            f"{handle['subject']!r} names {len(found)} commits — the receipt's "
+            "handle no longer identifies one commit of this history"
+        )
+        return found[0]
+
+    def _plan_audit_at(self, commit: str, dest: Path) -> tuple[int, tuple[str, ...]]:
+        """Run the gate over an extracted tree, as a verifier would."""
+        archive = dest.with_suffix(".tar")
+        subprocess.run(
+            ["git", "archive", "--format=tar", "--output", str(archive), commit]
+            + list(self.ARCHIVED_PATHS),
+            cwd=ROOT,
+            check=True,
+        )
+        with tarfile.open(archive) as bundle:
+            bundle.extractall(dest, filter="data")
+        result = subprocess.run(
+            [sys.executable, "scripts/plan_audit.py"],
+            cwd=dest,
+            capture_output=True,
+            check=False,
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+        )
+        prefix = "plan audit: "
+        findings = tuple(
+            line[len(prefix) :]
+            for line in result.stderr.decode("utf-8", "replace").splitlines()
+            if line.startswith(prefix)
+        )
+        return result.returncode, findings
+
+    def test_every_entry_carries_what_an_escalation_needs(self):
+        entries = self._entries()
+        assert entries, "the escalation ledger is empty"
+        for entry in entries:
+            for field in self.REQUIRED:
+                assert entry.get(field), f"{entry.get('id')} omits {field}"
+            assert len(entry["dated"]) == 10 and entry["dated"].count("-") == 2
+
+    def test_the_withdrawn_claim_is_quoted_from_the_body_that_made_it(self):
+        """The receipt may not paraphrase the sentence it calls false."""
+        (entry,) = self._entries()
+        signature = entry["live_signature"]
+        body = subprocess.run(
+            ["git", "log", "-1", "--format=%B", self._commit(signature["breached_in"])],
+            cwd=ROOT,
+            capture_output=True,
+            check=True,
+        ).stdout.decode("utf-8", "replace")
+        assert " ".join(signature["commit_body_claim"].split()) in " ".join(
+            body.split()
+        )
+        assert signature["commit_body_claim_is_true"] is False
+        assert signature["withdrawn_word"] in signature["commit_body_claim"]
+
+    def test_the_breach_still_reproduces(self, tmp_path):
+        """Clean before, red at P2a with exactly those findings, clean after."""
+        (entry,) = self._entries()
+        signature = entry["live_signature"]
+
+        entry_tip = signature["phase_entry_tip"]
+        code, findings = self._plan_audit_at(
+            self._commit(entry_tip), tmp_path / "entry"
+        )
+        assert (code, list(findings)) == (entry_tip["plan_audit_exit"], []), (
+            "the failures were pre-existing after all — the receipt's central "
+            "claim is wrong and the entry must be rewritten"
+        )
+
+        breach = signature["breached_in"]
+        code, findings = self._plan_audit_at(self._commit(breach), tmp_path / "breach")
+        assert code == breach["plan_audit_exit"]
+        assert list(findings) == breach["findings"], (
+            "the breach no longer reproduces as recorded — if the locator "
+            "refresh has been folded into the commit that caused the shift, "
+            "close this entry and retire the gate deliberately"
+        )
+
+        repair = signature["repaired_in"]
+        code, findings = self._plan_audit_at(self._commit(repair), tmp_path / "repair")
+        assert (code, list(findings)) == (repair["plan_audit_exit"], [])

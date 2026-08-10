@@ -1,0 +1,76 @@
+{
+  "artifact": "escalated_defects",
+  "slice": "P2a",
+  "escalated_in": "the phase-2 sign-off repair commit that adds this file",
+  "why_this_file_exists": "The phase-2 sign-off found that R-01 row 1 was red at P2a and that P2a's own commit body called the two failures 'pre-existing'. They were not: the same commit's 54-line addition to src/app.py moved the /api/bis and /api/optimize decorators 47 lines down, past CITATION_WINDOW, and four plan citations drifted with them. A gate claim whose prose outruns the code is the campaign's own named failure shape, sitting inside the campaign's own gate. The tree at 969bd4f cannot be repaired by a commit after it, and this lane may not repair it by rewriting a range that the sign-off, the phase document and the sibling receipt all cite by sha -- rewriting the evidence to erase a false claim about it is a worse answer than recording the claim as false. So the record is corrected here, the redness is made reproducible from git rather than remembered, and the two things that can actually close it -- an integration-time fold of the repair into the commit that caused it, and a runbook clause that stops R-37 and R-01 row 1 from colliding again -- are named with their owners. Written as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs.",
+  "gate": "tests/test_trigger_stream.py::TestTheP2aGateBreachIsStillTracked",
+  "defects": [
+    {
+      "id": "r01_row1_was_red_at_p2a_and_the_body_called_it_pre_existing",
+      "dated": "2026-08-10",
+      "origin": "introduced by 969bd4f itself; nothing before it in the phase carries the failure",
+      "raised_by": [
+        {
+          "signoff": "verify-phase-2",
+          "pass": 1,
+          "finding": "R-01 row 1 (pytest) was red at P2a and the success criterion 'The full per-commit gate set (R-01) is green at P2a, P2b and P2c' is not discharged there. The P2a commit body describes the two failures as '2 pre-existing plan_audit citation-locator failures' -- factually false; they were introduced by the commit claiming them pre-existing.",
+          "corrected_here": "Reproduced with the instrument rather than accepted as reported. At the phase entry tip 146a69c, tests/test_plan_audit.py is 44 passed and scripts/plan_audit.py exits 0 with '8 plan documents clean'. At 969bd4f it is 2 failed / 42 passed and plan_audit exits 1 with exactly four citation findings. At 312ccd9 and at every commit after it, through HEAD, plan_audit exits 0 again. The failure is therefore self-inflicted, confined to citation locators, and one commit wide. The body's own next clause -- 'caused by app.py's line shift' -- contradicts the word 'pre-existing' in the same sentence, which is how a reader could have caught it without git."
+        }
+      ],
+      "site": [
+        {
+          "file": "docs/plans/2026-08-08-silent-failure-campaign.md",
+          "fragment": "/api/bis"
+        },
+        {
+          "file": "docs/plans/phase-4-program-engine.md",
+          "fragment": "/api/optimize"
+        },
+        {
+          "file": "src/app.py",
+          "fragment": "except ProjectionStarvation"
+        }
+      ],
+      "defect": "P2a added the single request-boundary `except ProjectionStarvation` handler D-25 requires, 54 lines of src/app.py, above the two score-serving route decorators. The umbrella's criterion 1 and phase 4's criterion cite those two routes by `app.py:NNNN` with `/api/bis` and `/api/optimize` as their fragments; plan_audit's citation check verifies a fragment within CITATION_WINDOW (5) lines of its locator, and both fragments had moved 47 lines. R-37's ruling for that outcome is 'a drifted number is refreshed in a doc-only commit', and P2a followed it literally: the refresh landed at 312ccd9, the next commit. R-01 row 1 requires pytest green at *every* commit. Between a src/ commit that shifts a cited line and a doc-only commit that refreshes the locator there is exactly one red commit, and the ordering cannot be reversed -- refreshing first makes the locator wrong at the doc commit instead. The two rulings are jointly unsatisfiable for any slice that shifts a cited line, which is the structural half of this entry; the false 'pre-existing' is the disclosure half, and it is the one this campaign exists to end.",
+      "live_signature": {
+        "gate": "R-01 row 1 (pytest)",
+        "instrument": "scripts/plan_audit.py, via tests/test_plan_audit.py",
+        "phase_entry_tip": {
+          "commit": "146a69cb44c162014e8a3a76bec07f31abf20ba7",
+          "subject": "docs(receipts): the two escalated defects get a ledger the re-capture cannot absorb",
+          "plan_audit_exit": 0,
+          "test_plan_audit": "44 passed"
+        },
+        "breached_in": {
+          "commit": "969bd4f2547c824b6247b5b0dc806978be28716d",
+          "subject": "feat(trigger-bus): the seam lands with every assertion and no consumer switched",
+          "plan_audit_exit": 1,
+          "test_plan_audit": "2 failed, 42 passed",
+          "failing_tests": [
+            "tests/test_plan_audit.py::TestTheRealPlans::test_the_plan_documents_are_clean",
+            "tests/test_plan_audit.py::TestTheRealPlans::test_the_recorded_h5_ruling_passes_the_audit"
+          ],
+          "findings": [
+            "[citations] 2026-08-08-silent-failure-campaign.md:348: `app.py:1238` has drifted: fragment `/api/bis` is at src/app.py:509 (also 1285, 1327) — refresh the locator in a doc-only commit",
+            "[citations] 2026-08-08-silent-failure-campaign.md:348: `app.py:1273` has drifted: fragment `/api/optimize` is at src/app.py:1320 — refresh the locator in a doc-only commit",
+            "[citations] phase-4-program-engine.md:426: `app.py:1238` has drifted: fragment `/api/bis` is at src/app.py:509 (also 1285, 1327) — refresh the locator in a doc-only commit",
+            "[citations] phase-4-program-engine.md:427: `app.py:1273` has drifted: fragment `/api/optimize` is at src/app.py:1320 — refresh the locator in a doc-only commit"
+          ]
+        },
+        "repaired_in": {
+          "commit": "312ccd9e482dd02e18e2ee237601f5906fcb32bd",
+          "subject": "docs(plans): the two /api route locators are refreshed after P2a's line shift",
+          "plan_audit_exit": 0
+        },
+        "commit_body_claim": "2 pre-existing plan_audit citation-locator failures caused by app.py's line shift, refreshed in the following doc-only commit per R-37",
+        "commit_body_claim_is_true": false,
+        "withdrawn_word": "pre-existing",
+        "moves_a_number": false,
+        "reaches_src_behaviour": false
+      },
+      "reaches_the_committed_coupled_baseline": false,
+      "not_fixed_here_because": "The only repair of a commit's tree is a rewrite of that commit, and the range 146a69c..HEAD is cited by sha in the phase document (312ccd9, 44e10ea, a966a99, 4d32995), in this receipt's sibling escalated-defects-P2b.json, and in the sign-off that raised this finding. R-34 additionally reserves rebasing to the integration agent and forbids every campaign lane from rewriting shared history. A lane that rewrote the range would invalidate the citations that make the finding checkable and would replace a recorded false claim with no record at all, which is the absorption this artifact family exists to prevent.",
+      "resolution": "Two named actions, both outside this lane. (1) INTEGRATION, R-34: the integration agent already rebases and cherry-picks this lane in declared order, and 312ccd9 is a doc-only locator refresh of the shift 969bd4f caused. Folding it into 969bd4f during that pass makes R-01 row 1 green at every commit of the integrated history, which is the tip R-34 gates on, and it costs no ruling -- a locator refresh is not a semantic change and R-30 does not bind it. (2) RUNBOOK, L0: R-37 check 1 says a drifted locator is 'refreshed in a doc-only commit'. That form is right for drift a slice did not cause and unsatisfiable for drift it did, because R-01 row 1 is per commit. The clause R-37 is missing: a slice that shifts a line a plan document cites refreshes that locator in the same commit; the doc-only form applies only to drift the slice did not cause. Phase 2 states this in its own criterion as a lane-authored finding and does not write it into the runbook, which is not this lane's file."
+    }
+  ]
+}
