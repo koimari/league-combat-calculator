@@ -425,8 +425,9 @@ Each is separately falsifiable and separately revertible; the eleven shared gate
     (120), requested as `["Q","W","E","R"]`, yields `breakdown["Q2"]["casts"] == 1` and a cast timeline
     read off the **public `cast_timeline` list** (`public_response.py:249`) as
     `[(c["time"], c["slot"]) for c in result["cast_timeline"]]`, which measures
-    `[(0.0,"Q"),(0.0,"W"),(0.0,"E"),(0.25,"R"),(5.0,"Q"),(7.273,"W"),(10.0,"Q")]` before the fix — today
-    5253.47 with `Q2` absent — and must gain `(0.0,"Q2")` after it. *No breakdown row carries a
+    `[(0.0,"Q"),(0.0,"W"),(0.0,"E"),(0.25,"R"),(5.0,"Q"),(7.273,"W"),(10.0,"Q")]` before the fix — the
+    scalar beside it is the 0A capture's, not a figure this document owns — and must gain `(0.0,"Q2")`
+    after it. *No breakdown row carries a
     `cast_times` field: `breakdown["W"]` holds `casts`, `damage_by_type`, `damage_type`, `name`,
     `total_damage`, `total_raw`, and C6 adds no payload field, so a `cast_times` assertion would be
     undischargeable.* **The timeline
