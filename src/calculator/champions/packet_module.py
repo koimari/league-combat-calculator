@@ -53,13 +53,18 @@ class PacketSlotMap(dict[str, Any]):
 
     ``cast_dependencies`` rides here rather than in the digest: the module
     that accepts this evidence also declares the ordering rules it implies,
-    and ``contract_from_module`` reads them off this carrier (P5-a).
+    and ``contract_from_module`` reads them off this carrier (P5-a).  It is
+    keyword-only, so the positional signature is the ``(packet_spec,
+    packet_sha256)`` pair it has always been and a third positional
+    argument stays a ``TypeError`` rather than silently becoming a
+    declaration.
     """
 
     def __init__(
         self,
         packet_spec: dict[str, Any],
         packet_sha256: str,
+        *,
         cast_dependencies: tuple[CastDependency, ...] = (),
     ):
         super().__init__()
@@ -559,7 +564,7 @@ def build_packet_module(
     slot_parsers = slot_parsers or {}
     variant_parser_overrides = variant_parsers or {}
     packet_part_timings = packet_part_timings or {}
-    slots = PacketSlotMap(champion, packet_sha256, cast_dependencies)
+    slots = PacketSlotMap(champion, packet_sha256, cast_dependencies=cast_dependencies)
     options: list[dict[str, Any]] = []
     for slot in ("Q", "W", "E", "R", "P"):
         spec = champion.get("slots", {}).get(slot)

@@ -28,7 +28,7 @@ from src.calculator.champions.module_contract import (
     ChampionModuleContractError,
     contract_from_module,
 )
-from src.calculator.champions.packet_module import build_packet_module
+from src.calculator.champions.packet_module import PacketSlotMap, build_packet_module
 from src.calculator.rotation_resolver import _DIRECT_EDGE_KIND
 from src.calculator.cast_dependency import (
     BASE_CAST_SLOTS,
@@ -903,6 +903,12 @@ class TestThePacketCompilerCarriesDeclarations:
             build_packet_module(
                 "Jinx", self.SHA, cast_dependencies=(_dep(requires="Q2"),)
             )
+
+    def test_the_slot_maps_positional_signature_did_not_move(self) -> None:
+        """The carrier is keyword-only: the positional pair is unchanged."""
+        assert PacketSlotMap({}, "0" * 64).cast_dependencies == ()
+        with pytest.raises(TypeError):
+            PacketSlotMap({}, "0" * 64, (_dep(),))
 
     def test_the_digest_gate_still_fires_first(self) -> None:
         with pytest.raises(RuntimeError, match="packet evidence drifted"):
