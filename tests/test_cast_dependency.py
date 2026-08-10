@@ -704,3 +704,64 @@ class TestSyndraDeclaresHerStun:
             )
         assert "stun" in str(caught.value)
         assert "wiki.leagueoflegends.com" in str(caught.value)
+
+
+class TestHeadOnlyDeclarations:
+    """Zed and Brand declare their heads and keep their seeds (D-89)."""
+
+    def test_zed_declares_the_shadow_placement_and_nothing_else(self) -> None:
+        declared = get_champion_cast_dependencies("Zed")
+        assert [(dep.slot, dep.requires) for dep in declared] == [
+            ("Q", "W"),
+            ("E", "W"),
+        ]
+        assert {dep.kind for dep in declared} == {"damage_enabler"}
+
+    def test_zed_declares_nothing_about_death_mark(self) -> None:
+        """The wiki casts R first, this module prices it last: no honest edge."""
+        for dep in get_champion_cast_dependencies("Zed"):
+            assert "R" not in (dep.slot, dep.requires)
+
+    def test_brand_declares_one_edge_for_the_ablaze_opener(self) -> None:
+        declared = get_champion_cast_dependencies("Brand")
+        assert [(dep.slot, dep.requires) for dep in declared] == [("W", "Q")]
+        assert declared[0].kind == "damage_enabler"
+
+    def test_brand_names_the_row_its_own_module_prices(self) -> None:
+        """The declaration and the slot map must be about one number.
+
+        W's declaration exists because the module reads the Ablaze-only
+        row; if that read ever changes to the base "Magic Damage", the
+        dependency stops being true and this pairing is what says so.
+        """
+        module = (ROOT / "src" / "calculator" / "champions" / "brand.py").read_text(
+            encoding="utf-8"
+        )
+        assert '"W": simple_damage(attr="Increased Damage"' in module
+        assert "Increased Damage" in get_champion_cast_dependencies("Brand")[0].reason
+
+    def test_neither_declares_a_suppression(self) -> None:
+        """Their detectors infer nothing, so a suppression would be dead."""
+        for name in ("Zed", "Brand"):
+            for dep in get_champion_cast_dependencies(name):
+                assert dep.suppresses == ()
+
+    def test_both_cite_the_revision_their_module_publishes(self) -> None:
+        from src.calculator.champions import brand, zed
+
+        for module, name in ((zed, "Zed"), (brand, "Brand")):
+            parent = next(
+                row for row in module.SOURCES if "Template:" not in row["url"]
+            )
+            expected = f"{parent['url']}@{parent['revision_id']}"
+            for dep in get_champion_cast_dependencies(name):
+                assert dep.source == expected
+
+    def test_exactly_three_champions_declare_anything(self) -> None:
+        """The migration is provably diff-free because 170 modules do not."""
+        declaring = {
+            name
+            for name in _CUSTOM_CHAMPION_MODULES
+            if get_champion_cast_dependencies(name)
+        }
+        assert declaring == {"Syndra", "Zed", "Brand"}

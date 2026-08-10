@@ -30,6 +30,7 @@ hardcoded.
 
 from typing import Any
 
+from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
@@ -136,6 +137,46 @@ MODULE_COVERAGE = {
 }
 
 OPTIONS: list[dict[str, Any]] = []
+
+# The revision these declarations were read from, in the shape
+# scripts/cast_dependency_audit.py resolves against the committed wiki
+# audit. It is the parent entry SOURCES publishes.
+_WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Zed@4026038"
+
+_SHADOW_MIMICS_Q_AND_E = (
+    "Living Shadow's Shadow mimics Razor Shuriken and Shadow Slash "
+    "'regardless of range', so the same cast is one instance before the "
+    "Shadow is placed and two after it. The Shadow's copies are outside "
+    "this module's single-instance pricing, which is why the ordering is "
+    "declared rather than priced: the rotation still has to open on the "
+    "placement for the kit it models to be the kit Zed casts."
+)
+
+# Head only (D-89). W first is the mechanic above; the rest of the seed
+# order — E before Q, R last — is a DPS and scheduling preference no
+# declaration can honestly express, so the resolver's hand seed keeps it.
+# R in particular is deliberately undeclared: Marked for Death stores the
+# damage dealt *during* the mark, so the wiki puts R first while this
+# module prices it last off Q and E's raw totals with a 3-second
+# detonation offset. Neither direction is a dependency both surfaces
+# would agree to, and a declaration that contradicts one of them is worse
+# than the seed it would retire.
+CAST_DEPENDENCIES = (
+    CastDependency(
+        slot="Q",
+        requires="W",
+        kind="damage_enabler",
+        reason=_SHADOW_MIMICS_Q_AND_E,
+        source=_WIKI_SOURCE,
+    ),
+    CastDependency(
+        slot="E",
+        requires="W",
+        kind="damage_enabler",
+        reason=_SHADOW_MIMICS_Q_AND_E,
+        source=_WIKI_SOURCE,
+    ),
+)
 
 parse_abilities = build_parser(SLOTS, "Zed")
 REVIEW_STATUS = "reviewed_module"

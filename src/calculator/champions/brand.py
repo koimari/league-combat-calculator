@@ -24,6 +24,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
@@ -177,6 +178,35 @@ SLOTS = {
     "R": _pyroclasm,
     "P": _blaze,  # after the damage slots: reads their emissions
 }
+
+# The revision this declaration was read from, in the shape
+# scripts/cast_dependency_audit.py resolves against the committed wiki
+# audit. It is the same parent entry SOURCES publishes below.
+_WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Brand@4023911"
+
+# Head only (D-89). Q opening is the mechanic below; the rest of the seed
+# order — R and E between Q and W — is a stack-count and DPS preference,
+# so the resolver's hand seed keeps it. One edge, not three: R and E apply
+# Ablaze too, so this is the minimal declaration that keeps W's priced
+# row true in every derived order, and naming the other appliers as well
+# would constrain more than the mechanic does.
+CAST_DEPENDENCIES = (
+    CastDependency(
+        slot="W",
+        requires="Q",
+        kind="damage_enabler",
+        reason=(
+            "W is priced at its Ablaze-empowered row: this module reads "
+            "'Increased Damage', which is Blaze's 'Ablaze Bonus: the "
+            "target takes 25% increased damage' and exists only against a "
+            "target already afflicted. Q is the rotation's opener and "
+            "applies the stack ('Brand's abilities apply a stack of "
+            "Ablaze to enemies hit'), so an order that casts W first "
+            "prices a bonus nothing set up."
+        ),
+        source=_WIKI_SOURCE,
+    ),
+)
 
 parse_abilities = build_parser(SLOTS, "Brand")
 
