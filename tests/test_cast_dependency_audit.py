@@ -300,6 +300,65 @@ class TestDeclarations:
         ]
         assert any("load-bearing on nothing" in reason for reason in reasons), reasons
 
+    def test_the_confirmed_by_inference_route_has_a_positive_case(self) -> None:
+        """R-05 for the one route no live declaration takes.
+
+        ``confirmed_by_inference`` is a published member of
+        ``DECLARATION_ROUTES`` and ``_record_routes`` reads it, but no
+        declaration in the tree is confirmed by an inference today, so the
+        branch had no positive case anywhere: a bug in it would publish a
+        false-negative route in silence and every other check would stay
+        green.  This drives the real recorder with a merge receipt that
+        does confirm, and with one that does not, so the branch is proved
+        to discriminate rather than merely to run.  ``tests/
+        test_f3_rotation_all.py``'s second-opinion measurement mirrors the
+        same read and inherits this evidence.
+        """
+        from types import SimpleNamespace
+
+        from scripts.cast_dependency_audit import _parse, _record_routes, option_states
+        from src.calculator.champions import get_champion_cast_dependencies
+        from src.calculator.data_fetcher import fetch_champion_data
+
+        assert "confirmed_by_inference" in DECLARATION_ROUTES
+        data = next(
+            entry
+            for entry in fetch_champion_data().values()
+            if entry.get("name") == "Syndra"
+        )
+        _label, options = option_states("Syndra")[0]
+        parsed = _parse(data, 18, (), {}, options)
+        declarations = get_champion_cast_dependencies("Syndra")
+
+        confirmed: dict[tuple[str, str, str], set[str]] = {}
+        _record_routes(
+            "Syndra",
+            data,
+            parsed,
+            options,
+            declarations,
+            SimpleNamespace(
+                confirmed_by_inference=(
+                    "E requires Q (declared cc_enabler): the detector agrees",
+                )
+            ),
+            confirmed,
+        )
+        assert "confirmed_by_inference" in confirmed[("Syndra", "E", "Q")]
+        assert "confirmed_by_inference" not in confirmed[("Syndra", "E", "Q2")]
+
+        silent: dict[tuple[str, str, str], set[str]] = {}
+        _record_routes(
+            "Syndra",
+            data,
+            parsed,
+            options,
+            declarations,
+            SimpleNamespace(confirmed_by_inference=()),
+            silent,
+        )
+        assert all("confirmed_by_inference" not in routes for routes in silent.values())
+
     def test_every_source_resolves_against_the_committed_wiki_audit(
         self, receipt
     ) -> None:
