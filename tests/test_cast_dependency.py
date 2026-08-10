@@ -742,6 +742,22 @@ class TestNonDeclaringChampionsReachNoNewCode:
                 f"line {guard}"
             )
 
+    def test_the_merge_gates_every_failure_behind_its_guard(self) -> None:
+        """A non-declaring champion reaches the merge and returns from it.
+
+        ``merge_declared_edges`` is the one place an inferred edge meets a
+        declaration, so both resolve-time failures live in it; the
+        emptiness guard is the first statement, and nothing above it can
+        raise.
+        """
+        function = _function(RESOLVER, "merge_declared_edges")
+        guard = _emptiness_guard_line(function, "declarations")
+        raises = [
+            node.lineno for node in ast.walk(function) if isinstance(node, ast.Raise)
+        ]
+        assert len(raises) == 2, "the merge's two resolve-time failures"
+        assert min(raises) > guard
+
     def test_the_packet_compiler_gates_its_validation_behind_a_declaration(
         self,
     ) -> None:
