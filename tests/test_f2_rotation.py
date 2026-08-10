@@ -37,7 +37,6 @@ _OVERRIDE_CHAMPIONS = [
     "Varus",
     "Brand",
     "Vladimir",
-    "Jhin",
     "Annie",
     "Lux",
     "Zed",
@@ -49,7 +48,6 @@ _EXPECTED_ORDERS = {
     "Varus": ["Q", "E", "R", "W"],
     "Brand": ["Q", "R", "E", "W"],
     "Vladimir": ["R", "Q", "E", "W"],
-    "Jhin": ["Q", "W", "E", "R"],
     "Annie": ["E", "R", "Q", "W"],
     "Lux": ["E", "Q", "R", "W"],
     "Zed": ["W", "E", "Q", "R"],
@@ -61,7 +59,6 @@ _RATIONALE_FRAGMENTS = {
     "Varus": ("Blight", "detonat"),
     "Brand": ("Blaze", "spread"),
     "Vladimir": ("amplif", "mark"),
-    "Jhin": ("4th shot", "crit"),
     "Annie": ("stun", "Tibbers", "shield"),
     "Lux": ("slow", "root"),
     "Zed": ("shadow", "Death Mark"),
@@ -233,6 +230,17 @@ class TestDerivedPathRotations:
                 {"Q": 5, "W": 1, "R": 1, "passive": 1},
                 ("stat_buff(bonus_attack_damage)", "amplifies ability damage"),
             ),
+            # Jhin's seed named a mechanic the atomized data does not carry:
+            # his kit detects no setup/consume edge at all, so the derivation
+            # keeps the certified order and SAYS it found no signal.  The
+            # order is the seed's; the claim behind it is not, which is the
+            # honest half of retiring a seed nothing could check.
+            (
+                "Jhin",
+                ["Q", "W", "E", "R"],
+                {"Q": 5, "W": 1, "E": 5, "R": 1, "passive": 1},
+                ("no detectable setup/consume signal", "kept exactly as reviewed"),
+            ),
         ],
     )
     def test_the_derivation_reproduces_the_order_the_seed_pinned(
@@ -248,7 +256,7 @@ class TestDerivedPathRotations:
                 fragment.lower() in rationale
             ), f"{champion} rationale should mention {fragment!r}: {rationale}"
 
-    @pytest.mark.parametrize("champion", ["Syndra", "Aatrox"])
+    @pytest.mark.parametrize("champion", ["Syndra", "Aatrox", "Jhin"])
     def test_the_rule_is_derived_and_carries_no_override_reason(
         self, champion, champion_by_name
     ) -> None:
@@ -341,7 +349,6 @@ class TestParseLevelRotations:
             ("Varus", {"E": 5}),
             ("Brand", {"W": 5, "E": 5}),
             ("Vladimir", {"W": 5, "E": 5, "R": 5}),
-            ("Jhin", {"Q": 4, "E": 5}),
             ("Annie", {"W": 5, "R": 5}),
             ("Lux", {"E": 5, "R": 5, "Q": 2}),
             ("Zed", {"E": 5}),

@@ -61,7 +61,6 @@ _OVERRIDE_CHAMPIONS = [
     "Varus",
     "Brand",
     "Vladimir",
-    "Jhin",
     "Annie",
     "Lux",
     "Zed",
@@ -106,6 +105,9 @@ _EXPECTED_DERIVED_ORDERS = {
     # Retired seed (D-89): R's bonus-AD stat_buff is a detected edge to Q
     # and W, so the derivation puts World Ender first on its own.
     "Aatrox": ["R", "Q", "W"],
+    # Retired seed (D-89): no edge is detected at all, so the certified
+    # order survives untouched — the flat-kit path, honestly labelled.
+    "Jhin": ["Q", "W", "E", "R"],
     # Syndra's retired seed (D-89): E requires Q and E requires Q2, declared
     # by her module, derive the order the hand seed used to pin.
     "Syndra": ["Q", "Q2", "E", "W", "R"],

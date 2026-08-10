@@ -265,27 +265,6 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
     # R grants bonus AD as a percentage of total AD before Q/W are priced.
     # The rotation is anchored on Whisper's 4th shot (guaranteed crit +
     # missing-health bonus) from the auto stream; Q opens, W roots for R.
-    "Jhin": ComboRule(
-        champion="Jhin",
-        override_reason="pending_primitive",
-        order=("Q", "W", "E", "R"),
-        rationale=(
-            "The rotation is anchored on Whisper's 4th shot — the guaranteed "
-            "crit with 15–25% missing-health bonus that the auto stream "
-            "produces. Q opens as the fast poke, W (Deadly Flourish) roots the "
-            "marked target, E zones, and R (Curtain Call) executes with its "
-            "four shots."
-        ),
-        sources=(
-            "P 'Per-Level Scaling' — 4th-shot guaranteed crit + "
-            "missing-health bonus (p_final_shot / p_shot_number options)",
-            "R 'Physical Damage' 4-shot barrage (3 shots + final round)",
-            "W 'Physical Damage' root (Deadly Flourish)",
-        ),
-        setup=(),
-        consume=("R",),
-        aoe={"Q": 4, "E": 5},  # Dancing Grenade bounces, Captive Audience zone
-    ),
     # Molten Shield opens (buffs-first), Pyromania stuns with the burst, R
     # opens the damage (initial blast + MR shred + aura + Tibbers autos).
     "Annie": ComboRule(
