@@ -119,9 +119,23 @@ registry projects the five hand-maintained holder name sets, so the two gates th
   five things to maintain.*
 - **Solstice Sleigh is tuple-incapable by declaration** (D-02) — its branch is nested inside
   `for cc in cc_events:` and today it is protected only by a `healthRegen.percent` coincidence.
-  **Fimbulwinter needs the enriched view** (D-03) — it carries
-  `_trigger_event_id=event.get("_event_id")`, and dropping it disarms the fail-closed
-  `support_trigger_link` raise at `survival/compile.py:926`.
+  **Fimbulwinter needs the enriched view** (D-03) — it carries a
+  `_trigger_event_id` (`item_support_effects.py:573`), and dropping it strips the only
+  trigger link any support author emits, the one the fail-closed
+  `support_trigger_link` raise at `survival/compile.py:938` exists to refuse.
+
+  **Two locators and one verb corrected after the phase-2 sign-off, which found the
+  `survival/compile.py` Shape row below undischarged** — flagged as a lane-authored
+  plan-text change the way this phase's other five are, so the next verifier adjudicates
+  it. The spelling was `_trigger_event_id=event.get("_event_id")`, which P2b retired when
+  the scan moved onto the bus: `item_support_effects.py:573` reads
+  `_trigger_event_id=event.event_id or None`. The verb was "disarms", and it overstated:
+  Everlasting's shield carries a 3.0 s `duration`, so
+  `unrepresentable_template_receipt` declines it one branch earlier and the trigger-link
+  raise is not what refuses today's linked packet. Both readings are now pinned by
+  `tests/test_trigger_stream.py::TestTheSupportTriggerLinkRaise` rather than stated here,
+  along with the third fact the pair of them leaves open — that the guard is still live
+  for a linked instant heal or shield the receipt admits.
 - **The enrichment set shrinks by four** (dropping Bandlepipes, Echoes of Helia, Phage,
   Solstice Sleigh) and the shrink is **proved packet-for-packet, not asserted**. *Why: it is the
   one membership change inside a pure-refactor phase.*
@@ -224,7 +238,7 @@ registry projects the five hand-maintained holder name sets, so the two gates th
 | `src/calculator/item_support_effects.py` | `_CC_TRIGGER_KINDS`, the four scanners, the five name sets and three `has_*` helpers deleted; Phage's (`:349-355`) and Echoes of Helia's (`:797-804`) inline row loops read the bus; two guard forms normalized |
 | `src/calculator/pipeline.py` | tuple gate (`:994`) reads `tuple_incapable_items()`; the `item_support_effects` import is gone |
 | `src/calculator/participant_timeline.py` | enrichment gate (`:2613`) reads `enriched_view_items()`; the stale "the tuple predicate excludes every event-scanning holder" comment dies with the predicate it described |
-| `src/calculator/survival/compile.py` | the stale comment at `:927-930` — "No current support author emits a trigger link" — dies too: `item_support_effects.py:493` emits `_trigger_event_id` for every Fimbulwinter shield under the enriched view, which is exactly why D-03's fail-closed argument holds |
+| `src/calculator/survival/compile.py` | the stale comment above the `support_trigger_link` raise (`:938`) — "No current support author emits a trigger link" — dies too: `item_support_effects.py:573` emits `_trigger_event_id` for every Fimbulwinter shield under the enriched view, which is exactly why D-03's fail-closed argument holds. **Landed after the phase-2 sign-off, which found this row alone in the phase carrying no amendment, no disclosure and no escalation.** The replacement is three facts, each asserted in `TestTheSupportTriggerLinkRaise` rather than stated, because a replacement sentence only moves the day it goes stale: the link is emitted; the emitted one is declined a branch earlier for its duration; the guard is live for a linked template the earlier receipt admits |
 | `src/calculator/damage.py` | `_apply_command_amp` (`:9341-9347`) and `_fimbulwinter_event_coverage` (`:1716-1729`) read the bus; `:9956` reads `pair_outcome_items()` |
 | `src/calculator/survival/actions.py` | the inline immobilize set (`:497-503`) becomes the bus predicate |
 | `tests/test_trigger_stream.py` | **new** — construction invariants, registry validation, pinned projections, assertions A1–A9, the inertness proof |
@@ -630,3 +644,38 @@ its red is reproducible on demand rather than remembered (R-05).
   the repo stating which holders read which stream, and it is the only authority table —
   `cross_participant_authorities` is gone and no second `Authority` enum exists, because
   `trigger_stream` re-exports `ability_spec`'s.
+
+  **"Anywhere" is now checked as written, after the phase-2 sign-off found the letter and the
+  machine check diverged.** A2 and A4 scan the parsed tree — definitions, imports, names,
+  attributes — so both were green while `trigger_stream`'s own `Trigger` docstring still named
+  `_cc_triggers` in prose. The gap is closed by adding a check, never by narrowing the
+  criterion: `test_no_retired_symbol_is_named_anywhere_in_src_not_even_in_prose` word-boundary
+  scans every `src/` file's *text* for all fourteen retired names plus `EVENT_VIEW_STREAMS`,
+  with its own permanent R-05 seam, and the docstring says "the retired control scanner this
+  classifier replaced" instead. `is_immobilizing_event` stays out of the scanned set for A2's
+  recorded reason — the retired symbol is `ability_spec`'s and the bus's predicate is its live
+  replacement, which a text scan cannot tell apart and the definition scan already can.
+
+- **Two open items the phase-2 sign-off left for the integration agent, restated here so the
+  barrier closes on artifacts rather than on a review comment.** Neither is this lane's to
+  settle and neither is re-opened above.
+
+  *R-01 row 1's breach at P2a* is recorded in the amended criterion above, in
+  `docs/receipts/escalated-defects-P2a.json`, and gated by
+  `TestTheP2aGateBreachIsStillTracked`. The sign-off adjudicated the record legitimate and the
+  treatment adequate; the two closing actions (the integration-time fold of the locator
+  refresh, and R-37's missing same-commit clause) remain assigned to their named owners.
+
+  *R-01 row 7's ratchet at P2c* is green over two inline pylint disables added in that slice,
+  with the four-column measurement in the amended criterion above. R-32 makes the ratchet
+  baseline unwritable by this lane, so the bless-or-reseed choice stays the integration
+  agent's.
+
+  A third finding is cosmetic and is recorded rather than acted on: two doc-only commits
+  (`373cd5d`, `4f49722`) carry no R-20 `Expected qualifying occurrences` line, though both
+  declare "No `src/` change" / "Doc-only" so no gate is undeclared. Rewriting them is not the
+  cheaper option it looks like — the phase's two amended criteria enumerate their deviation
+  sets by sha, `escalated-defects-P2a.json` joins its reproducer to three shas, and
+  `TestTheP2aGateBreachIsStillTracked` extracts those trees by sha, so a history rewrite for a
+  missing line would invalidate four committed artifacts to fix a line that changes no gate.
+  Every commit landed after the sign-off carries the line, doc-only ones included.
