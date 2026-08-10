@@ -58,9 +58,14 @@ from src.calculator.champions import (
 )
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.item_support_effects import (
-    cross_participant_authorities,
-    producer_item,
+from src.calculator.item_support_effects import producer_item
+
+# The sys.path bootstrap above forces every first-party import below it;
+# this one line carries the disable rather than the whole block.
+from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
+    CAPABILITIES,
+    CROSS_PARTICIPANT_AUTHORITIES,
+    Engine,
 )
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
@@ -928,15 +933,34 @@ def _exact_totals(entry):
     return totals
 
 
+def cross_participant_producers():
+    """Every packet source that modifies another participant's damage.
+
+    Read from ``trigger_stream.CAPABILITIES`` (R-12), never typed: a walk
+    half whose declared ``authority`` is one of the cross-participant members
+    is a producer, and its ``packet_source`` is the literal a scenario has to
+    equip the owner of.  A seventh producer therefore joins this set on the
+    commit that declares it, and fails capture until a scenario covers it.
+    """
+    return frozenset(
+        capability.packet_source
+        for capability in CAPABILITIES.values()
+        if capability.engine is Engine.WALK
+        and capability.authority in CROSS_PARTICIPANT_AUTHORITIES
+        and capability.packet_source is not None
+    )
+
+
 def capture_coupled(scenarios, *, producers, exact=False):
     """Roster snapshots through the coupled path, covering every producer.
 
-    ``producers`` is read, never typed: it is
-    ``item_support_effects.cross_participant_authorities()`` at 0A/0B and
-    ``trigger_stream.CAPABILITIES`` from P2a (R-12), so a seventh
-    ``damage_modifier`` producer with no covering scenario fails here rather
-    than passing silently.  ``exact`` writes ``repr(float)`` per-attacker
-    totals instead of the 2-decimal snapshot.
+    ``producers`` is read, never typed: it was
+    ``item_support_effects.cross_participant_authorities()`` at 0A/0B and is
+    :func:`cross_participant_producers` — the ``trigger_stream.CAPABILITIES``
+    reading — from P2a (R-12), so a seventh ``damage_modifier`` producer with
+    no covering scenario fails here rather than passing silently.  ``exact``
+    writes ``repr(float)`` per-attacker totals instead of the 2-decimal
+    snapshot.
     """
     uncovered = _uncovered_producers(scenarios, producers)
     if uncovered:
@@ -1019,7 +1043,7 @@ def capture_coupled_file(outfile, *, exact=False):
     """Capture the coupled roster baseline (or its exact per-attacker totals)."""
     started = time.perf_counter()
     snapshot = capture_coupled(
-        COUPLED_SCENARIOS, producers=cross_participant_authorities(), exact=exact
+        COUPLED_SCENARIOS, producers=cross_participant_producers(), exact=exact
     )
     Path(outfile).write_text(
         json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -1042,7 +1066,7 @@ def rebuild_for(baseline):
         return build_snapshot()
     return capture_coupled(
         COUPLED_SCENARIOS,
-        producers=cross_participant_authorities(),
+        producers=cross_participant_producers(),
         exact=bool(metadata.get("exact", False)),
     )
 

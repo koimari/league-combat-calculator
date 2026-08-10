@@ -3,6 +3,7 @@
 import hmac
 import base64
 import binascii
+import functools
 import hashlib
 import ipaddress
 import json
@@ -41,6 +42,13 @@ from flask import (
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.application_errors import ApplicationError
+
+# The sys.path bootstrap above forces every first-party import below it;
+# this one line carries the disable rather than the whole block, because
+# widening it is another lane's file to change.
+from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
+    ProjectionStarvation,
+)
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
     classify_assumption as _classify_assumption,
@@ -549,6 +557,45 @@ def _internal_error(error):
     """
     _capture_exception(getattr(error, "original_exception", error))
     return jsonify({"error": "Internal server error"}), 500
+
+
+def _within_starvation_boundary(view):
+    """Wrap one view in the campaign's single ``ProjectionStarvation`` catch.
+
+    A ``ProjectionStarvation`` means a projection and a consumer disagree
+    about what a result can answer — a programming error, not a data
+    condition — so it is raised lazily on the first read and handled in
+    exactly one place, here, where it becomes a 500 carrying the ``STARVED``
+    receipt (D-25).  Everywhere else it propagates: a named refusal that is
+    quietly absorbed is the zero this campaign exists to kill.
+
+    One wrapper over every registered view rather than one ``except`` per
+    route, because "exactly one catch" is the rule and repeating it would be
+    a second place the rule lives.
+    """
+
+    @functools.wraps(view)
+    def _guarded(*args, **kwargs):
+        try:
+            return view(*args, **kwargs)
+        except ProjectionStarvation as starved:
+            _capture_exception(starved)
+            return (
+                jsonify(
+                    {
+                        "error": "Internal server error",
+                        "disposition": starved.disposition.value,
+                        "starved": {
+                            "field": starved.field,
+                            "producer": starved.producer,
+                            "reason": starved.reason,
+                        },
+                    }
+                ),
+                500,
+            )
+
+    return _guarded
 
 
 @app.errorhandler(429)
@@ -2007,6 +2054,13 @@ def api_update_data():
         cache_delete_all()
 
     return Response(generate(), mimetype="text/event-stream")
+
+
+# The request boundary, applied once every route above is registered: the
+# single ``except ProjectionStarvation`` in ``src/`` reaches every endpoint
+# from here, and a source assertion allowlists it and forbids every other.
+for _endpoint, _view in list(app.view_functions.items()):
+    app.view_functions[_endpoint] = _within_starvation_boundary(_view)
 
 
 if __name__ == "__main__":
