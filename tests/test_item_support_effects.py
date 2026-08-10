@@ -683,14 +683,19 @@ class TestOwnerIsPresentIffSplit:
         assert "authority" not in self._modifier()
 
 
-def declared_classes_by_producer():
-    """Each ``damage_modifier`` call site's declared class sets, by source.
+def declared_packet_keywords(*names):
+    """Each ``damage_modifier`` call site's declared keywords, by source.
 
     Read from the construction sites and evaluated in the module's own
     namespace, so the test sees the declaration a reader sees rather than a
-    packet a fixture happened to build.  Public because the C3 sentinel in
-    ``test_phase0_sentinels`` reads the same declarations: a second AST walk
-    over the same call sites would be a second home for one fact.
+    packet a fixture happened to build.  A keyword the call site does not
+    pass comes back ``None`` — absent and defaulted are the same thing to
+    ``_packet`` and the caller decides what that means.
+
+    Public, and the one AST walk over those call sites: the Phase 0
+    sentinels in ``test_phase0_sentinels`` read the same declarations (their
+    class sets and their expiries), and a second walk would be a second home
+    for one fact.
     """
     module_source = Path(item_support_effects.__file__).read_text(encoding="utf-8")
     declared = {}
@@ -706,17 +711,27 @@ def declared_classes_by_producer():
             continue
         source = item_support_effects._packet_keyword(node, "source").value
         declared[source] = {
-            axis: eval(  # pylint: disable=eval-used
-                compile(
-                    ast.Expression(item_support_effects._packet_keyword(node, axis)),
-                    "<declaration>",
-                    "eval",
-                ),
-                vars(item_support_effects),
+            name: _evaluate_declaration(
+                item_support_effects._packet_keyword(node, name)
             )
-            for axis in ("damage_classes", "attack_classes")
+            for name in names
         }
     return declared
+
+
+def _evaluate_declaration(expression):
+    """One declared keyword's value, or ``None`` when the site omits it."""
+    if expression is None:
+        return None
+    return eval(  # pylint: disable=eval-used
+        compile(ast.Expression(expression), "<declaration>", "eval"),
+        vars(item_support_effects),
+    )
+
+
+def declared_classes_by_producer():
+    """Each ``damage_modifier`` call site's declared class sets, by source."""
+    return declared_packet_keywords("damage_classes", "attack_classes")
 
 
 class TestDeclaredDamageAndAttackClasses:
