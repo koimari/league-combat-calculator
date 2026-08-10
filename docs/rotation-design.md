@@ -185,10 +185,14 @@ Every surviving entry carries an `override_reason` from the closed
 `ORDER_OVERRIDE_REASONS` set (`scheduling_preference`, `dps_tiebreak`,
 `defensive_precast`, `pending_primitive`), so "why is this order still held
 by hand?" is a countable field rather than a claim in this document; the
-count and its reason histogram are published in
-`docs/cast-dependency-audit.json` under `order_override_frontier`, and this
-section's name list is asserted against the live table by
-`tests/test_f2_rotation.py`.  Two seeds deliberately deviate from a
+count, its reason histogram and its `head_only` list — the seeds whose
+champion also declares, derived from `get_champion_cast_dependencies` rather
+than named — are published in `docs/cast-dependency-audit.json` under
+`order_override_frontier`, and this section's name list is asserted against
+the live table by `tests/test_f2_rotation.py`.  After the retirements every
+survivor carries the same reason, so `head_only` is the only place the
+frontier can tell Zed's and Brand's disposition from a seed held by hand end
+to end.  Two seeds deliberately deviate from a
 detected data edge (the seed's judgment wins, documented in
 `tests/test_f3_rotation_all.py`):
 

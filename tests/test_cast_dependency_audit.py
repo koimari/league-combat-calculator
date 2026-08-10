@@ -353,6 +353,58 @@ class TestDeclarations:
         assert frontier["unclassified"] == []
         assert sum(frontier["reasons"].values()) == frontier["entries"]
 
+    def test_the_whole_reason_vocabulary_is_published(self, receipt) -> None:
+        """A reason with no users is published as zero, not omitted.
+
+        Three of the four closed reasons have no user after the
+        retirements.  A histogram that listed only the reasons in use
+        would make a member's disappearance from the vocabulary invisible
+        and leave "which reasons are dead" a fact nobody could read.
+        """
+        from src.calculator.rotation_resolver import ORDER_OVERRIDE_REASONS
+
+        frontier = receipt["order_override_frontier"]
+        assert set(frontier["reasons"]) == set(ORDER_OVERRIDE_REASONS)
+
+    def test_the_head_only_seeds_are_the_seeds_that_also_declare(self, receipt) -> None:
+        """D-89's second disposition, measured rather than remembered.
+
+        All seven survivors carry ``dps_tiebreak``, so the reason
+        histogram alone cannot separate a head-only seed (declaration
+        head, hand-held DPS tail) from a seed held by hand end to end.
+        This measures the split independently of the audit's own code.
+        """
+        from src.calculator.champions import get_champion_cast_dependencies
+        from src.calculator.rotation_resolver import CAST_ORDER_OVERRIDES
+
+        declaring = sorted(
+            name
+            for name in CAST_ORDER_OVERRIDES
+            if get_champion_cast_dependencies(name)
+        )
+        frontier = receipt["order_override_frontier"]
+        assert frontier["head_only"] == declaring
+        assert set(frontier["head_only"]) <= set(frontier["champions"])
+
+    def test_head_only_follows_the_declarations_and_not_a_list(
+        self, monkeypatch
+    ) -> None:
+        """R-05: the field moves when a seeded champion starts declaring.
+
+        A hand-listed ``head_only`` would read identically today and stay
+        right by luck.  This makes Lux declare and asserts the frontier
+        notices, which a list cannot do.
+        """
+        from scripts import cast_dependency_audit as audit_module
+
+        real = audit_module.get_champion_cast_dependencies
+        monkeypatch.setattr(
+            audit_module,
+            "get_champion_cast_dependencies",
+            lambda name: real("Zed") if name == "Lux" else real(name),
+        )
+        assert "Lux" in audit_module._override_frontier()["head_only"]
+
 
 class TestMarkerSurfaceIsDerived:
     def test_the_surface_is_read_out_of_the_resolver(self) -> None:

@@ -1233,6 +1233,16 @@ def _override_frontier() -> dict[str, Any]:
     claim a document makes: every surviving entry of
     ``CAST_ORDER_OVERRIDES`` carries a reason from the closed set, and the
     histogram is what a later slice drives down.
+
+    ``head_only`` is the second half of that frontier and is derived, not
+    listed: a seed whose champion also declares a ``CastDependency`` is
+    D-89's head-only disposition — the declaration decides the head of the
+    order and the hand seed still decides the tail — where a seed whose
+    champion declares nothing is hand-held end to end.  After the four
+    retirements all seven survivors carry the same ``dps_tiebreak``
+    reason, so without this the histogram cannot tell Zed and Brand apart
+    from a pure Tier 3 seed and the distinction D-89 ruled lives only in
+    ``declared_dependency_activation``.
     """
     histogram = {reason: 0 for reason in sorted(ORDER_OVERRIDE_REASONS)}
     unclassified: list[str] = []
@@ -1246,6 +1256,11 @@ def _override_frontier() -> dict[str, Any]:
         "champions": sorted(CAST_ORDER_OVERRIDES),
         "reasons": histogram,
         "unclassified": unclassified,
+        "head_only": [
+            name
+            for name in sorted(CAST_ORDER_OVERRIDES)
+            if get_champion_cast_dependencies(name)
+        ],
     }
 
 

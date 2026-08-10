@@ -237,10 +237,32 @@ class TestCastOrderOverrides:
                 / "cast-dependency-audit.json"
             ).read_text(encoding="utf-8")
         )
+        from collections import Counter
+
+        from src.calculator.champions import get_champion_cast_dependencies
+
         frontier = receipt["order_override_frontier"]
         assert sorted(_OVERRIDE_CHAMPIONS) == frontier["champions"]
         assert frontier["entries"] == len(_OVERRIDE_CHAMPIONS)
-        assert frontier["reasons"]["pending_primitive"] == 0
+        # The WHOLE histogram, not one key of it: after the retirements
+        # every survivor carries `dps_tiebreak` and three of the four
+        # closed reasons have no user, so gating `pending_primitive`
+        # alone left the other three unwatched in both directions.
+        measured = Counter(
+            rule.override_reason for rule in CAST_ORDER_OVERRIDES.values()
+        )
+        assert frontier["reasons"] == {
+            reason: measured.get(reason, 0) for reason in ORDER_OVERRIDE_REASONS
+        }
+        assert frontier["unclassified"] == []
+        # D-89's head-only seeds: a declaration decides the head, the seed
+        # still decides the tail.  Nothing else in the frontier can tell
+        # them from a seed held by hand end to end.
+        assert frontier["head_only"] == sorted(
+            name
+            for name in CAST_ORDER_OVERRIDES
+            if get_champion_cast_dependencies(name)
+        )
 
     def test_the_design_doc_names_the_surviving_seeds_and_no_others(self) -> None:
         """The prose list is gated like the table it describes.

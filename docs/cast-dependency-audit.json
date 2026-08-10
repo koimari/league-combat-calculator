@@ -292,6 +292,10 @@
       "Zed"
     ],
     "entries": 7,
+    "head_only": [
+      "Brand",
+      "Zed"
+    ],
     "reasons": {
       "defensive_precast": 0,
       "dps_tiebreak": 7,
