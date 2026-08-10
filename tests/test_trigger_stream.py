@@ -17,10 +17,11 @@ import inspect
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
+from src.calculator import damage
 from src.calculator import trigger_stream as ts
 from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
@@ -31,7 +32,9 @@ from src.calculator.ability_spec import (
 from src.calculator.ability_spec import is_immobilizing_event as legacy_immobilizing
 from src.calculator.item_support_effects import (
     EVENT_VIEW_SUPPORT_ITEMS,
+    EventViewStarvationError,
     cross_participant_authorities,
+    derive_item_support_effects,
 )
 
 ROOT = Path(__file__).parents[1]
@@ -1464,3 +1467,199 @@ def test_every_registered_view_runs_inside_the_boundary():
         inspect.unwrap(app_module.app.view_functions["api_calculate"])
         is app_module.api_calculate
     )
+
+
+# ---------------------------------------------------------------------------
+# The edges P2b moved — every consumer difference the migration carries
+# ---------------------------------------------------------------------------
+#
+# A pure refactor still has a boundary: four consumers stopped reading raw
+# rows and started reading Triggers, and a Trigger is a narrower object than
+# the dict it summarises.  Each difference below was found by the
+# ``verify-P2b`` signoff rather than declared by the slice that shipped it,
+# which is exactly why each is now a pin: prose that says "latent" ages into
+# prose that said "latent", while a test says it again on every run.
+
+
+def _fimbulwinter_gate(rows):
+    """``damage._fimbulwinter_event_coverage`` over one hand-built ledger."""
+    return damage._fimbulwinter_event_coverage([{"name": "Fimbulwinter"}], rows)
+
+
+def _support_actor(participant_id, team, item_names):
+    """The ``derive_item_support_effects`` actor shape, minimally."""
+    return SimpleNamespace(
+        participant_id=participant_id,
+        team=team,
+        level=18,
+        items=tuple({"name": name} for name in item_names),
+        stats={"mana": 1000.0, "max_mana": 1000.0, "is_melee": False},
+        request=SimpleNamespace(item_options={}, ally_effects_enabled=True),
+    )
+
+
+def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
+    """``Trigger.cc_reviewed`` is narrower one way and wider the other.
+
+    The retired gate read ``cc_reviewed is True or cc_kind is not None``, so
+    mere *key presence* certified — a row carrying ``cc_kind=""`` passed.
+    The bus has no key-presence fact to offer: an empty token is an
+    unreviewed row, and reaching past the bus for the raw key would put a
+    second ``cc_kind`` reader in ``damage.py``, which is the divergence A1
+    exists to forbid.  So the gate withholds there, and withholding is the
+    direction a certification gate is allowed to move.
+
+    It is also wider in one place: ``is True`` became a truth test, so a
+    truthy non-``True`` marker now certifies.
+
+    Neither direction is reachable from the engine.  ``damage.py:1452-1454``
+    writes ``cc_reviewed`` in the same two lines that write ``cc_kind``, and
+    writes it ``True`` by default, so no engine row can carry an empty token
+    without a certifying flag beside it.
+    """
+    assert _fimbulwinter_gate([{"is_ability": True, "source_key": "Q"}]) == (
+        False,
+        "fimbulwinter_everlasting",
+    )
+    assert _fimbulwinter_gate(
+        [{"is_ability": True, "source_key": "Q", "cc_kind": "stun"}]
+    ) == (True, "")
+    # Narrower: a present-but-empty token certified before and does not now.
+    assert _fimbulwinter_gate(
+        [{"is_ability": True, "source_key": "Q", "cc_kind": ""}]
+    ) == (False, "fimbulwinter_everlasting")
+    # Wider: ``is True`` became a truth test.
+    assert _fimbulwinter_gate(
+        [{"is_ability": True, "source_key": "Q", "cc_reviewed": 1}]
+    ) == (True, "")
+    # The control that makes both unreachable from the engine.
+    ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    assert (
+        'row["cc_kind"] = str(event["cc_kind"])\n'
+        '                row["cc_reviewed"] = bool(event.get("cc_reviewed", True))'
+    ) in ledger
+
+
+def test_the_certification_gate_reads_every_mapping_not_only_a_dict():
+    """``isinstance(event, dict)`` became ``isinstance(row, Mapping)``.
+
+    The three sibling scanners the bus replaced all tested ``Mapping``; only
+    this gate tested ``dict``, so the migration made it agree with them.  A
+    non-dict ``Mapping`` ability row is therefore classified where it used
+    to be skipped — and skipped meant vacuously certified.
+    """
+    row = MappingProxyType({"is_ability": True, "source_key": "Q"})
+    assert _fimbulwinter_gate([row]) == (False, "fimbulwinter_everlasting")
+    assert _fimbulwinter_gate([("positional", "row")]) == (True, "")
+
+
+def test_the_certification_gate_propagates_the_damage_field_contract():
+    """Two tolerated-in-silence rows are now named ``ValueError``s.
+
+    The gate asks for ``Stream.DAMAGE``, so every ability row it inspects is
+    built as a damage ``Trigger`` and judged by that stream's contract: an
+    unattributed row and a ``damage_type`` outside the vocabulary both raise
+    where the old ``.get`` comparisons shrugged.  Both are unreachable from
+    the engine's ledger, and the control below is the reason — every row
+    reaching it passed a ``damage_type`` filter naming the same three types,
+    in both of ``_ordered_damage_events``' builders.
+    """
+    with pytest.raises(ValueError, match="source_key"):
+        _fimbulwinter_gate([{"is_ability": True, "source_key": ""}])
+    with pytest.raises(ValueError, match="damage_type"):
+        _fimbulwinter_gate(
+            [{"is_ability": True, "source_key": "Q", "damage_type": "mixed"}]
+        )
+    ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    assert (
+        ledger.count('damage_type not in {"physical", "magic", "true"}') == 2
+    ), "both ledger builders must keep the filter that makes 'mixed' unreachable"
+
+
+def test_echoes_of_helia_clamps_each_number_before_its_branch_chooses():
+    """A negative raw number now contributes the row's mitigated damage.
+
+    The retired expression clamped the value it had *chosen* —
+    ``max(0.0, raw if present else damage)`` — so a present negative raw
+    contributed nothing.  The bus clamps each field at construction and the
+    branch then picks ``raw or damage``, so a clamped-to-zero raw falls
+    through to the damage.  A negative raw is nonsense a producer would have
+    to author deliberately; the pin records which way it now resolves.
+    """
+    holder = _support_actor("ally:Lulu", "ally", ("Echoes of Helia",))
+    ally = _support_actor("main:Ahri", "main", ())
+
+    def charges(**extra):
+        row = {
+            "time": 0.5,
+            "source_key": "Q",
+            "damage_type": "magic",
+            "damage": 5.0,
+            "target": "main:Ahri",
+            **extra,
+        }
+        packets = derive_item_support_effects(
+            holder,
+            {"damage_events": [row]},
+            [holder, ally],
+            trigger_effects=[
+                {"time": 1.0, "kind": "heal", "target": "main:Ahri", "amount": 100.0}
+            ],
+        )
+        return [packet["amount"] for packet in packets]
+
+    assert charges(raw_damage=-5.0) == charges() != []
+    # ...and a row with nothing to charge from still produces no packet, so
+    # the assertion above is a statement about the negative raw and not about
+    # the branch firing unconditionally.
+    assert charges(damage=0.0, raw_damage=-5.0) == []
+
+
+@pytest.mark.parametrize("item", ["Phage", "Echoes of Helia"])
+def test_a_tuple_ledger_names_the_holder_before_the_bus_can_starve(item):
+    """The declared-holder raise still precedes the bus's own.
+
+    Both holders declare ``Stream.DAMAGE`` now, so ``authored_triggers``
+    would raise ``ProjectionStarvation`` on a tuple ledger — but
+    ``require_event_view`` runs first and both are in the projected set, so
+    the observable failure is the same named error it was before P2b.  That
+    ordering is the whole reason the new raise path is unreachable, which
+    makes it worth a test rather than a sentence.
+    """
+    holder = _support_actor("main:Annie", "main", (item,))
+    ally = _support_actor("ally:Pantheon", "ally", ())
+    result = {"damage_events_tuple": True, "damage_events": [(0.0, 100.0, "Q")]}
+    with pytest.raises(EventViewStarvationError):
+        derive_item_support_effects(holder, result, [holder, ally])
+    assert item in ts.tuple_incapable_items()
+
+
+def test_the_stack_ledgers_carry_a_coerced_string_trigger_event_id():
+    """``_event_id`` reaches Carve and Vile Decay as the bus's ``str``.
+
+    The retired expression passed the raw value through when the key was
+    present, so a non-string or ``None`` id landed on the packet
+    unconverted.  Every ``_event_id`` writer in ``src/`` builds one with an
+    f-string or ``str(...)``, so only a hand-built row can tell the two
+    apart.
+    """
+    holder = _support_actor("main:Annie", "main", ("Black Cleaver",))
+    enemy = _support_actor("enemy:Aatrox", "enemy", ())
+
+    def carve(**extra):
+        row = {
+            "time": 0.5,
+            "source_key": "Q",
+            "damage_type": "physical",
+            "damage": 100.0,
+            "target": "enemy:Aatrox",
+            **extra,
+        }
+        packets = derive_item_support_effects(
+            holder, {"damage_events": [row]}, [holder, enemy]
+        )
+        return [packet["trigger_event_id"] for packet in packets]
+
+    assert carve() == [""]
+    assert carve(_event_id=42) == ["42"]
+    assert carve(_event_id=None) == [""]
