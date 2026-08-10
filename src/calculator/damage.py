@@ -3067,11 +3067,19 @@ def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
 
     ``recast_of`` is the one authority for recast parentage (D-11), and
     that is what the cast-order machinery reads. Riding the parent's cast
-    *count* is a narrower claim: it holds for a recast that shares the
-    parent's cooldown (Camille's and Ambessa's Q2), and not for an entry
-    declared with this scheduler's zero-cooldown cast-exactly-once idiom
-    — Syndra's 40-splinter second charge is ONE extra cast whose recharge
-    the module deliberately does not simulate, not one cast per Q.
+    *count* is a narrower claim: it holds for a recast that declares a
+    cooldown of its own to share with its parent (Camille's Q2 at 5.0,
+    Ambessa's at 10.0), and not for an entry declared with this
+    scheduler's cast-exactly-once idiom — Syndra's 40-splinter second
+    charge is ONE extra cast whose recharge the module deliberately does
+    not simulate, not one cast per Q.
+
+    The test is a POSITIVE declared cooldown, so an entry whose cooldown
+    is zero, absent, ``None`` or negative all read the same: this row
+    schedules itself once and does not ride. Absent is deliberately not
+    "unknown, assume it rides" — a module that stamps parentage and
+    declares no cooldown has declared no shared timer either, and the
+    fail-quiet reading would silently multiply its casts.
     """
     parent = info.get("recast_of")
     if not parent:

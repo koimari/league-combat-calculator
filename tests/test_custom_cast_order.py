@@ -37,6 +37,7 @@ from src.calculator.champions import (  # noqa: E402
     parse_champion_abilities,
     registered_champion_names,
 )
+from src.calculator.damage import _ridden_parent_slot  # noqa: E402
 from src.calculator.data_fetcher import get_champion  # noqa: E402
 from src.calculator.pipeline import (  # noqa: E402
     CAST_SLOT_SPELLING,
@@ -147,6 +148,89 @@ class TestChampionAgnosticShapeCheck:
             source = (SRC / module).read_text(encoding="utf-8")
             assert '["E", "Q", "R", "W"]' not in source, module
             assert "permutation of Q, W, E, R" not in source, module
+
+    @pytest.mark.parametrize(
+        "bad, message",
+        [
+            ("QWER", "Cast order must be a list of ability slots"),
+            (["Q", {}], "Cast order must be a list of ability slots"),
+            ([], "Cast order must name at least one ability slot"),
+            (["Q", "W", "Q"], "Cast order must not repeat an ability slot"),
+        ],
+    )
+    def test_the_four_shape_messages_are_what_a_400_now_carries(self, bad, message):
+        """One retired message became four, and they are public response text.
+
+        Before C6 every malformed order came back as the single sentence
+        ``Cast order must be a permutation of Q, W, E, R``.  An API
+        consumer matching on that string sees four sentences now, plus a
+        fifth from the kit check below, so the set is pinned rather than
+        left to be discovered.
+        """
+        with pytest.raises(ValueError, match=message):
+            validate_cast_order_shape(bad, field="Cast order")
+
+
+class TestPartialOrdersAreRunnable:
+    """The widening the shape rule implies, exercised end to end.
+
+    ``validate_cast_order_shape`` accepts any non-empty list of distinct
+    slots, so a request may now name a *subset* of the champion's kit —
+    both request paths previously demanded a four-slot permutation and
+    raised on anything shorter.  ``/api/calculate`` reads ``cast_order``
+    straight off the payload, so this is a live widening of a public
+    request parameter and not merely an internal shape rule.
+    """
+
+    @pytest.mark.parametrize(
+        "order, expected_rows",
+        [
+            (["Q"], {"Q", "auto_attacks"}),
+            (["R", "Q"], {"Q", "R", "auto_attacks"}),
+        ],
+    )
+    def test_a_subset_order_runs_and_prices_only_what_it_names(
+        self, order, expected_rows
+    ):
+        result = run_fight(
+            get_champion("Ahri"), 18, [], _fight_params(cast_order=order)
+        )
+        assert set(result["breakdown"]) == expected_rows
+        assert result["rotation"]["order"] == order
+
+    def test_the_subset_prices_below_the_full_rotation(self):
+        """A sanity floor: fewer casts, less damage, nothing silently added."""
+        totals = {
+            tuple(order): run_fight(
+                get_champion("Ahri"), 18, [], _fight_params(cast_order=order)
+            )["total_damage"]
+            for order in (["Q"], ["R", "Q"], ["Q", "W", "E", "R"])
+        }
+        assert totals[("Q",)] < totals[("R", "Q")] < totals[("Q", "W", "E", "R")]
+
+    def test_the_roster_path_accepts_a_subset_too(self):
+        """``scenario.py`` held the second copy of the retired literal."""
+        parsed = parse_scenario_request(
+            {
+                "champion": "Ahri",
+                "level": 18,
+                "items": [],
+                "cast_order": ["Q"],
+            },
+            deterministic=True,
+        )
+        assert parsed.fight_params.cast_order == ["Q"]
+
+
+class TestTheResponseEchoesTheExpandedOrder:
+    """What the caller gets back is what was cast, not what was sent."""
+
+    def test_the_rotation_order_reports_the_recast_the_request_omitted(self):
+        result = _run_scenario("syndra_custom_order_120")
+        requested = _scenario("syndra_custom_order_120").request["cast_order"]
+        assert requested == ["Q", "W", "E", "R"]
+        assert result["rotation"]["order"][:5] == ["Q", "Q2", "W", "E", "R"]
+        assert "Q2" not in requested
 
 
 class TestOrderableSlotsAnswerTheChampionQuestion:
@@ -378,6 +462,49 @@ class TestTheRecastCastCountRuleStaysScoped:
                 ):
                     zero_cooldown.append((name, slot))
         assert zero_cooldown == [("Syndra", "Q2")]
+
+    @pytest.mark.parametrize(
+        "entry, rides",
+        [
+            ({"recast_of": "Q", "cooldown": 5.0}, "Q"),
+            ({"recast_of": "Q", "cooldown": 0.0}, None),
+            ({"recast_of": "Q"}, None),
+            ({"recast_of": "Q", "cooldown": None}, None),
+            ({"recast_of": "Q", "cooldown": -1.0}, None),
+            ({"cooldown": 5.0}, None),
+        ],
+    )
+    def test_the_rule_is_a_positive_declared_cooldown(self, entry, rides):
+        """Not only zero: absent, ``None`` and negative all fail to ride.
+
+        C6's body framed the guard as "zero-cooldown", which is the only
+        shape the roster holds today (Camille 5.0, Ambessa 10.0, Syndra
+        0.0).  A future module that stamps ``recast_of`` and omits
+        ``cooldown`` gets the once-only semantics too, and that is the
+        deliberate reading: no declared timer is no shared timer.
+        """
+        assert _ridden_parent_slot(entry) == rides
+
+
+class TestTheRotationReceiptNamesTheRecastOnce:
+    """The stamp is now the only producer of the recast sentence.
+
+    Before C6 both the ``recast_of`` loop and ``rotation_resolver``'s
+    name-based ``"Q" plus "Q2"`` fallback fired for a stamped Q2, so
+    ``detect_setup_consume_edges`` appended the same Q->Q2 edge twice and
+    the receipt carried two identical recast sentences.  Deleting the
+    fallback left one.  Neither baseline serialises a derived rotation
+    receipt for these champions, so nothing else covers this.
+    """
+
+    @pytest.mark.parametrize("champion", ["Camille", "Ambessa"])
+    def test_one_recast_sentence_per_stamped_pair(self, champion):
+        result = run_fight(
+            get_champion(champion), 18, [], _fight_params(one_rotation=False)
+        )
+        sources = result["rotation"]["sources"]
+        recast = [line for line in sources if "recast" in line]
+        assert recast == ["Q2 is the recast of Q — Q2 is Q's recast (recast_of atom)"]
 
 
 class TestPairEngineGoldenIsStructurallyBlind:

@@ -337,20 +337,30 @@ class TestSyndraPinScenarios:
     def test_a_custom_order_keeps_the_recast_slot(self, coupled):
         """The defect C6 corrected: the request used to delete this row.
 
-        The committed baseline still holds the pre-C6 timelines — R-17 keeps
-        a correction from moving a baseline — so this reads the live capture,
-        and the two values are reconciled by
+        This test replaces the pre-C6 ``..._drops_the_recast_slot_today``,
+        which pinned the defect and had to invert with the fix.  Both ends
+        of the transition are asserted, and only one of them can come from
+        the live capture: the committed baseline still holds the pre-C6
+        timelines, because R-17 keeps a correction from moving a baseline,
+        and the two are reconciled by
         ``docs/receipts/expected-golden-diff-C6.json`` until the phase
-        boundary re-captures.
+        boundary re-captures.  Reading the committed side from the file
+        rather than from a number typed here is what keeps this from
+        becoming a test that passes against itself.
         """
+        committed = _load(COUPLED_BASELINE)["coupled_scenarios"]
         entries = coupled["coupled_scenarios"]
+
+        def slots(source, name):
+            fight = source[name]["fights"]["manual_target"]
+            return [cast["slot"] for cast in fight["cast_timeline"]]
+
         for splinters in (60, 120):
-            timeline = entries[f"syndra_custom_order_{splinters}"]["fights"][
-                "manual_target"
-            ]["cast_timeline"]
-            assert [cast["slot"] for cast in timeline].count("Q2") == 1
-        untouched = entries["syndra_custom_order_39"]["fights"]["manual_target"]
-        assert "Q2" not in [cast["slot"] for cast in untouched["cast_timeline"]]
+            name = f"syndra_custom_order_{splinters}"
+            assert slots(committed, name).count("Q2") == 0
+            assert slots(entries, name).count("Q2") == 1
+        assert "Q2" not in slots(entries, "syndra_custom_order_39")
+        assert "Q2" not in slots(committed, "syndra_custom_order_39")
 
 
 def declared_exact_moves():
