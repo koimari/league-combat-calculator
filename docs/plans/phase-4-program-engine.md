@@ -423,8 +423,8 @@ Additional to the eleven per-commit gates in the [runbook](./silent-failure-runb
    helper); **a numeric leaf with no map entry, or a map entry naming neither a present leaf nor a
    withheld path, fails the payload-schema test — a backstop behind the single writer, not the
    mechanism.**
-   **The same holds for every numeric leaf of the `/api/bis` (`app.py:1238`) and `/api/optimize`
-   (`app.py:1273`) payloads, which the score view produces** — otherwise every criterion here passes while
+   **The same holds for every numeric leaf of the `/api/bis` (`app.py:1285`) and `/api/optimize`
+   (`app.py:1320`) payloads, which the score view produces** — otherwise every criterion here passes while
    the two largest numeric surfaces serve undispositioned zeros, and D-23 covers only their `withheld[]`
    and exclusion count. This
    is where the umbrella's criterion 1 is discharged.
