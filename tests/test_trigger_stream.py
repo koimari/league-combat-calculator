@@ -2156,6 +2156,13 @@ class TestTheP2aGateBreachIsStillTracked:
                 assert entry.get(field), f"{entry.get('id')} omits {field}"
             assert len(entry["dated"]) == 10 and entry["dated"].count("-") == 2
 
+    def test_every_site_still_carries_the_defect(self):
+        """The three files the breach is written across still say what it cites."""
+        for entry in self._entries():
+            for site in entry["site"]:
+                source = (ROOT / site["file"]).read_text(encoding="utf-8")
+                assert site["fragment"] in source, f"{entry['id']}: {site['file']}"
+
     def test_the_withdrawn_claim_is_quoted_from_the_body_that_made_it(self):
         """The receipt may not paraphrase the sentence it calls false."""
         (entry,) = self._entries()
