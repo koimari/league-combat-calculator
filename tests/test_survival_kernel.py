@@ -37,10 +37,10 @@ import pytest
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.item_support_effects import (
-    EVENT_VIEW_SUPPORT_ITEMS,
-    cross_participant_authorities,
+    _declared_authorities as cross_participant_authorities,
     producer_item,
 )
+from src.calculator.trigger_stream import tuple_incapable_items
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
@@ -1091,16 +1091,22 @@ REGISTRY_FIXTURES = (
 def required_coverage_keys() -> frozenset[str]:
     """Every key this suite owes a fixture, read from the registries.
 
-    ``EVENT_VIEW_SUPPORT_ITEMS`` is the tuple-incapable set the pipeline's
+    ``tuple_incapable_items()`` is the tuple-incapable set the pipeline's
     tuple gate consults, and contributes item names;
-    ``cross_participant_authorities()`` is the derived ``damage_modifier``
-    producer set, and contributes ``source`` literals — one key per packet,
-    not per item, so a second packet on an already-equipped item is its own
+    ``cross_participant_authorities()`` is the ``damage_modifier`` producer
+    table, and contributes ``source`` literals — one key per packet, not per
+    item, so a second packet on an already-equipped item is its own
     requirement.  Neither registry is restated here, so a new event-view
     holder or a seventh producer becomes a required key on the commit that
     adds it — and fails this suite until it has a fixture.
+
+    Both now project one declaration table.  The item half read the hand set
+    ``item_support_effects.EVENT_VIEW_SUPPORT_ITEMS`` until Phase 2's P2c
+    deleted it, and the producer half read that module's ``ast`` derivation
+    over its own call sites until the same commit; both are
+    ``trigger_stream.CAPABILITIES`` projections now.
     """
-    return EVENT_VIEW_SUPPORT_ITEMS | frozenset(cross_participant_authorities())
+    return tuple_incapable_items() | frozenset(cross_participant_authorities())
 
 
 @lru_cache(maxsize=None)
@@ -1338,8 +1344,8 @@ def test_every_registry_key_has_a_candidate_and_an_ally_fixture():
     """
     required = required_coverage_keys()
     # Neither half may be empty, or the check below is green over nothing.
-    assert EVENT_VIEW_SUPPORT_ITEMS and cross_participant_authorities()
-    assert required >= EVENT_VIEW_SUPPORT_ITEMS
+    assert tuple_incapable_items() and cross_participant_authorities()
+    assert required >= tuple_incapable_items()
     assert required >= frozenset(cross_participant_authorities())
 
     candidate_reached, ally_reached = _fixture_coverage()

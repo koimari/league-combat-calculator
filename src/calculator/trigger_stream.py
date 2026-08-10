@@ -63,6 +63,7 @@ __all__ = [
     "MechanicOwner",
     "Pairing",
     "ProjectionStarvation",
+    "RAW_STREAMS",
     "RuneOwner",
     "Stream",
     "Trigger",
@@ -182,8 +183,12 @@ class Pairing(Enum):
 
 # The three streams whose rows are parsed off an engine result.  A holder
 # reading any of them cannot be handed the optimizer's positional 6-tuple
-# ledger, which is exactly what ``tuple_incapable_items`` projects.
-_RAW_STREAMS = frozenset({Stream.CC, Stream.DAMAGE, Stream.TAKEDOWN})
+# ledger, which is exactly what ``tuple_incapable_items`` projects.  Public
+# for the same reason ``CROSS_PARTICIPANT_AUTHORITIES`` is: the item scan's
+# starvation tripwire has to say *which* stream a starved holder reads, and
+# it reads CAPABILITIES through this constant rather than re-spelling the
+# three members beside a second holder-to-stream table.
+RAW_STREAMS = frozenset({Stream.CC, Stream.DAMAGE, Stream.TAKEDOWN})
 
 # The two kinds one authored damage row can yield.  A takedown is its own
 # receipt row and never comes off this ledger.
@@ -950,7 +955,7 @@ def _row_fields(reads: frozenset[Stream]) -> frozenset[Field]:
     templates, not engine rows, so a mechanic reading only it declares no
     ``needs``.
     """
-    return frozenset(Field) if reads & _RAW_STREAMS else frozenset()
+    return frozenset(Field) if reads & RAW_STREAMS else frozenset()
 
 
 def _validate_pairing(mechanic: str, capability: MechanicCapability) -> None:
@@ -1003,9 +1008,9 @@ def _classify_cc(row: Mapping[str, Any]) -> tuple[CcClass, str, bool]:
     The ladder is *strongest evidence first*, and a ``cc_kind`` is evidence
     rather than an override: a reviewed ``"none"`` does not veto a row's
     legacy ``immobilized`` / ``hard_cc`` / ``slowed`` / ``slow`` booleans, it
-    simply narrows nothing.  Read that way the bus predicate is exactly
-    ``ability_spec.is_immobilizing_event`` — which OR'd the flags in — on
-    every row, which is what a phase that may not move a number owes the
+    simply narrows nothing.  Read that way the bus predicate is exactly the
+    ``ability_spec`` predicate this module retired — which OR'd the flags in
+    — on every row, which is what a phase that may not move a number owes the
     consumers it repoints.  Which fact *ought* to win on a row asserting a
     reviewed "no control" and a legacy stun at once is a semantics question,
     and this phase rules none.
@@ -1161,7 +1166,7 @@ def authored_triggers(
             programming error — the pipeline's tuple gate is supposed to have
             kept dict rows for this holder.
     """
-    wanted = streams & _RAW_STREAMS
+    wanted = streams & RAW_STREAMS
     if not wanted:
         return ()
     if result.get("damage_events_tuple"):
@@ -1213,7 +1218,7 @@ def tuple_incapable_items() -> frozenset[str]:
     enrichment gate is a subset of — one derivation, two gates, so they can
     never again disagree (D-01).
     """
-    return _projected_items(lambda cap: bool(cap.reads & _RAW_STREAMS))
+    return _projected_items(lambda cap: bool(cap.reads & RAW_STREAMS))
 
 
 @cache
@@ -1230,8 +1235,7 @@ def enriched_view_items() -> frozenset[str]:
     (D-03).
     """
     return _projected_items(
-        lambda cap: bool(cap.reads & _RAW_STREAMS)
-        and bool(cap.needs & _ENRICHED_FIELDS)
+        lambda cap: bool(cap.reads & RAW_STREAMS) and bool(cap.needs & _ENRICHED_FIELDS)
     )
 
 

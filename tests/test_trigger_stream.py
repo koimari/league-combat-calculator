@@ -31,12 +31,10 @@ from src.calculator.ability_spec import (
     DamagePart,
     Disposition,
 )
-from src.calculator.ability_spec import is_immobilizing_event as legacy_immobilizing
 from src.calculator.champions.engine import _validate_cc_event_contract
 from src.calculator.item_support_effects import (
-    EVENT_VIEW_SUPPORT_ITEMS,
     EventViewStarvationError,
-    cross_participant_authorities,
+    _declared_authorities,
     derive_item_support_effects,
 )
 from src.calculator.survival.actions import survival_action_from_event
@@ -358,8 +356,25 @@ def test_sequence_zero_is_a_sequence_and_not_an_absent_one():
     assert "\n    sequence = 0\n" in ledger
 
 
+def retired_immobilizing(row) -> bool:
+    """The body ``ability_spec.is_immobilizing_event`` carried until P2c.
+
+    P2a and P2b pinned the bus predicate against the *live* legacy symbol,
+    which is what D-98 asks of a derivation landing beside the thing it
+    replaces.  P2c deletes that symbol, so the witness becomes this
+    transcription — kept here, in the suite, so the 192-row equivalence
+    below stays a measurement rather than a memory of one.
+    """
+    kind = str(row.get("cc_kind", "")).lower().strip()
+    return (
+        kind in IMMOBILIZING_CC_KINDS
+        or bool(row.get("immobilized"))
+        or bool(row.get("hard_cc"))
+    )
+
+
 def test_classification_agrees_with_the_vocabulary_it_replaces():
-    """The bus predicate answers exactly what ``ability_spec``'s does.
+    """The bus predicate answers exactly what ``ability_spec``'s did.
 
     Pinned over the **cross product** of the whole vocabulary and the five
     legacy booleans — 192 rows — because P2b repoints four consumers onto
@@ -372,7 +387,7 @@ def test_classification_agrees_with_the_vocabulary_it_replaces():
     rows = list(_control_rows())
     assert len(rows) == (1 + len(CC_KIND_VOCABULARY)) * 32
     for row in rows:
-        assert ts.is_immobilizing_event(row) == legacy_immobilizing(row), row
+        assert ts.is_immobilizing_event(row) == retired_immobilizing(row), row
 
 
 def test_a_reviewed_no_control_kind_does_not_veto_a_legacy_flag():
@@ -413,7 +428,7 @@ def test_the_ladder_reads_immobilize_evidence_before_slow_evidence():
     """
     both = _row(hard_cc=True, slowed=True)
     assert ts._classify_cc(both)[0] is ts.CcClass.IMMOBILIZE
-    assert legacy_immobilizing(both) is True
+    assert retired_immobilizing(both) is True
     # Either fact alone still lands on its own rung.
     assert ts._classify_cc(_row(slowed=True))[0] is ts.CcClass.SLOW
     assert ts._classify_cc(_row(hard_cc=True))[0] is ts.CcClass.IMMOBILIZE
@@ -523,9 +538,12 @@ def test_fimbulwinter_needs_the_enriched_view():
     assert "Fimbulwinter" in ts.enriched_view_items()
 
 
-def test_the_derivation_lands_beside_the_live_legacy_set():
-    """D-98's witness is the **imported** set, never a transcription of it."""
-    assert ts.tuple_incapable_items() ^ EVENT_VIEW_SUPPORT_ITEMS == frozenset()
+# D-98's witness — ``tuple_incapable_items() ^ EVENT_VIEW_SUPPORT_ITEMS``
+# asserted empty against the **imported** live set — lived here through P2a
+# and P2b and is deleted by the same one-symbol commit that deletes the set
+# it witnessed.  What survives it is stronger and not a comparison against a
+# second list at all: ``test_projections_equal_their_docstring_memberships``
+# pins the derivation item for item, in both directions.
 
 
 # ---------------------------------------------------------------------------
@@ -809,12 +827,12 @@ def test_a_paired_capability_with_no_packet_source_is_rejected(monkeypatch):
 # A1 — one ``cc_kind`` parser, allowlisted by (module, symbol)
 # ---------------------------------------------------------------------------
 
-# The live readers at P2a.  P2b repoints the four legacy symbols onto the bus
-# and P2c deletes them, so this map shrinks to the one parser the phase's
-# goal names; it is pinned here so each of those deletions is a visible,
-# attributable edit rather than a silent one.
+# The live readers after P2c.  P2b repointed the legacy symbols onto the bus
+# and P2c deleted them, so what is left is the one classifier the phase's
+# goal names plus the two sites that copy the token onto a row without ever
+# branching on it; it is pinned here so each of those deletions was a
+# visible, attributable edit rather than a silent one.
 CC_KIND_READERS = {
-    "src/calculator/ability_spec.py": frozenset({"is_immobilizing_event"}),
     # ``add_declared_events`` copies the token onto the ledger row; it is
     # the one reader that never classifies.  D-34's certification gate left
     # this map at P2b, when it moved onto the bus.
@@ -873,17 +891,13 @@ def test_a1_has_a_permanent_injection_seam():
 # A2 — the retired scanners stay where the retirement schedule puts them
 # ---------------------------------------------------------------------------
 
-# ``phase-2-trigger-bus.md``'s *Retired symbols*.  The value is the module
-# that still defines the symbol at this commit; P2b/P2c empty this map, and
-# an entry appearing anywhere else fails now.
+# ``phase-2-trigger-bus.md``'s *Retired symbols*.  The value was the module
+# that still defined the symbol at the commit this map was last edited;
+# P2b/P2c emptied it, so every entry is now ``[]`` and any definition
+# anywhere in ``src/`` fails.  ``trigger_stream.is_immobilizing_event`` is
+# absent from the map on purpose: the retired symbol is the ``ability_spec``
+# one, and the bus's own predicate is the thing that replaced it.
 RETIRED_SYMBOL_HOMES = {
-    # ``is_immobilizing_event`` has two homes at P2a on purpose: D-98 lands
-    # the derivation beside the symbol it replaces, and P2c deletes the
-    # ``ability_spec`` one in a single-symbol diff that reverts cleanly.
-    "is_immobilizing_event": [
-        "src/calculator/ability_spec.py",
-        "src/calculator/trigger_stream.py",
-    ],
     # Retired by P2b: the four raw-row scanners and the kind set behind
     # them.  ``event_triggers`` classifies the row now, and the branches
     # they fed read ``Trigger.cc`` instead.
@@ -892,15 +906,17 @@ RETIRED_SYMBOL_HOMES = {
     "_fimbulwinter_trigger_kind": [],
     "_takedown_triggers": [],
     "_damage_triggers": [],
-    "EVENT_SCAN_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],
-    "has_event_scan_support_items": ["src/calculator/item_support_effects.py"],
-    "TAKEDOWN_SCAN_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],
-    "has_takedown_scan_support_items": ["src/calculator/item_support_effects.py"],
-    "CC_TRIGGER_ITEMS": ["src/calculator/item_support_effects.py"],
-    "DAMAGE_TRIGGER_ITEMS": ["src/calculator/item_support_effects.py"],
-    "EVENT_VIEW_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],
-    "has_event_view_support_items": ["src/calculator/item_support_effects.py"],
-    "cross_participant_authorities": ["src/calculator/item_support_effects.py"],
+    # Retired by P2c: the five hand name sets, their three ``has_*``
+    # helpers, and the second authority table.
+    "EVENT_SCAN_SUPPORT_ITEMS": [],
+    "has_event_scan_support_items": [],
+    "TAKEDOWN_SCAN_SUPPORT_ITEMS": [],
+    "has_takedown_scan_support_items": [],
+    "CC_TRIGGER_ITEMS": [],
+    "DAMAGE_TRIGGER_ITEMS": [],
+    "EVENT_VIEW_SUPPORT_ITEMS": [],
+    "has_event_view_support_items": [],
+    "cross_participant_authorities": [],
 }
 
 
@@ -1009,17 +1025,19 @@ def test_a3_has_a_permanent_injection_seam():
 # A4 — the five hand name sets and three ``has_*`` helpers
 # ---------------------------------------------------------------------------
 
-# The occurrence sites at P2a, which P2c drives to empty.  Pinning them here
-# is what makes each removal an attributable diff rather than a claim.
+# The occurrence sites, which P2c drove to empty.  Pinning them here is what
+# makes each removal an attributable diff rather than a claim — the map read
+# ``["src/calculator/item_support_effects.py"]`` on every row through P2a and
+# P2b, and the criterion this discharges is "zero occurrences in ``src/``".
 LEGACY_NAME_SET_SITES = {
-    "EVENT_SCAN_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],
-    "TAKEDOWN_SCAN_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],
-    "CC_TRIGGER_ITEMS": ["src/calculator/item_support_effects.py"],
-    "DAMAGE_TRIGGER_ITEMS": ["src/calculator/item_support_effects.py"],
-    "EVENT_VIEW_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],
-    "has_event_scan_support_items": ["src/calculator/item_support_effects.py"],
-    "has_takedown_scan_support_items": ["src/calculator/item_support_effects.py"],
-    "has_event_view_support_items": ["src/calculator/item_support_effects.py"],
+    "EVENT_SCAN_SUPPORT_ITEMS": [],
+    "TAKEDOWN_SCAN_SUPPORT_ITEMS": [],
+    "CC_TRIGGER_ITEMS": [],
+    "DAMAGE_TRIGGER_ITEMS": [],
+    "EVENT_VIEW_SUPPORT_ITEMS": [],
+    "has_event_scan_support_items": [],
+    "has_takedown_scan_support_items": [],
+    "has_event_view_support_items": [],
 }
 
 
@@ -1390,10 +1408,17 @@ def test_a9_has_a_permanent_injection_seam():
 
 
 def test_the_coupled_producer_source_reads_the_capability_registry():
-    """R-12 — the derivation lands beside the live set it replaces (D-98)."""
+    """R-12 — the instrument and the packet compiler read one table.
+
+    P2a landed the instrument's reading beside the ``ast``-derived table it
+    replaces and asserted the two equal (D-98); P2c deleted that table, so
+    what this now pins is that the two *readings* of ``CAPABILITIES`` — the
+    baseline instrument's producer set and the packet compiler's
+    owner-iff-``SPLIT`` table — still name the same producers.
+    """
     from scripts.golden_snapshot import cross_participant_producers
 
-    assert cross_participant_producers() == frozenset(cross_participant_authorities())
+    assert cross_participant_producers() == frozenset(_declared_authorities())
 
 
 def test_a_seventh_producer_with_no_scenario_fails_capture(monkeypatch):

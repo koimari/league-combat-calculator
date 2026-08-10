@@ -18,10 +18,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import golden_snapshot as gs  # noqa: E402  (path is set above)
 
 from src.calculator import pipeline  # noqa: E402
-from src.calculator.item_support_effects import (  # noqa: E402
-    cross_participant_authorities,
-    producer_item,
-)
+from src.calculator.item_support_effects import producer_item  # noqa: E402
 
 COUPLED_BASELINE = REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
 COUPLED_EXACT = REPO_ROOT / "scripts" / "golden_coupled_exact.json"
@@ -36,7 +33,7 @@ def _load(path):
 def coupled():
     """One coupled capture, shared by every check that reads its numbers."""
     return gs.capture_coupled(
-        gs.COUPLED_SCENARIOS, producers=cross_participant_authorities()
+        gs.COUPLED_SCENARIOS, producers=gs.cross_participant_producers()
     )
 
 
@@ -195,15 +192,16 @@ class TestCoupledCoverage:
     def test_the_scenario_set_covers_every_producer(self):
         assert (
             gs._uncovered_producers(
-                gs.COUPLED_SCENARIOS, cross_participant_authorities()
+                gs.COUPLED_SCENARIOS, gs.cross_participant_producers()
             )
             == ()
         )
 
     def test_a_seventh_producer_without_a_scenario_fails_the_capture(self):
         """R-12's whole point: the producer set is read, so coverage cannot rot."""
-        producers = dict(cross_participant_authorities())
-        producers["Unequipped Relic — Seventh Wonder"] = None
+        producers = gs.cross_participant_producers() | {
+            "Unequipped Relic — Seventh Wonder"
+        }
         with pytest.raises(ValueError, match="Unequipped Relic"):
             gs.capture_coupled(gs.COUPLED_SCENARIOS, producers=producers)
 
@@ -214,7 +212,7 @@ class TestCoupledCoverage:
         from src.calculator import participant_timeline
 
         original = participant_timeline.derive_item_support_effects
-        for producer in cross_participant_authorities():
+        for producer in gs.cross_participant_producers():
 
             def muted(*args, _producer=producer, **kwargs):
                 return [
@@ -227,7 +225,7 @@ class TestCoupledCoverage:
                 participant_timeline, "derive_item_support_effects", muted
             )
             without = gs.capture_coupled(
-                gs.COUPLED_SCENARIOS, producers=cross_participant_authorities()
+                gs.COUPLED_SCENARIOS, producers=gs.cross_participant_producers()
             )
             monkeypatch.setattr(
                 participant_timeline, "derive_item_support_effects", original
@@ -239,7 +237,7 @@ class TestCoupledCoverage:
 
     def test_every_producer_item_is_equipped_by_some_scenario(self):
         equipped = frozenset().union(*(s.equipped() for s in gs.COUPLED_SCENARIOS))
-        for producer in cross_participant_authorities():
+        for producer in gs.cross_participant_producers():
             assert producer_item(producer) in equipped
 
     def test_score_scenarios_cover_both_damage_ledger_shapes(self, monkeypatch):
@@ -434,7 +432,7 @@ class TestExactBaseline:
     def test_the_exact_capture_reproduces_the_committed_totals(self):
         captured = gs.capture_coupled(
             gs.COUPLED_SCENARIOS,
-            producers=cross_participant_authorities(),
+            producers=gs.cross_participant_producers(),
             exact=True,
         )["coupled_scenarios"]
         committed = _load(COUPLED_EXACT)["coupled_scenarios"]
@@ -461,7 +459,7 @@ class TestExactBaseline:
     def test_exact_values_are_repr_floats_not_rounded(self):
         captured = gs.capture_coupled(
             gs.COUPLED_SCENARIOS,
-            producers=cross_participant_authorities(),
+            producers=gs.cross_participant_producers(),
             exact=True,
         )
         values = [

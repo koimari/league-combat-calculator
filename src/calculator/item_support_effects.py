@@ -8,11 +8,9 @@ assumes an active or a trigger that is absent from the authored event stream.
 
 from __future__ import annotations
 
-import ast
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from functools import lru_cache
 import math
-from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
@@ -28,7 +26,11 @@ from .ability_spec import (
 # branches they gated (D-30, D-32).  ``trigger_stream``'s only intra-package
 # import is ``ability_spec``, so this edge adds no cycle.
 from .trigger_stream import (
+    CAPABILITIES,
+    CROSS_PARTICIPANT_AUTHORITIES,
+    RAW_STREAMS,
     CcClass,
+    Engine,
     Trigger,
     TriggerKind,
     authored_triggers,
@@ -50,6 +52,11 @@ from .item_effects import (
 # kernel package loads with this module.  Acyclic: nothing under
 # ``survival/`` imports ``item_support_effects``.
 from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
+
+# The one packet kind that changes how much damage some *other* participant
+# deals or takes, and therefore the kind ``_packet`` runs its authority and
+# damage-class checks on.  See *Cross-participant producers* below.
+_DAMAGE_MODIFIER_KIND = "damage_modifier"
 
 
 def _same_side(attacker: Any, actor: Any) -> bool:
@@ -98,7 +105,7 @@ def _event_time(event: Mapping[str, Any]) -> float:
     return parsed
 
 
-def _packet(
+def _packet(  # pylint: disable=too-many-arguments
     *,
     attacker: Any,
     target: Any,
@@ -116,6 +123,11 @@ def _packet(
 ) -> dict[str, Any]:
     """Build one sourced packet.
 
+    Keyword-only, and the argument-count check is disabled for the reason
+    ``trigger_stream``'s own builder disables it: every parameter is a
+    declared packet axis a call site names by keyword, and folding them into
+    one dict is the untyped bag the typed packet replaced.
+
     ``rank`` is how a packet declares *when* it arms, for the packets whose
     kind does not decide it (a barrier the triggering damage placed, say).
     It is the only way to override the walk's ladder: an author names a
@@ -126,8 +138,9 @@ def _packet(
     the rest, it is checked here — the one construction site all six
     cross-participant producers pass through — and it is deliberately *not*
     written into the returned dict: the declaration's homes are this call
-    site and :func:`cross_participant_authorities`, and a packet payload
-    that grew a key would move receipts inside a semantic commit (R-17).
+    site and the mechanic's ``trigger_stream`` capability, and a packet
+    payload that grew a key would move receipts inside a semantic commit
+    (R-17).
 
     ``damage_classes`` and ``attack_classes`` are how a ``damage_modifier``
     packet says *what it applies to* — the two axes of D-04, both required
@@ -264,80 +277,20 @@ def _selected_teammate(attacker: Any, teammates: list[Any]) -> Any | None:
     return teammates[index]
 
 
-# Items whose cross-participant packets are derived by scanning the
-# holder's damage/takedown event stream below (Phage's Rage autos, Black
-# Cleaver Carve stacks, Bloodletter's Curse, Bloodsong's Expose Weakness,
-# Cryptbloom's takedown nova).  The optimizer's score-only tuple ledger
-# carries positional rows the scan cannot read, so the pipeline's tuple
-# predicate consults this set and keeps dict rows for these holders
-# (issue #169).  Every new branch below that reads ``damage_events`` or
-# ``takedown_events`` must add its item here, or a score-only fight will
-# silently starve its scan.
-EVENT_SCAN_SUPPORT_ITEMS = frozenset(
-    {
-        "Black Cleaver",
-        "Bloodletter's Curse",
-        "Bloodsong",
-        "Cryptbloom",
-        "Phage",
-    }
-)
+def _starved_streams(names: Collection[str]) -> list[tuple[str, str]]:
+    """Each held holder that reads a raw stream, paired with that stream.
 
-
-def has_event_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Whether any held item derives support packets from the event stream."""
-    return any(str(item.get("name", "")) in EVENT_SCAN_SUPPORT_ITEMS for item in items)
-
-
-# The subset whose trigger is the takedown stream: the receipt composition
-# synthesizes ``takedown_events`` from the pair fight's one-pair shield
-# outcome (``target_ending_health``), so a score-only fight for these
-# holders must keep that outcome instead of skipping it (issue #169).
-TAKEDOWN_SCAN_SUPPORT_ITEMS = frozenset({"Cryptbloom"})
-
-
-def has_takedown_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Whether any held item derives support packets from takedowns."""
-    return any(
-        str(item.get("name", "")) in TAKEDOWN_SCAN_SUPPORT_ITEMS for item in items
+    The holder-to-stream fact has exactly one home — every mechanic's
+    declared ``reads`` in ``trigger_stream.CAPABILITIES`` — so this is a
+    projection of the registry and not the second name list it replaced.
+    The label is the raw ledger key the stream is parsed off, derived from
+    the stream's own value rather than tabulated beside it.
+    """
+    return sorted(
+        (item, f"{stream.value}_events")
+        for item in frozenset(names) & tuple_incapable_items()
+        for stream in streams_for(frozenset({item})) & RAW_STREAMS
     )
-
-
-# The holders that consume each pre-scanned trigger stream below.  The
-# streams are built lazily from these sets: every consumer branch in
-# ``derive_item_support_effects`` is gated on its item name, so a holder
-# with none of a stream's items can skip that scan entirely.  A new branch
-# that reads ``cc_events``/``damage_events`` must add its item here, or
-# its stream will arrive empty.
-CC_TRIGGER_ITEMS = frozenset(
-    {"Fimbulwinter", "Bandlepipes", "Solstice Sleigh", "Imperial Mandate"}
-)
-DAMAGE_TRIGGER_ITEMS = frozenset({"Bloodsong", "Black Cleaver", "Bloodletter's Curse"})
-
-# Which per-event stream each event-view holder reads.  Grouping the
-# registries above by stream is what lets a starved holder be told *which*
-# projection failed to answer, instead of only that it starved.
-EVENT_VIEW_STREAMS: Mapping[str, frozenset[str]] = {
-    "cc_events": CC_TRIGGER_ITEMS,
-    # Echoes of Helia sums raw per-event damage; the scanners read the same
-    # rows for stacks and procs.  Cryptbloom is a takedown reader only.
-    "damage_events": (EVENT_SCAN_SUPPORT_ITEMS - TAKEDOWN_SCAN_SUPPORT_ITEMS)
-    | frozenset({"Echoes of Helia"}),
-    "takedown_events": TAKEDOWN_SCAN_SUPPORT_ITEMS,
-}
-
-# Every holder whose scan reads the per-event view at all (``target`` /
-# ``_event_id`` enrichment, the takedown synthesis, or a raw damage sum).
-# The optimizer's compiled path builds that enriched per-event view only
-# for these holders; everyone else scans the plain engine result — and the
-# pipeline's score-only tuple gate keeps dict rows for exactly this set, so
-# one predicate answers the tuple question on both paths (D-01).
-EVENT_VIEW_SUPPORT_ITEMS = frozenset().union(*EVENT_VIEW_STREAMS.values())
-
-
-def has_event_view_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Whether any held item scans the per-event damage/takedown view."""
-    return any(str(item.get("name", "")) in EVENT_VIEW_SUPPORT_ITEMS for item in items)
 
 
 class EventViewStarvationError(ValueError):
@@ -355,18 +308,13 @@ def require_event_view(result: Mapping[str, Any], names: Collection[str]) -> Non
 
     The score-only tuple ledger (``damage_events_tuple``) carries positional
     rows that no scan below can read.  After the pipeline's tuple gate
-    consults ``has_event_view_support_items`` no public request can reach
-    this state, so the raise is a programming-error tripwire rather than a
+    consults ``tuple_incapable_items()`` no public request can reach this
+    state, so the raise is a programming-error tripwire rather than a
     user-facing outcome.
     """
     if not result.get("damage_events_tuple"):
         return
-    starved = sorted(
-        (item, stream)
-        for stream, holders in EVENT_VIEW_STREAMS.items()
-        for item in holders
-        if item in names
-    )
+    starved = _starved_streams(names)
     if not starved:
         return
     read = "; ".join(f"{item} reads {stream}" for item, stream in starved)
@@ -730,8 +678,8 @@ def derive_item_support_effects(
 
     reduction_stacks: dict[tuple[str, str], int] = {}
     # Both ledgers walk one stream; the guard is hoisted so a holder of
-    # neither never walks it at all, which is what the retired
-    # ``DAMAGE_TRIGGER_ITEMS`` gate bought before the registry existed.
+    # neither never walks it at all, which is what the hand-maintained
+    # damage-trigger name set bought before the registry existed.
     if "Black Cleaver" in names or "Bloodletter's Curse" in names:
         for event in _stack_triggers(damage_events):
             target = _target_by_id(all_actors, event.target_id)
@@ -1437,107 +1385,41 @@ def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
 # packets themselves from C2.  It is also what the coupled golden baseline
 # reads to prove its scenario set covers every producer (runbook R-12).
 #
-# The table is DERIVED from this module's own ``_packet(...)`` call sites,
-# never typed out: a hand list is a second home for a fact the construction
-# sites already state, and the campaign exists because a hand-maintained
-# claim outlived the code it described.  ``_declared_authorities`` reads the
-# module's source with ``ast`` and returns the ``source=`` literal and the
-# ``authority=`` member of every ``kind="damage_modifier"`` packet, so a
-# seventh producer joins the table on the commit that constructs it — and a
-# seventh producer that declares no authority fails to resolve rather than
-# joining as a silent hole.
-
-_MODULE_PATH = Path(__file__)
-_DAMAGE_MODIFIER_KIND = "damage_modifier"
-
-
-def _packet_keyword(call: ast.Call, name: str) -> ast.expr | None:
-    """The value node of one keyword argument of a ``_packet(...)`` call."""
-    for keyword in call.keywords:
-        if keyword.arg == name:
-            return keyword.value
-    return None
-
-
-def _declared_authority(node: ast.Call, source: str) -> Authority:
-    """The ``Authority`` member one ``_packet(...)`` call site declares.
-
-    The declaration must be a literal ``Authority.MEMBER`` attribute: an
-    expression the reader cannot resolve statically is exactly the kind of
-    claim this table exists to make checkable.
-    """
-    declared = _packet_keyword(node, "authority")
-    if not (
-        isinstance(declared, ast.Attribute)
-        and isinstance(declared.value, ast.Name)
-        and declared.value.id == Authority.__name__
-        and declared.attr in Authority.__members__
-    ):
-        raise ValueError(
-            f"{source} modifies another participant's damage and declares no "
-            f"literal Authority.<member> at line {node.lineno} of "
-            f"{_MODULE_PATH.name}; one of "
-            f"{sorted(member.value for member in Authority)} is required (D-07)"
-        )
-    return Authority[declared.attr]
+# There is exactly one authority table in the repo and it is
+# ``trigger_stream.CAPABILITIES``.  This module used to derive a second one
+# by reading its own ``_packet(...)`` call sites with ``ast``; two tables
+# that agree today are two tables that can disagree tomorrow, which is the
+# whole thesis of the campaign, so the derivation below reads the registry
+# and the call sites are bound to it by the check underneath.  A seventh
+# producer therefore fails to resolve — loudly, on its first packet — until
+# it is declared, and the same registry is what the coupled golden baseline
+# reads to prove its scenario set covers every producer (runbook R-12).
 
 
 @lru_cache(maxsize=1)
 def _declared_authorities() -> Mapping[str, Authority]:
-    """Every ``kind="damage_modifier"`` packet's source and declared engine.
+    """Every declared cross-participant packet source and its owning engine.
 
-    Derived from this module's own construction sites so that the table
-    cannot disagree with the packets: a new cross-participant modifier is a
-    row the moment its ``_packet`` call exists, and two call sites sharing
-    one ``source`` may not disagree about who owns the mechanic.
+    The key is the walk packet's ``source`` literal — ``packet_source`` on
+    the capability — and the value the ``Authority`` that capability
+    declares.  ``CROSS_PARTICIPANT_AUTHORITIES`` is the bus's own reading of
+    which members mean "a second engine can see this mechanic", so the three
+    members are named there and nowhere else.
 
-    Returned read-only and cached because ``_packet`` consults it on every
-    cross-participant packet it builds, and the stack-ledger producers build
-    one per damage event.
+    Cached because ``_packet`` consults it on every cross-participant packet
+    it builds and the stack-ledger producers build one per damage event.
     """
-    tree = ast.parse(_MODULE_PATH.read_text(encoding="utf-8"))
-    declared: dict[str, Authority] = {}
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if not (isinstance(func, ast.Name) and func.id == "_packet"):
-            continue
-        kind = _packet_keyword(node, "kind")
-        if not (isinstance(kind, ast.Constant) and kind.value == _DAMAGE_MODIFIER_KIND):
-            continue
-        source = _packet_keyword(node, "source")
-        if not (isinstance(source, ast.Constant) and isinstance(source.value, str)):
-            raise ValueError(
-                "a damage_modifier packet must name a literal source; "
-                f"line {node.lineno} of {_MODULE_PATH.name} does not"
+    return MappingProxyType(
+        {
+            capability.packet_source: capability.authority
+            for capability in sorted(
+                CAPABILITIES.values(), key=lambda cap: cap.mechanic
             )
-        authority = _declared_authority(node, source.value)
-        previous = declared.get(source.value)
-        if previous is not None and previous is not authority:
-            raise ValueError(
-                f"{source.value} declares {previous.value} at one call site and "
-                f"{authority.value} at line {node.lineno} of {_MODULE_PATH.name}; "
-                "one mechanic has one owning engine"
-            )
-        declared[source.value] = authority
-    return MappingProxyType(dict(sorted(declared.items())))
-
-
-def cross_participant_authorities() -> Mapping[str, Authority]:
-    """One row per packet that modifies another participant's damage.
-
-    The key is the packet's ``source`` literal; the value is the
-    ``Authority`` the packet declares — which engine owns the mechanic.  It
-    is the table ``_packet``'s owner-iff-``SPLIT`` check reads, so the rule
-    keys on the semantic rather than on the ``all_sources`` flag three of the
-    six producers never set (D-07).
-
-    Also the producer set ``golden_snapshot.capture_coupled`` reads (R-12):
-    the coupled baseline covers whatever this returns, so a seventh producer
-    with no covering scenario fails rather than passes.
-    """
-    return _declared_authorities()
+            if capability.engine is Engine.WALK
+            and capability.authority in CROSS_PARTICIPANT_AUTHORITIES
+            and capability.packet_source is not None
+        }
+    )
 
 
 def _check_cross_participant_authority(
@@ -1551,8 +1433,13 @@ def _check_cross_participant_authority(
     construction (D-07).  ``owner`` is the walk's skip handshake — the
     holder's own contribution is priced pair-side — so it is meaningful
     exactly when the two halves are disjoint, which is what ``SPLIT`` says.
+
+    This is also where a call site is bound to the registry: the packet is
+    built with an ``authority=`` argument and it must be the one
+    ``CAPABILITIES`` declares for that ``packet_source``, so the declaration
+    and the construction cannot drift without a raise naming both.
     """
-    declared = cross_participant_authorities().get(source)
+    declared = _declared_authorities().get(source)
     if declared is None:
         raise ValueError(
             f"{source} modifies another participant's damage but names no "
@@ -1649,7 +1536,6 @@ def producer_item(source: str) -> str:
 
 
 __all__ = [
-    "cross_participant_authorities",
     "derive_item_support_effects",
     "has_ordered_item_team_effects",
     "producer_item",

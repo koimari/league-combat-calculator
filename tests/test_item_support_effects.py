@@ -1,12 +1,11 @@
 """Typed cross-participant item packets and explicit trigger contracts."""
 
 import ast
-from collections import defaultdict
+from collections import Counter, defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 import re
-import tempfile
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 from typing import get_args, get_type_hints
 
 import pytest
@@ -19,34 +18,49 @@ from src.calculator.item_source import effect_entries, effect_text
 from src.calculator.item_effects import ITEM_EFFECTS, ally_item_effect_value
 from src.calculator.item_effects import ally_item_level_value
 from src.calculator.item_support_effects import (
-    cross_participant_authorities,
+    _declared_authorities,
     derive_item_support_effects,
     producer_item,
     schedule_knights_vow,
 )
+from src.calculator import trigger_stream
+from src.calculator.trigger_stream import CAPABILITIES
+
+
+def _capability(mechanic: str, packet_source: str):
+    """A synthetic seventh cross-participant producer, declared."""
+    return trigger_stream.MechanicCapability(
+        mechanic=mechanic,
+        owner=trigger_stream.ItemOwner("Synthetic Seventh"),
+        engine=trigger_stream.Engine.WALK,
+        reads=frozenset(),
+        needs=frozenset(),
+        authority=Authority.COUPLED_ONLY,
+        pairing=trigger_stream.Pairing.SOLO,
+        pair_of=None,
+        divergence_ref=None,
+        impl="item_support_effects.derive_item_support_effects",
+        packet_source=packet_source,
+    )
 
 
 @contextmanager
-def _grown_module(extra_source: str):
-    """Read the producer table off a copy of the module with one more packet.
+def _grown_registry(mechanic: str, capability):
+    """Read the producer table off a registry carrying one more capability.
 
-    The derivation reads ``_MODULE_PATH``, so a seventh construction site is
-    expressed as source text rather than as a monkeypatched table — which is
-    the only way to test that the table follows the call sites.
+    P2c moved the table off this module's own ``_packet`` call sites and
+    onto ``trigger_stream.CAPABILITIES``, so a seventh producer is now
+    expressed as a declaration rather than as source text — which is the
+    only way to test that the table follows the registry.
     """
-    original = item_support_effects._MODULE_PATH
-    with tempfile.TemporaryDirectory() as scratch:
-        grown = Path(scratch) / "grown.py"
-        grown.write_text(
-            original.read_text(encoding="utf-8") + extra_source, encoding="utf-8"
-        )
-        item_support_effects._MODULE_PATH = grown
+    grown = MappingProxyType({**CAPABILITIES, mechanic: capability})
+    item_support_effects.CAPABILITIES = grown
+    item_support_effects._declared_authorities.cache_clear()
+    try:
+        yield grown
+    finally:
+        item_support_effects.CAPABILITIES = CAPABILITIES
         item_support_effects._declared_authorities.cache_clear()
-        try:
-            yield grown
-        finally:
-            item_support_effects._MODULE_PATH = original
-            item_support_effects._declared_authorities.cache_clear()
 
 
 def _actor(
@@ -519,8 +533,49 @@ def test_knights_vow_attaches_typed_redirect_and_holder_heal_receipts():
     assert heal["amount"] == pytest.approx(24.0)
 
 
+def _damage_modifier_call_sites() -> dict[str, str]:
+    """Every ``kind="damage_modifier"`` ``_packet`` site's source and authority.
+
+    The static half of the binding P2c installs: the module used to *derive*
+    its authority table from these call sites, and now the table is
+    ``trigger_stream.CAPABILITIES`` and these call sites are checked against
+    it.  Returns ``{source literal: Authority member name}``; a site naming
+    neither literally is a failure here rather than a hole in the table.
+    """
+    body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
+    declared: dict[str, str] = {}
+    for node in ast.walk(ast.parse(body)):
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "_packet"
+        ):
+            continue
+        kind = _packet_keyword(node, "kind")
+        if not (isinstance(kind, ast.Constant) and kind.value == "damage_modifier"):
+            continue
+        source = _packet_keyword(node, "source")
+        assert isinstance(source, ast.Constant) and isinstance(source.value, str), (
+            f"the damage_modifier packet at line {node.lineno} names no literal "
+            "source; the registry cannot be checked against an expression"
+        )
+        authority = _packet_keyword(node, "authority")
+        assert (
+            isinstance(authority, ast.Attribute)
+            and isinstance(authority.value, ast.Name)
+            and authority.value.id == "Authority"
+            and authority.attr in Authority.__members__
+        ), (
+            f"{source.value} declares no literal Authority.<member> at line "
+            f"{node.lineno}; one of "
+            f"{sorted(member.value for member in Authority)} is required (D-07)"
+        )
+        declared[source.value] = authority.attr
+    return declared
+
+
 class TestCrossParticipantAuthorities:
-    """The producer set is derived from the packets, never tabulated."""
+    """One authority table, and the packets are bound to it."""
 
     def test_every_damage_modifier_packet_is_a_row(self):
         """One row per ``kind="damage_modifier"`` construction site."""
@@ -528,69 +583,90 @@ class TestCrossParticipantAuthorities:
         call_sites = len(
             re.findall(r'^\s*kind="damage_modifier",$', body, flags=re.MULTILINE)
         )
-        assert call_sites == len(cross_participant_authorities())
+        assert call_sites == len(_declared_authorities())
 
     def test_dream_maker_is_a_producer(self):
         """The sixth producer sets no ``all_sources`` flag and is in anyway."""
-        assert "Dream Maker — Blue Dream Bubble" in cross_participant_authorities()
+        assert "Dream Maker — Blue Dream Bubble" in _declared_authorities()
 
     def test_every_producer_declares_one_of_the_five_members(self):
         """C2 fills the values: no producer is left without an owning engine."""
-        declared = cross_participant_authorities()
+        declared = _declared_authorities()
         assert declared
         assert all(isinstance(value, Authority) for value in declared.values())
 
     def test_the_row_type_names_the_declared_vocabulary(self):
         """The value is an ``Authority``, with no undeclared spelling left."""
-        hints = get_type_hints(cross_participant_authorities)
+        hints = get_type_hints(_declared_authorities)
         key, value = get_args(hints["return"])
         assert key is str
         assert value is Authority
 
+    def test_every_call_site_declares_what_the_registry_declares(self):
+        """The construction sites and ``CAPABILITIES`` cannot drift apart.
+
+        This is the static half of the check ``_check_cross_participant_
+        authority`` runs per packet: every site names a literal source that
+        the registry knows and a literal ``Authority`` member equal to the
+        one the registry gives it.
+        """
+        table = _declared_authorities()
+        sites = _damage_modifier_call_sites()
+        assert sites
+        for source, member in sites.items():
+            assert source in table, (
+                f"{source!r} is built as a damage_modifier packet but no "
+                "capability declares it as a packet_source"
+            )
+            assert table[source] is Authority[member]
+        assert frozenset(sites) == frozenset(table)
+
     def test_a_new_producer_joins_without_editing_a_list(self):
-        """A seventh construction site is a member the moment it parses."""
-        with _grown_module(
-            "def _f():\n"
-            "    _packet(attacker=a, target=t, time=0.0,\n"
-            '            kind="damage_modifier", source="Synthetic — Seventh",\n'
-            "            authority=Authority.COUPLED_ONLY)\n"
-        ):
+        """A seventh producer is a row the moment its capability parses."""
+        seventh = _capability("synthetic.seventh", "Synthetic — Seventh")
+        with _grown_registry("synthetic.seventh", seventh):
             assert (
-                cross_participant_authorities()["Synthetic — Seventh"]
-                is Authority.COUPLED_ONLY
+                _declared_authorities()["Synthetic — Seventh"] is Authority.COUPLED_ONLY
             )
 
-    def test_a_seventh_producer_without_an_authority_fails_to_resolve(self):
+    def test_an_undeclared_producer_fails_on_its_first_packet(self):
         """The declaration is required, so a silent seventh cannot exist."""
-        with _grown_module(
-            "def _g():\n"
-            "    _packet(attacker=a, target=t, time=0.0,\n"
-            '            kind="damage_modifier", source="Synthetic — Undeclared")\n'
-        ):
-            with pytest.raises(ValueError, match="Synthetic — Undeclared"):
-                cross_participant_authorities()
+        with pytest.raises(ValueError, match="Synthetic — Undeclared"):
+            item_support_effects._packet(
+                attacker=_actor("main:Annie", "main", ()),
+                target=_actor("enemy:Aatrox", "enemy", ()),
+                time=0.0,
+                kind="damage_modifier",
+                source="Synthetic — Undeclared",
+                authority=Authority.COUPLED_ONLY,
+                damage_classes=frozenset({DamageClass.MAGIC}),
+                attack_classes=frozenset(AttackClass),
+            )
 
-    def test_two_call_sites_may_not_disagree_about_one_mechanic(self):
-        """One mechanic has one owning engine, even split across branches."""
-        with _grown_module(
-            "def _h():\n"
-            "    _packet(attacker=a, target=t, time=0.0,\n"
-            '            kind="damage_modifier", source="Abyssal Mask — Unmake",\n'
-            "            authority=Authority.COUPLED_ONLY)\n"
-        ):
-            with pytest.raises(ValueError, match="one mechanic has one owning engine"):
-                cross_participant_authorities()
+    def test_a_call_site_may_not_disagree_with_the_declaration(self):
+        """One mechanic has one owning engine, and the registry states it."""
+        with pytest.raises(ValueError, match="declares SPLIT"):
+            item_support_effects._packet(
+                attacker=_actor("main:Annie", "main", ()),
+                target=_actor("enemy:Aatrox", "enemy", ()),
+                time=0.0,
+                kind="damage_modifier",
+                source="Abyssal Mask — Unmake",
+                authority=Authority.COUPLED_ONLY,
+                damage_classes=frozenset({DamageClass.MAGIC}),
+                attack_classes=frozenset(AttackClass),
+            )
 
     def test_no_hand_written_producer_list_exists(self):
         """A source assertion against the second home the derivation retires."""
         body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
         derivation = body.split("def _declared_authorities")[1].split(
-            "def producer_item"
+            "def _check_cross_participant_authority"
         )[0]
-        for source in cross_participant_authorities():
+        for source in _declared_authorities():
             assert source not in derivation, (
                 f"{source!r} is spelled inside the producer-table derivation; "
-                "the table must be read from the _packet call sites"
+                "the table must be read from the capability registry"
             )
 
     def test_producer_item_names_the_item_a_scenario_must_equip(self):
@@ -683,6 +759,20 @@ class TestOwnerIsPresentIffSplit:
         assert "authority" not in self._modifier()
 
 
+def _packet_keyword(call, name):
+    """The value node of one keyword argument of a ``_packet(...)`` call.
+
+    Moved out of ``item_support_effects`` at P2c.  The module used to walk
+    its own source to derive an authority table; ``CAPABILITIES`` is that
+    table now, so the walk over its construction sites is purely a
+    test-side source assertion and lives with the assertions.
+    """
+    for keyword in call.keywords:
+        if keyword.arg == name:
+            return keyword.value
+    return None
+
+
 def declared_packet_keywords(*names):
     """Each ``damage_modifier`` call site's declared keywords, by source.
 
@@ -706,15 +796,12 @@ def declared_packet_keywords(*names):
             and node.func.id == "_packet"
         ):
             continue
-        kind = item_support_effects._packet_keyword(node, "kind")
+        kind = _packet_keyword(node, "kind")
         if not (isinstance(kind, ast.Constant) and kind.value == "damage_modifier"):
             continue
-        source = item_support_effects._packet_keyword(node, "source").value
+        source = _packet_keyword(node, "source").value
         declared[source] = {
-            name: _evaluate_declaration(
-                item_support_effects._packet_keyword(node, name)
-            )
-            for name in names
+            name: _evaluate_declaration(_packet_keyword(node, name)) for name in names
         }
     return declared
 
@@ -803,14 +890,14 @@ class TestDeclaredDamageAndAttackClasses:
                 and node.func.id == "_packet"
             ):
                 continue
-            kind = item_support_effects._packet_keyword(node, "kind")
+            kind = _packet_keyword(node, "kind")
             if isinstance(kind, ast.Constant) and kind.value == "damage_modifier":
                 sites.append(node)
-        assert len(sites) == len(cross_participant_authorities())
+        assert len(sites) == len(_declared_authorities())
         for node in sites:
             for axis in ("damage_classes", "attack_classes"):
                 assert (
-                    item_support_effects._packet_keyword(node, axis) is not None
+                    _packet_keyword(node, axis) is not None
                 ), f"line {node.lineno} declares no {axis}"
 
     def test_the_declarations_agree_with_the_cached_wiki_text(self):
@@ -873,7 +960,7 @@ class TestDreamMakerIsCoupledOnly:
 
     def test_blue_dream_bubble_declares_coupled_only(self):
         assert (
-            cross_participant_authorities()["Dream Maker — Blue Dream Bubble"]
+            _declared_authorities()["Dream Maker — Blue Dream Bubble"]
             is Authority.COUPLED_ONLY
         )
 
@@ -913,9 +1000,7 @@ class TestAbyssalMaskOwnerHandshake:
         ]
 
     def test_unmake_declares_split(self):
-        assert (
-            cross_participant_authorities()["Abyssal Mask — Unmake"] is Authority.SPLIT
-        )
+        assert _declared_authorities()["Abyssal Mask — Unmake"] is Authority.SPLIT
 
     def test_the_walk_is_told_to_skip_the_holder(self):
         packets = self._packets()
@@ -987,45 +1072,64 @@ class TestEventViewTupleGate:
     def test_the_pipeline_tuple_gate_consults_the_event_view_predicate(self):
         """The score-only gate and the enriched-view gate name one predicate.
 
-        P2b re-points that predicate at its derivation: the gate now reads
-        ``tuple_incapable_items()``, whose membership is asserted equal to
-        ``EVENT_VIEW_SUPPORT_ITEMS`` item for item in
-        ``tests/test_trigger_stream.py`` until P2c deletes the hand set.  The
-        claim C1 landed is unchanged — the pre-correction spelling is still
-        forbidden here.
+        P2b re-pointed that predicate at its derivation: the gate reads
+        ``tuple_incapable_items()``, whose membership is pinned item for
+        item in ``tests/test_trigger_stream.py``.  It was asserted equal to
+        the hand set ``EVENT_VIEW_SUPPORT_ITEMS`` until P2c deleted that set
+        (D-98's flip).  The claim C1 landed is unchanged — the
+        pre-correction spelling is still forbidden here.
         """
         body = Path(pipeline.__file__).read_text(encoding="utf-8")
         assert "and not holders_in(items, tuple_incapable_items())" in body
         assert "has_event_scan_support_items" not in body
 
-    def test_the_scan_predicate_keeps_no_callers_in_src(self):
-        """C1 leaves the callable; Phase 2's P2c deletes it."""
-        callers = []
+    def test_the_scan_predicate_is_gone_from_src_entirely(self):
+        """C1 left the callable with no callers; P2c deleted it.
+
+        The stronger form of the claim: not "no caller" but "no symbol",
+        checked over the whole package rather than over call nodes.
+        """
+        retired = frozenset(
+            {
+                "has_event_scan_support_items",
+                "has_takedown_scan_support_items",
+                "has_event_view_support_items",
+                "EVENT_SCAN_SUPPORT_ITEMS",
+                "TAKEDOWN_SCAN_SUPPORT_ITEMS",
+                "CC_TRIGGER_ITEMS",
+                "DAMAGE_TRIGGER_ITEMS",
+                "EVENT_VIEW_SUPPORT_ITEMS",
+            }
+        )
+        sites = []
         for module in (Path(pipeline.__file__).parent).rglob("*.py"):
             tree = ast.parse(module.read_text(encoding="utf-8"))
             for node in ast.walk(tree):
-                if (
-                    isinstance(node, ast.Call)
-                    and isinstance(node.func, ast.Name)
-                    and node.func.id == "has_event_scan_support_items"
-                ):
-                    callers.append(f"{module.name}:{node.lineno}")
-        assert callers == []
-        assert callable(item_support_effects.has_event_scan_support_items)
+                name = ""
+                if isinstance(node, ast.Name):
+                    name = node.id
+                elif isinstance(node, ast.Attribute):
+                    name = node.attr
+                elif isinstance(node, ast.alias):
+                    name = node.name
+                if name in retired:
+                    sites.append(f"{module.name}:{node.lineno}")
+        assert sites == []
 
     def test_solstice_sleigh_enters_by_derivation(self):
-        """D-02: it is a crowd-control reader, so the set already holds it."""
-        assert "Solstice Sleigh" in item_support_effects.CC_TRIGGER_ITEMS
-        assert "Solstice Sleigh" in item_support_effects.EVENT_VIEW_SUPPORT_ITEMS
-        # ...and the retired predicate never covered it, so its protection
-        # today is the cached health-regen coincidence, not this membership.
-        sleigh = [{"name": "Solstice Sleigh"}]
-        assert not item_support_effects.has_event_scan_support_items(sleigh)
-        assert item_support_effects.has_event_view_support_items(sleigh)
+        """D-02: it is a crowd-control reader, so the projection holds it."""
+        sleigh = trigger_stream.CAPABILITIES["solstice_sleigh.going_sledding"]
+        assert trigger_stream.Stream.CC in sleigh.reads
+        assert "Solstice Sleigh" in trigger_stream.tuple_incapable_items()
+        # ...and health regen is not why it is protected: the reason is the
+        # declaration above, which is what D-02 asked the test to pin.
+        assert trigger_stream.holders_in(
+            [{"name": "Solstice Sleigh"}], trigger_stream.tuple_incapable_items()
+        )
 
     def test_fimbulwinter_is_an_event_view_member_that_reads_event_id(self):
         """D-03: dropping it disarms a fail-closed raise downstream."""
-        assert "Fimbulwinter" in item_support_effects.EVENT_VIEW_SUPPORT_ITEMS
+        assert "Fimbulwinter" in trigger_stream.enriched_view_items()
         body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
         everlasting = body.split('if "Fimbulwinter" in names:')[1].split("\n    if ")[0]
         # P2b moved the read off the raw row and onto the bus; the claim is
@@ -1034,13 +1138,19 @@ class TestEventViewTupleGate:
         assert "_trigger_event_id=event.event_id or None" in everlasting
 
     def test_every_event_view_holder_is_named_by_exactly_one_stream(self):
-        """The stream map is the set's one home, so neither can drift."""
-        streams = item_support_effects.EVENT_VIEW_STREAMS
-        union = frozenset().union(*streams.values())
-        assert union == item_support_effects.EVENT_VIEW_SUPPORT_ITEMS
-        for item in union:
-            owners = [name for name, holders in streams.items() if item in holders]
-            assert owners == [next(iter(owners))], f"{item} reads {owners}"
+        """The registry is the map's one home, so neither can drift.
+
+        The claim used to be checked against ``EVENT_VIEW_STREAMS``, the
+        hand map P2c deleted; it is now read straight off the capability
+        declarations, which is where "which holders read which stream" now
+        lives and the only place it does.
+        """
+        holders = trigger_stream.tuple_incapable_items()
+        pairs = item_support_effects._starved_streams(holders)
+        assert frozenset(item for item, _ in pairs) == holders
+        counted = Counter(item for item, _ in pairs)
+        assert max(counted.values()) == 1, f"reads more than one stream: {counted}"
+        assert all(stream.endswith("_events") for _, stream in pairs)
 
 
 class TestEventViewStarvation:
@@ -1051,13 +1161,13 @@ class TestEventViewStarvation:
         "damage_events": [(0.0, 100.0, "Q"), (2.0, 80.0, "W")],
     }
 
+    # Generated from the capability registry rather than from a hand map:
+    # P2c deleted ``EVENT_VIEW_STREAMS``, so the (holder, stream) pairs this
+    # suite owes a fixture are read off the same projection the tripwire
+    # itself reads.  The parametrized ids are unchanged by the move.
     @pytest.mark.parametrize(
         ("item", "stream"),
-        sorted(
-            (item, stream)
-            for stream, holders in item_support_effects.EVENT_VIEW_STREAMS.items()
-            for item in holders
-        ),
+        item_support_effects._starved_streams(trigger_stream.tuple_incapable_items()),
     )
     def test_every_declared_holder_starves_by_name(self, item, stream):
         """The raise names the item and the stream, never just the failure."""

@@ -29,12 +29,14 @@ from src.calculator import item_effects
 from src.calculator.ability_spec import (
     AttackClass,
     DamageClass,
-    is_immobilizing_event,
 )
 from src.calculator.champions import registered_champion_names
 from src.calculator.damage import _in_cc_window, _merged_cc_windows
+from src.calculator.trigger_stream import is_immobilizing_event
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.item_support_effects import cross_participant_authorities
+from src.calculator.item_support_effects import (
+    _declared_authorities as cross_participant_authorities,
+)
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.survival.accumulate import accumulate_support_values
 from src.calculator.survival.actions import SurvivalAction, attack_class_of

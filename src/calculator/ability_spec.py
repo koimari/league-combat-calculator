@@ -154,26 +154,21 @@ IMMOBILIZING_CC_KINDS = frozenset(
 CC_KIND_VOCABULARY = IMMOBILIZING_CC_KINDS | frozenset({"slow", "none"})
 
 
-def is_immobilizing_event(event) -> bool:
-    """Whether an authored damage-event row marks the Wiki immobilize class.
-
-    Reads the reviewed ``cc_kind`` marker plus the legacy boolean flags
-    (``immobilized`` / ``hard_cc``). This is the single predicate for
-    every immobilize-triggered consumer (Imperial Mandate's Command in
-    both the pair engine and the participant walk, Fimbulwinter's
-    Everlasting) — the two sides of one trigger must never diverge.
-    """
-    kind = str(event.get("cc_kind", "")).lower().strip()
-    return (
-        kind in IMMOBILIZING_CC_KINDS
-        or bool(event.get("immobilized"))
-        or bool(event.get("hard_cc"))
-    )
+# The predicate that reads a raw row against the two constants above lives
+# in ``trigger_stream``, not here: authoring vocabulary belongs beside
+# ``DamagePart``, classification is transport.  This module keeps the
+# vocabulary and nothing that reads an event with it.
 
 
 @dataclass(frozen=True)
-class DamagePart:
+class DamagePart:  # pylint: disable=too-many-instance-attributes
     """One mitigation unit of one ability cast.
+
+    The attribute-count check is disabled because this is a data record and
+    the fields *are* the vocabulary: every one is a declared, documented
+    mitigation axis a champion module names by keyword, and collapsing any
+    of them into an untyped bag is the silent-default shape this module
+    exists to refuse.  Same reasoning as ``trigger_stream``'s builder.
 
     The engine evaluates parts in order, threading the target's running
     mitigated damage: a part's ``hp_scaled_damage`` sees the damage of

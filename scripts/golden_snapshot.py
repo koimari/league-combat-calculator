@@ -954,13 +954,13 @@ def cross_participant_producers():
 def capture_coupled(scenarios, *, producers, exact=False):
     """Roster snapshots through the coupled path, covering every producer.
 
-    ``producers`` is read, never typed: it was
-    ``item_support_effects.cross_participant_authorities()`` at 0A/0B and is
-    :func:`cross_participant_producers` — the ``trigger_stream.CAPABILITIES``
-    reading — from P2a (R-12), so a seventh ``damage_modifier`` producer with
-    no covering scenario fails here rather than passing silently.  ``exact``
-    writes ``repr(float)`` per-attacker totals instead of the 2-decimal
-    snapshot.
+    ``producers`` is read, never typed: it was the ``ast`` table
+    ``item_support_effects`` derived from its own packet call sites at
+    0A/0B, and is :func:`cross_participant_producers` — the
+    ``trigger_stream.CAPABILITIES`` reading — from P2a (R-12), so a seventh
+    ``damage_modifier`` producer with no covering scenario fails here rather
+    than passing silently.  ``exact`` writes ``repr(float)`` per-attacker
+    totals instead of the 2-decimal snapshot.
     """
     uncovered = _uncovered_producers(scenarios, producers)
     if uncovered:
