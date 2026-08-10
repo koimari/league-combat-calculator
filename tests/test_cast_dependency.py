@@ -9,6 +9,7 @@ consumes behave. The precedence table and the resolver merge belong to
 """
 
 import ast
+import itertools
 import subprocess
 import sys
 from dataclasses import FrozenInstanceError
@@ -17,12 +18,15 @@ from types import ModuleType
 
 import pytest
 
+from src import app as app_module
 from src.calculator.champions import (
     _CUSTOM_CHAMPION_MODULES,
     get_champion_cast_dependencies,
     get_champion_module_contract,
     get_champion_option_rotation,
 )
+from src.calculator.data_fetcher import get_champion
+from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.champions import module_contract
 from src.calculator.champions.module_contract import (
     ChampionModuleContractError,
@@ -64,6 +68,7 @@ LEAF = ROOT / "src" / "calculator" / "cast_dependency.py"
 RESOLVER = ROOT / "src" / "calculator" / "rotation_resolver.py"
 CONTRACT = ROOT / "src" / "calculator" / "champions" / "module_contract.py"
 PACKET = ROOT / "src" / "calculator" / "champions" / "packet_module.py"
+PIPELINE = ROOT / "src" / "calculator" / "pipeline.py"
 
 _VALIDATORS = ("validate_cast_dependencies", "validate_cast_order_declaration")
 
@@ -1156,3 +1161,243 @@ class TestHeadOnlyDeclarations:
             if get_champion_cast_dependencies(name)
         }
         assert declaring == {"Syndra", "Zed", "Brand"}
+
+
+def _fight_params(**overrides):
+    """A one-rotation ``FightParams``, field-overridable."""
+    config = {
+        "target_health": 1000.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 0.0,
+        "target_magic_resistance": 0.0,
+        "fight_duration_seconds": 5.0,
+        "auto_attack_uptime": 0.0,
+        "one_rotation": True,
+        "include_actives": True,
+        "cast_order": None,
+        "auto_attacks_only": False,
+        "ability_ranks": None,
+        "champion_options": None,
+        "deterministic": True,
+    }
+    config.update(overrides)
+    return FightParams(**config)
+
+
+def _refused(champion: str, order: list[str]) -> CustomOrderViolatesDependencyError:
+    """The refusal ``run_fight`` raises for *order*, or an assertion failure."""
+    with pytest.raises(CustomOrderViolatesDependencyError) as caught:
+        run_fight(get_champion(champion), 18, [], _fight_params(cast_order=order))
+    return caught.value
+
+
+def _is_refused(champion_data: dict, order: list[str]) -> bool:
+    """Whether this parsed champion refuses *order* — the fight is discarded."""
+    try:
+        run_fight(champion_data, 18, [], _fight_params(cast_order=order))
+    except CustomOrderViolatesDependencyError:
+        return True
+    return False
+
+
+def _pipeline_check_calls(run: ast.FunctionDef) -> list[ast.Call]:
+    """Every ``check_order_satisfies_dependencies`` call inside ``run_fight``.
+
+    Takes the function node rather than re-parsing, so a caller may compare
+    the calls it finds against other nodes of the same tree by identity.
+    """
+    return [
+        node
+        for node in ast.walk(run)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "check_order_satisfies_dependencies"
+    ]
+
+
+class TestTheRequestBoundaryRefusesAnImpossibleOrder:
+    """D-86 — a custom order inverting an active declaration is rejected.
+
+    A declared dependency states impossibility, not preference. Casting
+    Syndra's E before her Q has the engine author a ``cc_kind="stun"``
+    that cannot exist, and Imperial Mandate's Command then amplifies off a
+    stun that never happened — the incident this campaign is named after,
+    reached through a public request parameter. So the refusal quotes the
+    declaration's own ``reason`` and ``source``: the caller is told which
+    mechanic forbids the order, not which rule caught it.
+
+    The question is asked at the one call site that has a parse, because
+    which slots are live — Syndra's second charge exists only at 40
+    splinters — is a property of the parse and of nothing else.
+    """
+
+    def test_e_before_q_is_refused(self) -> None:
+        declared = get_champion_cast_dependencies("Syndra")
+        assert _refused("Syndra", ["E", "Q", "W", "R"]).dependency in declared
+
+    def test_the_refusal_quotes_the_mechanic_and_its_revision(self) -> None:
+        """The 4xx text is the declaration's, not the checker's."""
+        refusal = _refused("Syndra", ["E", "Q", "W", "R"])
+        assert refusal.dependency.reason in str(refusal)
+        assert refusal.dependency.source in str(refusal)
+        assert "wiki.leagueoflegends.com" in str(refusal)
+
+    def test_the_order_it_names_is_the_order_that_would_have_run(self) -> None:
+        """Expanded, not requested: the recast is part of the schedule.
+
+        ``expand_user_order`` folds Syndra's live second charge in after
+        its parent, so the order the engine would cast holds a slot the
+        request never named. Checking the requested order instead would
+        let a declaration whose ``requires`` is a recast slot be inverted
+        by an expansion nobody checked.
+        """
+        assert _refused("Syndra", ["E", "Q", "W", "R"]).order == (
+            "E",
+            "Q",
+            "Q2",
+            "W",
+            "R",
+        )
+
+    def test_below_forty_splinters_only_the_live_declaration_speaks(self) -> None:
+        """The parse decides which declarations are active (the dynamic tier).
+
+        Syndra's second charge exists only at 40 splinters, so at 39 the
+        ``E requires Q2`` declaration constrains nothing and there is no
+        recast to fold in: the same request is refused for one reason
+        instead of two, over an order that is exactly what was asked.
+        """
+        with pytest.raises(CustomOrderViolatesDependencyError) as caught:
+            run_fight(
+                get_champion("Syndra"),
+                18,
+                [],
+                _fight_params(
+                    cast_order=["E", "Q", "W", "R"],
+                    champion_options={"splinters": 39},
+                ),
+            )
+        assert caught.value.dependency.requires == "Q"
+        assert caught.value.order == ("E", "Q", "W", "R")
+
+    def test_the_api_refuses_with_a_400_carrying_the_declaration(self) -> None:
+        """D-86's body clause: the reason and source reach the response."""
+        app_module.app.config["TESTING"] = True
+        response = app_module.app.test_client().post(
+            "/api/calculate",
+            json={
+                "champion": "Syndra",
+                "level": 18,
+                "items": [],
+                "cast_order": ["E", "Q", "W", "R"],
+            },
+        )
+        assert response.status_code == 400
+        error = response.get_json()["error"]
+        declared = get_champion_cast_dependencies("Syndra")[0]
+        assert declared.reason in error
+        assert declared.source in error
+
+    def test_a_satisfying_order_still_runs_whole(self) -> None:
+        """C6's recast, re-asserted: the check refuses, it does not filter."""
+        result = run_fight(
+            get_champion("Syndra"),
+            18,
+            [],
+            _fight_params(cast_order=["Q", "W", "E", "R"]),
+        )
+        assert result["breakdown"]["Q2"]["casts"] == 1
+        assert result["rotation"]["order"][:5] == ["Q", "Q2", "W", "E", "R"]
+
+    def test_a_partial_order_naming_one_endpoint_is_unconstrained(self) -> None:
+        """E alone declares nothing about a Q the request never asked for."""
+        result = run_fight(
+            get_champion("Syndra"), 18, [], _fight_params(cast_order=["E", "W"])
+        )
+        assert set(result["breakdown"]) >= {"E", "W"}
+        assert "Q" not in result["breakdown"]
+
+    def test_a_non_declaring_champion_may_still_be_told_anything(self) -> None:
+        """D-85 at the request boundary: 170 modules reach no new failure."""
+        assert not get_champion_cast_dependencies("Ahri")
+        result = run_fight(
+            get_champion("Ahri"), 18, [], _fight_params(cast_order=["E", "Q", "W", "R"])
+        )
+        assert result["rotation"]["order"] == ["E", "Q", "W", "R"]
+
+    def test_the_derived_path_is_never_asked(self) -> None:
+        """A resolved order already merged the declarations that made it.
+
+        ``resolve_cast_order`` folds the declarations over its inferred
+        edges before it orders anything (D-82/D-85), so re-checking its
+        output would assert the resolver against itself. The check lives in
+        the branch a *caller* supplied an order to, and this is that shape
+        read off the tree rather than off the request.
+        """
+        run = _function(PIPELINE, "run_fight")
+        branch = next(
+            node
+            for node in ast.walk(run)
+            if isinstance(node, ast.If)
+            and isinstance(node.test, ast.Compare)
+            and ast.unparse(node.test) == "params.cast_order is None"
+        )
+        calls = _pipeline_check_calls(run)
+        assert len(calls) == 1
+        assert calls[0] in [
+            child for statement in branch.orelse for child in ast.walk(statement)
+        ]
+
+    def test_the_checked_order_is_the_order_the_engine_is_handed(self) -> None:
+        """One name, expanded once, checked and then cast — not two lists."""
+        run = _function(PIPELINE, "run_fight")
+        checked = _pipeline_check_calls(run)[0].args[0]
+        assert isinstance(checked, ast.Name)
+        expansions = [
+            node
+            for node in ast.walk(run)
+            if isinstance(node, ast.Assign)
+            and [target.id for target in node.targets if isinstance(target, ast.Name)]
+            == [checked.id]
+        ]
+        assert len(expansions) == 1
+        assert ast.unparse(expansions[0].value).startswith("expand_user_order(")
+        handed = [
+            node
+            for node in ast.walk(run)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "_params_with_cast_order"
+        ]
+        assert checked.id in {
+            argument.id
+            for call in handed
+            for argument in call.args
+            if isinstance(argument, ast.Name)
+        }
+
+    def test_the_declarations_come_from_the_validated_contract(self) -> None:
+        """Never a module attribute: an unvalidated declaration is not one."""
+        call = _pipeline_check_calls(_function(PIPELINE, "run_fight"))[0]
+        assert ast.unparse(call.args[1]).startswith("get_champion_cast_dependencies(")
+
+    def test_the_newly_refused_population_is_measured_not_assumed(self) -> None:
+        """How much of the request space this closes, per champion.
+
+        A new 4xx on a public parameter deserves a number rather than an
+        adjective. Every permutation of the four base slots is sent through
+        ``run_fight`` for each declaring champion and for one that declares
+        nothing: Syndra refuses the twelve that place E before Q, Zed the
+        sixteen that do not open on the Shadow (W before both Q and E leaves
+        eight), Brand the twelve that place W before Q, and Ahri — like the
+        other 169 non-declaring modules — refuses none of the twenty-four.
+        """
+        refused = {}
+        for champion in ("Syndra", "Zed", "Brand", "Ahri"):
+            data = get_champion(champion)
+            refused[champion] = sum(
+                1
+                for order in itertools.permutations(("Q", "W", "E", "R"))
+                if _is_refused(data, list(order))
+            )
+        assert refused == {"Syndra": 12, "Zed": 16, "Brand": 12, "Ahri": 0}

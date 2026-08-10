@@ -13,6 +13,7 @@ from typing import Any
 
 from .champions import (
     RESERVED_OPTION_KEYS,
+    get_champion_cast_dependencies,
     get_champion_cast_order,
     get_custom_cast_order_unavailable_reason,
     get_supported_fight_modes,
@@ -47,7 +48,12 @@ from .request_parsing import (
 )
 from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats, get_item_stats
-from .cast_dependency import BASE_CAST_SLOTS, expand_user_order, orderable_slots
+from .cast_dependency import (
+    BASE_CAST_SLOTS,
+    check_order_satisfies_dependencies,
+    expand_user_order,
+    orderable_slots,
+)
 
 DEFAULT_TARGET: dict[str, float] = {
     "health": 1000.0,
@@ -1093,9 +1099,21 @@ def run_fight(
         params.validate_cast_order_for_kit(
             champion_data.get("name", ""), ability_damages
         )
-        params = _params_with_cast_order(
-            params, expand_user_order(resolved_user_order, ability_damages)
+        # A declared ordering prerequisite states impossibility, not
+        # preference (D-86): casting Syndra's E before her Q would have the
+        # engine author a stun that cannot happen, and an amplifier price
+        # off it.  The order checked is the EXPANDED one, because that is
+        # what the engine casts — a recast folded in after its parent can
+        # satisfy a dependency the request never named, and could equally
+        # invert one.  A champion that declares nothing gets an empty tuple
+        # and reaches no new failure mode (D-85).
+        expanded_order = expand_user_order(resolved_user_order, ability_damages)
+        check_order_satisfies_dependencies(
+            expanded_order,
+            get_champion_cast_dependencies(champion_data.get("name", "")),
+            ability_damages,
         )
+        params = _params_with_cast_order(params, expanded_order)
     resolved_uptime, auto_attack_policy = resolve_auto_attack_policy(
         champion_data,
         ability_damages,

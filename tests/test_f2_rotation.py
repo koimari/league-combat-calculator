@@ -17,6 +17,7 @@ Covers the combo layer (src/calculator/rotation_resolver.py) end to end:
 
 import pytest
 
+from src.calculator.cast_dependency import CustomOrderViolatesDependencyError
 from src.calculator.damage import DEFAULT_CAST_ORDER
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
@@ -487,10 +488,18 @@ class TestTimedCadence:
         self, champion_by_name
     ) -> None:
         """The W-shadow opener costs zero cast time, so E fires at t=0 and
-        again at t=5.0 — two casts instead of the fixed order's one."""
+        again at t=5.0 — two casts instead of the later E's one.
+
+        The control was the engine's fixed default order until Zed's module
+        declared that Q and E each require the Shadow placement: an order
+        opening on Q now inverts that declaration and is refused outright
+        (D-86, asserted in the next test).  So the control moved to the
+        nearest legal order — W still first, E one slot later — which is
+        what isolates E's cadence rather than the opener.
+        """
         data = champion_by_name["Zed"]
         combo = _run(data, one_rotation=False, duration=5.0, uptime=1.0)
-        default = run_fight(
+        late_e = run_fight(
             data,
             11,
             [],
@@ -498,11 +507,40 @@ class TestTimedCadence:
                 one_rotation=False,
                 duration=5.0,
                 uptime=1.0,
-                cast_order=FIXED_ORDER,
+                cast_order=["W", "Q", "E", "R"],
             ),
         )
-        assert combo["breakdown"]["E"]["casts"] > default["breakdown"]["E"]["casts"]
+        assert combo["breakdown"]["E"]["casts"] > late_e["breakdown"]["E"]["casts"]
         assert combo["rotation"]["order"][0] == "W"
+
+    def test_zeds_declaration_refuses_an_order_that_skips_the_shadow(
+        self, champion_by_name
+    ) -> None:
+        """The fixed default order is no longer a legal request for Zed.
+
+        D-86 at a champion the phase's criteria never name: a declared
+        prerequisite states impossibility, so ``Q, W, E, R`` — the control
+        the test above used to run — comes back as a refusal quoting the
+        Shadow-placement mechanic rather than as a fight priced against a
+        kit Zed cannot cast.
+        """
+        with pytest.raises(CustomOrderViolatesDependencyError) as caught:
+            run_fight(
+                champion_by_name["Zed"],
+                11,
+                [],
+                _params(
+                    one_rotation=False,
+                    duration=5.0,
+                    uptime=1.0,
+                    cast_order=FIXED_ORDER,
+                ),
+            )
+        assert (caught.value.dependency.slot, caught.value.dependency.requires) == (
+            "Q",
+            "W",
+        )
+        assert caught.value.dependency.source in str(caught.value)
 
     def test_receipt_fallback_documents_the_default_order(self) -> None:
         receipt = build_rotation_receipt(
