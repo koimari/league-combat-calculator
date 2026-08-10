@@ -981,29 +981,37 @@ def _classify_cc(row: Mapping[str, Any]) -> tuple[CcClass, str, bool]:
     """The only place ``cc_kind`` and the legacy control flags are read.
 
     Returns the classification consumers branch on, the opaque receipt token
-    and whether a human reviewed it.  A reviewed ``cc_kind`` wins over the
-    legacy booleans; a bare ``crowd_control`` flag is control that nobody
-    narrowed, which is ``UNCLASSIFIED_CONTROL`` and not ``NONE``; an unmarked
-    row is ``UNREVIEWED`` and never ``NONE``.
+    and whether a human reviewed it.  A ``cc_kind`` that *narrows* the class —
+    an immobilize kind, or ``"slow"`` — is the answer; a bare
+    ``crowd_control`` flag is control that nobody narrowed, which is
+    ``UNCLASSIFIED_CONTROL`` and not ``NONE``; an unmarked row is
+    ``UNREVIEWED`` and never ``NONE``.
+
+    The ladder is *strongest evidence first*, and a ``cc_kind`` is evidence
+    rather than an override: a reviewed ``"none"`` does not veto a row's
+    legacy ``immobilized`` / ``hard_cc`` / ``slowed`` / ``slow`` booleans, it
+    simply narrows nothing.  Read that way the bus predicate is exactly
+    ``ability_spec.is_immobilizing_event`` — which OR'd the flags in — on
+    every row, which is what a phase that may not move a number owes the
+    consumers it repoints.  Which fact *ought* to win on a row asserting a
+    reviewed "no control" and a legacy stun at once is a semantics question,
+    and this phase rules none.
     """
     kind = str(row.get("cc_kind", "") or "").lower().strip()
-    if kind:
-        if kind not in CC_KIND_VOCABULARY:
-            raise ValueError(
-                f"cc_kind {kind!r} is not in CC_KIND_VOCABULARY "
-                f"({sorted(CC_KIND_VOCABULARY)}); a misspelled kind must never "
-                "author a no-op stun"
-            )
-        if kind in IMMOBILIZING_CC_KINDS:
-            return CcClass.IMMOBILIZE, kind, True
-        return (CcClass.SLOW if kind == "slow" else CcClass.NONE), kind, True
-    if row.get("immobilized") or row.get("hard_cc"):
-        return CcClass.IMMOBILIZE, "", bool(row.get("cc_reviewed"))
-    if row.get("slowed") or row.get("slow"):
-        return CcClass.SLOW, "", bool(row.get("cc_reviewed"))
+    if kind and kind not in CC_KIND_VOCABULARY:
+        raise ValueError(
+            f"cc_kind {kind!r} is not in CC_KIND_VOCABULARY "
+            f"({sorted(CC_KIND_VOCABULARY)}); a misspelled kind must never "
+            "author a no-op stun"
+        )
+    reviewed = bool(kind) or bool(row.get("cc_reviewed"))
+    if kind in IMMOBILIZING_CC_KINDS or row.get("immobilized") or row.get("hard_cc"):
+        return CcClass.IMMOBILIZE, kind, reviewed
+    if kind == "slow" or row.get("slowed") or row.get("slow"):
+        return CcClass.SLOW, kind, reviewed
     if row.get("crowd_control"):
-        return CcClass.UNCLASSIFIED_CONTROL, "", bool(row.get("cc_reviewed"))
-    return CcClass.UNREVIEWED, "", bool(row.get("cc_reviewed"))
+        return CcClass.UNCLASSIFIED_CONTROL, kind, reviewed
+    return (CcClass.NONE if kind else CcClass.UNREVIEWED), kind, reviewed
 
 
 def _float(value: Any) -> float:

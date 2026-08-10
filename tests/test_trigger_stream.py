@@ -313,21 +313,81 @@ def test_source_key_is_required_on_the_stream_that_dispatches_on_it():
     assert control.cc is ts.CcClass.IMMOBILIZE
 
 
+def _control_rows():
+    """Every combination of a reviewed kind and the four legacy flags.
+
+    The cross product, not the two axes separately: a row carrying both a
+    ``cc_kind`` and a legacy boolean is exactly where a precedence rule can
+    hide, and one axis at a time can never see it.
+    """
+    flags = ("immobilized", "hard_cc", "slowed", "slow", "crowd_control")
+    for kind in ("", *sorted(CC_KIND_VOCABULARY)):
+        for mask in range(1 << len(flags)):
+            marks = {
+                flag: True for index, flag in enumerate(flags) if mask & (1 << index)
+            }
+            yield _row(**({"cc_kind": kind} if kind else {}), **marks)
+
+
 def test_classification_agrees_with_the_vocabulary_it_replaces():
     """The bus predicate answers exactly what ``ability_spec``'s does.
 
-    Pinned over the whole vocabulary plus the two legacy booleans, because
-    P2b repoints four consumers onto the bus predicate and "the two sides of
-    one trigger must never diverge" has to be a measurement, not a claim.
+    Pinned over the **cross product** of the whole vocabulary and the five
+    legacy booleans — 192 rows — because P2b repoints four consumers onto
+    the bus predicate and "the two sides of one trigger must never diverge"
+    has to be a measurement, not a claim.  The earlier form walked the two
+    axes separately and so could not see the one place they interact: a
+    ``cc_kind`` is evidence, never an override, so a reviewed ``"none"``
+    beside a legacy ``hard_cc`` still classifies ``IMMOBILIZE``.
     """
-    for kind in sorted(CC_KIND_VOCABULARY):
-        row = _row(cc_kind=kind)
-        assert ts.is_immobilizing_event(row) == legacy_immobilizing(row), kind
-    for marker in ("immobilized", "hard_cc"):
-        row = _row(**{marker: True})
-        assert ts.is_immobilizing_event(row) == legacy_immobilizing(row) is True
-    assert ts.is_immobilizing_event(_row(crowd_control=True)) is False
-    assert legacy_immobilizing(_row(crowd_control=True)) is False
+    rows = list(_control_rows())
+    assert len(rows) == (1 + len(CC_KIND_VOCABULARY)) * 32
+    for row in rows:
+        assert ts.is_immobilizing_event(row) == legacy_immobilizing(row), row
+
+
+def test_a_reviewed_no_control_kind_does_not_veto_a_legacy_flag():
+    """The precedence question, pinned in both directions.
+
+    ``cc_kind="none"`` narrows nothing, so it neither creates control nor
+    destroys it; a narrowed kind that *is* control answers on its own.
+    """
+    assert ts._classify_cc(_row(cc_kind="none"))[0] is ts.CcClass.NONE
+    assert ts._classify_cc(_row(cc_kind="none", hard_cc=True)) == (
+        ts.CcClass.IMMOBILIZE,
+        "none",
+        True,
+    )
+    assert ts._classify_cc(_row(cc_kind="none", slowed=True))[0] is ts.CcClass.SLOW
+    assert (
+        ts._classify_cc(_row(cc_kind="none", crowd_control=True))[0]
+        is ts.CcClass.UNCLASSIFIED_CONTROL
+    )
+    assert (
+        ts._classify_cc(_row(cc_kind="stun", slowed=True))[0] is ts.CcClass.IMMOBILIZE
+    )
+
+
+def test_the_ladder_reads_immobilize_evidence_before_slow_evidence():
+    """A row asserting both facts at once takes the immobilize rung.
+
+    This is the one place the two retired predicates disagreed with each
+    other, so unifying them had to pick: ``ability_spec``'s said immobilize
+    (it OR'd the flags in) and ``_fimbulwinter_trigger_kind`` said slow (its
+    slow rung sat above its legacy-flag rung).  The bus keeps
+    ``ability_spec``'s answer — the three Command consumers outnumber
+    Everlasting, and an immobilize is the stronger claim about the row —
+    which moves Everlasting's rung on a control row carrying a slow fact and
+    an immobilize fact together, and on that row alone.  No ``src/`` writer
+    emits one: the two ``cc_kind`` writers (``damage.py:1452-1454``,
+    ``damage.py:2934-2936``) write no legacy boolean at all.
+    """
+    both = _row(hard_cc=True, slowed=True)
+    assert ts._classify_cc(both)[0] is ts.CcClass.IMMOBILIZE
+    assert legacy_immobilizing(both) is True
+    # Either fact alone still lands on its own rung.
+    assert ts._classify_cc(_row(slowed=True))[0] is ts.CcClass.SLOW
+    assert ts._classify_cc(_row(hard_cc=True))[0] is ts.CcClass.IMMOBILIZE
 
 
 # ---------------------------------------------------------------------------
