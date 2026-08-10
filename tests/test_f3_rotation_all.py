@@ -1200,10 +1200,15 @@ class TestTheRotationMemosInvalidateOnData:
 # ---------------------------------------------------------------------------
 
 
-# Which surface would notice if a declaration were deleted.  Recorded per
-# declaration rather than merely computed, so a declaration that quietly
-# stops carrying weight — the retired seed coming back as plausible prose —
-# fails on the route it claims instead of drifting onto a weaker one.
+# The committed record of which surface would notice if a declaration were
+# deleted lives in ``docs/cast-dependency-audit.json`` --
+# ``declared_dependency_activation[].load_bearing_routes`` -- beside every
+# other declaration-level ledger (R-36).  A disposition kept in a suite is a
+# disposition a reader of the receipt cannot see, and this suite is the
+# SECOND opinion on it: it re-measures the routes here, over the live tree
+# and by different code from the audit's, and asserts the two agree.  The
+# audit's own gate compares the receipt against a fresh audit run; this one
+# compares the receipt against an independent measurement.
 #
 #   derived_order          removing it changes the order the derivation
 #                          returns (or makes the derivation refuse to
@@ -1212,15 +1217,23 @@ class TestTheRotationMemosInvalidateOnData:
 #                          receipt says so
 #   custom_order_refusal   removing it makes a request order that is
 #                          currently refused legal again (D-86)
-_DECLARATION_ROUTES = {
-    ("Syndra", "E", "Q"): "derived_order",
-    ("Syndra", "E", "Q2"): "derived_order",
-    ("Zed", "Q", "W"): "custom_order_refusal",
-    ("Zed", "E", "W"): "custom_order_refusal",
-    ("Brand", "W", "Q"): "custom_order_refusal",
-}
-
 _DECLARING_CHAMPIONS = ("Syndra", "Zed", "Brand")
+
+
+def _recorded_routes():
+    """``(champion, slot, requires) -> routes`` from the committed receipt."""
+    import json
+    from pathlib import Path
+
+    receipt = json.loads(
+        (
+            Path(__file__).resolve().parents[1] / "docs" / "cast-dependency-audit.json"
+        ).read_text(encoding="utf-8")
+    )
+    return {
+        (row["champion"], row["slot"], row["requires"]): set(row["load_bearing_routes"])
+        for row in receipt["declared_dependency_activation"]
+    }
 
 
 def _without(dependency, declarations):
@@ -1228,75 +1241,75 @@ def _without(dependency, declarations):
     return tuple(other for other in declarations if other is not dependency)
 
 
-def _derived_order_route(name, dependency, declarations, champion_data, monkeypatch):
+def _derived_order_route(name, dependency, declarations, champion_data):
     """Does the derived order notice this declaration going away?"""
     from scripts.cast_dependency_audit import option_states
-    from src.calculator import champions as champions_module
 
     rest = _without(dependency, declarations)
+    certified = get_champion_cast_order(name)
+
+    def order(kept, parsed, options):
+        _DERIVED_RULE_CACHE.clear()
+        try:
+            return list(
+                derive_champion_rule(
+                    name,
+                    parsed,
+                    champion_data,
+                    certified,
+                    options,
+                    declarations=kept,
+                ).order
+            )
+        except ResolvedCycleError:
+            return None
+        finally:
+            _DERIVED_RULE_CACHE.clear()
+
     for _label, options in option_states(name):
         for level in (11, 18):
             parsed = _parse(champion_data, level, (), {}, champion_options=options)
-            certified = get_champion_cast_order(name)
-            _DERIVED_RULE_CACHE.clear()
-            full = derive_champion_rule(
-                name, parsed, champion_data, certified, champion_options=options
-            )
-            with monkeypatch.context() as patch:
-                patch.setattr(
-                    champions_module,
-                    "get_champion_cast_dependencies",
-                    lambda asked, kept=rest: kept if asked == name else (),
-                )
-                _DERIVED_RULE_CACHE.clear()
-                try:
-                    reduced = list(
-                        derive_champion_rule(
-                            name,
-                            parsed,
-                            champion_data,
-                            certified,
-                            champion_options=options,
-                        ).order
-                    )
-                except ResolvedCycleError:
-                    return True
-                finally:
-                    _DERIVED_RULE_CACHE.clear()
-            if reduced != list(full.order):
+            if order(rest, parsed, options) != order(declarations, parsed, options):
                 return True
     return False
 
 
 def _custom_order_route(name, dependency, declarations, champion_data):
-    """Does a currently-illegal request order become legal without it?"""
+    """Does a currently-illegal request order become legal without it?
+
+    Measured over the same certified option states as the derived-order
+    route, because the answer depends on them: below 40 splinters Syndra's
+    ``E requires Q2`` is inactive, so ``E requires Q`` is the only thing
+    left refusing the sphere-less order.
+    """
+    from scripts.cast_dependency_audit import option_states
     from src.calculator.cast_dependency import (
         CustomOrderViolatesDependencyError,
         check_order_satisfies_dependencies,
     )
 
-    parsed = _parse(champion_data, 18, (), {})
-    live = set(parsed)
-    if not {dependency.slot, dependency.requires} <= live:
+    def refused(order, kept, live):
+        try:
+            check_order_satisfies_dependencies(order, kept, live)
+        except CustomOrderViolatesDependencyError:
+            return True
         return False
-    inverted = [dependency.slot, dependency.requires] + [
-        slot
-        for slot in ("Q", "Q2", "W", "E", "R")
-        if slot in live and slot not in (dependency.slot, dependency.requires)
-    ]
-    try:
-        check_order_satisfies_dependencies(inverted, declarations, live)
-    except CustomOrderViolatesDependencyError:
-        pass
-    else:
-        return False
-    try:
-        check_order_satisfies_dependencies(
+
+    for _label, options in option_states(name):
+        parsed = _parse(champion_data, 18, (), {}, champion_options=options)
+        live = {slot for slot in parsed if slot != "passive"}
+        if not {dependency.slot, dependency.requires} <= live:
+            continue
+        inverted = [dependency.slot, dependency.requires] + [
+            slot
+            for slot in ("Q", "Q2", "W", "E", "R")
+            if slot in live and slot not in (dependency.slot, dependency.requires)
+        ]
+        if refused(inverted, declarations, live) and not refused(
             inverted, _without(dependency, declarations), live
-        )
-    except CustomOrderViolatesDependencyError:
-        return False
-    return True
+        ):
+            return True
+    return False
 
 
 class TestEveryDeclarationIsLoadBearing:
@@ -1307,19 +1320,19 @@ class TestEveryDeclarationIsLoadBearing:
     is as hand-held as it ever was — only now unfalsifiable, because the
     prose sits in a field a validator accepts.
 
-    The escape hatch the phase document names — ``confirmed_by_inference``
-    — is not the only honest one, and this suite does not pretend it is.
     Zed's and Brand's head-only declarations change no derived order in
-    any certified state, and no inferred edge agrees with them, so tagging
-    them confirmed would be a false receipt.  What they do change is which
-    request orders the engine will accept: without ``Q requires W``, the
-    order that skips the Shadow placement stops being refused (D-86), and
-    an engine that accepts it authors damage for a kit Zed cannot cast.
-    That is a third route, named and machine-checked here rather than
-    waved at.
+    any certified state and no inferred edge agrees with them, so their
+    weight is carried entirely by ``custom_order_refusal``: without
+    ``Q requires W``, the request order that skips the Shadow placement
+    stops being refused (D-86), and an engine that accepts it authors
+    damage for a kit Zed cannot cast.  That route is not a softening —
+    a declaration on none of the three still fails here and fails the
+    audit — and it is recorded per declaration in the committed receipt,
+    so which declaration is load-bearing on what is readable without
+    running anything.
     """
 
-    def test_the_declaring_champions_are_the_ones_this_suite_knows(self) -> None:
+    def test_the_declaring_champions_are_the_ones_the_receipt_knows(self) -> None:
         """A fourth declarer must arrive with its own route, not silently."""
         from src.calculator.champions import get_champion_cast_dependencies
 
@@ -1328,7 +1341,7 @@ class TestEveryDeclarationIsLoadBearing:
             for name in _DECLARING_CHAMPIONS
             for dep in get_champion_cast_dependencies(name)
         }
-        assert declared == set(_DECLARATION_ROUTES)
+        assert declared == set(_recorded_routes())
 
     def test_no_other_cached_champion_declares(self, champion_by_name) -> None:
         from src.calculator.champions import get_champion_cast_dependencies
@@ -1340,20 +1353,29 @@ class TestEveryDeclarationIsLoadBearing:
         )
         assert extra == []
 
+    def test_the_receipt_records_a_route_for_every_declaration(self) -> None:
+        """Criterion 12's claim, read straight off the committed receipt."""
+        from scripts.cast_dependency_audit import DECLARATION_ROUTES
+
+        recorded = _recorded_routes()
+        assert recorded, "the receipt records no declaration at all"
+        for key, routes in recorded.items():
+            assert routes, f"{key} is recorded as load-bearing on nothing"
+            assert routes <= set(DECLARATION_ROUTES), f"{key} names an unknown route"
+
     @pytest.mark.parametrize("champion", _DECLARING_CHAMPIONS)
-    def test_every_declaration_takes_the_route_it_claims(
-        self, champion, champion_by_name, monkeypatch
+    def test_every_declaration_takes_the_route_the_receipt_records(
+        self, champion, champion_by_name
     ) -> None:
         from src.calculator.champions import get_champion_cast_dependencies
 
         data = champion_by_name[champion]
         declarations = get_champion_cast_dependencies(champion)
+        recorded = _recorded_routes()
         for dependency in declarations:
             key = (champion, dependency.slot, dependency.requires)
             routes = set()
-            if _derived_order_route(
-                champion, dependency, declarations, data, monkeypatch
-            ):
+            if _derived_order_route(champion, dependency, declarations, data):
                 routes.add("derived_order")
             if _custom_order_route(champion, dependency, declarations, data):
                 routes.add("custom_order_refusal")
@@ -1369,7 +1391,7 @@ class TestEveryDeclarationIsLoadBearing:
                 "derived order, frees no refused request order, and no "
                 "inference confirms it"
             )
-            assert _DECLARATION_ROUTES[key] in routes, (
-                f"{key} claims route {_DECLARATION_ROUTES[key]!r} but carries "
-                f"{sorted(routes)}"
+            assert routes == recorded[key], (
+                f"{key} measures {sorted(routes)} here but the committed "
+                f"receipt records {sorted(recorded[key])}"
             )

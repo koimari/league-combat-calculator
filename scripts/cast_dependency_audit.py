@@ -14,9 +14,13 @@ five ledgers:
     named on the dated acknowledged-gap list carried in the committed
     receipt.
 ``declared_dependency_activation``
-    Every declaration, with the number of option states it was active in.
-    A declaration active in no certified state constrains nothing and is a
-    sentence nobody can falsify.
+    Every declaration, with the number of option states it was active in
+    and the surfaces it is load-bearing on (``load_bearing_routes``,
+    measured by deleting it and asking what notices).  A declaration
+    active in no certified state constrains nothing, and one on no route
+    is a sentence nobody can falsify; both fail.  This is where a
+    declaration's disposition lives — in the committed receipt beside
+    every other declaration-level ledger, not in a table inside a suite.
 ``suppression_ledger``
     Every nested suppression, and whether it matched an inferred edge or
     stood latent with its ``latent_reason``.
@@ -61,7 +65,7 @@ import argparse
 import ast
 import json
 import sys
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -79,18 +83,26 @@ from src.calculator.cast_dependency import (
     CastDependency,
     CastDependencyError,
     ConflictingInferenceError,
+    CustomOrderViolatesDependencyError,
+    ResolvedCycleError,
+    check_order_satisfies_dependencies,
+    expand_user_order,
+    orderable_slots,
 )
 from src.calculator.champions import (
     get_champion_cast_dependencies,
+    get_champion_cast_order,
     get_champion_option_rotation,
     get_champion_options_meta,
     parse_champion_abilities,
 )
 from src.calculator.champions.engine import _validate_cc_event_contract
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
+from src.calculator.pipeline import cast_slot_surface
 from src.calculator.rotation_resolver import (
     CAST_ORDER_OVERRIDES,
     ORDER_OVERRIDE_REASONS,
+    derive_champion_rule,
     resolved_edges,
 )
 from src.calculator.stats import calculate_total_stats
@@ -126,6 +138,26 @@ MATRIX_TARGET_STATS = {
 
 # The ledgers an acknowledged gap may excuse a member of.
 GAP_LEDGERS = ("inferred_kind_coverage", "authored_marker_reach")
+
+# The closed set of surfaces a declaration can be load-bearing on.  A
+# declaration on none of them is prose in a dataclass: deleting it changes
+# nothing anybody can observe, which is exactly how a retired hand seed
+# comes back as plausible sentences with every other check still green.
+#
+# ``derived_order``           deleting it changes the order the derivation
+#                             returns, or makes the derivation refuse to
+#                             return one, in at least one certified state
+# ``confirmed_by_inference``  the detector independently derived the same
+#                             edge and the merge receipt says so
+# ``custom_order_refusal``    deleting it makes a request order the engine
+#                             currently refuses legal again (D-86) — the
+#                             route a head-only declaration takes when its
+#                             champion's hand seed still decides the order
+DECLARATION_ROUTES: tuple[str, ...] = (
+    "derived_order",
+    "confirmed_by_inference",
+    "custom_order_refusal",
+)
 
 
 class AuditDerivationError(RuntimeError):
@@ -427,6 +459,7 @@ def _walk_roster(markers: Sequence[str]) -> dict[str, Any]:
     walk_errors: list[dict[str, str]] = []
     cc_markers: dict[tuple[str, str], set[str]] = {}
     cc_contract: dict[tuple[str, str], str] = {}
+    routes: dict[tuple[str, str, str], set[str]] = {}
     states_walked = 0
 
     for name in sorted(champions):
@@ -472,6 +505,9 @@ def _walk_roster(markers: Sequence[str]) -> dict[str, Any]:
                         latent,
                         conflicts,
                     )
+                    _record_routes(
+                        name, data, parsed, options, declarations, receipt, routes
+                    )
 
     return {
         "champions": sorted(champions),
@@ -485,6 +521,7 @@ def _walk_roster(markers: Sequence[str]) -> dict[str, Any]:
         "walk_errors": walk_errors,
         "cc_markers": cc_markers,
         "cc_contract": cc_contract,
+        "routes": routes,
         "states_walked": states_walked,
     }
 
@@ -588,6 +625,117 @@ def _record_merge(  # pylint: disable=too-many-arguments,too-many-positional-arg
 def _has_prefix(rows: Iterable[str], prefix: str) -> bool:
     """Whether any receipt row opens with *prefix*."""
     return any(row.startswith(prefix) for row in rows)
+
+
+def _record_routes(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    name: str,
+    champion_data: Mapping[str, Any],
+    parsed: Mapping[str, Any],
+    options: Mapping[str, Any],
+    declarations: Sequence[CastDependency],
+    receipt: Any,
+    routes: dict[tuple[str, str, str], set[str]],
+) -> None:
+    """Fold one state's load-bearing measurement into the route ledger.
+
+    Every declaration is deleted in turn and the state is asked what
+    notices.  This is criterion 12 mechanised: a declaration that survives
+    its own deletion unnoticed on all three surfaces is unfalsifiable
+    prose, and it is the exact shape a retired hand seed takes when it
+    comes back.
+    """
+    if not declarations:
+        return
+    certified = get_champion_cast_order(name)
+    full_order = _derived_order(
+        name, parsed, champion_data, certified, options, declarations
+    )
+    for dependency in declarations:
+        key = (name, dependency.slot, dependency.requires)
+        routes.setdefault(key, set())
+        rest = tuple(other for other in declarations if other is not dependency)
+        if (
+            _derived_order(name, parsed, champion_data, certified, options, rest)
+            != full_order
+        ):
+            routes[key].add("derived_order")
+        if _has_prefix(
+            receipt.confirmed_by_inference,
+            f"{dependency.slot} requires {dependency.requires}",
+        ):
+            routes[key].add("confirmed_by_inference")
+        if _frees_a_refused_order(dependency, declarations, rest, parsed):
+            routes[key].add("custom_order_refusal")
+
+
+def _derived_order(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    name: str,
+    parsed: Mapping[str, Any],
+    champion_data: Mapping[str, Any],
+    certified: list[str] | None,
+    options: Mapping[str, Any],
+    declarations: Sequence[CastDependency],
+) -> tuple[str, ...] | None:
+    """The order the derivation returns against *declarations*.
+
+    ``None`` means the derivation refused to return one — a declared cycle
+    is a module/interpreter disagreement, and "the answer changed from an
+    order to a refusal" is a change like any other.
+    """
+    try:
+        rule = derive_champion_rule(
+            name,
+            parsed,
+            champion_data,
+            certified,
+            dict(options) or None,
+            declarations=declarations,
+        )
+    except ResolvedCycleError:
+        return None
+    return tuple(rule.order)
+
+
+def _frees_a_refused_order(
+    dependency: CastDependency,
+    declarations: Sequence[CastDependency],
+    rest: Sequence[CastDependency],
+    parsed: Mapping[str, Any],
+) -> bool:
+    """Does deleting *dependency* make a refused request order legal?
+
+    The probe is a real request, built the way the request boundary builds
+    one: a permutation of ``orderable_slots`` — what a payload may name —
+    run through ``expand_user_order`` so live recasts ride their parents,
+    then checked.  A two-slot fragment would answer a different and easier
+    question: Syndra's ``E requires Q`` frees nothing on its own, because
+    ``E requires Q2`` refuses the same order, and only a whole order can
+    see that.
+    """
+    surface = cast_slot_surface(parsed)
+    live = set(surface)
+    if not {dependency.slot, dependency.requires} <= live:
+        return False
+    nameable = orderable_slots(surface)
+    if dependency.slot not in nameable:
+        return False
+    head = [dependency.slot] + [
+        slot for slot in (dependency.requires,) if slot in nameable
+    ]
+    inverted = expand_user_order(
+        head + [slot for slot in nameable if slot not in head], surface
+    )
+    try:
+        check_order_satisfies_dependencies(inverted, declarations, live)
+    except CustomOrderViolatesDependencyError:
+        pass
+    else:
+        return False
+    try:
+        check_order_satisfies_dependencies(inverted, rest, live)
+    except CustomOrderViolatesDependencyError:
+        return False
+    return True
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -796,6 +944,12 @@ def _activation_ledger(
                 "active_states": len(states),
                 "sample_active_state": states[0] if states else None,
                 "source_resolution": source,
+                "load_bearing_routes": sorted(
+                    observed["routes"].get(
+                        (name, dependency.slot, dependency.requires), ()
+                    ),
+                    key=DECLARATION_ROUTES.index,
+                ),
             }
             if dependency.kind == "cc_enabler":
                 row["cc_enabler_resolution"] = _resolve_cc_enabler(
@@ -843,6 +997,18 @@ def _declaration_failures(
                 "reason": (
                     "the declaration is active in no certified option state, so "
                     "it constrains nothing and no test can falsify it"
+                ),
+            }
+        )
+    if not row["load_bearing_routes"]:
+        failures.append(
+            {
+                "item": item,
+                "reason": (
+                    "the declaration is load-bearing on nothing: deleting it "
+                    "changes no derived order in any certified state, frees no "
+                    "refused request order, and no inference confirms it — a "
+                    "sentence in a dataclass that nothing can falsify"
                 ),
             }
         )

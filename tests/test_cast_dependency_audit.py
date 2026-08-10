@@ -26,8 +26,10 @@ import json
 import pytest
 
 from scripts.cast_dependency_audit import (
+    DECLARATION_ROUTES,
     RECEIPT_PATH,
     AuditDerivationError,
+    _declaration_failures,
     _marker_ledger,
     apply_marker_keys,
     declared_negative_tests,
@@ -35,6 +37,7 @@ from scripts.cast_dependency_audit import (
 )
 from scripts.gate_receipt import SCHEMA_VERSION, validate_receipt
 from src.calculator.ability_spec import DamagePart
+from src.calculator.cast_dependency import CastDependency
 from src.calculator.rotation_resolver import detect_setup_consume_edges
 
 # Every marker the interpreter reads → the negative test that proves the
@@ -255,6 +258,47 @@ class TestDeclarations:
     def test_every_declaration_is_active_somewhere(self, receipt) -> None:
         for row in receipt["declared_dependency_activation"]:
             assert row["active_states"] > 0, row
+
+    def test_every_declaration_is_load_bearing_on_a_named_route(self, receipt) -> None:
+        """Criterion 12, published rather than remembered.
+
+        The routes are measured by deleting each declaration and asking
+        what notices, and they live here — beside the activation counts
+        and the source resolutions — so a reader of the committed receipt
+        can tell which declaration carries weight and by what route
+        without running anything.
+        """
+        for row in receipt["declared_dependency_activation"]:
+            routes = row["load_bearing_routes"]
+            assert routes, row
+            assert set(routes) <= set(DECLARATION_ROUTES), row
+
+    def test_a_declaration_on_no_route_fails_the_audit(self) -> None:
+        """The gate reproduces its own red on demand (R-05).
+
+        A declaration nothing would miss is exactly how a retired hand
+        seed comes back: plausible prose in a field a validator accepts,
+        with every other check still green.
+        """
+        dependency = CastDependency(
+            slot="E",
+            requires="Q",
+            kind="cc_enabler",
+            reason="synthetic",
+            source="https://wiki.leagueoflegends.com/en-us/Syndra@4024662",
+        )
+        row = {
+            "champion": "Syndra",
+            "slot": "E",
+            "requires": "Q",
+            "active_states": 4,
+            "load_bearing_routes": [],
+            "source_resolution": {"resolved": True, "reviewed_revision_id": 4024662},
+        }
+        reasons = [
+            failure["reason"] for failure in _declaration_failures(row, dependency)
+        ]
+        assert any("load-bearing on nothing" in reason for reason in reasons), reasons
 
     def test_every_source_resolves_against_the_committed_wiki_audit(
         self, receipt

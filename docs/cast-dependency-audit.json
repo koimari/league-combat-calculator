@@ -76,6 +76,9 @@
       "active_states": 16,
       "champion": "Brand",
       "kind": "damage_enabler",
+      "load_bearing_routes": [
+        "custom_order_refusal"
+      ],
       "requires": "Q",
       "sample_active_state": "defaults|L11|magic",
       "slot": "W",
@@ -102,6 +105,10 @@
       },
       "champion": "Syndra",
       "kind": "cc_enabler",
+      "load_bearing_routes": [
+        "derived_order",
+        "custom_order_refusal"
+      ],
       "requires": "Q",
       "sample_active_state": "defaults|L11|magic",
       "slot": "E",
@@ -128,6 +135,9 @@
       },
       "champion": "Syndra",
       "kind": "cc_enabler",
+      "load_bearing_routes": [
+        "derived_order"
+      ],
       "requires": "Q2",
       "sample_active_state": "defaults|L11|magic",
       "slot": "E",
@@ -145,6 +155,9 @@
       "active_states": 8,
       "champion": "Zed",
       "kind": "damage_enabler",
+      "load_bearing_routes": [
+        "custom_order_refusal"
+      ],
       "requires": "W",
       "sample_active_state": "defaults|L11|magic",
       "slot": "Q",
@@ -162,6 +175,9 @@
       "active_states": 8,
       "champion": "Zed",
       "kind": "damage_enabler",
+      "load_bearing_routes": [
+        "custom_order_refusal"
+      ],
       "requires": "W",
       "sample_active_state": "defaults|L11|magic",
       "slot": "E",
