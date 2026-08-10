@@ -596,9 +596,19 @@ class TestOrderStructure:
             assert len(set(order)) == len(order), f"{name}: duplicate slot in order"
 
     def test_algorithmic_coverage_floors(self, champion_by_name, items_by_name) -> None:
-        """The derivation must stay algorithmic: at least 25 champions carry
-        detected edges and at least 15 derive a non-base order.  A regression
-        back to the default path would break these floors."""
+        """The derivation must stay algorithmic: at least 32 champions carry
+        detected edges and at least 21 derive a non-base order.  A regression
+        back to the default path would break these floors.
+
+        The floors are re-measured whenever a retirement changes the counted
+        population — the walk skips seeded champions, so retiring a seed adds
+        that champion to it — and they move UP only.  D-89's four retirements
+        added Syndra and Aatrox to both counts (Jhin and Aphelios derive by
+        the flat-kit path, so they enter the population without raising
+        either floor), taking 25 -> 32 and 15 -> 21.  A floor lowered to make
+        a red suite green would turn the one check that says "the derivation
+        is still doing the work" into a check that says nothing.
+        """
         edge_champions = 0
         nonbase_champions = 0
         for name in sorted(champion_by_name):
@@ -615,10 +625,10 @@ class TestOrderStructure:
             if order != _base_order(name, parsed):
                 nonbase_champions += 1
         assert (
-            edge_champions >= 25
+            edge_champions >= 32
         ), f"only {edge_champions} champions have detected edges"
         assert (
-            nonbase_champions >= 15
+            nonbase_champions >= 21
         ), f"only {nonbase_champions} derive non-base orders"
 
     def test_certified_orders_survive_when_edges_agree(
