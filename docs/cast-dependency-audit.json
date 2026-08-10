@@ -1,0 +1,317 @@
+{
+  "acknowledged_gaps": [
+    {
+      "dated": "2026-08-10",
+      "decision": "D-88 / H6",
+      "ledger": "inferred_kind_coverage",
+      "member": "enhanced_consume",
+      "reason": "No champion in the certified matrix produces an enhanced_consume edge. The branch needs a consumer whose enhanced-damage row names a condition and an applier slot that authors that condition as a marker; the kit that would supply it authors no chill marker, so the branch is reachable in code and unreachable from data.",
+      "resolution": "H6 is unanswered: either the missing chill marker is authored, or the branch is replaced by a declared damage_enabler. Either disposition moves a champion's derived order and her golden rows, so it needs its own investigator receipt. Phase 5 carries this gap and does not resolve it; emptying this list is a named follow-on slice, scheduled only once the umbrella records H6's answer."
+    }
+  ],
+  "audit": "cast_dependency_declarations",
+  "authored_marker_reach": {
+    "applies_dot_stack": {
+      "authors": 2,
+      "negative_test": "test_withholding_applies_dot_stack_drops_the_stack_edge",
+      "sample_author": "Briar"
+    },
+    "cc_kind": {
+      "authors": 3,
+      "negative_test": "test_withholding_cc_kind_drops_the_cc_setup_fan_out",
+      "sample_author": "Ahri"
+    },
+    "cooldown": {
+      "authors": 173,
+      "negative_test": "test_zeroing_cooldown_disqualifies_the_setup_slot",
+      "sample_author": "Aatrox"
+    },
+    "dot_duration": {
+      "authors": 39,
+      "negative_test": "test_withholding_dot_duration_drops_the_dot_consume_edge",
+      "sample_author": "Alistar"
+    },
+    "on_hit": {
+      "authors": 41,
+      "negative_test": "test_withholding_on_hit_changes_the_edge_citation",
+      "sample_author": "Aatrox"
+    },
+    "parts": {
+      "authors": 173,
+      "negative_test": "test_withholding_parts_drops_the_cc_setup_fan_out",
+      "sample_author": "Aatrox"
+    },
+    "stacking_dot": {
+      "authors": 2,
+      "negative_test": "test_withholding_stacking_dot_drops_the_stack_edge",
+      "sample_author": "Briar"
+    },
+    "stat_buff": {
+      "authors": 35,
+      "negative_test": "test_withholding_stat_buff_drops_the_buff_edge",
+      "sample_author": "Aatrox"
+    },
+    "target_debuff": {
+      "authors": 10,
+      "negative_test": "test_withholding_target_debuff_drops_the_shred_edge",
+      "sample_author": "Briar"
+    }
+  },
+  "conflict_ledger": [
+    {
+      "champion": "Syndra",
+      "covered": true,
+      "row": "E -> Q (cc_setup) opposes E requires Q \u2014 covered by the declaration's own suppression",
+      "states": 24
+    }
+  ],
+  "counts": {
+    "failed": 0,
+    "passed": 29,
+    "total": 29,
+    "withheld": 0
+  },
+  "declared_dependency_activation": [
+    {
+      "active_states": 16,
+      "champion": "Brand",
+      "kind": "damage_enabler",
+      "requires": "Q",
+      "sample_active_state": "defaults|L11|magic",
+      "slot": "W",
+      "source_resolution": {
+        "current": true,
+        "resolved": true,
+        "reviewed_revision_id": 4023911,
+        "revision_id": 4023911,
+        "source": "https://wiki.leagueoflegends.com/en-us/Brand@4023911",
+        "stale": false,
+        "url": "https://wiki.leagueoflegends.com/en-us/Brand"
+      }
+    },
+    {
+      "active_states": 24,
+      "cc_enabler_resolution": {
+        "cc_kinds": [
+          "stun"
+        ],
+        "contract_error": null,
+        "marker_slot": "E",
+        "reaches_event_ledger": true,
+        "resolved": true
+      },
+      "champion": "Syndra",
+      "kind": "cc_enabler",
+      "requires": "Q",
+      "sample_active_state": "defaults|L11|magic",
+      "slot": "E",
+      "source_resolution": {
+        "current": true,
+        "resolved": true,
+        "reviewed_revision_id": 4024662,
+        "revision_id": 4024662,
+        "source": "https://wiki.leagueoflegends.com/en-us/Syndra@4024662",
+        "stale": false,
+        "url": "https://wiki.leagueoflegends.com/en-us/Syndra"
+      }
+    },
+    {
+      "active_states": 16,
+      "cc_enabler_resolution": {
+        "cc_kinds": [
+          "stun"
+        ],
+        "contract_error": null,
+        "marker_slot": "E",
+        "reaches_event_ledger": true,
+        "resolved": true
+      },
+      "champion": "Syndra",
+      "kind": "cc_enabler",
+      "requires": "Q2",
+      "sample_active_state": "defaults|L11|magic",
+      "slot": "E",
+      "source_resolution": {
+        "current": true,
+        "resolved": true,
+        "reviewed_revision_id": 4024662,
+        "revision_id": 4024662,
+        "source": "https://wiki.leagueoflegends.com/en-us/Syndra@4024662",
+        "stale": false,
+        "url": "https://wiki.leagueoflegends.com/en-us/Syndra"
+      }
+    },
+    {
+      "active_states": 8,
+      "champion": "Zed",
+      "kind": "damage_enabler",
+      "requires": "W",
+      "sample_active_state": "defaults|L11|magic",
+      "slot": "Q",
+      "source_resolution": {
+        "current": true,
+        "resolved": true,
+        "reviewed_revision_id": 4026038,
+        "revision_id": 4026038,
+        "source": "https://wiki.leagueoflegends.com/en-us/Zed@4026038",
+        "stale": false,
+        "url": "https://wiki.leagueoflegends.com/en-us/Zed"
+      }
+    },
+    {
+      "active_states": 8,
+      "champion": "Zed",
+      "kind": "damage_enabler",
+      "requires": "W",
+      "sample_active_state": "defaults|L11|magic",
+      "slot": "E",
+      "source_resolution": {
+        "current": true,
+        "resolved": true,
+        "reviewed_revision_id": 4026038,
+        "revision_id": 4026038,
+        "source": "https://wiki.leagueoflegends.com/en-us/Zed@4026038",
+        "stale": false,
+        "url": "https://wiki.leagueoflegends.com/en-us/Zed"
+      }
+    }
+  ],
+  "failures": [],
+  "inferred_kind_coverage": {
+    "amp": [
+      "Vladimir"
+    ],
+    "buff": [
+      "Aatrox",
+      "Ambessa",
+      "Annie",
+      "Darius",
+      "Dr. Mundo",
+      "Twitch",
+      "Vayne"
+    ],
+    "cc_setup": [
+      "Ahri",
+      "Pantheon",
+      "Syndra"
+    ],
+    "detonate": [
+      "Varus",
+      "Vi"
+    ],
+    "dot_consume": [
+      "Cassiopeia"
+    ],
+    "enhanced_consume": [],
+    "execute": [
+      "Akshan",
+      "Bel'Veth",
+      "Briar",
+      "Evelynn",
+      "Hwei",
+      "Nidalee",
+      "Pantheon",
+      "Seraphine",
+      "Shaco"
+    ],
+    "mark_applier": [
+      "Ezreal",
+      "LeBlanc",
+      "Ryze"
+    ],
+    "mark_consume": [
+      "Diana",
+      "Evelynn",
+      "LeBlanc",
+      "Lux"
+    ],
+    "recast": [
+      "Ambessa",
+      "Camille",
+      "Syndra"
+    ],
+    "shred": [
+      "Briar",
+      "Corki",
+      "Evelynn",
+      "Garen",
+      "Jarvan IV",
+      "Jayce",
+      "Karthus",
+      "Kog'Maw",
+      "Sion",
+      "Wukong"
+    ],
+    "stack_consume": [
+      "Darius",
+      "Kalista",
+      "Mel",
+      "Twitch",
+      "Varus"
+    ]
+  },
+  "matrix": "cast_dependency_declarations",
+  "option_matrix": {
+    "builds": [
+      "no_items",
+      "magic",
+      "physical",
+      "spellblade"
+    ],
+    "champions": 173,
+    "levels": [
+      11,
+      18
+    ],
+    "states_walked": 4040
+  },
+  "order_override_frontier": {
+    "champions": [
+      "Aatrox",
+      "Annie",
+      "Aphelios",
+      "Brand",
+      "Cassiopeia",
+      "Jhin",
+      "Lux",
+      "Syndra",
+      "Varus",
+      "Vladimir",
+      "Zed"
+    ],
+    "entries": 11,
+    "reasons": {
+      "defensive_precast": 0,
+      "dps_tiebreak": 7,
+      "pending_primitive": 4,
+      "scheduling_preference": 0
+    },
+    "unclassified": []
+  },
+  "passed": true,
+  "schema_version": 1,
+  "suppression_ledger": [
+    {
+      "champion": "Syndra",
+      "consume": "Q",
+      "kind": "cc_setup",
+      "latent_reason": null,
+      "latent_states": 0,
+      "matched_states": 24,
+      "parent": "E requires Q",
+      "reason": "The detector reads E's cc_kind and fans a cc_setup edge out to every castable damage row, Q among them, which would place E first. E's stun is the sphere's consumer, never its setup; the inference has the mechanic the wrong way round.",
+      "setup": "E"
+    },
+    {
+      "champion": "Syndra",
+      "consume": "Q2",
+      "kind": "cc_setup",
+      "latent_reason": "No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_f3_rotation_all.py claimed while silently passing, moved where the audit can see it (D-84).",
+      "latent_states": 16,
+      "matched_states": 0,
+      "parent": "E requires Q2",
+      "reason": "The detector reads E's cc_kind and fans a cc_setup edge out to every castable damage row, Q among them, which would place E first. E's stun is the sphere's consumer, never its setup; the inference has the mechanic the wrong way round.",
+      "setup": "E"
+    }
+  ]
+}
