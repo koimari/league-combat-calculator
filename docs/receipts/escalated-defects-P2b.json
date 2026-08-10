@@ -1,7 +1,7 @@
 {
   "artifact": "escalated_defects",
   "slice": "P2b",
-  "escalated_in": "HEAD",
+  "escalated_in": "4aaa6d3",
   "why_this_file_exists": "The verify-P2b signoff found that unifying four readings of cc_kind onto the bus turned an out-of-vocabulary kind from a silent 'not immobilizing' into a live ValueError on four production paths. The raise itself is ruled and correct -- Phase 2's Types section rules that a cc_kind outside CC_KIND_VOCABULARY cannot enter the stream, because a misspelled kind must never author a no-op stun -- and the named-champion contract already rejects the part-authored spelling at parse time. What is not ruled, and what this slice may not fix, is the one authoring path that reaches the walk without passing that parse-time gate: a module-authored damage_events row. There the loud failure fires inside the walk as a plain ValueError, which the endpoints' own except-ValueError clauses report to the caller as a 400 bad request -- a champion module's authoring defect billed to the caller, and not the STARVED disposition the campaign's single boundary produces for the sibling condition. The fix belongs to the champion-module contract, which is outside this phase's Shape table and outside a phase ruled a pure refactor (D-90). Written down as a dated, gated artifact rather than as commit-body prose, because prose is what the next baseline re-capture absorbs.",
   "gate": "tests/test_trigger_stream.py::TestTheEscalatedDefectIsStillTracked",
   "defects": [

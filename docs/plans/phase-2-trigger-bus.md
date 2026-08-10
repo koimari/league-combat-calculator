@@ -194,6 +194,25 @@ registry projects the five hand-maintained holder name sets, so the two gates th
   product. The one place the retired predicates disagreed with **each other** — a row
   asserting a slow fact and an immobilize fact at once — is where Everlasting's rung moves,
   and it moves because a phase that unifies four readings of one string must pick one.*
+- **Three more edges the second `verify-P2b` pass found, and the one thing it found that the
+  boundary may not absorb.** The list above is the boundary; these three join it, each with its
+  own pin in the same section: Bloodsong's Expose Weakness spells its `trigger_event_id`
+  `event.event_id or None`, a third spelling beside Fimbulwinter's and Carve's; the support
+  scan's `damage` and `raw_damage` ride the same `_float` softening its `time` does, so garbage
+  no longer raises out of the scan and an infinite number no longer stacks; and the receipt
+  token — reported as having moved — did **not**, which is pinned as the property that the
+  published `cc_kind` is always the row's own token, normalised.
+  *The one that is not a boundary edge:* all three retired predicates coerced an
+  out-of-vocabulary `cc_kind` to "not immobilizing" and continued, so the four consumers P2b
+  repointed **gained a raise the walk did not have**. Keeping it is this phase's Types ruling —
+  a misspelled kind must never author a no-op stun — and the champion contract already refuses
+  the part-authored spelling at parse time, naming the champion, the entry and the kind. But a
+  module-authored `damage_events` row reaches the walk unchecked, and there the refusal is a
+  plain `ValueError` the endpoints report as a bad **request**. Closing that is a parse-time
+  rejection in `champions/engine.py`, a file in no row of this phase's Shape table and a
+  semantic hardening inside a phase D-90 rules a pure refactor, so it is escalated as
+  `docs/receipts/escalated-defects-P2b.json` with its own gate rather than left in a commit
+  body for the next re-capture to absorb.
 
 ## Shape
 
@@ -248,7 +267,12 @@ class Trigger:
     ability_instance: str     # "" when absent — Fimbulwinter's cast dedupe key
     damage: float             # mitigated; 0.0 for TAKEDOWN
     raw_damage: float         # 0.0 when the producer emitted none
-    damage_type: str          # physical | magic | true; "" for TAKEDOWN
+    damage_type: str          # physical | magic | true, enforced on DAMAGE
+                              # and on it alone; "" for TAKEDOWN.  Narrowed
+                              # at P2b for source_key's own reason: the
+                              # retired _cc_triggers accepted a control row
+                              # of any type, including the "mixed"
+                              # damage._damage_type_fields really emits
     is_ability: bool
     basic_attack: bool
     reactive: bool
