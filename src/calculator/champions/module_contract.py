@@ -45,15 +45,65 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     cast_dependencies: tuple[CastDependency, ...] = ()
 
 
+def _declared_cast_dependencies(
+    module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
+) -> tuple[CastDependency, ...]:
+    """The one declaration the module, its parser and its slot map agree on.
+
+    A packet champion may carry its declaration on the artifacts
+    ``build_packet_module`` compiled instead of restating it beside them,
+    so three carriers can hold it.  ``PACKET_SPEC`` reads its three places
+    as a chain of ``getattr`` defaults, and Python evaluates a default
+    *eagerly*: a carrier that is present but empty wins over a non-empty
+    one further down the chain and the declaration is discarded with no
+    error.  That is precisely the silent failure this campaign exists to
+    kill, so the lookup here is a survey rather than a chain — an empty
+    carrier declares nothing and therefore shadows nothing, and two
+    carriers that both declare something and disagree stop the import
+    instead of one of them quietly winning.
+
+    Raises:
+        ChampionModuleContractError: A carrier holds something other than
+            a sequence of ``CastDependency``, or two carriers disagree.
+    """
+    carriers = (
+        ("module CAST_DEPENDENCIES", module, "CAST_DEPENDENCIES"),
+        ("parse_abilities.cast_dependencies", parser, "cast_dependencies"),
+        ("SLOTS.cast_dependencies", slots, "cast_dependencies"),
+    )
+    declared = [
+        (label, getattr(carrier, attribute))
+        for label, carrier, attribute in carriers
+        if getattr(carrier, attribute, None)
+    ]
+    if not declared:
+        return ()
+
+    rows: list[tuple[str, tuple[CastDependency, ...]]] = []
+    for label, value in declared:
+        if not isinstance(value, (tuple, list)) or any(
+            not isinstance(row, CastDependency) for row in value
+        ):
+            raise ChampionModuleContractError(
+                f"{module.__name__} {label} must be a sequence of "
+                "CastDependency declarations"
+            )
+        rows.append((label, tuple(value)))
+
+    first_label, first = rows[0]
+    for label, other in rows[1:]:
+        if other != first:
+            raise ChampionModuleContractError(
+                f"{module.__name__} declares conflicting cast dependencies: "
+                f"{first_label} and {label} disagree"
+            )
+    return first
+
+
 def _cast_dependencies(
     module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
 ) -> tuple[CastDependency, ...]:
     """The module's declared ordering prerequisites, validated at import.
-
-    Read from the same three places as ``PACKET_SPEC`` — the module, then
-    the parser, then the slot map — so a packet champion can carry its
-    declaration on the artifacts ``build_packet_module`` compiled instead
-    of restating it.
 
     Both validators run against *this module's own* slot surface, never a
     global slot list: a synthetic key like Syndra's ``Q2`` is legal
@@ -66,26 +116,13 @@ def _cast_dependencies(
     champion that declares no dependency reaches no new failure mode.
 
     Raises:
-        ChampionModuleContractError: The declaration is not a tuple of
-            ``CastDependency``.
+        ChampionModuleContractError: The declaration is malformed or the
+            carriers disagree.
         CastDependencyError: One of the typed import-time failures.
     """
-    declared = getattr(
-        module,
-        "CAST_DEPENDENCIES",
-        getattr(parser, "cast_dependencies", getattr(slots, "cast_dependencies", ())),
-    )
-    if not declared:
+    dependencies = _declared_cast_dependencies(module, parser, slots)
+    if not dependencies:
         return ()
-    if not isinstance(declared, (tuple, list)) or any(
-        not isinstance(row, CastDependency) for row in declared
-    ):
-        raise ChampionModuleContractError(
-            f"{module.__name__} CAST_DEPENDENCIES must be a sequence of "
-            "CastDependency declarations"
-        )
-
-    dependencies = tuple(declared)
     slot_surface = set(slots)
     validate_cast_dependencies(
         dependencies, slot_surface=slot_surface, module=module.__name__

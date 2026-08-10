@@ -556,6 +556,99 @@ class TestTheContractCarriesDeclarations:
         assert contract.cast_dependencies == ()
 
 
+class _SlotMap(dict):
+    """A slot map that carries a declaration, as ``PacketSlotMap`` does."""
+
+    def __init__(self, slots, cast_dependencies):
+        super().__init__(slots)
+        self.cast_dependencies = cast_dependencies
+
+
+class TestAnEmptyCarrierShadowsNothing:
+    """A present-but-empty carrier may not discard a declaration.
+
+    ``getattr(a, x, getattr(b, y, ()))`` evaluates its default *eagerly*,
+    so a chain of them lets ``CAST_DEPENDENCIES = ()`` on the module win
+    over a non-empty parser declaration and throw it away with no error.
+    A packet champion would lose its declared ordering rules silently —
+    the exact failure class this campaign exists to kill.
+    """
+
+    def test_an_empty_module_attribute_keeps_the_parsers_declaration(self) -> None:
+        module = _champion_module(CAST_DEPENDENCIES=())
+        module.parse_abilities.cast_dependencies = (_dep(),)
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == (_dep(),)
+
+    def test_a_none_module_attribute_keeps_the_parsers_declaration(self) -> None:
+        module = _champion_module(CAST_DEPENDENCIES=None)
+        module.parse_abilities.cast_dependencies = (_dep(),)
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == (_dep(),)
+
+    def test_an_empty_parser_attribute_keeps_the_slot_maps_declaration(self) -> None:
+        module = _champion_module()
+        module.SLOTS = _SlotMap(module.SLOTS, (_dep(),))
+        module.parse_abilities.cast_dependencies = ()
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == (_dep(),)
+
+    def test_every_carrier_empty_is_still_no_declaration(self) -> None:
+        module = _champion_module(CAST_DEPENDENCIES=())
+        module.SLOTS = _SlotMap(module.SLOTS, ())
+        module.parse_abilities.cast_dependencies = ()
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == ()
+
+    def test_carriers_that_agree_are_one_declaration(self) -> None:
+        module = _champion_module(CAST_DEPENDENCIES=(_dep(),))
+        module.parse_abilities.cast_dependencies = (_dep(),)
+        contract = contract_from_module("Synthetic", "synthetic", module)
+        assert contract.cast_dependencies == (_dep(),)
+
+    def test_carriers_that_disagree_stop_the_import(self) -> None:
+        """No carrier quietly wins a real disagreement."""
+        module = _champion_module(CAST_DEPENDENCIES=(_dep(),))
+        module.parse_abilities.cast_dependencies = (_dep(requires="W"),)
+        with pytest.raises(ChampionModuleContractError, match="disagree"):
+            contract_from_module("Synthetic", "synthetic", module)
+
+    def test_the_disagreement_names_both_carriers(self) -> None:
+        module = _champion_module(CAST_DEPENDENCIES=(_dep(),))
+        module.SLOTS = _SlotMap(module.SLOTS, (_dep(requires="W"),))
+        with pytest.raises(ChampionModuleContractError) as caught:
+            contract_from_module("Synthetic", "synthetic", module)
+        assert "module CAST_DEPENDENCIES" in str(caught.value)
+        assert "SLOTS.cast_dependencies" in str(caught.value)
+
+    def test_a_malformed_carrier_is_named_in_the_failure(self) -> None:
+        module = _champion_module()
+        module.parse_abilities.cast_dependencies = ({"slot": "E"},)
+        with pytest.raises(
+            ChampionModuleContractError, match=r"parse_abilities\.cast_dependencies"
+        ):
+            contract_from_module("Synthetic", "synthetic", module)
+
+    def test_no_registered_champion_carries_a_shadowing_carrier(self) -> None:
+        """The population this correction was measured against (R-20)."""
+        shadowed = []
+        for name in _CUSTOM_CHAMPION_MODULES:
+            contract = get_champion_module_contract(name)
+            carriers = (
+                (contract.module, "CAST_DEPENDENCIES"),
+                (contract.parse_abilities, "cast_dependencies"),
+                (contract.slots, "cast_dependencies"),
+            )
+            present = [
+                bool(getattr(carrier, attribute))
+                for carrier, attribute in carriers
+                if hasattr(carrier, attribute)
+            ]
+            if any(present) and not all(present):
+                shadowed.append(name)
+        assert shadowed == []
+
+
 class TestTheRegistryAccessor:
     def test_an_unknown_champion_declares_nothing(self) -> None:
         assert get_champion_cast_dependencies("Not A Champion") == ()
