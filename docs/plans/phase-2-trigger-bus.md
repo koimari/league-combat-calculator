@@ -217,7 +217,12 @@ class Trigger:
     """One authored event, classified once, read by both engines."""
     kind: TriggerKind
     time: float               # finite, enforced
-    source_key: str           # "" rejected for DAMAGE and CC
+    source_key: str           # "" rejected for DAMAGE — the one stream whose
+                              # consumers dispatch on it (Phage's autos,
+                              # Bloodsong's spellblade).  Narrowed from
+                              # "DAMAGE and CC" at P2b: the live scanners
+                              # accept control rows carrying no source, and a
+                              # pure refactor may not start rejecting them
     event_id: str             # "" when the producer did not enrich (legal, capability-gated)
     attacker_id: str          # "" on a bare pair-engine row
     target_id: str            # "" when unenriched
