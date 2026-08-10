@@ -54,7 +54,19 @@
         "/coupled_scenarios/score_plain_tuple/fights/0:Aatrox/rotation/dependencies"
       ],
       "old": "<absent>",
-      "new": "seven empty ledgers — Aatrox and Malphite declare no cast dependencies",
+      "new": "seven empty ledgers — the rotation's owner declares no cast dependencies",
+      "rotation_owner_per_path": {
+        "why_this_block_exists": "A fight key names the DEFENDER, not the champion whose rotation the receipt describes: golden_snapshot.COUPLED_SCENARIOS builds each entry as _roster_request(<attacker>, enemies=(...)) and serializes one fight per enemy. An earlier revision of this row read 'Aatrox and Malphite declare no cast dependencies', which names the two enemies and not one rotation owner among them. Anyone handed that prose as the leaf's new value computes against the wrong kit.",
+        "/coupled_scenarios/catalyst_roster/fights/0:Aatrox/rotation/dependencies": "Ahri (attacker; Aatrox is the defender)",
+        "/coupled_scenarios/catalyst_roster/fights/1:Malphite/rotation/dependencies": "Ahri (attacker; Malphite is the defender)",
+        "/coupled_scenarios/cleaver_bloodsong_roster/fights/0:Aatrox/rotation/dependencies": "Jax",
+        "/coupled_scenarios/dream_maker_roster/fights/0:Aatrox/rotation/dependencies": "Lulu",
+        "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/rotation/dependencies": "Ahri",
+        "/coupled_scenarios/score_event_scan_holder/fights/0:Aatrox/rotation/dependencies": "Annie",
+        "/coupled_scenarios/score_event_view_holder/fights/0:Aatrox/rotation/dependencies": "Annie",
+        "/coupled_scenarios/score_plain_tuple/fights/0:Aatrox/rotation/dependencies": "Annie",
+        "declaring_modules": "Exactly three champion modules define CAST_DEPENDENCIES — Syndra, Zed and Brand. None of Ahri, Jax, Lulu or Annie is one, which is why every ledger on these eight paths is empty."
+      },
       "transition": "absent_to_value",
       "qualifies_under_R15": true,
       "oracle_receipt": null,
