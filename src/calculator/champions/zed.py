@@ -139,8 +139,11 @@ MODULE_COVERAGE = {
 OPTIONS: list[dict[str, Any]] = []
 
 # The revision these declarations were read from, in the shape
-# scripts/cast_dependency_audit.py resolves against the committed wiki
-# audit. It is the parent entry SOURCES publishes.
+# scripts/cast_dependency_audit.py will resolve against the committed
+# wiki audit once this phase's audit slice lands -- that script is not
+# in the tree yet, so today this string is shape-checked and pinned
+# equal to SOURCES by test, nothing more. It is the parent entry
+# SOURCES publishes.
 _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Zed@4026038"
 
 _SHADOW_MIMICS_Q_AND_E = (

@@ -109,9 +109,11 @@ class UnsourcedDependencyError(CastDependencyError):
     An empty ``reason``, an empty ``source``, or a ``source`` that is not
     ``"<wiki url>@<revision_id>"``. A free-text string checked only for
     non-emptiness would let a retired hand seed come back as four
-    plausible sentences, so the shape is checked here and the revision is
-    resolved against the committed wiki audit by
-    ``scripts/cast_dependency_audit.py``.
+    plausible sentences, so the shape is checked here.  Resolving the
+    revision itself against the committed wiki audit is the job of
+    ``scripts/cast_dependency_audit.py``, which does not exist yet — it
+    lands with this phase's audit slice, and until it does the shape
+    check is the only gate on a ``source``.
     """
 
 
