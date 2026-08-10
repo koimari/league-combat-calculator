@@ -481,7 +481,6 @@ _CONDITIONS = (
 )
 
 _CAST_SLOTS = ("Q", "Q2", "W", "E", "R")
-_PARENT_SLOT = {"Q2": "Q", "R_buff": "R", "W_frenzy": "W", "R_onhit": "R"}
 
 
 @dataclass(frozen=True)
@@ -511,11 +510,24 @@ class _Edge:
 
 
 def _slot_corpus(
-    champion_data: Mapping[str, Any], slot: str
+    champion_data: Mapping[str, Any],
+    slot: str,
+    *,
+    recast_of: str | None = None,
 ) -> dict[str, list[str]] | None:
-    """Structured row corpus for a slot (special slots fall back to parent)."""
+    """Structured row corpus for a slot, borrowing its recast parent's rows.
+
+    A recast slot (Syndra's ``Q2``) has no wiki row of its own — the
+    parent ability's rows describe both casts — so it reads the parent's
+    corpus.  ``recast_of`` comes from the parsed ability entry and from
+    nowhere else: the hand table that used to answer this by slot name
+    also claimed a parent for three synthetic non-recast slots, which is
+    exactly the guess D-11 retires.
+    """
     abilities = champion_data.get("abilities", {})
-    rows = abilities.get(slot, []) or abilities.get(_PARENT_SLOT.get(slot, slot), [])
+    rows = abilities.get(slot, []) or (
+        abilities.get(recast_of, []) if recast_of else []
+    )
     if not rows:
         return None
     out: dict[str, list[str]] = {
@@ -556,6 +568,19 @@ def _corpus_attrs(corpus: Mapping[str, list[str]]) -> str:
     return " ".join(corpus["attrs"]).lower()
 
 
+def _recast_parent(entry: Any) -> str | None:
+    """The slot a parsed ability entry is a recast of, or ``None``.
+
+    ``recast_of`` on the parsed entry is the single authority for recast
+    parentage (D-11); a slot that carries no stamp has no parent, however
+    its name reads.
+    """
+    if not isinstance(entry, Mapping):
+        return None
+    parent = entry.get("recast_of")
+    return parent if isinstance(parent, str) and parent else None
+
+
 def _is_damage_row(info: Mapping[str, Any]) -> bool:
     if float(info.get("total_raw", 0.0) or 0.0) > 0:
         return True
@@ -594,7 +619,12 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
     )  # pylint: disable=import-outside-toplevel
 
     slots = [s for s in _CAST_SLOTS if isinstance(ability_damages.get(s), Mapping)]
-    corpora = {s: _slot_corpus(champion_data, s) for s in slots}
+    corpora = {
+        s: _slot_corpus(
+            champion_data, s, recast_of=_recast_parent(ability_damages.get(s))
+        )
+        for s in slots
+    }
     corpora = {s: c for s, c in corpora.items() if c}
     if not corpora:
         return []
@@ -1015,9 +1045,17 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
 # ─────────────────────────────────────────────────────────────────────
 
 
-def detect_aoe_cap(champion_data: Mapping[str, Any], slot: str) -> int:
-    """Conservative AoE cap from the structured row fields."""
-    corpus = _slot_corpus(champion_data, slot)
+def detect_aoe_cap(
+    champion_data: Mapping[str, Any], slot: str, *, recast_of: str | None = None
+) -> int:
+    """Conservative AoE cap from the structured row fields.
+
+    A recast slot reads its parent's rows (``recast_of`` from the parsed
+    entry); a slot with no rows of its own and no recast parent — a
+    module's synthetic buff or on-hit row — caps at one, because no wiki
+    row says otherwise.
+    """
+    corpus = _slot_corpus(champion_data, slot, recast_of=recast_of)
     if not corpus:
         return 1
     fields = " ".join(corpus["fields"]).lower()
@@ -1280,7 +1318,9 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         if isinstance(ability_damages.get(s), Mapping)
     ]
     aoe = {
-        s: detect_aoe_cap(champion_data, s)
+        s: detect_aoe_cap(
+            champion_data, s, recast_of=_recast_parent(ability_damages[s])
+        )
         for s in ability_damages
         if isinstance(ability_damages[s], Mapping)
     }

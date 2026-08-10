@@ -519,6 +519,50 @@ class TestOrderableSlots:
             orderable_slots({"Q": {}, "R_buff": {"recast_of": ""}})
 
 
+class TestRecastParentageHasOneAuthority:
+    """The resolver reads ``recast_of``; no table restates it (D-11).
+
+    The retired ``_PARENT_SLOT`` map answered "whose rows describe this
+    slot?" from the slot's *name*, which linked three synthetic slots
+    that are not recasts at all to a parent the wiki never gave them.
+    """
+
+    def test_the_hand_parent_table_is_gone_from_the_resolver(self) -> None:
+        source = RESOLVER.read_text(encoding="utf-8")
+        assert "_PARENT_SLOT" not in source
+
+    def test_no_name_based_recast_edge_survives(self) -> None:
+        """The Q→Q2 fallback masked every unstamped recast slot."""
+        source = RESOLVER.read_text(encoding="utf-8")
+        assert 'add("Q", "Q2"' not in source
+        assert "add('Q', 'Q2'" not in source
+
+    def test_a_recast_slot_reads_its_parents_wiki_rows(self) -> None:
+        """Syndra's Q2 has no row of its own and keeps Q's AoE cap."""
+        from src.calculator.data_fetcher import fetch_champion_data
+        from src.calculator.rotation_resolver import detect_aoe_cap
+
+        champion = {data.get("name"): data for data in fetch_champion_data().values()}[
+            "Syndra"
+        ]
+        assert detect_aoe_cap(champion, "Q") == 5
+        assert detect_aoe_cap(champion, "Q2", recast_of="Q") == 5
+
+    def test_an_unstamped_synthetic_slot_borrows_nothing(self) -> None:
+        """Riven's R_buff is a module row, not a recast: it caps at one.
+
+        The hand table published a five-champion AoE cap for a
+        zero-damage buff slot no wiki row describes; with the table gone
+        the receipt says one, which is what the data supports.
+        """
+        from src.calculator.data_fetcher import fetch_champion_data
+        from src.calculator.rotation_resolver import detect_aoe_cap
+
+        champions = {data.get("name"): data for data in fetch_champion_data().values()}
+        assert detect_aoe_cap(champions["Riven"], "R_buff") == 1
+        assert detect_aoe_cap(champions["Briar"], "W_frenzy") == 1
+
+
 class TestExpandUserOrder:
     def test_a_live_recast_is_reinserted_after_its_parent(self) -> None:
         live = {"Q": {}, "Q2": {"recast_of": "Q"}, "W": {}, "E": {}, "R": {}}
