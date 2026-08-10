@@ -33,14 +33,17 @@ from src.calculator.cast_dependency import (
     CastDependency,
     ConflictingInferenceError,
     MissingLatentReasonError,
+    ResolvedCycleError,
     SuppressedInference,
 )
 from src.calculator.champions import get_champion_cast_order
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.rotation_resolver import (
     COMBO_TABLE,
+    _DERIVED_RULE_CACHE,
     DependencyReceipt,
     _Edge,
+    derive_champion_rule,
     detect_setup_consume_edges,
     merge_declared_edges,
     resolve_cast_order,
@@ -71,14 +74,17 @@ _OVERRIDE_CHAMPIONS = [
 #   - Varus: R applies Blight stacks, so the data says R→Q, but the seed
 #     puts the Blight DETONATOR Q first (the auto-applied stacks ride Q;
 #     R's own stacks land later in the burst).
-#   - Syndra: E's authored stun makes the generic cc-setup fan-out say
-#     E→(Q, Q2, W, R), but the stun only exists by scattering a sphere Q
-#     provides — the dependency runs Q→E, so the seed opens Q and keeps
-#     W/R inside the stun window.
+# Syndra's two entries are gone (D-84): E's authored stun made the generic
+# cc-setup fan-out say E→Q, and the seed's judgment was written down here
+# where nothing could check it. Her module now DECLARES that E requires the
+# sphere and nests the suppression that says the inference reads the
+# mechanic backwards, so the merge drops the edge and there is no
+# exception left to document. The ("E","Q2") half was vacuous besides —
+# no such edge exists, which is the fact her suppression's latent_reason
+# now carries where the audit can see it.
 _OVERRIDE_SEED_EXCEPTIONS = {
     "Cassiopeia": {("W", "E")},
     "Varus": {("R", "Q")},
-    "Syndra": {("E", "Q"), ("E", "Q2")},
 }
 
 # Level x build reference matrix (mirrors scripts/golden_snapshot.py).
@@ -193,9 +199,16 @@ def _resolved(champion_data, parsed):
 
 
 def _detect_edges(champion_name, champion_data, parsed):
-    """Re-run the resolver's own edge detector (mirrors the derive path)."""
-    return detect_setup_consume_edges(
-        champion_name, parsed, champion_data, _slot_options(champion_name)
+    """The ordering constraints the derivation runs under.
+
+    Reads ``resolved_edges`` — the resolver's own detect→merge surface —
+    so a suite can never assert against a set of edges production does
+    not use.
+    """
+    return list(
+        resolved_edges(
+            champion_name, parsed, champion_data, _slot_options(champion_name)
+        )[0]
     )
 
 
@@ -320,6 +333,11 @@ class TestEdgeInvariants:
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
             for edge in _detect_edges(name, data, parsed):
+                if edge.origin == "declared":
+                    assert (
+                        edge.kind in DEPENDENCY_KINDS
+                    ), f"{name}: declared edge wears an inferred kind {edge.kind}"
+                    continue
                 observed.add(edge.kind)
                 assert edge.kind in allowed, f"{name}: unknown edge kind {edge.kind}"
                 assert (
@@ -795,3 +813,120 @@ class TestResolvedEdgesIsTheOneSurface:
                 name, parsed, data, _slot_options(name)
             )
             assert receipt == DependencyReceipt()
+
+
+class TestTheDerivationReadsDeclarations:
+    """The merge is what ``derive_champion_rule`` orders against."""
+
+    def test_syndra_derives_her_seed_order_from_the_declaration(
+        self, champion_by_name
+    ) -> None:
+        """Q, Q2, E, W, R — the order her hand seed pins, now derived.
+
+        Without the declaration the cc-setup fan-out opens with a
+        sphere-less E; this is the retirement candidate's proof (D-89),
+        asserted while the seed is still live (P5-e).
+        """
+        data = champion_by_name["Syndra"]
+        for level in (11, 18):
+            for splinters in (40, 60, 119, 120):
+                parsed = _parse(
+                    data, level, (), {}, champion_options={"splinters": splinters}
+                )
+                rule = derive_champion_rule(
+                    "Syndra", parsed, data, get_champion_cast_order("Syndra")
+                )
+                assert list(rule.order) == [
+                    "Q",
+                    "Q2",
+                    "E",
+                    "W",
+                    "R",
+                ], f"L{level} at {splinters} splinters derives {rule.order}"
+
+    def test_below_forty_splinters_she_derives_the_three_slot_order(
+        self, champion_by_name
+    ) -> None:
+        data = champion_by_name["Syndra"]
+        for splinters in (0, 39):
+            parsed = _parse(data, 18, (), {}, champion_options={"splinters": splinters})
+            rule = derive_champion_rule(
+                "Syndra", parsed, data, get_champion_cast_order("Syndra")
+            )
+            assert list(rule.order) == ["Q", "E", "W", "R"]
+
+    def test_the_declaring_champions_carry_their_receipt_on_the_rule(
+        self, champion_by_name
+    ) -> None:
+        for name in ("Syndra", "Zed", "Brand"):
+            data = champion_by_name[name]
+            parsed = _parse(data, 11, (), {})
+            rule = derive_champion_rule(
+                name, parsed, data, get_champion_cast_order(name)
+            )
+            assert rule.dependencies is not None
+            assert rule.dependencies.active, f"{name} derived with no active row"
+
+    def test_a_non_declaring_champion_carries_an_empty_receipt(
+        self, champion_by_name
+    ) -> None:
+        data = champion_by_name["Ahri"]
+        parsed = _parse(data, 11, (), {})
+        rule = derive_champion_rule(
+            "Ahri", parsed, data, get_champion_cast_order("Ahri")
+        )
+        assert rule.dependencies == DependencyReceipt()
+
+    def test_a_declared_cycle_in_a_live_parse_raises(
+        self, champion_by_name, monkeypatch
+    ) -> None:
+        """A declaring champion never falls back from a cycle (D-85).
+
+        Ahri declares nothing; with two declarations that oppose each
+        other in a parse where both slots are live, no order satisfies
+        the module, and serving the base order would be exactly the
+        silent fallback this phase exists to end.
+        """
+        from src.calculator import champions as champions_module
+
+        cycle = (
+            CastDependency(
+                slot="W",
+                requires="R",
+                kind="damage_enabler",
+                reason="synthetic",
+                source="https://wiki.leagueoflegends.com/en-us/Ahri@4024662",
+            ),
+            CastDependency(
+                slot="R",
+                requires="W",
+                kind="damage_enabler",
+                reason="synthetic",
+                source="https://wiki.leagueoflegends.com/en-us/Ahri@4024662",
+            ),
+        )
+        monkeypatch.setattr(
+            champions_module, "get_champion_cast_dependencies", lambda name: cycle
+        )
+        _DERIVED_RULE_CACHE.clear()
+        data = champion_by_name["Ahri"]
+        parsed = _parse(data, 11, (), {})
+        try:
+            with pytest.raises(ResolvedCycleError) as caught:
+                derive_champion_rule(
+                    "Ahri", parsed, data, get_champion_cast_order("Ahri")
+                )
+        finally:
+            _DERIVED_RULE_CACHE.clear()
+        assert "declared" in str(caught.value)
+
+    def test_the_same_cycle_without_a_declaration_still_falls_back(
+        self, champion_by_name
+    ) -> None:
+        """The 170 keep the silent fallback — that is what D-85 buys."""
+        data = champion_by_name["Ahri"]
+        parsed = _parse(data, 11, (), {})
+        rule = derive_champion_rule(
+            "Ahri", parsed, data, get_champion_cast_order("Ahri")
+        )
+        assert rule.derived and rule.order

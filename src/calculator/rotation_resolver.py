@@ -57,6 +57,7 @@ from .cast_dependency import (
     CastDependency,
     ConflictingInferenceError,
     MissingLatentReasonError,
+    ResolvedCycleError,
     active_dependencies,
 )
 from .damage import DEFAULT_CAST_ORDER, effective_cooldown
@@ -95,6 +96,10 @@ class ComboRule:
         derived: ``True`` when the rule was produced algorithmically by
             :func:`derive_champion_rule` (F3), ``False`` for the
             hand-verified seeds in :data:`COMBO_TABLE`.
+        dependencies: What the declared-vs-inferred merge did, for the
+            public receipt.  ``None`` on a hand seed, which never ran a
+            merge; an empty :class:`DependencyReceipt` on the 170
+            champions that declare nothing.
     """
 
     champion: str
@@ -105,6 +110,7 @@ class ComboRule:
     consume: tuple[str, ...] = ()
     aoe: dict[str, int] = field(default_factory=dict)
     derived: bool = False
+    dependencies: DependencyReceipt | None = None
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -1542,6 +1548,7 @@ def _fit_rule_to_fight(
         consume=cached.consume,
         aoe=dict(cached.aoe),
         derived=True,
+        dependencies=cached.dependencies,
     )
 
 
@@ -1598,6 +1605,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     )
 
     from .champions import (  # pylint: disable=import-outside-toplevel
+        get_champion_cast_dependencies,
         get_champion_option_rotation,
         get_champion_options_meta,
     )
@@ -1649,9 +1657,11 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         elif role == "unsupported":
             option_receipts.append(f"option {key} (unsupported rotation semantics)")
 
-    edges = detect_setup_consume_edges(
-        champion_name, ability_damages, champion_data, slot_options
+    declarations = get_champion_cast_dependencies(champion_name)
+    merged, dependencies = resolved_edges(
+        champion_name, ability_damages, champion_data, slot_options, declarations
     )
+    edges = list(merged)
 
     if not edges:
         unclassified = [
@@ -1704,6 +1714,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             consume=(),
             aoe=aoe,
             derived=True,
+            dependencies=dependencies,
         )
         rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
         _DERIVED_RULE_CACHE[cache_key] = rule
@@ -1716,6 +1727,19 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         return (0 if outgoing.get(s) else 1, base_idx.get(s, 99))
 
     stable = _kahn_order(base, edges, tie_base)
+    if stable is None and declarations:
+        # A declaring champion's cycle is a disagreement between a module
+        # and the interpreter that a human must settle — falling back
+        # would serve an order no rule derived (D-85 gates the raise on
+        # the declaration, so the 170 non-declaring champions keep the
+        # silent fallback below).
+        raise ResolvedCycleError(
+            f"{champion_name}: the declared and inferred edges form a cycle "
+            "in this parse — "
+            + "; ".join(f"{e.setup}->{e.consume} ({e.origin} {e.kind})" for e in edges)
+            + ". A declaration and the detector disagree about the kit's "
+            "order; settle it in the module rather than falling back."
+        )
     if stable is None:
         # cycle in the detected edges — fall back to the certified order and
         # flag the ambiguity for the verification swarm.
@@ -1735,6 +1759,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             consume=tuple(sorted({e.consume for e in edges})),
             aoe=aoe,
             derived=True,
+            dependencies=dependencies,
         )
         rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
         _DERIVED_RULE_CACHE[cache_key] = rule
@@ -1801,6 +1826,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         consume=consume,
         aoe=aoe,
         derived=True,
+        dependencies=dependencies,
     )
     rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
     _DERIVED_RULE_CACHE[cache_key] = rule

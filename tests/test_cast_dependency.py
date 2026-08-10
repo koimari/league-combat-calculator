@@ -758,6 +758,28 @@ class TestNonDeclaringChampionsReachNoNewCode:
         assert len(raises) == 2, "the merge's two resolve-time failures"
         assert min(raises) > guard
 
+    def test_the_derivation_gates_its_cycle_failure_on_a_declaration(self) -> None:
+        """A cycle raises for a declarer and falls back for everyone else.
+
+        The fallback is the pre-campaign behaviour and the 170 keep it;
+        the raise is reachable only from inside a branch that tested the
+        declarations, which this reads out of the AST rather than trusting.
+        """
+        function = _function(RESOLVER, "derive_champion_rule")
+        raises = [node for node in ast.walk(function) if isinstance(node, ast.Raise)]
+        assert len(raises) == 1, "the derivation has exactly one failure"
+        guarded = [
+            node
+            for node in ast.walk(function)
+            if isinstance(node, ast.If)
+            and any(
+                isinstance(name, ast.Name) and name.id == "declarations"
+                for name in ast.walk(node.test)
+            )
+            and any(raises[0] in ast.walk(statement) for statement in node.body)
+        ]
+        assert guarded, "the cycle raise is not gated on a declaration (D-85)"
+
     def test_the_packet_compiler_gates_its_validation_behind_a_declaration(
         self,
     ) -> None:
