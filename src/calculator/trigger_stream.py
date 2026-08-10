@@ -1036,6 +1036,24 @@ def _float(value: Any) -> float:
     return parsed if math.isfinite(parsed) else 0.0
 
 
+def _sequence(value: Any) -> int:
+    """A row's ordinal, with an absent, missing or unparsable one as -1.
+
+    ``0`` is a real sequence and the commonest one there is: both of
+    ``damage._ordered_damage_events``' builders number their rows from
+    zero, so every ledger's first row carries it.  It therefore cannot
+    share a spelling with the absent marker, which is what folding the
+    parse through ``... or -1`` did.
+    """
+    if value is None:
+        return -1
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return -1
+    return int(parsed) if math.isfinite(parsed) else -1
+
+
 def event_triggers(
     row: Mapping[str, Any], *, kinds: frozenset[TriggerKind] = _ROW_KINDS
 ) -> tuple[Trigger, ...]:
@@ -1067,7 +1085,7 @@ def event_triggers(
         "event_id": str(row.get("_event_id", "") or ""),
         "attacker_id": str(row.get("attacker", "") or ""),
         "target_id": str(row.get("target", "") or ""),
-        "sequence": int(_float(row.get("sequence", -1)) or -1),
+        "sequence": _sequence(row.get("sequence")),
         "ability_instance": str(row.get("ability_instance", "") or ""),
         "damage": max(0.0, _float(row.get("damage"))),
         "raw_damage": max(0.0, _float(row.get("raw_damage"))),

@@ -332,6 +332,28 @@ def _control_rows():
             yield _row(**({"cc_kind": kind} if kind else {}), **marks)
 
 
+def test_sequence_zero_is_a_sequence_and_not_an_absent_one():
+    """The ledger's first row is numbered zero, so zero has to survive.
+
+    P2a spelled the parse ``int(_float(row.get("sequence", -1)) or -1)``,
+    and ``0.0 or -1`` is ``-1``: every ledger's first row arrived on the bus
+    carrying the absent marker.  Latent — no consumer reads
+    ``Trigger.sequence`` today — but it is a field the bus publishes, and
+    the control below is the ledger numbering it has to agree with.
+    """
+    assert ts.event_triggers(_row(sequence=0))[0].sequence == 0
+    assert ts.event_triggers(_row(sequence=7))[0].sequence == 7
+    assert ts.event_triggers(_row(sequence="3"))[0].sequence == 3
+    # Absent, explicitly null, and unparsable all mean "this row carries no
+    # ordinal", which is the one thing -1 is for.
+    assert ts.event_triggers(_row())[0].sequence == -1
+    assert ts.event_triggers(_row(sequence=None))[0].sequence == -1
+    assert ts.event_triggers(_row(sequence="third"))[0].sequence == -1
+    assert ts.event_triggers(_row(sequence=float("inf")))[0].sequence == -1
+    ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    assert "\n    sequence = 0\n" in ledger
+
+
 def test_classification_agrees_with_the_vocabulary_it_replaces():
     """The bus predicate answers exactly what ``ability_spec``'s does.
 
