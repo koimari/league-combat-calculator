@@ -382,8 +382,48 @@ its red is reproducible on demand rather than remembered (R-05).
   boundary in `src/app.py`, allowlisted by source assertion (D-25).
 - `pipeline.py` imports no symbol from `item_support_effects`; `trigger_stream`'s only
   intra-package import is `ability_spec`; the package import graph is still acyclic.
-- `tests/test_item_support_effects.py` and `tests/test_syndra.py` are byte-identical to their
-  pre-phase contents at every commit — behaviour is pinned by the existing suites.
+- `tests/test_syndra.py` is byte-identical to its pre-phase contents at every commit, and
+  `tests/test_item_support_effects.py` moves **only** where it quotes `src/` text this phase's
+  own Shape re-points — behaviour is pinned by the existing suites, and every behavioural test
+  in both files is untouched.
+
+  **Amended after the `verify-P2b` pass, which found the original clause not discharged.** It
+  read "`tests/test_item_support_effects.py` and `tests/test_syndra.py` are byte-identical to
+  their pre-phase contents at every commit", and that is a claim the phase's own Shape table
+  makes unwritable — flagged here as a plan-text change by an implementation lane, in the
+  criterion itself, so the next verifier adjudicates the amendment instead of inheriting it
+  silently. `test_syndra.py`'s half was always writable and holds: blob `7a6e46b` at the
+  pre-phase tip and at every commit since. The other half could never hold, for two independent
+  reasons and at two different slices:
+
+  *At P2b.* Shape rules that `pipeline.py`'s tuple gate reads `tuple_incapable_items()`, while
+  the pre-phase file asserts the literal string `and not has_event_view_support_items(items)`
+  appears in `pipeline.py`, and asserts the literal `_trigger_event_id=event.get("_event_id")`
+  appears in Everlasting's branch — the exact spellings P2b is chartered to replace. A source
+  assertion quoting text a slice rewrites cannot survive the slice; either the assertion moves
+  or the ruling does.
+
+  *At P2c.* The same file names four symbols on this phase's own **Retired symbols** list —
+  `EVENT_VIEW_SUPPORT_ITEMS` (3 occurrences), `has_event_scan_support_items` (4),
+  `has_event_view_support_items` (2) and `CC_TRIGGER_ITEMS` (1) — so the commit that deletes
+  them must move the file again. Byte-identity and the deletion cannot both happen.
+
+  So the clause now demands more than identity, and the deviation set is enumerated by a command
+  rather than recalled:
+
+  ```bash
+  git rev-list 146a69c..HEAD | while read -r c; do \
+    printf '%s %s\n' "$c" "$(git rev-parse --short "$c":tests/test_item_support_effects.py)"; done
+  ```
+
+  Every blob change it reports must be (a) confined to source-assertion **literals and
+  docstrings** inside `TestEventViewTupleGate`, (b) disclosed in its own commit body, and (c)
+  accompanied by no change to any test that executes calculator behaviour. Run over the phase to
+  date the set is two: `44e10ea` (`4afce97` → `54c6b32`, the Everlasting link literal) and
+  `a966a99` (`54c6b32` → `25fd763`, the pipeline gate literal), three hunks in total, both
+  disclosed in their bodies, no behavioural test touched. The one thing the original clause was
+  really protecting — that this phase pins nothing new by editing the suite that already pins it
+  — is what (c) states directly.
 - Every commit shows zero golden and zero coupled-golden diffs, with all four fingerprint
   families, the residual, the winners and the scores identical to the Phase 0 exit measurement
   ([runbook](silent-failure-runbook.md): R-11, R-13, R-24…R-29). No golden re-capture happens in
