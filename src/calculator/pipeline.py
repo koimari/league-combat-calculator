@@ -32,7 +32,7 @@ from .damage import (
 from . import item_effects
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
-from .item_support_effects import has_event_view_support_items
+from .trigger_stream import holders_in, tuple_incapable_items
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
     AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
@@ -1167,10 +1167,11 @@ def run_fight(
         # (Imperial Mandate, Fimbulwinter, ...) and Echoes of Helia's raw
         # damage sum — cannot read the positional tuple rows; keep dict rows
         # so their scan sees the same events the receipt path enriches
-        # (issue #169).  This is the same predicate the enriched-view gate in
-        # ``participant_timeline`` consults, so one predicate answers the
-        # tuple question on both paths (D-01).
-        and not has_event_view_support_items(items)
+        # (issue #169).  ``tuple_incapable_items()`` is that set derived from
+        # the capabilities themselves — every holder declaring a stream the
+        # bus parses off raw rows — so the question is answered by the
+        # declarations rather than by a list kept beside them (D-01).
+        and not holders_in(items, tuple_incapable_items())
         # The Collector's execute rides per-event threshold stamps that the
         # tuple schema cannot carry; the engine stays fail-closed for the
         # item by keeping dict rows, whose stamps the compiled walk then

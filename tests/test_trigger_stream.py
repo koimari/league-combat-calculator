@@ -932,10 +932,7 @@ LEGACY_NAME_SET_SITES = {
         "src/calculator/damage.py",
         "src/calculator/item_support_effects.py",
     ],
-    "has_event_view_support_items": [
-        "src/calculator/item_support_effects.py",
-        "src/calculator/pipeline.py",
-    ],
+    "has_event_view_support_items": ["src/calculator/item_support_effects.py"],
 }
 
 

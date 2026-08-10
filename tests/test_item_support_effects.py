@@ -985,9 +985,17 @@ class TestEventViewTupleGate:
     """One predicate answers the tuple question on both paths (D-01)."""
 
     def test_the_pipeline_tuple_gate_consults_the_event_view_predicate(self):
-        """The score-only gate and the enriched-view gate name one predicate."""
+        """The score-only gate and the enriched-view gate name one predicate.
+
+        P2b re-points that predicate at its derivation: the gate now reads
+        ``tuple_incapable_items()``, whose membership is asserted equal to
+        ``EVENT_VIEW_SUPPORT_ITEMS`` item for item in
+        ``tests/test_trigger_stream.py`` until P2c deletes the hand set.  The
+        claim C1 landed is unchanged — the pre-correction spelling is still
+        forbidden here.
+        """
         body = Path(pipeline.__file__).read_text(encoding="utf-8")
-        assert "and not has_event_view_support_items(items)" in body
+        assert "and not holders_in(items, tuple_incapable_items())" in body
         assert "has_event_scan_support_items" not in body
 
     def test_the_scan_predicate_keeps_no_callers_in_src(self):
