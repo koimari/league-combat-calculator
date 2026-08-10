@@ -233,20 +233,71 @@ class TestDerivedPathRotations:
     the rationale, which a hand seed's prose never carried; the others
     were seeds the derivation already reproduced, held only until a
     deletion commit proved it on both baselines (``pending_primitive``).
+
+    The rows pin the receipt's whole ordering projection — ``cast_order``,
+    ``setup``, ``consume`` and ``aoe`` — because a retirement moves more of
+    it than the order.  ``order`` is what the engine executes; the other
+    four are published beside it through ``build_rotation_receipt`` and
+    reach the public API, and for Aatrox, Jhin and Aphelios no numeric gate
+    can see them at all: none is a coupled attacker, and the pair snapshot
+    holds no rotation receipt.  A seed hand-listed these fields; a derived
+    rule computes them, so each retirement moved them and the moves are
+    recorded in ``_SEED_PUBLISHED`` rather than left to be rediscovered.
     """
 
+    # What each retired seed published, for the fields the derivation now
+    # computes.  Kept beside the live expectations so the delta a retirement
+    # caused is legible instead of implicit: the derivation reads its AoE
+    # caps from the structured targeting rows and its setup/consume sets
+    # from the edges it actually ordered against, where the seed carried
+    # whatever its author wrote down.  None of these deltas moves a damage
+    # number — ``aoe`` weights the DPS tie-break by ``min(target_count,
+    # cap)`` and the derivation ranks at ``target_count=1``, so every cap
+    # collapses to 1 there, and ``setup``/``consume`` are receipt fields no
+    # engine reads back.
+    _SEED_PUBLISHED = {
+        "Syndra": {
+            "setup": ["Q"],
+            "consume": ["E"],
+            "aoe": {"E": 5},
+            "moved": {"setup", "consume", "aoe"},
+        },
+        "Aatrox": {
+            "setup": ["R"],
+            "consume": [],
+            "aoe": {"Q": 5, "W": 2},  # W's hand-written cap of 2 becomes 1
+            "moved": {"consume", "aoe"},
+        },
+        "Jhin": {
+            "setup": [],
+            "consume": ["R"],
+            "aoe": {"Q": 4, "E": 5},  # Q's hand-written cap of 4 becomes 5
+            "moved": {"consume", "aoe"},
+        },
+        "Aphelios": {
+            "setup": ["Q", "W"],
+            "consume": ["R"],
+            "aoe": {"R": 5, "Q": 5},  # gains W and passive at 1
+            "moved": {"setup", "consume", "aoe"},
+        },
+    }
+
     @pytest.mark.parametrize(
-        ("champion", "order", "aoe", "fragments"),
+        ("champion", "order", "setup", "consume", "aoe", "fragments"),
         [
             (
                 "Syndra",
                 ["Q", "Q2", "E", "W", "R"],
+                ["E", "Q", "Q2"],
+                ["E", "Q2", "R", "W"],
                 {"Q": 5, "Q2": 5, "W": 5, "E": 5, "R": 1, "passive": 1},
                 ("sphere", "stun", "cc_enabler", "@4024662"),
             ),
             (
                 "Aatrox",
                 ["R", "Q", "W"],
+                ["R"],
+                ["Q", "W"],
                 {"Q": 5, "W": 1, "R": 1, "passive": 1},
                 ("stat_buff(bonus_attack_damage)", "amplifies ability damage"),
             ),
@@ -254,36 +305,69 @@ class TestDerivedPathRotations:
             # his kit detects no setup/consume edge at all, so the derivation
             # keeps the certified order and SAYS it found no signal.  The
             # order is the seed's; the claim behind it is not, which is the
-            # honest half of retiring a seed nothing could check.
+            # honest half of retiring a seed nothing could check.  Its
+            # ``consume=("R",)`` went with the claim: there is no edge to
+            # consume anything, so the derived sets are empty.
             (
                 "Jhin",
                 ["Q", "W", "E", "R"],
+                [],
+                [],
                 {"Q": 5, "W": 1, "E": 5, "R": 1, "passive": 1},
                 ("no detectable setup/consume signal", "kept exactly as reviewed"),
             ),
             # Aphelios is Jhin's case again: the weapon-swap story his seed
             # told is a module OPTION, not a parsed setup/consume atom, so
-            # the derivation keeps the certified order and names the absence.
+            # the derivation keeps the certified order and names the absence
+            # — and publishes empty setup/consume for the same reason.
             (
                 "Aphelios",
                 ["Q", "W", "R"],
+                [],
+                [],
                 {"Q": 5, "W": 1, "R": 5, "passive": 1},
                 ("no detectable setup/consume signal", "aphelios_main_weapon"),
             ),
         ],
     )
     def test_the_derivation_reproduces_the_order_the_seed_pinned(
-        self, champion, order, aoe, fragments, champion_by_name
+        self, champion, order, setup, consume, aoe, fragments, champion_by_name
     ) -> None:
         rotation = _run(champion_by_name[champion])["rotation"]
         assert rotation["cast_order"] == order
         assert rotation["order"][: len(order)] == order
+        assert rotation["setup"] == setup
+        assert rotation["consume"] == consume
         assert rotation["aoe"] == aoe
         rationale = rotation["rationale"].lower()
         for fragment in fragments:
             assert (
                 fragment.lower() in rationale
             ), f"{champion} rationale should mention {fragment!r}: {rationale}"
+
+    @pytest.mark.parametrize("champion", ["Syndra", "Aatrox", "Jhin", "Aphelios"])
+    def test_the_published_projection_moved_off_the_seed(
+        self, champion, champion_by_name
+    ) -> None:
+        """Each retirement moved a published field, and this says which.
+
+        A retirement is allowed to move these — they are the derivation's
+        own account of what it ordered against, and the seed's were hand
+        entries.  What is not allowed is moving them invisibly, which is
+        what happens when the only pins are on ``order``.
+        """
+        rotation = _run(champion_by_name[champion])["rotation"]
+        seed = self._SEED_PUBLISHED[champion]
+        moved = {
+            field
+            for field in ("setup", "consume", "aoe")
+            if rotation[field] != seed[field]
+        }
+        assert moved == seed["moved"], (
+            f"{champion}'s derived rotation moves {sorted(moved)} off its "
+            f"seed, not {sorted(seed['moved'])} — record the move rather "
+            "than letting a published field drift unrecorded"
+        )
 
     @pytest.mark.parametrize("champion", ["Syndra", "Aatrox", "Jhin", "Aphelios"])
     def test_the_rule_is_derived_and_carries_no_override_reason(
