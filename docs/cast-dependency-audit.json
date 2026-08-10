@@ -274,16 +274,15 @@
       "Cassiopeia",
       "Jhin",
       "Lux",
-      "Syndra",
       "Varus",
       "Vladimir",
       "Zed"
     ],
-    "entries": 11,
+    "entries": 10,
     "reasons": {
       "defensive_precast": 0,
       "dps_tiebreak": 7,
-      "pending_primitive": 4,
+      "pending_primitive": 3,
       "scheduling_preference": 0
     },
     "unclassified": []

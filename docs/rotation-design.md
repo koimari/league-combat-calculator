@@ -168,8 +168,11 @@ the data-driven, honest fallback — not a hidden combo database.
 
 `CAST_ORDER_OVERRIDES` (renamed from `COMBO_TABLE`) holds the hand-verified
 seeds — Cassiopeia, Varus, Brand, Vladimir, Aatrox, Jhin, Annie, Lux, Zed,
-Aphelios, Syndra.  The resolver checks the table FIRST; the derivation
-never touches them.  Every entry carries an `override_reason` from the
+Aphelios.  The resolver checks the table FIRST; the derivation
+never touches them.  Syndra is no longer among them: her module declares
+`E requires Q` and `E requires Q2`, the derivation reproduces the order the
+seed pinned, and the seed retired against that declaration (D-89) — which
+is the only ground on which a seed may be retired.  Every entry carries an `override_reason` from the
 closed `ORDER_OVERRIDE_REASONS` set (`scheduling_preference`,
 `dps_tiebreak`, `defensive_precast`, `pending_primitive`), so "why is
 this order still held by hand?" is a countable field rather than a claim

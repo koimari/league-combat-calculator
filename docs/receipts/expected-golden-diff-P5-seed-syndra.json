@@ -1,0 +1,240 @@
+{
+ "slice": "P5-seed-syndra",
+ "decisions": [
+  "D-89",
+  "P5-e"
+ ],
+ "what_landed": "CAST_ORDER_OVERRIDES[\"Syndra\"] is deleted. Her order now comes from champions/syndra.py's CAST_DEPENDENCIES (E requires Q, E requires Q2) through the declared-vs-inferred merge, which is the only ground the campaign accepts for retiring a hand seed: the declaration reproduces the order the seed pinned.",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "rule": "R-17/R-32/D-97 -- no baseline moves inside this commit"
+ },
+ "positive_control": {
+  "rule": "Phase 5 criterion 7 + R-05",
+  "recorded_at": "docs/receipts/campaign-fingerprints.json -> demonstrated_red.P5_syndra_seed_positive_control",
+  "why": "Zero pair-golden diffs is evidence only if the pair baseline can see this champion's cast order at all. The control perturbs it and the compare goes red; the count and the throwaway commit's sha live in the fingerprints receipt and in this slice's commit body."
+ },
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": true,
+  "rule": "R-20 second half: the count is not readable off the pre-change tree by inspection, because a derived rule publishes receipt keys a hand seed does not. The population is therefore the path-prefix-bounded set enumerated from the committed baselines before the first src/ edit, and any occurrence outside it stops the slice.",
+  "method": "Walked `git show HEAD:scripts/golden_baseline.json` and `git show HEAD:scripts/golden_coupled_baseline.json` -- the committed artifacts, not the working tree. Syndra is the rotation owner of exactly three coupled fights that derive an order (syndra_derived_order_{39,60,120}/fights/manual_target); the three syndra_custom_order_* fights supply their own cast_order and never consult a rule, and no other coupled scenario has Syndra as its attacker (the fight key names the defender). In the pair baseline she owns two sections.",
+  "pair_golden": {
+   "champion_baselines/Syndra": 167,
+   "registered_champion_fights/Syndra": 124,
+   "predicted_qualifying_leaves": 0,
+   "measured_qualifying_leaves": 0,
+   "why_zero_is_predictable_here": "The pair snapshot holds no rotation receipt -- only stats, parsed abilities and breakdown totals -- so it moves only if the ORDER moves. The declaration derives the seed's order, so nothing moves; and the positive control proves the section is not merely blind."
+  },
+  "coupled_golden": {
+   "bounded_by_prefix": [
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/"
+   ],
+   "committed_leaves_under_those_prefixes": 62,
+   "measured_qualifying_leaves": 64,
+   "occurrences_outside_the_population": 0
+  }
+ },
+ "expected_diff_paths": {
+  "golden": [],
+  "coupled_golden": [
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/Q",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/Q2",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/R",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/W",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/passive",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/consume[1]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/consume[2]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/consume[3]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/rationale",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[0]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[1]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[2]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[0]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[1]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[2]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[3]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[4]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[5]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[6]",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[7]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/Q",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/Q2",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/R",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/W",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/passive",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[1]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[2]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[3]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[4]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/consume[1]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/consume[2]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/consume[3]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/rationale",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[0]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[1]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[2]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[0]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[1]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[2]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[3]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[4]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[5]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[6]",
+   "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[7]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/Q",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/Q2",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/R",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/W",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/passive",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/consume[1]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/consume[2]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/consume[3]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/rationale",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[0]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[1]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[2]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[0]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[1]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[2]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[3]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[4]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[5]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[6]",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[7]"
+  ],
+  "coupled_exact": {}
+ },
+ "what_did_not_move": {
+  "claim": "No number the engine computed moved, in either jurisdiction.",
+  "evidence": [
+   "scripts/golden_baseline.json: `compare` reports 'snapshot identical'.",
+   "scripts/golden_coupled_baseline.json: every differing leaf is under one of the three prefixes above and inside the `rotation` receipt. cast_timeline, damage_events, breakdown, total_damage, resource_*, champion_stats and the whole `combat` block are byte-identical, including `rotation/order` -- the EXECUTED order -- on all three scenarios."
+  ]
+ },
+ "oracle_receipts_required": [
+  {
+   "paths": [
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[1]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[2]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[3]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[4]"
+   ],
+   "old": "the seed's advertised order Q, Q2, E, W, R",
+   "new": "the derived order restricted to the slots this parse holds: Q, E, W, R",
+   "transition": "text_change and value_to_absent",
+   "qualifies_under_R15": true,
+   "oracle_receipt": null,
+   "scenario": "syndra_derived_order_39",
+   "reading": "Only the 39-splinter scenario moves. Q's second charge arrives at 40 Splinters of Wrath, so Q2 is not in that parse -- the seed advertised a slot the kit did not have, and the derived rule advertises the live slots. `rotation/order`, the executed sequence, is unchanged at Q, E, W, R and the fight's numbers with it. At 60 and 120 splinters cast_order does not move at all: the derivation returns Q, Q2, E, W, R, which is the seed verbatim."
+  },
+  {
+   "paths": [
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/rationale",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[0]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[1]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[2]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[3]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[4]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[5]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[6]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[7]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/rationale",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[0]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[1]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[2]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[3]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[4]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[5]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[6]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[7]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/rationale",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[0]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[1]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[2]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[3]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[4]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[5]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[6]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[7]"
+   ],
+   "old": "the hand seed's prose and its four `sources` lines",
+   "new": "the merge's own account: both declarations with their kind, reason and wiki revision, the recast atom, the two surviving cc_setup fan-out edges, and the DPS-ranking sentence",
+   "transition": "text_change and absent_to_value",
+   "qualifies_under_R15": true,
+   "oracle_receipt": null,
+   "reading": "This is the retirement's whole point: the seed's justification was prose no machine could check, and the derived rationale cites https://wiki.leagueoflegends.com/en-us/Syndra@4024662 -- the revision the declaration was read from, resolved against the committed wiki audit by scripts/cast_dependency_audit.py. No number is stated in either value."
+  },
+  {
+   "paths": [
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/consume[1]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/consume[2]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/consume[3]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[0]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[1]",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[2]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/consume[1]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/consume[2]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/consume[3]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[0]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[1]",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/setup[2]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/consume[1]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/consume[2]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/consume[3]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[0]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[1]",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[2]"
+   ],
+   "old": "the seed's hand-written setup=[Q], consume=[E]",
+   "new": "the merged edge set's endpoints",
+   "transition": "text_change and absent_to_value",
+   "qualifies_under_R15": true,
+   "oracle_receipt": null,
+   "reading": "`setup`/`consume` are the machine-readable projection of the edges the derivation ordered against, and a derived rule reports every edge it used where the seed reported the one its author wrote down. They are UI receipt fields; no engine reads them back."
+  },
+  {
+   "paths": [
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/Q",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/Q2",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/R",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/W",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/passive",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/Q",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/Q2",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/R",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/W",
+    "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/passive",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/Q",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/Q2",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/R",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/W",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/aoe/passive"
+   ],
+   "old": "<absent> -- the seed hand-listed aoe={\"E\": 5} and nothing else",
+   "new": "the derivation's own per-slot caps, read from the structured targeting rows (E stays 5 and does not appear here)",
+   "transition": "absent_to_value",
+   "qualifies_under_R15": true,
+   "oracle_receipt": null,
+   "reading": "`aoe` weights the DPS tie-break by min(roster target count, cap) and is published to the UI as a per-slot target cap. Every coupled Syndra scenario is single-target, so the weight is 1 everywhere and no number moves -- which the unchanged damage leaves demonstrate rather than assume. This is the same map the derivation already publishes for the 170 non-seeded champions."
+  }
+ ],
+ "unexpected_occurrences": [
+  {
+   "path": "/metadata/fingerprint/leaves",
+   "baseline": "scripts/golden_coupled_baseline.json",
+   "transition": "value",
+   "qualifies_under_R15": false,
+   "why": "the fingerprint counts the snapshot's leaves, so publishing receipt keys moves it; the value is docs/receipts/campaign-fingerprints.json's to state and never this file's (umbrella criterion 4)"
+  },
+  {
+   "path": "/metadata/fingerprint/numeric_leaves",
+   "baseline": "scripts/golden_coupled_baseline.json",
+   "transition": "value",
+   "qualifies_under_R15": false,
+   "why": "same counter, numeric half: the derived rule's `aoe` map holds integers, so five new numeric leaves per derived scenario are counted. No pre-existing numeric leaf changed value."
+  }
+ ]
+}

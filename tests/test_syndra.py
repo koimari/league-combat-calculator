@@ -308,17 +308,26 @@ class TestUnleashedPowerSpheres:
 
 class TestRotationOrder:
     """E's stun exists only by scattering a Dark Sphere, so Q is E's setup —
-    the reverse of the generic cc-setup-first ordering. The hand-verified
-    CAST_ORDER_OVERRIDES seed pins the QE combo and keeps W/R inside the stun."""
+    the reverse of the generic cc-setup-first ordering.  The hand seed in
+    CAST_ORDER_OVERRIDES pinned that order until the module declared it;
+    the order is now DERIVED from ``CAST_DEPENDENCIES`` (D-89) and cites
+    the wiki revision the declaration was read from, which is the whole
+    point of retiring a seed rather than deleting one."""
 
     def test_cast_order_is_qe_combo(self, syndra_data) -> None:
-        from src.calculator.rotation_resolver import resolve_cast_order
+        from src.calculator.rotation_resolver import (
+            CAST_ORDER_OVERRIDES,
+            resolve_cast_order,
+        )
 
         abilities = _parse(syndra_data)
         order, rule = resolve_cast_order("Syndra", abilities, champion_data=syndra_data)
         assert order == ["Q", "Q2", "E", "W", "R"]
-        assert rule is not None and rule.derived is False
+        assert rule is not None and rule.derived is True
+        assert "Syndra" not in CAST_ORDER_OVERRIDES
         assert "sphere" in rule.rationale.lower()
+        assert "cc_enabler" in rule.rationale
+        assert "wiki.leagueoflegends.com/en-us/Syndra@" in rule.rationale
 
 
 # ---------------------------------------------------------------------------
@@ -417,6 +426,62 @@ class TestTheDerivedOrderPinScenario:
         derived = _casts(_capture(f"syndra_derived_order_{splinters}"))
         requested = _casts(_capture(f"syndra_custom_order_{splinters}"))
         assert derived != requested
+
+
+class TestTheSeedRetirementAllowlistIsCommitted:
+    """R-17: the retirement lands against the committed baseline plus a list.
+
+    The seed deletion moves receipt prose and no number, and the list of
+    exactly which leaves may move is committed beside the code rather than
+    absorbed by re-capturing a baseline inside a semantic commit.
+    """
+
+    _PATH = (
+        _REPO_ROOT / "docs" / "receipts" / "expected-golden-diff-P5-seed-syndra.json"
+    )
+
+    @staticmethod
+    def _receipt():
+        return json.loads(
+            TestTheSeedRetirementAllowlistIsCommitted._PATH.read_text(encoding="utf-8")
+        )
+
+    def test_the_pair_baseline_half_is_empty(self) -> None:
+        """The retirement's own gate: the pair engine sees no change."""
+        receipt = self._receipt()
+        assert receipt["slice"] == "P5-seed-syndra"
+        assert receipt["decisions"] == ["D-89", "P5-e"]
+        assert receipt["expected_diff_paths"]["golden"] == []
+
+    def test_every_allowed_path_is_inside_the_declared_population(self) -> None:
+        """An occurrence outside the enumerated population stops the slice."""
+        receipt = self._receipt()
+        prefixes = tuple(
+            receipt["qualifying_population"]["coupled_golden"]["bounded_by_prefix"]
+        )
+        assert len(prefixes) == 3
+        allowed = receipt["expected_diff_paths"]["coupled_golden"]
+        assert allowed, "an empty allowlist would make this check vacuous"
+        outside = [path for path in allowed if not path.startswith(prefixes)]
+        assert outside == []
+
+    def test_the_population_was_enumerated_before_the_first_src_edit(self) -> None:
+        population = self._receipt()["qualifying_population"]
+        assert population["enumerated_before_first_src_edit"] is True
+        assert population["pair_golden"]["measured_qualifying_leaves"] == 0
+        assert population["coupled_golden"]["occurrences_outside_the_population"] == 0
+
+    def test_the_positive_control_is_recorded_in_the_fingerprints_receipt(self) -> None:
+        """Zero diffs means nothing unless the gate can be made to fail."""
+        fingerprints = json.loads(
+            (_REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        control = fingerprints["demonstrated_red"]["P5_syndra_seed_positive_control"]
+        assert control["pair_golden_diff_count"] >= 1
+        assert len(control["sha"]) == 40
+        assert len(control["output_sha256"]) == 64
 
 
 class TestTheCustomOrderPinReadsTheBaseline:

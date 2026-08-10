@@ -67,7 +67,6 @@ _OVERRIDE_CHAMPIONS = [
     "Lux",
     "Zed",
     "Aphelios",
-    "Syndra",
 ]
 
 # Documented seed exceptions: the verified F2 seed deliberately deviates
@@ -105,6 +104,9 @@ _MATRIX_BUILDS = (
 # derivation against silent regressions back to the default order).
 _EXPECTED_DERIVED_ORDERS = {
     "Ahri": ["E", "Q", "W", "R"],  # charm cc setup opens the burst
+    # Syndra's retired seed (D-89): E requires Q and E requires Q2, declared
+    # by her module, derive the order the hand seed used to pin.
+    "Syndra": ["Q", "Q2", "E", "W", "R"],
     "Ambessa": ["R", "Q", "Q2", "W", "E"],  # R armor pen buff first
     "Bel'Veth": ["Q", "W", "R", "E"],  # E missing-health execute last
     "Briar": ["Q", "E", "R", "W"],  # Q shred first, W execute last

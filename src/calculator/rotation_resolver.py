@@ -400,32 +400,6 @@ CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {
         # Infernum form spreads to all in the cone (weapon-dependent).
         aoe={"R": 5, "Q": 5},
     ),
-    # E stuns only by scattering a Dark Sphere, so Q is E's setup — the
-    # reverse of the generic cc-setup-first fan-out, which would open with
-    # a sphere-less (stun-less) E and push Q's recast cadence back a slot.
-    "Syndra": ComboRule(
-        champion="Syndra",
-        override_reason="pending_primitive",
-        order=("Q", "Q2", "E", "W", "R"),
-        rationale=(
-            "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns "
-            "only by scattering a sphere into the target — the sphere is E's "
-            "setup, the standard QE stun combo. E follows immediately so the "
-            "stun (and CC-triggered item passives such as Imperial Mandate's "
-            "Command) covers W and R's burst. Q2 is Q's second charge and "
-            "mirrors Q's cast times."
-        ),
-        sources=(
-            "E cc_kind='stun' authored in the module (sphere-collision stun; "
-            "see the module's QE-combo assumption)",
-            "Q 'Magic Damage' — the sphere E scatters",
-            "Q2 recast_of Q (40+ splinter second charge)",
-            "R 'Magic Damage' per sphere closes the burst",
-        ),
-        setup=("Q",),
-        consume=("E",),
-        aoe={"E": 5},  # Scatter the Weak's cone
-    ),
 }
 
 

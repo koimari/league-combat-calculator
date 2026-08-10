@@ -43,7 +43,6 @@ _OVERRIDE_CHAMPIONS = [
     "Lux",
     "Zed",
     "Aphelios",
-    "Syndra",
 ]
 
 _EXPECTED_ORDERS = {
@@ -57,7 +56,6 @@ _EXPECTED_ORDERS = {
     "Lux": ["E", "Q", "R", "W"],
     "Zed": ["W", "E", "Q", "R"],
     "Aphelios": ["Q", "W", "R"],
-    "Syndra": ["Q", "Q2", "E", "W", "R"],
 }
 
 _RATIONALE_FRAGMENTS = {
@@ -71,7 +69,6 @@ _RATIONALE_FRAGMENTS = {
     "Lux": ("slow", "root"),
     "Zed": ("shadow", "Death Mark"),
     "Aphelios": ("weapon", "swap"),
-    "Syndra": ("sphere", "stun"),
 }
 
 
@@ -210,6 +207,56 @@ class TestCastOrderOverrides:
 # ---------------------------------------------------------------------------
 # Parse-level rotation assertions per combo champion
 # ---------------------------------------------------------------------------
+
+
+class TestDerivedPathRotations:
+    """Champions whose order comes from their own declarations, not a seed.
+
+    Syndra's rows lived in ``_OVERRIDE_CHAMPIONS`` until her seed retired
+    against ``CAST_DEPENDENCIES`` (D-89).  They move here rather than
+    being deleted: the same order, the same mechanic, now asserted on the
+    path that computes it — and the rationale has to cite the declared
+    kind and the wiki revision it was read from, which a hand seed's
+    prose never could.
+    """
+
+    @pytest.mark.parametrize(
+        ("champion", "order"),
+        [("Syndra", ["Q", "Q2", "E", "W", "R"])],
+    )
+    def test_the_declaration_derives_the_order_the_seed_used_to_pin(
+        self, champion, order, champion_by_name
+    ) -> None:
+        result = _run(champion_by_name[champion])
+        rotation = result["rotation"]
+        assert rotation["cast_order"] == order
+        assert rotation["order"][: len(order)] == order
+
+    @pytest.mark.parametrize(
+        ("champion", "fragments"),
+        [("Syndra", ("sphere", "stun", "cc_enabler", "@4024662"))],
+    )
+    def test_the_rationale_cites_the_kind_and_the_revision(
+        self, champion, fragments, champion_by_name
+    ) -> None:
+        rationale = _run(champion_by_name[champion])["rotation"]["rationale"]
+        for fragment in fragments:
+            assert (
+                fragment.lower() in rationale.lower()
+            ), f"{champion} rationale should mention {fragment!r}: {rationale}"
+
+    @pytest.mark.parametrize("champion", ["Syndra"])
+    def test_the_rule_is_derived_and_carries_no_override_reason(
+        self, champion, champion_by_name
+    ) -> None:
+        _, rule = resolve_cast_order(
+            champion,
+            _parse_for(champion_by_name[champion]),
+            champion_data=champion_by_name[champion],
+        )
+        assert rule is not None and rule.derived is True
+        assert rule.override_reason is None
+        assert champion not in CAST_ORDER_OVERRIDES
 
 
 class TestParseLevelRotations:
@@ -651,24 +698,28 @@ class TestTheReceiptPublishesTheMerge:
     def test_a_seeded_declarer_names_the_declarations_nobody_consulted(
         self, champion_by_name
     ) -> None:
-        """Syndra declares and is still seeded: her ledgers must say so.
+        """Zed declares and is still seeded: his ledgers must say so.
 
         Six empty ledgers would read "this module declares nothing",
         which is a different fact — and this row is how the frontier
-        counts a declarer whose hand seed still wins.
+        counts a declarer whose hand seed still wins.  Syndra held this
+        row until her seed retired against her declaration (D-89); Zed
+        and Brand are the head-only declarers whose tails are DPS
+        preferences no declaration can honestly express, so their seeds
+        stay and the disclosure has to stay with them.
         """
         order, rule = resolve_cast_order(
-            "Syndra",
-            _parse_for(champion_by_name["Syndra"], splinters=120),
-            champion_data=champion_by_name["Syndra"],
+            "Zed",
+            _parse_for(champion_by_name["Zed"]),
+            champion_data=champion_by_name["Zed"],
         )
-        assert order == list(CAST_ORDER_OVERRIDES["Syndra"].order)
+        assert order == list(CAST_ORDER_OVERRIDES["Zed"].order)
         receipt = build_rotation_receipt(
-            "Syndra", cast_order=order, cast_timeline=[], rule=rule
+            "Zed", cast_order=order, cast_timeline=[], rule=rule
         )
         rows = receipt["dependencies"]["unconsulted"]
         assert len(rows) == 2
-        assert "hand seed" in rows[0] and "pending_primitive" in rows[0]
+        assert "hand seed" in rows[0] and "dps_tiebreak" in rows[0]
         assert rows == receipt["dependencies"]["unconsulted"]
         assert receipt["dependencies"]["active"] == []
 
