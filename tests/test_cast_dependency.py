@@ -604,3 +604,103 @@ class TestThePacketCompilerCarriesDeclarations:
     def test_the_digest_gate_still_fires_first(self) -> None:
         with pytest.raises(RuntimeError, match="packet evidence drifted"):
             build_packet_module("Jinx", "0" * 64, cast_dependencies=(_dep(),))
+
+
+def _parsed_syndra(splinters: int = 120) -> dict:
+    """Syndra's live parse at L18, the surface her declarations run against."""
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.data_fetcher import fetch_champion_data
+
+    champion = {data.get("name"): data for data in fetch_champion_data().values()}[
+        "Syndra"
+    ]
+    return parse_champion_abilities(
+        champion,
+        18,
+        600.0,
+        ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+        champion_options={"splinters": splinters},
+    )
+
+
+class TestSyndraDeclaresHerStun:
+    """The conversion candidate: both declarations ship (D-83)."""
+
+    def test_she_declares_exactly_the_two_documented_pairs(self) -> None:
+        declared = get_champion_cast_dependencies("Syndra")
+        assert [(dep.slot, dep.requires) for dep in declared] == [
+            ("E", "Q"),
+            ("E", "Q2"),
+        ]
+        assert {dep.kind for dep in declared} == {"cc_enabler"}
+
+    def test_both_cite_the_revision_her_module_publishes(self) -> None:
+        from src.calculator.champions import syndra
+
+        receipt = syndra.SOURCES[0]
+        expected = f"{receipt['url']}@{receipt['revision_id']}"
+        for dep in get_champion_cast_dependencies("Syndra"):
+            assert dep.source == expected
+
+    def test_each_nests_exactly_one_reverse_cc_setup_suppression(self) -> None:
+        for dep in get_champion_cast_dependencies("Syndra"):
+            assert len(dep.suppresses) == 1
+            suppression = dep.suppresses[0]
+            assert (suppression.setup, suppression.consume) == (
+                dep.slot,
+                dep.requires,
+            )
+            assert suppression.kind == "cc_setup"
+
+    def test_only_the_recast_suppression_is_latent(self) -> None:
+        """D-84's deleted test exception, moved where the audit can see it."""
+        by_pair = {
+            dep.requires: dep.suppresses[0]
+            for dep in get_champion_cast_dependencies("Syndra")
+        }
+        assert by_pair["Q"].latent_reason is None
+        assert "cooldown" in (by_pair["Q2"].latent_reason or "")
+
+    def test_the_latent_claim_is_true_of_this_tree(self) -> None:
+        """The suppression it opposes exists for Q and does not for Q2.
+
+        A latent_reason nobody checks is the prose-outruns-code shape this
+        campaign exists to kill, so the claim is asserted against the
+        detector rather than believed.
+        """
+        from src.calculator.rotation_resolver import detect_setup_consume_edges
+        from src.calculator.data_fetcher import fetch_champion_data
+
+        champion = {data.get("name"): data for data in fetch_champion_data().values()}[
+            "Syndra"
+        ]
+        parsed = _parsed_syndra()
+        edges = {
+            (edge.setup, edge.consume, edge.kind)
+            for edge in detect_setup_consume_edges("Syndra", parsed, champion, {})
+        }
+        assert ("E", "Q", "cc_setup") in edges
+        assert ("E", "Q2", "cc_setup") not in edges
+
+    def test_the_recast_declaration_is_inactive_below_forty_splinters(self) -> None:
+        declared = get_champion_cast_dependencies("Syndra")
+        assert "Q2" not in _parsed_syndra(splinters=39)
+        assert [dep.requires for dep in active_dependencies(declared, {"Q", "E"})] == [
+            "Q"
+        ]
+
+    def test_both_are_active_once_the_second_charge_exists(self) -> None:
+        parsed = _parsed_syndra(splinters=40)
+        assert "Q2" in parsed
+        declared = get_champion_cast_dependencies("Syndra")
+        assert len(active_dependencies(declared, set(parsed))) == 2
+
+    def test_a_custom_order_putting_e_first_is_refused(self) -> None:
+        """The refusal quotes her own mechanic, not the rule that caught it."""
+        declared = get_champion_cast_dependencies("Syndra")
+        with pytest.raises(CustomOrderViolatesDependencyError) as caught:
+            check_order_satisfies_dependencies(
+                ["E", "Q", "W", "R"], declared, {"Q", "E", "W", "R"}
+            )
+        assert "stun" in str(caught.value)
+        assert "wiki.leagueoflegends.com" in str(caught.value)

@@ -27,7 +27,9 @@ Why each slot is non-generic:
   rank 1 = 0.12 x 70).
 - E (Scatter the Weak) is a clean "Magic Damage" read; explicit attr
   for symmetry with the rest of the kit. The 80-splinter upgrade
-  (wider angle, 70% slow) is utility only.
+  (wider angle, 70% slow) is utility only. Its authored stun is the
+  one slot in this kit whose cast order is a mechanic rather than a
+  preference, which is what ``CAST_DEPENDENCIES`` below declares.
 - R (Unleashed Power) must read "Magic Damage per Sphere" — the
   "Minimum/Maximum Magic Damage" rows are precomputed 3- and 7-sphere
   totals that would double-count with the sphere-count option. The
@@ -38,6 +40,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..cast_dependency import CastDependency, SuppressedInference
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
@@ -313,6 +316,79 @@ SLOTS = {
     "E": simple_damage(attr="Magic Damage", dmg_type="magic", cc_kind="stun"),
     "R": _unleashed_power,
 }
+
+# The revision these declarations were read from, in the shape
+# scripts/cast_dependency_audit.py resolves against the committed wiki
+# audit. It is the same parent entry SOURCES publishes below.
+_WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Syndra@4024662"
+
+_STUN_RIDES_A_SPHERE = (
+    "Scatter the Weak's stun is the Dark Sphere's, not the cone's: the "
+    "wave knocks a sphere through the target and only 'targets hit are "
+    "also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly "
+    "that assumption, so a sphere has to be on the field before E is cast "
+    "or the authored stun has no referent — and an amplifier keyed on "
+    "immobilizing CC would then price a stun that never happened."
+)
+
+_INFERENCE_READS_THE_STUN_BACKWARDS = (
+    "The detector reads E's cc_kind and fans a cc_setup edge out to every "
+    "castable damage row, Q among them, which would place E first. E's "
+    "stun is the sphere's consumer, never its setup; the inference has "
+    "the mechanic the wrong way round."
+)
+
+CAST_DEPENDENCIES = (
+    CastDependency(
+        slot="E",
+        requires="Q",
+        kind="cc_enabler",
+        reason=_STUN_RIDES_A_SPHERE,
+        source=_WIKI_SOURCE,
+        suppresses=(
+            SuppressedInference(
+                setup="E",
+                consume="Q",
+                kind="cc_setup",
+                reason=_INFERENCE_READS_THE_STUN_BACKWARDS,
+            ),
+        ),
+    ),
+    CastDependency(
+        slot="E",
+        requires="Q2",
+        kind="cc_enabler",
+        reason=(
+            "The 40-splinter second charge is another Dark Sphere ('causes "
+            "Syndra to periodically stock a Dark Sphere charge, up to a "
+            "maximum of 2'), so it is subject to the same rule as Q: the "
+            "stored charge is spent before E, not after it. Load-bearing, "
+            "not a restatement of E requires Q — without it the resolver's "
+            "tie-break ranks E ahead of Q2, which has no outgoing edges, "
+            "and the derived order changes (D-83)."
+        ),
+        source=_WIKI_SOURCE,
+        suppresses=(
+            SuppressedInference(
+                setup="E",
+                consume="Q2",
+                kind="cc_setup",
+                reason=_INFERENCE_READS_THE_STUN_BACKWARDS,
+                latent_reason=(
+                    "No E->Q2 cc_setup edge exists in this tree: the "
+                    "detector's _castable() requires cooldown > 0 and Q2 "
+                    "carries the 0.0 cast-exactly-once cooldown, so the "
+                    "fan-out skips it. Declared latent rather than dropped "
+                    "because a Q2 that ever gains a real charge cooldown "
+                    "brings the reversed edge with it. This is the fact "
+                    "the ('E','Q2') seed exception in "
+                    "tests/test_f3_rotation_all.py claimed while silently "
+                    "passing, moved where the audit can see it (D-84)."
+                ),
+            ),
+        ),
+    ),
+)
 
 parse_abilities = build_parser(SLOTS, "Syndra")
 
