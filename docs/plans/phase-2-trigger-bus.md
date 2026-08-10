@@ -176,6 +176,24 @@ registry projects the five hand-maintained holder name sets, so the two gates th
   `item_effects.requires_authored_control_event`. The `"crowd_control"` string that dispatch
   compares against is a balance value outside `CC_KIND_VOCABULARY` and stays a Phase 3
   declaration problem.
+- **Unification has a boundary, and P2b enumerates it rather than claiming there is none.**
+  A `Trigger` is a narrower object than the dict it summarises, so repointing six raw-row
+  readers onto one classification moves a small, bounded set of edges. Each is pinned by a
+  named test in the *edges P2b moved* section of `tests/test_trigger_stream.py`, never by
+  prose: the certification gate is narrower on a present-but-empty `cc_kind` and wider where
+  `is True` became a truth test; it reads every `Mapping` where it read only a `dict`; it
+  propagates the damage stream's `source_key` and `damage_type` contract as a named
+  `ValueError` where the retired `.get` comparisons shrugged; Echoes of Helia clamps each
+  number before its branch chooses rather than after; Phage and Echoes of Helia gain a
+  `ProjectionStarvation` path that `require_event_view` reaches first; and Carve and Vile
+  Decay carry a `str`-coerced `trigger_event_id`. Every one is unreachable from the engine
+  and each pin ships the control that proves it. *Why this is a boundary and not a defect
+  list: `cc_kind` is **evidence, not an override** — a reviewed `"none"` beside a legacy
+  `hard_cc` still classifies `IMMOBILIZE`, which is what keeps `is_immobilizing_event`
+  identical to the `ability_spec` predicate on every row of the vocabulary × flag cross
+  product. The one place the retired predicates disagreed with **each other** — a row
+  asserting a slow fact and an immobilize fact at once — is where Everlasting's rung moves,
+  and it moves because a phase that unifies four readings of one string must pick one.*
 
 ## Shape
 
