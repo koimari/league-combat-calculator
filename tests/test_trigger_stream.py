@@ -929,10 +929,7 @@ LEGACY_NAME_SET_SITES = {
     "DAMAGE_TRIGGER_ITEMS": ["src/calculator/item_support_effects.py"],
     "EVENT_VIEW_SUPPORT_ITEMS": ["src/calculator/item_support_effects.py"],
     "has_event_scan_support_items": ["src/calculator/item_support_effects.py"],
-    "has_takedown_scan_support_items": [
-        "src/calculator/damage.py",
-        "src/calculator/item_support_effects.py",
-    ],
+    "has_takedown_scan_support_items": ["src/calculator/item_support_effects.py"],
     "has_event_view_support_items": ["src/calculator/item_support_effects.py"],
 }
 

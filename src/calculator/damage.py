@@ -132,8 +132,13 @@ from . import item_effects
 from . import rune_effects
 from . import shield_ledger
 from .ability_spec import DamagePart
-from .item_support_effects import has_takedown_scan_support_items
-from .trigger_stream import Stream, authored_triggers, is_immobilizing_event
+from .trigger_stream import (
+    Stream,
+    authored_triggers,
+    holders_in,
+    is_immobilizing_event,
+    pair_outcome_items,
+)
 from .resistance import (
     apply_resistance,
     apply_magic_penetration,
@@ -9987,14 +9992,16 @@ def calculate_fight_damage(
     if (
         score_only
         and config.target_threshold_health_heal <= 0
-        and not has_takedown_scan_support_items(items)
+        and not holders_in(items, pair_outcome_items())
     ):
         # Score-mode consumers replay shields inside the coupled survival
         # walk and never read the one-pair shield outcome.  The remaining
         # engine-side consumers are the Protoplasm coverage downgrade below
-        # (requires a positive threshold heal) and the takedown-scanning
-        # support items, whose ``takedown_events`` synthesis reads
-        # ``target_ending_health`` (issue #169) — both keep the outcome.
+        # (requires a positive threshold heal) and the holders whose stream
+        # is synthesised from that outcome — ``pair_outcome_items()``, the
+        # projection of who declares ``Stream.TAKEDOWN``, whose
+        # ``takedown_events`` synthesis reads ``target_ending_health``
+        # (issue #169) — both keep the outcome.
         shield_outcome: dict[str, float] = {}
     else:
         shield_outcome = _resolve_starting_shield_outcome(state, config, damage_events)
