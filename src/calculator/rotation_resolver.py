@@ -61,6 +61,7 @@ from .cast_dependency import (
     active_dependencies,
 )
 from .damage import DEFAULT_CAST_ORDER, effective_cooldown
+from .data_registry import data_version
 
 # Fallback rationale when no combo rule and no certified order exists.
 _DEFAULT_RATIONALE = (
@@ -1459,26 +1460,36 @@ _MATRIX_SPECS = (
     (18, ("Trinity Force", "Infinity Edge", "Berserker's Greaves")),
 )
 
-# per-champion cache: matrix DPS rows at the reference points
-_MATRIX_DPS_CACHE: dict[str, list[list[tuple[str, float]]]] = {}
+# Both rotation memos hold values derived from data/, so both key on
+# data_registry.data_version() (D-49): a patch-day refresh bumps the
+# counter and the next read misses, instead of serving a cast order
+# derived from the numbers the refresh just replaced.
 
-# per-(champion, option-signature) cache: the FULL-KIT derived rule (order is
-# matrix-invariant by construction; the fight's own level/build only narrows
-# which slots exist, and the option signature keeps option-gated slots and
-# option-sensitive edges deterministic across cache warmth — issue #145 §6).
-_DERIVED_RULE_CACHE: dict[tuple[str, frozenset[tuple[str, Any]] | None], ComboRule] = {}
+# per-(champion, data version) cache: matrix DPS rows at the reference points
+_MATRIX_DPS_CACHE: dict[tuple[str, int], list[list[tuple[str, float]]]] = {}
+
+# per-(champion, option-signature, data version) cache: the FULL-KIT derived
+# rule (order is matrix-invariant by construction; the fight's own level/build
+# only narrows which slots exist, and the option signature keeps option-gated
+# slots and option-sensitive edges deterministic across cache warmth —
+# issue #145 §6).
+_DERIVED_RULE_CACHE: dict[
+    tuple[str, frozenset[tuple[str, Any]] | None, int], ComboRule
+] = {}
 
 
 def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
     champion_name: str, champion_data: Mapping[str, Any], aoe: Mapping[str, int]
 ) -> list[list[tuple[str, float]]]:
-    """Per-rank DPS at the reference level/build matrix (cached per champion).
+    """Per-rank DPS at the reference level/build matrix, cached.
 
     The matrix is a pure function of the champion's cached data — it never
     depends on the request's level or build — so it is computed once per
-    process and reused by every fight.
+    (champion, data version) and reused by every fight until a refresh
+    replaces the data it was computed from.
     """
-    cached = _MATRIX_DPS_CACHE.get(champion_name)
+    cache_key = (champion_name, data_version())
+    cached = _MATRIX_DPS_CACHE.get(cache_key)
     if cached is not None:
         return cached
 
@@ -1508,7 +1519,7 @@ def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
             champion_options=None,
         )
         rows.append(rank_ability_dps(parsed, target_count=1, aoe=aoe))
-    _MATRIX_DPS_CACHE[champion_name] = rows
+    _MATRIX_DPS_CACHE[cache_key] = rows
     return rows
 
 
@@ -1652,7 +1663,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         s for s in ability_damages if isinstance(ability_damages.get(s), Mapping)
     }
     signature = _option_signature(champion_name, champion_options)
-    cache_key = (champion_name, signature)
+    cache_key = (champion_name, signature, data_version())
     cached = _DERIVED_RULE_CACHE.get(cache_key)
     if cached is not None:
         return _fit_rule_to_fight(cached, champion_name, fight_slots, certified_order)

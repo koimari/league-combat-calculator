@@ -25,8 +25,11 @@ EVERY champion:
     slots, none dropped), and the verified seeds stay as overrides.
 """
 
+from dataclasses import replace
+
 import pytest
 
+from src.calculator import data_registry
 from src.calculator.cast_dependency import (
     DEPENDENCY_KINDS,
     INFERRED_EDGE_KINDS,
@@ -38,9 +41,11 @@ from src.calculator.cast_dependency import (
 )
 from src.calculator.champions import get_champion_cast_order
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
+from src.calculator.data_registry import data_version
 from src.calculator.rotation_resolver import (
     CAST_ORDER_OVERRIDES,
     _DERIVED_RULE_CACHE,
+    _MATRIX_DPS_CACHE,
     DependencyReceipt,
     _Edge,
     derive_champion_rule,
@@ -930,3 +935,54 @@ class TestTheDerivationReadsDeclarations:
             "Ahri", parsed, data, get_champion_cast_order("Ahri")
         )
         assert rule.derived and rule.order
+
+
+class TestTheRotationMemosInvalidateOnData:
+    """D-49: both rotation caches key on ``data_version()``.
+
+    Every value in them is derived from ``data/``, so a mid-process
+    refresh must make them miss.  Without the component a patch-day
+    refresh serves a cast order derived from pre-patch numbers, which is
+    a number no rule computed against the data the response cites.
+    """
+
+    def test_both_cache_keys_carry_the_counter(self, champion_by_name) -> None:
+        _DERIVED_RULE_CACHE.clear()
+        _MATRIX_DPS_CACHE.clear()
+        data = champion_by_name["Ahri"]
+        parsed = _parse(data, 11, (), {})
+        derive_champion_rule("Ahri", parsed, data, get_champion_cast_order("Ahri"))
+        version = data_version()
+        assert any(key[-1] == version for key in _DERIVED_RULE_CACHE)
+        assert any(key[-1] == version for key in _MATRIX_DPS_CACHE)
+
+    def test_a_refresh_is_not_served_a_pre_refresh_order(
+        self, champion_by_name, monkeypatch
+    ) -> None:
+        """Bump the counter and the stale rule cannot be handed back.
+
+        The cached rule is poisoned with an order no derivation produces;
+        at the same version it is served (proving the cache is live), and
+        after the bump it is gone.
+        """
+        _DERIVED_RULE_CACHE.clear()
+        data = champion_by_name["Ahri"]
+        parsed = _parse(data, 11, (), {})
+        fresh = derive_champion_rule(
+            "Ahri", parsed, data, get_champion_cast_order("Ahri")
+        )
+        key = next(iter(_DERIVED_RULE_CACHE))
+        stale = replace(_DERIVED_RULE_CACHE[key], order=("R", "W", "E", "Q"))
+        _DERIVED_RULE_CACHE[key] = stale
+
+        served = derive_champion_rule(
+            "Ahri", parsed, data, get_champion_cast_order("Ahri")
+        )
+        assert list(served.order) == ["R", "W", "E", "Q"], "the memo is not live"
+
+        monkeypatch.setattr(data_registry, "_DATA_VERSION", data_version() + 1)
+        after = derive_champion_rule(
+            "Ahri", parsed, data, get_champion_cast_order("Ahri")
+        )
+        assert list(after.order) == list(fresh.order)
+        _DERIVED_RULE_CACHE.clear()
