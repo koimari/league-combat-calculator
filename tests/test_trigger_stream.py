@@ -2093,6 +2093,14 @@ class TestTheP2aGateBreachIsStillTracked:
     agent folds the locator refresh into the commit that caused the shift,
     R-01 row 1 goes green at every commit of the integrated history, and
     this class and its receipt are retired in the same pass.
+
+    What is being asserted is a property of the *repository*, not of the
+    tree, so these tests need a clone and say so when they do not have one
+    rather than skipping -- a conditional skip is a check that stops
+    checking without telling anyone, and R-01 row 1 counts skips for that
+    reason.  The suite already requires a clone: ``tests/test_e9_corpus.py``
+    fails collection outright on an export, because the corpus anchor is a
+    merge base (R-21).
     """
 
     RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-P2a.json"
@@ -2103,8 +2111,24 @@ class TestTheP2aGateBreachIsStillTracked:
         return json.loads(self.RECEIPT.read_text(encoding="utf-8"))["defects"]
 
     @staticmethod
-    def _commit(handle: Mapping[str, str]) -> str:
+    def _require_repository() -> None:
+        """Name the missing precondition instead of failing as a git error."""
+        probe = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            cwd=ROOT,
+            capture_output=True,
+            check=False,
+        )
+        assert probe.returncode == 0, (
+            "this reproducer reads the commits the breach lives in, so it needs "
+            "the repository and not only the tree — run it in a clone, as "
+            "tests/test_e9_corpus.py's merge-base anchor already requires"
+        )
+
+    @classmethod
+    def _commit(cls, handle: Mapping[str, str]) -> str:
         """The commit carrying ``handle["subject"]``, whatever its sha is now."""
+        cls._require_repository()
         log = subprocess.run(
             ["git", "log", "--format=%H%x1f%s"],
             cwd=ROOT,
