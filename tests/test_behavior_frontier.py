@@ -16,6 +16,7 @@ from pathlib import Path
 from scripts import behavior_frontier
 from src.calculator import interpreters
 from src.calculator import item_behavior_catalog as catalog
+from src.calculator import item_coverage
 
 ROOT = Path(__file__).parents[1]
 RECEIPT_PATH = ROOT / "docs" / "behavior-frontier.json"
@@ -106,16 +107,45 @@ def test_the_gate_reproduces_its_own_red() -> None:
     assert any("class_c" in failure for failure in failures)
 
 
-def test_the_reviewed_nothing_set_is_bounded_and_empty_at_the_skeleton() -> None:
-    """Counter 3 cannot be reached by reviewing the backlog into silence."""
+def test_the_reviewed_nothing_set_is_bounded_and_every_member_is_sourced() -> None:
+    """Counter 3 cannot be reached by reviewing the backlog into silence.
+
+    Empty at the skeleton; filled at 3.8, when the flip renamed the reviewed
+    stats-only claim into ``NO_RUNTIME_BEHAVIOR`` and made it the one reviewed
+    registry that survives.  Three properties hold from here on: the committed
+    member set equals the declared one, the size never passes the ceiling
+    measured before the phase, and every member names the wiki revision its
+    review read.
+    """
     block = _receipt()["no_runtime_behavior"]
-    assert block["members"] == []
-    assert block["ratchet_ceiling"] > 0
-    failures = behavior_frontier.check(
-        behavior_frontier.scan(),
-        _receipt() | {"no_runtime_behavior": {"members": ["a"], "ratchet_ceiling": 0}},
+    assert block["members"], "the set is populated from 3.8 onwards"
+    assert len(block["members"]) <= block["ratchet_ceiling"]
+    assert sorted(block["sourced"]) == sorted(block["members"])
+    assert sorted(block["members"]) == sorted(item_coverage.NO_RUNTIME_BEHAVIOR)
+
+
+def test_the_reviewed_nothing_ratchet_reproduces_its_red(monkeypatch) -> None:
+    """R-05: the ceiling and the set-equality clause each fail loud on demand.
+
+    The ceiling is driven through the module constant and not through the
+    receipt, deliberately: a ceiling a receipt could lower is a ratchet the
+    thing it bounds gets to set.
+    """
+    report = behavior_frontier.scan()
+    committed = _receipt()
+    monkeypatch.setattr(behavior_frontier, "NO_RUNTIME_BEHAVIOR_CEILING", 0)
+    over_ceiling = behavior_frontier.check(report, committed)
+    assert any("ratchet ceiling" in failure for failure in over_ceiling)
+    monkeypatch.undo()
+
+    moved = behavior_frontier.check(
+        report,
+        committed
+        | {
+            "no_runtime_behavior": committed["no_runtime_behavior"] | {"members": ["a"]}
+        },
     )
-    assert any("ratchet ceiling" in failure for failure in failures)
+    assert any("committed member set differs" in failure for failure in moved)
 
 
 def test_the_ten_h4_tags_ride_the_frontier() -> None:

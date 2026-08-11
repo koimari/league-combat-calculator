@@ -19,6 +19,19 @@ from src.calculator.item_behavior import UtilityDimension
 from src.calculator.item_effects import ITEM_EFFECTS
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_source import is_ordinary_sr_item
+from src.calculator.item_coverage import ATTACKER_LANES
+
+
+def _attacker_coverage(item):
+    """The attacker-lane public payload for one cached item record.
+
+    ``item_model_coverage`` takes a name and the lanes the caller needs
+    answered (3.8), and these tests all ask the picker's question, so they all
+    ask for the attacker lane.
+    """
+    return item_model_coverage(str(item.get("name", "")), ATTACKER_LANES).as_payload()
+
+
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_eligible_legendaries,
@@ -28,7 +41,7 @@ from src.calculator.optimizer import (
 
 def test_every_current_optimizer_candidate_has_an_explicit_classification():
     candidates = get_eligible_legendaries() + get_eligible_boots(tier=None)
-    classifications = [item_model_coverage(item) for item in candidates]
+    classifications = [_attacker_coverage(item) for item in candidates]
 
     assert classifications
     assert not [
@@ -44,12 +57,12 @@ def test_cached_ordinary_items_never_remain_review_pending():
         if item.get("name") and is_ordinary_sr_item(item)
     ]
     assert ordinary
-    classifications = [item_model_coverage(item) for item in ordinary]
+    classifications = [_attacker_coverage(item) for item in ordinary]
     assert not [
         entry for entry in classifications if entry["status"] == "review_pending"
     ]
     assert all(
-        entry["optimizer_eligible"] or entry["status"] in {"blocked", "stats_only"}
+        entry["optimizer_eligible"] or entry["status"] in {"withheld", "stats_only"}
         for entry in classifications
     )
 
@@ -63,8 +76,8 @@ def test_cached_ordinary_items_have_named_fail_closed_reasons():
     ]
     generic = [
         item["name"]
-        for item in (item_model_coverage(item) for item in ordinary)
-        if item["status"] == "blocked"
+        for item in (_attacker_coverage(item) for item in ordinary)
+        if item["status"] == "withheld"
         and item["reason"]
         == "This cached passive or active has not been reviewed for outgoing "
         "damage or state effects; calculation is withheld."
@@ -74,7 +87,7 @@ def test_cached_ordinary_items_have_named_fail_closed_reasons():
 
 def test_endless_hunger_blocker_is_feast_state_only():
     """Famine and the bounded Feast state are receipt-backed."""
-    coverage = item_model_coverage(get_item_by_name("Endless Hunger"))
+    coverage = _attacker_coverage(get_item_by_name("Endless Hunger"))
 
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
@@ -93,8 +106,8 @@ def test_unmodeled_splash_packets_are_always_withheld():
         if item_name == "Runaan's Hurricane":
             # Wind's Fury is now allocated by the shared roster ledger.
             continue
-        coverage = item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "blocked", item_name
+        coverage = _attacker_coverage(get_item_by_name(item_name))
+        assert coverage["status"] == "withheld", item_name
         assert coverage["optimizer_eligible"] is False
 
 
@@ -128,8 +141,8 @@ def test_secondary_packet_ratios_cannot_be_scored_without_multi_target_ledger():
             # Breaking Shockwave is now allocated through the same roster
             # ledger and its slow/movement siblings have utility receipts.
             continue
-        coverage = item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "blocked", item_name
+        coverage = _attacker_coverage(get_item_by_name(item_name))
+        assert coverage["status"] == "withheld", item_name
         assert coverage["optimizer_eligible"] is False
 
 
@@ -140,12 +153,12 @@ def test_phantom_hit_items_have_explicit_duplicate_on_hit_coverage():
     ]
     assert phantom_items
     for item_name in phantom_items:
-        coverage = item_model_coverage(get_item_by_name(item_name))
+        coverage = _attacker_coverage(get_item_by_name(item_name))
         if item_name == "Guinsoo's Rageblade":
             assert coverage["status"] == "modeled_effect", item_name
             assert coverage["optimizer_eligible"] is True
         else:
-            assert coverage["status"] == "blocked", item_name
+            assert coverage["status"] == "withheld", item_name
             assert coverage["optimizer_eligible"] is False
 
 
@@ -158,7 +171,7 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
     ]
     assert stateful_items
     for item_name in stateful_items:
-        coverage = item_model_coverage(get_item_by_name(item_name))
+        coverage = _attacker_coverage(get_item_by_name(item_name))
         assert coverage["status"] == "modeled_effect", item_name
         assert coverage["optimizer_eligible"] is True
 
@@ -170,17 +183,17 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
         ("Zeke's Convergence", "modeled_effect"),
         ("Immortal Path", "modeled_state"),
         ("Mejai's Soulstealer", "modeled_state"),
-        ("Rabadon's Deathcap", "modeled_effect"),
+        ("Rabadon's Deathcap", "modeled_state"),
         ("Serpent's Fang", "modeled_effect"),
         ("Kaenic Rookern", "stats_only"),
         ("Void Staff", "stats_only"),
-        ("Riftmaker", "modeled_effect"),
+        ("Riftmaker", "modeled_state"),
         ("Archangel's Staff", "modeled_state"),
         ("Guinsoo's Rageblade", "modeled_effect"),
         ("Actualizer", "modeled_state"),
         ("Overlord's Bloodmail", "modeled_state"),
-        ("Yun Tal Wildarrows", "modeled_effect"),
-        ("Swiftmarch", "modeled_effect"),
+        ("Yun Tal Wildarrows", "modeled_state"),
+        ("Swiftmarch", "modeled_state"),
         ("Lich Bane", "modeled_effect"),
         ("Essence Reaver", "modeled_effect"),
         ("Dusk and Dawn", "modeled_effect"),
@@ -192,11 +205,11 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
     ],
 )
 def test_representative_item_classifications(item_name, expected_status):
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
 
     assert coverage["status"] == expected_status
     assert coverage["optimizer_eligible"] is (
-        expected_status not in {"blocked", "review_pending"}
+        expected_status not in {"withheld", "review_pending"}
     )
 
 
@@ -207,12 +220,15 @@ def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():
     item classifies as a modeled effect; Noxian Gait remains documented as
     out of scope and the stats stay optimizer-eligible.
     """
-    coverage = item_model_coverage(get_item_by_name("Gunmetal Greaves"))
+    coverage = _attacker_coverage(get_item_by_name("Gunmetal Greaves"))
 
+    # The boot declares its life-steal sustain, so the ladder answers from the
+    # declaration.  Noxian Gait's Riot-only movement branch is still out of
+    # scope and is still not a refusal: what changed is that the sentence
+    # saying so is gone, because a modelled item no longer carries prose.
     assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
-    assert "Noxian Gait" in coverage["reason"]
-    assert "out of scope" in coverage["reason"]
+    assert coverage["review_issue_refs"] == []
 
 
 # The two ``PRECEDENCE`` rungs 3.8 deleted with the empty containers they kept
@@ -248,11 +264,11 @@ def test_multitool_is_not_a_summoners_rift_optimizer_candidate():
 def test_candidate_receipt_is_complete_after_item_umbrella_reconciliation():
     candidates = get_eligible_legendaries() + get_eligible_boots(tier=2)
     receipt = optimizer_candidate_coverage(candidates)
-    excluded_names = {entry["name"] for entry in receipt["excluded"]}
+    excluded_names = {entry["name"] for entry in receipt["withheld"]}
 
     assert receipt["complete"] is True
     assert receipt["eligible_candidates"] == len(candidates)
-    assert receipt["scored_candidates"] + receipt["excluded_count"] == len(candidates)
+    assert receipt["scored_candidates"] + receipt["withheld_count"] == len(candidates)
     assert excluded_names == set()
     assert "Rod of Ages" not in excluded_names
     assert "Runaan's Hurricane" not in excluded_names
@@ -266,7 +282,7 @@ def test_optimizer_reports_exhaustive_legal_candidates_after_item_reconciliation
         locked_boots="Sorcerer's Shoes",
     )
     excluded_names = {
-        entry["name"] for entry in result["candidate_coverage"]["excluded"]
+        entry["name"] for entry in result["candidate_coverage"]["withheld"]
     }
 
     assert result["items"]
@@ -317,7 +333,7 @@ def test_target_item_coverage_is_mechanic_specific(item_name, status):
     coverage = target_item_model_coverage(get_item_by_name(item_name))
 
     assert coverage["status"] == status
-    assert coverage["calculation_eligible"] is (status != "blocked")
+    assert coverage["calculation_eligible"] is (status != "withheld")
 
 
 @pytest.mark.parametrize(
@@ -376,7 +392,7 @@ def test_target_build_coverage_and_guard_name_the_omitted_defense():
     coverage = target_build_coverage(items)
 
     assert coverage["complete"] is True
-    assert coverage["blocked"] == []
+    assert coverage["withheld"] == []
     require_target_item_coverage(items)
 
 
@@ -424,36 +440,50 @@ def test_force_of_nature_target_defense_is_event_certified():
     ],
 )
 def test_issue_42_components_are_modeled_attacker_candidates(item_name):
-    """Every issue-42 component left review_pending for an explicit model."""
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    """Every issue-42 component left review_pending for an explicit model.
 
-    assert coverage["status"] == "modeled_effect"
+    ``Bramble Vest`` declares nothing but ``reactive``, a defence, so the
+    attacker lane's honest answer is stats-only: the mechanic changes what the
+    holder takes, not what it deals.  It is still eligible, which is what this
+    test is about.
+    """
+    coverage = _attacker_coverage(get_item_by_name(item_name))
+
+    assert coverage["status"] == (
+        "stats_only" if item_name == "Bramble Vest" else "modeled_effect"
+    )
     assert coverage["optimizer_eligible"] is True
 
 
 def test_bandlepipes_ally_buff_uses_the_shared_typed_support_ledger():
     """Fanfare's authored CC trigger is fully represented for ranking."""
-    coverage = item_model_coverage(get_item_by_name("Bandlepipes"))
+    coverage = _attacker_coverage(get_item_by_name("Bandlepipes"))
 
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
-    assert "shared participant support ledger" in coverage["reason"]
+    assert "shared participant ledger" in coverage["reason"]
 
 
 @pytest.mark.parametrize("item_name", ["Ardent Censer", "Imperial Mandate"])
 def test_typed_enchanter_packets_are_optimizer_eligible(item_name):
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
 
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
-    assert "shared participant support ledger" in coverage["reason"]
+    assert "shared participant ledger" in coverage["reason"]
 
 
 def test_warmog_is_not_hidden_by_an_unreachable_blocked_reason():
-    """Warmog's registered health conversion remains explicitly modeled."""
-    coverage = item_model_coverage(get_item_by_name("Warmog's Armor"))
+    """Warmog's registered health conversion remains explicitly modeled.
 
-    assert coverage["status"] == "modeled_effect"
+    ``stat_derivation`` is a state family: the Heart's conversion is a
+    progression the shared ledger schedules, so the declared answer is
+    ``modeled_state``.  The property this test guards is that no refusal
+    hides it.
+    """
+    coverage = _attacker_coverage(get_item_by_name("Warmog's Armor"))
+
+    assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
 
 
@@ -468,8 +498,10 @@ def test_bramble_vest_is_an_explicitly_modeled_target_item():
 
 def test_thornmail_is_modeled_as_a_typed_target_reactive_item():
     """Armor-scaled Thorns now participate in target coverage."""
-    attacker = item_model_coverage(get_item_by_name("Thornmail"))
-    assert attacker["status"] == "modeled_effect"
+    attacker = _attacker_coverage(get_item_by_name("Thornmail"))
+    # Thorns is a reactive defence and nothing else, so the attacker lane says
+    # stats-only; the target lane is where it is priced.
+    assert attacker["status"] == "stats_only"
     assert attacker["optimizer_eligible"] is True
     assert target_item_model_coverage(get_item_by_name("Thornmail"))["status"] == (
         "modeled"
@@ -510,10 +542,10 @@ def test_target_self_healing_items_have_explicit_modeled_coverage(item_name):
 def test_utility_coverage_exposes_outcome_dimensions_without_claiming_support(
     item_name, dimension
 ):
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
 
     assert dimension in coverage["outcome_dimensions"]
-    if coverage["status"] == "blocked":
+    if coverage["status"] == "withheld":
         assert coverage["optimizer_eligible"] is False
 
 
@@ -521,7 +553,7 @@ def test_every_utility_dimension_item_has_explicit_non_pending_coverage():
     """#50 utility labels cannot silently drift into unreviewed coverage."""
     assert UTILITY_OUTCOMES
     for item_name, dimensions in UTILITY_OUTCOMES.items():
-        coverage = item_model_coverage(get_item_by_name(item_name))
+        coverage = _attacker_coverage(get_item_by_name(item_name))
         assert coverage["status"] != "review_pending", item_name
         assert coverage["outcome_dimensions"] == [
             dimension.value for dimension in dimensions
@@ -537,7 +569,7 @@ def test_sustain_dimension_never_claims_outgoing_model_support():
     ]
     assert sustain_items
     for item_name in sustain_items:
-        coverage = item_model_coverage(get_item_by_name(item_name))
+        coverage = _attacker_coverage(get_item_by_name(item_name))
         if item_name == "Ravenous Hydra":
             # Crescent and Cleave self-healing receipts are modeled directly.
             assert coverage["status"] == "modeled_effect"
@@ -547,7 +579,7 @@ def test_sustain_dimension_never_claims_outgoing_model_support():
 
 def test_dusk_and_dawn_self_heal_is_calculation_eligible():
     """Spellblade self-heal has timestamped ledger events and is now modeled."""
-    coverage = item_model_coverage(get_item_by_name("Dusk and Dawn"))
+    coverage = _attacker_coverage(get_item_by_name("Dusk and Dawn"))
 
     assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
@@ -555,7 +587,7 @@ def test_dusk_and_dawn_self_heal_is_calculation_eligible():
 
 def test_cull_progression_receipt_is_calculation_and_optimizer_eligible():
     """Reap's health and quest receipts share one modeled state ledger."""
-    coverage = item_model_coverage(get_item_by_name("Cull"))
+    coverage = _attacker_coverage(get_item_by_name("Cull"))
 
     assert coverage["calculation_eligible"] is True
     assert coverage["optimizer_eligible"] is True
@@ -578,7 +610,7 @@ def test_opening_defense_items_with_blocked_target_state_never_claim_target_supp
         if item_name not in _TARGET_BLOCKED_REASONS:
             continue
         coverage = target_item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "blocked", item_name
+        assert coverage["status"] == "withheld", item_name
         assert coverage["calculation_eligible"] is False
 
 
@@ -614,16 +646,16 @@ def test_ally_item_packets_are_coupled_and_never_assume_target_cast_timing(item_
 @pytest.mark.parametrize("item_name", ["Stridebreaker"])
 def test_stridebreaker_utility_scope_is_explicitly_modelled(item_name):
     """Breaking Shockwave exposes its typed slow and movement siblings."""
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
     assert "multi_target" in coverage["outcome_dimensions"]
     assert {"slow", "movement"} <= set(coverage["outcome_dimensions"])
-    assert coverage["status"] == "modeled_effect"
+    assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["review_issue_refs"] == []
 
 
 def test_fimbulwinter_is_event_certified_and_not_optimizer_blocked():
-    coverage = item_model_coverage(get_item_by_name("Fimbulwinter"))
+    coverage = _attacker_coverage(get_item_by_name("Fimbulwinter"))
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     target = target_item_model_coverage(get_item_by_name("Fimbulwinter"))
@@ -633,7 +665,7 @@ def test_fimbulwinter_is_event_certified_and_not_optimizer_blocked():
 
 
 def test_world_atlas_support_quest_receipt_is_reconciled():
-    coverage = item_model_coverage(get_item_by_name("World Atlas"))
+    coverage = _attacker_coverage(get_item_by_name("World Atlas"))
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["review_issue_refs"] == []
@@ -641,7 +673,7 @@ def test_world_atlas_support_quest_receipt_is_reconciled():
 
 def test_ravenous_hydra_active_scope_is_modelled_with_lifesteal():
     """Ravenous active and secondary packets are now fully represented."""
-    coverage = item_model_coverage(get_item_by_name("Ravenous Hydra"))
+    coverage = _attacker_coverage(get_item_by_name("Ravenous Hydra"))
 
     assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
@@ -650,7 +682,7 @@ def test_ravenous_hydra_active_scope_is_modelled_with_lifesteal():
 
 def test_bloodmail_retribution_is_explicit_starting_state():
     """Bloodmail exposes its bounded starting missing-health state."""
-    coverage = item_model_coverage(get_item_by_name("Overlord's Bloodmail"))
+    coverage = _attacker_coverage(get_item_by_name("Overlord's Bloodmail"))
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert "scenario" in coverage["reason"]
@@ -665,13 +697,13 @@ def test_bloodmail_retribution_is_explicit_starting_state():
 )
 def test_long_lived_stack_items_name_missing_state_input(item_name, required_state):
     """Only items without a supplied authored state remain blocked."""
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
     if item_name in {"Heartsteel", "Rod of Ages"}:
         assert coverage["status"] == "modeled_state"
         assert coverage["optimizer_eligible"] is True
         assert "scenario control" in coverage["reason"]
         return
-    assert coverage["status"] == "blocked"
+    assert coverage["status"] == "withheld"
     assert coverage["optimizer_eligible"] is False
     assert required_state in coverage["reason"]
 
@@ -688,7 +720,7 @@ def test_long_lived_stack_items_name_missing_state_input(item_name, required_sta
     ],
 )
 def test_remaining_cp20_items_are_explicitly_modeled(item_name):
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["review_issue_refs"] == []
@@ -696,7 +728,7 @@ def test_remaining_cp20_items_are_explicitly_modeled(item_name):
 
 def test_dusk_and_dawn_self_heal_receipt_promotes_attacker_coverage():
     """An exact proc receipt and ledger mutation make the item scoreable."""
-    coverage = item_model_coverage(get_item_by_name("Dusk and Dawn"))
+    coverage = _attacker_coverage(get_item_by_name("Dusk and Dawn"))
     assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
 

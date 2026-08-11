@@ -43,6 +43,7 @@ sys.path.insert(0, str(REPO_ROOT))
 # pylint: disable=wrong-import-position
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_coverage import (
+    ATTACKER_LANES,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -57,8 +58,19 @@ SNAPSHOT_KIND = "item_coverage_classification"
 # support_packet and utility lanes are claim lanes with no classifier of their
 # own.
 CLASSIFIERS: Mapping[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
-    "attacker": item_model_coverage,
+    "attacker": lambda item: item_model_coverage(
+        str(item.get("name", "")), ATTACKER_LANES
+    ).as_payload(),
     "target": target_item_model_coverage,
+}
+
+# The dotted name each lane's answer comes from.  Written out rather than read
+# off ``__name__``: the attacker lane is a lambda that supplies the lane set
+# ``item_model_coverage`` now requires, and a receipt recording "<lambda>" as
+# its producer would name nothing a reader could look up.
+CLASSIFIER_NAMES: Mapping[str, str] = {
+    "attacker": "item_model_coverage",
+    "target": "target_item_model_coverage",
 }
 
 # Metadata keys ``compare`` ignores: ``git_head`` moves every commit and the
@@ -110,8 +122,8 @@ def capture() -> dict[str, Any]:
             "item_count": len(items),
             "lanes": sorted(CLASSIFIERS),
             "classifiers": {
-                lane: f"src.calculator.item_coverage.{classify.__name__}"
-                for lane, classify in sorted(CLASSIFIERS.items())
+                lane: f"src.calculator.item_coverage.{name}"
+                for lane, name in sorted(CLASSIFIER_NAMES.items())
             },
         },
         "records": records,

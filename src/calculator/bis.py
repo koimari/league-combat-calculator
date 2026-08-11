@@ -155,7 +155,7 @@ def roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, ob
     blocked: list[dict[str, object]] = []
     for loadout in loadouts:
         coverage = target_build_coverage(list(loadout.item_data))
-        for entry in coverage.get("blocked", []):
+        for entry in coverage.get("withheld", []):
             blocked.append(
                 {
                     "champion": loadout.champion_data.get(

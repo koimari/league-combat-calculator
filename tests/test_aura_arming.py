@@ -10,7 +10,7 @@ not price — which is what Abyssal Mask's Unmake did.
 between the barriers and the damage; ``item_support_effects._packet``
 refuses a persistent modifier that does not declare it; and the ladder's new
 member publishes the participant ledger's seventh phase name, which is the
-change ``CAPABILITY_SCHEMA_VERSION == 2`` announces.
+change ``CAPABILITY_SCHEMA_VERSION`` moved to 2 to announce.
 """
 
 import pytest
@@ -195,5 +195,8 @@ class TestThePublishedLedgerGainsItsSeventhPhase:
         )
 
     def test_the_schema_version_moved_with_the_payload(self):
-        assert CAPABILITY_SCHEMA_VERSION == 2
+        # C4 took 2 for this phase list; 3.8's coverage flip took 3 for a
+        # different payload, so the seven names are still C4's and the
+        # version is one past it.
+        assert CAPABILITY_SCHEMA_VERSION == 3
         assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7

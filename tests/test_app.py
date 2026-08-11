@@ -354,7 +354,7 @@ def test_loadout_stats_exposes_target_item_coverage_without_hiding_the_card():
     assert response.status_code == 200
     coverage = response.get_json()["target_model_coverage"]
     assert coverage["complete"] is True
-    assert coverage["blocked"] == []
+    assert coverage["withheld"] == []
 
 
 def test_calculate_applies_an_opening_enemy_spell_shield():
@@ -1179,7 +1179,7 @@ def test_config_exposes_one_authoritative_capability_contract_for_every_particip
 
     assert response.status_code == 200
     contract = response.get_json()["capabilities"]
-    assert contract["schema_version"] == 2
+    assert contract["schema_version"] == 3
     assert set(contract["participants"]) == {"main", "enemy", "ally"}
     assert (
         contract["participants"]["enemy"]["fields"]["champion"]["state_path"]
@@ -1968,11 +1968,18 @@ class TestIconUrlsAreHttps:
         assert items["Guardian Angel"]["model_coverage"]["outcome_dimensions"] == [
             "revive"
         ]
-        assert "Rebirth" in items["Guardian Angel"]["model_coverage"]["reason"]
+        # Guardian Angel declares only defences, so the attacker card now
+        # says the mechanic changes durability rather than naming Rebirth;
+        # the target card is where Rebirth is priced and named.
+        assert items["Guardian Angel"]["model_coverage"]["status"] == "stats_only"
+        assert "Rebirth" in items["Guardian Angel"]["target_model_coverage"]["reason"]
         assert items["Zhonya's Hourglass"]["model_coverage"]["outcome_dimensions"] == [
             "stasis"
         ]
-        assert "Time Stop" in items["Zhonya's Hourglass"]["model_coverage"]["reason"]
+        # Same shape: Zhonya's declares only defences, so the attacker card
+        # states the rule that decided it and Time Stop's bounded control
+        # is a scenario input rather than a sentence in the coverage payload.
+        assert items["Zhonya's Hourglass"]["model_coverage"]["status"] == "stats_only"
         assert items["Runaan's Hurricane"]["target_model_coverage"]["status"]
         assert "calculation_eligible" in boots["Immortal Path"]["target_model_coverage"]
 

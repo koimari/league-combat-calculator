@@ -65,6 +65,7 @@ from src.calculator.item_effects import (
 )
 from src.calculator.rune_effects import keystone_catalog, refresh_rune_effects
 from src.calculator.item_coverage import (
+    ATTACKER_LANES,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -1084,7 +1085,9 @@ def api_items():
                 "into": item.get("into") or [],
                 "categories": item.get("categories") or [],
                 "support_quest_stage": support_quest_item_stage(item.get("name")),
-                "model_coverage": item_model_coverage(item),
+                "model_coverage": item_model_coverage(
+                    str(item.get("name", "")), ATTACKER_LANES
+                ).as_payload(),
                 "target_model_coverage": target_item_model_coverage(item),
             }
             for item in get_selectable_items()
@@ -1132,7 +1135,9 @@ def api_boots():
                     ),
                     None,
                 ),
-                "model_coverage": item_model_coverage(item),
+                "model_coverage": item_model_coverage(
+                    str(item.get("name", "")), ATTACKER_LANES
+                ).as_payload(),
                 "target_model_coverage": target_item_model_coverage(item),
             }
             for item in get_eligible_boots(tier=None)

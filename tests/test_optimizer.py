@@ -536,7 +536,7 @@ def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
 
     assert result["is_certified_best"] is False
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
-    assert result["candidate_coverage"]["excluded_count"] == 0
+    assert result["candidate_coverage"]["withheld_count"] == 0
     assert len(result["ranked_builds"]) == 2
     assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
 
@@ -549,7 +549,7 @@ def test_candidate_item_coverage_alone_does_not_certify_partial_timelines(
         lambda items: {
             "eligible_candidates": len(items),
             "scored_candidates": len(items),
-            "excluded_count": 0,
+            "withheld_count": 0,
             "complete": True,
             "excluded": [],
             "note": "Every available candidate is fully modelled.",
@@ -579,7 +579,7 @@ def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(
         lambda items: {
             "eligible_candidates": len(items),
             "scored_candidates": len(items),
-            "excluded_count": 0,
+            "withheld_count": 0,
             "complete": True,
             "excluded": [],
             "note": "Every available candidate is fully modelled.",

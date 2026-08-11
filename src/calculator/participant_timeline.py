@@ -32,7 +32,7 @@ from .roster_composition import (
 )
 from .scenario import ResolvedLoadout
 from .timeline_coverage import combine_timeline_coverages
-from .item_coverage import item_model_coverage
+from .item_coverage import ATTACKER_LANES, item_model_coverage
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
@@ -738,12 +738,15 @@ def _utility_outcome_receipt(
             "runaan_bolt_copied_on_hit",
         }
     ]
-    coverage = [item_model_coverage(item) for item in actor.items]
+    coverage = [
+        item_model_coverage(str(item.get("name", "")), ATTACKER_LANES)
+        for item in actor.items
+    ]
     dimensions = sorted(
         {
-            str(dimension)
+            dimension.value
             for entry in coverage
-            for dimension in entry.get("outcome_dimensions", [])
+            for dimension in entry.outcome_dimensions
         }
     )
     applied_dimensions = set()
@@ -808,13 +811,15 @@ def _utility_outcome_receipt(
         ),
         "item_coverage": [
             {
-                "name": entry.get("name", ""),
-                "status": entry.get("status", ""),
-                "dimensions": list(entry.get("outcome_dimensions", [])),
-                "reason": entry.get("reason", ""),
+                "name": entry.name,
+                "status": entry.status,
+                "dimensions": [
+                    dimension.value for dimension in entry.outcome_dimensions
+                ],
+                "reason": entry.reason,
             }
             for entry in coverage
-            if entry.get("outcome_dimensions")
+            if entry.outcome_dimensions
         ],
         "metric_note": (
             "Movement, cleanse, economy, and vision remain separate units; no "

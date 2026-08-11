@@ -54,7 +54,7 @@ ClaimStatus = Literal[
     "modeled_effect",
     "modeled_state",
     "stats_only",
-    "blocked",
+    "withheld",
     "review_pending",
     "modeled",
     "modeled_event_certified",
@@ -100,7 +100,7 @@ CLAIM_STATUSES: frozenset[str] = frozenset(
         "modeled_effect",
         "modeled_state",
         "stats_only",
-        "blocked",
+        "withheld",
         "review_pending",
         "modeled",
         "modeled_event_certified",
@@ -616,7 +616,11 @@ class EvidencePolicy:
 
 # A status is negative when it withholds rather than models.  Both of them
 # take exactly one ``Absence`` and no positive evidence at all.
-NEGATIVE_STATUSES: frozenset[str] = frozenset({"blocked", "review_pending"})
+# The two refusals.  ``withheld`` is the campaign's spelling for "coverage
+# refused to model it — a named receipt and no number" (D-23); it replaced
+# ``blocked`` at the 3.8 flip, and the rename is why the serialized coverage
+# payload changed and CAPABILITY_SCHEMA_VERSION moved with it.
+NEGATIVE_STATUSES: frozenset[str] = frozenset({"withheld", "review_pending"})
 
 # The three shapes a ``modeled_state`` claim may name its state's home with.
 # ``modeled_state`` says the item's damage-relevant state is *supplied* rather
@@ -682,7 +686,7 @@ _STATUS_POLICIES: Mapping[str, EvidencePolicy] = {
         forbidden=frozenset({"Absence", "PacketSource"}),
         min_count=1,
     ),
-    "blocked": EvidencePolicy(
+    "withheld": EvidencePolicy(
         required=frozenset({"Absence"}),
         forbidden=_POSITIVE_EVIDENCE_KINDS,
         min_count=1,
@@ -919,8 +923,8 @@ def validate_claim_table(
 
 # ── the classifier chain, as data ─────────────────────────────────────────
 
-# What a precedence rung tests before it yields its status.  The eight kinds
-# are the eight shapes the live ``if``/``elif`` ladder actually uses; they are
+# What a precedence rung tests before it yields its status.  The nine kinds
+# are the nine shapes the live ``if``/``elif`` ladder actually uses; they are
 # a closed vocabulary rather than a callable per rung because a rung that
 # carried its own predicate would be a second implementation of the chain
 # wearing a declaration's clothes, and the point of the mirror is that a test
@@ -931,6 +935,7 @@ RuleKind = Literal[
     "option_state",
     "named_item",
     "predicate",
+    "derivation",
     "cached_record",
     "status_passthrough",
     "terminal",
@@ -943,6 +948,7 @@ RULE_KINDS: frozenset[str] = frozenset(
         "option_state",
         "named_item",
         "predicate",
+        "derivation",
         "cached_record",
         "status_passthrough",
         "terminal",
@@ -958,6 +964,7 @@ _RULE_SHAPES: Mapping[str, tuple[int, bool]] = {
     "option_state": (1, True),
     "named_item": (0, True),
     "predicate": (1, False),
+    "derivation": (1, False),
     "cached_record": (0, False),
     "status_passthrough": (0, False),
     "terminal": (0, False),
@@ -973,15 +980,15 @@ class PrecedenceRule:  # pylint: disable=too-many-instance-attributes
 
     ``item_coverage``'s two classifiers are ``if``/``elif`` ladders, and the
     order of their rungs is a real part of the public contract: an item in
-    ``_REVIEWED_STATS_ONLY`` that also carries a defensive effect type never
-    reaches its container, so a coverage claim filed against that container is
-    a claim no cached item can reach.  Nothing could say that until the ladder
-    was something a program could walk.
+    ``NO_RUNTIME_BEHAVIOR`` that also declares a defence never reaches its
+    container, so a coverage claim filed against that container is a claim no
+    cached item can reach.  Nothing could say that until the ladder was
+    something a program could walk.
 
-    This is that walk, landed **beside** the chain rather than instead of it
-    (D-98): a test reproduces the live status for every cached item on both
-    lanes, and no ``src`` module consumes it.  Phase 3's step 3.8 is what
-    flips the classifier onto it, in a one-symbol commit.
+    This is that walk.  At 3.8 the attacker ladder's rungs became
+    ``derivation`` rungs naming the predicates ``item_coverage`` itself
+    branches on, so the mirror and the original are the same code and a test
+    still reproduces the live status for every cached item on both lanes.
 
     Attributes:
         rule_id: ``<lane>.<rung>``, unique across the table.

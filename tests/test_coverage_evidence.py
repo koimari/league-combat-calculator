@@ -134,7 +134,7 @@ def test_a_well_formed_table_validates() -> None:
                 subject_kind="rule",
                 subject="item_effects_membership",
                 lane="attacker",
-                status="blocked",
+                status="withheld",
                 evidence=(ABSENCE,),
             ),
         )
@@ -202,14 +202,14 @@ def test_absence_on_a_positive_claim_is_rejected() -> None:
 def test_positive_evidence_on_a_negative_claim_is_rejected() -> None:
     """A refusal carries its reason and nothing that looks like coverage."""
     with pytest.raises(CoverageClaimError, match="forbids evidence"):
-        validate_claim(claim(status="blocked", evidence=(ABSENCE, IMPL)))
+        validate_claim(claim(status="withheld", evidence=(ABSENCE, IMPL)))
 
 
 def test_two_absences_on_a_negative_claim_are_rejected() -> None:
     """A refusal has exactly one reason, so the receipt is unambiguous."""
     second = Absence(reason="A second, different reason.", issue_refs=(41,))
     with pytest.raises(CoverageClaimError, match="carries 2 Absence members"):
-        validate_claim(claim(status="blocked", evidence=(ABSENCE, second)))
+        validate_claim(claim(status="withheld", evidence=(ABSENCE, second)))
 
 
 def test_min_count_below_the_cell_floor_is_rejected() -> None:
@@ -326,7 +326,7 @@ def test_utility_claim_with_no_dimension_is_rejected() -> None:
 def test_issue_refs_on_a_negative_claim_are_rejected() -> None:
     """One home per claim: a refusal's refs live on its Absence."""
     with pytest.raises(CoverageClaimError, match="issue refs on its Absence"):
-        validate_claim(claim(status="blocked", evidence=(ABSENCE,), issue_refs=(40,)))
+        validate_claim(claim(status="withheld", evidence=(ABSENCE,), issue_refs=(40,)))
 
 
 def test_non_positive_issue_ref_is_rejected() -> None:
@@ -697,10 +697,10 @@ def test_claim_lane_is_exported_here_and_is_not_spelled_lane() -> None:
 def rung(**overrides) -> PrecedenceRule:
     """A valid attacker container rung, with fields overridden."""
     fields = {
-        "rule_id": "attacker.reviewed_stats_only",
+        "rule_id": "attacker.no_runtime_behavior",
         "lane": "attacker",
         "kind": "container",
-        "keys_on": ("item_coverage._REVIEWED_STATS_ONLY",),
+        "keys_on": ("item_coverage.NO_RUNTIME_BEHAVIOR",),
         "items": (),
         "effect_types": (),
         "negated": False,

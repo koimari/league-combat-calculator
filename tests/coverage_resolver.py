@@ -1556,6 +1556,12 @@ def rule_matches(
     if rule.kind == "predicate":
         verdict = bool(_rule_container(rule.keys_on[0], ctx)(item))
         return not verdict if rule.negated else verdict
+    if rule.kind == "derivation":
+        # A derived rung reads the same predicate the live ladder branches on,
+        # by name and through the same seam.  That is what keeps the mirror a
+        # mirror after 3.8: the two cannot disagree, because there is one
+        # predicate.
+        return bool(_rule_container(rule.keys_on[0], ctx)(name))
     if rule.kind == "cached_record":
         return item.get("id") is not None or bool(item.get("icon"))
     if rule.kind == "status_passthrough":
@@ -1587,13 +1593,27 @@ def first_matching_rule(
     )
 
 
+# The containers a rung may key on whose membership is a hand-maintained list,
+# so every entry is claimable one by one.  Privacy used to be the test, and
+# 3.8 retired it: ``NO_RUNTIME_BEHAVIOR`` is public because the frontier gate
+# reads it, and it is still a list its own module maintains by hand.
+_HAND_CONTAINERS = frozenset(
+    {
+        "NO_RUNTIME_BEHAVIOR",
+        "_TARGET_MODELED_REASONS",
+        "_TARGET_EVENT_CERTIFIED_REASONS",
+        "_TARGET_BLOCKED_REASONS",
+    }
+)
+
+
 def _rule_population(rule: Any, ctx: ResolverContext) -> tuple[str, ...]:
     """The item names a rung's own declaration enumerates.
 
     Two rungs enumerate: one that pins item names, and one that keys on a
     **private** container.  Privacy is the line between a hand-listed family
     and a dynamic one, and it is the real line rather than a convenient one:
-    ``item_coverage._REVIEWED_STATS_ONLY`` is a list its own module maintains
+    ``item_coverage.NO_RUNTIME_BEHAVIOR`` is a list its own module maintains
     by hand, so every entry is claimable one by one, while
     ``item_effects.ITEM_EFFECTS`` is another module's registry whose overlap
     with the cached shop is recomputed on every call — which is exactly why
@@ -1604,7 +1624,10 @@ def _rule_population(rule: Any, ctx: ResolverContext) -> tuple[str, ...]:
     test and the two terminals — enumerates nothing at authoring time.
     """
     names = list(rule.items)
-    if rule.kind == "container" and rule.keys_on[0].rsplit(".", 1)[-1].startswith("_"):
+    if (
+        rule.kind == "container"
+        and rule.keys_on[0].rsplit(".", 1)[-1] in _HAND_CONTAINERS
+    ):
         names.extend(_rule_container(rule.keys_on[0], ctx))
     return tuple(dict.fromkeys(names))
 
@@ -1619,7 +1642,7 @@ def shadow_report(
 
     Two shapes of unreachability, and both are real today.  An **item** claim
     is shadowed when the item is listed in a container an earlier rung
-    already decided — twenty-nine ``_REVIEWED_STATS_ONLY`` entries are, and
+    already decided — the ``NO_RUNTIME_BEHAVIOR`` entries an earlier rung reaches are, and
     the container never gets to speak for any of them.  A **rule** claim is
     shadowed when no cached item reaches its rung at all, which is what an
     empty container or a fixture-only branch looks like from here.

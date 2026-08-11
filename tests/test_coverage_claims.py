@@ -1296,27 +1296,28 @@ def test_the_live_survey_reports_only_real_and_unimported_modules() -> None:
 CLASSIFICATION_RECEIPT = (
     ROOT / "docs" / "receipts" / "item-coverage-classification.json"
 )
+EXPECTED_COVERAGE_DIFF = ROOT / "docs" / "receipts" / "expected-coverage-diff-3.8.json"
 
 # The containers whose entries a rung reads verbatim as its reason text.  The
 # receipt records that text per item, which is what makes a *second*,
 # independent derivation of the shadow set possible: if the rung had fired,
 # the item's published reason would be its container's entry.
 _REASON_CONTAINERS: dict[str, str] = {
-    "attacker.stateful_modeled_items": "_STATEFUL_MODELED_ITEMS",
-    "attacker.reviewed_stats_only": "_REVIEWED_STATS_ONLY",
+    "attacker.no_runtime_behavior": "NO_RUNTIME_BEHAVIOR",
     "target.modeled_reasons": "_TARGET_MODELED_REASONS",
     "target.event_certified_reasons": "_TARGET_EVENT_CERTIFIED_REASONS",
-    "target.blocked_reasons": "_TARGET_BLOCKED_REASONS",
+    "target.withheld_reasons": "_TARGET_BLOCKED_REASONS",
 }
 
-# Where the receipt derivation is blind, and why.  ``Gunmetal Greaves`` is
-# decided by its own named rung, whose inline reason is a **verbatim copy** of
-# its ``_REVIEWED_STATS_ONLY`` entry — so the published reason cannot say
-# which of the two rungs produced it, and only the ladder walk can.  This is
-# the shape that makes a pinned integer dangerous: a reader counting either
-# derivation gets a different answer, which is exactly the 28-versus-29
-# disagreement the phase saw, reproduced and named instead of guessed at.
-_REASON_COLLISIONS: frozenset[str] = frozenset({"item:Gunmetal Greaves@attacker"})
+# Where the receipt derivation is blind, and why.  It used to hold Gunmetal
+# Greaves: the old ladder gave that one item a named rung whose inline reason
+# was a **verbatim copy** of its reviewed stats-only entry, so the published
+# reason could not say which of the two rungs produced it.  3.8 deleted the
+# named rung, and with it the collision — the two derivations now agree item
+# for item.  The set stays declared and asserted empty rather than deleted:
+# emptiness is the property, and a future ladder that reintroduces a
+# copy-pasted reason has somewhere to land and a test that notices.
+_REASON_COLLISIONS: frozenset[str] = frozenset()
 
 # The shadowed set, pinned as a **set** and never as a count: two independent
 # reproductions of it once disagreed by one, and a wrong integer is a second
@@ -1330,9 +1331,13 @@ SHADOWED_CLAIMS: frozenset[str] = frozenset(
         "item:Bloodthirster@attacker",
         "item:Celestial Opposition@attacker",
         "item:Chainlaced Crushers@attacker",
+        "item:Cryptbloom@attacker",
         "item:Death's Dance@attacker",
+        "item:Diadem of Songs@attacker",
         "item:Doran's Ring@attacker",
         "item:Doran's Shield@attacker",
+        "item:Dream Maker@attacker",
+        "item:Echoes of Helia@attacker",
         "item:Edge of Night@attacker",
         "item:Force of Nature@attacker",
         "item:Frozen Heart@attacker",
@@ -1346,18 +1351,31 @@ SHADOWED_CLAIMS: frozenset[str] = frozenset(
         "item:Maw of Malmortius@attacker",
         "item:Mercurial Scimitar@attacker",
         "item:Mikael's Blessing@attacker",
+        "item:Moonstone Renewer@attacker",
         "item:Plated Steelcaps@attacker",
         "item:Protoplasm Harness@attacker",
         "item:Randuin's Omen@attacker",
         "item:Seeker's Armguard@attacker",
         "item:Shurelya's Battlesong@attacker",
+        "item:Solstice Sleigh@attacker",
         "item:Spirit Visage@attacker",
         "item:Verdant Barrier@attacker",
         "item:Zhonya's Hourglass@attacker",
         "rule:attacker.unreviewed_fixture@attacker",
+        "rule:attacker.unserved_declared_lane@attacker",
         "rule:target.attacker_review_pending_passthrough@target",
     }
 )
+
+
+def _attacker(name: str):
+    """The attacker-lane answer for one cached item, on the lanes it needs."""
+    return item_coverage.item_model_coverage(name, item_coverage.ATTACKER_LANES)
+
+
+def _attacker_payload(record: dict) -> dict:
+    """The attacker-lane public payload, keyed the way the receipt keys it."""
+    return _attacker(str(record.get("name", ""))).as_payload()
 
 
 def cached_items() -> dict[str, dict]:
@@ -1376,7 +1394,7 @@ def test_the_mirror_reproduces_the_live_classifier_on_both_lanes() -> None:
     walks both ladders for every cached record and compares the status.
     """
     ctx = live_context()
-    live = {"attacker": item_model_coverage, "target": target_item_model_coverage}
+    live = {"attacker": _attacker_payload, "target": target_item_model_coverage}
     disagreements = []
     for name, record in cached_items().items():
         for lane, classifier in live.items():
@@ -1444,7 +1462,13 @@ def test_the_receipt_derives_the_same_shadowed_items_independently() -> None:
     the two derivations have to agree item for item, less the one collision
     :data:`_REASON_COLLISIONS` names.
     """
-    receipt = json.loads(CLASSIFICATION_RECEIPT.read_text(encoding="utf-8"))
+    # A **fresh** capture rather than the committed receipt: 3.8 lands
+    # against a receipt one commit stale (R-32 forbids re-capturing inside a
+    # semantic commit), and this derivation reads the published reason, which
+    # the flip regenerated for every item.  The property being checked is
+    # still two independent derivations of one set — the ladder walk and the
+    # published reason — and neither of them is the receipt file.
+    receipt = capture_coverage_classification.capture()
     from_receipt: set[str] = set()
     for rule in PRECEDENCE:
         container_name = _REASON_CONTAINERS.get(rule.rule_id)
@@ -1457,12 +1481,10 @@ def test_the_receipt_derives_the_same_shadowed_items_independently() -> None:
                 from_receipt.add(f"item:{name}@{rule.lane}")
     from_ladder = {key for key in SHADOWED_CLAIMS if key.startswith("item:")}
     assert from_receipt == from_ladder - _REASON_COLLISIONS
-    for key in _REASON_COLLISIONS:
-        name, _, lane = key.removeprefix("item:").partition("@")
-        assert (
-            receipt["records"][lane][name]["reason"]
-            == item_coverage._REVIEWED_STATS_ONLY[name]
-        )
+    assert _REASON_COLLISIONS == frozenset(), (
+        "a rung is copying a container's reason again; the two derivations "
+        "can no longer be compared item for item"
+    )
 
 
 def test_a_shadowed_item_is_shadowed_for_a_reason_that_names_both_rungs() -> None:
@@ -1475,8 +1497,8 @@ def test_a_shadowed_item_is_shadowed_for_a_reason_that_names_both_rungs() -> Non
         for shadowed in report
         if shadowed.claim_key == "item:Banshee's Veil@attacker"
     )
-    assert veil.rule_id == "attacker.reviewed_stats_only"
-    assert veil.outranked_by == "attacker.defensive_effect_types"
+    assert veil.rule_id == "attacker.no_runtime_behavior"
+    assert veil.outranked_by == "attacker.declared_defence_only"
     assert "before" in veil.reason
 
 
@@ -1553,7 +1575,29 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
     for snapshot in (baseline, fresh):
         for key in excluded:
             snapshot["metadata"].pop(key, None)
-    assert capture_coverage_classification.differing_leaves(baseline, fresh) == ()
+    moved = capture_coverage_classification.differing_leaves(baseline, fresh)
+
+    # 3.8's coverage flip moves records against the committed receipt, and
+    # lands against it plus an allowlist rather than re-capturing inside a
+    # semantic commit (R-32, R-36, D-97).  Every moved leaf must be in the
+    # allowlist and the allowlist must hold no leaf that did not move: an
+    # entry for a key that stopped moving is a stale permission.
+    allowlist = json.loads(EXPECTED_COVERAGE_DIFF.read_text(encoding="utf-8"))
+    permitted = {
+        f"records.{lane_status.split(':')[0]}.{name}.status"
+        for lane_status, block in allowlist["status_moves"].items()
+        for name in block["items"]
+    }
+    permitted |= {
+        f"records.{lane}.{name}.reason"
+        for lane in ("attacker", "target")
+        for name in allowlist["reason_moves"]["items"]
+    }
+    moved_paths = {leaf for leaf, _, _ in moved}
+
+    assert moved_paths - permitted == set(), "a coverage record moved unlisted"
+    assert len(moved) == allowlist["total_leaves"]
+    assert allowlist["unclassified"] == []
 
 
 def test_the_capture_gate_names_the_record_that_moved() -> None:
@@ -1635,7 +1679,9 @@ def _audit_entry(item: str) -> dict:
 # resolver enumerates the population and demands every member be backed.
 _DYNAMIC_RULES: frozenset[str] = frozenset(
     {
-        "attacker.item_effects_membership",
+        "attacker.declared_behaviour",
+        "attacker.declared_defence_only",
+        "attacker.declared_state",
         "attacker.item_input_options_membership",
         "attacker.no_described_effect",
         "attacker.cached_shop_record",
@@ -1677,7 +1723,7 @@ def dynamic_population(rule) -> tuple[str, ...]:
 # ── one parametrized node per hand-listed entry ───────────────────────────
 
 
-@pytest.mark.parametrize("item", sorted(item_coverage._STATEFUL_MODELED_ITEMS))
+@pytest.mark.parametrize("item", sorted(item_coverage._ATTACKER_STATE_HOMES))
 def test_a_stateful_item_supplies_its_state_from_a_named_home(item: str) -> None:
     """The state a ``modeled_state`` claim asserts is supplied has a home.
 
@@ -1688,7 +1734,7 @@ def test_a_stateful_item_supplies_its_state_from_a_named_home(item: str) -> None
     a computed one.
     """
     record = CACHE[item]
-    assert item_coverage.item_model_coverage(record)["optimizer_eligible"]
+    assert _attacker(item).optimizer_eligible
     path, home = item_coverage._ATTACKER_STATE_HOMES[item]
     kind, _, value = home.partition(":")
     if kind == "option":
@@ -1703,7 +1749,7 @@ def test_a_stateful_item_supplies_its_state_from_a_named_home(item: str) -> None
     assert path
 
 
-@pytest.mark.parametrize("item", sorted(item_coverage._REVIEWED_STATS_ONLY))
+@pytest.mark.parametrize("item", sorted(item_coverage.NO_RUNTIME_BEHAVIOR))
 def test_a_reviewed_stats_only_item_adds_no_outgoing_damage(item: str) -> None:
     """The review concluded the item is safe to score, and it still is.
 
@@ -1713,8 +1759,8 @@ def test_a_reviewed_stats_only_item_adds_no_outgoing_damage(item: str) -> None:
     that starts blocking one of these fails here with the item's name.
     """
     record = CACHE[item]
-    coverage = item_coverage.item_model_coverage(record)
-    assert coverage["optimizer_eligible"] and coverage["calculation_eligible"]
+    coverage = _attacker(item)
+    assert coverage.optimizer_eligible and coverage.calculation_eligible
     entry = _audit_entry(item)
     assert entry["status"] == "ready"
 
@@ -1764,7 +1810,7 @@ def test_an_item_with_no_described_effect_is_stats_only(item: str) -> None:
     """
     record = CACHE[item]
     assert not item_coverage._has_described_effect(record)
-    assert item_coverage.item_model_coverage(record)["status"] == "stats_only"
+    assert _attacker(item).status == "stats_only"
 
 
 @pytest.mark.parametrize(
@@ -1778,12 +1824,12 @@ def test_an_unreviewed_cached_record_is_blocked_with_issue_refs(item: str) -> No
     issue that tracks it, never a number.
     """
     record = CACHE[item]
-    coverage = item_coverage.item_model_coverage(record)
+    coverage = _attacker(item)
     assert record.get("id") is not None or record.get("icon")
     assert item_coverage._has_described_effect(record)
-    assert coverage["status"] == "blocked"
-    assert not coverage["optimizer_eligible"]
-    assert coverage["review_issue_refs"]
+    assert coverage.status == "withheld"
+    assert not coverage.optimizer_eligible
+    assert coverage.review_issue_refs
 
 
 @pytest.mark.parametrize("item", sorted(item_coverage._TARGET_MODELED_REASONS))
@@ -1818,7 +1864,7 @@ def test_a_target_event_certified_item_needs_a_certified_timeline(item: str) -> 
 def test_a_target_blocked_item_stops_the_run(item: str) -> None:
     """A withheld target mechanic refuses the calculation by name."""
     record = CACHE[item]
-    assert item_coverage.target_item_model_coverage(record)["status"] == "blocked"
+    assert item_coverage.target_item_model_coverage(record)["status"] == "withheld"
     with pytest.raises(ValueError, match=re.escape(item)):
         item_coverage.require_target_item_coverage([record])
 
@@ -1828,7 +1874,7 @@ def test_a_utility_item_publishes_its_declared_dimensions(item: str) -> None:
     """The product-facing dimensions reach both public payloads, unchanged."""
     record = CACHE[item]
     declared = [dimension.value for dimension in item_coverage.UTILITY_OUTCOMES[item]]
-    assert item_coverage.item_model_coverage(record)["outcome_dimensions"] == declared
+    assert _attacker(item).as_payload()["outcome_dimensions"] == declared
     assert (
         item_coverage.target_item_model_coverage(record)["outcome_dimensions"]
         == declared
@@ -1854,7 +1900,7 @@ def test_a_precedence_rung_yields_its_declared_status(rule_id: str) -> None:
     """
     rule = next(rule for rule in PRECEDENCE if rule.rule_id == rule_id)
     classifier = {
-        "attacker": item_coverage.item_model_coverage,
+        "attacker": _attacker_payload,
         "target": item_coverage.target_item_model_coverage,
     }[rule.lane]
     reached = _reaching(rule_id, rule.lane)
@@ -1941,8 +1987,8 @@ def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None
     rule the load gate applies to a negative claim's ``Absence``.
     """
     lanes = {
-        "_STATEFUL_MODELED_ITEMS": "attacker",
-        "_REVIEWED_STATS_ONLY": "attacker",
+        "_ATTACKER_STATE_HOMES": "attacker",
+        "NO_RUNTIME_BEHAVIOR": "attacker",
         "_TARGET_MODELED_REASONS": "target",
         "_TARGET_EVENT_CERTIFIED_REASONS": "target",
         "_TARGET_BLOCKED_REASONS": "target",
@@ -1982,7 +2028,7 @@ def test_claim_status_is_a_pinned_expectation_the_classifier_agrees_with() -> No
     a written ``unreachable_reason``, and the set is pinned.
     """
     classifier = {
-        "attacker": item_coverage.item_model_coverage,
+        "attacker": _attacker_payload,
         "target": item_coverage.target_item_model_coverage,
     }
     disagreements: list[str] = []

@@ -31,13 +31,18 @@ from typing import Any, Mapping
 # Acyclic: nothing under ``survival/`` imports ``capabilities``.
 from .survival.actions import TransitionRank, public_phase
 
-# D-63's chain, in commit order: 1 at 0A's derivation (a starting value, not
-# a bump), 2 here — C4 publishes ``persistent_aura_arming`` as the ledger's
-# seventh phase — and the two later values belong to Phase 3's coverage flip
-# and Phase 4's S9.  The version moves for a change to the *published
-# payload* and for nothing else, so a derivation edit that comes out
-# byte-identical leaves it alone.
-CAPABILITY_SCHEMA_VERSION = 2
+# D-63's chain, in commit order: 1 at 0A's derivation (a starting value, not a
+# bump), 2 at 0B's C4 — which published ``persistent_aura_arming`` as the
+# ledger's seventh phase — and 3 here, at Phase 3's 3.8 coverage flip.  The
+# flip changed the serialized coverage payload: ``blocked`` became
+# ``withheld`` (D-23's spelling for a refusal that carries a receipt and no
+# number), and every status and reason is now computed from declarations
+# rather than read out of a hand registry.  The next value is Phase 4's S9 and
+# belongs to no commit before it.
+#
+# The version moves for a change to the *published payload* and for nothing
+# else, so a derivation edit that comes out byte-identical leaves it alone.
+CAPABILITY_SCHEMA_VERSION = 3
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
 # resolves every participant's state transition.  Keeping the phase names in

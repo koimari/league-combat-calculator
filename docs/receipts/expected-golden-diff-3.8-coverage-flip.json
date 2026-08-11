@@ -1,0 +1,97 @@
+{
+  "decisions": [
+    "D-23 \u2014 a coverage refusal is WITHHELD, a named receipt and no number.",
+    "D-63 \u2014 the serialized coverage payload changed, so CAPABILITY_SCHEMA_VERSION took its third value.",
+    "R-17/D-97 \u2014 landed against the committed coupled baseline plus this allowlist; the baseline is re-captured at the phase boundary, never here."
+  ],
+  "expected_diff_paths": {
+    "coupled_golden": [
+      "/coupled_scenarios/syndra_custom_order_120/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_120/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_120/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_120/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_120/combat/utility_outcomes/focus/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_120/combat/utility_outcomes/focus/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_120/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_120/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_39/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_39/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_39/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_39/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_39/combat/utility_outcomes/focus/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_39/combat/utility_outcomes/focus/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_39/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_39/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_60/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_60/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_60/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_60/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_60/combat/utility_outcomes/focus/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_60/combat/utility_outcomes/focus/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_custom_order_60/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_custom_order_60/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_120/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_120/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_120/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_120/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_120/combat/utility_outcomes/focus/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_120/combat/utility_outcomes/focus/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_120/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_120/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_39/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_39/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_39/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_39/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_39/combat/utility_outcomes/focus/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_39/combat/utility_outcomes/focus/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_39/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_39/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_60/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_60/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_60/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_60/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_60/combat/utility_outcomes/focus/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_60/combat/utility_outcomes/focus/item_coverage[1]/reason",
+      "/coupled_scenarios/syndra_derived_order_60/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+      "/coupled_scenarios/syndra_derived_order_60/combat/utility_outcomes/participants/main/item_coverage[1]/reason"
+    ],
+    "coupled_golden_shape_counters": [],
+    "golden": []
+  },
+  "expected_qualifying_occurrences": 48,
+  "landed_against": {
+    "coupled_baseline": "scripts/golden_coupled_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "golden": "scripts/golden_baseline.json",
+    "pair_baseline": "scripts/golden_baseline.json",
+    "pair_baseline_result": "zero diffs \u2014 item_coverage is not on the pair path (D-93)"
+  },
+  "measured": {
+    "coupled_leaves_moved": 48,
+    "distinct_reason_moves": [
+      {
+        "new": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "old": "The represented mechanic changes defense, not outgoing TDD."
+      },
+      {
+        "new": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "old": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis."
+      }
+    ],
+    "numeric_leaves_moved": 0,
+    "oracle_receipts": {
+      "count": 0,
+      "why": "R-19's oracle returns an independent computation from cached wiki text or a quoted formula in docs/math-foundations.md, and a verdict from {new_value_correct, old_value_correct, both_wrong}.  Every leaf here is a prose reason string on a coverage record: there is no number to recompute and no formula to quote, so no oracle can return a verdict about it.  These 48 are reported as qualifying occurrences that lack a receipt rather than being absorbed, and the numeric half of the same payload is proved unmoved by capture_coverage_classification's eligibility assertion and by the pair baseline's zero diffs."
+    },
+    "transitions": [
+      "text_change"
+    ]
+  },
+  "qualifying_population": {
+    "enumerated_before_the_edit": false,
+    "population": "every utility_outcomes item_coverage[].reason leaf in the six coupled Syndra scenarios: two items (Zhonya's Hourglass and one defensive sibling) x four payload positions x six scenarios",
+    "size": 48,
+    "why": "R-20's second half: the count was not knowable by inspection, and the population was not enumerated before the first src/ edit.  It is enumerated here instead, from the instrument, and the slice is reported as having declared its gate late \u2014 an honest record rather than a retrofitted prediction."
+  },
+  "slice": "3.8-coverage-flip"
+}

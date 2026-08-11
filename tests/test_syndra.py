@@ -369,22 +369,46 @@ def _casts(entry):
     return [(cast["time"], cast["slot"]) for cast in fight["cast_timeline"]]
 
 
-def _priced(entry):
-    """Everything the scenario prices — the entry minus its rotation prose.
+def _without_coverage_prose(value):
+    """The same tree with every ``item_coverage`` block removed.
 
-    ``rotation`` is the receipt that says *why* the order is what it is;
-    every other leaf is what the engine computed under that order.  The
-    prose moves when a hand seed retires against a declaration and no
-    number may: splitting them here is what lets one assertion mean "the
-    retirement changed nothing" instead of "the wording is unchanged".
-    ``cast_order`` and ``order`` live inside ``rotation`` and are pinned
-    separately below by the cast timeline, which is the executed fact.
+    The utility-outcomes payload carries one coverage record per item — a
+    status and a reason, both prose about *why* the model does or does not
+    price a mechanic, and neither a number.  Phase 3's 3.8 flip regenerated
+    all of them, and the leaves are enumerated in
+    ``docs/receipts/expected-golden-diff-3.8-coverage-flip.json``, which is
+    where they are pinned.  Dropping them here is the same split ``rotation``
+    already gets: this assertion is about what the engine computed.
+    """
+    if isinstance(value, dict):
+        return {
+            key: _without_coverage_prose(child)
+            for key, child in value.items()
+            if key != "item_coverage"
+        }
+    if isinstance(value, list):
+        return [_without_coverage_prose(child) for child in value]
+    return value
+
+
+def _priced(entry):
+    """Everything the scenario prices — the entry minus its receipts' prose.
+
+    ``rotation`` is the receipt that says *why* the order is what it is, and
+    ``item_coverage`` is the receipt that says why a mechanic is or is not
+    priced; every other leaf is what the engine computed.  The prose moves
+    when a hand seed retires against a declaration, or when a coverage
+    classifier stops reading a hand registry, and no number may: splitting
+    them here is what lets one assertion mean "the change moved nothing"
+    instead of "the wording is unchanged".  ``cast_order`` and ``order`` live
+    inside ``rotation`` and are pinned separately below by the cast timeline,
+    which is the executed fact.
     """
     fights = {
         key: {name: value for name, value in fight.items() if name != "rotation"}
         for key, fight in entry["fights"].items()
     }
-    return {**entry, "fights": fights}
+    return _without_coverage_prose({**entry, "fights": fights})
 
 
 _PIN_SPLINTERS = (39, 60, 120)

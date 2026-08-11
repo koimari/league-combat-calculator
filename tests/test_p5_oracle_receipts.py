@@ -171,13 +171,35 @@ def unallowlisted(diff_paths, allowlisted):
     return tuple(sorted(set(diff_paths) - set(allowlisted) - set(DISOWNED_COUNTERS)))
 
 
+# Coverage-prose leaves another phase's allowlist claims.  The clause below
+# is about a **computed number** moving, and these carry none: Phase 3's 3.8
+# coverage flip regenerated every ``item_coverage[].reason`` string in the
+# utility-outcomes payload, which reaches the coupled snapshot as a
+# ``text_change`` and nothing else.  Read from that slice's own receipt rather
+# than listed here, so the exemption cannot outlive the diffs it covers.
+def _prose_leaves_another_slice_claims():
+    """Coupled leaves the 3.8 coverage-flip allowlist declares, if committed."""
+    receipt = RECEIPTS / "expected-golden-diff-3.8-coverage-flip.json"
+    if not receipt.exists():
+        return frozenset()
+    data = json.loads(receipt.read_text(encoding="utf-8"))
+    return frozenset(data.get("expected_diff_paths", {}).get("coupled_golden", ()))
+
+
 def outside_a_rotation_receipt(diff_paths):
-    """Every differing leaf that is not inside a ``rotation`` object."""
+    """Every differing leaf that is not inside a ``rotation`` object.
+
+    Less the two disowned counters, and less the coverage-prose leaves 3.8
+    claims: this clause exists to catch a *number* moving, and a regenerated
+    reason string is not one.  A damage, timeline, stat or combat leaf still
+    lands here, which is what the negative test below drives.
+    """
+    exempt = set(DISOWNED_COUNTERS) | _prose_leaves_another_slice_claims()
     return tuple(
         sorted(
             path
             for path in diff_paths
-            if "/rotation/" not in path and path not in DISOWNED_COUNTERS
+            if "/rotation/" not in path and path not in exempt
         )
     )
 

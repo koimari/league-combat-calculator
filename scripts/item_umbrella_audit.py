@@ -31,6 +31,7 @@ except ImportError:  # imported as scripts.item_umbrella_audit in tests
 
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_coverage import (
+    ATTACKER_LANES,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -72,7 +73,9 @@ def run_audit() -> dict[str, Any]:
     path_mismatches: list[dict[str, Any]] = []
     for name in sorted(by_name):
         item = by_name[name]
-        attacker = item_model_coverage(item)
+        attacker = item_model_coverage(
+            str(item.get("name", "")), ATTACKER_LANES
+        ).as_payload()
         target = target_item_model_coverage(item)
         if (
             attacker["status"] == "review_pending"
@@ -81,7 +84,7 @@ def run_audit() -> dict[str, Any]:
             review_pending.append(name)
         for path, coverage in (("attacker", attacker), ("target", target)):
             if (
-                coverage["status"] in {"blocked", "review_pending"}
+                coverage["status"] in {"withheld", "review_pending"}
                 and not str(coverage.get("reason", "")).strip()
             ):
                 unexplained_blocks.append({"item": name, "path": path})
@@ -131,10 +134,10 @@ def run_audit() -> dict[str, Any]:
         "path_mismatches": len(path_mismatches),
         "unresolved_source_conflicts": len(unresolved_source),
         "attacker_blocked": sum(
-            entry["attacker"]["status"] == "blocked" for entry in entries
+            entry["attacker"]["status"] == "withheld" for entry in entries
         ),
         "target_blocked": sum(
-            entry["target"]["status"] == "blocked" for entry in entries
+            entry["target"]["status"] == "withheld" for entry in entries
         ),
     }
     passed = not any(

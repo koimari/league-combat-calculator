@@ -360,6 +360,14 @@ def compiled_walk_delta() -> dict[str, Any]:
     }
 
 
+# The pre-phase size of the reviewed no-modelled-effect claim, measured on the
+# commit before 3.8's flip renamed it.  A literal rather than a live
+# ``len(...)``: a ceiling read off the set it bounds is not a ratchet, it is a
+# tautology, and the whole point is that the set may never grow past what the
+# migration inherited.
+NO_RUNTIME_BEHAVIOR_CEILING = 56
+
+
 def no_runtime_behavior_block() -> dict[str, Any]:
     """The reviewed-nothing ratchet: its members, and the ceiling they ride.
 
@@ -369,12 +377,19 @@ def no_runtime_behavior_block() -> dict[str, Any]:
     backlog into silence: counter 3's target is
     ``declared >= entries - |NO_RUNTIME_BEHAVIOR|``.
     """
+    members = sorted(item_coverage.NO_RUNTIME_BEHAVIOR)
     return {
-        "members": [],
-        "ratchet_ceiling": len(item_coverage._REVIEWED_STATS_ONLY),  # noqa: SLF001
+        "members": members,
+        "sourced": sorted(
+            name
+            for name in members
+            if name in item_coverage._SOURCE_REFS  # noqa: SLF001
+        ),
+        "ratchet_ceiling": NO_RUNTIME_BEHAVIOR_CEILING,
         "ceiling_source": (
-            "len(item_coverage._REVIEWED_STATS_ONLY) on this commit — the "
-            "reviewed no-modelled-effect claim this set replaces"
+            "the size of item_coverage._REVIEWED_STATS_ONLY measured before "
+            "3.8, the reviewed no-modelled-effect claim this set is the rename "
+            "of; the set is non-increasing from it"
         ),
         "rule": (
             "|members| may never exceed the ceiling and may never grow once a "
@@ -686,6 +701,48 @@ def _compiled_walk_delta_failures(
     return failures
 
 
+def _no_runtime_behavior_failures(
+    committed: Mapping[str, Any], fresh: Mapping[str, Any]
+) -> list[str]:
+    """The reviewed-nothing ratchet: set-equal, bounded, and every member sourced.
+
+    Three checks and not one.  Set equality against the receipt makes an edit
+    a diff in a committed artifact (D-40); the ceiling makes the set
+    non-increasing from what the migration inherited; and requiring a
+    ``SourceReceipt`` per member is what stops "we reviewed it" from being the
+    same unbacked sentence this phase deletes everywhere else.
+    """
+    failures: list[str] = []
+    recorded = committed.get("no_runtime_behavior")
+    measured = fresh["no_runtime_behavior"]
+    if not isinstance(recorded, Mapping):
+        return [
+            "NO_RUNTIME_BEHAVIOR: the committed receipt has no "
+            "no_runtime_behavior section; run --write"
+        ]
+    if set(recorded.get("members", ())) != set(measured["members"]):
+        failures.append(
+            "NO_RUNTIME_BEHAVIOR: the committed member set differs from the "
+            f"declared one (committed-only="
+            f"{sorted(set(recorded.get('members', ())) - set(measured['members']))}, "
+            f"declared-only="
+            f"{sorted(set(measured['members']) - set(recorded.get('members', ())))})"
+        )
+    if len(measured["members"]) > NO_RUNTIME_BEHAVIOR_CEILING:
+        failures.append(
+            f"NO_RUNTIME_BEHAVIOR holds {len(measured['members'])} members, "
+            f"above its ratchet ceiling of {NO_RUNTIME_BEHAVIOR_CEILING}"
+        )
+    unsourced = sorted(set(measured["members"]) - set(measured["sourced"]))
+    if unsourced:
+        failures.append(
+            "NO_RUNTIME_BEHAVIOR: no wiki revision is recorded for "
+            f"{unsourced} — a reviewed absence with no source is the sentence "
+            "this phase deletes"
+        )
+    return failures
+
+
 def build_receipt(report: FrontierReport) -> dict[str, Any]:
     """The committed frontier artifact."""
     return {
@@ -797,14 +854,7 @@ def check(
             )
     failures.extend(_zero_policy_failures(committed, fresh))
     failures.extend(_compiled_walk_delta_failures(committed, fresh))
-    ratchet = committed.get("no_runtime_behavior", {})
-    members = ratchet.get("members", [])
-    ceiling = ratchet.get("ratchet_ceiling")
-    if isinstance(ceiling, int) and len(members) > ceiling:
-        failures.append(
-            f"NO_RUNTIME_BEHAVIOR holds {len(members)} members, above its "
-            f"ratchet ceiling of {ceiling}"
-        )
+    failures.extend(_no_runtime_behavior_failures(committed, fresh))
     return tuple(failures)
 
 

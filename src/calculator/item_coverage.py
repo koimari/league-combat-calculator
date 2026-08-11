@@ -17,6 +17,7 @@ ceiling is a proxy for "more than one responsibility", and this is one.
 # pylint: disable=too-many-lines
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any, Literal
 
 from .coverage_evidence import (
@@ -38,16 +39,102 @@ from .coverage_evidence import (
     validate_claim_table,
     validate_precedence,
 )
-from .item_behavior import UtilityDimension
+from .data_fetcher import get_item_by_name
+from .interpreters import INTERPRETERS, lanes_for
+from .item_behavior import EngineLane, RuleFamily, UtilityDimension
+from .item_behavior_catalog import behavior_rules, registry_entries
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 
 ItemCoverageStatus = Literal[
     "modeled_effect",
     "modeled_state",
     "stats_only",
-    "blocked",
+    "withheld",
     "review_pending",
 ]
+
+# The two answers that are refusals rather than classifications.  ``withheld``
+# is the campaign's spelling for "coverage refused to model it — a named
+# receipt and no number" (D-23); ``review_pending`` is the same refusal for a
+# record that is not a shop item at all.  Neither is optimizer- or
+# calculation-eligible, and no third status is a refusal.
+_REFUSAL_STATUSES: frozenset[str] = frozenset({"withheld", "review_pending"})
+
+# Families whose whole subject is the holder surviving rather than the holder
+# dealing damage.  An item declaring nothing but these changes durability, and
+# saying so on the attacker lane is the honest answer rather than a modelled
+# claim about outgoing TDD.
+_DEFENCE_FAMILIES: frozenset[RuleFamily] = frozenset(
+    {
+        RuleFamily.OPENING_DEFENSE,
+        RuleFamily.THRESHOLD_DEFENSE,
+        RuleFamily.COMBAT_STATE,
+        RuleFamily.REACTIVE,
+    }
+)
+
+# Families whose numbers come out of a progression or cross-participant state
+# the shared ledger schedules rather than out of the pair engine's own
+# rotation — which is exactly what ``modeled_state`` has always meant.
+_STATE_FAMILIES: frozenset[RuleFamily] = frozenset(
+    {RuleFamily.ALLY_PACKET, RuleFamily.STAT_DERIVATION}
+)
+
+# The lanes each public question needs answered.  ``needed`` is a real
+# argument and not decoration: a family with no interpreter on a lane a caller
+# depends on is the whole of ``withheld``, and a caller that never runs the
+# compiled score walk must not be told its items are withheld because that
+# lane has no interpreter yet.
+ATTACKER_LANES: frozenset[EngineLane] = frozenset({EngineLane.PAIR_ENGINE})
+SCORING_LANES: frozenset[EngineLane] = ATTACKER_LANES | frozenset(
+    {EngineLane.DEFENSE_RESOLVER}
+)
+
+
+@dataclass(frozen=True, slots=True)
+class ItemCoverage:
+    """One item's coverage answer, and the lanes it was answered for.
+
+    A record rather than a dict because ``needed`` is part of the answer: the
+    same item is modelled for a caller that prices only the pair engine and
+    withheld for one that also needs a lane no interpreter serves, and a
+    payload that did not carry the question could not be read back.
+
+    ``as_payload`` is the only producer of the public shape, so the two
+    serializing call sites in ``app.py`` cannot drift from the one the
+    optimizer and the classification receipt read.
+    """
+
+    name: str
+    status: ItemCoverageStatus
+    reason: str
+    outcome_dimensions: tuple[UtilityDimension, ...]
+    review_issue_refs: tuple[int, ...]
+    needed: frozenset[EngineLane]
+
+    @property
+    def optimizer_eligible(self) -> bool:
+        """Whether BIS search may generate candidates holding this item."""
+        return self.status not in _REFUSAL_STATUSES
+
+    @property
+    def calculation_eligible(self) -> bool:
+        """Whether an explicit request naming this item may be calculated."""
+        return self.status not in _REFUSAL_STATUSES
+
+    def as_payload(self) -> dict[str, Any]:
+        """The public coverage dict — one producer, read by every consumer."""
+        return {
+            "name": self.name,
+            "status": self.status,
+            "optimizer_eligible": self.optimizer_eligible,
+            "calculation_eligible": self.calculation_eligible,
+            "outcome_dimensions": [
+                dimension.value for dimension in self.outcome_dimensions
+            ],
+            "review_issue_refs": list(self.review_issue_refs),
+            "reason": self.reason,
+        }
 
 
 # Three containers stood here — ``_BLOCKED_REASONS``,
@@ -59,74 +146,26 @@ ItemCoverageStatus = Literal[
 # answer.  A withheld item now has one producer — a cached record whose passive
 # is unreviewed — instead of three that could disagree with each other.
 
-# These items have explicit scenario state and a single shared receipt ledger
-# for their timed/progression branches.  They remain separate from ordinary
-# ``ITEM_EFFECTS`` so an item cannot become optimizer-eligible merely because
-# one static stat conversion was parsed.
-_STATEFUL_MODELED_ITEMS: dict[str, str] = {
-    "Ardent Censer": (
-        "Sanctify is represented by the shared participant support ledger: an "
-        "explicit heal or shield trigger schedules the sourced holder/ally "
-        "attack-speed and on-hit-magic packets."
-    ),
-    "Bandlepipes": (
-        "Fanfare is represented by the shared participant support ledger: an "
-        "authored immobilize or slow schedules the sourced movement and "
-        "holder/ally attack-speed packets."
-    ),
-    "Imperial Mandate": (
-        "Command is represented on both sides of one authored immobilize "
-        "event (a slow is not enough): the holder's pair engine prices its "
-        "own post-immobilize amplifier, and the shared participant support "
-        "ledger schedules the all-source amplifier for every other "
-        "participant."
-    ),
-    "Actualizer": "Mana Made Real is represented by its bounded active window, resource multiplier, and cooldown-progress receipt.",
-    "Archangel's Staff": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
-    "Manamune": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
-    "Whispering Circlet": "Harmony, Manaflow, and Diadem state are represented by the bounded bonus-mana control and transformation receipt.",
-    "Winter's Approach": "Awe, Manaflow, and Fimbulwinter transformation state are represented by the bounded bonus-mana control and transformation receipt.",
-    "Hubris": "Eminence's bounded starting stacks and timed window are represented by a sourced state receipt.",
-    "Axiom Arc": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
-    "Endless Hunger": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
-    "Immortal Path": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
-    "Catalyst of Aeons": "Eternity's pre-mitigation champion-damage mana restoration and capped per-cast healing are represented by the ordered resource and participant ledgers.",
-    "Fimbulwinter": (
-        "Awe's bonus-mana-to-health conversion and Everlasting's sourced "
-        "post-control shield are represented by the ordered participant ledger; "
-        "unreviewed crowd-control packets remain fail-closed."
-    ),
-    "Cull": (
-        "Reap's authored minion-kill progression, completion payout, and on-hit "
-        "health receipt share one explicit state/economy ledger."
-    ),
-    "Phage": (
-        "Rage is emitted once per authored basic attack with the sourced melee or "
-        "ranged movement-speed window."
-    ),
-    "Runic Compass": (
-        "Support Quest, Shared Riches, and Ward charges are explicit state/economy "
-        "and vision receipts."
-    ),
-    "Tear of the Goddess": (
-        "Manaflow's bounded bonus-mana progression and minion-only Helping Hand "
-        "boundary are explicit state receipts."
-    ),
-    "Umbral Glaive": (
-        "Nightstalker's unseen-ready state gates a typed first-auto true-damage "
-        "packet; Blackout remains a separate vision dimension."
-    ),
-    "World Atlas": (
-        "Support Quest, Shared Riches, and Ward charges are explicit state/economy "
-        "and vision receipts."
-    ),
-}
+# ``_STATEFUL_MODELED_ITEMS`` stood here: twenty-one sentences saying an item's
+# state was represented, checked by nothing.  It is gone.  ``modeled_state`` is
+# now what the declared families say — an ally packet or a stat derivation is
+# state the shared ledger schedules — or what ``ITEM_INPUT_OPTIONS`` says, and
+# both are read out of a registry rather than asserted in prose here.
 
 
-# Each entry was reviewed against the cached Wiki passive/active description.
-# The effect does not add outgoing TDD in the calculator's current attacker
-# event model; the item's ordinary stats still flow through stats.py.
-_REVIEWED_STATS_ONLY: dict[str, str] = {
+# The one reviewed registry that survives the flip, and the reason it has to:
+# "we read the cached page and there is no runtime behaviour" is a fact about
+# an *absence*, and no declaration can carry an absence.  Every other container
+# in this module asserted the presence of a model, which is what declarations
+# now say instead.
+#
+# It is a ratchet and not an escape hatch (criterion 2).  Its membership is
+# committed to ``docs/behavior-frontier.json``, diff-gated by set equality, and
+# **non-increasing** from the size measured before the phase — otherwise
+# counter 3's target could be reached by reviewing the backlog into silence.
+# Each entry was reviewed against the cached Wiki passive/active description at
+# the revision ``_SOURCE_REFS`` records for it.
+NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Banshee's Veil": "Annul is defensive spell protection.",
     "Doran's Ring": (
         "Drain restores mana first and converts to a sourced health packet only "
@@ -524,109 +563,196 @@ def review_issue_refs(item_name: str) -> list[int]:
     return list(_REVIEW_ISSUE_REFS.get(str(item_name), (40,)))
 
 
-def _has_described_effect(item: dict[str, Any]) -> bool:
+def _has_described_effect(item: Mapping[str, Any]) -> bool:
     """Return whether cached Wiki data describes a passive or active."""
     return bool(item.get("passives") or item.get("active") or item.get("actives"))
 
 
-def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
-    """Return the optimiser coverage classification for one resolved item."""
-    name = str(item.get("name", ""))
-    effect_type = ITEM_EFFECTS.get(name, {}).get("type")
-    if name == "Death's Dance" and effect_type == "defensive_start":
-        status: ItemCoverageStatus = "modeled_effect"
-        reason = (
-            "Ignore Pain's post-mitigation deferral ticks and Defy's takedown "
-            "clear/heal are represented in the ordered participant timeline."
+def _cached_record(name: str) -> Mapping[str, Any]:
+    """One cached item record, read through the caching layer (rule 2).
+
+    A name the shop does not hold is a synthetic fixture, not an error: the
+    last two rungs exist to tell those apart from real records, so a miss is an
+    empty mapping rather than a raise.
+    """
+    try:
+        return get_item_by_name(name)
+    except KeyError:
+        return {}
+
+
+def _declared_families(name: str) -> frozenset[RuleFamily]:
+    """Every family *name* declares — through a rule, or through its entry.
+
+    Two sources and not one, deliberately.  A compiled ``BehaviorRule`` is the
+    declaration proper; a registry entry whose family is not migrated yet
+    compiles to no rule but is still an item whose behaviour the engines run.
+    Reading only the rules would call every unmigrated item unmodelled, which
+    is a refusal invented by the migration rather than by the model.
+    """
+    families = {family for _, family, _ in registry_entries(name)}
+    families.update(rule.family for rule in behavior_rules(name))
+    return frozenset(families)
+
+
+def unserved_lanes(name: str, needed: frozenset[EngineLane]) -> tuple[str, ...]:
+    """Every ``(family, lane)`` *name* declares that no interpreter serves.
+
+    This is the whole of ``withheld``: a declared family whose interpreter is
+    missing on a lane the caller needs cannot be priced, and the honest answer
+    is a named refusal rather than a number the missing interpreter would have
+    changed.  Empty tuple is the pass condition, and it is empty for every
+    cached item today — which is why the branch is proved on a synthetic
+    declaration and on an emptiness assertion rather than by a real build
+    (D-26).
+
+    It folds over compiled **rules** and never over registry entries, and the
+    difference is the whole correctness of the flip.  A family a registry entry
+    names but no rule compiles is *unmigrated*, not uninterpreted: its
+    behaviour is still live engine code, and withholding it would be a refusal
+    the migration invented.  ``stat_derivation`` is exactly that today, and
+    reading entries here would withhold Rabadon's Deathcap from BIS on the
+    strength of a declaration nobody has written yet.
+    """
+    return tuple(
+        sorted(
+            f"{family.value}/{lane.value}"
+            for family in {rule.family for rule in behavior_rules(name)}
+            for lane in lanes_for(family) & needed
+            if (family, lane) not in INTERPRETERS
         )
-    elif effect_type in {
-        "defensive_start",
-        "target_mitigation",
-        "target_threshold_health",
-        "target_threshold_shield",
-    }:
-        status: ItemCoverageStatus = "stats_only"
-        reason = (
-            "Guardian Angel's Rebirth is modeled in the target survival ledger; "
-            "it changes defense, not outgoing TDD."
-            if name == "Guardian Angel"
-            else (
-                "Time Stop is priced only from the explicit bounded active-seconds "
-                "scenario input; item presence alone never assumes stasis."
-                if name in {"Zhonya's Hourglass", "Seeker's Armguard"}
-                else "The represented mechanic changes defense, not outgoing TDD."
-            )
+    )
+
+
+def has_unserved_lane(name: str) -> bool:
+    """Rung 1: a declared family with no interpreter on an attacker lane."""
+    return bool(unserved_lanes(name, ATTACKER_LANES))
+
+
+def declares_only_defence(name: str) -> bool:
+    """Rung 2: everything this item declares is about surviving, not dealing."""
+    families = _declared_families(name)
+    return bool(families) and families <= _DEFENCE_FAMILIES
+
+
+def declares_state(name: str) -> bool:
+    """Rung 3: declared behaviour whose numbers come out of supplied state."""
+    families = _declared_families(name)
+    if not families:
+        return False
+    return bool(name in ITEM_INPUT_OPTIONS or families & _STATE_FAMILIES)
+
+
+def declares_behaviour(name: str) -> bool:
+    """Rung 4: anything declared at all, once the two rungs above have passed."""
+    return bool(_declared_families(name))
+
+
+def _state_reason(name: str, families: frozenset[RuleFamily]) -> str:
+    """Why a declared item's damage-relevant state is supplied rather than run."""
+    if name in ITEM_INPUT_OPTIONS:
+        return (
+            f"{name}'s damage-relevant state is supplied through an explicit "
+            "bounded scenario control, and its declared behaviour reads it."
         )
-    elif name in _STATEFUL_MODELED_ITEMS:
-        status = "modeled_state"
-        reason = _STATEFUL_MODELED_ITEMS[name]
-    elif name == "Heartsteel" and name in ITEM_INPUT_OPTIONS:
-        status = "modeled_state"
-        reason = (
-            "Colossal Consumption's permanent bonus-health state is supplied "
-            "through the explicit bounded scenario control."
+    return (
+        "The declared behaviour carries progression or cross-participant state "
+        "that the shared participant ledger schedules: "
+        + ", ".join(sorted(family.value for family in families & _STATE_FAMILIES))
+        + "."
+    )
+
+
+def _declared_status(
+    name: str, families: frozenset[RuleFamily]
+) -> tuple[ItemCoverageStatus, str]:
+    """The status of an item whose behaviour is declared, from its families.
+
+    The three predicates above are the rungs ``PRECEDENCE`` mirrors, and this
+    reads them rather than re-testing the same conditions: the ladder and its
+    mirror are the same code, so they cannot drift into disagreeing.
+    """
+    if declares_only_defence(name):
+        return (
+            "stats_only",
+            "Every declared family on this item is a defence: the represented "
+            "mechanic changes durability, not outgoing TDD.",
         )
-    elif name == "Rod of Ages" and name in ITEM_INPUT_OPTIONS:
-        status = "modeled_state"
+    if declares_state(name):
+        return "modeled_state", _state_reason(name, families)
+    return (
+        "modeled_effect",
+        "Damage-relevant effects are declared and every declared family has an "
+        "interpreter on the lanes this request needs.",
+    )
+
+
+def item_model_coverage(name: str, needed: frozenset[EngineLane]) -> ItemCoverage:
+    """One item's coverage on the lanes a caller needs, computed from declarations.
+
+    The ladder used to branch on the item's name eleven times.  It now asks
+    four questions in order, and every one of them is answered by something the
+    catalog or the registries say rather than by a sentence in this file:
+
+    1. Does a declared family lack an interpreter on a needed lane?  Then the
+       answer is ``withheld`` with the missing pair named — never a number.
+    2. Is anything declared at all?  Then the families decide: all-defence is
+       ``stats_only``, a state or ally family is ``modeled_state``, and the
+       rest is ``modeled_effect``.
+    3. Does the item expose bounded state as a scenario control, or has a
+       review found it has no runtime behaviour?  Then ``modeled_state`` and
+       ``stats_only`` respectively — the second being the one reviewed registry
+       that survives, because "we looked and there is nothing" is a fact no
+       declaration can carry.
+    4. Otherwise it has a cached passive nothing declares.  A real shop record
+       is ``withheld``; anything else is a fixture and is ``review_pending``.
+    """
+    record = _cached_record(name)
+    unserved = unserved_lanes(name, needed)
+    if unserved:
+        status: ItemCoverageStatus = "withheld"
         reason = (
-            "Timeless stacks and their sourced health, mana, and ability-power "
-            "conversions are supplied through the explicit bounded scenario control."
-        )
-    elif name == "Overlord's Bloodmail" and name in ITEM_INPUT_OPTIONS:
-        status = "modeled_state"
-        reason = (
-            "Tyranny is modeled and Retribution uses the explicit bounded "
-            "starting missing-health scenario control."
-        )
-    elif name == "Gunmetal Greaves":
-        # The boot's life steal is now pinned by the typed sustain receipt,
-        # but Noxian Gait's Riot-only movement branch stays out of scope.
-        status: ItemCoverageStatus = "modeled_effect"
-        reason = (
-            "Noxian Gait's Riot-only movement branch remains explicitly out of "
-            "scope because its magnitude and spacing input are not sourced; the "
-            "boot's attack-speed and life-steal stats are still applied."
-        )
-    elif name in ITEM_EFFECTS:
-        status: ItemCoverageStatus = "modeled_effect"
-        reason = "Damage-relevant effects are represented by the fight model."
-    elif name in ITEM_INPUT_OPTIONS:
-        status = "modeled_state"
-        reason = "The item exposes its damage-relevant state as a scenario control."
-    elif name in _REVIEWED_STATS_ONLY:
-        status = "stats_only"
-        reason = _REVIEWED_STATS_ONLY[name]
-    elif not _has_described_effect(item):
-        status = "stats_only"
-        reason = "The item has no separate passive or active in the cached Wiki data."
-    elif item.get("id") is not None or item.get("icon"):
-        # A cached source item is a real selectable record, even when its
-        # passive/active has not been reviewed yet.  Keep the public contract
-        # fail-closed and explicit: ``review_pending`` is reserved for
-        # synthetic/unknown fixtures that do not belong to the cached shop.
-        status = "blocked"
-        reason = (
-            "This cached passive or active has not been reviewed for outgoing "
-            "damage or state effects; calculation is withheld."
+            f"{name} declares {', '.join(unserved)} and no interpreter serves "
+            "it there, so its contribution is withheld rather than priced as "
+            "zero."
         )
     else:
-        status = "review_pending"
-        reason = "This passive or active has not yet been reviewed for outgoing TDD."
+        families = _declared_families(name)
+        if families:
+            status, reason = _declared_status(name, families)
+        elif name in ITEM_INPUT_OPTIONS:
+            status = "modeled_state"
+            reason = "The item exposes its damage-relevant state as a scenario control."
+        elif name in NO_RUNTIME_BEHAVIOR:
+            status = "stats_only"
+            reason = NO_RUNTIME_BEHAVIOR[name]
+        elif not _has_described_effect(record):
+            status = "stats_only"
+            reason = (
+                "The item has no separate passive or active in the cached Wiki data."
+            )
+        elif record.get("id") is not None or record.get("icon"):
+            status = "withheld"
+            reason = (
+                "This cached passive or active is declared by no BehaviorRule "
+                "and no registry entry; calculation is withheld."
+            )
+        else:
+            status = "review_pending"
+            reason = (
+                "This passive or active has not yet been reviewed for outgoing TDD."
+            )
 
-    return {
-        "name": name,
-        "status": status,
-        "optimizer_eligible": status
-        in {"modeled_effect", "modeled_state", "stats_only"},
-        "calculation_eligible": status not in {"blocked", "review_pending"},
-        "outcome_dimensions": [
-            dimension.value for dimension in UTILITY_OUTCOMES.get(name, ())
-        ],
-        "review_issue_refs": (
-            review_issue_refs(name) if status in {"blocked", "review_pending"} else []
+    return ItemCoverage(
+        name=name,
+        status=status,
+        reason=reason,
+        outcome_dimensions=UTILITY_OUTCOMES.get(name, ()),
+        review_issue_refs=(
+            tuple(review_issue_refs(name)) if status in _REFUSAL_STATUSES else ()
         ),
-        "reason": reason,
-    }
+        needed=needed,
+    )
 
 
 def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
@@ -639,9 +765,15 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
         status = "modeled_event_certified"
         reason = _TARGET_EVENT_CERTIFIED_REASONS[name]
     elif name in _TARGET_BLOCKED_REASONS:
-        status = "blocked"
+        status = "withheld"
         reason = _TARGET_BLOCKED_REASONS[name]
-    elif item_model_coverage(item)["status"] == "review_pending":
+    elif not _cached_record(name) and _has_described_effect(item):
+        # A record the shop does not hold, carrying a described passive: a
+        # synthetic or unknown fixture.  The attacker ladder answers by name
+        # and cannot see a caller-supplied record, so the durability question
+        # is asked here of the record itself rather than passed through — the
+        # rung fails closed either way, and asking it of the argument is what
+        # keeps it reachable at all.
         status = "review_pending"
         reason = "This passive or active has not been reviewed for target durability."
     else:
@@ -653,12 +785,12 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     return {
         "name": name,
         "status": status,
-        "calculation_eligible": status not in {"blocked", "review_pending"},
+        "calculation_eligible": status not in _REFUSAL_STATUSES,
         "outcome_dimensions": [
             dimension.value for dimension in UTILITY_OUTCOMES.get(name, ())
         ],
         "review_issue_refs": (
-            review_issue_refs(name) if status in {"blocked", "review_pending"} else []
+            review_issue_refs(name) if status in _REFUSAL_STATUSES else []
         ),
         "reason": reason,
     }
@@ -667,15 +799,15 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
 def target_build_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
     """Summarise whether a target inventory is safe to calculate."""
     entries = [target_item_model_coverage(item) for item in items]
-    blocked = [entry for entry in entries if not entry["calculation_eligible"]]
+    withheld = [entry for entry in entries if not entry["calculation_eligible"]]
     return {
-        "complete": not blocked,
+        "complete": not withheld,
         "model": "passive_target",
         "items": entries,
-        "blocked": blocked,
+        "withheld": withheld,
         "note": (
             "Every equipped item is supported by the passive-target model."
-            if not blocked
+            if not withheld
             else "Calculation is withheld until the named target mechanic is modelled."
         ),
     }
@@ -684,10 +816,11 @@ def target_build_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
 def require_target_item_coverage(items: list[dict[str, Any]]) -> None:
     """Reject target inventories that would silently omit a defense."""
     coverage = target_build_coverage(items)
-    if coverage["blocked"]:
-        blocked = coverage["blocked"][0]
+    if coverage["withheld"]:
+        withheld = coverage["withheld"][0]
         raise ValueError(
-            f"Enemy item {blocked['name']} is not supported yet: {blocked['reason']}"
+            f"Enemy item {withheld['name']} is not supported yet: "
+            f"{withheld['reason']}"
         )
 
 
@@ -722,22 +855,32 @@ def require_certified_target_timeline(
 
 
 def optimizer_candidate_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
-    """Summarise which legal item candidates can be scored without omission."""
-    classified = [item_model_coverage(item) for item in items]
-    included = [entry for entry in classified if entry["optimizer_eligible"]]
-    excluded = [entry for entry in classified if not entry["optimizer_eligible"]]
+    """Summarise which legal item candidates can be scored without omission.
+
+    D-23's published half.  A withheld candidate is **excluded from candidate
+    generation** by :func:`optimizer_supported_items` and **named here**, and
+    the per-request exclusion count is published as ``withheld_count`` so a
+    request that quietly lost a legal build says so in its own response rather
+    than only in a log.  It is never scored as zero, which is the outcome this
+    campaign exists to make unrepresentable.
+    """
+    classified = [
+        item_model_coverage(str(item.get("name", "")), SCORING_LANES) for item in items
+    ]
+    included = [entry for entry in classified if entry.optimizer_eligible]
+    withheld = [entry for entry in classified if not entry.optimizer_eligible]
     return {
         "eligible_candidates": len(classified),
         "scored_candidates": len(included),
-        "excluded_count": len(excluded),
-        "complete": not excluded,
-        "excluded": excluded,
+        "withheld_count": len(withheld),
+        "complete": not withheld,
+        "withheld": [entry.as_payload() for entry in withheld],
         "note": (
             "Every legal candidate is fully modelled."
-            if not excluded
+            if not withheld
             else (
-                f"{len(excluded)} legal item candidate"
-                f"{' is' if len(excluded) == 1 else 's are'} withheld because "
+                f"{len(withheld)} legal item candidate"
+                f"{' is' if len(withheld) == 1 else 's are'} withheld because "
                 "a damage-relevant mechanic is not yet modelled."
             )
         ),
@@ -745,17 +888,28 @@ def optimizer_candidate_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def optimizer_supported_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return candidates whose outgoing TDD can be scored without omission."""
-    return [item for item in items if item_model_coverage(item)["optimizer_eligible"]]
+    """Return candidates whose outgoing TDD can be scored without omission.
+
+    The exclusion half of D-23: a withheld item never reaches candidate
+    generation, so no build is ranked on a zero standing in for a mechanic
+    nobody ran.
+    """
+    return [
+        item
+        for item in items
+        if item_model_coverage(
+            str(item.get("name", "")), SCORING_LANES
+        ).optimizer_eligible
+    ]
 
 
 def require_optimizer_item_coverage(item: dict[str, Any]) -> None:
     """Reject a locked item whose damage-relevant mechanics are incomplete."""
-    coverage = item_model_coverage(item)
-    if not coverage["optimizer_eligible"]:
+    coverage = item_model_coverage(str(item.get("name", "")), SCORING_LANES)
+    if not coverage.optimizer_eligible:
         raise ValueError(
-            f"{coverage['name']} cannot be locked into BIS search yet: "
-            f"{coverage['reason']}"
+            f"{coverage.name} cannot be locked into BIS search yet: "
+            f"{coverage.reason}"
         )
 
 
@@ -773,11 +927,11 @@ def require_calculation_item_coverage(
     while remaining selectable in the browser.
     """
     for item in items:
-        coverage = item_model_coverage(item)
+        coverage = item_model_coverage(str(item.get("name", "")), SCORING_LANES)
         if (
             allow_ally_effects
-            and coverage["status"] == "blocked"
-            and coverage["name"] in ALLY_ITEM_EFFECTS
+            and coverage.status == "withheld"
+            and coverage.name in ALLY_ITEM_EFFECTS
         ):
             # CP17's cross-participant packet layer is the authoritative
             # calculation path for support items.  They remain withheld from
@@ -786,11 +940,11 @@ def require_calculation_item_coverage(
             # calculate because its item-team effects are timestamped and
             # fail closed when their trigger is absent.
             continue
-        if coverage["calculation_eligible"]:
+        if coverage.calculation_eligible:
             continue
         raise ValueError(
-            f"{participant} item {coverage['name']} cannot be used in a "
-            f"calculation yet: {coverage['reason']}"
+            f"{participant} item {coverage.name} cannot be used in a "
+            f"calculation yet: {coverage.reason}"
         )
 
 
@@ -836,7 +990,11 @@ _H4_SELF_REFERENTIAL_TAG = (
 # refs still need exactly one claim to carry them, so they get the claim their
 # rung implies — ``ITEM_EFFECTS`` membership — rather than a home invented for
 # the purpose.
-_ISSUE_REF_ONLY_ITEMS: tuple[str, ...] = ("Voltaic Cyclosword", "Zeke's Convergence")
+_ISSUE_REF_ONLY_ITEMS: tuple[str, ...] = (
+    "Catalyst of Aeons",
+    "Voltaic Cyclosword",
+    "Zeke's Convergence",
+)
 
 # Why an earlier rung means no cached item can reach a claim, keyed
 # ``<subject>@<lane>``.  Twenty-nine container entries are decided above their
@@ -847,159 +1005,213 @@ _ISSUE_REF_ONLY_ITEMS: tuple[str, ...] = ("Voltaic Cyclosword", "Zeke's Converge
 # exists to make visible, so no entry may be blank.
 _SHADOWED_CLAIM_REASONS: Mapping[str, str] = {
     "Armored Advance@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Banshee's Veil@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Bloodthirster@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Celestial Opposition@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Chainlaced Crushers@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
+    ),
+    "Cryptbloom@attacker": (
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Death's Dance@attacker": (
-        "attacker.deaths_dance_defensive_start decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its own declaration answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
+    ),
+    "Diadem of Songs@attacker": (
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Doran's Ring@attacker": (
-        "attacker.item_effects_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its own declaration answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Doran's Shield@attacker": (
-        "attacker.item_effects_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its own declaration answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
+    ),
+    "Dream Maker@attacker": (
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
+    ),
+    "Echoes of Helia@attacker": (
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Edge of Night@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Force of Nature@attacker": (
-        "attacker.item_effects_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Frozen Heart@attacker": (
-        "attacker.item_effects_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Guardian Angel@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Gunmetal Greaves@attacker": (
-        "attacker.gunmetal_greaves_movement_gap decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its own declaration answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Immortal Shieldbow@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Jak'Sho, The Protean@attacker": (
-        "attacker.item_effects_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Kaenic Rookern@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Knight's Vow@attacker": (
-        "attacker.item_input_options_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Locket of the Iron Solari@attacker": (
-        "attacker.item_input_options_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Maw of Malmortius@attacker": (
-        "attacker.item_effects_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Mercurial Scimitar@attacker": (
-        "attacker.item_effects_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its own declaration answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Mikael's Blessing@attacker": (
-        "attacker.item_input_options_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
+    ),
+    "Moonstone Renewer@attacker": (
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Plated Steelcaps@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Protoplasm Harness@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Randuin's Omen@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Seeker's Armguard@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Shurelya's Battlesong@attacker": (
-        "attacker.item_input_options_membership decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
+    ),
+    "Solstice Sleigh@attacker": (
+        "Its declared state family answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Spirit Visage@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Its own declaration answers it before the reviewed-nothing "
+        "container is reached, so the container never speaks for it and "
+        "no request can reach this claim."
     ),
     "Verdant Barrier@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "Zhonya's Hourglass@attacker": (
-        "attacker.defensive_effect_types decides this item before the "
-        "container is reached, so the container never speaks for it and no "
-        "request can reach this claim."
+        "Every family this item declares is a defence, so the defence "
+        "rung answers it before the reviewed-nothing container is "
+        "reached; the container never speaks for it and no request can "
+        "reach this claim."
     ),
     "attacker.unreviewed_fixture@attacker": (
-        "review_pending is reserved for synthetic and unknown fixtures: every "
-        "cached shop record carries an id or an icon and is blocked by the "
-        "rung above, so no cached item reaches this one."
+        "review_pending is reserved for synthetic and unknown fixtures: "
+        "every cached shop record carries an id or an icon and is "
+        "withheld by the rung above, so no cached item reaches this one."
+    ),
+    "attacker.unserved_declared_lane@attacker": (
+        "No cached item declares a family whose interpreter is missing on "
+        "the attacker lane, so nothing reaches this rung; the branch is "
+        "proved on a synthetic declaration and on the emptiness of the "
+        "population itself rather than by any real build."
     ),
     "target.attacker_review_pending_passthrough@target": (
         "The passthrough fires only for an item the attacker lane calls "
         "review_pending, and no cached item is; it exists so a synthetic "
-        "fixture cannot be target-relevant while being attacker-unreviewed."
+        "fixture cannot be target-relevant while being attacker- "
+        "unreviewed."
     ),
 }
 _SOURCE_REFS: Mapping[str, tuple[str, int]] = {
@@ -1213,10 +1425,6 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
     "Bandlepipes": (
         "item_support_effects.derive_item_support_effects",
         "packet:Bandlepipes — Fanfare",
-    ),
-    "Catalyst of Aeons": (
-        "item_effects.item_state_receipts",
-        "key:mana_spent_heal_ratio",
     ),
     "Cull": ("item_effects.item_state_receipts", "option:reap_minion_kills"),
     "Endless Hunger": (
@@ -1584,7 +1792,7 @@ def _unreachable_reason(item: str, lane: ClaimLane) -> str:
 
 
 def _attacker_state_claim(item: str) -> Claim:
-    """One ``_STATEFUL_MODELED_ITEMS`` entry: state, and where it comes from."""
+    """One stateful item: the state, and the named home it comes from."""
     path, home = _ATTACKER_STATE_HOMES[item]
     role: SymbolRole = (
         "walk_packet_builder" if home.startswith("packet:") else "value_accessor"
@@ -1608,7 +1816,7 @@ def _attacker_state_claim(item: str) -> Claim:
 
 
 def _stats_only_claim(item: str) -> Claim:
-    """One ``_REVIEWED_STATS_ONLY`` entry: a review, and the revision it read."""
+    """One ``NO_RUNTIME_BEHAVIOR`` entry: a review, and the revision it read."""
     return Claim(
         subject_kind="item",
         subject=item,
@@ -1693,7 +1901,7 @@ def _target_blocked_claim(item: str) -> Claim:
         subject_kind="item",
         subject=item,
         lane="target",
-        status="blocked",
+        status="withheld",
         evidence=(
             Absence(
                 reason=_TARGET_BLOCKED_REASONS[item],
@@ -1840,83 +2048,48 @@ def _unreachable_rung_claim(
 # whole reason a claim's subject may be a rule.
 _RULE_CLAIMS: tuple[Claim, ...] = (
     _rule_claim(
-        "attacker.deaths_dance_defensive_start",
+        "attacker.unserved_declared_lane",
         "attacker",
-        "modeled_effect",
+        "withheld",
         (
-            Symbol(
-                path="survival.transitions.trigger_defy", role="walk_packet_builder"
+            Absence(
+                reason=(
+                    "A declared family whose interpreter is missing on a lane the "
+                    "request needs is withheld with the pair named, never priced "
+                    "as zero; no cached item reaches it today, which is why the "
+                    "rung is proved on a synthetic declaration and on an "
+                    "emptiness assertion."
+                ),
+                issue_refs=(_UMBRELLA_ISSUE,),
             ),
-            _rung_ref("attacker.deaths_dance_defensive_start"),
         ),
     ),
     _rule_claim(
-        "attacker.defensive_effect_types",
+        "attacker.declared_defence_only",
         "attacker",
         "stats_only",
         (
             _source_ref("Guardian Angel"),
-            _rung_ref("attacker.defensive_effect_types"),
+            _rung_ref("attacker.declared_defence_only"),
         ),
     ),
     _rule_claim(
-        "attacker.stateful_modeled_items",
+        "attacker.declared_state",
         "attacker",
         "modeled_state",
         (
             Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
             OptionSchema(item="Hubris", option="eminence_stacks"),
-            _rung_ref("attacker.stateful_modeled_items"),
+            _rung_ref("attacker.declared_state"),
         ),
     ),
     _rule_claim(
-        "attacker.heartsteel_state_option",
-        "attacker",
-        "modeled_state",
-        (
-            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
-            OptionSchema(item="Heartsteel", option="bonus_health"),
-            _rung_ref("attacker.heartsteel_state_option"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.rod_of_ages_state_option",
-        "attacker",
-        "modeled_state",
-        (
-            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
-            OptionSchema(item="Rod of Ages", option="timeless_stacks"),
-            _rung_ref("attacker.rod_of_ages_state_option"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.overlords_bloodmail_state_option",
-        "attacker",
-        "modeled_state",
-        (
-            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
-            OptionSchema(item="Overlord's Bloodmail", option="missing_health_percent"),
-            _rung_ref("attacker.overlords_bloodmail_state_option"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.gunmetal_greaves_movement_gap",
+        "attacker.declared_behaviour",
         "attacker",
         "modeled_effect",
         (
-            Symbol(path="stats.get_item_stats", role="value_accessor"),
-            _rung_ref("attacker.gunmetal_greaves_movement_gap"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.item_effects_membership",
-        "attacker",
-        "modeled_effect",
-        (
-            Symbol(
-                path="item_effects._resolve_damage_effects_uncached", role="tag_handler"
-            ),
-            _rung_ref("attacker.item_effects_membership"),
+            Symbol(path="item_behavior_catalog.behavior_rules", role="compiler"),
+            _rung_ref("attacker.declared_behaviour"),
         ),
     ),
     _rule_claim(
@@ -1930,12 +2103,12 @@ _RULE_CLAIMS: tuple[Claim, ...] = (
         ),
     ),
     _rule_claim(
-        "attacker.reviewed_stats_only",
+        "attacker.no_runtime_behavior",
         "attacker",
         "stats_only",
         (
             _source_ref("Banshee's Veil"),
-            _rung_ref("attacker.reviewed_stats_only"),
+            _rung_ref("attacker.no_runtime_behavior"),
         ),
     ),
     _rule_claim(
@@ -1950,7 +2123,7 @@ _RULE_CLAIMS: tuple[Claim, ...] = (
     _rule_claim(
         "attacker.cached_shop_record",
         "attacker",
-        "blocked",
+        "withheld",
         (
             Absence(
                 reason=(
@@ -1994,9 +2167,9 @@ _RULE_CLAIMS: tuple[Claim, ...] = (
         ),
     ),
     _rule_claim(
-        "target.blocked_reasons",
+        "target.withheld_reasons",
         "target",
-        "blocked",
+        "withheld",
         (
             Absence(
                 reason=(
@@ -2031,8 +2204,8 @@ def _corpus() -> dict[tuple[SubjectKind, str, ClaimLane], Claim]:
     exists to catch -- and only the assembly is mechanical.
     """
     claims = [
-        *(_attacker_state_claim(item) for item in _STATEFUL_MODELED_ITEMS),
-        *(_stats_only_claim(item) for item in _REVIEWED_STATS_ONLY),
+        *(_attacker_state_claim(item) for item in _ATTACKER_STATE_HOMES),
+        *(_stats_only_claim(item) for item in NO_RUNTIME_BEHAVIOR),
         *(_item_effects_claim(item) for item in _ISSUE_REF_ONLY_ITEMS),
         *(_target_modeled_claim(item) for item in _TARGET_MODELED_REASONS),
         *(_target_certified_claim(item) for item in _TARGET_EVENT_CERTIFIED_REASONS),
@@ -2109,7 +2282,7 @@ validate_claim_table(COVERAGE_EVIDENCE)
 
 # The two classifiers above are ``if``/``elif`` ladders, and the *order* of
 # their rungs is part of the public contract: an item in
-# ``_REVIEWED_STATS_ONLY`` that also carries a defensive effect type never
+# ``NO_RUNTIME_BEHAVIOR`` that also carries a defensive effect type never
 # reaches its own container, so a coverage claim filed against that container
 # is a claim no cached item can reach.  Nothing could say that until the
 # ladder was something a program could walk.
@@ -2123,85 +2296,40 @@ validate_claim_table(COVERAGE_EVIDENCE)
 # `keys_on` names the container, registry or predicate that branch reads.
 PRECEDENCE: tuple[PrecedenceRule, ...] = (
     PrecedenceRule(
-        rule_id="attacker.deaths_dance_defensive_start",
+        rule_id="attacker.unserved_declared_lane",
         lane="attacker",
-        kind="effect_type",
-        keys_on=("item_effects.ITEM_EFFECTS",),
-        items=("Death's Dance",),
-        effect_types=("defensive_start",),
+        kind="derivation",
+        keys_on=("item_coverage.has_unserved_lane",),
+        items=(),
+        effect_types=(),
         negated=False,
-        status="modeled_effect",
+        status="withheld",
     ),
     PrecedenceRule(
-        rule_id="attacker.defensive_effect_types",
+        rule_id="attacker.declared_defence_only",
         lane="attacker",
-        kind="effect_type",
-        keys_on=("item_effects.ITEM_EFFECTS",),
+        kind="derivation",
+        keys_on=("item_coverage.declares_only_defence",),
         items=(),
-        effect_types=(
-            "defensive_start",
-            "target_mitigation",
-            "target_threshold_health",
-            "target_threshold_shield",
-        ),
+        effect_types=(),
         negated=False,
         status="stats_only",
     ),
     PrecedenceRule(
-        rule_id="attacker.stateful_modeled_items",
+        rule_id="attacker.declared_state",
         lane="attacker",
-        kind="container",
-        keys_on=("item_coverage._STATEFUL_MODELED_ITEMS",),
+        kind="derivation",
+        keys_on=("item_coverage.declares_state",),
         items=(),
         effect_types=(),
         negated=False,
         status="modeled_state",
     ),
     PrecedenceRule(
-        rule_id="attacker.heartsteel_state_option",
+        rule_id="attacker.declared_behaviour",
         lane="attacker",
-        kind="option_state",
-        keys_on=("item_effects.ITEM_INPUT_OPTIONS",),
-        items=("Heartsteel",),
-        effect_types=(),
-        negated=False,
-        status="modeled_state",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.rod_of_ages_state_option",
-        lane="attacker",
-        kind="option_state",
-        keys_on=("item_effects.ITEM_INPUT_OPTIONS",),
-        items=("Rod of Ages",),
-        effect_types=(),
-        negated=False,
-        status="modeled_state",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.overlords_bloodmail_state_option",
-        lane="attacker",
-        kind="option_state",
-        keys_on=("item_effects.ITEM_INPUT_OPTIONS",),
-        items=("Overlord's Bloodmail",),
-        effect_types=(),
-        negated=False,
-        status="modeled_state",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.gunmetal_greaves_movement_gap",
-        lane="attacker",
-        kind="named_item",
-        keys_on=(),
-        items=("Gunmetal Greaves",),
-        effect_types=(),
-        negated=False,
-        status="modeled_effect",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.item_effects_membership",
-        lane="attacker",
-        kind="container",
-        keys_on=("item_effects.ITEM_EFFECTS",),
+        kind="derivation",
+        keys_on=("item_coverage.declares_behaviour",),
         items=(),
         effect_types=(),
         negated=False,
@@ -2218,10 +2346,10 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
         status="modeled_state",
     ),
     PrecedenceRule(
-        rule_id="attacker.reviewed_stats_only",
+        rule_id="attacker.no_runtime_behavior",
         lane="attacker",
         kind="container",
-        keys_on=("item_coverage._REVIEWED_STATS_ONLY",),
+        keys_on=("item_coverage.NO_RUNTIME_BEHAVIOR",),
         items=(),
         effect_types=(),
         negated=False,
@@ -2245,7 +2373,7 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
         items=(),
         effect_types=(),
         negated=False,
-        status="blocked",
+        status="withheld",
     ),
     PrecedenceRule(
         rule_id="attacker.unreviewed_fixture",
@@ -2278,14 +2406,14 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
         status="modeled_event_certified",
     ),
     PrecedenceRule(
-        rule_id="target.blocked_reasons",
+        rule_id="target.withheld_reasons",
         lane="target",
         kind="container",
         keys_on=("item_coverage._TARGET_BLOCKED_REASONS",),
         items=(),
         effect_types=(),
         negated=False,
-        status="blocked",
+        status="withheld",
     ),
     PrecedenceRule(
         rule_id="target.attacker_review_pending_passthrough",
@@ -2312,8 +2440,12 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
 validate_precedence(PRECEDENCE)
 
 __all__ = [
+    "ATTACKER_LANES",
     "COVERAGE_EVIDENCE",
     "FRONTIER",
+    "ItemCoverage",
+    "NO_RUNTIME_BEHAVIOR",
+    "SCORING_LANES",
     "PRECEDENCE",
     "UTILITY_OUTCOMES",
     "item_model_coverage",

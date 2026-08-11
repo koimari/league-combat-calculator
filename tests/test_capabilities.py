@@ -26,7 +26,7 @@ ACTIONS = ROOT / "src" / "calculator" / "survival" / "actions.py"
 #
 # Six at 0A.  C4 inserted ``persistent_aura_arming`` third — the ledger slot
 # between the barriers and the damage, where an aura already in force is
-# armed — and that is the change ``CAPABILITY_SCHEMA_VERSION == 2`` names.
+# armed — and that is the change version 2 named.
 PUBLISHED_PHASES = [
     "state_transition",
     "shield_or_temporary_health",
@@ -46,7 +46,7 @@ def test_capability_contract_exposes_named_participant_and_catalogue_fields() ->
         item_option_count=3,
     )
 
-    assert contract["schema_version"] == 2
+    assert contract["schema_version"] == 3
     assert contract["participants"]["main"]["fields"]["champion"]["supported"]
     assert contract["catalogs"]["champion_options"]["count"] == 2
     assert contract["catalogs"]["item_options"]["count"] == 3
@@ -80,10 +80,13 @@ def test_the_published_list_moved_the_schema_version_with_it() -> None:
     """D-63: the version names a change to the payload, and only that.
 
     0A derived the list at version 1 with the payload byte-identical; C4
-    published a seventh name and took version 2.  Every value in the chain
-    has exactly one owning commit.
+    published a seventh name and took version 2; Phase 3's 3.8 coverage flip
+    took 3 for a different published payload — the coverage record, whose
+    refusal is now spelled ``withheld`` and whose status is computed from
+    declarations.  Every value in the chain has exactly one owning commit,
+    which is why the phase list is still seven names at version 3.
     """
-    assert CAPABILITY_SCHEMA_VERSION == 2
+    assert CAPABILITY_SCHEMA_VERSION == 3
     assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7
 
 
