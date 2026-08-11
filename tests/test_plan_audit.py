@@ -51,7 +51,8 @@ class TestTheRealPlans:
         text = UMBRELLA.read_text(encoding="utf-8")
         h5 = [line for line in text.splitlines() if line.startswith("| **H5** |")]
         assert h5, "the umbrella no longer records an H5 row"
-        assert "Recorded ruling: DESCOPED" in h5[0]
+        assert "Recorded ruling: SCOPED" in h5[0]
+        assert "DESCOPED" not in h5[0]
         assert plan_audit.audit(documents=[UMBRELLA]) == ()
 
 
