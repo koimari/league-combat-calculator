@@ -6,6 +6,7 @@ import math
 from typing import Any
 
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
+from .data_registry import data_version
 from .champions.slotlib import extract_named
 from .champions.skill_orders import get_ability_rank
 
@@ -45,7 +46,7 @@ _SUPPORT_ATTRIBUTES = frozenset(
         "Maximum Heal",
     }
 )
-_SUPPORT_ATTRS_MEMO: dict[int, tuple[dict[str, Any], bool]] = {}
+_SUPPORT_ATTRS_MEMO: dict[tuple[int, int], tuple[dict[str, Any], bool]] = {}
 
 # E8d follow-up: per-champion heal-attribute overrides.  Bard W's shrine
 # gathers power over 5s; the deterministic single-target model prices the
@@ -179,7 +180,8 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
 
 
 def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
-    memo = _SUPPORT_ATTRS_MEMO.get(id(champion_data))
+    memo_key = (data_version(), id(champion_data))
+    memo = _SUPPORT_ATTRS_MEMO.get(memo_key)
     if memo is not None and memo[0] is champion_data:
         return memo[1]
     found = any(
@@ -188,14 +190,15 @@ def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
         for effect in _ability(champion_data, slot).get("effects", [])
         for leveling in effect.get("leveling", [])
     )
-    _SUPPORT_ATTRS_MEMO[id(champion_data)] = (champion_data, found)
+    _SUPPORT_ATTRS_MEMO[memo_key] = (champion_data, found)
     return found
 
 
 # The attribute names and target-scope markers below are pure cached-JSON
-# facts per ability, so they are derived once per ability object (identity-
-# verified on every hit) instead of per optimizer candidate.
-_SUPPORT_PROFILE_MEMO: dict[int, tuple[dict, tuple]] = {}
+# facts per ability, so they are derived once per ability object and cache
+# generation — ``(data_version(), id(ability))``, identity-verified on every
+# hit (D-49) — instead of per optimizer candidate.
+_SUPPORT_PROFILE_MEMO: dict[tuple[int, int], tuple[dict, tuple]] = {}
 
 
 def _sourced_cast_time(cast: dict[str, Any], *, slot: str) -> float:
@@ -217,7 +220,8 @@ def _sourced_cast_time(cast: dict[str, Any], *, slot: str) -> float:
 def _support_profile(
     ability: dict[str, Any],
 ) -> tuple[str | None, str | None, bool, str]:
-    memo = _SUPPORT_PROFILE_MEMO.get(id(ability))
+    memo_key = (data_version(), id(ability))
+    memo = _SUPPORT_PROFILE_MEMO.get(memo_key)
     if memo is not None and memo[0] is ability:
         return memo[1]
     shield_attr = _first_attribute(ability, ("Shield Strength", "Shield"))
@@ -302,7 +306,7 @@ def _support_profile(
     else:
         target_scope = "one_teammate"
     profile = (shield_attr, heal_attr, target_self, target_scope)
-    _SUPPORT_PROFILE_MEMO[id(ability)] = (ability, profile)
+    _SUPPORT_PROFILE_MEMO[memo_key] = (ability, profile)
     return profile
 
 

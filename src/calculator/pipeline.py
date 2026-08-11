@@ -48,6 +48,7 @@ from .request_parsing import (
 )
 from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats, get_item_stats
+from .data_registry import data_version
 from .cast_dependency import (
     BASE_CAST_SLOTS,
     check_order_satisfies_dependencies,
@@ -947,10 +948,11 @@ def require_fight_mode_support(params: "FightParams", champion_name: str) -> Non
 # candidate fights, and the resolved cast order for one champion is almost
 # always identical across candidates.  Memoize the derived params by
 # (params identity, order): frozen instances are safe to share, the strong
-# reference guards ``id()`` recycling, and the bound keeps candidate churn
-# from growing the memo without limit.
+# reference guards ``id()`` recycling, the leading ``data_version()``
+# retires every entry derived from a replaced cache (D-49), and the bound
+# keeps candidate churn from growing the memo without limit.
 _CAST_ORDER_PARAMS_MEMO: dict[
-    tuple[int, tuple[str, ...]], tuple["FightParams", "FightParams"]
+    tuple[int, int, tuple[str, ...]], tuple["FightParams", "FightParams"]
 ] = {}
 _CAST_ORDER_PARAMS_MEMO_LIMIT = 512
 
@@ -959,7 +961,7 @@ def _params_with_cast_order(
     params: "FightParams", declared_order: list[str]
 ) -> "FightParams":
     """``replace(params, cast_order=declared_order)`` with an identity memo."""
-    key = (id(params), tuple(declared_order))
+    key = (data_version(), id(params), tuple(declared_order))
     memo = _CAST_ORDER_PARAMS_MEMO.get(key)
     if memo is not None and memo[0] is params:
         return memo[1]

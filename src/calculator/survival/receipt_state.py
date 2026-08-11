@@ -21,16 +21,18 @@ from .actions import (
     survival_action_from_event,
 )
 from .transitions import participant_pools
+from ..data_registry import data_version
 from ..item_effects import sustain_effect_value
 
 # The optimizer rebuilds every participant's state once per candidate
 # evaluation, but the construction below derives only from the combatant's
 # fixed defenses/stats/items.  The prototype memo is identity-keyed with a
-# strong reference (the same recycling guard as the item-stats memo) and
-# bounded because candidate combatants churn per evaluation.  Container
+# strong reference (the same recycling guard as the item-stats memo), keyed
+# on the cache generation the item stats came from (D-49), and bounded
+# because candidate combatants churn per evaluation.  Container
 # keys are derived from the prototype itself, so a new mutable field can
 # never be silently shared between clones.
-_STATE_PROTO_MEMO: dict[int, tuple[Any, dict[str, Any], list[str]]] = {}
+_STATE_PROTO_MEMO: dict[tuple[int, int], tuple[Any, dict[str, Any], list[str]]] = {}
 _STATE_PROTO_MEMO_LIMIT = 512
 
 
@@ -41,7 +43,8 @@ def build_state(combatant: Any) -> dict[str, Any]:
     fresh containers, shared scalars — field-for-field identical to an
     uncached construction (issue #171).
     """
-    memo = _STATE_PROTO_MEMO.get(id(combatant))
+    memo_key = (data_version(), id(combatant))
+    memo = _STATE_PROTO_MEMO.get(memo_key)
     if memo is None or memo[0] is not combatant:
         proto = _build_state_uncached(combatant)
         container_keys = [
@@ -49,7 +52,7 @@ def build_state(combatant: Any) -> dict[str, Any]:
         ]
         if len(_STATE_PROTO_MEMO) > _STATE_PROTO_MEMO_LIMIT:
             _STATE_PROTO_MEMO.clear()
-        _STATE_PROTO_MEMO[id(combatant)] = (combatant, proto, container_keys)
+        _STATE_PROTO_MEMO[memo_key] = (combatant, proto, container_keys)
     else:
         proto, container_keys = memo[1], memo[2]
     # The prototype itself is never handed out: the walk mutates its state,

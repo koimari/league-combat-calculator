@@ -12,6 +12,7 @@ from .item_effects import (
     override_item_stat,
     resolve_stat_effects,
 )
+from .data_registry import data_version
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 
 # Level cap — 20 is top-lane-only as of this season, so this is
@@ -154,17 +155,20 @@ def get_champion_base_stats(
 
 
 # The optimizer recomputes candidate stats thousands of times over the same
-# cached item dicts, so the pure extraction below is memoized by item-data
-# identity.  Each entry keeps a strong reference to its source dict and is
-# re-verified on every hit, so a data refresh that rebuilds the item cache
-# can never serve stale stats through a recycled ``id()``.
-_ITEM_STATS_MEMO: dict[int, tuple[dict[str, Any], dict[str, float]]] = {}
+# cached item dicts, so the pure extraction below is memoized by
+# ``(data_version(), id(item_data))``.  Each entry keeps a strong reference
+# to its source dict and is re-verified on every hit, so a recycled ``id()``
+# cannot serve stale stats; the version component retires every entry a
+# cache refresh derived from the cache it replaced (D-49).
+_ITEM_STATS_MEMO: dict[tuple[int, int], tuple[dict[str, Any], dict[str, float]]] = {}
 # Cached item records are immutable for the lifetime of one calculation/data
 # snapshot. Keep the validated item and its nested stats map alive so coupled
 # optimizer searches do not walk the same schema thousands of times. A data
 # refresh creates new item/stat dictionaries and therefore cannot reuse this
 # entry; synthetic sparse fixtures continue to bypass the cache below.
-_ITEM_STATS_VALIDATION_MEMO: dict[int, tuple[dict[str, Any], Mapping[str, Any]]] = {}
+_ITEM_STATS_VALIDATION_MEMO: dict[
+    tuple[int, int], tuple[dict[str, Any], Mapping[str, Any]]
+] = {}
 
 
 def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
@@ -180,7 +184,8 @@ def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
         return
     item_name = str(item_data.get("name") or "unknown item")
     raw_stats = item_data.get("stats")
-    memo = _ITEM_STATS_VALIDATION_MEMO.get(id(item_data))
+    memo_key = (data_version(), id(item_data))
+    memo = _ITEM_STATS_VALIDATION_MEMO.get(memo_key)
     if memo is not None and memo[0] is item_data and memo[1] is raw_stats:
         return
     if not isinstance(raw_stats, Mapping):
@@ -216,7 +221,7 @@ def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
                     f"Cached item {item_name} stat {stat_name}.{component} "
                     "must be finite"
                 )
-    _ITEM_STATS_VALIDATION_MEMO[id(item_data)] = (item_data, raw_stats)
+    _ITEM_STATS_VALIDATION_MEMO[memo_key] = (item_data, raw_stats)
 
 
 def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
@@ -231,7 +236,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         same cached item.
     """
     _validate_cached_item_stats(item_data)
-    memo = _ITEM_STATS_MEMO.get(id(item_data))
+    memo_key = (data_version(), id(item_data))
+    memo = _ITEM_STATS_MEMO.get(memo_key)
     if memo is not None and memo[0] is item_data:
         return memo[1]
     stats = item_data.get("stats", {})
@@ -297,7 +303,7 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "omnivamp_percent",
         extracted["omnivamp_percent"],
     )
-    _ITEM_STATS_MEMO[id(item_data)] = (item_data, extracted)
+    _ITEM_STATS_MEMO[memo_key] = (item_data, extracted)
     return extracted
 
 

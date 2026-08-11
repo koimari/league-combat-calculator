@@ -60,12 +60,102 @@ def data_version() -> int:
     bumping it is what makes a mid-process refresh recompute rather than
     serve a value derived from the cache it replaced.
 
-    Deliberately unread for now.  The memos that will key on it belong to
-    two lanes that are live at once, and a counter either of them declared
-    would be a counter the other could not use, so it is declared here —
-    in the module that owns the write it counts.
+    Who reads it is :data:`DATA_VERSION_KEYED_MEMOS`, below, and the three
+    tables beside it say why every other memo in the tree does not.  It is
+    declared here, in the module that owns the write it counts, because the
+    two lanes that key on it are live at once and a counter either of them
+    declared would be a counter the other could not use.
     """
     return _DATA_VERSION
+
+
+# ── who keys on the counter ──────────────────────────────────────────────
+#
+# The population is machine-derived, not judged: *every module-level binding
+# under src/calculator/ whose name ends in ``_MEMO`` or ``_CACHE`` and whose
+# value is a mapping*.  tests/test_data_version_memos.py scans the tree for
+# that shape — fifteen of them today — and asserts the four tables below
+# partition it exactly, so a sixteenth cannot join the codebase without
+# landing in one of them, which is the whole point of a counter over a
+# convention (D-49).
+#
+# Splitting the population four ways rather than two is deliberate: "keys on
+# it", "another lane keys it", "cannot be governed by it" and "should be
+# keyed and is not this phase's to edit" are four different claims, and
+# collapsing the last two would hide a real gap behind a reasoned exemption.
+
+DATA_VERSION_KEYED_MEMOS: dict[str, str] = {
+    "calculator.economy._ITEM_BY_ID_MEMO": (
+        "the id-keyed view of the item cache the optimizer prices plans through"
+    ),
+    "calculator.pipeline._CAST_ORDER_PARAMS_MEMO": (
+        "derived cast-order params; the order was resolved from cached ability data"
+    ),
+    "calculator.stats._ITEM_STATS_MEMO": "one cached item's extracted stat block",
+    "calculator.stats._ITEM_STATS_VALIDATION_MEMO": (
+        "the schema verdict on one cached item's stat map"
+    ),
+    "calculator.support_effects._SUPPORT_ATTRS_MEMO": (
+        "whether a cached champion carries any support attribute"
+    ),
+    "calculator.support_effects._SUPPORT_PROFILE_MEMO": (
+        "one cached ability's shield/heal attribute names and target scope"
+    ),
+    "calculator.survival.receipt_state._STATE_PROTO_MEMO": (
+        "a participant's survival prototype, derived from cached item stats"
+    ),
+}
+
+# Keyed by their own lane rather than here: Phase 5 owns the two rotation
+# memos and keyed them with the cast-dependency work (D-49's split).
+ROTATION_MEMOS: frozenset[str] = frozenset(
+    {
+        "calculator.rotation_resolver._DERIVED_RULE_CACHE",
+        "calculator.rotation_resolver._MATRIX_DPS_CACHE",
+    }
+)
+
+# Not governable by this counter: the counter counts write_runtime_cache
+# calls, and a memo over something write_runtime_cache never writes would
+# key on a number that can never move for it.
+UNGOVERNED_MEMOS: dict[str, str] = {
+    "calculator.certainty._AUDIT_CACHE": (
+        "derived from data/wiki-full-entry-audit.json, a HAND_AUTHORED "
+        "artifact rather than a runtime cache"
+    ),
+}
+
+# The same shape as the seven above, over champions.json instead of
+# items.json, and keyed by the same argument — but the champion tree is
+# ruled out of this phase's sweep (D-24: no champion sweep is implied), so
+# these five are named here with their issue rather than silently left out
+# of the population.  This is a gap on the record, not an exemption.
+_CHAMPION_MEMO_DEFERRAL = (
+    "champions/ is outside this phase's edit scope (D-24); identity-keyed "
+    "with a strong reference and re-verified on every hit, so the residual "
+    "hazard is an in-place mutation of a cached ability dict — issue #212"
+)
+
+# Emptied wholesale when the registry they derive from is rebuilt, so the
+# counter has nothing to add.  Named here anyway, with the test that asserts
+# the clear still happens: a memo whose safety is one line in somebody
+# else's function is exactly the claim this campaign stopped taking on
+# trust.  Their names do not match the ``_MEMO``/``_CACHE`` shape the scan
+# looks for, which is why they are listed rather than partitioned.
+REFRESH_CLEARED_MEMOS: dict[str, str] = {
+    "calculator.item_effects._RESOLVED_DAMAGE_EFFECTS": (
+        "refresh_item_effects() clears it in the same call that rebuilds "
+        "ITEM_EFFECTS"
+    ),
+}
+
+DEFERRED_MEMOS: dict[str, str] = {
+    "calculator.champions.engine._CAST_TIME_MEMO": _CHAMPION_MEMO_DEFERRAL,
+    "calculator.champions.engine._RESOURCE_COST_MEMO": _CHAMPION_MEMO_DEFERRAL,
+    "calculator.champions.slotlib._MODIFIER_PAIRS_MEMO": _CHAMPION_MEMO_DEFERRAL,
+    "calculator.champions.slotlib._NAMED_LEVELING_MEMO": _CHAMPION_MEMO_DEFERRAL,
+    "calculator.champions.slotlib._PRIMARY_LEVELING_MEMO": _CHAMPION_MEMO_DEFERRAL,
+}
 
 
 def write_runtime_cache(
