@@ -1,0 +1,685 @@
+"""Item and keystone behaviour as a closed union of frozen declarations.
+
+The campaign's diagnosis was that behaviour lived as code scattered across
+engines, and coverage lived as prose describing that code.  Neither can be
+checked against the other.  This module is the replacement vocabulary: a
+:class:`BehaviorRule` is one mechanic, declared once, in a closed family, with
+its numbers held as references (``value_ref``), its provenance held as a
+receipt, and its legal-zero story declared rather than assumed.  What a
+declaration cannot say is as load-bearing as what it can — an undeclared
+behaviour is withheld with a named receipt, never priced as zero.
+
+**This module is a leaf.**  It imports ``value_ref`` and ``ability_spec`` and
+nothing else, so ``damage.py``, ``survival/*``, ``defensive_effects.py`` and
+``item_support_effects.py`` may all depend on it without a cycle.  Two
+consequences are deliberate and worth stating, because both look like
+duplication until the constraint is remembered:
+
+* :class:`TriggerEvent` is a local closed enum rather than a re-export of
+  ``trigger_stream``'s ``Stream``.  It is not a second vocabulary: every
+  member declares the stream it reads in :data:`TRIGGER_STREAM`, and
+  ``tests/test_item_behavior.py`` asserts that projection lands inside
+  ``Stream``'s own member names.
+* :class:`KernelField` and :class:`BuildContext` — the ``interpreters/`` →
+  ``survival/`` contract — live here, because this is the one module both
+  packages may import and a name in a cross-package signature needs a home.
+
+Naming: the unit is a **rule**, never an "atom" (D-44).  ``atomizer.Atom``,
+``atomizer_domains`` and ``rotation_resolver``'s apply-atom keys are three
+live meanings of that word already.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+from typing import NamedTuple, Union
+
+from .ability_spec import AttackClass, Authority, DamageClass, Disposition
+from .value_ref import AnyValueRef, SourceReceipt, VALUE_REF_TYPES
+
+
+class BehaviorRuleError(ValueError):
+    """A declaration is structurally impossible — checked without imports."""
+
+
+# ── lanes and families ────────────────────────────────────────────────────
+
+
+class EngineLane(Enum):
+    """The engines a declared behaviour may have to be interpreted by.
+
+    Phase 1 exports ``ClaimLane`` and this phase exports ``EngineLane``
+    (D-45): two lane vocabularies answering different questions must never
+    both be spelled ``Lane``.  A claim lane says *who is claiming coverage*;
+    an engine lane says *which engine has to run the rule*.
+    """
+
+    PAIR_ENGINE = "pair_engine"
+    RECEIPT_WALK = "receipt_walk"
+    COMPILED_SCORE_WALK = "compiled_score_walk"
+    DEFENSE_RESOLVER = "defense_resolver"
+    STAT_RESOLVER = "stat_resolver"
+
+
+class RuleFamily(Enum):
+    """The closed set of shapes an item or keystone behaviour can have.
+
+    Closed at eighteen, and closure is a test rather than a convention: a new
+    ``item_effects._KNOWN_EFFECT_TYPES`` member, a new ``ActionKind`` or a new
+    ``DefenseSource`` construction fails collection until it is mapped
+    (``item_behavior_catalog.validate_catalog``).  The four groups below are
+    the reason the union is closable at all — every mechanic in the registry
+    is a strike, a pricing rule, a defence, or one of the three that are
+    none of those.
+    """
+
+    # strike — something happens when a hit or a cast lands
+    ON_HIT_STRIKE = "on_hit_strike"
+    CHARGED_STRIKE = "charged_strike"
+    SPELLBLADE = "spellblade"
+    CAST_PROC = "cast_proc"
+    PERIODIC = "periodic"
+    ACTIVE_CAST = "active_cast"
+    SECONDARY_TARGET = "secondary_target"
+    # pricing — the damage number itself is changed
+    DELTA_AMP = "delta_amp"
+    RESISTANCE_SHRED = "resistance_shred"
+    CRIT_PROFILE = "crit_profile"
+    DAMAGE_ROUTING = "damage_routing"
+    # defence — the subject survives differently
+    OPENING_DEFENSE = "opening_defense"
+    THRESHOLD_DEFENSE = "threshold_defense"
+    COMBAT_STATE = "combat_state"
+    REACTIVE = "reactive"
+    # rest
+    SUSTAIN = "sustain"
+    STAT_DERIVATION = "stat_derivation"
+    ALLY_PACKET = "ally_packet"
+
+
+RULE_FAMILY_COUNT = 18
+
+
+# ── compilability (D-43) ──────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class Compilable:
+    """The compiled score kernel can represent this rule."""
+
+
+@dataclass(frozen=True, slots=True)
+class ReceiptOnly:
+    """The compiled kernel cannot represent this rule, and here is why.
+
+    ``reason`` is a citation, not policy: it is the sentence a fallback
+    receipt prints when a build holding this rule declines to compile.
+    """
+
+    reason: str
+
+    def __post_init__(self) -> None:
+        """A fallback with no stated cause is the silence this phase removes."""
+        if not self.reason.strip():
+            raise BehaviorRuleError("ReceiptOnly needs a reason")
+
+
+Compilability = Union[Compilable, ReceiptOnly]
+
+COMPILABILITY_TYPES: tuple[type, ...] = (Compilable, ReceiptOnly)
+
+
+# ── triggers ──────────────────────────────────────────────────────────────
+
+
+class TriggerEvent(Enum):
+    """What arms or gates a rule's window.
+
+    Local to this leaf by necessity (see the module docstring) and joined to
+    the trigger bus by :data:`TRIGGER_STREAM`.
+    """
+
+    IMMOBILIZE = "immobilize"
+    ANY_CROWD_CONTROL = "any_crowd_control"
+    CHAMPION_DAMAGE = "champion_damage"
+    ABILITY_HIT = "ability_hit"
+    BASIC_ATTACK_HIT = "basic_attack_hit"
+    TAKEDOWN = "takedown"
+    SUPPORT_TRIGGER = "support_trigger"
+
+
+# Which bus stream each trigger reads.  The values are ``trigger_stream``
+# ``Stream`` member *names*; the projection is asserted against the enum in
+# the test front door, which is what keeps this from being a second
+# vocabulary rather than a view of the one that exists.
+TRIGGER_STREAM: dict[TriggerEvent, str] = {
+    TriggerEvent.IMMOBILIZE: "CC",
+    TriggerEvent.ANY_CROWD_CONTROL: "CC",
+    TriggerEvent.CHAMPION_DAMAGE: "DAMAGE",
+    TriggerEvent.ABILITY_HIT: "DAMAGE",
+    TriggerEvent.BASIC_ATTACK_HIT: "DAMAGE",
+    TriggerEvent.TAKEDOWN: "TAKEDOWN",
+    TriggerEvent.SUPPORT_TRIGGER: "SUPPORT_TRIGGER",
+}
+
+
+class WindowMerge(Enum):
+    """What a second trigger does to a window the first one already opened."""
+
+    EXTEND = "extend"
+    REFRESH = "refresh"
+    INDEPENDENT = "independent"
+
+
+class WindowBoundary(Enum):
+    """Whether an event exactly on a window's end is inside it (D-13)."""
+
+    OPEN_CLOSED = "open_closed"
+    CLOSED_CLOSED = "closed_closed"
+
+
+class Isolation(Enum):
+    """What an exclusion rule excludes."""
+
+    TRIGGER_ABILITY_ONLY = "trigger_ability_only"
+    TRIGGER_EVENT_ONLY = "trigger_event_only"
+
+
+class Probe(Enum):
+    """A live pool a predicate may read mid-simulation."""
+
+    TARGET_HEALTH_FRACTION = "target_health_fraction"
+    HOLDER_HEALTH_FRACTION = "holder_health_fraction"
+
+
+class Comparison(Enum):
+    """How a live probe is compared against its threshold."""
+
+    LT = "lt"
+    LE = "le"
+    GT = "gt"
+    GE = "ge"
+
+
+@dataclass(frozen=True, slots=True)
+class Always:
+    """The rule is armed for the whole fight."""
+
+
+@dataclass(frozen=True, slots=True)
+class AbsoluteWindow:
+    """The rule is armed between two fixed times."""
+
+    start: AnyValueRef
+    end: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class TriggerWindow:
+    """A trigger opens a window of declared duration."""
+
+    trigger: TriggerEvent
+    duration: AnyValueRef
+    merge: WindowMerge
+    boundary: WindowBoundary
+
+
+@dataclass(frozen=True, slots=True)
+class AfterTrigger:
+    """The rule applies to events after a trigger, with no window end."""
+
+    trigger: TriggerEvent
+    strict: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ExcludeTrigger:
+    """The rule applies to everything *except* the triggering event."""
+
+    trigger: TriggerEvent
+    isolation: Isolation
+
+
+@dataclass(frozen=True, slots=True)
+class LivePredicate:
+    """A condition on a pool that only exists mid-simulation.
+
+    Shadowflame's Cinderbloom is the one amp whose pool cannot be
+    precomputed: it reads the target's live health at the moment of the hit.
+    Forcing it into a window would make the algebra claim a certainty the
+    mechanic does not have, so it gets its own activation shape and
+    ``requires_live_pool`` is a property of that shape rather than a flag a
+    caller may forget.
+    """
+
+    probe: Probe
+    cmp: Comparison
+    threshold: AnyValueRef
+
+    @property
+    def requires_live_pool(self) -> bool:
+        """Always true — the field exists so interpreters can branch on it."""
+        return True
+
+
+Activation = Union[
+    Always,
+    AbsoluteWindow,
+    TriggerWindow,
+    AfterTrigger,
+    ExcludeTrigger,
+    LivePredicate,
+]
+
+ACTIVATION_TYPES: tuple[type, ...] = (
+    Always,
+    AbsoluteWindow,
+    TriggerWindow,
+    AfterTrigger,
+    ExcludeTrigger,
+    LivePredicate,
+)
+
+
+# ── consumption (Dream Maker's axis) ──────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class Persist:
+    """The rule stays armed for its whole activation."""
+
+
+@dataclass(frozen=True, slots=True)
+class NextEventOnly:
+    """The rule is spent by the first event it applies to.
+
+    Dream Maker's Blue Dream Bubble is the reason this axis exists at all:
+    it is expressible in no activation shape without it.
+    """
+
+
+@dataclass(frozen=True, slots=True)
+class NEvents:
+    """The rule is spent after a declared number of events."""
+
+    count: AnyValueRef
+
+
+Consumption = Union[Persist, NextEventOnly, NEvents]
+
+CONSUMPTION_TYPES: tuple[type, ...] = (Persist, NextEventOnly, NEvents)
+
+
+# ── magnitude ─────────────────────────────────────────────────────────────
+
+
+class RampModel(Enum):
+    """How a per-stack ramp is summed.
+
+    ``CESARO_APPROX`` is the closed-form average the pair engine already
+    uses for Black Cleaver's Carve.  ``docs/math-foundations.md`` §2.3 calls
+    re-tuning it a balance change, so this phase makes it *visible* and
+    changes nothing about it.
+    """
+
+    EXACT = "exact"
+    CESARO_APPROX = "cesaro_approx"
+
+
+@dataclass(frozen=True, slots=True)
+class Fixed:
+    """One magnitude, constant for the rule's whole activation."""
+
+    value: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class RampPerSecond:
+    """A magnitude that grows with time in the window, up to a cap."""
+
+    per_second: AnyValueRef
+    maximum: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class TargetBonusHealthScaled:
+    """A magnitude scaled by the target's bonus health."""
+
+    base: AnyValueRef
+    per_bonus_health: AnyValueRef
+    maximum: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class RampPerStack:
+    """A magnitude that grows per stack, summed by a declared model."""
+
+    per_stack: AnyValueRef
+    max_stacks: AnyValueRef
+    model: RampModel
+
+
+Magnitude = Union[Fixed, RampPerSecond, TargetBonusHealthScaled, RampPerStack]
+
+MAGNITUDE_TYPES: tuple[type, ...] = (
+    Fixed,
+    RampPerSecond,
+    TargetBonusHealthScaled,
+    RampPerStack,
+)
+
+
+# ── the remaining policy axes ─────────────────────────────────────────────
+
+
+class Pool(Enum):
+    """Which events a rule is allowed to price."""
+
+    ALL_EVENTS = "all_events"
+    CERTIFIED_ONLY = "certified_only"
+    COARSE_ROW = "coarse_row"
+    OWN_CAST_ONLY = "own_cast_only"
+
+
+class Attribution(Enum):
+    """Who the rule's contribution is credited to in the receipt."""
+
+    HOLDER = "holder"
+    DAMAGE_SOURCE = "damage_source"
+
+
+class Subject(Enum):
+    """Whose numbers the rule acts on.
+
+    The roster-scoped members are what make an authority claim checkable:
+    a rule reading any roster attacker cannot belong to a ``PAIR_ONLY``
+    mechanic, and :data:`SUBJECT_AUTHORITY` is where that is stated.
+    """
+
+    HOLDER = "holder"
+    TARGET = "target"
+    ALLY = "ally"
+    ANY_ATTACKER = "any_attacker"
+
+
+# Which authorities each subject is compatible with.  A pair-local subject
+# is compatible with every authority; a roster-scoped one is compatible with
+# none of the pair-local ones, because the pair engine cannot see it.
+SUBJECT_AUTHORITY: dict[Subject, frozenset[Authority]] = {
+    Subject.HOLDER: frozenset(Authority),
+    Subject.TARGET: frozenset(Authority),
+    Subject.ALLY: frozenset(Authority) - {Authority.PAIR_ONLY},
+    Subject.ANY_ATTACKER: frozenset(Authority) - {Authority.PAIR_ONLY},
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Typing:
+    """The damage restriction a rule applies under (D-04).
+
+    Both sets are required and neither may be empty: "empty means all" is a
+    silent default in a campaign whose thesis is that silent defaults kill,
+    and ``attack_classes`` is the only place "from all sources" becomes
+    something a declaration *says* rather than something it omits.
+
+    It is a record rather than an enum for exactly that reason — the ruling
+    fixes two frozensets, and no single enum member can carry both.
+    """
+
+    damage_classes: frozenset[DamageClass]
+    attack_classes: frozenset[AttackClass]
+
+    def __post_init__(self) -> None:
+        """Reject the empty-means-all spelling D-04 bans."""
+        if not self.damage_classes:
+            raise BehaviorRuleError(
+                "Typing.damage_classes must name every class the rule applies "
+                "to; empty-means-all is banned (D-04)"
+            )
+        if not self.attack_classes:
+            raise BehaviorRuleError(
+                "Typing.attack_classes must name every class the rule applies "
+                "to; empty-means-all is banned (D-04)"
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class ZeroPolicy:
+    """What a zero out of this rule *means*, declared rather than inferred.
+
+    The campaign's one invariant, at rule granularity: a rule that can
+    legitimately produce 0.0 says ``STRUCTURAL_ZERO`` and gives the reason
+    that is then the receipt; a rule that computes zero from real inputs says
+    ``MEASURED``.  Required on every rule with no default (D-24), because a
+    defaulted disposition is the undistinguishable zero this campaign exists
+    to remove.
+    """
+
+    disposition: Disposition
+    reason: str
+
+    def __post_init__(self) -> None:
+        """A disposition with no reason is a label, not a receipt."""
+        if not isinstance(self.disposition, Disposition):
+            raise BehaviorRuleError("zero_policy.disposition must be a Disposition")
+        if not self.reason.strip():
+            raise BehaviorRuleError("zero_policy needs a reason")
+
+
+# ── payloads ──────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
+    """One amplification slot: which events, when, how much, and to whom.
+
+    Eight fields because the amp chain has eight independent questions and
+    collapsing any two of them is what let a pair-side preview and a coupled
+    number both call themselves the answer.  ``lane_chain_rank`` is an
+    explicit integer: the seven chain slots are ordered, nothing in the
+    engine stops a refactor reordering them, and every mixed build's number
+    moves when they do.
+    """
+
+    pool: Pool
+    activation: Activation
+    consumption: Consumption
+    magnitude: Magnitude
+    attribution: Attribution
+    typing: Typing
+    subject: Subject
+    lane_chain_rank: int
+
+
+RulePayload = DeltaAmpRule
+
+# Which family each payload type belongs to.  One entry per payload; each
+# migration slice adds its family's payload here, so a rule can never carry
+# a payload its family does not name.
+PAYLOAD_FAMILY: dict[type, RuleFamily] = {
+    DeltaAmpRule: RuleFamily.DELTA_AMP,
+}
+
+
+# ── the rule ──────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class BehaviorRule:
+    """One declared behaviour: the unit this phase replaces prose with."""
+
+    family: RuleFamily
+    owner: str
+    mechanic_id: str
+    payload: RulePayload
+    compilability: Compilability
+    receipt: SourceReceipt
+    zero_policy: ZeroPolicy
+
+
+def validate_rule(rule: BehaviorRule) -> None:
+    """Structural validation of one rule — no imports, no ``data/`` read.
+
+    It answers only the question a load gate can answer: is this declaration
+    *shaped* like something that could be true?  Whether the owner exists,
+    whether an interpreter is registered and whether the numbers resolve are
+    later tiers' questions, deliberately not asked here.
+    """
+    if not isinstance(rule, BehaviorRule):
+        raise BehaviorRuleError(f"{rule!r} is not a BehaviorRule")
+    if not isinstance(rule.family, RuleFamily):
+        raise BehaviorRuleError(f"{rule.owner!r}: family must be a RuleFamily")
+    if not rule.owner.strip():
+        raise BehaviorRuleError("a BehaviorRule names an owner")
+    if not rule.mechanic_id.strip():
+        raise BehaviorRuleError(f"{rule.owner!r}: a BehaviorRule names a mechanic_id")
+    declared = PAYLOAD_FAMILY.get(type(rule.payload))
+    if declared is None:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: {type(rule.payload).__name__} is not a declared "
+            "payload type; add it to PAYLOAD_FAMILY in the slice that migrates "
+            "its family"
+        )
+    if declared is not rule.family:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: payload {type(rule.payload).__name__} belongs to "
+            f"{declared.value}, not {rule.family.value}"
+        )
+    if not isinstance(rule.compilability, COMPILABILITY_TYPES):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: compilability is not declared")
+    if not isinstance(rule.receipt, SourceReceipt):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: receipt is not a SourceReceipt")
+    if not isinstance(rule.zero_policy, ZeroPolicy):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: zero_policy is required and has no default (D-24)"
+        )
+    _validate_payload(rule)
+
+
+def _validate_payload(rule: BehaviorRule) -> None:
+    """Per-payload structure, kept out of :func:`validate_rule`'s ladder."""
+    payload = rule.payload
+    if not isinstance(payload, DeltaAmpRule):
+        return
+    if not isinstance(payload.activation, ACTIVATION_TYPES):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: activation is not in the union")
+    if not isinstance(payload.consumption, CONSUMPTION_TYPES):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: consumption is not in the union")
+    if not isinstance(payload.magnitude, MAGNITUDE_TYPES):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: magnitude is not in the union")
+    if not isinstance(payload.typing, Typing):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+    if isinstance(payload.lane_chain_rank, bool) or not isinstance(
+        payload.lane_chain_rank, int
+    ):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: lane_chain_rank must be an int")
+
+
+def policy_values(rule: BehaviorRule) -> tuple[object, ...]:
+    """Every policy value the rule carries, flattened for reflective checks.
+
+    Criterion 6 is asserted over this: no policy field may be a callable, a
+    ``dict``, ``Any`` or an open string.  Identifiers and citations —
+    ``owner``, ``mechanic_id``, the receipt's three fields and the reason
+    strings on ``ReceiptOnly`` and ``zero_policy`` — are policy's opposite
+    and are deliberately excluded here rather than waived at the assertion,
+    so the criterion never has to be argued about.
+    """
+    values: list[object] = [rule.family, type(rule.compilability)]
+    payload = rule.payload
+    for field_name in getattr(payload, "__slots__", ()):
+        values.append(getattr(payload, field_name))
+    return tuple(values)
+
+
+def is_value_reference(value: object) -> bool:
+    """Whether *value* is one of the four reference shapes a declaration holds."""
+    return isinstance(value, VALUE_REF_TYPES)
+
+
+# ── the interpreters/ -> survival/ contract ───────────────────────────────
+
+
+class KernelField(NamedTuple):
+    """One value-typed field a build-time interpreter emits for the kernel.
+
+    The compiled form of a rule, carrying no program type and no callable.
+    This is what keeps the dependency one-way: walk-lane interpreters run at
+    *build* time and hand the kernel fields it already understands, so
+    nothing under ``survival/`` ever imports ``interpreters/``.
+    """
+
+    name: str
+    value: float | int | bool | str
+    lane: EngineLane
+    rule_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class BuildContext:
+    """What an interpreter may read at build time.
+
+    Level, the owner whose registry entry is being compiled, and the
+    ``data_registry.data_version()`` its memo keys on (D-49).  No walk state
+    and no ``SurvivalAction``: an interpreter that could see those would be
+    running inside the walk, which is the cycle this contract prevents.
+    """
+
+    level: int
+    owner: str
+    data_version: int
+
+
+__all__ = [
+    "ACTIVATION_TYPES",
+    "AbsoluteWindow",
+    "Activation",
+    "AfterTrigger",
+    "Always",
+    "Attribution",
+    "BehaviorRule",
+    "BehaviorRuleError",
+    "BuildContext",
+    "COMPILABILITY_TYPES",
+    "CONSUMPTION_TYPES",
+    "Comparison",
+    "Compilability",
+    "Compilable",
+    "Consumption",
+    "DeltaAmpRule",
+    "EngineLane",
+    "ExcludeTrigger",
+    "Fixed",
+    "Isolation",
+    "KernelField",
+    "LivePredicate",
+    "MAGNITUDE_TYPES",
+    "Magnitude",
+    "NEvents",
+    "NextEventOnly",
+    "PAYLOAD_FAMILY",
+    "Persist",
+    "Pool",
+    "Probe",
+    "RULE_FAMILY_COUNT",
+    "RampModel",
+    "RampPerSecond",
+    "RampPerStack",
+    "ReceiptOnly",
+    "RuleFamily",
+    "RulePayload",
+    "SUBJECT_AUTHORITY",
+    "Subject",
+    "TRIGGER_STREAM",
+    "TargetBonusHealthScaled",
+    "TriggerEvent",
+    "TriggerWindow",
+    "Typing",
+    "WindowBoundary",
+    "WindowMerge",
+    "ZeroPolicy",
+    "is_value_reference",
+    "policy_values",
+    "validate_rule",
+]
