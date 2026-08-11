@@ -580,6 +580,21 @@ class EvidencePolicy:
 # take exactly one ``Absence`` and no positive evidence at all.
 NEGATIVE_STATUSES: frozenset[str] = frozenset({"blocked", "review_pending"})
 
+# The three shapes a ``modeled_state`` claim may name its state's home with.
+# ``modeled_state`` says the item's damage-relevant state is *supplied* rather
+# than assumed, so the claim has to name where it comes from — but the live
+# classifier reaches that status by three different routes, and only one of
+# them is a scenario control: Heartsteel's stacks arrive as a bounded
+# ``ITEM_INPUT_OPTIONS`` control, Ardent Censer's Sanctify arrives as an
+# authored event the participant ledger schedules into a named packet, and
+# Axiom Arc's Flux arrives as a sourced value the pair engine reads.  Naming
+# only the control would have made seven of the twenty stateful items
+# unclaimable, which is a matrix that forces prose rather than one that
+# forbids it.
+STATE_HOME_KINDS: frozenset[str] = frozenset(
+    {"OptionSchema", "PacketSource", "EffectKey"}
+)
+
 # Which statuses each lane may claim, derived from the two live classifiers
 # rather than invented: ``item_model_coverage`` yields exactly the attacker
 # row and ``target_item_model_coverage`` exactly the target row.  The two
@@ -610,7 +625,7 @@ _STATUS_POLICIES: Mapping[str, EvidencePolicy] = {
         min_count=2,
     ),
     "modeled_state": EvidencePolicy(
-        required=frozenset({"Symbol", "TestRef", "OptionSchema"}),
+        required=frozenset({"Symbol", "TestRef"}),
         forbidden=frozenset({"Absence"}),
         min_count=3,
     ),
@@ -646,17 +661,21 @@ def status_policy(lane: ClaimLane, status: ClaimStatus) -> EvidencePolicy:
     """The requirement matrix for one lane/status cell.
 
     ``modeled_*`` needs a ``Symbol`` and a ``TestRef``; ``modeled_state``
-    additionally needs the ``OptionSchema`` naming its control;
+    additionally needs a third member naming where its state comes from —
+    an ``OptionSchema``, a ``PacketSource`` or an ``EffectKey``, the three
+    routes the live classifier reaches that status by (:data:`STATE_HOME_KINDS`);
     ``stats_only`` and ``not_target_relevant`` need a ``SourceRef`` and
     forbid a ``PacketSource``, because an item that emits a packet is not
     stats-only; ``blocked`` and ``review_pending`` need exactly one
     ``Absence`` and no positive evidence; the ``support_packet`` lane adds a
     ``PacketSource`` to every positive cell.
 
-    Two of the matrix's rules are about a member's *fields* rather than its
-    kind, so ``EvidencePolicy`` cannot carry them and :func:`validate_claim`
-    enforces them beside this cell: ``modeled_event_certified`` needs one of
-    its Symbols to be the ``certification_guard``, and a ``PairedSides`` is
+    Three of the matrix's rules are about a member's *fields* or about a
+    choice between kinds, so ``EvidencePolicy`` cannot carry them and
+    :func:`validate_claim` enforces them beside this cell:
+    ``modeled_event_certified`` needs one of its Symbols to be the
+    ``certification_guard``, ``modeled_state`` needs one of
+    :data:`STATE_HOME_KINDS`, and a ``PairedSides`` is
     owed wherever Phase 2 declares the mechanic ``SPLIT`` — the second is the
     resolution tier's, since only the capability registry knows.
     """
@@ -749,7 +768,7 @@ def _validate_evidence_set(claim: Claim, policy: EvidencePolicy, *, name: str) -
 
 
 def _validate_field_rules(claim: Claim, *, name: str) -> None:
-    """The two matrix rules that are about a member's fields, not its kind."""
+    """The matrix rules that are about fields or a choice between kinds."""
     if claim.status in NEGATIVE_STATUSES:
         absences = [m for m in claim.evidence if isinstance(m, Absence)]
         if len(absences) != 1:
@@ -758,6 +777,14 @@ def _validate_field_rules(claim: Claim, *, name: str) -> None:
                 "Absence members; a refusal has exactly one reason"
             )
         return
+    if claim.status == "modeled_state":
+        present = {type(member).__name__ for member in claim.evidence}
+        if not present & STATE_HOME_KINDS:
+            raise CoverageClaimError(
+                f"{name}: status 'modeled_state' needs one of "
+                f"{sorted(STATE_HOME_KINDS)}; without one the claim says the "
+                "state is supplied and names nothing that supplies it"
+            )
     if claim.status == "modeled_event_certified" and not any(
         isinstance(m, Symbol) and m.role == "certification_guard"
         for m in claim.evidence
@@ -875,6 +902,7 @@ __all__ = [
     "OwnerPolicy",
     "PacketSource",
     "PairedSides",
+    "STATE_HOME_KINDS",
     "SUBJECT_KINDS",
     "SYMBOL_ROLES",
     "SourceRef",

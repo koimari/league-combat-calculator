@@ -65,6 +65,9 @@ NODE = TestRef(node_id="tests/test_command_amp_roster.py::test_command_amp_is_pr
 OTHER_NODE = TestRef(node_id="tests/test_item_support_effects.py::test_mandate_packet")
 PACKET = PacketSource(source="Imperial Mandate — Command")
 OPTION = OptionSchema(item="Rod of Ages", option="rod_of_ages_stacks")
+EFFECT_KEY = EffectKey(
+    registry="ITEM_EFFECTS", item="Imperial Mandate", key="command_amp_percent"
+)
 SOURCE = SourceRef(
     url="https://wiki.leagueoflegends.com/en-us/Abyssal_Mask", revision_id=2864060
 )
@@ -226,6 +229,30 @@ def test_certified_status_without_a_certification_guard_is_rejected() -> None:
                 status="modeled_event_certified",
                 evidence=(IMPL, PAIR_IMPL, NODE),
             )
+        )
+
+
+@pytest.mark.parametrize(
+    "home",
+    [OPTION, PACKET, EFFECT_KEY],
+    ids=["OptionSchema", "PacketSource", "EffectKey"],
+)
+def test_modeled_state_accepts_any_of_the_three_state_homes(home) -> None:
+    """The live classifier reaches ``modeled_state`` by three routes.
+
+    A bounded scenario control, an authored event the ledger schedules into a
+    named packet, and a sourced registry value the engine reads are all
+    "the state is supplied rather than assumed"; requiring the control alone
+    would leave seven of the twenty stateful items unclaimable.
+    """
+    validate_claim(claim(status="modeled_state", evidence=(IMPL, NODE, home)))
+
+
+def test_modeled_state_naming_no_state_home_is_rejected() -> None:
+    """Three members are not enough if none of them supplies the state."""
+    with pytest.raises(CoverageClaimError, match="needs one of"):
+        validate_claim(
+            claim(status="modeled_state", evidence=(IMPL, GUARD, NODE)),
         )
 
 
