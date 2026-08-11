@@ -76,6 +76,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "{{as|9% armor reduction}}",
         0.09,
     ),
+    RuleFamily.ACTIVE_CAST: (
+        "Tiamat",
+        "total_ad_ratio",
+        "Deal {{as|75% AD}}",
+        "Deal {{as|90% AD}}",
+        0.90,
+    ),
     RuleFamily.DELTA_AMP: (
         "Horizon Focus",
         "amp",

@@ -133,6 +133,7 @@ from . import rune_effects
 from . import shield_ledger
 from .ability_spec import DamagePart
 from .interpreters import (
+    active_cast,
     delta_amp,
     on_hit_strike,
     resistance_shred,
@@ -457,6 +458,11 @@ class FightState:
     # defaulted them to an empty tuple would price a whole family at zero with
     # nothing saying so.
     per_hit_strikes: tuple[item_effects.PerHitEffect, ...]
+    # The actives this build declares, resolved through their rules.  Off the
+    # registry's build projection for the same reason the strikes are: a
+    # projection field that defaulted to an empty tuple would price the whole
+    # family at zero with nothing saying so.
+    item_actives: tuple[item_effects.DamageSource, ...]
     secondary_target_bolts: "secondary_target.SecondaryTargetSlot | None"
     cast_order: list[str]
     target_health: float
@@ -2285,6 +2291,13 @@ def _resolve_combat_state(
         items=items,
         damage_effects=damage_effects,
         per_hit_strikes=on_hit_strike.per_hit_effects(
+            owners,
+            level=level,
+            fight_duration_seconds=fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=bool(is_melee),
+        ),
+        item_actives=active_cast.active_sources(
             owners,
             level=level,
             fight_duration_seconds=fight_duration_seconds,
@@ -7782,7 +7795,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
     resists = state.resists
     active_time = max(_damaging_cast_times(state, rotation), default=0.0)
     secondary_item_name = item_effects.active_secondary_ad_item_name(state.items)
-    for source in state.damage_effects.actives:
+    for source in state.item_actives:
         raw_active = source.raw_damage(_damage_inputs(state))
         active_mitigated = _mitigate(
             raw_active, source.damage_type, resists, state.magic_amp

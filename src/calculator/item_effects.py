@@ -3686,7 +3686,6 @@ class BuildDamageEffects:
     periodic: tuple[PeriodicEffect, ...] = ()
     cooldown_procs: tuple[CooldownProcEffect, ...] = ()
     ultimate_procs: tuple[UltimateProcEffect, ...] = ()
-    actives: tuple[DamageSource, ...] = ()
     first_autos: tuple[FirstAutoEffect, ...] = ()
     auto_cooldowns: tuple[AutoCooldownEffect, ...] = ()
     stacking_on_hits: tuple[StackingOnHitEffect, ...] = ()
@@ -4112,52 +4111,6 @@ def _compile_ultimate_proc(
     )
 
 
-def _compile_active(item_name: str, values: Mapping[str, Any]) -> DamageSource:
-    """Compile one once-per-fight active damage formula."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "flat_ap":
-        base = required.number("base")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    elif formula == "total_ad":
-        ratio = required.number("total_ad_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return ratio * inputs.champion_stats.get("attack_damage", 0.0)
-
-    elif formula == "level_ap":
-        base_min = required.number("base_min")
-        base_max = required.number("base_max")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            level = max(1, min(inputs.level, 20))
-            base = base_min + (base_max - base_min) * (level - 1) / 19
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    else:
-        raise ValueError(f"Unsupported active formula {formula!r} for {item_name!r}")
-    raw_lifesteal_effectiveness = values.get("lifesteal_effectiveness", 0.0)
-    lifesteal_effectiveness = (
-        float(raw_lifesteal_effectiveness)
-        if isinstance(raw_lifesteal_effectiveness, (int, float))
-        and not isinstance(raw_lifesteal_effectiveness, bool)
-        else 0.0
-    )
-    return damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="active",
-        breakdown_key=f"active_{item_name}",
-        lifesteal_effectiveness=lifesteal_effectiveness,
-    )
-
-
 def _explicit_damage_source(
     item_name: str,
     required: _RequiredValues,
@@ -4497,7 +4450,6 @@ def _resolve_damage_effects_uncached(
     periodic: list[PeriodicEffect] = []
     cooldown_procs: list[CooldownProcEffect] = []
     ultimate_procs: list[UltimateProcEffect] = []
-    actives: list[DamageSource] = []
     first_autos: list[FirstAutoEffect] = []
     stacking_on_hits: list[StackingOnHitEffect] = []
     auto_cooldowns: list[AutoCooldownEffect] = []
@@ -4541,8 +4493,6 @@ def _resolve_damage_effects_uncached(
             cooldown_procs.append(_compile_proc(item_name, values))
         elif effect_type == "ult_proc":
             ultimate_procs.append(_compile_ultimate_proc(item_name, values))
-        elif effect_type == "active":
-            actives.append(_compile_active(item_name, values))
         elif effect_type == "on_hit_once":
             first_autos.append(_compile_first_auto(item_name, values))
         elif effect_type == "on_hit_stacking":
@@ -4676,7 +4626,6 @@ def _resolve_damage_effects_uncached(
         periodic=tuple(periodic),
         cooldown_procs=tuple(cooldown_procs),
         ultimate_procs=tuple(ultimate_procs),
-        actives=tuple(actives),
         first_autos=tuple(first_autos),
         stacking_on_hits=tuple(stacking_on_hits),
         auto_cooldowns=tuple(auto_cooldowns),

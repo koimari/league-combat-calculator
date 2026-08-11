@@ -61,11 +61,20 @@ STRUCTURAL_REASONS: frozenset[str] = frozenset(
 
 # How a two-key level ramp is interpolated.  ``registry_start`` delegates to
 # the ally registry's own ``level_scaling_start`` breakpoint; ``linear_1_18``
-# is the plain one-to-eighteen ramp.  There is no "whatever the caller meant"
-# member on purpose.
-LevelScale = Literal["registry_start", "linear_1_18"]
+# is the plain one-to-eighteen ramp; ``linear_1_20`` is the same ramp over the
+# top-lane level cap CLAUDE.md records, which is the span the item registry's
+# own active formulas interpolate across.  There is no "whatever the caller
+# meant" member on purpose.
+LevelScale = Literal["registry_start", "linear_1_18", "linear_1_20"]
 
-LEVEL_SCALES: frozenset[str] = frozenset({"registry_start", "linear_1_18"})
+LEVEL_SCALES: frozenset[str] = frozenset(
+    {"registry_start", "linear_1_18", "linear_1_20"}
+)
+
+# The top level each linear ramp interpolates to.  A ramp reaches its maximum
+# key's value exactly at this level and is clamped there above it, so the two
+# spans differ in one number rather than in two code paths.
+_LINEAR_RAMP_CAP: Mapping[str, int] = {"linear_1_18": 18, "linear_1_20": 20}
 
 # The arithmetic a derived reference may perform over other references.
 # ``SUB`` exists because an amplifier's registry number is sometimes a
@@ -300,8 +309,9 @@ class LevelValueRef:
             )
         low = ValueRef(self.registry, self.owner, self.min_key).get()
         high = ValueRef(self.registry, self.owner, self.max_key).get()
-        clamped = max(1, min(18, int(level)))
-        return low + (high - low) * (clamped - 1) / 17.0
+        cap = _LINEAR_RAMP_CAP[self.scale]
+        clamped = max(1, min(cap, int(level)))
+        return low + (high - low) * (clamped - 1) / float(cap - 1)
 
 
 @dataclass(frozen=True, slots=True)

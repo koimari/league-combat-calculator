@@ -31,13 +31,14 @@ import ast
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, NamedTuple
 from urllib.parse import quote
 
 from . import data_registry, item_effects, rune_effects
 from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
     AbsoluteWindow,
+    ActiveCastRule,
     AfterTrigger,
     AllyPacketRule,
     AllyProducer,
@@ -96,6 +97,7 @@ from .survival.actions import ActionKind
 from .value_ref import (
     Const,
     DerivedValueRef,
+    LevelScale,
     LevelValueRef,
     SourceReceipt,
     ValueRef,
@@ -448,6 +450,7 @@ KEYSTONE_AMPS: Mapping[str, AmpChainSlot] = {
     "Press the Attack": AmpChainSlot.LASTING_PROC_AMP,
 }
 
+
 # ── registry formula schemas: which shares each formula name is made of ───
 #
 # The registry names a shape (``"flat_bonus_ad_ap"``) and these tables say
@@ -456,7 +459,22 @@ KEYSTONE_AMPS: Mapping[str, AmpChainSlot] = {
 # sourced rate or ``(basis, (melee_key, ranged_key))`` where the registry pays
 # a melee holder differently.  They live here, with the shapes, because a
 # formula name is a *schema* of the registry and not policy of a rule.
-TermSchema = tuple[Basis, "str | tuple[str, str]"]
+class LevelRampKeys(NamedTuple):
+    """A schema coefficient the registry states as a two-key level ramp.
+
+    The third coefficient shape, beside a single key and a melee/ranged pair:
+    the registry says a number's value at the bottom and the top of the level
+    span and the ramp between them is interpolation, not a share of anything.
+    ``scale`` names which span, so the two live ramps differ in a declared
+    word rather than in two arithmetic branches.
+    """
+
+    min_key: str
+    max_key: str
+    scale: LevelScale
+
+
+TermSchema = tuple[Basis, "str | tuple[str, str] | LevelRampKeys"]
 
 ON_HIT_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
     "flat": ((Basis.FLAT, "base"),),
@@ -480,6 +498,28 @@ ON_HIT_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
 
 # Which on-hit schemas carry a sourced minimum, and the key holding it.
 ON_HIT_FORMULA_FLOORS: Mapping[str, str] = {"current_hp": "min_damage"}
+
+# The active-item schemas.  ``level_ap``'s base is a two-key ramp rather than
+# two terms: the registry states one number with a low and a high end, and
+# splitting it into shares would invent a mechanic ("so much per level") the
+# item does not have.  The ramp spans levels 1 to 20, the top-lane cap
+# CLAUDE.md records, which is what the registry's own compiler interpolated
+# across.
+ACTIVE_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
+    "flat_ap": ((Basis.FLAT, "base"), (Basis.ABILITY_POWER, "ap_ratio")),
+    "total_ad": ((Basis.TOTAL_ATTACK_DAMAGE, "total_ad_ratio"),),
+    "level_ap": (
+        (Basis.FLAT, LevelRampKeys("base_min", "base_max", "linear_1_20")),
+        (Basis.ABILITY_POWER, "ap_ratio"),
+    ),
+}
+
+# The registry key an active's life-steal inheritance lives under.  Absent
+# means the active inherits none — a declared ``None``, not a zero.
+LIFESTEAL_EFFECTIVENESS_KEY = "lifesteal_effectiveness"
+
+# The key every item-registry cooldown lives under.
+COOLDOWN_KEY = "cooldown"
 
 # The registry's spelling for "this item also pays per ability hit".  Named
 # once so the declaration and the build projection read one string.
@@ -1052,7 +1092,11 @@ def _formula_terms(
     """
     terms: list[Term] = []
     for basis, keys in schema:
-        if isinstance(keys, tuple):
+        if isinstance(keys, LevelRampKeys):
+            coefficient = LevelValueRef(
+                registry, owner, keys.min_key, keys.max_key, keys.scale
+            )
+        elif isinstance(keys, tuple):
             melee_key, ranged_key = keys
             coefficient = MeleeRangedSplit(
                 melee=ValueRef(registry, owner, melee_key),
@@ -1178,6 +1222,58 @@ def _compile_secondary_target(
             "the bolts are a sourced share of the attack that fired them, "
             "priced over the roster's own event ledger; a zero means no extra "
             "target was in range, which the ledger measured",
+        ),
+    )
+    validate_rule(rule)
+    return (rule,)
+
+
+def _optional_ref(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any], key: str
+) -> ValueRef | None:
+    """A reference to *key*, or ``None`` where the entry does not carry it.
+
+    The declared-absence idiom: a mechanic that has no such sibling declares
+    ``None``, which is a different claim from a reference that resolves to
+    zero.  Presence in the entry is the test, so no item name decides it.
+    """
+    return ValueRef(registry, owner, key) if key in entry else None
+
+
+def _compile_active_cast(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the once-per-fight active one registry entry declares.
+
+    An active is the strike whose trigger is the player: the engine fires it
+    at the end of the rotation opener and the declaration says only how much
+    it deals, how long before it could be pressed again, and whether the
+    holder's life steal follows it.
+    """
+    del family
+    rule = BehaviorRule(
+        family=RuleFamily.ACTIVE_CAST,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.active",
+        payload=ActiveCastRule(
+            formula=_damage_formula(owner, registry, entry, ACTIVE_FORMULA_TERMS, {}),
+            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
+            lifesteal_effectiveness=_optional_ref(
+                owner, registry, entry, LIFESTEAL_EFFECTIVENESS_KEY
+            ),
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the active is a sum of sourced shares of the holder's stats; a "
+            "zero means every share resolved to zero, which the formula "
+            "measured",
         ),
     )
     validate_rule(rule)
@@ -2173,7 +2269,7 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.SPELLBLADE: _unmigrated,
     RuleFamily.CAST_PROC: _unmigrated,
     RuleFamily.PERIODIC: _unmigrated,
-    RuleFamily.ACTIVE_CAST: _unmigrated,
+    RuleFamily.ACTIVE_CAST: _compile_active_cast,
     RuleFamily.SECONDARY_TARGET: _compile_secondary_target,
     RuleFamily.DELTA_AMP: _compile_delta_amp,
     RuleFamily.RESISTANCE_SHRED: _compile_resistance_shred,
@@ -2194,7 +2290,6 @@ UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
     RuleFamily.SPELLBLADE: "3.4",
     RuleFamily.CAST_PROC: "3.4",
     RuleFamily.PERIODIC: "3.4",
-    RuleFamily.ACTIVE_CAST: "3.4",
     RuleFamily.OPENING_DEFENSE: "3.5",
     RuleFamily.THRESHOLD_DEFENSE: "3.5",
     RuleFamily.COMBAT_STATE: "3.5",

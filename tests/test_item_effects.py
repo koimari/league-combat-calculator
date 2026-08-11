@@ -718,7 +718,6 @@ class TestResolveDamageEffects:
                 "Unending Despair",
                 "Luden's Echo",
                 "Malignance",
-                "Hextech Rocketbelt",
             )
         )
 
@@ -735,9 +734,6 @@ class TestResolveDamageEffects:
         ]
         assert [effect.source.item_name for effect in effects.ultimate_procs] == [
             "Malignance"
-        ]
-        assert [source.item_name for source in effects.actives] == [
-            "Hextech Rocketbelt"
         ]
 
     def test_passive_attack_speed_bonus_uses_melee_ranged_registry_values(self) -> None:

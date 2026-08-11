@@ -31,6 +31,7 @@ live meanings of that word already.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from enum import Enum
 from typing import NamedTuple, Union
@@ -709,6 +710,27 @@ class SecondaryTargetRule:
     applies_on_hit: bool
 
 
+@dataclass(frozen=True, slots=True)
+class ActiveCastRule:
+    """Damage the holder deals by pressing the item, once per fight.
+
+    An active is the one strike family whose trigger is the *player* rather
+    than an event the fight produces, which is why it carries a cooldown and
+    no trigger: the engine casts it once, at the end of the rotation opener,
+    and the cooldown is what says whether a second cast could exist.
+
+    ``lifesteal_effectiveness`` is ``None`` — a declared absence — for every
+    active that does not inherit life steal.  A zero would say the sibling
+    exists and pays nothing, which is a different claim about the item, and
+    exactly the claim this campaign exists to stop a declaration making by
+    accident.
+    """
+
+    formula: DamageFormula
+    cooldown: AnyValueRef
+    lifesteal_effectiveness: AnyValueRef | None
+
+
 class Resistance(Enum):
     """Which of the target's two resistances a shred reduces.
 
@@ -960,6 +982,7 @@ class AllyPacketRule:
 
 
 RulePayload = Union[
+    ActiveCastRule,
     AllyPacketRule,
     DeltaAmpRule,
     OnHitStrikeRule,
@@ -971,6 +994,7 @@ RulePayload = Union[
 # migration slice adds its family's payload here, so a rule can never carry
 # a payload its family does not name.
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
+    ActiveCastRule: RuleFamily.ACTIVE_CAST,
     AllyPacketRule: RuleFamily.ALLY_PACKET,
     DeltaAmpRule: RuleFamily.DELTA_AMP,
     OnHitStrikeRule: RuleFamily.ON_HIT_STRIKE,
@@ -1043,6 +1067,15 @@ def _validate_payload(rule: BehaviorRule) -> None:
     if isinstance(payload, OnHitStrikeRule):
         _validate_formula(rule, payload.formula)
         return
+    if isinstance(payload, ActiveCastRule):
+        _validate_formula(rule, payload.formula)
+        _validate_refs(rule, {"cooldown": payload.cooldown})
+        _validate_refs(
+            rule,
+            {"lifesteal_effectiveness": payload.lifesteal_effectiveness},
+            optional=True,
+        )
+        return
     if isinstance(payload, SecondaryTargetRule):
         _validate_secondary_target(rule, payload)
         return
@@ -1072,6 +1105,29 @@ def _validate_payload(rule: BehaviorRule) -> None:
             f"{rule.mechanic_id}: lane_chain_rank {payload.lane_chain_rank} names no "
             "slot in AMP_CHAIN_ORDER"
         )
+
+
+def _validate_refs(
+    rule: BehaviorRule,
+    fields: Mapping[str, object],
+    *,
+    optional: bool = False,
+) -> None:
+    """Each named field holds a sourced reference — or, if optional, ``None``.
+
+    ``None`` is a *declared absence*: the mechanic has no such sibling at all.
+    It is deliberately distinguishable from a reference that resolves to zero,
+    which would say the sibling exists and pays nothing.
+    """
+    for name, value in fields.items():
+        if optional and value is None:
+            continue
+        if not isinstance(value, VALUE_REF_TYPES):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: {name} is a sourced reference, never a "
+                "number in the declaration"
+                + (" (or None where the mechanic has none)" if optional else "")
+            )
 
 
 def _validate_formula(rule: BehaviorRule, formula: DamageFormula) -> None:
@@ -1315,6 +1371,7 @@ __all__ = [
     "AMP_CHAIN_ORDER",
     "AbsoluteWindow",
     "Activation",
+    "ActiveCastRule",
     "AfterTrigger",
     "AllyPacketRule",
     "AllyProducer",
