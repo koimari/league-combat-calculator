@@ -319,11 +319,146 @@ def no_runtime_behavior_block() -> dict[str, Any]:
     }
 
 
+# ── the zero-policy frontier (D-24) ──────────────────────────────────────
+#
+# ``damage_entry`` and ``simple_damage`` carry the champion tree's one
+# declared ``zero_policy`` default, so the 384 call sites across 143 modules
+# are not edited.  That exception is only honest while the inputs those
+# formulas read are wired: a stack count or option that never resolved,
+# silently replaced by a literal, is a zero the default would stamp
+# ``MEASURED``.  Two populations are therefore measured and pinned
+# non-growing rather than swept — a sweep of ``champions/`` is exactly what
+# D-24 rules out.
+
+CHAMPIONS_ROOT = SRC_ROOT / "calculator" / "champions"
+
+ZERO_POLICY_ISSUE = "issue #213"
+
+# The builders that supply the declared default.  A champion entry built by
+# hand instead of through one of these carries no policy at all.
+ENTRY_BUILDERS = ("damage_entry", "simple_damage")
+
+# Keys that make a dict literal an ability entry rather than any other
+# mapping: the fight engine reads ``parts`` and the producer diagnostics
+# carry ``total_raw``.
+ENTRY_MARKER_KEYS = frozenset({"parts", "total_raw"})
+
+
+@dataclass(frozen=True, slots=True)
+class ZeroPolicyFrontier:
+    """The two populations the ruled exception is guarded by.
+
+    ``literal_fallbacks`` are ``x.get(key, <number>)`` reads under
+    ``champions/``, tallied by the receiver they read from — an option, a
+    stat block, a target block — because the receiver is what says whose
+    wiring is being trusted.  ``hand_built_entries`` are ability-entry dict
+    literals that bypass the two builders, and are therefore leaves produced
+    by neither a ``BehaviorRule`` nor a policy-carrying builder.
+    """
+
+    literal_fallbacks: dict[str, int]
+    hand_built_entries: dict[str, int]
+
+    def totals(self) -> dict[str, int]:
+        """Both populations as one pair of numbers."""
+        return {
+            "literal_fallbacks": sum(self.literal_fallbacks.values()),
+            "hand_built_entries": sum(self.hand_built_entries.values()),
+        }
+
+
+def _literal_default(node: ast.AST) -> bool:
+    """Whether a ``.get`` default is a bare number (or its negation)."""
+    if isinstance(node, ast.Constant):
+        return isinstance(node.value, (int, float)) and not isinstance(node.value, bool)
+    if isinstance(node, ast.UnaryOp):
+        return _literal_default(node.operand)
+    return False
+
+
+def _receiver(call: ast.Call) -> str:
+    """The tail of the expression a ``.get`` is called on — ``ctx.options``.
+
+    The receiver is the interesting half: ``options`` says a champion option
+    is being defaulted, ``stats`` says a stat block is.  Anything whose tail
+    is itself a call is bucketed as ``chained`` rather than given a name a
+    reader could not look up.
+    """
+    receiver = ast.unparse(call.func.value)  # type: ignore[attr-defined]
+    tail = receiver.split(".")[-1].strip("() ")
+    if not tail or "(" in tail or ")" in tail or " " in tail:
+        return "chained"
+    return tail
+
+
+def _policy_stamping_nodes(tree: ast.AST) -> set[int]:
+    """Every node id inside ``damage_entry`` — the one policy-stamping body.
+
+    Its own entry dict is not a bypass of itself, and counting it would make
+    the population mean two different things.
+    """
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "damage_entry":
+            return {id(inner) for inner in ast.walk(node)}
+    return set()
+
+
+def zero_policy_frontier(root: Path = CHAMPIONS_ROOT) -> ZeroPolicyFrontier:
+    """Measure both populations over the champion tree."""
+    fallbacks: dict[str, int] = {}
+    entries: dict[str, int] = {}
+    for path in sorted(root.rglob("*.py")):
+        module = path.relative_to(root).as_posix()
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        stamping = _policy_stamping_nodes(tree)
+        for node in ast.walk(tree):
+            if id(node) in stamping:
+                continue
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "get"
+                and len(node.args) == 2
+                and _literal_default(node.args[1])
+            ):
+                key = _receiver(node)
+                fallbacks[key] = fallbacks.get(key, 0) + 1
+            if isinstance(node, ast.Dict) and ENTRY_MARKER_KEYS & {
+                key.value
+                for key in node.keys
+                if isinstance(key, ast.Constant) and isinstance(key.value, str)
+            }:
+                entries[module] = entries.get(module, 0) + 1
+    return ZeroPolicyFrontier(
+        literal_fallbacks=dict(sorted(fallbacks.items())),
+        hand_built_entries=dict(sorted(entries.items())),
+    )
+
+
+def zero_policy_block(frontier: ZeroPolicyFrontier) -> dict[str, Any]:
+    """The receipt's zero-policy section — measured, reasoned, non-growing."""
+    return {
+        "issue": ZERO_POLICY_ISSUE,
+        "rule": (
+            "neither population may grow: a new .get(key, <literal>) under "
+            "champions/ and a new hand-built ability entry each fail --check, "
+            "so the ruled exception cannot widen without a decision"
+        ),
+        "declared_default": (
+            "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry "
+            "and simple_damage and overridable per call (D-24)"
+        ),
+        "totals": frontier.totals(),
+        "literal_fallbacks_by_receiver": frontier.literal_fallbacks,
+        "hand_built_entries_by_module": frontier.hand_built_entries,
+    }
+
+
 def build_receipt(report: FrontierReport) -> dict[str, Any]:
     """The committed frontier artifact."""
     return {
         "schema_version": SCHEMA_VERSION,
-        "slice": "3.6",
+        "slice": "3.7",
         "counters": {
             "counter_1": {
                 "counts": "runtime item-name dispatch sites",
@@ -374,6 +509,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
             for module, tally in sorted(report.by_module.items())
         },
         "no_runtime_behavior": no_runtime_behavior_block(),
+        "zero_policy_frontier": zero_policy_block(zero_policy_frontier()),
         "h4_tags": {
             "dead": sorted(catalog.H4_DEAD_TAGS),
             "self_referential": sorted(catalog.H4_SELF_REFERENTIAL_TAGS),
@@ -425,6 +561,16 @@ def check(
                 f"{key}: committed exclusion set differs from the declared one "
                 f"(committed-only={sorted(recorded_modules - fresh_modules)}, "
                 f"declared-only={sorted(fresh_modules - recorded_modules)})"
+            )
+    committed_zero = committed.get("zero_policy_frontier", {})
+    fresh_zero = fresh["zero_policy_frontier"]
+    for population, measured in fresh_zero["totals"].items():
+        recorded = committed_zero.get("totals", {}).get(population)
+        if isinstance(recorded, int) and measured > recorded:
+            failures.append(
+                f"zero-policy frontier: {population} grew from {recorded} to "
+                f"{measured}; the ruled default at champions/slotlib may not "
+                f"cover a wider population ({ZERO_POLICY_ISSUE})"
             )
     ratchet = committed.get("no_runtime_behavior", {})
     members = ratchet.get("members", [])

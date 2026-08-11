@@ -144,3 +144,61 @@ def test_counters_five_to_seven_are_not_reported_here() -> None:
         "counter_3",
         "counter_4",
     }
+
+
+# ---------------------------------------------------------------------------
+# The zero-policy frontier — the guard the ruled exception ships with (D-24)
+# ---------------------------------------------------------------------------
+
+
+def test_the_zero_policy_populations_are_committed_and_reproduce() -> None:
+    """The two measured populations are in the receipt, not in the tool."""
+    receipt = _receipt()["zero_policy_frontier"]
+    measured = behavior_frontier.zero_policy_frontier().totals()
+    assert receipt["totals"] == measured
+    assert receipt["issue"].strip()
+    assert "slotlib" in receipt["declared_default"]
+
+
+def test_a_new_literal_fallback_under_champions_fails_the_gate() -> None:
+    """R-05: the guard has a red it can produce on demand.
+
+    ``check``'s ``committed`` seam stands in for a receipt taken before the
+    site was added, which is exactly the situation the ratchet exists for.
+    """
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    committed["zero_policy_frontier"]["totals"]["literal_fallbacks"] -= 1
+    failures = behavior_frontier.check(report, committed)
+    assert any("literal_fallbacks grew" in failure for failure in failures)
+
+
+def test_a_new_hand_built_entry_fails_the_gate() -> None:
+    """The second population is ratcheted by the same rule as the first."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    committed["zero_policy_frontier"]["totals"]["hand_built_entries"] -= 1
+    failures = behavior_frontier.check(report, committed)
+    assert any("hand_built_entries grew" in failure for failure in failures)
+
+
+def test_shrinking_a_population_is_not_a_failure() -> None:
+    """The ratchet is non-growing, not equality: migrating one is progress."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    committed["zero_policy_frontier"]["totals"]["literal_fallbacks"] += 5
+    failures = behavior_frontier.check(report, committed)
+    assert not any("literal_fallbacks" in failure for failure in failures)
+
+
+def test_the_scan_finds_a_planted_fallback_and_a_planted_entry(tmp_path) -> None:
+    """The measurement is a seam over a tree, so it can be driven directly."""
+    (tmp_path / "fake_champion.py").write_text(
+        "def parse(ctx):\n"
+        "    stacks = ctx.options.get('q_stacks', 3)\n"
+        "    return {'name': 'Q', 'total_raw': float(stacks)}\n",
+        encoding="utf-8",
+    )
+    frontier = behavior_frontier.zero_policy_frontier(tmp_path)
+    assert frontier.totals() == {"literal_fallbacks": 1, "hand_built_entries": 1}
+    assert frontier.literal_fallbacks == {"options": 1}

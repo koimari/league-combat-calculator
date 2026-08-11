@@ -25,6 +25,8 @@ from src.calculator.champions.engine import (
     build_parser,
 )
 from src.calculator.champions.slotlib import (
+    MODULE_FORMULA_ZERO,
+    STEROID_ZERO,
     ability_on_hit_entry,
     by_option,
     damage_entry,
@@ -426,7 +428,9 @@ class TestSimpleDamageParams:
         )
         results = parse(champ, 9, 0.0)
         assert results["Q"]["damage_type"] == "true"
-        assert results["Q"]["parts"] == (DamagePart("true", 100.0),)
+        assert results["Q"]["parts"] == (
+            DamagePart("true", 100.0, zero_policy=MODULE_FORMULA_ZERO),
+        )
 
     def test_mixed_type_splits_magic_and_true(self) -> None:
         """Mixed damage splits evenly between magic and true (Ahri Q)."""
@@ -443,8 +447,8 @@ class TestSimpleDamageParams:
         parse = build_parser({"Q": simple_damage()}, "TestChamp")
         results = parse(champ, 9, 0.0)
         assert results["Q"]["parts"] == (
-            DamagePart("magic", 50.0),
-            DamagePart("true", 50.0),
+            DamagePart("magic", 50.0, zero_policy=MODULE_FORMULA_ZERO),
+            DamagePart("true", 50.0, zero_policy=MODULE_FORMULA_ZERO),
         )
 
 
@@ -636,7 +640,12 @@ class TestStatBuff:
         )
 
     def test_flat_mode_entry_shape(self) -> None:
-        """The entry is a zero-damage damage_entry plus the stat_buff."""
+        """The entry is a zero-damage damage_entry plus the stat_buff.
+
+        Its zero is ``STRUCTURAL_ZERO``: a steroid with no damage attribute
+        deals none by declaration, which is a different fact from a formula
+        that ran and produced nothing (D-24).
+        """
         parse = build_parser(
             {"R": stat_buff("Bonus Attack Damage", "bonus_attack_damage")},
             "TestChamp",
@@ -648,7 +657,7 @@ class TestStatBuff:
             "cooldown": 70.0,
             "damage_type": "physical",
             "total_raw": 0.0,
-            "parts": (DamagePart("physical", 0.0),),
+            "parts": (DamagePart("physical", 0.0, zero_policy=STEROID_ZERO),),
             "stat_buff": {"bonus_attack_damage": 65.0},
         }
 
@@ -708,7 +717,9 @@ class TestStatBuff:
             "TestChamp",
         )
         results = parse(champ, 11, 0.0)  # R rank 2
-        assert results["R"]["parts"] == (DamagePart("physical", 250.0),)
+        assert results["R"]["parts"] == (
+            DamagePart("physical", 250.0, zero_policy=MODULE_FORMULA_ZERO),
+        )
         assert results["R"]["total_raw"] == 250.0
         assert results["R"]["stat_buff"] == {"bonus_attack_damage": 50.0}
 

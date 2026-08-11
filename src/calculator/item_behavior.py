@@ -35,7 +35,13 @@ from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from enum import Enum
 from typing import NamedTuple, Union
 
-from .ability_spec import AttackClass, Authority, DamageClass, Disposition
+from .ability_spec import (
+    AttackClass,
+    Authority,
+    DamageClass,
+    Disposition,
+    ZeroPolicy,
+)
 from .value_ref import AnyValueRef, SourceReceipt, VALUE_REF_TYPES
 
 
@@ -514,27 +520,9 @@ class Typing:
             )
 
 
-@dataclass(frozen=True, slots=True)
-class ZeroPolicy:
-    """What a zero out of this rule *means*, declared rather than inferred.
-
-    The campaign's one invariant, at rule granularity: a rule that can
-    legitimately produce 0.0 says ``STRUCTURAL_ZERO`` and gives the reason
-    that is then the receipt; a rule that computes zero from real inputs says
-    ``MEASURED``.  Required on every rule with no default (D-24), because a
-    defaulted disposition is the undistinguishable zero this campaign exists
-    to remove.
-    """
-
-    disposition: Disposition
-    reason: str
-
-    def __post_init__(self) -> None:
-        """A disposition with no reason is a label, not a receipt."""
-        if not isinstance(self.disposition, Disposition):
-            raise BehaviorRuleError("zero_policy.disposition must be a Disposition")
-        if not self.reason.strip():
-            raise BehaviorRuleError("zero_policy needs a reason")
+# ``ZeroPolicy`` is re-exported from ``ability_spec``: the champion entry
+# builders declare one too, and they cannot import this module without
+# inverting the vocabulary leaf's dependency direction (D-24).
 
 
 # ── payloads ──────────────────────────────────────────────────────────────

@@ -11,7 +11,10 @@ fight engine: both import the contract, neither imports the other. That
 is also why the campaign's four closed vocabularies live here —
 ``DamageClass``, ``AttackClass``, ``Disposition`` and ``Authority`` are
 declared once, in the one module every layer may import, so no consumer
-has to re-spell a member as a bare string.
+has to re-spell a member as a bare string.  ``ZeroPolicy`` sits with them
+for the same reason: it is a ``Disposition`` and the receipt that goes
+with it, and both the champion entry builders and ``item_behavior``'s
+rule union declare one.
 """
 
 from collections.abc import Callable
@@ -72,6 +75,34 @@ class Disposition(Enum):
     STRUCTURAL_ZERO = "STRUCTURAL_ZERO"
     WITHHELD = "WITHHELD"
     STARVED = "STARVED"
+
+
+@dataclass(frozen=True, slots=True)
+class ZeroPolicy:
+    """What a zero out of one producer *means*, declared rather than inferred.
+
+    The campaign's invariant at producer granularity: a producer that can
+    legitimately yield 0.0 says ``STRUCTURAL_ZERO`` and gives the reason that
+    is then the receipt; one that computed zero from real inputs says
+    ``MEASURED``.  Required with no default wherever a declaration carries it
+    (D-24), because a defaulted disposition is the indistinguishable zero
+    this campaign exists to remove.
+
+    It lives here rather than beside the rule union because two unrelated
+    layers declare one — ``item_behavior``'s ``BehaviorRule`` and the
+    champion entry builders in ``champions/slotlib`` — and the second cannot
+    import the first without inverting this leaf's dependency direction.
+    """
+
+    disposition: Disposition
+    reason: str
+
+    def __post_init__(self) -> None:
+        """A disposition with no reason is a label, not a receipt."""
+        if not isinstance(self.disposition, Disposition):
+            raise ValueError("zero_policy.disposition must be a Disposition")
+        if not self.reason.strip():
+            raise ValueError("zero_policy needs a reason")
 
 
 class Authority(Enum):
@@ -225,6 +256,14 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
     # is an explicit reviewed no-CC result.  The engine never infers control
     # from an ability name or description at runtime.
     cc_kind: str | None = None
+    # What a zero ``amount`` on this part *means* (D-24).  ``None`` is the
+    # unreviewed state a raw construction leaves; every part the champion
+    # entry builders emit carries the policy those builders declared.
+    # Deliberately absent from ``__repr__``: this is a declaration Phase 4
+    # publishes through ``serialize_leaf``, not a value the pair snapshot
+    # serializes, and printing it would move every golden ability repr for
+    # a field no engine reads.
+    zero_policy: "ZeroPolicy | None" = None
 
     def __post_init__(self) -> None:
         if self.damage_type not in part_damage_types():

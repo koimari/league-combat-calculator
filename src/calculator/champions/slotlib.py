@@ -35,7 +35,7 @@ shared output shells use entry builders instead of flag-heavy factories.
 import re
 from typing import Any, Callable
 
-from ..ability_spec import DamagePart
+from ..ability_spec import DamagePart, Disposition, ZeroPolicy
 from .attribute_classifier import (
     classify_damage_type,
     is_damage_attribute,
@@ -388,6 +388,46 @@ def build_stats_context(
 # ---------------------------------------------------------------------------
 
 
+MODULE_FORMULA_ZERO = ZeroPolicy(
+    Disposition.MEASURED,
+    "a champion module's formula ran against its parsed ability data and "
+    "produced this total; a zero here is a computed zero, not a rule that "
+    "never ran",
+)
+"""The one declared ``zero_policy`` default in the champion tree (D-24).
+
+Every numeric leaf a champion authors is born in one of the two builders
+below, so this is the single place the disposition has to be stated — the
+384 call sites across 143 modules are deliberately **not** edited, and a
+required-no-default field there would be a campaign-wide champion sweep
+smuggled in by an idiom.  ``MEASURED`` is the honest default at this layer
+and only at this layer: a module formula that evaluates to zero *computed*
+that zero.  Any slot whose zero means something else passes its own policy.
+
+The default's safety rests on the inputs being wired, which is why it ships
+with a guard rather than on its own: ``scripts/behavior_frontier.py``'s
+zero-policy frontier counts every ``.get(key, <literal>)``-shaped fallback in
+``champions/`` and every hand-built entry that bypasses these builders, and
+asserts neither population grows.  A zero produced by an option that never
+resolved is the incident's own shape and must fail loud rather than be
+stamped ``MEASURED`` here.
+"""
+
+
+STEROID_ZERO = ZeroPolicy(
+    Disposition.STRUCTURAL_ZERO,
+    "a steroid slot with no damage attribute grants a stat and deals no "
+    "damage by declaration; the zero is the answer, not a missing formula",
+)
+"""The one place a champion-tree zero is a declaration rather than a result.
+
+``stat_buff`` without a ``damage_attr`` emits a zero-damage entry so the
+buff has a row to ride on.  That zero is ``STRUCTURAL_ZERO``, and saying so
+here is what makes ``damage_entry``'s default overridable in fact rather
+than only in signature.
+"""
+
+
 def damage_entry(
     name: str,
     rank: int,
@@ -395,6 +435,7 @@ def damage_entry(
     total: float,
     dmg_type: str,
     cc_kind: str | None = None,
+    zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
@@ -405,6 +446,11 @@ def damage_entry(
     (usually the parts sum; proc entries store per-proc × count, and
     hp-scaled entries store a bound) — the fight engine reads ONLY
     ``parts``.
+
+    ``zero_policy`` says what a zero total *means*.  It defaults to
+    :data:`MODULE_FORMULA_ZERO` — the one declared default in the champion
+    tree (D-24) — and a slot whose zero is a declaration rather than a
+    computation passes its own.
 
     ``cc_kind`` marks the cast's reviewed crowd control (e.g. "stun",
     "immobilize") on the entry's single part AND certifies ``single_hit``
@@ -431,11 +477,13 @@ def damage_entry(
     }
     if dmg_type == "mixed":
         entry["parts"] = (
-            DamagePart("magic", total / 2.0),
-            DamagePart("true", total / 2.0),
+            DamagePart("magic", total / 2.0, zero_policy=zero_policy),
+            DamagePart("true", total / 2.0, zero_policy=zero_policy),
         )
     else:
-        entry["parts"] = (DamagePart(dmg_type, total, cc_kind=cc_kind),)
+        entry["parts"] = (
+            DamagePart(dmg_type, total, cc_kind=cc_kind, zero_policy=zero_policy),
+        )
     if cc_kind is not None:
         entry["event_order_certified"] = "single_hit"
     return entry
@@ -607,6 +655,7 @@ def simple_damage(
     ranks: str = "rank",
     dot_duration: float | None = None,
     cc_kind: str | None = None,
+    zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
 ) -> SlotParser:
     """Standard castable damage slot.
 
@@ -643,6 +692,10 @@ def simple_damage(
             marker actually reaches the ledger instead of dissolving
             into a coarse aggregate row. Requires a single-part slot
             (``dmg_type != "mixed"``). None (default) authors no CC.
+        zero_policy: What a zero total from this slot means. Defaults to
+            :data:`MODULE_FORMULA_ZERO`, the champion tree's one declared
+            disposition (D-24); pass a different policy where a zero is a
+            declaration rather than a computed result.
 
     Returns:
         A DAMAGE-phase slot parser.
@@ -698,7 +751,9 @@ def simple_damage(
 
         total *= _resolve_casts(casts, ability, rank)
         name = ability.get("name", f"Ability {ctx.slot}")
-        entry = damage_entry(name, rank, cd_value, total, resolved_type, cc_kind)
+        entry = damage_entry(
+            name, rank, cd_value, total, resolved_type, cc_kind, zero_policy
+        )
         if dot_duration is not None:
             entry["dot_duration"] = dot_duration
         return entry
@@ -776,7 +831,14 @@ def stat_buff(
 
         name = ability.get("name", f"Ability {ctx.slot}")
         entry = damage_entry(
-            name, rank, extract_cooldown(ability, rank), damage, dmg_type
+            name,
+            rank,
+            extract_cooldown(ability, rank),
+            damage,
+            dmg_type,
+            zero_policy=(
+                MODULE_FORMULA_ZERO if damage_attr is not None else STEROID_ZERO
+            ),
         )
         entry["stat_buff"] = {stat: value}
         return entry
