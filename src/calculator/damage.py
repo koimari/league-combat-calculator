@@ -136,6 +136,7 @@ from .interpreters import (
     active_cast,
     cast_proc,
     charged_strike,
+    damage_routing,
     delta_amp,
     periodic,
     on_hit_strike,
@@ -10017,17 +10018,28 @@ def _apply_shield_reaver_venom(
 ) -> tuple[FightConfig, list[str]]:
     """Cut the target's non-magic shields for the attacker's Shield Reaver.
 
-    Serpent's Fang's venom reduces the target's active shields on first
-    damage and any shields gained while the attacker keeps dealing damage —
-    a sustained rotation keeps the venom applied throughout. Magic-damage
-    shields (Hexdrinker, Maw of Malmortius, Kaenic Rookern, ability magic
-    shields) are unaffected, and Protoplasm Harness's temporary health and
-    healing are not shields.
+    The venom reduces the target's active shields on first damage and any
+    shields gained while the attacker keeps dealing damage — a sustained
+    rotation keeps the venom applied throughout. Magic-damage shields
+    (Hexdrinker, Maw of Malmortius, Kaenic Rookern, ability magic shields)
+    are unaffected, and Protoplasm Harness's temporary health and healing
+    are not shields.
+
+    Which item carries the venom, how deep the cut is and how long it lasts
+    are all read off the declaration: the holder's own ``damage_routing``
+    rule, resolved for the holder's range class.
     """
     is_melee = bool(champion_stats.get("is_melee", True))
-    fraction = item_effects.shield_reduction_fraction(items, is_melee=is_melee)
-    if fraction <= 0.0:
+    bypass = damage_routing.resolve_shield_bypass(
+        [str(item.get("name", "")) for item in items],
+        level=int(champion_stats.get("level", 1)),
+        fight_duration_seconds=config.fight_duration_seconds,
+        target_bonus_health=max(0.0, config.target_bonus_health),
+        holder_is_melee=is_melee,
+    )
+    if bypass is None or bypass.fraction <= 0.0:
         return config, []
+    fraction = bypass.fraction
 
     keep = 1.0 - fraction
     threshold_is_cuttable = (
@@ -10051,13 +10063,10 @@ def _apply_shield_reaver_venom(
             else config.target_threshold_shield_amount
         ),
     )
-    venom_seconds = float(
-        item_effects.required_effect_value("Serpent's Fang", "venom_duration")
-    )
     note = (
-        f"Serpent's Fang: Shield Reaver cuts the target's non-magic shields "
+        f"{bypass.owner}: Shield Reaver cuts the target's non-magic shields "
         f"by {fraction:.0%} ({'melee' if is_melee else 'ranged'}) — the "
-        f"rotation keeps its {venom_seconds:g}-second venom applied; "
+        f"rotation keeps its {bypass.duration:g}-second venom applied; "
         "magic-damage shields are unaffected."
     )
     return reduced, [note]

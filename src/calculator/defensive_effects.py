@@ -445,61 +445,14 @@ def _apply_champion_revive(
     )
 
 
-# ── defences still resolved by name (3.7) ────────────────────────────────
+# ── the one defence still resolved by name (3.7) ─────────────────────────
 #
-# Two mechanics whose family sits outside this slice.  Each keeps the branch
-# it always had, in the position the resolution order gives it, and is named
-# in ``item_behavior_catalog.DEFENSE_UNMIGRATED_MECHANICS`` with the slice
-# that retires it — a refusal with a date rather than an omission.
-
-
-def _apply_ignore_pain(ledger: _DefenseLedger, names: frozenset[str], subject) -> None:
-    """Death's Dance's deferral schedule — ``damage_routing``, retired at 3.7."""
-    owner = "Death's Dance"
-    if owner not in names:
-        return
-    melee = subject.is_melee
-    ledger.write(
-        DefenseField.DAMAGE_DEFERRAL_FRACTION,
-        float(
-            required_effect_value(
-                owner, "damage_deferral_melee" if melee else "damage_deferral_ranged"
-            )
-        ),
-    )
-    ledger.write(
-        DefenseField.DAMAGE_DEFERRAL_DURATION,
-        float(required_effect_value(owner, "damage_deferral_duration")),
-    )
-    ledger.write(
-        DefenseField.DAMAGE_DEFERRAL_TICKS,
-        int(required_effect_value(owner, "damage_deferral_ticks")),
-    )
-    ledger.write(
-        DefenseField.DEFY_WINDOW, float(required_effect_value(owner, "defy_window"))
-    )
-    ledger.write(
-        DefenseField.DEFY_HEAL_BONUS_AD_RATIO,
-        float(required_effect_value(owner, "defy_heal_bonus_ad_ratio")),
-    )
-    ledger.write(
-        DefenseField.DEFY_HEAL_DURATION,
-        float(required_effect_value(owner, "defy_heal_duration")),
-    )
-    ledger.write(
-        DefenseField.DEFY_HEAL_TICKS,
-        int(required_effect_value(owner, "defy_heal_ticks")),
-    )
-    ledger.notes.append(
-        "Death's Dance Ignore Pain defers the sourced fraction of each "
-        "post-mitigation physical or magic packet; Defy clears the "
-        "remaining store and heals after a qualifying champion takedown."
-    )
-    ledger.cite(
-        DefenseMechanic.IGNORE_PAIN,
-        owner,
-        DEFENSE_RECEIPTS[DefenseMechanic.IGNORE_PAIN],
-    )
+# Spirit Visage's Boundless Vitality multiplies every heal and shield the
+# subject receives, which is ``sustain``'s shape and this slice's successor's
+# work.  It keeps the branch it always had, in the position the resolution
+# order gives it, and is named in
+# ``item_behavior_catalog.DEFENSE_UNMIGRATED_MECHANICS`` with the slice that
+# retires it — a refusal with a date rather than an omission.
 
 
 _SHIELD_FIELDS = (
@@ -594,12 +547,12 @@ def _apply_everlasting(
 
 
 # Defences resolved outside the four defence families: one declared by
-# another family (Everlasting) and two whose own family lands in 3.7.
+# another family (Everlasting) and one whose own family lands in the next
+# slice.
 _UNMIGRATED_DEFENSES: Mapping[
     DefenseMechanic, Callable[[_DefenseLedger, frozenset[str], DefenseSubject], None]
 ] = {
     DefenseMechanic.EVERLASTING: _apply_everlasting,
-    DefenseMechanic.IGNORE_PAIN: _apply_ignore_pain,
     DefenseMechanic.BOUNDLESS_VITALITY: _apply_boundless_vitality,
 }
 

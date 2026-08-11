@@ -1504,9 +1504,10 @@ def _apply_damage(
                 "event_id": str(event_id or ""),
             }
         )
-    # The Collector is an authored terminal transition.  Its threshold
-    # is carried by the attacker's packet from the cached item effect; it
-    # never contributes extra damage or fires from an aggregate row.
+    # An execution is an authored terminal transition.  Both its threshold
+    # and the name of whatever declared it are carried by the attacker's
+    # packet; this walk names no item, and an execution never contributes
+    # extra damage or fires from an aggregate row.
     if (
         action.execute_threshold_ratio > 0.0
         and applied_to_health > 0.0
@@ -1515,7 +1516,7 @@ def _apply_damage(
     ):
         pools.health = 0.0
         state["execute_time"] = float(event_time)
-        state["execute_source"] = str(action.execute_source or "The Collector")
+        state["execute_source"] = str(action.execute_source)
         state["death_time"] = min(float(ctx.duration), float(event_time))
         state["terminal_phase"] = "dead"
         ctx.ledger.write(

@@ -44,7 +44,7 @@ def test_every_family_declares_the_lanes_that_owe_it_an_answer() -> None:
     """Declared, not inferred — otherwise an empty registry reports full cover."""
     for family in RuleFamily:
         assert interpreters.lanes_for(family)
-    assert len(interpreters.declared_pairs()) == 51
+    assert len(interpreters.declared_pairs()) == 52
 
 
 def test_counter_four_is_the_gap_between_the_table_and_the_registry() -> None:

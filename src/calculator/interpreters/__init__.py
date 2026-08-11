@@ -51,6 +51,7 @@ from . import (
     charged_strike,
     combat_state,
     crit_profile,
+    damage_routing,
     delta_amp,
     on_hit_strike,
     opening_defense,
@@ -163,11 +164,15 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
             EngineLane.COMPILED_SCORE_WALK,
         }
     ),
+    # Routing is the one pricing family the defensive resolver also builds:
+    # the deferral schedule is read at the opening with every other defence,
+    # and the two target-side rules are priced by the pair engine.
     RuleFamily.DAMAGE_ROUTING: frozenset(
         {
             EngineLane.PAIR_ENGINE,
             EngineLane.RECEIPT_WALK,
             EngineLane.COMPILED_SCORE_WALK,
+            EngineLane.DEFENSE_RESOLVER,
         }
     ),
     # Defence families are built by the defensive resolver and then have to
@@ -247,6 +252,14 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         RuleFamily.CRIT_PROFILE,
         EngineLane.PAIR_ENGINE,
     ): crit_profile.PAIR_INTERPRETER,
+    (
+        RuleFamily.DAMAGE_ROUTING,
+        EngineLane.DEFENSE_RESOLVER,
+    ): damage_routing.RESOLVER_INTERPRETER,
+    (
+        RuleFamily.DAMAGE_ROUTING,
+        EngineLane.PAIR_ENGINE,
+    ): damage_routing.PAIR_INTERPRETER,
     (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
     (
         RuleFamily.ON_HIT_STRIKE,

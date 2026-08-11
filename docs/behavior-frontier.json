@@ -16,10 +16,10 @@
       "class_d": 1
     },
     "calculator/damage.py": {
-      "counter_1": 14
+      "counter_1": 13
     },
     "calculator/defensive_effects.py": {
-      "counter_1": 2
+      "counter_1": 1
     },
     "calculator/item_coverage.py": {
       "counter_2": 409
@@ -63,9 +63,6 @@
     "calculator/stats.py": {
       "counter_1": 3
     },
-    "calculator/survival/actions.py": {
-      "counter_1": 1
-    },
     "calculator/survival/compile.py": {
       "counter_1": 18
     },
@@ -73,7 +70,7 @@
       "counter_1": 2
     },
     "calculator/survival/transitions.py": {
-      "counter_1": 7
+      "counter_1": 6
     },
     "calculator/trigger_stream.py": {
       "class_c": 38
@@ -85,7 +82,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 74
+      "value": 70
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -99,7 +96,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 31
+      "value": 28
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -116,7 +113,6 @@
         "crit_profile/compiled_score_walk",
         "crit_profile/receipt_walk",
         "damage_routing/compiled_score_walk",
-        "damage_routing/pair_engine",
         "damage_routing/receipt_walk",
         "delta_amp/compiled_score_walk",
         "delta_amp/receipt_walk",
@@ -144,7 +140,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 36
+      "value": 35
     }
   },
   "exclusions": {
@@ -200,7 +196,7 @@
     "reasons": {
       "conditional_attack_speed": "dead: read nowhere in src/. Yun Tal Wildarrows' crit-gated attack speed is a derived stat, so STAT_DERIVATION is where a rule for it would land the day one is written",
       "defensive_start": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name in defensive_effects \u2014 until 3.5 made it a real dispatch: every entry carrying it now compiles an OPENING_DEFENSE declaration. H4's decision on the tag stands",
-      "shield_reduction": "dead: read nowhere in src/. Serpent's Fang changes how much shielding a strike must pass through on its way to health, which is a routing rule and not a defence the holder owns",
+      "shield_reduction": "was dead \u2014 read nowhere in src/ \u2014 until 3.7 declared Serpent's Fang's venom as DAMAGE_ROUTING: the share of the target's shielding a strike passes through is a routing rule and not a defence the holder owns, and it now reaches a real dispatch. H4's decision on the tag stands",
       "stat_conversion": "self-referential: read only by item_coverage's own claim, while the behaviour is reached by item name in stats. The mechanic derives one stat from another",
       "sustain": "self-referential: read only by item_coverage's own claim, while the behaviour is reached by item name. The mechanic is sustain and the family it names is SUSTAIN",
       "target_attack_speed_aura": "dead: read nowhere in src/. Frozen Heart's aura derives a stat on everyone in range",

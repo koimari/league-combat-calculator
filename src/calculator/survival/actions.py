@@ -779,7 +779,12 @@ def survival_action_from_event(
         ),
         reactive=bool(get("_reactive")),
         execute_threshold_ratio=max(0.0, float(execute_ratio_raw or 0.0)),
-        execute_source=str(get("execute_source", "The Collector")),
+        # The source is the declaring item's own name, stamped on the packet
+        # beside the ratio by whoever authored the execution.  There is no
+        # fallback name: an execution whose source the packet did not carry
+        # is an unstamped packet, and naming a plausible item here would be
+        # the stale literal this migration removes.
+        execute_source=str(get("execute_source", "")),
         deferred=bool(deferred_raw),
         deferred_batch_id=str(batch_id) if batch_id else None,
         redirected=bool(redirected_raw),

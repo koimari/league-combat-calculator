@@ -54,6 +54,7 @@ from .item_behavior import (
     CombatStateRule,
     CooldownProcRule,
     CritDamageBonusRule,
+    DamageDeferralRule,
     CritOccurrence,
     DamageFormula,
     DEFENSE_FIELD_COMBINE,
@@ -64,6 +65,7 @@ from .item_behavior import (
     DefenseOption,
     DeltaAmpRule,
     ExcludeTrigger,
+    ExecuteRule,
     Fixed,
     ForcedCritHeal,
     ForcedCritRule,
@@ -105,6 +107,7 @@ from .item_behavior import (
     SecondaryTargetRule,
     SelfShield,
     ShapedChargeRule,
+    ShieldBypassRule,
     ShieldAbsorbs,
     SpellbladeRule,
     StackGate,
@@ -224,9 +227,10 @@ H4_TAG_REASONS: Mapping[str, str] = {
         "would land the day one is written"
     ),
     "shield_reduction": (
-        "dead: read nowhere in src/. Serpent's Fang changes how much shielding "
-        "a strike must pass through on its way to health, which is a routing "
-        "rule and not a defence the holder owns"
+        "was dead — read nowhere in src/ — until 3.7 declared Serpent's Fang's "
+        "venom as DAMAGE_ROUTING: the share of the target's shielding a strike "
+        "passes through is a routing rule and not a defence the holder owns, "
+        "and it now reaches a real dispatch. H4's decision on the tag stands"
     ),
     "target_state": (
         "was dead — read nowhere in src/ — until 3.5 gave Force of Nature's "
@@ -358,11 +362,6 @@ UNDECLARED_DEFENSE_MECHANICS: Mapping[DefenseMechanic, str] = {
 # healing received, and a slice that declared them here would be doing
 # another family's work under this one's zero-diff claim.
 DEFENSE_UNMIGRATED_MECHANICS: Mapping[DefenseMechanic, str] = {
-    DefenseMechanic.IGNORE_PAIN: (
-        "3.7 — Ignore Pain stores post-mitigation damage and pays it back as "
-        "ticks, which is damage_routing's shape and not a defence held at the "
-        "opening"
-    ),
     DefenseMechanic.BOUNDLESS_VITALITY: (
         "3.7 — Boundless Vitality multiplies every heal and shield the subject "
         "receives, which is sustain's shape; it also has to run *after* every "
@@ -801,6 +800,16 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
             DefenseField.DEFY_HEAL_TICKS,
         ),
         exclusivity=DefenseExclusivity.NONE,
+        reads=(
+            "damage_deferral_melee",
+            "damage_deferral_ranged",
+            "damage_deferral_duration",
+            "damage_deferral_ticks",
+            "defy_window",
+            "defy_heal_bonus_ad_ratio",
+            "defy_heal_duration",
+            "defy_heal_ticks",
+        ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
             "the deferral is a sourced fraction of each post-mitigation "
@@ -1205,6 +1214,7 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         # wrong one.
         "health_threshold": RuleFamily.THRESHOLD_DEFENSE,
         "revive_health_ratio": RuleFamily.THRESHOLD_DEFENSE,
+        "damage_deferral_melee": RuleFamily.DAMAGE_ROUTING,
         "spell_shield_ready": RuleFamily.COMBAT_STATE,
         "stasis_duration": RuleFamily.COMBAT_STATE,
         "reactive_shield_base": RuleFamily.REACTIVE,
@@ -3111,6 +3121,117 @@ def _compile_crit_profile(
     return tuple(rules)
 
 
+# ── damage routing (3.7) ──────────────────────────────────────────────────
+#
+# Three mechanics that move a damage packet rather than resize it.  Two are
+# tagged into the family by the registry; the third — Death's Dance's Ignore
+# Pain — is tagged as a starting defence, because that is where the resolver
+# builds it, and reaches this compiler through its own signature key.  The
+# tag says where a mechanic is *built*; the family says what it *does*.
+
+EXECUTE_THRESHOLD_KEY = "threshold"
+SHIELD_BYPASS_KEYS = ("shield_reduction_melee", "shield_reduction_ranged")
+VENOM_DURATION_KEY = "venom_duration"
+
+
+def _execute_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """The Collector's shape: below a sourced share of health, the target dies.
+
+    Nothing about the damage changes, which is why the threshold is a routing
+    declaration and not a magnitude.  The typing is every class from every
+    attack class: the execution reads the target's health after the packet
+    lands, whatever delivered it.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DAMAGE_ROUTING,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.execute",
+        payload=ExecuteRule(
+            threshold=ValueRef(registry, owner, EXECUTE_THRESHOLD_KEY),
+            typing=_all_damage_typing(),
+            subject=Subject.TARGET,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the threshold is a sourced share of the target's maximum health; "
+            "a zero would be the registry stating nothing is ever executed, "
+            "which the rule read rather than assumed",
+        ),
+    )
+
+
+def _shield_bypass_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Serpent's Fang's shape: a share of the target's shielding is bypassed.
+
+    Melee and ranged holders are paid different shares and both are declared
+    — a schema that supplied one and defaulted the other would price a whole
+    class of holders at zero with nothing saying so.  The window is opened by
+    a champion hit and lasts the sourced venom duration.
+    """
+    melee_key, ranged_key = SHIELD_BYPASS_KEYS
+    return BehaviorRule(
+        family=RuleFamily.DAMAGE_ROUTING,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.shield_bypass",
+        payload=ShieldBypassRule(
+            fraction=MeleeRangedSplit(
+                melee=ValueRef(registry, owner, melee_key),
+                ranged=ValueRef(registry, owner, ranged_key),
+            ),
+            duration=ValueRef(registry, owner, VENOM_DURATION_KEY),
+            trigger=TriggerEvent.CHAMPION_DAMAGE,
+            typing=_all_damage_typing(),
+            subject=Subject.TARGET,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the bypassed share is a sourced fraction of the shielding the "
+            "target holds; a zero means the registry states no shielding is "
+            "bypassed, which the rule read",
+        ),
+    )
+
+
+def _compile_damage_routing(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile every routing mechanic one registry entry declares.
+
+    The two tagged mechanics are dispatched on the entry's tag and the
+    deferral through the shared defence machinery, so one entry carrying both
+    a tag and a defence signature declares both — and an entry tagged into
+    this family carrying neither is a stop rather than an item that quietly
+    routes nothing.
+    """
+    tag = str(entry.get("type"))
+    rules: list[BehaviorRule] = []
+    if tag == "execute":
+        rules.append(_execute_rule(owner, registry))
+    if tag == "shield_reduction":
+        rules.append(_shield_bypass_rule(owner, registry))
+    rules.extend(_compile_defense(family, owner, registry, entry))
+    if not rules:
+        raise BehaviorCatalogError(
+            f"{registry}[{owner!r}] is offered to the damage-routing compiler "
+            f"carrying tag {tag!r} and no routing signature key; a routing rule "
+            "that routes nothing is a parse that failed"
+        )
+    for rule in rules:
+        validate_rule(rule)
+    return tuple(rules)
+
+
 # ── ally packets (3.6) ────────────────────────────────────────────────────
 #
 # The one family whose mechanics share no arithmetic.  Redemption heals a
@@ -4029,6 +4150,13 @@ def _defense_rule(
             absorbs=absorbs,
             values=values,
         )
+    elif family is RuleFamily.DAMAGE_ROUTING:
+        payload = DamageDeferralRule(
+            mechanic=mechanic,
+            writes=declaration.writes,
+            exclusivity=declaration.exclusivity,
+            values=values,
+        )
     elif family is RuleFamily.COMBAT_STATE:
         payload = CombatStateRule(
             mechanic=mechanic,
@@ -4198,7 +4326,7 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.DELTA_AMP: _compile_delta_amp,
     RuleFamily.RESISTANCE_SHRED: _compile_resistance_shred,
     RuleFamily.CRIT_PROFILE: _compile_crit_profile,
-    RuleFamily.DAMAGE_ROUTING: _unmigrated,
+    RuleFamily.DAMAGE_ROUTING: _compile_damage_routing,
     RuleFamily.OPENING_DEFENSE: _compile_opening_defense,
     RuleFamily.THRESHOLD_DEFENSE: _compile_threshold_defense,
     RuleFamily.COMBAT_STATE: _compile_combat_state,
@@ -4210,7 +4338,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.DAMAGE_ROUTING: "3.7",
     RuleFamily.SUSTAIN: "3.7",
     RuleFamily.STAT_DERIVATION: "3.7",
 }

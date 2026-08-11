@@ -1214,6 +1214,66 @@ class AttackCooldownRefundRule:
     subject: Subject
 
 
+# ── damage routing ────────────────────────────────────────────────────────
+#
+# Three mechanics that change **where a damage packet goes** rather than how
+# big it is: a threshold below which a strike finishes the target, a share of
+# the target's shielding a strike passes through instead of being absorbed
+# by, and a deferral that stores post-mitigation damage and pays it back over
+# ticks.  None of them is an amplifier and none of them is a defence the
+# holder keeps — which is why they are one family and why the deferral, whose
+# registry entry is tagged as a starting defence, is filed here.
+
+
+@dataclass(frozen=True, slots=True)
+class ExecuteRule:
+    """Below a sourced share of the target's health, the strike finishes it.
+
+    The threshold is a *routing* fact rather than a magnitude: nothing about
+    the damage changes, and what changes is whether the packet ends the
+    fight.  ``typing`` says which damage may execute, so an item that only
+    executes with basic attacks is expressible without a second field.
+    """
+
+    threshold: AnyValueRef
+    typing: Typing
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ShieldBypassRule:
+    """A share of the target's shielding a strike passes through, for a window.
+
+    The share is a :class:`MeleeRangedSplit` because the registry pays melee
+    and ranged holders differently, and that choice is made once per build
+    from the holder's range class rather than per event.  ``duration`` is how
+    long the window the trigger opens stays open.
+    """
+
+    fraction: MeleeRangedSplit
+    duration: AnyValueRef
+    trigger: TriggerEvent
+    typing: Typing
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class DamageDeferralRule:
+    """Post-mitigation damage stored and repaid over declared ticks.
+
+    Shaped like a defence — it carries a :class:`DefenseMechanic`, writes
+    resolved defensive state and reads its numbers as references — because
+    the resolver builds it at the opening with every other defence.  What it
+    *is* is a routing rule: the damage is not reduced, it is moved in time,
+    and filing it under a defence family would say the holder took less.
+    """
+
+    mechanic: DefenseMechanic
+    writes: tuple[DefenseField, ...]
+    exclusivity: DefenseExclusivity
+    values: tuple[AnyValueRef, ...]
+
+
 # ── defence ───────────────────────────────────────────────────────────────
 
 
@@ -1707,6 +1767,9 @@ RulePayload = Union[
     CritDamageBonusRule,
     ForcedCritRule,
     AttackCooldownRefundRule,
+    ExecuteRule,
+    ShieldBypassRule,
+    DamageDeferralRule,
     OpeningDefenseRule,
     ThresholdDefenseRule,
     CombatStateRule,
@@ -1734,6 +1797,9 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     CritDamageBonusRule: RuleFamily.CRIT_PROFILE,
     ForcedCritRule: RuleFamily.CRIT_PROFILE,
     AttackCooldownRefundRule: RuleFamily.CRIT_PROFILE,
+    ExecuteRule: RuleFamily.DAMAGE_ROUTING,
+    ShieldBypassRule: RuleFamily.DAMAGE_ROUTING,
+    DamageDeferralRule: RuleFamily.DAMAGE_ROUTING,
     OpeningDefenseRule: RuleFamily.OPENING_DEFENSE,
     ThresholdDefenseRule: RuleFamily.THRESHOLD_DEFENSE,
     CombatStateRule: RuleFamily.COMBAT_STATE,
@@ -1748,6 +1814,10 @@ DEFENSE_PAYLOAD_TYPES: tuple[type, ...] = (
     ThresholdDefenseRule,
     CombatStateRule,
     ReactiveRule,
+    # Shaped like a defence and filed under another family: the resolver
+    # builds it at the opening with every other defence, and what it does
+    # with the damage is a different question from where it is built.
+    DamageDeferralRule,
 )
 
 
@@ -1875,6 +1945,30 @@ def _validate_payload(rule: BehaviorRule) -> None:
         return
     if isinstance(payload, (CritDamageBonusRule, ForcedCritRule)):
         _validate_crit_profile(rule, payload)
+        return
+    if isinstance(payload, ExecuteRule):
+        _validate_damage_routing(rule, payload)
+        _validate_refs(rule, {"threshold": payload.threshold})
+        return
+    if isinstance(payload, ShieldBypassRule):
+        _validate_damage_routing(rule, payload)
+        if not isinstance(payload.fraction, MeleeRangedSplit):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a shield bypass pays melee and ranged "
+                "holders differently and declares both"
+            )
+        _validate_refs(
+            rule,
+            {
+                "fraction.melee": payload.fraction.melee,
+                "fraction.ranged": payload.fraction.ranged,
+                "duration": payload.duration,
+            },
+        )
+        if not isinstance(payload.trigger, TriggerEvent):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a shield bypass says what opens its window"
+            )
         return
     if isinstance(payload, AttackCooldownRefundRule):
         _validate_refs(rule, {"refund_fraction": payload.refund_fraction})
@@ -2221,6 +2315,19 @@ def _validate_shred_payload(rule: BehaviorRule, payload: ResistanceShredRule) ->
         )
 
 
+def _validate_damage_routing(
+    rule: BehaviorRule, payload: ExecuteRule | ShieldBypassRule
+) -> None:
+    """A routing rule names its typing and acts on the target it re-routes."""
+    if not isinstance(payload.typing, Typing):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+    if payload.subject is not Subject.TARGET:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a routing rule changes where damage lands on "
+            "the target and has no other subject"
+        )
+
+
 def _validate_crit_profile(
     rule: BehaviorRule, payload: CritDamageBonusRule | ForcedCritRule
 ) -> None:
@@ -2448,6 +2555,7 @@ __all__ = [
     "CritOccurrence",
     "DEFENSE_FIELD_COMBINE",
     "DEFENSE_PAYLOAD_TYPES",
+    "DamageDeferralRule",
     "DamageFormula",
     "DamageThreshold",
     "DefenseCombine",
@@ -2463,6 +2571,7 @@ __all__ = [
     "EnergizedCharge",
     "EngineLane",
     "ExcludeTrigger",
+    "ExecuteRule",
     "FLOOR_TYPES",
     "Fixed",
     "Floor",
@@ -2513,6 +2622,7 @@ __all__ = [
     "SelfShield",
     "ShapedChargeRule",
     "ShieldAbsorbs",
+    "ShieldBypassRule",
     "SpellbladeRule",
     "StackGate",
     "StackRamp",

@@ -132,6 +132,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "below {{as|45% of your '''maximum''' health}}",
         0.45,
     ),
+    RuleFamily.DAMAGE_ROUTING: (
+        "The Collector",
+        "threshold",
+        "below {{as|5% of their '''maximum''' health}}",
+        "below {{as|9% of their '''maximum''' health}}",
+        0.09,
+    ),
     RuleFamily.CRIT_PROFILE: (
         "Navori Flickerblade",
         "cd_refund_percent",
