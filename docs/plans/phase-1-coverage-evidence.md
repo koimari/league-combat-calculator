@@ -293,6 +293,10 @@ def packet_sites(module_text: str) -> tuple[PacketSite, ...]:
     """Every call carrying ``source=``, with its keyword-name set.  Measured 29 in
     item_support_effects.py; the measurement, not a pinned integer, is the contract, and
     Phase 3's producer count is derived from it (len of the distinct ``source`` set)."""
+def unquoted_packet_sources(claims, frontier, module_text) -> tuple[str, ...]:
+    """``PacketSource``'s return edge: every literal the builder emits that no claim
+    quotes and no ``FRONTIER`` key withholds — the holder's, or the packet's own
+    ``packet:<source>`` key.  Empty is the pass condition."""
 def render_source_argument(node: ast.AST) -> str | None:
     """Render one ``source=`` argument; f-strings collapse to ``{}`` slots."""
 def tag_dispatch_branches(module_text: str, qualname: str) -> frozenset[str]:
@@ -405,3 +409,14 @@ def _is_full_session(config) -> bool:
     leaf no receipt claims. Neither half is this phase's numeric evidence anyway (D-93):
     what carries *this phase changes no number* is criterion 1's classification receipt,
     which re-captures on the tip with no diff.
+17. **The packet evidence is total in both directions.** `PacketSource` resolution proves
+    claim → builder; `unquoted_packet_sources` proves builder → claim and returns empty:
+    every distinct `source=` literal `packet_sites` reads out of `item_support_effects.py`
+    is quoted by some claim's `PacketSource`, or withheld by a `FRONTIER` key — its
+    holder's `item:<name>@support_packet`, or the packet's own `packet:<source>` for a
+    holder whose claim exists but does not reach that packet. A packet added to an
+    already-claimed item is reported until one of the two names it. *Why this is a
+    criterion and not a review rule: without the return edge a claimed item's second packet
+    owed evidence to nobody, which is this phase's own failure shape one level inside its
+    own evidence union — added after the phase-1 sign-off found the residue, and flagged
+    here for the same reason the amendment above is.*

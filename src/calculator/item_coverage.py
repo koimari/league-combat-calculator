@@ -2024,6 +2024,15 @@ COVERAGE_EVIDENCE: Mapping[tuple[SubjectKind, str, ClaimLane], Claim] = _corpus(
 # a new member arrives only with the reason it cannot be a claim, and every
 # reason carries the issue that tracks it.
 #
+# Three key shapes: ``item:<name>@<lane>`` is a claim nobody may file yet,
+# ``tag:<name>`` an effect tag with no live handler, and ``packet:<source>``
+# one walk packet of an item whose claim exists but does not reach that
+# packet.  The third exists because ``PacketSource`` proves only that a
+# quoted packet is emitted; the totality check
+# (``coverage_resolver.unquoted_packet_sources``) asks the other direction --
+# every literal the builder emits is quoted by a claim or withheld here --
+# and a per-item key cannot answer it for an item that is already claimed.
+#
 # No attacker or target key may appear here at all.  The rule is that a
 # frontier which can absorb a damage or durability claim is the escape hatch
 # this campaign closes, and "no such lane, ever" is the version of that rule a
@@ -2056,6 +2065,12 @@ FRONTIER: Mapping[str, str] = {
     "item:Stridebreaker@support_packet": (
         "Breaking Shockwave emits a walk packet no focused test exercises; #43 "
         "tracks the multi-target authoring debt."
+    ),
+    "packet:Dream Maker — Purple Dream Bubble": (
+        "Dream Maker's second walk packet: the item's support_packet claim "
+        "quotes Blue Dream Bubble, and the Purple bubble's magic on-hit is "
+        "exercised by no focused test; #48 tracks the support-item authoring "
+        "debt."
     ),
     "tag:conditional_attack_speed": _H4_DEAD_TAG,
     "tag:shield_reduction": _H4_DEAD_TAG,

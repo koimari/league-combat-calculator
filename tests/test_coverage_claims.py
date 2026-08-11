@@ -857,6 +857,64 @@ def test_packet_sites_read_every_source_argument_with_its_keywords() -> None:
     assert owning == split
 
 
+def test_every_walk_packet_literal_is_quoted_by_a_claim_or_withheld() -> None:
+    """Criterion 17: the corpus is total over the literals the builder emits.
+
+    ``PacketSource`` resolution runs claim → builder.  This is the return
+    edge: a packet the builder emits that no claim quotes and no frontier
+    entry withholds owes no evidence to anybody, so a second packet on an
+    already-claimed item would enter the walk unremarked — the shape this
+    phase exists to kill, one level inside its own evidence union.
+    """
+    text = coverage_resolver.read_repo_file("src/calculator/item_support_effects.py")
+    assert (
+        coverage_resolver.unquoted_packet_sources(COVERAGE_EVIDENCE, FRONTIER, text)
+        == ()
+    )
+
+
+def test_a_packet_added_to_an_already_claimed_item_is_reported() -> None:
+    """The red the totality check ships with (R-05), through its own seam.
+
+    Dream Maker is the case that motivated the check: it is a claimed item
+    whose claim quotes one of its two packets, so a holder-level frontier key
+    could never have covered the other one and a third growing it would not
+    be noticed by the item lane at all.
+    """
+    text = coverage_resolver.read_repo_file("src/calculator/item_support_effects.py")
+    grown = f'{text}\n_ = _packet(source="Dream Maker — Green Dream Bubble")\n'
+    assert coverage_resolver.unquoted_packet_sources(
+        COVERAGE_EVIDENCE, FRONTIER, grown
+    ) == ("Dream Maker — Green Dream Bubble",)
+    named = {
+        **FRONTIER,
+        "packet:Dream Maker — Green Dream Bubble": "synthetic, tracked by #0",
+    }
+    assert (
+        coverage_resolver.unquoted_packet_sources(COVERAGE_EVIDENCE, named, grown) == ()
+    )
+
+
+def test_a_withheld_holder_covers_its_own_packets_and_no_others() -> None:
+    """The holder-key route is a derivation, and it is not a blanket.
+
+    An item on the frontier has no claim to quote its packets with, so its
+    key stands for them — by the ``"<Holder> — <Effect>"`` spelling every
+    ``_packet`` source is built with, never by a second hand list.  Dropping
+    the key reports exactly that holder's packet and nothing else, which is
+    what says the exemption is doing work rather than passing everything.
+    """
+    text = coverage_resolver.read_repo_file("src/calculator/item_support_effects.py")
+    without = {
+        key: reason
+        for key, reason in FRONTIER.items()
+        if key != "item:Diadem of Songs@support_packet"
+    }
+    assert coverage_resolver.unquoted_packet_sources(
+        COVERAGE_EVIDENCE, without, text
+    ) == ("Diadem of Songs — Consonance",)
+
+
 def test_render_source_argument_collapses_an_f_string_to_slots() -> None:
     """``{}`` is the only brace a ``PacketSource`` may carry, and this is why."""
     rendered = coverage_resolver.render_source_argument(

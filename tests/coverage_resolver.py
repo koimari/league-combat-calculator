@@ -909,6 +909,58 @@ def packet_sites(module_text: str) -> tuple[PacketSite, ...]:
     return tuple(sites)
 
 
+# The separator every ``_packet`` source is built with.  A literal is spelled
+# ``"<Holder> — <Effect>"``, which is what lets a holder's frontier key stand
+# for the packets that holder emits without a second hand list saying so.
+PACKET_SOURCE_SEPARATOR = " — "
+
+
+def unquoted_packet_sources(
+    claims: Mapping[Any, Claim], frontier: Mapping[str, str], module_text: str
+) -> tuple[str, ...]:
+    """Every walk-packet literal the corpus neither quotes nor withholds.
+
+    :class:`PacketSource` proves one direction — that the builder a claim
+    names really emits the packet the claim quotes.  Nothing proved the
+    other: a packet the builder emits that *no* claim quotes owed no
+    evidence at all, so a second packet added to an already-claimed item
+    would enter the walk with nobody noticing.  That is this phase's own
+    failure shape, surviving inside its own evidence union, and this is the
+    direction that closes it.
+
+    A literal is accounted for in exactly two ways.  **Quoted**: some claim
+    carries it as a ``PacketSource``.  **Withheld**: ``FRONTIER`` names it,
+    either through its own ``packet:<source>`` key or through the
+    ``item:<holder>@support_packet`` key of the holder whose packet it is —
+    a holder with no claim at all cannot be asked to quote one, and
+    :data:`PACKET_SOURCE_SEPARATOR` is what makes "whose packet it is" a
+    derivation rather than a second hand list.  A source whose holder
+    collapses to an f-string ``{}`` slot names no holder and is therefore
+    only ever quotable, which is why ``World Atlas`` quotes both of its.
+
+    Reported literals are sorted and the empty tuple is the pass condition.
+    """
+    quoted = {
+        evidence.source
+        for claim in claims.values()
+        for evidence in claim.evidence
+        if isinstance(evidence, PacketSource)
+    }
+    withheld_holders = tuple(
+        key.removeprefix("item:").removesuffix("@support_packet")
+        for key in frontier
+        if key.startswith("item:") and key.endswith("@support_packet")
+    )
+    unquoted = set()
+    for source in {site.source for site in packet_sites(module_text)}:
+        if source in quoted or f"packet:{source}" in frontier:
+            continue
+        prefixes = (f"{holder}{PACKET_SOURCE_SEPARATOR}" for holder in withheld_holders)
+        if not any(source.startswith(prefix) for prefix in prefixes):
+            unquoted.add(source)
+    return tuple(sorted(unquoted))
+
+
 def tag_dispatch_branches(module_text: str, qualname: str) -> frozenset[str]:
     """The effect tags a handler actually branches on — ``EffectTag``'s oracle.
 
