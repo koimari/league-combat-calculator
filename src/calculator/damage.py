@@ -133,7 +133,7 @@ from . import rune_effects
 from . import shield_ledger
 from .ability_spec import DamagePart
 from .interpreters import delta_amp
-from .item_behavior import AmpChainSlot
+from .item_behavior import AmpChainSlot, Isolation
 from .trigger_stream import (
     Stream,
     authored_triggers,
@@ -6266,8 +6266,6 @@ class SpellbladeResult:
     procs: int = 0
     damage_per_proc: float = 0.0  # mitigated damage per proc
     double_on_hit_procs: int = 0  # extra on-hit stacks (Dusk and Dawn + double shot)
-    expose_weakness_melee: float = 0.0
-    expose_weakness_ranged: float = 0.0
     mana_restored: float = 0.0
     self_healing: float = 0.0
 
@@ -6447,8 +6445,6 @@ def _add_spellblade_damage(
     effect = state.damage_effects.spellblade
     if effect is not None:
         result.item = effect.source.item_name
-        result.expose_weakness_melee = effect.expose_weakness_melee
-        result.expose_weakness_ranged = effect.expose_weakness_ranged
 
     # A spellblade charge is consumed by any basic attack — the auto
     # stream when one exists, plus attacks forced by empowered-auto
@@ -9106,19 +9102,33 @@ def _add_expose_weakness(
     autos: AutoAttackResult,
     spellblade: SpellbladeResult,
 ) -> None:
-    """Add Bloodsong's Expose Weakness amp on damage after the first proc."""
+    """Add Bloodsong's Expose Weakness amp on damage after the first proc.
+
+    This is the **pair engine's reading** of the mechanic, and the walk's is
+    different: it arms a timed modifier per proc, on a cooldown, for every
+    roster attacker.  The two are not numerically equivalent and this slice
+    does not unify them — ``trigger_stream.DIVERGENCES`` carries the reviewed
+    receipt naming both readings, and Phase 4 reconciles them.  What is
+    declared here is the exclusion (the chain that armed the buff) and the
+    rate, which used to be a comparison and a compiled field respectively.
+    """
     if not (spellblade.item and spellblade.procs > 0):
         return
-    expose_rate = (
-        spellblade.expose_weakness_melee
-        if state.is_melee
-        else spellblade.expose_weakness_ranged
-    )
+    slot = _amp_slot_for(state, AmpChainSlot.EXPOSE_WEAKNESS, [spellblade.item])
+    if slot is None:
+        return
+    if slot.exclusion() is not Isolation.TRIGGER_SEQUENCE:
+        raise delta_amp.DeltaAmpInterpretationError(
+            f"{slot.owner} declares the {slot.exclusion().value} exclusion and "
+            "this engine only knows how to subtract a whole arming sequence"
+        )
+    expose_rate = slot.bonus_fraction
     if expose_rate <= 0:
         return
 
-    # First ability cast + first auto + first spellblade proc
-    # occur before Expose Weakness is applied and don't benefit.
+    # The arming sequence — the first ability cast, the first auto that
+    # consumed it and the first spellblade proc — lands before the buff is
+    # up, which is what ``Isolation.TRIGGER_SEQUENCE`` says.
     breakdown = state.breakdown
     first_ability_key = next((k for k in state.cast_order if k in breakdown), None)
     damage_before_expose = 0.0
@@ -9133,9 +9143,9 @@ def _add_expose_weakness(
     amped_damage = max(0, state.total_damage - damage_before_expose)
     expose_bonus = amped_damage * expose_rate
 
-    breakdown[f"expose_weakness_{spellblade.item}"] = {
-        "name": f"{spellblade.item} (Expose Weakness)",
-        "amplifier": 1.0 + expose_rate,
+    breakdown[f"expose_weakness_{slot.owner}"] = {
+        "name": f"{slot.owner} (Expose Weakness)",
+        "amplifier": slot.multiplier,
         "total_damage": expose_bonus,
         "damage_type": "mixed",
     }
@@ -9239,12 +9249,26 @@ def _amp_slot(
     """
     owners = [str(item.get("name", "")) for item in state.items]
     owners.extend(extra_owners)
+    return _amp_slot_for(state, slot, owners)
+
+
+def _amp_slot_for(
+    state: FightState, slot: AmpChainSlot, owners: Sequence[str]
+) -> "delta_amp.AmpSlot | None":
+    """One chain slot resolved for an explicit owner list.
+
+    Split from :func:`_amp_slot` for the one mechanic whose eligible owner is
+    narrower than the build: only the *active* spellblade's Expose Weakness
+    is priced, and a build holding Bloodsong behind another spellblade must
+    not be amped by an item whose proc never landed.
+    """
     return delta_amp.resolve_slot(
         owners,
         slot,
         level=state.level,
         fight_duration_seconds=state.fight_duration_seconds,
         target_bonus_health=max(0.0, state.target_bonus_health),
+        holder_is_melee=state.is_melee,
     )
 
 

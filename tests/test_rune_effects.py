@@ -112,6 +112,7 @@ class TestFirstStrike:
             level=18,
             fight_duration_seconds=10.0,
             target_bonus_health=0.0,
+            holder_is_melee=True,
         )
         assert slot is not None
         assert slot.window() == (0.0, 3.0)
@@ -171,6 +172,7 @@ class TestPressTheAttack:
             level=18,
             fight_duration_seconds=10.0,
             target_bonus_health=0.0,
+            holder_is_melee=True,
         )
         assert slot is not None
         assert slot.fractions[0] == pytest.approx(0.08)

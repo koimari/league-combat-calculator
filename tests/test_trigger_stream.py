@@ -1323,11 +1323,26 @@ def pairing_defects(
 
 
 def test_a8_every_pairing_claim_holds_against_source():
-    """A8 — empty defect set, and the escape hatch itself is empty."""
+    """A8 — empty defect set, and the escape hatch itself is empty.
+
+    ``UNPAIRED_KNOWN_DEFECT`` is the escape hatch D-92 pins empty, and it is
+    still empty: one half missing is a different statement from two halves
+    disagreeing.  Phase 3 froze Bloodsong's disagreement as the campaign's
+    one :class:`DivergenceReceipt` — both halves declared, both reachable,
+    and the reviewed fact that they do not compute the same number — which is
+    why the receipt hangs off a ``PAIRED`` row and Phase 4 retires it.
+    """
     assert pairing_defects() == ()
-    # Phase 2 creates no DivergenceReceipt; Phase 3 creates the one live
-    # instance (Bloodsong) and Phase 4 retires it (D-92).
-    assert dict(ts.DIVERGENCES) == {}
+    assert sorted(ts.DIVERGENCES) == ["bloodsong.expose_weakness"]
+    receipt = ts.DIVERGENCES["bloodsong.expose_weakness"]
+    assert receipt.mechanic in ts.CAPABILITIES
+    assert receipt.pair_reading and receipt.walk_reading
+    assert receipt.pair_reading != receipt.walk_reading
+    assert receipt.source_url.startswith("https://")
+    assert receipt.revision_id > 0
+    assert (
+        ts.CAPABILITIES[receipt.mechanic].divergence_ref == receipt.ref
+    ), "a receipt nothing points at is prose"
 
 
 def test_a8_has_a_permanent_injection_seam():

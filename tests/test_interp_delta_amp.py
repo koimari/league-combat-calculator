@@ -47,6 +47,7 @@ def _slot(*owners: str) -> "delta_amp.AmpSlot | None":
         level=18,
         fight_duration_seconds=5.0,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
 
 
@@ -152,6 +153,7 @@ def test_the_opening_window_slot_declares_its_window_and_its_true_bonus() -> Non
         level=18,
         fight_duration_seconds=10.0,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
     assert slot is not None
     assert slot.window() == (0.0, 3.0)
@@ -164,7 +166,11 @@ def test_the_pair_interpreter_emits_one_value_typed_field() -> None:
     """A KernelField carries no program type — that is the one-way dependency."""
     (rule,) = behavior_rules("Horizon Focus")
     ctx = build_context(
-        "Horizon Focus", 18, fight_duration_seconds=5.0, target_bonus_health=0.0
+        "Horizon Focus",
+        18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
     )
     (field,) = delta_amp.PAIR_INTERPRETER.compile(rule, ctx)
     assert field.name == delta_amp.AMP_FRACTION_FIELD
@@ -179,6 +185,7 @@ def _ctx(duration: float = 5.0, bonus_health: float = 0.0):
         18,
         fight_duration_seconds=duration,
         target_bonus_health=bonus_health,
+        holder_is_melee=True,
     )
 
 
@@ -250,6 +257,7 @@ def test_the_whole_total_slot_holds_every_declared_general_amp() -> None:
         level=18,
         fight_duration_seconds=4.0,
         target_bonus_health=750.0,
+        holder_is_melee=True,
     )
     assert slot is not None
     assert [owner for owner, _ in slot.sources()] == build
@@ -283,6 +291,7 @@ def _command_slot(*owners: str) -> "delta_amp.AmpSlot | None":
         level=18,
         fight_duration_seconds=10.0,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
 
 

@@ -49,6 +49,7 @@ from .item_behavior import (
     Fixed,
     Isolation,
     Magnitude,
+    MeleeRangedSplit,
     Persist,
     Pool,
     RULE_FAMILY_COUNT,
@@ -366,6 +367,7 @@ DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
 # on keys is that it must not turn a broken parse into an item that quietly
 # declares no amplifier.
 ALLY_DELTA_AMP_SLOTS: Mapping[AmpChainSlot, tuple[str, ...]] = {
+    AmpChainSlot.EXPOSE_WEAKNESS: ("expose_weakness_melee", "expose_weakness_ranged"),
     AmpChainSlot.POST_IMMOBILIZE: ("command_damage_amp", "command_duration"),
 }
 
@@ -381,9 +383,17 @@ ALLY_DELTA_AMP_KEYS: frozenset[str] = frozenset(
 # somebody has to notice.  Counter 3's population is unchanged: it counts
 # entries with no rule at all, and this only changes which compilers an entry
 # is offered to.
-SECONDARY_KEY_FAMILY: Mapping[str, RuleFamily] = {
-    "damage_amp_per_second": RuleFamily.DELTA_AMP,
-    **{key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)},
+#
+# Keyed by registry, because a key name is only evidence *in the registry
+# that owns the mechanic*: Bloodsong's spellblade record carries the same
+# ``expose_weakness_*`` keys as its ally record, and reading them there would
+# claim the pair-side spellblade entry declares an amplifier it does not.
+SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
+    "ITEM_EFFECTS": {"damage_amp_per_second": RuleFamily.DELTA_AMP},
+    "ALLY_ITEM_EFFECTS": {
+        key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)
+    },
+    "RUNE_EFFECTS": {},
 }
 
 # Which keystones declare an amp-chain slot, and which slot.  A rune record
@@ -409,11 +419,13 @@ COMBAT_START = Const(0.0, "origin")
 ASSUMED_SECONDS_PER_AMP_STACK = Const(2.0, "unit_scale")
 
 
-def _declares_secondary(entry: Mapping[str, Any], family: RuleFamily) -> bool:
+def _declares_secondary(
+    registry: ValueRegistry, entry: Mapping[str, Any], family: RuleFamily
+) -> bool:
     """Whether *entry*'s value keys declare a second mechanic in *family*."""
     return any(
         key in entry
-        for key, declared in SECONDARY_KEY_FAMILY.items()
+        for key, declared in SECONDARY_KEY_FAMILY[registry].items()
         if declared is family
     )
 
@@ -660,6 +672,59 @@ def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
+def _expose_weakness_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Bloodsong's Expose Weakness — **the pair engine's reading of it**.
+
+    This declaration is deliberately *not* the mechanic's whole truth, and
+    the difference is the point.  The pair engine prices one amp of the
+    holder's running total, less the chain that armed the buff (the first
+    ability cast, the first attack that consumed it, and the first empowered
+    proc), filed as one coarse row carrying no authored events.  The coupled
+    walk arms a timed modifier per proc, on a cooldown, and prices each
+    roster attacker's packets inside it.  Those are two different numbers
+    for one item.
+
+    Freezing the pair reading here — with
+    ``DIVERGENCES["bloodsong.expose_weakness"]`` naming both readings, their
+    source and the phase that reconciles them — is what keeps the
+    disagreement a *declared* one.  Unifying it inside a slice labelled a
+    pure refactor would land a semantic correction under a zero-diff claim,
+    which is the shape this campaign exists to end.  Phase 4 corrects it.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.expose_weakness",
+        payload=DeltaAmpRule(
+            pool=Pool.COARSE_ROW,
+            activation=ExcludeTrigger(
+                trigger=TriggerEvent.BASIC_ATTACK_HIT,
+                isolation=Isolation.TRIGGER_SEQUENCE,
+            ),
+            consumption=Persist(),
+            magnitude=MeleeRangedSplit(
+                melee=ValueRef(registry, owner, "expose_weakness_melee"),
+                ranged=ValueRef(registry, owner, "expose_weakness_ranged"),
+            ),
+            attribution=Attribution.HOLDER,
+            typing=_all_damage_typing(),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
+            subject=Subject.ANY_ATTACKER,
+            lane_chain_rank=chain_rank(AmpChainSlot.EXPOSE_WEAKNESS),
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the amp is a sourced ratio of the total left after the arming "
+            "chain; a zero means the spellblade never procced or nothing "
+            "landed after it, which the rule measured over the ledger",
+        ),
+    )
+
+
 def _compile_ally_delta_amp(
     owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
 ) -> tuple[BehaviorRule, ...]:
@@ -683,6 +748,9 @@ def _compile_ally_delta_amp(
                 f"slot and is missing {missing}; a partly-parsed amplifier is a "
                 "registry defect, not an item that quietly amplifies nothing"
             )
+        if slot is AmpChainSlot.EXPOSE_WEAKNESS:
+            rules.append(_expose_weakness_rule(owner, registry))
+            continue
         if slot is AmpChainSlot.POST_IMMOBILIZE:
             rules.append(_post_immobilize_rule(owner, registry))
             continue
@@ -785,7 +853,9 @@ def _compile_delta_amp(
         tag = str(entry.get("type"))
         if tag == "hypershot_amp":
             rules.append(_hypershot_rule(owner, registry))
-        if tag == "damage_amp" or _declares_secondary(entry, RuleFamily.DELTA_AMP):
+        if tag == "damage_amp" or _declares_secondary(
+            registry, entry, RuleFamily.DELTA_AMP
+        ):
             rules.append(_whole_total_rule(owner, registry, entry))
     for rule in rules:
         validate_rule(rule)
@@ -899,7 +969,7 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     """
     rules: list[BehaviorRule] = []
     for registry, family, entry in registry_entries(owner) + keystone_entries(owner):
-        for claimed in entry_families(family, entry):
+        for claimed in entry_families(registry, family, entry):
             rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
     return tuple(rules)
 
@@ -931,7 +1001,7 @@ def rule_owners() -> frozenset[str]:
 
 
 def entry_families(
-    family: RuleFamily, entry: Mapping[str, Any]
+    registry: ValueRegistry, family: RuleFamily, entry: Mapping[str, Any]
 ) -> tuple[RuleFamily, ...]:
     """Every family one entry declares: its tag's, plus any a value key adds.
 
@@ -943,7 +1013,7 @@ def entry_families(
     """
     extra = tuple(
         declared
-        for key, declared in SECONDARY_KEY_FAMILY.items()
+        for key, declared in SECONDARY_KEY_FAMILY[registry].items()
         if key in entry and declared is not family
     )
     return (family, *dict.fromkeys(extra))
@@ -1004,14 +1074,16 @@ def build_context(
     *,
     fight_duration_seconds: float,
     target_bonus_health: float,
+    holder_is_melee: bool,
 ) -> BuildContext:
     """The build-time context an interpreter reads, stamped with the data version.
 
     ``data_registry.data_version()`` (D-49) is read here rather than by each
     interpreter, so every memo downstream keys on one counter instead of on
-    object identity.  The two fight facts are keyword-only and required: a
+    object identity.  The three fight facts are keyword-only and required: a
     caller that forgets one gets a ``TypeError``, never a defaulted zero
-    duration silently flattening a ramping magnitude.
+    duration silently flattening a ramping magnitude or a defaulted range
+    class silently paying every holder the ranged rate.
     """
     return BuildContext(
         level=level,
@@ -1019,6 +1091,7 @@ def build_context(
         data_version=data_registry.data_version(),
         fight_duration_seconds=fight_duration_seconds,
         target_bonus_health=target_bonus_health,
+        holder_is_melee=holder_is_melee,
     )
 
 

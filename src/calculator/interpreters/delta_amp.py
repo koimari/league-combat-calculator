@@ -34,6 +34,7 @@ from dataclasses import dataclass
 from ..item_behavior import (
     AbsoluteWindow,
     AfterTrigger,
+    ExcludeTrigger,
     AmpChainSlot,
     BehaviorRule,
     BonusTyping,
@@ -42,7 +43,9 @@ from ..item_behavior import (
     EngineLane,
     Fixed,
     KernelField,
+    Isolation,
     Magnitude,
+    MeleeRangedSplit,
     RampModel,
     RampPerSecond,
     RampPerStack,
@@ -86,10 +89,23 @@ def magnitude_fraction(magnitude: Magnitude, ctx: BuildContext) -> float:
         return _target_bonus_health_scaled(magnitude, ctx)
     if isinstance(magnitude, RampPerStack):
         return _ramp_per_stack(magnitude, ctx)
+    if isinstance(magnitude, MeleeRangedSplit):
+        return _melee_ranged_split(magnitude, ctx)
     raise DeltaAmpInterpretationError(
         f"{type(magnitude).__name__} has no delta-amp arithmetic yet; the "
         "slice that declares a rule with it owns the branch"
     )
+
+
+def _melee_ranged_split(magnitude: MeleeRangedSplit, ctx: BuildContext) -> float:
+    """Whichever of the two sourced rates the holder's range class earns.
+
+    One branch, no default: the context carries the class as a required
+    field, so there is no path on which a holder silently takes the ranged
+    rate because nobody said which they were.
+    """
+    reference = magnitude.melee if ctx.holder_is_melee else magnitude.ranged
+    return resolve(reference, ctx.level)
 
 
 def _ramp_per_second(magnitude: RampPerSecond, ctx: BuildContext) -> float:
@@ -340,6 +356,23 @@ class AmpSlot:
             )
         return any(start < time <= end for start, end in windows)
 
+    def exclusion(self, index: int = 0) -> Isolation:
+        """What this holder's exclusion rule excludes, or a stop.
+
+        The engine subtracts a pool from the total it amps, and *which* pool
+        is a modelling ruling: Hypershot drops one event, Expose Weakness
+        drops the whole chain that armed it.  Reading it off the declaration
+        is what keeps that ruling somewhere a reader can find, instead of in
+        the shape of whichever sum the engine happens to build.
+        """
+        activation = self.rules[index].payload.activation
+        if not isinstance(activation, ExcludeTrigger):
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares no exclusion, so it "
+                "has no answer for what an amp leaves out"
+            )
+        return activation.isolation
+
     def bonus_damage_type(self, source_type: str, index: int = 0) -> str:
         """What this amp's own bonus lands as, given the event it amplified."""
         typing = self.rules[index].payload.bonus_typing
@@ -426,6 +459,7 @@ def resolve_slot(
     level: int,
     fight_duration_seconds: float,
     target_bonus_health: float,
+    holder_is_melee: bool,
 ) -> AmpSlot | None:
     """One chain slot's multiplier for this build, or ``None`` if nobody has it.
 
@@ -445,6 +479,7 @@ def resolve_slot(
                 level,
                 fight_duration_seconds=fight_duration_seconds,
                 target_bonus_health=target_bonus_health,
+                holder_is_melee=holder_is_melee,
             ),
         )
         for rule in rules

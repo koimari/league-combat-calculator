@@ -116,6 +116,7 @@ def _command_effect() -> _CommandNumbers:
         level=18,
         fight_duration_seconds=8.0,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
     assert slot is not None, "the roster fixture needs Command's declared rule"
     return _CommandNumbers(

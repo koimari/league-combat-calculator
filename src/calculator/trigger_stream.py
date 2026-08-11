@@ -397,8 +397,15 @@ class DivergenceReceipt:
     Declared here because ``Pairing.UNPAIRED_KNOWN_DEFECT`` and
     ``divergence_ref`` are this module's, so the reference and its referent
     keep one home.  Phase 3 creates the one live instance (Bloodsong) and
-    Phase 4 retires it; Phase 2 creates none, and A8 asserts the set empty.
+    Phase 4 retires it; Phase 2 created none.
     Precedent: ``item_source.ACKNOWLEDGED_SOURCE_CONFLICTS``.
+
+    A receipt is **not** the same statement as
+    ``Pairing.UNPAIRED_KNOWN_DEFECT``, which says one half is missing.  Both
+    of Bloodsong's halves exist and are declared; what they do not do is
+    compute the same number.  That is a *paired* mechanic with a reviewed
+    disagreement, and it is why ``divergence_ref`` is required for an
+    unpaired defect and permitted — never required — for a paired one.
     """
 
     ref: str
@@ -410,7 +417,40 @@ class DivergenceReceipt:
     issue_ref: int
 
 
-DIVERGENCES: Mapping[str, DivergenceReceipt] = MappingProxyType({})
+# The campaign's one live divergence.  ``issue_ref`` is the umbrella coverage
+# issue (#40, ``item_coverage``'s release gate), because no child issue owns
+# this reconciliation: the umbrella's authority table schedules it as Phase
+# 4's, alongside Command.
+DIVERGENCES: Mapping[str, DivergenceReceipt] = MappingProxyType(
+    {
+        "bloodsong.expose_weakness": DivergenceReceipt(
+            ref="bloodsong.expose_weakness",
+            mechanic="bloodsong.expose_weakness",
+            pair_reading=(
+                "One amp of the holder's whole running total, less the chain "
+                "that armed the buff — the first ability cast, the first "
+                "attack that consumed it, and the first empowered proc — "
+                "filed as one coarse breakdown row carrying no authored "
+                "events, and applied once for the whole fight regardless of "
+                "how many times the spellblade procs "
+                "(damage._add_expose_weakness; declared as "
+                "ExcludeTrigger(BASIC_ATTACK_HIT, TRIGGER_SEQUENCE) over "
+                "Pool.COARSE_ROW)."
+            ),
+            walk_reading=(
+                "One timed damage_modifier packet per Bloodsong spellblade "
+                "proc, armed for expose_weakness_duration seconds with "
+                "expose_weakness_cooldown between arms, pricing every roster "
+                "attacker's packets that land inside a live window and "
+                "skipping the holder through the owner handshake "
+                "(item_support_effects.derive_item_support_effects)."
+            ),
+            source_url="https://wiki.leagueoflegends.com/en-us/Bloodsong",
+            revision_id=4028002,
+            issue_ref=40,
+        )
+    }
+)
 
 
 # Eleven fields, and the umbrella's field-ownership table adds four more
@@ -480,6 +520,7 @@ def _walk_item(  # pylint: disable=too-many-arguments
     authority: Authority = Authority.COUPLED_AUTHORITATIVE,
     pairing: Pairing = Pairing.SOLO,
     pair_of: str | None = None,
+    divergence_ref: str | None = None,
     impl: str = _SUPPORT_IMPL,
 ) -> MechanicCapability:
     """One item-granted mechanic the participant walk implements.
@@ -500,7 +541,7 @@ def _walk_item(  # pylint: disable=too-many-arguments
         authority=authority,
         pairing=pairing,
         pair_of=pair_of,
-        divergence_ref=None,
+        divergence_ref=divergence_ref,
         impl=impl,
         packet_source=packet_source,
     )
@@ -588,6 +629,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.SPLIT,
         pairing=Pairing.PAIRED,
         pair_of="bloodsong.expose_weakness_preview",
+        divergence_ref="bloodsong.expose_weakness",
     ),
     _walk_item(
         "black_cleaver.carve",
@@ -988,9 +1030,20 @@ def _validate_pairing(mechanic: str, capability: MechanicCapability) -> None:
                 "DivergenceReceipt"
             )
     elif capability.divergence_ref is not None:
-        raise TriggerRegistryError(
-            f"{mechanic} is {capability.pairing.value} and carries a " "divergence_ref"
-        )
+        # A paired mechanic may carry a receipt: both halves exist and the
+        # reviewed fact is that they do not agree numerically.  Only SOLO is
+        # nonsense — one engine cannot disagree with nobody.
+        if capability.pairing is not Pairing.PAIRED:
+            raise TriggerRegistryError(
+                f"{mechanic} is {capability.pairing.value} and carries a "
+                "divergence_ref; a disagreement needs two declared halves"
+            )
+        if capability.divergence_ref not in DIVERGENCES:
+            raise TriggerRegistryError(
+                f"{mechanic} carries divergence_ref "
+                f"{capability.divergence_ref!r}, which resolves in no "
+                "DivergenceReceipt"
+            )
 
 
 _validate_registry()

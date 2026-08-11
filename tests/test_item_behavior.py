@@ -210,5 +210,6 @@ def test_the_kernel_contract_carries_no_program_type() -> None:
         data_version=3,
         fight_duration_seconds=5.0,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
     assert context.data_version == 3

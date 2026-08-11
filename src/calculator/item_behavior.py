@@ -180,10 +180,20 @@ class WindowBoundary(Enum):
 
 
 class Isolation(Enum):
-    """What an exclusion rule excludes."""
+    """What an exclusion rule excludes.
+
+    ``TRIGGER_SEQUENCE`` is wider than the other two on purpose: some buffs
+    are armed by a *chain* of events — Bloodsong's Expose Weakness needs an
+    ability cast, then the attack that consumes it, then the empowered proc —
+    and everything in that chain lands before the buff is up.  Calling that
+    "the trigger event" or "the trigger ability" would understate the
+    exclusion by two events, and an amp priced over two events it should not
+    have seen is a wrong number nobody could read off the declaration.
+    """
 
     TRIGGER_ABILITY_ONLY = "trigger_ability_only"
     TRIGGER_EVENT_ONLY = "trigger_event_only"
+    TRIGGER_SEQUENCE = "trigger_sequence"
 
 
 class Probe(Enum):
@@ -379,13 +389,40 @@ class RampPerStack:
     model: RampModel
 
 
-Magnitude = Union[Fixed, RampPerSecond, TargetBonusHealthScaled, RampPerStack]
+@dataclass(frozen=True, slots=True)
+class MeleeRangedSplit:
+    """Two sourced magnitudes, chosen by the holder's own range class.
+
+    A handful of registry schemas pay a melee holder more than a ranged one
+    — Bloodsong's Expose Weakness is 8% against 5% — and that choice is made
+    once per build, from a stat, before any event exists.  It is a magnitude
+    question rather than a typing one: ``Typing.attack_classes`` says how a
+    *number was delivered*, which is a property of the damage and not of the
+    champion holding the item.
+
+    Both references are required.  A schema that supplied one and defaulted
+    the other would price a whole class of holders at zero with nothing in
+    the declaration saying so.
+    """
+
+    melee: AnyValueRef
+    ranged: AnyValueRef
+
+
+Magnitude = Union[
+    Fixed,
+    RampPerSecond,
+    TargetBonusHealthScaled,
+    RampPerStack,
+    MeleeRangedSplit,
+]
 
 MAGNITUDE_TYPES: tuple[type, ...] = (
     Fixed,
     RampPerSecond,
     TargetBonusHealthScaled,
     RampPerStack,
+    MeleeRangedSplit,
 )
 
 
@@ -756,11 +793,14 @@ class BuildContext:
     ``SurvivalAction``: an interpreter that could see those would be running
     inside the walk, which is the cycle this contract prevents.
 
-    ``fight_duration_seconds`` and ``target_bonus_health`` are configuration,
-    not walk state — both are fixed before the first event — and they are
-    here because a ramping or health-scaled magnitude cannot become a number
-    without them.  Every field is required: a magnitude that silently read a
-    defaulted zero duration is the campaign's own failure shape.
+    ``fight_duration_seconds``, ``target_bonus_health`` and
+    ``holder_is_melee`` are configuration, not walk state — all three are
+    fixed before the first event — and they are here because a ramping,
+    health-scaled or range-split magnitude cannot become a number without
+    them.  Every field is required: a magnitude that silently read a
+    defaulted zero duration is the campaign's own failure shape, and a
+    defaulted ``holder_is_melee`` would silently pay every champion the
+    ranged rate.
     """
 
     level: int
@@ -768,6 +808,7 @@ class BuildContext:
     data_version: int
     fight_duration_seconds: float
     target_bonus_health: float
+    holder_is_melee: bool
 
 
 __all__ = [
@@ -798,6 +839,7 @@ __all__ = [
     "LivePredicate",
     "MAGNITUDE_TYPES",
     "Magnitude",
+    "MeleeRangedSplit",
     "NEvents",
     "NextEventOnly",
     "PAYLOAD_FAMILY",

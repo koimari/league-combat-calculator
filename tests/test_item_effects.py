@@ -156,6 +156,7 @@ def test_giant_slayer_scales_on_the_targets_bonus_health_not_the_holders() -> No
             level=18,
             fight_duration_seconds=5.0,
             target_bonus_health=target_bonus_health,
+            holder_is_melee=True,
         )
         assert slot is not None
         return slot.sources()[0][1]
@@ -411,7 +412,6 @@ class TestResolveDamageEffects:
     @pytest.mark.parametrize(
         ("item_name", "key"),
         [
-            ("Bloodsong", "expose_weakness_melee"),
             ("Dusk and Dawn", "self_heal_ap_ratio"),
             ("Lich Bane", "bonus_attack_speed_percent"),
             ("Essence Reaver", "mana_restore_base_ad_ratio"),

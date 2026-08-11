@@ -657,6 +657,7 @@ def _command_slot():
         level=18,
         fight_duration_seconds=10.0,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
     assert slot is not None
     return slot

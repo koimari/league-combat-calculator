@@ -3466,8 +3466,6 @@ class SpellbladeEffect:
     cooldown: float
     weave_delay: float
     double_on_hit: bool = False
-    expose_weakness_melee: float = 0.0
-    expose_weakness_ranged: float = 0.0
     bonus_attack_speed_percent: float = 0.0
     mana_restore_base_ad_ratio: float = 0.0
     mana_restore_crit_ratio: float = 0.0
@@ -3985,7 +3983,6 @@ def _compile_spellblade(
             "mana_restore_base_ad_ratio",
             "mana_restore_crit_ratio",
         ),
-        "Bloodsong": ("expose_weakness_melee", "expose_weakness_ranged"),
         "Dusk and Dawn": (
             "self_heal_ap_ratio",
             "self_heal_bonus_health_ratio",
@@ -3999,12 +3996,6 @@ def _compile_spellblade(
         cooldown=required.number("cooldown"),
         weave_delay=required.number("weave_delay"),
         double_on_hit=bool(values.get("double_on_hit", False)),
-        expose_weakness_melee=sibling_values.get(
-            "expose_weakness_melee", float(values.get("expose_weakness_melee", 0.0))
-        ),
-        expose_weakness_ranged=sibling_values.get(
-            "expose_weakness_ranged", float(values.get("expose_weakness_ranged", 0.0))
-        ),
         bonus_attack_speed_percent=sibling_values.get(
             "bonus_attack_speed_percent",
             float(values.get("bonus_attack_speed_percent", 0.0)),

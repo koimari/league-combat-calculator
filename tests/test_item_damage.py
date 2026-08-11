@@ -48,6 +48,7 @@ def _hypershot_slot(owners):
         level=18,
         fight_duration_seconds=5.0,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
 
 
@@ -66,6 +67,7 @@ def _whole_total_fraction(owner: str, duration: float) -> float:
         level=18,
         fight_duration_seconds=duration,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
     assert slot is not None
     return slot.sources()[0][1]

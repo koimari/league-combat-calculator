@@ -142,6 +142,7 @@ def command_slot() -> delta_amp.AmpSlot:
         level=18,
         fight_duration_seconds=10.0,
         target_bonus_health=0.0,
+        holder_is_melee=True,
     )
     assert slot is not None, "D-12: the sweep needs Command's declared window"
     return slot

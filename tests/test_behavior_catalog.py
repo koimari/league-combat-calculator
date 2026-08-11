@@ -248,7 +248,11 @@ def test_the_build_context_carries_the_data_version() -> None:
     from src.calculator import data_registry  # pylint: disable=import-outside-toplevel
 
     context = catalog.build_context(
-        "Black Cleaver", 18, fight_duration_seconds=5.0, target_bonus_health=0.0
+        "Black Cleaver",
+        18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
     )
     assert context.data_version == data_registry.data_version()
     assert context.owner == "Black Cleaver"
