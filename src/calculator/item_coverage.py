@@ -2074,14 +2074,9 @@ FRONTIER: Mapping[str, str] = {
     ),
     "tag:conditional_attack_speed": _H4_DEAD_TAG,
     "tag:shield_reduction": _H4_DEAD_TAG,
-    "tag:target_state": _H4_DEAD_TAG,
     "tag:target_attack_speed_aura": _H4_DEAD_TAG,
-    "tag:defensive_start": _H4_SELF_REFERENTIAL_TAG,
     "tag:stat_conversion": _H4_SELF_REFERENTIAL_TAG,
     "tag:sustain": _H4_SELF_REFERENTIAL_TAG,
-    "tag:target_mitigation": _H4_SELF_REFERENTIAL_TAG,
-    "tag:target_threshold_health": _H4_SELF_REFERENTIAL_TAG,
-    "tag:target_threshold_shield": _H4_SELF_REFERENTIAL_TAG,
 }
 
 validate_claim_table(COVERAGE_EVIDENCE)

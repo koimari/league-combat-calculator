@@ -2606,20 +2606,33 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # consumes it on the first authored hostile ability; cooldown/rearm is
     # intentionally not inferred from an item's name or from unscheduled
     # damage events.
+    # Each of the three carries its own citation because they are one
+    # mechanic with three revisions: a declaration whose family constant
+    # named a single page could not say which revision the other two were
+    # read from, and receipt_for's resolution order reads the entry first.
     "Banshee's Veil": {
         "type": "defensive_start",
         "spell_shield_ready": True,
         "spell_shield_cooldown": 40.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Banshee%27s_Veil",
+        "source_revision_id": 3957919,
+        "source_revision_timestamp": "2025-10-05T20:03:50Z",
     },
     "Edge of Night": {
         "type": "defensive_start",
         "spell_shield_ready": True,
         "spell_shield_cooldown": 40.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Edge_of_Night",
+        "source_revision_id": 4013389,
+        "source_revision_timestamp": "2026-04-29T06:32:04Z",
     },
     "Verdant Barrier": {
         "type": "defensive_start",
         "spell_shield_ready": True,
         "spell_shield_cooldown": 60.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Verdant_Barrier",
+        "source_revision_id": 3957920,
+        "source_revision_timestamp": "2025-10-05T20:04:20Z",
     },
     "Immortal Shieldbow": {
         "type": "target_threshold_shield",
@@ -2954,9 +2967,33 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "nightstalker_trigger_window",
         }
     ),
-    "Banshee's Veil": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
-    "Edge of Night": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
-    "Verdant Barrier": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
+    "Banshee's Veil": frozenset(
+        {
+            "spell_shield_ready",
+            "spell_shield_cooldown",
+            "source_url",
+            "source_revision_id",
+            "source_revision_timestamp",
+        }
+    ),
+    "Edge of Night": frozenset(
+        {
+            "spell_shield_ready",
+            "spell_shield_cooldown",
+            "source_url",
+            "source_revision_id",
+            "source_revision_timestamp",
+        }
+    ),
+    "Verdant Barrier": frozenset(
+        {
+            "spell_shield_ready",
+            "spell_shield_cooldown",
+            "source_url",
+            "source_revision_id",
+            "source_revision_timestamp",
+        }
+    ),
     "Blade of the Ruined King": frozenset(
         {"min_damage", "lifesteal_percent", "source_url", "source_revision_id"}
     ),

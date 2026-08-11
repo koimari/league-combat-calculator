@@ -315,6 +315,57 @@ class LevelValueRef:
 
 
 @dataclass(frozen=True, slots=True)
+class LateLevelValueRef:
+    """A ramp that holds its base until a declared level, then reaches its top.
+
+    Deliberately not a :class:`LevelValueRef` with a different scale: that
+    one interpolates from level one to a fixed cap, while this one is *flat*
+    below a level the registry itself names and interpolates from there to a
+    second named level.  Both ends and both levels are the entry's own keys,
+    so the shape carries no number at all — which matters because the three
+    mechanics that use it (the two Noxian boots' reactive shields,
+    Bloodthirster's Ichorshield and Immortal Shieldbow's Lifeline) each state
+    their own start and end.
+
+    Above ``end_key`` the value is clamped at the maximum rather than
+    extrapolated: CLAUDE.md's level cap is 20 and every one of these ramps
+    tops out at 18, so extrapolating would invent two levels of growth the
+    wiki does not state.
+    """
+
+    registry: ValueRegistry
+    owner: str
+    min_key: str
+    max_key: str
+    start_key: str
+    end_key: str
+
+    def __post_init__(self) -> None:
+        """Reject a ramp that does not name all four of its keys."""
+        if self.registry not in VALUE_REGISTRIES:
+            raise ValueRefError(
+                f"{self.registry!r} is not one of {sorted(VALUE_REGISTRIES)}"
+            )
+        if not self.owner or not all(
+            (self.min_key, self.max_key, self.start_key, self.end_key)
+        ):
+            raise ValueRefError(
+                "a LateLevelValueRef names an owner, two ends and two levels"
+            )
+
+    def get(self, level: int) -> float:
+        """The ramp's value at *level*, every end read from the registry now."""
+        low = ValueRef(self.registry, self.owner, self.min_key).get()
+        high = ValueRef(self.registry, self.owner, self.max_key).get()
+        start = int(ValueRef(self.registry, self.owner, self.start_key).get())
+        end = int(ValueRef(self.registry, self.owner, self.end_key).get())
+        if level < start:
+            return low
+        increments = max(1, end - start + 1)
+        return min(high, low + (high - low) * (level - start + 1) / increments)
+
+
+@dataclass(frozen=True, slots=True)
 class DerivedValueRef:
     """Arithmetic over other references, so a derivation is never a literal.
 
@@ -361,14 +412,20 @@ class DerivedValueRef:
         return product
 
 
-AnyValueRef = Union[Const, ValueRef, LevelValueRef, DerivedValueRef]
+AnyValueRef = Union[Const, ValueRef, LevelValueRef, LateLevelValueRef, DerivedValueRef]
 
-VALUE_REF_TYPES: tuple[type, ...] = (Const, ValueRef, LevelValueRef, DerivedValueRef)
+VALUE_REF_TYPES: tuple[type, ...] = (
+    Const,
+    ValueRef,
+    LevelValueRef,
+    LateLevelValueRef,
+    DerivedValueRef,
+)
 
 
 def _resolve(reference: AnyValueRef, level: int | None) -> float:
     """Read one reference, supplying the level only to the ones that need it."""
-    if isinstance(reference, LevelValueRef):
+    if isinstance(reference, (LevelValueRef, LateLevelValueRef)):
         if level is None:
             raise ValueRefError(
                 f"{reference!r} is level-scaled and no level was supplied"
@@ -394,6 +451,7 @@ __all__ = [
     "DerivedOp",
     "DerivedValueRef",
     "LEVEL_SCALES",
+    "LateLevelValueRef",
     "LevelScale",
     "LevelValueRef",
     "STRUCTURAL_REASONS",

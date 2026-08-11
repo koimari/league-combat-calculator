@@ -1129,6 +1129,314 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     lane_chain_rank: int
 
 
+# ── defence ───────────────────────────────────────────────────────────────
+
+
+class DefenseMechanic(Enum):
+    """Every defence the resolver may cite, in the order it applies them.
+
+    The successor to ``defensive_effects.DefenseSource``: a member is the
+    identity of one defensive mechanic and its citation is a
+    ``SourceReceipt`` the catalog resolves, so a defence's provenance is the
+    same kind of object as every other declaration's.
+
+    **The declaration order below is the resolution order**, and that is
+    arithmetic rather than presentation.  A later mechanic sees what an
+    earlier one granted — Boundless Vitality multiplies shields that three
+    earlier mechanics put there — and the published ``assumptions`` and
+    ``sources`` lists come out in this order.  Two members carry one
+    mechanic's two spellings only where the wiki does: Armored Advance's
+    Noxian Endurance and Chainlaced Crushers' Noxian Persistence are the same
+    shape with two names and two citations.
+    """
+
+    SHIELD_OF_DURAND = "shield_of_durand"
+    NOXIAN_ENDURANCE = "noxian_endurance"
+    NOXIAN_PERSISTENCE = "noxian_persistence"
+    BLESSING_OF_THE_MOUNTAIN = "blessing_of_the_mountain"
+    ICHORSHIELD = "ichorshield"
+    EVERLASTING = "everlasting"
+    ANNUL = "annul"
+    MAGEBANE = "magebane"
+    LIFELINE_SHIELDBOW = "lifeline_shieldbow"
+    LIFELINE_HEXDRINKER = "lifeline_hexdrinker"
+    LIFELINE_MAW = "lifeline_maw"
+    LIFELINE_SERAPH = "lifeline_seraph"
+    LIFELINE_STERAK = "lifeline_sterak"
+    LIFELINE_PROTOPLASM = "lifeline_protoplasm"
+    REBIRTH = "rebirth"
+    IGNORE_PAIN = "ignore_pain"
+    STEADFAST = "steadfast"
+    VOIDBORN_RESILIENCE = "voidborn_resilience"
+    TIME_STOP = "time_stop"
+    BOUNDLESS_VITALITY = "boundless_vitality"
+    PLATING = "plating"
+    ROCK_SOLID = "rock_solid"
+    RESILIENCE = "resilience"
+    THORNS = "thorns"
+
+
+class DefenseField(Enum):
+    """One field of the resolved defensive state a declaration may write.
+
+    Total over ``defensive_effects.StartingDefenses``' own fields, less the
+    three that are *about* the resolution rather than part of it
+    (``assumptions``, ``sources``, ``coverage``).  The totality is a test
+    rather than a comment, so a new defensive field cannot exist with no
+    declaration able to fill it and no combine rule saying how two mechanics
+    writing it agree.
+    """
+
+    MAGIC_SHIELD = "magic_shield"
+    PHYSICAL_SHIELD = "physical_shield"
+    GENERAL_SHIELD = "general_shield"
+    REACTIVE_SHIELD_AMOUNT = "reactive_shield_amount"
+    REACTIVE_SHIELD_DAMAGE_TYPE = "reactive_shield_damage_type"
+    REACTIVE_SHIELD_DURATION = "reactive_shield_duration"
+    REACTIVE_SHIELD_COOLDOWN = "reactive_shield_cooldown"
+    REACTIVE_SHIELD_SOURCE = "reactive_shield_source"
+    BLOODTHIRSTER_SHIELD_CAP = "bloodthirster_shield_cap"
+    BLOODTHIRSTER_STARTING_SHIELD = "bloodthirster_starting_shield"
+    SPELL_SHIELD_READY = "spell_shield_ready"
+    SPELL_SHIELD_SOURCE = "spell_shield_source"
+    BASIC_DAMAGE_MULTIPLIER = "basic_damage_multiplier"
+    INCOMING_DAMAGE_MULTIPLIER = "incoming_damage_multiplier"
+    INCOMING_DAMAGE_LINGER = "incoming_damage_linger"
+    INCOMING_DAMAGE_COOLDOWN = "incoming_damage_cooldown"
+    INCOMING_DAMAGE_SOURCE = "incoming_damage_source"
+    BASIC_DAMAGE_FLAT_REDUCTION = "basic_damage_flat_reduction"
+    BASIC_DAMAGE_FLAT_REDUCTION_CAP = "basic_damage_flat_reduction_cap"
+    CRITICAL_STRIKE_DAMAGE_MULTIPLIER = "critical_strike_damage_multiplier"
+    HEALING_RECEIVED_MULTIPLIER = "healing_received_multiplier"
+    MAW_LIFELINE_OMNIVAMP_PERCENT = "maw_lifeline_omnivamp_percent"
+    THRESHOLD_SHIELD_AMOUNT = "threshold_shield_amount"
+    THRESHOLD_SHIELD_HEALTH_RATIO = "threshold_shield_health_ratio"
+    THRESHOLD_SHIELD_DURATION = "threshold_shield_duration"
+    THRESHOLD_SHIELD_DAMAGE_TYPE = "threshold_shield_damage_type"
+    THRESHOLD_HEALTH_BONUS = "threshold_health_bonus"
+    THRESHOLD_HEALTH_HEAL = "threshold_health_heal"
+    THRESHOLD_HEALTH_RATIO = "threshold_health_ratio"
+    THRESHOLD_HEALTH_DURATION = "threshold_health_duration"
+    REVIVE_HEALTH_AMOUNT = "revive_health_amount"
+    REVIVE_DELAY = "revive_delay"
+    REVIVE_COOLDOWN = "revive_cooldown"
+    REVIVE_SOURCE = "revive_source"
+    DAMAGE_DEFERRAL_FRACTION = "damage_deferral_fraction"
+    DAMAGE_DEFERRAL_DURATION = "damage_deferral_duration"
+    DAMAGE_DEFERRAL_TICKS = "damage_deferral_ticks"
+    DEFY_WINDOW = "defy_window"
+    DEFY_HEAL_BONUS_AD_RATIO = "defy_heal_bonus_ad_ratio"
+    DEFY_HEAL_DURATION = "defy_heal_duration"
+    DEFY_HEAL_TICKS = "defy_heal_ticks"
+    FORCE_STACK_DURATION = "force_stack_duration"
+    FORCE_MAX_STACKS = "force_max_stacks"
+    FORCE_STACK_INTERVAL = "force_stack_interval"
+    FORCE_IMMOBILIZE_STACKS = "force_immobilize_stacks"
+    FORCE_BONUS_MAGIC_RESISTANCE = "force_bonus_magic_resistance"
+    FORCE_BONUS_MOVE_SPEED_PERCENT = "force_bonus_move_speed_percent"
+    JAKSHO_STACK_INTERVAL = "jaksho_stack_interval"
+    JAKSHO_MAX_STACKS = "jaksho_max_stacks"
+    JAKSHO_BONUS_RESISTANCE_MULTIPLIER = "jaksho_bonus_resistance_multiplier"
+    STARTING_STASIS_DURATION = "starting_stasis_duration"
+    STARTING_STASIS_SOURCE = "starting_stasis_source"
+
+
+class DefenseCombine(Enum):
+    """How a field answers when a second mechanic writes the one before it.
+
+    A property of the *field*, not of the mechanic that writes it: two boots
+    both plate, so their multipliers compose, while two Lifelines are
+    mutually exclusive and the second never gets to write at all.  Stating it
+    once per field is what makes "a build holding two of these" a declared
+    answer instead of whichever branch a name ladder tested last.
+    """
+
+    SET = "set"
+    ADD = "add"
+    MULTIPLY = "multiply"
+    FILL_IF_EMPTY = "fill_if_empty"
+
+
+# How each defensive field composes.  ``FILL_IF_EMPTY`` has exactly one
+# member and it is a real rule rather than a convenience: a champion passive
+# that already claimed the revive keeps its label when Guardian Angel is also
+# held, because the resurrection is one event with one cause.
+DEFENSE_FIELD_COMBINE: dict[DefenseField, DefenseCombine] = {
+    DefenseField.MAGIC_SHIELD: DefenseCombine.ADD,
+    DefenseField.PHYSICAL_SHIELD: DefenseCombine.ADD,
+    DefenseField.GENERAL_SHIELD: DefenseCombine.ADD,
+    DefenseField.REACTIVE_SHIELD_AMOUNT: DefenseCombine.SET,
+    DefenseField.REACTIVE_SHIELD_DAMAGE_TYPE: DefenseCombine.SET,
+    DefenseField.REACTIVE_SHIELD_DURATION: DefenseCombine.SET,
+    DefenseField.REACTIVE_SHIELD_COOLDOWN: DefenseCombine.SET,
+    DefenseField.REACTIVE_SHIELD_SOURCE: DefenseCombine.SET,
+    DefenseField.BLOODTHIRSTER_SHIELD_CAP: DefenseCombine.SET,
+    DefenseField.BLOODTHIRSTER_STARTING_SHIELD: DefenseCombine.SET,
+    DefenseField.SPELL_SHIELD_READY: DefenseCombine.SET,
+    DefenseField.SPELL_SHIELD_SOURCE: DefenseCombine.SET,
+    DefenseField.BASIC_DAMAGE_MULTIPLIER: DefenseCombine.MULTIPLY,
+    DefenseField.INCOMING_DAMAGE_MULTIPLIER: DefenseCombine.SET,
+    DefenseField.INCOMING_DAMAGE_LINGER: DefenseCombine.SET,
+    DefenseField.INCOMING_DAMAGE_COOLDOWN: DefenseCombine.SET,
+    DefenseField.INCOMING_DAMAGE_SOURCE: DefenseCombine.SET,
+    DefenseField.BASIC_DAMAGE_FLAT_REDUCTION: DefenseCombine.SET,
+    DefenseField.BASIC_DAMAGE_FLAT_REDUCTION_CAP: DefenseCombine.SET,
+    DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER: DefenseCombine.MULTIPLY,
+    DefenseField.HEALING_RECEIVED_MULTIPLIER: DefenseCombine.SET,
+    DefenseField.MAW_LIFELINE_OMNIVAMP_PERCENT: DefenseCombine.SET,
+    DefenseField.THRESHOLD_SHIELD_AMOUNT: DefenseCombine.SET,
+    DefenseField.THRESHOLD_SHIELD_HEALTH_RATIO: DefenseCombine.SET,
+    DefenseField.THRESHOLD_SHIELD_DURATION: DefenseCombine.SET,
+    DefenseField.THRESHOLD_SHIELD_DAMAGE_TYPE: DefenseCombine.SET,
+    DefenseField.THRESHOLD_HEALTH_BONUS: DefenseCombine.SET,
+    DefenseField.THRESHOLD_HEALTH_HEAL: DefenseCombine.SET,
+    DefenseField.THRESHOLD_HEALTH_RATIO: DefenseCombine.SET,
+    DefenseField.THRESHOLD_HEALTH_DURATION: DefenseCombine.SET,
+    DefenseField.REVIVE_HEALTH_AMOUNT: DefenseCombine.SET,
+    DefenseField.REVIVE_DELAY: DefenseCombine.SET,
+    DefenseField.REVIVE_COOLDOWN: DefenseCombine.SET,
+    DefenseField.REVIVE_SOURCE: DefenseCombine.FILL_IF_EMPTY,
+    DefenseField.DAMAGE_DEFERRAL_FRACTION: DefenseCombine.SET,
+    DefenseField.DAMAGE_DEFERRAL_DURATION: DefenseCombine.SET,
+    DefenseField.DAMAGE_DEFERRAL_TICKS: DefenseCombine.SET,
+    DefenseField.DEFY_WINDOW: DefenseCombine.SET,
+    DefenseField.DEFY_HEAL_BONUS_AD_RATIO: DefenseCombine.SET,
+    DefenseField.DEFY_HEAL_DURATION: DefenseCombine.SET,
+    DefenseField.DEFY_HEAL_TICKS: DefenseCombine.SET,
+    DefenseField.FORCE_STACK_DURATION: DefenseCombine.SET,
+    DefenseField.FORCE_MAX_STACKS: DefenseCombine.SET,
+    DefenseField.FORCE_STACK_INTERVAL: DefenseCombine.SET,
+    DefenseField.FORCE_IMMOBILIZE_STACKS: DefenseCombine.SET,
+    DefenseField.FORCE_BONUS_MAGIC_RESISTANCE: DefenseCombine.SET,
+    DefenseField.FORCE_BONUS_MOVE_SPEED_PERCENT: DefenseCombine.SET,
+    DefenseField.JAKSHO_STACK_INTERVAL: DefenseCombine.SET,
+    DefenseField.JAKSHO_MAX_STACKS: DefenseCombine.SET,
+    DefenseField.JAKSHO_BONUS_RESISTANCE_MULTIPLIER: DefenseCombine.SET,
+    DefenseField.STARTING_STASIS_DURATION: DefenseCombine.SET,
+    DefenseField.STARTING_STASIS_SOURCE: DefenseCombine.SET,
+}
+
+
+class DefenseExclusivity(Enum):
+    """Which declared defences may not both be read on one build.
+
+    The game's own unique-passive rule, declared.  A build can legally hold
+    two Lifelines, two Annuls or both stasis items in this model, and exactly
+    one of them is read: the one whose owner comes **first in the number
+    registry**, which is the tie-break the retired name ladder spelled as a
+    tuple of item names and this states without naming one.
+    """
+
+    NONE = "none"
+    LIFELINE = "lifeline"
+    ANNUL = "annul"
+    STASIS = "stasis"
+
+
+class DefenseOption(Enum):
+    """The scenario inputs a defence refuses to infer from item presence.
+
+    A starting Ichorshield and an active Time Stop are *states*, not
+    properties of the build, so each names the input option that supplies it
+    and pays nothing without one.  The values are the item registry's own
+    option keys.
+    """
+
+    STARTING_ICHORSHIELD = "starting_ichorshield"
+    STASIS_ACTIVE_SECONDS = "stasis_active_seconds"
+
+
+class ShieldAbsorbs(Enum):
+    """What a declared shield stands in front of.
+
+    Not :class:`~.ability_spec.DamageClass`: a shield that absorbs
+    *everything* is the common case and "all" is not a damage class, so
+    reusing that enum would force every general shield to declare three
+    members and would make the published ``damage_type`` field a join rather
+    than a value.
+    """
+
+    ALL = "all"
+    MAGIC = "magic"
+    PHYSICAL = "physical"
+
+
+@dataclass(frozen=True, slots=True)
+class OpeningDefenseRule:
+    """A defence already in force when the modeled exchange opens.
+
+    ``writes`` is the resolved state this mechanic is allowed to change, and
+    ``values`` every number it is allowed to read.  Both are closed on
+    purpose: the resolver reaches the registry only through the declaration,
+    so a mechanic cannot quietly grow a field or a key, and deleting the
+    declaration takes the defence out of the fight with a named refusal
+    rather than leaving a resolver reading numbers for a mechanic nothing
+    declares.
+    """
+
+    mechanic: DefenseMechanic
+    writes: tuple[DefenseField, ...]
+    exclusivity: DefenseExclusivity
+    option: DefenseOption | None
+    values: tuple[AnyValueRef, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ThresholdDefenseRule:
+    """A defence armed by the subject's health crossing a declared fraction.
+
+    ``threshold`` and ``duration`` are ``None`` exactly where the mechanic
+    has neither: Rebirth arms on lethal damage rather than on a fraction of
+    health and lasts until it has resurrected, and a declared absence is a
+    different statement from a reference that resolves to zero.
+    """
+
+    mechanic: DefenseMechanic
+    writes: tuple[DefenseField, ...]
+    exclusivity: DefenseExclusivity
+    threshold: AnyValueRef | None
+    duration: AnyValueRef | None
+    absorbs: ShieldAbsorbs | None
+    values: tuple[AnyValueRef, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class CombatStateRule:
+    """A defence that accrues, or is spent, while the fight is in progress.
+
+    The three stacking states (Steadfast, Voidborn Resilience) and the two
+    spent ones (Annul's spell shield, Time Stop's stasis) share a shape
+    because what the resolver owes them is the same: the *metadata* the
+    ordered ledger needs, with no stack assumed active at ``t = 0``.
+    """
+
+    mechanic: DefenseMechanic
+    writes: tuple[DefenseField, ...]
+    exclusivity: DefenseExclusivity
+    option: DefenseOption | None
+    values: tuple[AnyValueRef, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ReactiveRule:
+    """A defence armed by an incoming event rather than by the clock.
+
+    ``trigger`` is what arms it and ``damage_class`` is what it strikes back
+    with — ``None`` for a mechanic that only shields, which is the difference
+    between the Noxian boots and Thorns.  A reactive shield deliberately does
+    not absorb the hit that armed it, which is why it is its own family and
+    not an opening defence with a delay.
+    """
+
+    mechanic: DefenseMechanic
+    writes: tuple[DefenseField, ...]
+    exclusivity: DefenseExclusivity
+    trigger: TriggerEvent
+    absorbs: ShieldAbsorbs | None
+    damage_class: DamageClass | None
+    values: tuple[AnyValueRef, ...]
+
+
 class AllyProducer(Enum):
     """The closed set of cross-participant packet producers.
 
@@ -1311,6 +1619,10 @@ RulePayload = Union[
     OnHitStrikeRule,
     ResistanceShredRule,
     SecondaryTargetRule,
+    OpeningDefenseRule,
+    ThresholdDefenseRule,
+    CombatStateRule,
+    ReactiveRule,
 ]
 
 # Which family each payload type belongs to.  One entry per payload; each
@@ -1331,7 +1643,21 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     OnHitStrikeRule: RuleFamily.ON_HIT_STRIKE,
     ResistanceShredRule: RuleFamily.RESISTANCE_SHRED,
     SecondaryTargetRule: RuleFamily.SECONDARY_TARGET,
+    OpeningDefenseRule: RuleFamily.OPENING_DEFENSE,
+    ThresholdDefenseRule: RuleFamily.THRESHOLD_DEFENSE,
+    CombatStateRule: RuleFamily.COMBAT_STATE,
+    ReactiveRule: RuleFamily.REACTIVE,
 }
+
+# The four defence payloads, as one tuple the validator and the resolver both
+# read: every defence declaration answers "which mechanic, which state, which
+# numbers" and the family it lands in says *when* rather than *what*.
+DEFENSE_PAYLOAD_TYPES: tuple[type, ...] = (
+    OpeningDefenseRule,
+    ThresholdDefenseRule,
+    CombatStateRule,
+    ReactiveRule,
+)
 
 
 # ── the rule ──────────────────────────────────────────────────────────────
@@ -1392,6 +1718,9 @@ def validate_rule(rule: BehaviorRule) -> None:
 def _validate_payload(rule: BehaviorRule) -> None:
     """Per-payload structure, kept out of :func:`validate_rule`'s ladder."""
     payload = rule.payload
+    if isinstance(payload, DEFENSE_PAYLOAD_TYPES):
+        _validate_defense(rule, payload)
+        return
     if isinstance(payload, AllyPacketRule):
         _validate_ally_packet(rule, payload)
         return
@@ -1641,6 +1970,44 @@ def _validate_secondary_target(
         )
 
 
+def _validate_defense(rule: BehaviorRule, payload: RulePayload) -> None:
+    """A defence names its mechanic, the state it writes and sourced numbers.
+
+    The three clauses are the three ways a defence declaration can be a lie:
+    a mechanic outside the closed set, a field nobody can combine, and a
+    number sitting in the declaration instead of a reference into the
+    registry that owns it.
+    """
+    if not isinstance(payload.mechanic, DefenseMechanic):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a defence names one DefenseMechanic"
+        )
+    for field in payload.writes:
+        if field not in DEFENSE_FIELD_COMBINE:
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: {field!r} is not a defensive field with a "
+                "declared combine rule"
+            )
+    for index, reference in enumerate(payload.values):
+        if not isinstance(reference, VALUE_REF_TYPES):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: value {index} is a sourced reference, "
+                "never a number in the declaration"
+            )
+    if isinstance(payload, ThresholdDefenseRule):
+        _validate_refs(
+            rule,
+            {"threshold": payload.threshold, "duration": payload.duration},
+            optional=True,
+        )
+    if isinstance(payload, ReactiveRule) and not isinstance(
+        payload.trigger, TriggerEvent
+    ):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a reactive defence says what arms it"
+        )
+
+
 def _validate_ally_packet(rule: BehaviorRule, payload: AllyPacketRule) -> None:
     """A producer names its packets, their recipients and its numbers.
 
@@ -1843,6 +2210,67 @@ class BuildContext:
     holder_is_melee: bool
 
 
+@dataclass(frozen=True, slots=True)
+class DefenseSubject:
+    """What a defence resolver may read about the subject it is defending.
+
+    The defensive counterpart of :class:`BuildContext`, and separate from it
+    for the reason that context exists at all: a defence reads the *holder's*
+    own resolved stats and the scenario's input options, and neither is a
+    fight fact a damage interpreter has any business seeing.  Nothing here is
+    walk state — every field is fixed before the first event.
+    """
+
+    level: int
+    stats: Mapping[str, float]
+    options: Mapping[str, Mapping[str, int | float]]
+
+    def stat(self, name: str) -> float:
+        """One of the subject's resolved stats, absent meaning zero.
+
+        Absent-means-zero is correct here and only here: the stat block is
+        built by the stat resolver for every champion, so a missing key means
+        the champion has none of that stat (no mana, no bonus armour) rather
+        than that a rule failed to run.
+        """
+        return float(self.stats.get(name, 0.0))
+
+    def max_health(self) -> float:
+        """The subject's maximum health, which every subject has.
+
+        Deliberately not :meth:`stat`: a champion with no maximum health is a
+        stat block that failed to build, so this raises rather than defaulting
+        — the one reading whose absence could not mean "none of that stat".
+        """
+        return float(self.stats["health"])
+
+    @property
+    def is_melee(self) -> bool:
+        """Whether the subject pays the melee rate of a range-split defence."""
+        return bool(self.stats.get("is_melee", False))
+
+    def option(self, owner: str, option: DefenseOption) -> float:
+        """One declared input option, zero when the scenario supplied none."""
+        supplied = self.options.get(owner) or {}
+        return float(supplied.get(option.value, 0.0))
+
+
+@dataclass(frozen=True, slots=True)
+class DefenseOutcome:
+    """One resolved defence: the state it writes and what it disclosed.
+
+    ``fields`` are :class:`KernelField`s like every other interpreter's
+    output — value-typed, carrying the rule that produced them — so the
+    resolver folds them by :data:`DEFENSE_FIELD_COMBINE` without knowing
+    which mechanic wrote which.  ``notes`` are the published assumptions the
+    mechanic's own interpreter phrases, kept out of the declaration because a
+    sentence is presentation and criterion 6 admits no open string as policy.
+    """
+
+    fields: tuple["KernelField", ...]
+    notes: tuple[str, ...]
+
+
 __all__ = [
     "ACTIVATION_TYPES",
     "AMP_CHAIN_ORDER",
@@ -1863,19 +2291,29 @@ __all__ = [
     "BuildContext",
     "COMPILABILITY_TYPES",
     "CONSUMPTION_TYPES",
+    "ChainTargets",
+    "ChargedSplash",
+    "CombatStateRule",
     "Comparison",
     "Compilability",
-    "ChargedSplash",
     "Compilable",
-    "CooldownProcRule",
     "Consumption",
+    "CooldownProcRule",
+    "DEFENSE_FIELD_COMBINE",
+    "DEFENSE_PAYLOAD_TYPES",
     "DamageFormula",
-    "ChainTargets",
     "DamageThreshold",
+    "DefenseCombine",
+    "DefenseExclusivity",
+    "DefenseField",
+    "DefenseMechanic",
+    "DefenseOption",
+    "DefenseOutcome",
+    "DefenseSubject",
+    "DeltaAmpRule",
     "EmpoweredAutoBuffRule",
     "EmpoweredHitRule",
     "EnergizedCharge",
-    "DeltaAmpRule",
     "EngineLane",
     "ExcludeTrigger",
     "FLOOR_TYPES",
@@ -1893,11 +2331,12 @@ __all__ = [
     "NoFloor",
     "NoScaling",
     "OnHitStrikeRule",
+    "OpeningDefenseRule",
     "PAYLOAD_FAMILY",
+    "PERIODIC_CADENCE_FIELDS",
     "POLICY_IDENTIFIER_FIELDS",
     "PacketKind",
     "PacketSpec",
-    "PERIODIC_CADENCE_FIELDS",
     "PacketTrigger",
     "PeriodicCadence",
     "PeriodicRule",
@@ -1910,9 +2349,10 @@ __all__ = [
     "RampModel",
     "RampPerSecond",
     "RampPerStack",
+    "ReactiveRule",
     "ReceiptOnly",
-    "RepeatingStrikeRule",
     "Recipients",
+    "RepeatingStrikeRule",
     "Resistance",
     "ResistanceShredRule",
     "RuleFamily",
@@ -1923,6 +2363,7 @@ __all__ = [
     "SecondaryTargetRule",
     "SelfShield",
     "ShapedChargeRule",
+    "ShieldAbsorbs",
     "SpellbladeRule",
     "StackGate",
     "StackRamp",
@@ -1931,12 +2372,13 @@ __all__ = [
     "TargetBonusHealthScaled",
     "TemporaryLethality",
     "Term",
+    "ThresholdDefenseRule",
     "TimesMissingHealth",
     "TimesValue",
     "TriggerEvent",
     "TriggerWindow",
-    "UltimateProcRule",
     "Typing",
+    "UltimateProcRule",
     "WindowBoundary",
     "WindowMerge",
     "ZeroPolicy",

@@ -54,9 +54,15 @@ from .item_behavior import (
     BehaviorRule,
     BuildContext,
     ChargedSplash,
+    CombatStateRule,
     CooldownProcRule,
     DamageFormula,
+    DEFENSE_FIELD_COMBINE,
     DamageThreshold,
+    DefenseExclusivity,
+    DefenseField,
+    DefenseMechanic,
+    DefenseOption,
     DeltaAmpRule,
     ExcludeTrigger,
     Fixed,
@@ -72,6 +78,7 @@ from .item_behavior import (
     NoFloor,
     NoScaling,
     OnHitStrikeRule,
+    OpeningDefenseRule,
     PacketKind,
     PacketSpec,
     PacketTrigger,
@@ -87,6 +94,7 @@ from .item_behavior import (
     RampModel,
     RampPerSecond,
     RampPerStack,
+    ReactiveRule,
     ReceiptOnly,
     RepeatingStrikeRule,
     Resistance,
@@ -96,6 +104,7 @@ from .item_behavior import (
     SecondaryTargetRule,
     SelfShield,
     ShapedChargeRule,
+    ShieldAbsorbs,
     SpellbladeRule,
     StackGate,
     StackRamp,
@@ -103,6 +112,7 @@ from .item_behavior import (
     Term,
     TargetBonusHealthScaled,
     TemporaryLethality,
+    ThresholdDefenseRule,
     TimesMissingHealth,
     TimesValue,
     TriggerEvent,
@@ -118,6 +128,7 @@ from .item_behavior import (
 from .survival.actions import ActionKind
 from .value_ref import (
     Const,
+    LateLevelValueRef,
     DerivedValueRef,
     LevelScale,
     LevelValueRef,
@@ -217,17 +228,20 @@ H4_TAG_REASONS: Mapping[str, str] = {
         "rule and not a defence the holder owns"
     ),
     "target_state": (
-        "dead: read nowhere in src/. Force of Nature and Jak'Sho carry stack "
-        "ledgers on the defender, which is COMBAT_STATE's shape"
+        "was dead — read nowhere in src/ — until 3.5 gave Force of Nature's "
+        "and Jak'Sho's stack ledgers a COMBAT_STATE declaration, which is the "
+        "family this tag always named. Whether the *tag* is then deleted or "
+        "kept is still H4's, the human's"
     ),
     "target_attack_speed_aura": (
         "dead: read nowhere in src/. Frozen Heart's aura derives a stat on "
         "everyone in range"
     ),
     "defensive_start": (
-        "self-referential: read only by item_coverage's own claim, while the "
-        "behaviour is reached by item name in defensive_effects. The mechanic "
-        "is a defence ready when the exchange opens"
+        "was self-referential — read only by item_coverage's own claim while "
+        "the behaviour was reached by item name in defensive_effects — until "
+        "3.5 made it a real dispatch: every entry carrying it now compiles an "
+        "OPENING_DEFENSE declaration. H4's decision on the tag stands"
     ),
     "stat_conversion": (
         "self-referential: read only by item_coverage's own claim, while the "
@@ -240,17 +254,20 @@ H4_TAG_REASONS: Mapping[str, str] = {
         "family it names is SUSTAIN"
     ),
     "target_mitigation": (
-        "self-referential: read only by item_coverage's own claim, while the "
-        "behaviour is reached by item name in defensive_effects. Plated "
-        "Steelcaps-class mitigation is part of StartingDefenses"
+        "was self-referential — read only by item_coverage's own claim while "
+        "the behaviour was reached by item name — until 3.5 declared "
+        "Plated Steelcaps-class mitigation as OPENING_DEFENSE. H4's decision "
+        "on the tag stands"
     ),
     "target_threshold_health": (
-        "self-referential: read only by item_coverage's own claim. A lifeline "
-        "on a health threshold is THRESHOLD_DEFENSE"
+        "was self-referential — read only by item_coverage's own claim — "
+        "until 3.5 declared Protoplasm Harness's temporary health as "
+        "THRESHOLD_DEFENSE. H4's decision on the tag stands"
     ),
     "target_threshold_shield": (
-        "self-referential: read only by item_coverage's own claim. A lifeline "
-        "granting a shield at a threshold is THRESHOLD_DEFENSE"
+        "was self-referential — read only by item_coverage's own claim — "
+        "until 3.5 declared the Lifeline shields as THRESHOLD_DEFENSE. H4's "
+        "decision on the tag stands"
     ),
 }
 
@@ -280,66 +297,78 @@ ACTION_KIND_FAMILY: Mapping[ActionKind, RuleFamily] = {
 }
 
 
-# ── DefenseSource label → family, total over the module's constructions ───
+# ── defence mechanic → family, total over the closed mechanic set ─────────
+#
+# The successor to the ``DefenseSource`` labels this table used to be keyed
+# by: the population is now ``DefenseMechanic``, a closed enum, so the
+# closure below fails *collection* on an unmapped mechanic instead of
+# depending on a scrape of another module's source text.  The rulings are
+# unchanged, mechanic for mechanic — two of them deliberately point outside
+# the four defence families, because Ignore Pain reroutes damage over time
+# and Boundless Vitality is sustain, and both ride their own family's slice.
 
-DEFENSE_SOURCE_FAMILY: Mapping[str, RuleFamily] = {
-    "Galio — Shield of Durand": RuleFamily.OPENING_DEFENSE,
-    "Kaenic Rookern — Magebane": RuleFamily.OPENING_DEFENSE,
-    "Spirit Visage — Boundless Vitality": RuleFamily.SUSTAIN,
-    "Plated Steelcaps — Plating": RuleFamily.OPENING_DEFENSE,
-    "Warden's Mail — Rock Solid": RuleFamily.OPENING_DEFENSE,
-    "Randuin's Omen — Resilience": RuleFamily.OPENING_DEFENSE,
-    "Guardian Angel — Rebirth": RuleFamily.THRESHOLD_DEFENSE,
-    "Death's Dance — Ignore Pain / Defy": RuleFamily.DAMAGE_ROUTING,
-    "Force of Nature — Steadfast": RuleFamily.COMBAT_STATE,
-    "Jak'Sho, The Protean — Voidborn Resilience": RuleFamily.COMBAT_STATE,
-    "Zhonya's Hourglass / Seeker's Armguard — Time Stop": RuleFamily.COMBAT_STATE,
-    "Immortal Shieldbow — Lifeline": RuleFamily.THRESHOLD_DEFENSE,
-    "Hexdrinker — Lifeline": RuleFamily.THRESHOLD_DEFENSE,
-    "Maw of Malmortius — Lifeline": RuleFamily.THRESHOLD_DEFENSE,
-    "Seraph's Embrace — Lifeline": RuleFamily.THRESHOLD_DEFENSE,
-    "Sterak's Gage — Lifeline": RuleFamily.THRESHOLD_DEFENSE,
-    "Protoplasm Harness — Lifeline": RuleFamily.THRESHOLD_DEFENSE,
-    "Banshee's Veil — Annul": RuleFamily.COMBAT_STATE,
-    "Edge of Night — Annul": RuleFamily.COMBAT_STATE,
-    "Verdant Barrier — Annul": RuleFamily.COMBAT_STATE,
-    "Armored Advance — Noxian Endurance / Plating": RuleFamily.REACTIVE,
-    "Chainlaced Crushers — Noxian Persistence": RuleFamily.REACTIVE,
-    "Celestial Opposition — Blessing of the Mountain": RuleFamily.OPENING_DEFENSE,
-    "Bloodthirster — Ichorshield": RuleFamily.OPENING_DEFENSE,
-    "Fimbulwinter — Everlasting": RuleFamily.OPENING_DEFENSE,
+DEFENSE_SOURCE_FAMILY: Mapping[DefenseMechanic, RuleFamily] = {
+    DefenseMechanic.SHIELD_OF_DURAND: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.NOXIAN_ENDURANCE: RuleFamily.REACTIVE,
+    DefenseMechanic.NOXIAN_PERSISTENCE: RuleFamily.REACTIVE,
+    DefenseMechanic.BLESSING_OF_THE_MOUNTAIN: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.ICHORSHIELD: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.EVERLASTING: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.ANNUL: RuleFamily.COMBAT_STATE,
+    DefenseMechanic.MAGEBANE: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.LIFELINE_SHIELDBOW: RuleFamily.THRESHOLD_DEFENSE,
+    DefenseMechanic.LIFELINE_HEXDRINKER: RuleFamily.THRESHOLD_DEFENSE,
+    DefenseMechanic.LIFELINE_MAW: RuleFamily.THRESHOLD_DEFENSE,
+    DefenseMechanic.LIFELINE_SERAPH: RuleFamily.THRESHOLD_DEFENSE,
+    DefenseMechanic.LIFELINE_STERAK: RuleFamily.THRESHOLD_DEFENSE,
+    DefenseMechanic.LIFELINE_PROTOPLASM: RuleFamily.THRESHOLD_DEFENSE,
+    DefenseMechanic.REBIRTH: RuleFamily.THRESHOLD_DEFENSE,
+    DefenseMechanic.IGNORE_PAIN: RuleFamily.DAMAGE_ROUTING,
+    DefenseMechanic.STEADFAST: RuleFamily.COMBAT_STATE,
+    DefenseMechanic.VOIDBORN_RESILIENCE: RuleFamily.COMBAT_STATE,
+    DefenseMechanic.TIME_STOP: RuleFamily.COMBAT_STATE,
+    DefenseMechanic.BOUNDLESS_VITALITY: RuleFamily.SUSTAIN,
+    DefenseMechanic.PLATING: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.ROCK_SOLID: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.RESILIENCE: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.THORNS: RuleFamily.REACTIVE,
 }
 
+# The two defences the resolver cites without declaring one of its own, and
+# why each is a citation rather than a declaration.  Both reasons are the
+# same reason in different clothes: a declaration here would be a *second*
+# home for a mechanic that already has one, or none.
+UNDECLARED_DEFENSE_MECHANICS: Mapping[DefenseMechanic, str] = {
+    DefenseMechanic.SHIELD_OF_DURAND: (
+        "champion-owned: Galio's W has no registry entry, so there is no "
+        "entry for a declaration to be compiled from"
+    ),
+    DefenseMechanic.EVERLASTING: (
+        "declared once already, as the ally packet that grants the shield; "
+        "the opening resolver cites that mechanic to disclose that its "
+        "trigger needs authored crowd-control metadata this model will not "
+        "infer, and a second declaration would be two homes for one mechanic"
+    ),
+}
 
-def defense_source_labels() -> frozenset[str]:
-    """Every ``DefenseSource`` label constructed in ``defensive_effects.py``.
-
-    Derived from that module's own source rather than typed here, and read
-    with ``ast`` rather than by importing the module: the closure this backs
-    is "no defensive source exists without a family", and a hand list would
-    be a second population to keep in step with the first.
-    """
-    source = (
-        Path(__file__).with_name("defensive_effects.py").read_text(encoding="utf-8")
-    )
-    labels: set[str] = set()
-    for node in ast.walk(ast.parse(source)):
-        if not isinstance(node, ast.Call):
-            continue
-        if not isinstance(node.func, ast.Name) or node.func.id != "DefenseSource":
-            continue
-        for keyword in node.keywords:
-            if keyword.arg != "label":
-                continue
-            if not isinstance(keyword.value, ast.Constant) or not isinstance(
-                keyword.value.value, str
-            ):
-                raise BehaviorCatalogError(
-                    "a DefenseSource label must be a string literal so the "
-                    "closure over defensive_effects.py can read it"
-                )
-            labels.add(keyword.value.value)
-    return frozenset(labels)
+# Which slice retires each defence still resolved by name.  Both point at
+# 3.7 because :data:`DEFENSE_SOURCE_FAMILY` puts them outside the four
+# defence families: Death's Dance defers damage and Spirit Visage multiplies
+# healing received, and a slice that declared them here would be doing
+# another family's work under this one's zero-diff claim.
+DEFENSE_UNMIGRATED_MECHANICS: Mapping[DefenseMechanic, str] = {
+    DefenseMechanic.IGNORE_PAIN: (
+        "3.7 — Ignore Pain stores post-mitigation damage and pays it back as "
+        "ticks, which is damage_routing's shape and not a defence held at the "
+        "opening"
+    ),
+    DefenseMechanic.BOUNDLESS_VITALITY: (
+        "3.7 — Boundless Vitality multiplies every heal and shield the subject "
+        "receives, which is sustain's shape; it also has to run *after* every "
+        "shield it multiplies, so its position in the resolution order is "
+        "arithmetic and moving it is not a refactor"
+    ),
+}
 
 
 # ── citations ─────────────────────────────────────────────────────────────
@@ -363,6 +392,719 @@ def cached_source_receipt(owner: str, stamp: str) -> SourceReceipt:
         revision_id=0,
         revision_timestamp=stamp,
     )
+
+
+# ── defence declarations ──────────────────────────────────────────────────
+#
+# One record per defensive mechanic, owner-free: two items carry Annul's
+# spell shield and two carry Time Stop, and the declaration is the same
+# declaration for both, so binding it to an owner would be the item-name
+# literal this migration removes coming back as a table key.  Which owner
+# carries a mechanic is answered by the *entry's own keys*, exactly as
+# ``ALLY_ENTRY_SHAPES`` answers it for the ally packets.
+
+_WIKI_MODULE = f"{_WIKI}/Module:ItemData/data"
+
+
+@dataclass(frozen=True, slots=True)
+class DefenseShape:
+    """Which registry entry carries one defensive mechanic.
+
+    ``requires`` is every key the mechanic reads or gates on; ``excludes``
+    the keys whose presence means the entry is a *different* mechanic.  The
+    exclusion is not decoration: Armored Advance and Plated Steelcaps both
+    carry ``basic_damage_multiplier``, and only the reactive shield tells the
+    boots that also plate apart from the boots that only plate.
+    """
+
+    requires: tuple[str, ...]
+    excludes: frozenset[str] = frozenset()
+    signature: tuple[str, ...] = ()
+
+    @property
+    def signature_keys(self) -> tuple[str, ...]:
+        """The keys that identify the mechanic — the first one unless stated.
+
+        Armored Advance is the one mechanic that needs two: it carries the
+        reactive shield *and* plates, and either key alone names a different
+        mechanic on a different item.
+        """
+        return self.signature or self.requires[:1]
+
+    def claims(self, entry: Mapping[str, Any]) -> bool:
+        """Whether *entry* carries this mechanic, by its signature keys alone.
+
+        The signature rather than the whole required set, so a *partly*
+        parsed entry is a stop rather than a mechanic that quietly stops
+        matching: an entry missing one ramp end would otherwise read as "not
+        this mechanic", which is the silent absence this phase exists to
+        remove.
+        """
+        if any(key in entry for key in self.excludes):
+            return False
+        return all(key in entry for key in self.signature_keys)
+
+    def missing(self, entry: Mapping[str, Any]) -> tuple[str, ...]:
+        """The companion keys *entry* does not carry."""
+        return tuple(key for key in self.requires if key not in entry)
+
+
+@dataclass(frozen=True, slots=True)
+class DefenseDeclaration:  # pylint: disable=too-many-instance-attributes
+    """One defensive mechanic's shape, before an owner is known.
+
+    ``reads``, ``ramps`` and ``late_ramps`` are the three reference shapes a
+    defensive number comes in — a plain sourced key, a one-to-eighteen ramp,
+    and a ramp that holds its base until a level the entry itself names — and
+    together they are every number the mechanic is allowed to read.  The
+    ``*_key`` fields name the entry keys whose values are *policy* rather
+    than magnitude: a health threshold, a duration, what a shield stands in
+    front of, and what a strike-back is mitigated by.
+    """
+
+    shape: DefenseShape
+    writes: tuple[DefenseField, ...]
+    exclusivity: DefenseExclusivity
+    zero_policy: ZeroPolicy
+    option: DefenseOption | None = None
+    trigger: TriggerEvent | None = None
+    threshold_key: str | None = None
+    duration_key: str | None = None
+    absorbs_key: str | None = None
+    damage_class_key: str | None = None
+    reads: tuple[str, ...] = ()
+    ramps: tuple[tuple[str, str], ...] = ()
+    late_ramps: tuple[tuple[str, str, str, str], ...] = ()
+
+
+_REACTIVE_SHIELD_KEYS: tuple[str, ...] = (
+    "reactive_shield_base",
+    "reactive_shield_max",
+    "reactive_shield_scale_start_level",
+    "reactive_shield_scale_end_level",
+    "reactive_shield_bonus_health_ratio",
+    "reactive_shield_duration",
+    "reactive_shield_cooldown",
+    "reactive_shield_damage_type",
+)
+
+_REACTIVE_SHIELD_RAMP: tuple[str, str, str, str] = (
+    "reactive_shield_base",
+    "reactive_shield_max",
+    "reactive_shield_scale_start_level",
+    "reactive_shield_scale_end_level",
+)
+
+_REACTIVE_SHIELD_WRITES: tuple[DefenseField, ...] = (
+    DefenseField.REACTIVE_SHIELD_AMOUNT,
+    DefenseField.REACTIVE_SHIELD_DAMAGE_TYPE,
+    DefenseField.REACTIVE_SHIELD_DURATION,
+    DefenseField.REACTIVE_SHIELD_COOLDOWN,
+    DefenseField.REACTIVE_SHIELD_SOURCE,
+)
+
+_REACTIVE_SHIELD_READS: tuple[str, ...] = (
+    "reactive_shield_bonus_health_ratio",
+    "reactive_shield_duration",
+    "reactive_shield_cooldown",
+)
+
+_REACTIVE_SHIELD_ZERO = ZeroPolicy(
+    Disposition.MEASURED,
+    "the shield is a sourced level ramp plus a share of the subject's bonus "
+    "health; a zero means both resolved to zero, which the rule measured",
+)
+
+_THRESHOLD_SHIELD_WRITES: tuple[DefenseField, ...] = (
+    DefenseField.THRESHOLD_SHIELD_AMOUNT,
+    DefenseField.THRESHOLD_SHIELD_HEALTH_RATIO,
+    DefenseField.THRESHOLD_SHIELD_DURATION,
+    DefenseField.THRESHOLD_SHIELD_DAMAGE_TYPE,
+)
+
+# The three keys every Lifeline states about *when* it fires and what it
+# stands in front of, as opposed to how much it is worth.
+_LIFELINE_POLICY_KEYS: tuple[str, ...] = ("health_threshold", "duration", "damage_type")
+
+_LIFELINE_ZERO = ZeroPolicy(
+    Disposition.MEASURED,
+    "the Lifeline is a sum of sourced shares of the subject's own stats at "
+    "the level the build is priced at; a zero means every share resolved to "
+    "zero, which the rule measured",
+)
+
+_SOURCED_MULTIPLIER_ZERO = ZeroPolicy(
+    Disposition.MEASURED,
+    "the reduction is a sourced multiplier read live from the registry; a "
+    "zero would mean the registry holds zero, which is a measurement",
+)
+
+DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
+    DefenseMechanic.NOXIAN_ENDURANCE: DefenseDeclaration(
+        shape=DefenseShape(
+            _REACTIVE_SHIELD_KEYS + ("basic_damage_multiplier",),
+            signature=("reactive_shield_base", "basic_damage_multiplier"),
+        ),
+        writes=_REACTIVE_SHIELD_WRITES + (DefenseField.BASIC_DAMAGE_MULTIPLIER,),
+        exclusivity=DefenseExclusivity.NONE,
+        trigger=TriggerEvent.CHAMPION_DAMAGE,
+        absorbs_key="reactive_shield_damage_type",
+        reads=_REACTIVE_SHIELD_READS + ("basic_damage_multiplier",),
+        late_ramps=(_REACTIVE_SHIELD_RAMP,),
+        zero_policy=_REACTIVE_SHIELD_ZERO,
+    ),
+    DefenseMechanic.NOXIAN_PERSISTENCE: DefenseDeclaration(
+        shape=DefenseShape(
+            _REACTIVE_SHIELD_KEYS, frozenset({"basic_damage_multiplier"})
+        ),
+        writes=_REACTIVE_SHIELD_WRITES,
+        exclusivity=DefenseExclusivity.NONE,
+        trigger=TriggerEvent.CHAMPION_DAMAGE,
+        absorbs_key="reactive_shield_damage_type",
+        reads=_REACTIVE_SHIELD_READS,
+        late_ramps=(_REACTIVE_SHIELD_RAMP,),
+        zero_policy=_REACTIVE_SHIELD_ZERO,
+    ),
+    DefenseMechanic.BLESSING_OF_THE_MOUNTAIN: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "incoming_damage_multiplier",
+                "incoming_damage_linger",
+                "incoming_damage_cooldown",
+            )
+        ),
+        writes=(
+            DefenseField.INCOMING_DAMAGE_MULTIPLIER,
+            DefenseField.INCOMING_DAMAGE_LINGER,
+            DefenseField.INCOMING_DAMAGE_COOLDOWN,
+            DefenseField.INCOMING_DAMAGE_SOURCE,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=(
+            "incoming_damage_multiplier",
+            "incoming_damage_linger",
+            "incoming_damage_cooldown",
+        ),
+        zero_policy=_SOURCED_MULTIPLIER_ZERO,
+    ),
+    DefenseMechanic.ICHORSHIELD: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "ichorshield_min",
+                "ichorshield_max",
+                "ichorshield_scale_start_level",
+                "ichorshield_scale_end_level",
+            )
+        ),
+        writes=(
+            DefenseField.BLOODTHIRSTER_SHIELD_CAP,
+            DefenseField.BLOODTHIRSTER_STARTING_SHIELD,
+            DefenseField.GENERAL_SHIELD,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        option=DefenseOption.STARTING_ICHORSHIELD,
+        late_ramps=(
+            (
+                "ichorshield_min",
+                "ichorshield_max",
+                "ichorshield_scale_start_level",
+                "ichorshield_scale_end_level",
+            ),
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.STRUCTURAL_ZERO,
+            "the Ichorshield starts empty unless the scenario supplies one — "
+            "excess life-steal healing before the modeled exchange is not "
+            "guessed — so a zero starting shield is the declared absence of an "
+            "input rather than a shield that resolved to nothing",
+        ),
+    ),
+    DefenseMechanic.ANNUL: DefenseDeclaration(
+        shape=DefenseShape(("spell_shield_ready", "spell_shield_cooldown")),
+        writes=(DefenseField.SPELL_SHIELD_READY, DefenseField.SPELL_SHIELD_SOURCE),
+        exclusivity=DefenseExclusivity.ANNUL,
+        reads=("spell_shield_cooldown",),
+        zero_policy=ZeroPolicy(
+            Disposition.STRUCTURAL_ZERO,
+            "a spell shield is a state rather than a quantity: it consumes one "
+            "hostile ability and grants no number, so it has no measured value "
+            "that could be zero",
+        ),
+    ),
+    DefenseMechanic.MAGEBANE: DefenseDeclaration(
+        shape=DefenseShape(("magic_shield_max_health_ratio",)),
+        writes=(DefenseField.MAGIC_SHIELD,),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=("magic_shield_max_health_ratio",),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the shield is a sourced share of the subject's own maximum "
+            "health; a zero means the subject has none, which the rule "
+            "measured",
+        ),
+    ),
+    DefenseMechanic.LIFELINE_SHIELDBOW: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "shield_base",
+                "shield_max",
+                "shield_scale_start_level",
+                "shield_scale_end_level",
+            )
+            + _LIFELINE_POLICY_KEYS
+        ),
+        writes=_THRESHOLD_SHIELD_WRITES,
+        exclusivity=DefenseExclusivity.LIFELINE,
+        threshold_key="health_threshold",
+        duration_key="duration",
+        absorbs_key="damage_type",
+        late_ramps=(
+            (
+                "shield_base",
+                "shield_max",
+                "shield_scale_start_level",
+                "shield_scale_end_level",
+            ),
+        ),
+        zero_policy=_LIFELINE_ZERO,
+    ),
+    DefenseMechanic.LIFELINE_HEXDRINKER: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "shield_melee_min",
+                "shield_melee_max",
+                "shield_ranged_min",
+                "shield_ranged_max",
+            )
+            + _LIFELINE_POLICY_KEYS
+        ),
+        writes=_THRESHOLD_SHIELD_WRITES,
+        exclusivity=DefenseExclusivity.LIFELINE,
+        threshold_key="health_threshold",
+        duration_key="duration",
+        absorbs_key="damage_type",
+        ramps=(
+            ("shield_melee_min", "shield_melee_max"),
+            ("shield_ranged_min", "shield_ranged_max"),
+        ),
+        zero_policy=_LIFELINE_ZERO,
+    ),
+    DefenseMechanic.LIFELINE_MAW: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "shield_melee_base",
+                "shield_melee_bonus_ad_ratio",
+                "shield_ranged_base",
+                "shield_ranged_bonus_ad_ratio",
+                "lifeline_omnivamp_percent",
+            )
+            + _LIFELINE_POLICY_KEYS
+        ),
+        writes=_THRESHOLD_SHIELD_WRITES + (DefenseField.MAW_LIFELINE_OMNIVAMP_PERCENT,),
+        exclusivity=DefenseExclusivity.LIFELINE,
+        threshold_key="health_threshold",
+        duration_key="duration",
+        absorbs_key="damage_type",
+        reads=(
+            "shield_melee_base",
+            "shield_melee_bonus_ad_ratio",
+            "shield_ranged_base",
+            "shield_ranged_bonus_ad_ratio",
+            "lifeline_omnivamp_percent",
+        ),
+        zero_policy=_LIFELINE_ZERO,
+    ),
+    DefenseMechanic.LIFELINE_SERAPH: DefenseDeclaration(
+        shape=DefenseShape(("shield_max_mana_ratio",) + _LIFELINE_POLICY_KEYS),
+        writes=_THRESHOLD_SHIELD_WRITES,
+        exclusivity=DefenseExclusivity.LIFELINE,
+        threshold_key="health_threshold",
+        duration_key="duration",
+        absorbs_key="damage_type",
+        reads=("shield_max_mana_ratio",),
+        zero_policy=_LIFELINE_ZERO,
+    ),
+    DefenseMechanic.LIFELINE_STERAK: DefenseDeclaration(
+        shape=DefenseShape(("shield_bonus_health_ratio",) + _LIFELINE_POLICY_KEYS),
+        writes=_THRESHOLD_SHIELD_WRITES,
+        exclusivity=DefenseExclusivity.LIFELINE,
+        threshold_key="health_threshold",
+        duration_key="duration",
+        absorbs_key="damage_type",
+        reads=("shield_bonus_health_ratio",),
+        zero_policy=_LIFELINE_ZERO,
+    ),
+    DefenseMechanic.LIFELINE_PROTOPLASM: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "bonus_health_min",
+                "bonus_health_max",
+                "heal_min",
+                "heal_max",
+                "heal_bonus_armor_ratio",
+                "heal_bonus_mr_ratio",
+                "health_threshold",
+                "duration",
+            )
+        ),
+        writes=(
+            DefenseField.THRESHOLD_HEALTH_BONUS,
+            DefenseField.THRESHOLD_HEALTH_HEAL,
+            DefenseField.THRESHOLD_HEALTH_RATIO,
+            DefenseField.THRESHOLD_HEALTH_DURATION,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        threshold_key="health_threshold",
+        duration_key="duration",
+        reads=("heal_bonus_armor_ratio", "heal_bonus_mr_ratio"),
+        ramps=(("bonus_health_min", "bonus_health_max"), ("heal_min", "heal_max")),
+        zero_policy=_LIFELINE_ZERO,
+    ),
+    DefenseMechanic.REBIRTH: DefenseDeclaration(
+        shape=DefenseShape(("revive_health_ratio", "revive_delay", "revive_cooldown")),
+        writes=(
+            DefenseField.REVIVE_HEALTH_AMOUNT,
+            DefenseField.REVIVE_DELAY,
+            DefenseField.REVIVE_COOLDOWN,
+            DefenseField.REVIVE_SOURCE,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=("revive_health_ratio", "revive_delay", "revive_cooldown"),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the resurrection restores a sourced share of the subject's own "
+            "base health; a zero means the subject has none, which the rule "
+            "measured",
+        ),
+    ),
+    DefenseMechanic.IGNORE_PAIN: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "damage_deferral_melee",
+                "damage_deferral_ranged",
+                "damage_deferral_duration",
+                "damage_deferral_ticks",
+                "defy_window",
+                "defy_heal_bonus_ad_ratio",
+                "defy_heal_duration",
+                "defy_heal_ticks",
+            )
+        ),
+        writes=(
+            DefenseField.DAMAGE_DEFERRAL_FRACTION,
+            DefenseField.DAMAGE_DEFERRAL_DURATION,
+            DefenseField.DAMAGE_DEFERRAL_TICKS,
+            DefenseField.DEFY_WINDOW,
+            DefenseField.DEFY_HEAL_BONUS_AD_RATIO,
+            DefenseField.DEFY_HEAL_DURATION,
+            DefenseField.DEFY_HEAL_TICKS,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the deferral is a sourced fraction of each post-mitigation "
+            "packet; a zero would mean the registry holds zero, which is a "
+            "measurement",
+        ),
+    ),
+    DefenseMechanic.STEADFAST: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "steadfast_stack_duration",
+                "steadfast_max_stacks",
+                "steadfast_stack_interval",
+                "steadfast_immobilize_stacks",
+                "steadfast_bonus_magic_resistance",
+                "steadfast_bonus_move_speed_percent",
+            )
+        ),
+        writes=(
+            DefenseField.FORCE_STACK_DURATION,
+            DefenseField.FORCE_MAX_STACKS,
+            DefenseField.FORCE_STACK_INTERVAL,
+            DefenseField.FORCE_IMMOBILIZE_STACKS,
+            DefenseField.FORCE_BONUS_MAGIC_RESISTANCE,
+            DefenseField.FORCE_BONUS_MOVE_SPEED_PERCENT,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=(
+            "steadfast_stack_duration",
+            "steadfast_max_stacks",
+            "steadfast_stack_interval",
+            "steadfast_immobilize_stacks",
+            "steadfast_bonus_magic_resistance",
+            "steadfast_bonus_move_speed_percent",
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.STRUCTURAL_ZERO,
+            "Steadfast starts at zero stacks and the ordered ledger arms them "
+            "one per eligible cast instance: the resolver publishes the "
+            "schedule, so a zero here is the declared opening state rather "
+            "than a resistance bonus that resolved to nothing",
+        ),
+    ),
+    DefenseMechanic.VOIDBORN_RESILIENCE: DefenseDeclaration(
+        shape=DefenseShape(
+            (
+                "voidborn_stack_interval",
+                "voidborn_max_stacks",
+                "voidborn_bonus_resistance_multiplier",
+            )
+        ),
+        writes=(
+            DefenseField.JAKSHO_STACK_INTERVAL,
+            DefenseField.JAKSHO_MAX_STACKS,
+            DefenseField.JAKSHO_BONUS_RESISTANCE_MULTIPLIER,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=(
+            "voidborn_stack_interval",
+            "voidborn_max_stacks",
+            "voidborn_bonus_resistance_multiplier",
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.STRUCTURAL_ZERO,
+            "Voidborn Resilience starts at zero combat seconds and the ordered "
+            "ledger counts them: the resolver publishes the schedule, so a "
+            "zero here is the declared opening state",
+        ),
+    ),
+    DefenseMechanic.TIME_STOP: DefenseDeclaration(
+        shape=DefenseShape(("stasis_duration",)),
+        writes=(
+            DefenseField.STARTING_STASIS_DURATION,
+            DefenseField.STARTING_STASIS_SOURCE,
+        ),
+        exclusivity=DefenseExclusivity.STASIS,
+        option=DefenseOption.STASIS_ACTIVE_SECONDS,
+        reads=("stasis_duration",),
+        zero_policy=ZeroPolicy(
+            Disposition.STRUCTURAL_ZERO,
+            "stasis is never assumed active by item presence alone: without "
+            "the scenario's own active-seconds input the mechanic does not "
+            "apply, which is what a zero here says",
+        ),
+    ),
+    DefenseMechanic.BOUNDLESS_VITALITY: DefenseDeclaration(
+        shape=DefenseShape(("shield_received_multiplier",)),
+        writes=(DefenseField.HEALING_RECEIVED_MULTIPLIER,),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=("shield_received_multiplier",),
+        zero_policy=_SOURCED_MULTIPLIER_ZERO,
+    ),
+    DefenseMechanic.PLATING: DefenseDeclaration(
+        shape=DefenseShape(
+            ("basic_damage_multiplier",), frozenset({"reactive_shield_base"})
+        ),
+        writes=(DefenseField.BASIC_DAMAGE_MULTIPLIER,),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=("basic_damage_multiplier",),
+        zero_policy=_SOURCED_MULTIPLIER_ZERO,
+    ),
+    DefenseMechanic.ROCK_SOLID: DefenseDeclaration(
+        shape=DefenseShape(
+            ("basic_damage_flat_reduction", "basic_damage_flat_reduction_cap")
+        ),
+        writes=(
+            DefenseField.BASIC_DAMAGE_FLAT_REDUCTION,
+            DefenseField.BASIC_DAMAGE_FLAT_REDUCTION_CAP,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=("basic_damage_flat_reduction", "basic_damage_flat_reduction_cap"),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the reduction is a sourced flat amount capped at a sourced share "
+            "of the packet; a zero would mean the registry holds zero, which "
+            "is a measurement",
+        ),
+    ),
+    DefenseMechanic.RESILIENCE: DefenseDeclaration(
+        shape=DefenseShape(("critical_strike_damage_multiplier",)),
+        writes=(DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER,),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=("critical_strike_damage_multiplier",),
+        zero_policy=_SOURCED_MULTIPLIER_ZERO,
+    ),
+    DefenseMechanic.THORNS: DefenseDeclaration(
+        shape=DefenseShape(
+            ("base", "bonus_armor_ratio", "grievous_duration", "damage_type")
+        ),
+        writes=(),
+        exclusivity=DefenseExclusivity.NONE,
+        trigger=TriggerEvent.BASIC_ATTACK_HIT,
+        damage_class_key="damage_type",
+        reads=("base", "bonus_armor_ratio", "grievous_duration"),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the strike-back is a sourced flat amount plus a share of the "
+            "wearer's bonus armour; a zero means both resolved to zero, which "
+            "the rule measured",
+        ),
+    ),
+}
+
+# Which defences the compiled score kernel cannot stage, with the clause that
+# refuses each.  Partial on purpose — absent means ``Compilable`` — and the
+# membership is the kernel's own capability report
+# (``survival/compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS``) read at mechanic
+# granularity rather than per item, which is D-43's whole argument: three of
+# that set's sixteen reasons are conservatism notes about a different
+# mechanic of the same item.
+COMPILED_KERNEL_CANNOT_STAGE: Mapping[DefenseMechanic, ReceiptOnly] = {
+    DefenseMechanic.ANNUL: ReceiptOnly(
+        "the compiled score kernel cannot stage an Annul spell shield: "
+        "consuming one needs the per-packet cast metadata the light score "
+        "ledger does not carry"
+    ),
+    DefenseMechanic.REBIRTH: ReceiptOnly(
+        "the compiled score kernel cannot stage a resurrection: Rebirth's "
+        "candidates are authored inside the event walk, after the score "
+        "ledger has been built"
+    ),
+    DefenseMechanic.STEADFAST: ReceiptOnly(
+        "the compiled score kernel cannot stage a dynamic-resistance reprice: "
+        "Steadfast's stacks are priced against baseline resistances the score "
+        "ledger does not keep"
+    ),
+    DefenseMechanic.VOIDBORN_RESILIENCE: ReceiptOnly(
+        "the compiled score kernel cannot stage a dynamic-resistance reprice: "
+        "Voidborn Resilience multiplies baseline resistances the score ledger "
+        "does not keep"
+    ),
+    DefenseMechanic.LIFELINE_MAW: ReceiptOnly(
+        "the compiled score kernel cannot stage the Lifeline omnivamp state "
+        "transition: the temporary stat is granted by an authored threshold "
+        "event"
+    ),
+    DefenseMechanic.IGNORE_PAIN: ReceiptOnly(
+        "the compiled score kernel cannot stage deferred damage: Ignore Pain's "
+        "ticks and Defy's clearance are authored inside the event walk"
+    ),
+}
+
+# Where each defence's numbers were read from.  Partial on purpose: the three
+# Annul items are one mechanic with three citations, so no single declared
+# constant could name the revision any one of them was read from, and each
+# entry carries its own instead — ``receipt_for``'s ruled resolution order,
+# entry first.  :func:`_validate_defense_receipts` asserts exactly that, so
+# the gap is checked rather than assumed.
+DEFENSE_RECEIPTS: Mapping[DefenseMechanic, SourceReceipt] = {
+    DefenseMechanic.SHIELD_OF_DURAND: SourceReceipt(
+        url=f"{_WIKI}/Template:Data_Galio/Shield_of_Durand",
+        revision_id=3990299,
+        revision_timestamp="2026-02-07T07:08:21Z",
+    ),
+    DefenseMechanic.NOXIAN_ENDURANCE: SourceReceipt(
+        url=f"{_WIKI}/Armored_Advance",
+        revision_id=4013702,
+        revision_timestamp="2026-04-29T23:40:53Z",
+    ),
+    DefenseMechanic.NOXIAN_PERSISTENCE: SourceReceipt(
+        url=f"{_WIKI}/Chainlaced_Crushers",
+        revision_id=4013705,
+        revision_timestamp="2026-04-29T23:41:11Z",
+    ),
+    DefenseMechanic.BLESSING_OF_THE_MOUNTAIN: SourceReceipt(
+        url=f"{_WIKI}/Celestial_Opposition",
+        revision_id=4028004,
+        revision_timestamp="2026-06-13T11:27:01Z",
+    ),
+    DefenseMechanic.ICHORSHIELD: SourceReceipt(
+        url=f"{_WIKI}/Bloodthirster",
+        revision_id=4025103,
+        revision_timestamp="2026-06-04T21:03:44Z",
+    ),
+    DefenseMechanic.EVERLASTING: SourceReceipt(
+        url=f"{_WIKI}/Fimbulwinter",
+        revision_id=3984419,
+        revision_timestamp="2026-01-14T22:19:05Z",
+    ),
+    DefenseMechanic.MAGEBANE: SourceReceipt(
+        url=f"{_WIKI}/Kaenic_Rookern",
+        revision_id=3984971,
+        revision_timestamp="2026-01-17T16:04:29Z",
+    ),
+    DefenseMechanic.LIFELINE_SHIELDBOW: SourceReceipt(
+        url=f"{_WIKI}/Immortal_Shieldbow",
+        revision_id=4030401,
+        revision_timestamp="2026-06-15T20:45:46Z",
+    ),
+    DefenseMechanic.LIFELINE_HEXDRINKER: SourceReceipt(
+        url=f"{_WIKI_MODULE}/Hexdrinker",
+        revision_id=3905721,
+        revision_timestamp="2025-06-04T01:19:48Z",
+    ),
+    DefenseMechanic.LIFELINE_MAW: SourceReceipt(
+        url=f"{_WIKI}/Maw_of_Malmortius",
+        revision_id=3984424,
+        revision_timestamp="2026-01-14T23:08:00Z",
+    ),
+    DefenseMechanic.LIFELINE_SERAPH: SourceReceipt(
+        url=f"{_WIKI_MODULE}/Seraph%27s_Embrace",
+        revision_id=3905841,
+        revision_timestamp="2025-06-04T02:29:36Z",
+    ),
+    DefenseMechanic.LIFELINE_STERAK: SourceReceipt(
+        url=f"{_WIKI_MODULE}/Sterak%27s_Gage",
+        revision_id=3905864,
+        revision_timestamp="2025-06-04T02:46:55Z",
+    ),
+    DefenseMechanic.LIFELINE_PROTOPLASM: SourceReceipt(
+        url=_WIKI_MODULE,
+        revision_id=4046863,
+        revision_timestamp="2026-07-28T22:43:08Z",
+    ),
+    DefenseMechanic.REBIRTH: SourceReceipt(
+        url=f"{_WIKI}/Guardian_Angel",
+        revision_id=4046863,
+        revision_timestamp="2026-07-28T22:43:08Z",
+    ),
+    DefenseMechanic.IGNORE_PAIN: SourceReceipt(
+        url=f"{_WIKI}/Death%27s_Dance",
+        revision_id=0,
+        revision_timestamp=CACHED_ITEM_SOURCE,
+    ),
+    DefenseMechanic.STEADFAST: SourceReceipt(
+        url=f"{_WIKI}/Force_of_Nature",
+        revision_id=4016272,
+        revision_timestamp="2026-05-10T11:45:30Z",
+    ),
+    DefenseMechanic.VOIDBORN_RESILIENCE: SourceReceipt(
+        url=f"{_WIKI}/Jak%27Sho,_The_Protean",
+        revision_id=3984950,
+        revision_timestamp="2026-01-17T15:12:22Z",
+    ),
+    DefenseMechanic.TIME_STOP: SourceReceipt(
+        url=f"{_WIKI}/Zhonya%27s_Hourglass",
+        revision_id=3902922,
+        revision_timestamp="2025-05-29T13:29:45Z",
+    ),
+    DefenseMechanic.BOUNDLESS_VITALITY: SourceReceipt(
+        url=f"{_WIKI}/Spirit_Visage",
+        revision_id=4016166,
+        revision_timestamp="2026-05-09T17:09:08Z",
+    ),
+    DefenseMechanic.PLATING: SourceReceipt(
+        url=f"{_WIKI}/Plated_Steelcaps",
+        revision_id=4022248,
+        revision_timestamp="2026-05-24T02:13:22Z",
+    ),
+    DefenseMechanic.ROCK_SOLID: SourceReceipt(
+        url=f"{_WIKI}/Warden%27s_Mail",
+        revision_id=3987228,
+        revision_timestamp="2026-01-25T05:28:19Z",
+    ),
+    DefenseMechanic.RESILIENCE: SourceReceipt(
+        url=f"{_WIKI}/Randuin%27s_Omen",
+        revision_id=4021798,
+        revision_timestamp="2026-05-21T14:21:13Z",
+    ),
+    DefenseMechanic.THORNS: SourceReceipt(
+        url=_WIKI_MODULE,
+        revision_id=0,
+        revision_timestamp=CACHED_ITEM_SOURCE,
+    ),
+}
 
 
 # ── the compiled-kernel refusal every amp carries (D-101) ─────────────────
@@ -455,6 +1197,16 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         "rage_duration": RuleFamily.ALLY_PACKET,
         "support_quest_threshold": RuleFamily.ALLY_PACKET,
         "front_offset": RuleFamily.ALLY_PACKET,
+        # A defence hung on an entry whose tag names a different family.  The
+        # key is the mechanic's own signature key from DEFENSE_DECLARATIONS,
+        # so the two tables cannot name different keys for one mechanic, and
+        # an entry the key does not fit compiles no defence rather than a
+        # wrong one.
+        "health_threshold": RuleFamily.THRESHOLD_DEFENSE,
+        "revive_health_ratio": RuleFamily.THRESHOLD_DEFENSE,
+        "spell_shield_ready": RuleFamily.COMBAT_STATE,
+        "stasis_duration": RuleFamily.COMBAT_STATE,
+        "reactive_shield_base": RuleFamily.REACTIVE,
     },
     "ALLY_ITEM_EFFECTS": {
         key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)
@@ -3010,6 +3762,219 @@ def _compile_ally_packet(
     return rules
 
 
+def _defense_values(
+    declaration: DefenseDeclaration, owner: str, registry: ValueRegistry
+) -> tuple[Any, ...]:
+    """Every number one defence may read, as references in declared order.
+
+    Three shapes, in the order a reader of the declaration meets them: the
+    plain sourced keys, the one-to-eighteen ramps, and the ramps that hold
+    their base until a level the entry names.  Order is load-bearing only in
+    that the resolver looks a reference up by the key it names, never by
+    position.
+    """
+    return (
+        tuple(ValueRef(registry, owner, key) for key in declaration.reads)
+        + tuple(
+            LevelValueRef(registry, owner, low, high, "linear_1_18")
+            for low, high in declaration.ramps
+        )
+        + tuple(
+            LateLevelValueRef(registry, owner, low, high, start, end)
+            for low, high, start, end in declaration.late_ramps
+        )
+    )
+
+
+def _defense_policy(owner: str, key: str | None, kind: type) -> Any:
+    """One entry value whose *meaning* is policy, resolved into its enum.
+
+    Read through ``required_effect_value`` so a missing key raises naming the
+    item and the key — the registry's own fail-loud accessor rather than a
+    second message that says the same thing differently — and converted at
+    compile time, so a spelling the enum does not carry is a stop when the
+    build is made rather than a string compared at runtime.
+    """
+    if key is None:
+        return None
+    value = item_effects.required_effect_value(owner, key)
+    try:
+        return kind(str(value))
+    except ValueError as error:
+        raise BehaviorCatalogError(
+            f"ITEM_EFFECTS[{owner!r}][{key!r}] is {value!r}, which is not a "
+            f"{kind.__name__}"
+        ) from error
+
+
+def _defense_rule(
+    mechanic: DefenseMechanic, owner: str, registry: ValueRegistry
+) -> BehaviorRule:
+    """One defensive mechanic's declaration, bound to the owner that carries it.
+
+    Every companion key is read through the registry's own accessor before
+    the rule exists, so a partly parsed entry stops the build with the item
+    and the key named instead of compiling a defence that quietly grants
+    less than the item does.
+    """
+    declaration = DEFENSE_DECLARATIONS[mechanic]
+    for key in declaration.shape.requires:
+        item_effects.required_effect_value(owner, key)
+    family = DEFENSE_SOURCE_FAMILY[mechanic]
+    values = _defense_values(declaration, owner, registry)
+    absorbs = _defense_policy(owner, declaration.absorbs_key, ShieldAbsorbs)
+    payload: Any
+    if family is RuleFamily.OPENING_DEFENSE:
+        payload = OpeningDefenseRule(
+            mechanic=mechanic,
+            writes=declaration.writes,
+            exclusivity=declaration.exclusivity,
+            option=declaration.option,
+            values=values,
+        )
+    elif family is RuleFamily.THRESHOLD_DEFENSE:
+        payload = ThresholdDefenseRule(
+            mechanic=mechanic,
+            writes=declaration.writes,
+            exclusivity=declaration.exclusivity,
+            threshold=_optional_key_ref(registry, owner, declaration.threshold_key),
+            duration=_optional_key_ref(registry, owner, declaration.duration_key),
+            absorbs=absorbs,
+            values=values,
+        )
+    elif family is RuleFamily.COMBAT_STATE:
+        payload = CombatStateRule(
+            mechanic=mechanic,
+            writes=declaration.writes,
+            exclusivity=declaration.exclusivity,
+            option=declaration.option,
+            values=values,
+        )
+    else:
+        payload = ReactiveRule(
+            mechanic=mechanic,
+            writes=declaration.writes,
+            exclusivity=declaration.exclusivity,
+            trigger=declaration.trigger,
+            absorbs=absorbs,
+            damage_class=_defense_policy(
+                owner, declaration.damage_class_key, DamageClass
+            ),
+            values=values,
+        )
+    rule = BehaviorRule(
+        family=family,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.{mechanic.value}",
+        payload=payload,
+        compilability=COMPILED_KERNEL_CANNOT_STAGE.get(mechanic, Compilable()),
+        receipt=receipt_for(registry, owner, declared=DEFENSE_RECEIPTS.get(mechanic)),
+        zero_policy=declaration.zero_policy,
+    )
+    validate_rule(rule)
+    return rule
+
+
+def _optional_key_ref(registry: ValueRegistry, owner: str, key: str | None) -> Any:
+    """A reference to *key*, or ``None`` where the mechanic declares none."""
+    return None if key is None else ValueRef(registry, owner, key)
+
+
+def defense_mechanics_for(
+    family: RuleFamily, entry: Mapping[str, Any]
+) -> tuple[DefenseMechanic, ...]:
+    """Every defence of *family* one registry entry declares, in resolution order.
+
+    Iterating :class:`~.item_behavior.DefenseMechanic` rather than the
+    declarations mapping is what keeps the resolution order the enum's, so
+    one entry carrying two mechanics resolves them in the same order two
+    entries would.
+    """
+    return tuple(
+        mechanic
+        for mechanic in DefenseMechanic
+        if DEFENSE_SOURCE_FAMILY[mechanic] is family
+        and mechanic in DEFENSE_DECLARATIONS
+        and DEFENSE_DECLARATIONS[mechanic].shape.claims(entry)
+    )
+
+
+def _compile_defense(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the defences of one family that a registry entry declares.
+
+    An entry that declares none compiles none, and that is an *answer* — a
+    Guardian Angel is tagged as a starting defence and its mechanic is a
+    resurrection, so the opening-defence compiler is right to hand back
+    nothing.  A mechanic whose family sits outside this slice is named in
+    :data:`DEFENSE_UNMIGRATED_MECHANICS` with the slice that retires it, so
+    the refusal carries a date as well as a reason.
+    """
+    return tuple(
+        _defense_rule(mechanic, owner, registry)
+        for mechanic in defense_mechanics_for(family, entry)
+        if mechanic not in DEFENSE_UNMIGRATED_MECHANICS
+        and _defense_flag_holds(mechanic, entry)
+    )
+
+
+def _defense_flag_holds(mechanic: DefenseMechanic, entry: Mapping[str, Any]) -> bool:
+    """Whether the entry's own flags say this mechanic is live at the opening.
+
+    One member today, and it is a real rule rather than a convenience: a
+    spell shield the registry says is not ready compiles no declaration at
+    all, which is the fail-closed reading the retired name ladder spelled as
+    ``.get("spell_shield_ready", False)``.
+    """
+    if mechanic is DefenseMechanic.ANNUL:
+        return bool(entry.get("spell_shield_ready", False))
+    return True
+
+
+def _compile_opening_defense(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Defences already in force when the modeled exchange opens."""
+    return _compile_defense(family, owner, registry, entry)
+
+
+def _compile_threshold_defense(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Defences armed by the subject's health crossing a declared fraction."""
+    return _compile_defense(family, owner, registry, entry)
+
+
+def _compile_combat_state(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Defences that accrue, or are spent, while the fight is in progress."""
+    return _compile_defense(family, owner, registry, entry)
+
+
+def _compile_reactive(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Defences armed by an incoming event rather than by the clock."""
+    return _compile_defense(family, owner, registry, entry)
+
+
 def _unmigrated(
     family: RuleFamily,
     owner: str,
@@ -3047,10 +4012,10 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.RESISTANCE_SHRED: _compile_resistance_shred,
     RuleFamily.CRIT_PROFILE: _unmigrated,
     RuleFamily.DAMAGE_ROUTING: _unmigrated,
-    RuleFamily.OPENING_DEFENSE: _unmigrated,
-    RuleFamily.THRESHOLD_DEFENSE: _unmigrated,
-    RuleFamily.COMBAT_STATE: _unmigrated,
-    RuleFamily.REACTIVE: _unmigrated,
+    RuleFamily.OPENING_DEFENSE: _compile_opening_defense,
+    RuleFamily.THRESHOLD_DEFENSE: _compile_threshold_defense,
+    RuleFamily.COMBAT_STATE: _compile_combat_state,
+    RuleFamily.REACTIVE: _compile_reactive,
     RuleFamily.SUSTAIN: _unmigrated,
     RuleFamily.STAT_DERIVATION: _unmigrated,
     RuleFamily.ALLY_PACKET: _compile_ally_packet,
@@ -3058,10 +4023,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.OPENING_DEFENSE: "3.5",
-    RuleFamily.THRESHOLD_DEFENSE: "3.5",
-    RuleFamily.COMBAT_STATE: "3.5",
-    RuleFamily.REACTIVE: "3.5",
     RuleFamily.CRIT_PROFILE: "3.7",
     RuleFamily.DAMAGE_ROUTING: "3.7",
     RuleFamily.SUSTAIN: "3.7",
@@ -3291,16 +4252,123 @@ def _validate_action_kind_closure(kinds: frozenset[Any] | None = None) -> None:
         )
 
 
-def _validate_defense_source_closure(labels: frozenset[str] | None = None) -> None:
-    """Every ``DefenseSource`` construction has a family (seam: R-05)."""
-    labels = defense_source_labels() if labels is None else labels
+def _validate_defense_source_closure(
+    mechanics: frozenset[DefenseMechanic] | None = None,
+) -> None:
+    """Every defensive mechanic has a family (seam: R-05).
+
+    The population is :class:`~.item_behavior.DefenseMechanic` itself, so a
+    new defence fails *collection* until somebody decides which family models
+    it — the same closure this used to get by scraping ``defensive_effects``
+    for ``DefenseSource`` constructions, now over a closed enum rather than
+    over another module's source text.
+    """
+    declared = frozenset(DefenseMechanic) if mechanics is None else mechanics
     mapped = frozenset(DEFENSE_SOURCE_FAMILY)
-    if mapped != labels:
+    if mapped != declared:
         raise BehaviorCatalogError(
-            "DEFENSE_SOURCE_FAMILY must name every DefenseSource constructed in "
-            f"defensive_effects.py; unmapped={sorted(labels - mapped)} "
-            f"stale={sorted(mapped - labels)}"
+            "DEFENSE_SOURCE_FAMILY must name every DefenseMechanic; unmapped="
+            f"{sorted(str(getattr(m, 'value', m)) for m in declared - mapped)} "
+            f"stale={sorted(str(getattr(m, 'value', m)) for m in mapped - declared)}"
         )
+
+
+def _validate_defense_migration() -> None:
+    """Every defence is declared here or carries the slice that retires it.
+
+    Three clauses, because a defence can go missing in three ways: a mechanic
+    with no declaration and no promise, a declaration whose family is not the
+    one :data:`DEFENSE_SOURCE_FAMILY` rules it into, and a registry entry
+    whose tag says *defence* while no mechanic claims a single one of its
+    keys — the last being the shape that would let an item silently stop
+    defending after a parser rename.
+    """
+    declared = frozenset(DEFENSE_DECLARATIONS)
+    promised = frozenset(DEFENSE_UNMIGRATED_MECHANICS)
+    covered = declared | frozenset(UNDECLARED_DEFENSE_MECHANICS)
+    unnamed = sorted(
+        mechanic.value for mechanic in frozenset(DefenseMechanic) - covered
+    )
+    if unnamed:
+        raise BehaviorCatalogError(
+            "every DefenseMechanic is either declared with the entry shape "
+            "that carries it or owned by a champion; unshaped="
+            f"{unnamed}"
+        )
+    if promised - declared:
+        raise BehaviorCatalogError(
+            "a defence awaiting a slice still declares the entry shape it "
+            "will be compiled from, so the promise names a real mechanic"
+        )
+    for mechanic, declaration in DEFENSE_DECLARATIONS.items():
+        if not declaration.shape.requires:
+            raise BehaviorCatalogError(
+                f"{mechanic.value} declares no signature key, so no entry "
+                "could ever carry it"
+            )
+        if mechanic in DEFENSE_UNMIGRATED_MECHANICS:
+            continue
+        for field in declaration.writes:
+            if field not in DEFENSE_FIELD_COMBINE:
+                raise BehaviorCatalogError(
+                    f"{mechanic.value} writes {field} with no declared combine"
+                )
+    _validate_defense_entry_closure()
+
+
+def _validate_defense_entry_closure() -> None:
+    """Every defence-tagged registry entry is claimed by at least one mechanic."""
+    defence_families = frozenset(
+        {
+            RuleFamily.OPENING_DEFENSE,
+            RuleFamily.THRESHOLD_DEFENSE,
+            RuleFamily.COMBAT_STATE,
+            RuleFamily.REACTIVE,
+        }
+    )
+    unclaimed: list[str] = []
+    for owner, entry in item_effects.ITEM_EFFECTS.items():
+        if not isinstance(entry, Mapping):
+            continue
+        family = TAG_FAMILY.get(str(entry.get("type")))
+        if family not in defence_families:
+            continue
+        claimed = any(
+            declaration.shape.claims(entry)
+            for declaration in DEFENSE_DECLARATIONS.values()
+        )
+        if not claimed:
+            unclaimed.append(owner)
+    if unclaimed:
+        raise BehaviorCatalogError(
+            "every entry tagged as a defence must be claimed by one declared "
+            f"mechanic's signature key; unclaimed={sorted(unclaimed)}"
+        )
+
+
+def _validate_defense_receipts() -> None:
+    """Every declared defence resolves a citation, or its owners carry one.
+
+    The one mechanic with no declared constant is Annul, whose three items
+    are one mechanic with three revisions.  Rather than trusting that, this
+    walks the registry: a mechanic missing from :data:`DEFENSE_RECEIPTS`
+    whose owner's entry carries no complete citation would be a declaration
+    against an unsourced number, and ``receipt_for`` would raise at compile
+    time on a build nobody happened to price.
+    """
+    for mechanic, declaration in DEFENSE_DECLARATIONS.items():
+        if mechanic in DEFENSE_RECEIPTS:
+            continue
+        for owner, entry in item_effects.ITEM_EFFECTS.items():
+            if not isinstance(entry, Mapping) or not declaration.shape.claims(entry):
+                continue
+            if CITATION_KEYS - frozenset(entry):
+                raise BehaviorCatalogError(
+                    f"{mechanic.value} declares no constant receipt and "
+                    f"ITEM_EFFECTS[{owner!r}] carries no complete citation of "
+                    "its own, so the rule would be declared against an "
+                    "unsourced number"
+                )
 
 
 def _validate_compilers() -> None:
@@ -3427,6 +4495,8 @@ def validate_catalog() -> None:
     _validate_h4_closure()
     _validate_action_kind_closure()
     _validate_defense_source_closure()
+    _validate_defense_migration()
+    _validate_defense_receipts()
     _validate_compilers()
     _validate_delta_amp_migration()
     _validate_ally_packet_migration()
@@ -3454,7 +4524,15 @@ __all__ = [
     "COMPILED_KERNEL_CANNOT_AMP",
     "BehaviorCatalogError",
     "Compiler",
+    "COMPILED_KERNEL_CANNOT_STAGE",
+    "DEFENSE_DECLARATIONS",
+    "DEFENSE_RECEIPTS",
     "DEFENSE_SOURCE_FAMILY",
+    "DEFENSE_UNMIGRATED_MECHANICS",
+    "UNDECLARED_DEFENSE_MECHANICS",
+    "DefenseDeclaration",
+    "DefenseShape",
+    "defense_mechanics_for",
     "DELTA_AMP_UNMIGRATED_TAGS",
     "COMBAT_START",
     "H4_DEAD_TAGS",
@@ -3477,7 +4555,6 @@ __all__ = [
     "declared_tags",
     "entry_families",
     "keystone_entries",
-    "defense_source_labels",
     "owners_for",
     "producers_for",
     "registry_entries",

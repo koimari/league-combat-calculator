@@ -1,7 +1,7 @@
 """The front door for ``item_behavior_catalog`` — closure, and its three reds.
 
 The catalog's whole value is that it *cannot* be silently incomplete.  A new
-effect tag, a new ``ActionKind`` or a new ``DefenseSource`` construction has
+effect tag, a new ``ActionKind`` or a new ``DefenseMechanic`` has
 to be given a family before the module will import, and a module that will
 not import fails collection rather than running with a hole in it.  Each of
 those three closures therefore ships with the red it can reproduce on demand
@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.item_behavior import RuleFamily
+from src.calculator.item_behavior import DefenseMechanic, RuleFamily
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_EFFECTS,
@@ -86,18 +86,30 @@ def test_a_new_action_kind_fails_the_catalog() -> None:
         )
 
 
-def test_every_defense_source_construction_has_a_family() -> None:
-    """Derived from defensive_effects' own constructions, never typed twice."""
-    labels = catalog.defense_source_labels()
-    assert frozenset(catalog.DEFENSE_SOURCE_FAMILY) == labels
-    assert len(labels) == 25
+def test_every_defense_mechanic_has_a_family() -> None:
+    """The closure's population is the closed enum, not a scrape of a module."""
+    assert frozenset(catalog.DEFENSE_SOURCE_FAMILY) == frozenset(DefenseMechanic)
 
 
-def test_a_new_defense_source_fails_the_catalog() -> None:
+def test_every_defense_mechanic_is_declared_or_cited() -> None:
+    """A mechanic with no declaration says why, and both reasons are named."""
+    covered = frozenset(catalog.DEFENSE_DECLARATIONS) | frozenset(
+        catalog.UNDECLARED_DEFENSE_MECHANICS
+    )
+    assert covered == frozenset(DefenseMechanic)
+    assert not frozenset(catalog.DEFENSE_DECLARATIONS) & frozenset(
+        catalog.UNDECLARED_DEFENSE_MECHANICS
+    )
+    assert frozenset(catalog.DEFENSE_UNMIGRATED_MECHANICS) <= frozenset(
+        catalog.DEFENSE_DECLARATIONS
+    )
+
+
+def test_a_new_defense_mechanic_fails_the_catalog() -> None:
     """R-05's red for the defensive closure."""
     with pytest.raises(catalog.BehaviorCatalogError, match="unmapped"):
         catalog._validate_defense_source_closure(  # pylint: disable=protected-access
-            catalog.defense_source_labels() | {"Some New Item — Some New Passive"}
+            frozenset(DefenseMechanic) | {"a_new_defence"}
         )
 
 

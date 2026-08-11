@@ -593,7 +593,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
     """The committed frontier artifact."""
     return {
         "schema_version": SCHEMA_VERSION,
-        "slice": "3.4",
+        "slice": "3.5",
         "counters": {
             "counter_1": {
                 "counts": "runtime item-name dispatch sites",

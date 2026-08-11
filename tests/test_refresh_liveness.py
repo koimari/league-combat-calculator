@@ -118,15 +118,43 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "damage dealt to them by 25%",
         0.25,
     ),
+    RuleFamily.OPENING_DEFENSE: (
+        "Kaenic Rookern",
+        "magic_shield_max_health_ratio",
+        "equal to {{as|15% of '''maximum''' health}}",
+        "equal to {{as|25% of '''maximum''' health}}",
+        0.25,
+    ),
+    RuleFamily.THRESHOLD_DEFENSE: (
+        "Immortal Shieldbow",
+        "health_threshold",
+        "below {{as|30% of your '''maximum''' health}}",
+        "below {{as|45% of your '''maximum''' health}}",
+        0.45,
+    ),
+    RuleFamily.REACTIVE: (
+        "Bramble Vest",
+        "base",
+        "deal {{as|10 magic damage}}",
+        "deal {{as|18 magic damage}}",
+        18.0,
+    ),
 }
 
-# The one migrated family with no rule that *can* pass the proof, and the
-# reason, measured rather than asserted: every number an ally packet reads is
+# The migrated families with no rule that *can* pass the proof, and the reason
+# for each, measured rather than asserted: every number an ally packet reads is
 # either hand-authored in ``ALLY_ITEM_EFFECTS`` (refresh-inert by
 # construction, D-47) or a code-owned key in ``_STATIC_ITEM_EFFECTS``, which a
 # wiki edit cannot move either.  The test below proves that is still true, so
 # the exemption fails the day one ally-packet number becomes parser-owned.
 REFRESH_INERT_FAMILIES: dict[RuleFamily, str] = {
+    RuleFamily.COMBAT_STATE: (
+        "every number a combat state reads is a code-owned static key: "
+        "_PARSEABLE_ITEM_KEYS is empty for all seven owners — Force of "
+        "Nature, Jak'Sho, the three Annul items and the two stasis items — "
+        "because a stack schedule and a readiness flag are model structure "
+        "rather than a number the wiki text states for a parser to lift"
+    ),
     RuleFamily.ALLY_PACKET: (
         "every value an ally packet reads is hand-authored (ALLY_ITEM_EFFECTS, "
         "D-47) or a code-owned static key; a refresh cannot move any of them, "
