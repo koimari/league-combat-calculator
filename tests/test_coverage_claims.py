@@ -21,7 +21,9 @@ honest about the shape of a real one.
 """
 
 import ast
+import dataclasses
 import fnmatch
+import importlib
 import subprocess
 import sys
 from pathlib import Path
@@ -29,13 +31,20 @@ from pathlib import Path
 import pytest
 
 from src.calculator.coverage_evidence import (
+    EVIDENCE_TYPES,
+    Absence,
     Claim,
     EffectKey,
+    EffectTag,
+    OptionSchema,
     PacketSource,
+    PairedSides,
+    SourceRef,
     Symbol,
     TestRef,
     validate_claim,
 )
+from src.calculator.trigger_stream import CAPABILITIES
 
 # The resolver is imported as a module, never by name: ``test_ref_verdict``
 # is a helper, and a ``test_``-prefixed name bound in a collected module is
@@ -699,3 +708,453 @@ def test_ci_runs_pytest_with_no_keyword_marker_or_path_filter() -> None:
         assert [
             argument for argument in arguments if not argument.startswith("-")
         ] == [], invocation
+
+
+# ── the other eight evidence kinds ────────────────────────────────────────
+
+MANDATE_SUPPORT_CLAIM = Claim(
+    subject_kind="item",
+    subject="Imperial Mandate",
+    lane="support_packet",
+    status="modeled_effect",
+    evidence=(
+        Symbol(
+            path="item_support_effects.derive_item_support_effects",
+            role="walk_packet_builder",
+        ),
+        PacketSource(source="Imperial Mandate — Command"),
+        PairedSides(
+            mechanic="imperial_mandate.command", owner_policy="owner_skips_holder"
+        ),
+        TestRef(node_id=MANDATE_NODE),
+    ),
+    dimensions=("damage_amplification",),
+    issue_refs=(),
+    unreachable_reason="",
+)
+
+
+def _live() -> ResolverContext:
+    """The live seams with an empty node set — every kind but ``TestRef``."""
+    return ResolverContext(
+        importer=importlib.import_module,
+        read_source=coverage_resolver.read_repo_file,
+        nodes={},
+    )
+
+
+def _resolve_live(member, claim: Claim = MANDATE_SUPPORT_CLAIM) -> None:
+    """One member against the real tree."""
+    coverage_resolver.resolve(member, claim, _live())
+
+
+def test_the_dispatch_covers_every_evidence_kind() -> None:
+    """Totality, as a set comparison rather than a ladder anyone can outgrow.
+
+    ``TestRef`` and ``SourceRef`` are dispatched by name because they take a
+    parameter the others do not — the tier flag and the parsed audit — so the
+    table plus those two is the union, and a tenth kind fails here on the
+    commit that adds it.
+    """
+    assert set(coverage_resolver._RESOLVERS) | {TestRef, SourceRef} == set(
+        EVIDENCE_TYPES
+    )
+
+
+def test_an_unknown_evidence_kind_is_unresolved_rather_than_ignored() -> None:
+    """A member the tier cannot dispatch is a failure, never a silent pass."""
+    with pytest.raises(EvidenceUnresolved, match="nine evidence kinds"):
+        _resolve_live(object())
+
+
+# ── Symbol ────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "damage._apply_command_amp",
+        "survival.transitions.trigger_defy",
+        "item_effects.ITEM_INPUT_OPTIONS",
+        "item_coverage._has_described_effect",
+    ],
+    ids=["one-segment module", "two-segment module", "registry", "private predicate"],
+)
+def test_a_live_symbol_resolves_to_its_module_and_object(path: str) -> None:
+    """The split between module and attribute is found, not declared.
+
+    ``survival.transitions.trigger_defy`` is a two-segment module and one
+    attribute and ``damage._apply_command_amp`` is one of each; the longest
+    importable prefix is what tells them apart.
+    """
+    module, found = coverage_resolver.import_symbol(path, _live())
+    assert path.startswith(module)
+    assert found is not None
+
+
+@pytest.mark.parametrize(
+    ("path", "message"),
+    [
+        ("damage._apply_command_amp_renamed", "names no '_apply_command_amp_renamed'"),
+        ("nowhere.at_all", "names no importable module"),
+    ],
+    ids=["M1: the accessor is renamed", "M2: the module is gone"],
+)
+def test_a_symbol_naming_nothing_is_unresolved(path: str, message: str) -> None:
+    """The mutation shape M1 and M2 both take: the prose outlives the code."""
+    with pytest.raises(EvidenceUnresolved, match=message):
+        _resolve_live(Symbol(path=path, role="pair_engine"))
+
+
+# ── PacketSource ──────────────────────────────────────────────────────────
+
+
+def test_packet_sites_read_every_source_argument_with_its_keywords() -> None:
+    """The measurement is the contract, and ``owner=`` is what it is for.
+
+    The count is read off the module rather than pinned, and the distinct
+    source set is what Phase 3 derives its producer count from.  What is
+    asserted here is the property the campaign turns on: exactly the packets
+    whose mechanic Phase 2 declares ``SPLIT`` carry ``owner=``.
+    """
+    text = coverage_resolver.read_repo_file("src/calculator/item_support_effects.py")
+    sites = coverage_resolver.packet_sites(text)
+    assert len(sites) >= len({site.source for site in sites}) >= 1
+    owning = {site.source for site in sites if "owner" in site.keywords}
+    split = {
+        capability.packet_source
+        for capability in CAPABILITIES.values()
+        if capability.authority.name == "SPLIT" and capability.packet_source
+    }
+    assert owning == split
+
+
+def test_render_source_argument_collapses_an_f_string_to_slots() -> None:
+    """``{}`` is the only brace a ``PacketSource`` may carry, and this is why."""
+    rendered = coverage_resolver.render_source_argument(
+        ast.parse('f"{item} — Reap"', mode="eval").body
+    )
+    assert rendered == "{} — Reap"
+    assert (
+        coverage_resolver.render_source_argument(
+            ast.parse('"Cull — Reap"', mode="eval").body
+        )
+        == "Cull — Reap"
+    )
+    assert (
+        coverage_resolver.render_source_argument(ast.parse("name", mode="eval").body)
+        is None
+    )
+
+
+def test_a_live_packet_source_resolves_against_its_declared_builder() -> None:
+    """The claim names the builder; the builder emits the source."""
+    _resolve_live(PacketSource(source="Imperial Mandate — Command"))
+
+
+def test_a_packet_source_with_no_builder_symbol_is_unresolved() -> None:
+    """M3's shape: the literal is removed and nothing else changes.
+
+    A repository-wide scan would still find the string in a comment or a
+    test, so the member is proved against the module the claim itself names.
+    """
+    claim = Claim(
+        subject_kind="item",
+        subject="Imperial Mandate",
+        lane="attacker",
+        status="modeled_effect",
+        evidence=(
+            Symbol(path="damage._apply_command_amp", role="pair_engine"),
+            TestRef(node_id=MANDATE_NODE),
+        ),
+        dimensions=(),
+        issue_refs=(),
+        unreachable_reason="",
+    )
+    with pytest.raises(EvidenceUnresolved, match="names no builder"):
+        coverage_resolver.resolve(
+            PacketSource(source="Imperial Mandate — Command"), claim, _live()
+        )
+
+
+def test_a_packet_source_the_builder_never_emits_is_unresolved() -> None:
+    """The other half of M3: the builder resolves and the receipt is gone."""
+    with pytest.raises(EvidenceUnresolved, match="is not a source= argument"):
+        _resolve_live(PacketSource(source="Imperial Mandate — Commandeer"))
+
+
+# ── PairedSides ───────────────────────────────────────────────────────────
+
+
+def test_every_split_capability_resolves_as_a_paired_mechanic() -> None:
+    """The registry is the authority, and it closes in both directions.
+
+    Five mechanics declare ``SPLIT`` on the walk side today.  Each is
+    resolved through the same door a claim uses, so a half deleted, a
+    ``pair_of`` cleared or an owner changed fails here rather than in review.
+    """
+    walk_halves = [
+        capability
+        for capability in CAPABILITIES.values()
+        if capability.authority.name == "SPLIT" and capability.pair_of
+    ]
+    assert walk_halves
+    for capability in walk_halves:
+        _resolve_live(
+            PairedSides(mechanic=capability.mechanic, owner_policy="owner_skips_holder")
+        )
+
+
+@pytest.mark.parametrize(
+    ("sides", "message"),
+    [
+        (
+            PairedSides(
+                mechanic="imperial_mandate.made_up", owner_policy="owner_skips_holder"
+            ),
+            "not a declared capability",
+        ),
+        (
+            PairedSides(mechanic="cull.reap", owner_policy="owner_skips_holder"),
+            "not SPLIT",
+        ),
+        (
+            PairedSides(
+                mechanic="imperial_mandate.command",
+                owner_policy="holder_is_not_a_source",
+            ),
+            "expects the .* packet not to declare owner=",
+        ),
+    ],
+    ids=["undeclared", "not split", "wrong owner policy"],
+)
+def test_a_paired_sides_member_that_does_not_hold_is_unresolved(
+    sides: PairedSides, message: str
+) -> None:
+    """Each half of the handshake fails on its own, named separately."""
+    with pytest.raises(EvidenceUnresolved, match=message):
+        _resolve_live(sides)
+
+
+def test_M5_clearing_a_pair_of_leaves_the_dual_sided_claim_unresolved() -> None:
+    """The mutation is a context, not an edit: a registry with one half gone.
+
+    ``pair_of`` is the only field that says the two engines are pricing one
+    mechanic.  Clearing it is exactly the incident — a coverage claim naming
+    both sides while only one exists — and it has to fail without any source
+    file being touched.
+    """
+    live = _live()
+    real = live.importer("src.calculator.trigger_stream")
+    unpaired = dict(CAPABILITIES)
+    unpaired["imperial_mandate.command"] = dataclasses.replace(
+        CAPABILITIES["imperial_mandate.command"], pair_of=None
+    )
+
+    class _Registry:
+        """``trigger_stream`` with one capability's pair link cleared."""
+
+        CAPABILITIES = unpaired
+
+    def importer(name: str) -> object:
+        return _Registry if name.endswith("trigger_stream") else real
+
+    ctx = ResolverContext(
+        importer=importer, read_source=live.read_source, nodes=live.nodes
+    )
+    with pytest.raises(EvidenceUnresolved, match="declares no pair_of"):
+        coverage_resolver.resolve(
+            PairedSides(
+                mechanic="imperial_mandate.command", owner_policy="owner_skips_holder"
+            ),
+            MANDATE_SUPPORT_CLAIM,
+            ctx,
+        )
+
+
+# ── EffectKey, EffectTag, OptionSchema ────────────────────────────────────
+
+
+def test_a_live_effect_key_resolves_to_its_registry_entry() -> None:
+    """The key, never its number — the resolution is exactly membership."""
+    _resolve_live(
+        EffectKey(registry="ITEM_EFFECTS", item="Thornmail", key="bonus_armor_ratio")
+    )
+
+
+@pytest.mark.parametrize(
+    ("key", "message"),
+    [
+        (
+            EffectKey(registry="ITEM_EFFECTS", item="Thornmail", key="thorn_percent"),
+            "has no 'thorn_percent' key",
+        ),
+        (
+            EffectKey(registry="ITEM_EFFECTS", item="Thornmail Plus", key="base"),
+            "has no 'Thornmail Plus' entry",
+        ),
+    ],
+    ids=["key", "holder"],
+)
+def test_an_effect_key_the_registry_lacks_is_unresolved(key, message: str) -> None:
+    """Rule 5's discipline: the declaration names where the number lives."""
+    with pytest.raises(EvidenceUnresolved, match=message):
+        _resolve_live(key)
+
+
+def test_a_live_effect_tag_resolves_to_a_handler_that_branches_on_it() -> None:
+    """A tag with a handler; the ten without one are the frontier's."""
+    _resolve_live(EffectTag(tag="thorns", handler="item_effects.thorns_effects"))
+
+
+@pytest.mark.parametrize(
+    ("tag", "message"),
+    [
+        (
+            EffectTag(tag="target_state", handler="item_effects.thorns_effects"),
+            "does not branch on",
+        ),
+        (
+            EffectTag(tag="not_a_tag", handler="item_effects.thorns_effects"),
+            "not an item_effects._KNOWN_EFFECT_TYPES member",
+        ),
+    ],
+    ids=["M6: the tag is renamed", "unknown tag"],
+)
+def test_an_effect_tag_with_no_live_branch_is_unresolved(tag, message: str) -> None:
+    """M6's shape: renaming a tag reclassifies items with no other signal."""
+    with pytest.raises(EvidenceUnresolved, match=message):
+        _resolve_live(tag)
+
+
+def test_a_live_option_schema_resolves_to_a_bounded_control() -> None:
+    """Bounded is the whole claim: type, default, and both ends."""
+    _resolve_live(OptionSchema(item="Heartsteel", option="bonus_health"))
+
+
+def test_an_option_the_registry_does_not_declare_is_unresolved() -> None:
+    """An item whose state is claimed supplied has to name the control."""
+    with pytest.raises(EvidenceUnresolved, match="declares no 'unbounded' control"):
+        _resolve_live(OptionSchema(item="Heartsteel", option="unbounded"))
+
+
+def test_an_unbounded_control_is_unresolved() -> None:
+    """A control missing an end is an assumption with a form field in front."""
+    live = _live()
+    real = live.importer("src.calculator.item_effects")
+
+    class _Registry:
+        """``item_effects`` with one control's ceiling removed."""
+
+        ITEM_INPUT_OPTIONS = {
+            "Heartsteel": {
+                "options": {"bonus_health": {"type": "int", "default": 0, "min": 0}}
+            }
+        }
+
+    def importer(name: str) -> object:
+        return _Registry if name.endswith("item_effects") else real
+
+    ctx = ResolverContext(
+        importer=importer, read_source=live.read_source, nodes=live.nodes
+    )
+    with pytest.raises(EvidenceUnresolved, match=r"is missing \['max'\]"):
+        coverage_resolver.resolve(
+            OptionSchema(item="Heartsteel", option="bonus_health"),
+            MANDATE_SUPPORT_CLAIM,
+            ctx,
+        )
+
+
+# ── SourceRef and Absence ─────────────────────────────────────────────────
+
+
+def test_a_live_source_ref_resolves_to_that_items_audit_entry() -> None:
+    """A citation is a url *and* a revision, and it is the subject's own."""
+    entries = coverage_resolver.audit_entries(_live())
+    entry = next(item for item in entries if item["name"] == "Banshee's Veil")
+    claim = Claim(
+        subject_kind="item",
+        subject="Banshee's Veil",
+        lane="attacker",
+        status="stats_only",
+        evidence=(
+            SourceRef(url=entry["source_url"], revision_id=entry["revision_id"]),
+        ),
+        dimensions=(),
+        issue_refs=(),
+        unreachable_reason="",
+    )
+    coverage_resolver.resolve(claim.evidence[0], claim, _live())
+
+    stale = SourceRef(url=entry["source_url"], revision_id=entry["revision_id"] - 1)
+    with pytest.raises(EvidenceUnresolved, match="is not an entry of"):
+        coverage_resolver.resolve(stale, claim, _live())
+
+
+def test_a_source_ref_citing_another_items_entry_is_unresolved() -> None:
+    """A review of some other item is not a review of this one."""
+    entries = coverage_resolver.audit_entries(_live())
+    entry = next(item for item in entries if item["name"] == "Abyssal Mask")
+    claim = Claim(
+        subject_kind="item",
+        subject="Banshee's Veil",
+        lane="attacker",
+        status="stats_only",
+        evidence=(
+            SourceRef(url=entry["source_url"], revision_id=entry["revision_id"]),
+        ),
+        dimensions=(),
+        issue_refs=(),
+        unreachable_reason="",
+    )
+    with pytest.raises(EvidenceUnresolved, match='not for "Banshee\'s Veil"'):
+        coverage_resolver.resolve(claim.evidence[0], claim, _live())
+
+
+def test_an_absence_names_the_issues_the_public_payload_publishes() -> None:
+    """The declaration's receipt and the receipt on the wire are one list."""
+    claim = Claim(
+        subject_kind="item",
+        subject="Guardian's Horn",
+        lane="target",
+        status="blocked",
+        evidence=(
+            Absence(reason="Legendary's reduction is not modelled.", issue_refs=(40,)),
+        ),
+        dimensions=(),
+        issue_refs=(),
+        unreachable_reason="",
+    )
+    coverage_resolver.resolve(claim.evidence[0], claim, _live())
+
+    wrong = Absence(reason="Same reason, different tracker.", issue_refs=(43,))
+    with pytest.raises(EvidenceUnresolved, match="the public payload publishes"):
+        coverage_resolver.resolve(wrong, claim, _live())
+
+
+# ── the table ─────────────────────────────────────────────────────────────
+
+
+def test_resolve_table_reports_every_broken_member_not_the_first() -> None:
+    """One run names all of them; the first is a fact about alphabetical order."""
+    broken = Claim(
+        subject_kind="item",
+        subject="Imperial Mandate",
+        lane="attacker",
+        status="modeled_effect",
+        evidence=(
+            Symbol(path="damage._gone", role="pair_engine"),
+            Symbol(path="item_effects._also_gone", role="value_accessor"),
+        ),
+        dimensions=(),
+        issue_refs=(),
+        unreachable_reason="",
+    )
+    failures = coverage_resolver.resolve_table(
+        {("item", "Imperial Mandate", "attacker"): broken}, _live()
+    )
+    assert [failure.evidence for failure in failures] == list(broken.evidence)
+    assert all(
+        failure.claim == "item:Imperial Mandate@attacker" for failure in failures
+    )

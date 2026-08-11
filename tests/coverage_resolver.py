@@ -45,17 +45,23 @@ them, and this module proves the weaker fact by source scan instead
 
 import ast
 import importlib
-from collections.abc import Callable, Iterable, Mapping
+import json
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import pytest
 
 from src.calculator.coverage_evidence import (
+    Absence,
     Claim,
     EffectKey,
+    EffectTag,
+    OptionSchema,
     PacketSource,
+    PairedSides,
+    SourceRef,
     Symbol,
     TestRef,
     claim_name,
@@ -761,3 +767,674 @@ def resolve_test_ref(
             evidence=ref,
             detail=f"{ref.node_id} " + "; ".join(failures),
         )
+
+
+# ── the package, read through the seams ───────────────────────────────────
+
+# Every ``Symbol`` path, every registry and every handler qualname a claim
+# names is written relative to the package: ``damage._apply_command_amp``,
+# not ``src.calculator.damage._apply_command_amp``.  The prefix is spelled
+# once here rather than in nine evidence members' worth of strings.
+PACKAGE = "src.calculator"
+PACKAGE_ROOT = "src/calculator"
+
+# The committed full-entry audit a ``SourceRef`` cites.  It is a repository
+# path read through the ``read_source`` seam, never an import: the receipt is
+# evidence about what was reviewed, and a test that reached it any other way
+# could not be handed a different one.
+FULL_ENTRY_AUDIT = "docs/wiki-full-entry-audit.json"
+
+# Which module owns each registry an ``EffectKey`` may name.  Three of the
+# four live together and the runes one does not, which is exactly why the
+# member carries the registry name rather than a dotted path — a claim says
+# *which* registry holds the number, and this table is the only place that
+# turns the answer into a module (D-46's three plus ``ITEM_INPUT_OPTIONS``).
+REGISTRY_MODULES: Mapping[str, str] = {
+    "ITEM_EFFECTS": "item_effects",
+    "ALLY_ITEM_EFFECTS": "item_effects",
+    "ITEM_INPUT_OPTIONS": "item_effects",
+    "RUNE_EFFECTS": "rune_effects",
+}
+
+# A bounded ``ITEM_INPUT_OPTIONS`` control declares all four: a type, a
+# default, and the two ends it may not leave.  "Bounded" is the whole content
+# of the claim ``modeled_state`` makes about a control, so an option missing
+# an end is an unbounded input wearing a schema.
+_OPTION_BOUNDS: frozenset[str] = frozenset({"type", "default", "min", "max"})
+_OPTION_TYPES: frozenset[str] = frozenset({"int", "float"})
+
+
+def module_path_of(dotted: str) -> str:
+    """The repository path of a package-relative module name."""
+    return f"{PACKAGE_ROOT}/{dotted.replace('.', '/')}.py"
+
+
+def import_symbol(path: str, ctx: ResolverContext) -> tuple[str, object]:
+    """Resolve a package-relative dotted path to its module and its object.
+
+    The split between module and attribute is not knowable from the string —
+    ``survival.transitions.trigger_defy`` is a two-segment module and one
+    attribute, ``damage._apply_command_amp`` is one and one — so the longest
+    importable prefix wins and the remainder is walked as attributes.
+
+    Returns the module's package-relative name beside the object, because
+    every caller that resolves a symbol also needs to know which file to read
+    next: a packet source is proved against the module that builds it, and an
+    effect tag against the module that dispatches on it.
+    """
+    segments = path.split(".")
+    for cut in range(len(segments) - 1, 0, -1):
+        name = ".".join(segments[:cut])
+        try:
+            module = ctx.importer(f"{PACKAGE}.{name}")
+        except ImportError:
+            continue
+        found: object = module
+        for attribute in segments[cut:]:
+            try:
+                found = getattr(found, attribute)
+            except AttributeError as missing:
+                raise LookupError(
+                    f"{path!r} names no {attribute!r} in {PACKAGE}.{name}"
+                ) from missing
+        return name, found
+    raise LookupError(f"{path!r} names no importable module under {PACKAGE}")
+
+
+@dataclass(frozen=True, slots=True)
+class PacketSite:
+    """One call carrying ``source=``, reduced to what a claim is judged on.
+
+    Attributes:
+        source: the rendered ``source=`` argument; an f-string's interpolated
+            parts collapse to bare ``{}`` slots.
+        keywords: every keyword name the call passes.  ``owner`` is the one
+            the campaign turns on — a dual-sided packet that stops declaring
+            it is the incident's second failure layer — so the set is carried
+            rather than a boolean about one of them.
+    """
+
+    source: str
+    keywords: frozenset[str]
+
+
+def render_source_argument(node: ast.AST) -> str | None:
+    """Render one ``source=`` argument; f-strings collapse to ``{}`` slots.
+
+    A constant renders verbatim.  A joined string renders its literal parts
+    with a bare ``{}`` wherever a value is interpolated, which is the shape a
+    ``PacketSource`` member is authored in — a member spelling ``{item}``
+    could never match, so the load tier rejects it on sight.  Anything else
+    renders ``None``: a source built by a call or a name is not a literal any
+    declaration can quote.
+    """
+    if isinstance(node, ast.Constant):
+        return node.value if isinstance(node.value, str) else None
+    if isinstance(node, ast.JoinedStr):
+        rendered: list[str] = []
+        for part in node.values:
+            if isinstance(part, ast.Constant) and isinstance(part.value, str):
+                rendered.append(part.value)
+            elif isinstance(part, ast.FormattedValue):
+                rendered.append("{}")
+            else:
+                return None
+        return "".join(rendered)
+    return None
+
+
+def packet_sites(module_text: str) -> tuple[PacketSite, ...]:
+    """Every call carrying ``source=``, with its keyword-name set.
+
+    Measured 29 in ``item_support_effects.py``; the measurement, not a pinned
+    integer, is the contract, and Phase 3's producer count is derived from it
+    (the length of the distinct ``source`` set).  A call whose source is not a
+    literal is skipped rather than reported: it is unquotable evidence, not a
+    broken site.
+    """
+    sites: list[PacketSite] = []
+    for node in ast.walk(ast.parse(module_text)):
+        if not isinstance(node, ast.Call):
+            continue
+        keywords = {keyword.arg for keyword in node.keywords if keyword.arg}
+        if "source" not in keywords:
+            continue
+        argument = next(
+            (keyword.value for keyword in node.keywords if keyword.arg == "source"),
+            None,
+        )
+        rendered = render_source_argument(argument) if argument is not None else None
+        if rendered is not None:
+            sites.append(PacketSite(source=rendered, keywords=frozenset(keywords)))
+    return tuple(sites)
+
+
+def tag_dispatch_branches(module_text: str, qualname: str) -> frozenset[str]:
+    """The effect tags a handler actually branches on — ``EffectTag``'s oracle.
+
+    ``qualname`` is package-relative and its last segment names the function;
+    every string constant inside that function's body is a candidate branch,
+    which is what the live dispatch ladder is made of.  Reading the constants
+    rather than the ``==`` comparisons is deliberate: the ladder mixes
+    equality tests with set membership, and a rule that understood only one
+    spelling would report a live tag as dead.
+    """
+    wanted = qualname.rsplit(".", 1)[-1]
+    tree = ast.parse(module_text)
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if node.name != wanted:
+            continue
+        return frozenset(
+            inner.value
+            for inner in ast.walk(node)
+            if isinstance(inner, ast.Constant) and isinstance(inner.value, str)
+        )
+    return frozenset()
+
+
+def audit_entries(ctx: ResolverContext) -> tuple[Mapping[str, Any], ...]:
+    """The committed full-entry audit's item entries, read through the seam.
+
+    Built fresh on every call.  ``resolve_table`` builds it once and hands it
+    down, because one table resolves a hundred ``SourceRef`` members against
+    one three-megabyte receipt; a module-level memo would do the same job and
+    would also answer the next mutation with this tree.
+    """
+    try:
+        text = ctx.read_source(FULL_ENTRY_AUDIT)
+    except OSError:
+        return ()
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return ()
+    return tuple(
+        entry
+        for entry in payload.get("entries", ())
+        if isinstance(entry, Mapping) and entry.get("kind") == "item"
+    )
+
+
+# ── the eight remaining evidence kinds ────────────────────────────────────
+
+
+def _unresolved(claim: Claim, evidence: object, detail: str) -> EvidenceUnresolved:
+    """One failure, naming the claim and the member that produced it."""
+    return EvidenceUnresolved(claim=claim_name(claim), evidence=evidence, detail=detail)
+
+
+def resolve_symbol(symbol: Symbol, claim: Claim, ctx: ResolverContext) -> None:
+    """The dotted path names something this tree actually defines.
+
+    This is M1's and M2's tripwire: renaming the pair-engine effect accessor
+    or deleting the pair-side pricer leaves a claim naming a path that no
+    longer resolves, and the evidence fails rather than the prose surviving.
+    """
+    try:
+        import_symbol(symbol.path, ctx)
+    except LookupError as missing:
+        raise _unresolved(claim, symbol, str(missing)) from missing
+
+
+def _builder_modules(claim: Claim, ctx: ResolverContext) -> tuple[str, ...]:
+    """The modules a claim's packet-building Symbols name."""
+    modules: list[str] = []
+    for member in claim.evidence:
+        if not isinstance(member, Symbol) or member.role != "walk_packet_builder":
+            continue
+        try:
+            module, _ = import_symbol(member.path, ctx)
+        except LookupError:
+            continue
+        if module not in modules:
+            modules.append(module)
+    return tuple(modules)
+
+
+def resolve_packet_source(
+    packet: PacketSource, claim: Claim, ctx: ResolverContext
+) -> None:
+    """The ``source=`` literal is built by the module the claim names.
+
+    A packet source is proved against the builder the same claim points at,
+    never against a repository-wide scan: "this string exists somewhere in
+    ``src/``" is satisfied by a comment, and the member is supposed to say
+    that *this* producer emits *this* receipt.  So a claim carrying a
+    ``PacketSource`` and no ``walk_packet_builder`` Symbol is unresolved for
+    that reason alone — M3's shape, where the packet literal is removed and
+    nothing else changes.
+    """
+    modules = _builder_modules(claim, ctx)
+    if not modules:
+        raise _unresolved(
+            claim,
+            packet,
+            f"{packet.source!r} names no builder; a packet source is proved "
+            "against the walk_packet_builder Symbol on its own claim",
+        )
+    for module in modules:
+        try:
+            text = ctx.read_source(module_path_of(module))
+        except OSError:
+            continue
+        if any(site.source == packet.source for site in packet_sites(text)):
+            return
+    raise _unresolved(
+        claim,
+        packet,
+        f"{packet.source!r} is not a source= argument in "
+        f"{', '.join(module_path_of(module) for module in modules)}",
+    )
+
+
+def _owner_declaring_sites(
+    claim: Claim, ctx: ResolverContext, source: str
+) -> tuple[bool, bool]:
+    """Whether the named packet exists, and whether it declares ``owner=``."""
+    found = declares_owner = False
+    for module in _builder_modules(claim, ctx):
+        try:
+            text = ctx.read_source(module_path_of(module))
+        except OSError:
+            continue
+        for site in packet_sites(text):
+            if site.source != source:
+                continue
+            found = True
+            declares_owner = declares_owner or "owner" in site.keywords
+    return found, declares_owner
+
+
+def resolve_paired_sides(
+    sides: PairedSides, claim: Claim, ctx: ResolverContext
+) -> None:
+    """Both engine halves exist, pair back, and the handshake is declared.
+
+    The incident shipped with one half present and a hand list that agreed
+    with it, so nothing here reads a name list: the capability registry is the
+    authority, ``authority`` has to be ``SPLIT``, ``pair_of`` has to name a
+    capability on the *other* engine owned by the same holder, and exactly one
+    walk half may claim that pair half — the back edge, which the pair half
+    cannot carry itself because ``pair_of`` is required only where ``pairing
+    is PAIRED``.
+    """
+    capabilities = _capabilities(sides, claim, ctx)
+    walk = capabilities.get(sides.mechanic)
+    if walk is None:
+        raise _unresolved(
+            claim, sides, f"{sides.mechanic!r} is not a declared capability"
+        )
+    if walk.authority.name != "SPLIT":
+        raise _unresolved(
+            claim,
+            sides,
+            f"{sides.mechanic} declares authority {walk.authority.name}, not "
+            "SPLIT; a dual-sided claim may not describe a single-engine mechanic",
+        )
+    if walk.pair_of is None:
+        raise _unresolved(
+            claim, sides, f"{sides.mechanic} declares no pair_of; one half is missing"
+        )
+    pair = capabilities.get(walk.pair_of)
+    if pair is None:
+        raise _unresolved(
+            claim, sides, f"{walk.pair_of!r} is not a declared capability"
+        )
+    _resolve_pair_half(sides, claim, walk, pair, capabilities)
+    for half in (walk, pair):
+        try:
+            import_symbol(half.impl, ctx)
+        except LookupError as missing:
+            raise _unresolved(
+                claim, sides, f"{half.mechanic} implements {missing}"
+            ) from missing
+    _resolve_owner_policy(sides, claim, ctx, walk)
+
+
+def _capabilities(
+    sides: PairedSides, claim: Claim, ctx: ResolverContext
+) -> Mapping[str, Any]:
+    """Phase 2's capability registry, through the importer seam."""
+    try:
+        trigger_stream = ctx.importer(f"{PACKAGE}.trigger_stream")
+    except ImportError as missing:
+        raise _unresolved(claim, sides, "trigger_stream does not import") from missing
+    return getattr(trigger_stream, "CAPABILITIES", {})
+
+
+def _resolve_pair_half(
+    sides: PairedSides,
+    claim: Claim,
+    walk: Any,
+    pair: Any,
+    capabilities: Mapping[str, Any],
+) -> None:
+    """The pair half is the other engine's, the same holder's, and only ours."""
+    if pair.authority.name != "SPLIT":
+        raise _unresolved(
+            claim,
+            sides,
+            f"{walk.pair_of} declares authority {pair.authority.name}, not SPLIT",
+        )
+    if pair.engine is walk.engine:
+        raise _unresolved(
+            claim,
+            sides,
+            f"{sides.mechanic} and {walk.pair_of} are both on "
+            f"{walk.engine.name}; a split mechanic has one half per engine",
+        )
+    if pair.owner != walk.owner:
+        raise _unresolved(
+            claim,
+            sides,
+            f"{sides.mechanic} is owned by {walk.owner} and {walk.pair_of} by "
+            f"{pair.owner}; the two halves price one holder's mechanic",
+        )
+    back = sorted(
+        key
+        for key, capability in capabilities.items()
+        if capability.pair_of == walk.pair_of
+    )
+    if back != [sides.mechanic]:
+        raise _unresolved(
+            claim,
+            sides,
+            f"{walk.pair_of} is paired back by {back}, not by "
+            f"{sides.mechanic} alone",
+        )
+
+
+def _resolve_owner_policy(
+    sides: PairedSides, claim: Claim, ctx: ResolverContext, walk: Any
+) -> None:
+    """The declared handshake against the packet the walk half emits.
+
+    ``owner_skips_holder`` is the only policy that shows up in the source as
+    something a reader can point at: the walk packet carries ``owner=``, and
+    the walk skips that participant because the holder's own engine prices it.
+    The other two policies say the opposite — no owner keyword — so the check
+    is one comparison, and M4, dropping ``owner=`` from a dual-sided packet,
+    fails it.
+    """
+    if walk.packet_source is None:
+        raise _unresolved(
+            claim,
+            sides,
+            f"{sides.mechanic} declares no packet_source; the walk half of a "
+            "split mechanic emits the packet the owner policy is about",
+        )
+    found, declares_owner = _owner_declaring_sites(claim, ctx, walk.packet_source)
+    if not found:
+        raise _unresolved(
+            claim,
+            sides,
+            f"{walk.packet_source!r} is emitted by no site in the claim's "
+            "builder module",
+        )
+    wanted = sides.owner_policy == "owner_skips_holder"
+    if declares_owner is not wanted:
+        raise _unresolved(
+            claim,
+            sides,
+            f"policy {sides.owner_policy!r} expects the {walk.packet_source!r} "
+            f"packet {'to' if wanted else 'not to'} declare owner=, and it "
+            f"{'does not' if wanted else 'does'}",
+        )
+
+
+def resolve_effect_key(key: EffectKey, claim: Claim, ctx: ResolverContext) -> None:
+    """The registry holds this holder, and the holder holds this key.
+
+    The number itself is never quoted (CLAUDE.md rule 5), so the resolution is
+    exactly membership: the key exists, and the value it names is left to the
+    accessor that reads it.
+    """
+    module = REGISTRY_MODULES[key.registry]
+    try:
+        registry = getattr(ctx.importer(f"{PACKAGE}.{module}"), key.registry)
+    except (ImportError, AttributeError) as missing:
+        raise _unresolved(
+            claim, key, f"{module}.{key.registry} does not resolve"
+        ) from missing
+    entry = registry.get(key.item)
+    if entry is None:
+        raise _unresolved(claim, key, f"{key.registry} has no {key.item!r} entry")
+    if key.key not in entry:
+        raise _unresolved(
+            claim, key, f"{key.registry}[{key.item!r}] has no {key.key!r} key"
+        )
+
+
+def resolve_effect_tag(tag: EffectTag, claim: Claim, ctx: ResolverContext) -> None:
+    """The tag is a known effect type and the named handler branches on it.
+
+    Both halves are the claim: a tag with no handler is a data label nothing
+    reads, which is the state ten of the thirty-eight are in and the reason
+    they sit on the frontier naming H4 instead of carrying this member.
+    """
+    try:
+        known = getattr(ctx.importer(f"{PACKAGE}.item_effects"), "_KNOWN_EFFECT_TYPES")
+    except (ImportError, AttributeError) as missing:
+        raise _unresolved(
+            claim, tag, "item_effects._KNOWN_EFFECT_TYPES does not resolve"
+        ) from missing
+    if tag.tag not in known:
+        raise _unresolved(
+            claim, tag, f"{tag.tag!r} is not an item_effects._KNOWN_EFFECT_TYPES member"
+        )
+    try:
+        module, _ = import_symbol(tag.handler, ctx)
+    except LookupError as missing:
+        raise _unresolved(claim, tag, str(missing)) from missing
+    try:
+        text = ctx.read_source(module_path_of(module))
+    except OSError as missing:
+        raise _unresolved(
+            claim, tag, f"{module_path_of(module)} is not readable"
+        ) from missing
+    if tag.tag not in tag_dispatch_branches(text, tag.handler):
+        raise _unresolved(
+            claim,
+            tag,
+            f"{tag.handler} does not branch on {tag.tag!r}; the tag is declared "
+            "and nothing reads it",
+        )
+
+
+def resolve_option_schema(
+    option: OptionSchema, claim: Claim, ctx: ResolverContext
+) -> None:
+    """The control exists and is bounded at both ends.
+
+    ``modeled_state`` says the item's state is supplied rather than assumed,
+    and an input with no ceiling is an assumption with a form field in front
+    of it.
+    """
+    try:
+        options = getattr(ctx.importer(f"{PACKAGE}.item_effects"), "ITEM_INPUT_OPTIONS")
+    except (ImportError, AttributeError) as missing:
+        raise _unresolved(
+            claim, option, "item_effects.ITEM_INPUT_OPTIONS does not resolve"
+        ) from missing
+    control = options.get(option.item, {}).get("options", {}).get(option.option)
+    if control is None:
+        raise _unresolved(
+            claim,
+            option,
+            f"ITEM_INPUT_OPTIONS[{option.item!r}] declares no {option.option!r} "
+            "control",
+        )
+    missing_bounds = _OPTION_BOUNDS - set(control)
+    if missing_bounds:
+        raise _unresolved(
+            claim,
+            option,
+            f"control {option.option!r} is missing {sorted(missing_bounds)}; an "
+            "unbounded input is an assumption with a form field in front of it",
+        )
+    if control["type"] not in _OPTION_TYPES:
+        raise _unresolved(
+            claim,
+            option,
+            f"control {option.option!r} declares type {control['type']!r}, which "
+            f"is not one of {sorted(_OPTION_TYPES)}",
+        )
+    if not control["min"] <= control["default"] <= control["max"]:
+        raise _unresolved(
+            claim,
+            option,
+            f"control {option.option!r} defaults to {control['default']} outside "
+            f"[{control['min']}, {control['max']}]",
+        )
+
+
+def resolve_source_ref(
+    source: SourceRef,
+    claim: Claim,
+    ctx: ResolverContext,
+    entries: Sequence[Mapping[str, Any]] | None = None,
+) -> None:
+    """The citation is an entry of the committed full-entry audit.
+
+    The revision is what makes it reproducible, so url and revision are
+    matched together: a url whose revision has moved on is a citation of a
+    page that no longer says what the claim says it says.  For an **item**
+    claim the entry additionally has to be that item's — a review of some
+    other item is not a review of this one.
+    """
+    found = tuple(entries if entries is not None else audit_entries(ctx))
+    if not found:
+        raise _unresolved(
+            claim, source, f"{FULL_ENTRY_AUDIT} holds no item entries to cite"
+        )
+    matches = [
+        entry
+        for entry in found
+        if entry.get("source_url") == source.url
+        and entry.get("revision_id") == source.revision_id
+    ]
+    if not matches:
+        raise _unresolved(
+            claim,
+            source,
+            f"{source.url} at revision {source.revision_id} is not an entry of "
+            f"{FULL_ENTRY_AUDIT}",
+        )
+    if claim.subject_kind == "item" and all(
+        entry.get("name") != claim.subject for entry in matches
+    ):
+        raise _unresolved(
+            claim,
+            source,
+            f"{source.url} is the audit entry for "
+            f"{sorted({str(entry.get('name')) for entry in matches})}, not for "
+            f"{claim.subject!r}",
+        )
+
+
+def resolve_absence(absence: Absence, claim: Claim, ctx: ResolverContext) -> None:
+    """A refusal's issue refs are the ones the tracker actually publishes.
+
+    ``review_issue_refs`` is what the public payload hands a caller for a
+    withheld item, so a claim that refuses to model something has to name the
+    same issues the API does — otherwise the receipt in the declaration and
+    the receipt on the wire disagree and neither is wrong on its own.
+    """
+    try:
+        coverage = ctx.importer(f"{PACKAGE}.item_coverage")
+    except ImportError as missing:
+        raise _unresolved(claim, absence, "item_coverage does not import") from missing
+    if claim.subject_kind == "item":
+        published = tuple(coverage.review_issue_refs(claim.subject))
+        if tuple(absence.issue_refs) != published:
+            raise _unresolved(
+                claim,
+                absence,
+                f"names issues {list(absence.issue_refs)} where the public "
+                f"payload publishes {list(published)}",
+            )
+        return
+    tracked = {40}
+    for refs in getattr(coverage, "_REVIEW_ISSUE_REFS", {}).values():
+        tracked |= set(refs)
+    stray = sorted(set(absence.issue_refs) - tracked)
+    if stray:
+        raise _unresolved(
+            claim, absence, f"names issues {stray}, which no item's refs track"
+        )
+
+
+# ── one dispatch over the nine kinds ──────────────────────────────────────
+
+# The dispatch table, keyed by the evidence type itself.  It is a mapping
+# rather than an if/elif ladder for one reason: totality is then a set
+# comparison against ``EVIDENCE_TYPES`` that a test can run, and a tenth
+# evidence kind that nobody wired up fails on the commit that adds it instead
+# of silently resolving to nothing.
+_RESOLVERS: Mapping[type, Callable[..., None]] = {
+    Symbol: resolve_symbol,
+    PacketSource: resolve_packet_source,
+    PairedSides: resolve_paired_sides,
+    EffectKey: resolve_effect_key,
+    EffectTag: resolve_effect_tag,
+    OptionSchema: resolve_option_schema,
+    SourceRef: resolve_source_ref,
+    Absence: resolve_absence,
+}
+
+
+def resolve(
+    ev: object,
+    claim: Claim,
+    ctx: ResolverContext,
+    *,
+    full_session: bool = False,
+    entries: Sequence[Mapping[str, Any]] | None = None,
+) -> None:
+    """Single dispatch over the nine kinds; raises EvidenceUnresolved naming both.
+
+    It takes the whole :class:`Claim` rather than its name because three of
+    the nine kinds are judged *against* the claim: a ``TestRef`` has to be
+    about it (rule 5), a ``PacketSource`` is proved against the builder the
+    same claim names, and a ``SourceRef`` on an item claim has to cite that
+    item's audit entry.  ``entries`` is the parsed audit, passed down by
+    :func:`resolve_table` so one table costs one read of a three-megabyte
+    receipt; ``None`` means "read it yourself".
+    """
+    if isinstance(ev, TestRef):
+        resolve_test_ref(ev, claim, ctx, full_session=full_session)
+        return
+    if isinstance(ev, SourceRef):
+        resolve_source_ref(ev, claim, ctx, entries)
+        return
+    resolver = _RESOLVERS.get(type(ev))
+    if resolver is None:
+        raise _unresolved(
+            claim, ev, "is not one of the nine evidence kinds this tier resolves"
+        )
+    resolver(ev, claim, ctx)
+
+
+def resolve_table(
+    claims: Mapping[tuple[str, str, str], Claim],
+    ctx: ResolverContext,
+    *,
+    full_session: bool = False,
+) -> list[EvidenceUnresolved]:
+    """Collect-all, report-all — one run names every broken member, not the first.
+
+    The first broken member of a two-hundred-claim table is a fact about
+    alphabetical order, not about the tree; a table that names all of them is
+    what makes a refactor's blast radius readable in one run.
+    """
+    entries = audit_entries(ctx)
+    failures: list[EvidenceUnresolved] = []
+    for claim in claims.values():
+        for member in claim.evidence:
+            try:
+                resolve(member, claim, ctx, full_session=full_session, entries=entries)
+            except EvidenceUnresolved as unresolved:
+                failures.append(unresolved)
+    return failures
