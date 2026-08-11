@@ -338,8 +338,16 @@ def _is_full_session(config) -> bool:
 5. `first_matching_rule` reproduces the live classifier's status for every cached item on both
    lanes, and no `src/` module consumes `PRECEDENCE`.
 6. Every claim `shadow_report` returns carries a non-empty `unreachable_reason`, and the
-   shadowed set matches the receipt's derived shadow section by set equality — no count is
-   authored anywhere.
+   shadowed set matches the receipt's derived shadow section by set equality less a
+   committed collision set, whose every member's two `reason` texts are asserted
+   byte-identical rather than absorbed — no count is authored anywhere. *The exception is
+   the 28-versus-29 disagreement this phase already records, reproduced instead of guessed
+   at: the receipt derivation reads the published `reason` to decide which rung spoke for
+   an item, so an item whose outranked container holds text byte-identical to the rung that
+   outranks it is invisible to it while the ladder walk still sees it. Gunmetal Greaves is
+   the collision set's one member on the tip; naming it and asserting the byte-equality is
+   what keeps the derivations independent, and dropping the clause would have meant either
+   a second derivation quietly weakened to agree or a criterion known to be false.*
 7. Every `TestRef` passes all five rules; one naming a skipped, xfailed, fixture-skipped,
    duplicated **or irrelevant** node fails the suite. Under `-k` filtering the resolution tier
    still fails a dangling `TestRef`, and no coverage test ever reports as `skipped`.
