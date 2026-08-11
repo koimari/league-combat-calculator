@@ -435,6 +435,7 @@ def damage_entry(
     total: float,
     dmg_type: str,
     cc_kind: str | None = None,
+    *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
@@ -450,7 +451,9 @@ def damage_entry(
     ``zero_policy`` says what a zero total *means*.  It defaults to
     :data:`MODULE_FORMULA_ZERO` — the one declared default in the champion
     tree (D-24) — and a slot whose zero is a declaration rather than a
-    computation passes its own.
+    computation passes its own.  It is **keyword-only**: a trailing
+    positional would let a seventh positional argument at any of the
+    hundreds of call sites bind a non-``ZeroPolicy`` value into it silently.
 
     ``cc_kind`` marks the cast's reviewed crowd control (e.g. "stun",
     "immobilize") on the entry's single part AND certifies ``single_hit``
@@ -655,6 +658,7 @@ def simple_damage(
     ranks: str = "rank",
     dot_duration: float | None = None,
     cc_kind: str | None = None,
+    *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
 ) -> SlotParser:
     """Standard castable damage slot.
@@ -692,7 +696,8 @@ def simple_damage(
             marker actually reaches the ledger instead of dissolving
             into a coarse aggregate row. Requires a single-part slot
             (``dmg_type != "mixed"``). None (default) authors no CC.
-        zero_policy: What a zero total from this slot means. Defaults to
+        zero_policy: Keyword-only. What a zero total from this slot means.
+            Defaults to
             :data:`MODULE_FORMULA_ZERO`, the champion tree's one declared
             disposition (D-24); pass a different policy where a zero is a
             declaration rather than a computed result.
@@ -752,7 +757,13 @@ def simple_damage(
         total *= _resolve_casts(casts, ability, rank)
         name = ability.get("name", f"Ability {ctx.slot}")
         entry = damage_entry(
-            name, rank, cd_value, total, resolved_type, cc_kind, zero_policy
+            name,
+            rank,
+            cd_value,
+            total,
+            resolved_type,
+            cc_kind,
+            zero_policy=zero_policy,
         )
         if dot_duration is not None:
             entry["dot_duration"] = dot_duration

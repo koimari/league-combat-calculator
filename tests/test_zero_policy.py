@@ -19,6 +19,7 @@ just the entry — so Phase 4 has a disposition to serialize.
 from __future__ import annotations
 
 import ast
+import inspect
 from pathlib import Path
 
 import pytest
@@ -28,6 +29,7 @@ from src.calculator.champions.slotlib import (
     MODULE_FORMULA_ZERO,
     STEROID_ZERO,
     damage_entry,
+    simple_damage,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,6 +72,22 @@ def test_the_declared_default_lives_at_exactly_one_layer() -> None:
         "damage_entry",
         "simple_damage",
     }
+
+
+def test_the_declared_default_is_keyword_only_at_both_builders() -> None:
+    """A trailing positional would let an extra argument bind into it.
+
+    ``damage_entry`` takes six positional parameters and is called with
+    them positionally across the champion tree; a seventh positional slot
+    named ``zero_policy`` turns any miscounted call into a policy silently
+    replaced by a float — the indistinguishable-default shape one layer up
+    from the one D-24 removes.
+    """
+    for builder in (damage_entry, simple_damage):
+        parameters = inspect.signature(builder).parameters
+        assert (
+            parameters["zero_policy"].kind is inspect.Parameter.KEYWORD_ONLY
+        ), f"{builder.__name__} must take zero_policy by keyword only"
 
 
 def test_the_default_is_measured_and_carries_its_reason() -> None:
