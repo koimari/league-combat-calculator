@@ -143,16 +143,20 @@ door is *a test module importing the production module's dotted path* — an `Im
 module as a symbol. A textual mention is not a front door, and `from src.calculator.survival
 import X` imports the **package**, not `survival.transitions`; those two rules are what make
 the count reproducible and they live in `front_door_report`, not in prose. The denominator is
-`src/calculator/**/*.py` minus `__init__.py` — **237 modules**; `champions/` is excluded by
-declaration (its front door is the per-champion convention plus `champions/module_contract`
-validation). Measured this session under exactly that rule: **ten** modules outside
-`champions/` have no importing test module — `application_errors`, `healing_legacy`,
-`practice_dummy`, `request_parsing`, and `survival/{accumulate, actions, compile,
-receipt_state, score_state, transitions}` — and those are the pinned `FRONT_DOOR_FRONTIER`,
-**six of them Phase 4's**. *Why: a line threshold cannot reproduce the hand tuple
-(`healing.py` is 71 lines), the tuple is itself the prose-registry shape this campaign kills,
-and an earlier reading of this same frontier produced five because the package-versus-submodule
-rule was unstated — a five-member pin would have been wrong on its first run.*
+read off the tree — `src/calculator/**/*.py` minus `__init__.py` — with `champions/` excluded
+by declaration (its front door is the per-champion convention plus `champions/module_contract`
+validation). `FRONT_DOOR_FRONTIER` is **whatever the instrument reports on the tip it is
+pinned against**, by set equality, and no figure for it is written here: run against the
+pre-campaign tree at `1274615` the derivation reports `application_errors`, `healing_legacy`,
+`practice_dummy`, `request_parsing` and all six `survival/` submodules — the reading this
+phase was planned from — and against the Phase 1 tip it reports the same list less
+`survival/{accumulate, actions, compile, transitions}`, which Phase 0's and Phase 2's new
+suites now import directly. A frontier pinned at the planning-time reading would have been red
+on arrival, and the shrink is the frontier doing its job. *Why: a line threshold cannot
+reproduce the hand tuple (`healing.py` is 71 lines), the tuple is itself the prose-registry
+shape this campaign kills, and an earlier reading of this same frontier produced a shorter
+list because the package-versus-submodule rule was unstated — a pin taken from that reading
+would have been wrong on its first run.*
 
 **Every new module a later phase adds owes a front door or an exclusion.** Phase 3 adds
 `value_ref`, `item_behavior`, `item_behavior_catalog`, `interpreters/__init__` and 18
@@ -348,12 +352,14 @@ def _is_full_session(config) -> bool:
     authored anywhere, because the source dict has 43 keys over 29 distinct values and either
     integer is a plausible-looking wrong answer — and every dimension on every claim is a
     member.
-13. `SUBSTANTIAL_MODULE_FRONT_DOORS` has zero occurrences in the repository;
-    `front_door_report` equals `FRONT_DOOR_FRONTIER` by set equality; that frontier has
-    exactly the **ten** measured members, each with a reason and an owning phase (six are
-    Phase 4's); the package-versus-submodule and import-versus-mention rules live in
-    `front_door_report`'s docstring; and the frontier lives in the consumer, not in the tool
-    that measures it.
+13. `SUBSTANTIAL_MODULE_FRONT_DOORS` has zero occurrences in `src/`, `tests/` and `scripts/`
+    — asserted by a text scan with its own injection seam, so a regrown registry is a finding
+    rather than a review miss; the phase documents that ordered the deletion may name it.
+    `front_door_report` equals `FRONT_DOOR_FRONTIER` by set equality; that frontier holds
+    exactly the members the instrument measures on the tip, each with a reason and an owning
+    phase (the surviving `survival/` members are Phase 4's); the package-versus-submodule and
+    import-versus-mention rules live in `front_door_report`'s docstring; and the frontier
+    lives in the consumer, not in the tool that measures it.
 14. `FRONTIER` holds no attacker or target claim that prices damage or durability, and every
     member carries an issue ref.
 15. `docs/item-umbrella-audit.json` and the full-entry audit receipt are byte-identical to
