@@ -4683,6 +4683,16 @@ _KNOWN_EFFECT_TYPES = frozenset(
 )
 
 
+def known_effect_types() -> frozenset[str]:
+    """The closed set of effect tags an ``ITEM_EFFECTS`` entry may carry.
+
+    The public read behind ``item_behavior_catalog``'s closure test: a new
+    member here has to be given a rule family before the catalog will import,
+    so a tag can never arrive with no engine claiming it.
+    """
+    return _KNOWN_EFFECT_TYPES
+
+
 def resolve_damage_effects(
     items: Sequence[Mapping[str, Any]],
 ) -> BuildDamageEffects:

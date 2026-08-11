@@ -1,0 +1,205 @@
+"""The front door for ``item_behavior_catalog`` — closure, and its three reds.
+
+The catalog's whole value is that it *cannot* be silently incomplete.  A new
+effect tag, a new ``ActionKind`` or a new ``DefenseSource`` construction has
+to be given a family before the module will import, and a module that will
+not import fails collection rather than running with a hole in it.  Each of
+those three closures therefore ships with the red it can reproduce on demand
+(runbook R-05), driven through the validator's own seam — because a gate
+nobody has seen fail is indistinguishable from a gate that always passes,
+which is this campaign's founding observation.
+"""
+
+import ast
+from pathlib import Path
+
+import pytest
+
+from src.calculator import item_behavior_catalog as catalog
+from src.calculator.item_behavior import RuleFamily
+from src.calculator.item_effects import (
+    ALLY_ITEM_EFFECTS,
+    ITEM_EFFECTS,
+    known_effect_types,
+)
+from src.calculator.survival.actions import ActionKind
+
+MODULE_PATH = (
+    Path(__file__).parents[1] / "src" / "calculator" / "item_behavior_catalog.py"
+)
+
+
+# ── closure ───────────────────────────────────────────────────────────────
+
+
+def test_the_tag_map_is_total_and_single_valued() -> None:
+    """Every registry tag has exactly one family; no family is invented for none."""
+    assert frozenset(catalog.TAG_FAMILY) == frozenset(known_effect_types())
+    assert all(isinstance(family, RuleFamily) for family in catalog.TAG_FAMILY.values())
+
+
+def test_a_new_effect_tag_fails_the_catalog() -> None:
+    """R-05's red for the tag closure, through the validator's seam."""
+    with pytest.raises(catalog.BehaviorCatalogError, match="unmapped"):
+        catalog._validate_tag_closure(  # pylint: disable=protected-access
+            frozenset(known_effect_types()) | {"brand_new_mechanic"}
+        )
+
+
+def test_the_catalog_import_runs_the_tag_closure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The seam above is the same gate the import runs — not a parallel check."""
+    monkeypatch.setattr(
+        catalog.item_effects,
+        "known_effect_types",
+        lambda: frozenset(known_effect_types()) | {"brand_new_mechanic"},
+    )
+    with pytest.raises(catalog.BehaviorCatalogError):
+        catalog.validate_catalog()
+
+
+def test_validate_catalog_is_called_at_import() -> None:
+    """A closure nobody runs is a comment; the call is at module scope."""
+    tree = ast.parse(MODULE_PATH.read_text(encoding="utf-8"))
+    called = {
+        node.value.func.id
+        for node in tree.body
+        if isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Name)
+    }
+    assert "validate_catalog" in called
+
+
+def test_every_action_kind_has_a_family() -> None:
+    """All nineteen survival transitions land in the eighteen families."""
+    assert frozenset(catalog.ACTION_KIND_FAMILY) == frozenset(ActionKind)
+    assert len(ActionKind) == 19
+
+
+def test_a_new_action_kind_fails_the_catalog() -> None:
+    """R-05's red for the ActionKind closure."""
+    with pytest.raises(catalog.BehaviorCatalogError, match="ActionKind"):
+        catalog._validate_action_kind_closure(  # pylint: disable=protected-access
+            frozenset(ActionKind) | {"a_new_transition"}
+        )
+
+
+def test_every_defense_source_construction_has_a_family() -> None:
+    """Derived from defensive_effects' own constructions, never typed twice."""
+    labels = catalog.defense_source_labels()
+    assert frozenset(catalog.DEFENSE_SOURCE_FAMILY) == labels
+    assert len(labels) == 25
+
+
+def test_a_new_defense_source_fails_the_catalog() -> None:
+    """R-05's red for the defensive closure."""
+    with pytest.raises(catalog.BehaviorCatalogError, match="unmapped"):
+        catalog._validate_defense_source_closure(  # pylint: disable=protected-access
+            catalog.defense_source_labels() | {"Some New Item — Some New Passive"}
+        )
+
+
+def test_one_compiler_per_family_and_every_stub_names_its_slice() -> None:
+    """D-52's registry: closed enum key, module-level defs, totality asserted."""
+    compilers = catalog._COMPILERS  # pylint: disable=protected-access
+    assert frozenset(compilers) == frozenset(RuleFamily)
+    assert all(
+        getattr(compiler, "__name__", "") and not compiler.__name__ == "<lambda>"
+        for compiler in compilers.values()
+    )
+    assert frozenset(catalog.UNMIGRATED_FAMILIES) == frozenset(RuleFamily)
+
+
+# ── H4's ten tags ─────────────────────────────────────────────────────────
+
+
+def test_the_ten_undispatched_tags_are_declared_four_and_six() -> None:
+    """The split is the phase document's; this table must agree with it."""
+    assert catalog.H4_DEAD_TAGS == frozenset(
+        {
+            "conditional_attack_speed",
+            "shield_reduction",
+            "target_state",
+            "target_attack_speed_aura",
+        }
+    )
+    assert catalog.H4_SELF_REFERENTIAL_TAGS == frozenset(
+        {
+            "defensive_start",
+            "stat_conversion",
+            "sustain",
+            "target_mitigation",
+            "target_threshold_health",
+            "target_threshold_shield",
+        }
+    )
+    assert not catalog.H4_DEAD_TAGS & catalog.H4_SELF_REFERENTIAL_TAGS
+
+
+def test_each_h4_tag_fails_closed_into_a_family_with_a_reason() -> None:
+    """Declared, not deleted: deleting them is the human's call, not a side effect."""
+    ten = catalog.H4_DEAD_TAGS | catalog.H4_SELF_REFERENTIAL_TAGS
+    assert frozenset(catalog.H4_TAG_REASONS) == ten
+    for tag in ten:
+        assert isinstance(catalog.TAG_FAMILY[tag], RuleFamily)
+        assert catalog.H4_TAG_REASONS[tag].strip()
+
+
+def test_an_h4_tag_without_a_reason_fails_the_catalog(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A fail-closed mapping with no stated cause is the prose this phase kills."""
+    reasons = dict(catalog.H4_TAG_REASONS)
+    reasons.pop("target_state")
+    monkeypatch.setattr(catalog, "H4_TAG_REASONS", reasons)
+    with pytest.raises(catalog.BehaviorCatalogError, match="reason"):
+        catalog.validate_catalog()
+
+
+# ── compilation ───────────────────────────────────────────────────────────
+
+
+def test_the_skeleton_declares_no_rules_and_says_so() -> None:
+    """At 3.1 every registry entry is undeclared, and it is *named*, not zeroed."""
+    assert catalog.declared_owners() == frozenset()
+    assert catalog.undeclared_owners() == catalog.registry_owners()
+    assert catalog.undeclared_entry_count() == len(ITEM_EFFECTS) + len(
+        ALLY_ITEM_EFFECTS
+    )
+
+
+def test_an_owner_in_both_registries_owes_two_declarations() -> None:
+    """Six owners hold one entry of each, and each entry is its own obligation."""
+    both = frozenset(ITEM_EFFECTS) & frozenset(ALLY_ITEM_EFFECTS)
+    assert both
+    for owner in sorted(both):
+        assert len(catalog.registry_entries(owner)) == 2
+
+
+def test_an_item_with_no_registry_entry_has_no_rules_and_no_refusal() -> None:
+    """No entry is an answer — stats only — and a different thing from a refusal."""
+    assert catalog.behavior_rules("Boots") == ()
+    assert catalog.registry_entries("Boots") == ()
+
+
+def test_an_unknown_tag_in_the_registry_raises_rather_than_compiling_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A tag no family claims is a stop, not an item that quietly does nothing."""
+    entry = dict(ITEM_EFFECTS["Black Cleaver"])
+    entry["type"] = "not_a_known_tag"
+    monkeypatch.setitem(ITEM_EFFECTS, "Black Cleaver", entry)
+    with pytest.raises(catalog.BehaviorCatalogError, match="no family claims"):
+        catalog.behavior_rules("Black Cleaver")
+
+
+def test_the_build_context_carries_the_data_version() -> None:
+    """D-49: every downstream memo keys on one counter, read in one place."""
+    from src.calculator import data_registry  # pylint: disable=import-outside-toplevel
+
+    context = catalog.build_context("Black Cleaver", 18)
+    assert context.data_version == data_registry.data_version()
+    assert context.owner == "Black Cleaver"
+    assert context.level == 18
