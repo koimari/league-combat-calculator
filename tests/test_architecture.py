@@ -12,22 +12,6 @@ ROOT = Path(__file__).parents[1]
 SRC_ROOT = ROOT / "src" / "calculator"
 TEST_ROOT = ROOT / "tests"
 
-# These modules are large enough to need a named entry point.  The older
-# campaign suites remain in place because their issue history is useful when
-# a regression is investigated.
-SUBSTANTIAL_MODULE_FRONT_DOORS = (
-    "passive_parser",
-    "healing",
-    "rotation_resolver",
-    "capabilities",
-    "bis",
-    "public_response",
-    "atomizer_domains",
-    "loadout_rules",
-    "auto_attack_policy",
-    "data_registry",
-    "economics_data",
-)
 DAMAGE_PATH = ROOT / "src" / "calculator" / "damage.py"
 
 
@@ -120,16 +104,6 @@ def test_damage_engine_does_not_dispatch_on_item_names() -> None:
     assert offenders == []
 
 
-def test_substantial_calculator_modules_have_named_test_front_doors() -> None:
-    """Production module names must lead maintainers to a test suite."""
-    missing = [
-        module
-        for module in SUBSTANTIAL_MODULE_FRONT_DOORS
-        if not (ROOT / "tests" / f"test_{module}.py").is_file()
-    ]
-    assert missing == []
-
-
 def test_every_module_outside_champions_has_a_front_door_or_a_frontier_entry() -> None:
     """D-95: the front-door registry is derived, and this is what it says.
 
@@ -151,23 +125,24 @@ def test_every_frontier_entry_carries_a_reason_and_an_owner() -> None:
         assert entry.owning_phase.strip(), module
 
 
-def test_the_derivation_subsumes_the_hand_tuple_it_replaces() -> None:
-    """D-98's delta, asserted before the flip that deletes the tuple.
+def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> None:
+    """The other half of D-95: a front door is an import, not a filename.
 
-    The hand tuple asserts a filename convention over eleven chosen modules;
-    the derivation asserts a real import over every module outside
-    `champions/`.  Two facts make the flip a deletion rather than a loss of
-    coverage: no tuple member is on the frontier, so the derivation agrees
-    with everything the tuple claimed, and the derivation's denominator is
-    strictly larger than the tuple's — the modules it covers that the tuple
-    never named are the delta the tuple could never have seen.
+    The registry this replaced was a tuple of eleven module names checked
+    against `tests/test_<module>.py` existing.  A file whose name matches
+    proves nothing about what it imports, and eleven hand-chosen names prove
+    nothing about the rest of the package — so the property asserted now is
+    the one the tuple could not state: every module outside `champions/` is
+    either imported by a test module or carries a frontier entry, with the
+    denominator read off the tree rather than typed.
     """
     surveyed = {
         ".".join(path.relative_to(SRC_ROOT).with_suffix("").parts)
         for path in SRC_ROOT.rglob("*.py")
         if path.name != "__init__.py"
-        and not path.relative_to(SRC_ROOT).parts[0] == "champions"
+        and path.relative_to(SRC_ROOT).parts[0] != "champions"
     }
-    assert set(SUBSTANTIAL_MODULE_FRONT_DOORS) <= surveyed
-    assert not set(SUBSTANTIAL_MODULE_FRONT_DOORS) & set(FRONT_DOOR_FRONTIER)
-    assert surveyed - set(SUBSTANTIAL_MODULE_FRONT_DOORS)
+    reported = {missing.module for missing in front_door_report(SRC_ROOT, TEST_ROOT)}
+    assert set(FRONT_DOOR_FRONTIER) <= surveyed
+    assert reported <= surveyed
+    assert surveyed - reported
