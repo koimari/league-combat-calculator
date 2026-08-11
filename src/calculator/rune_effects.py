@@ -45,6 +45,22 @@ def refresh_rune_effects() -> None:
     RUNE_EFFECTS.update(_load_rune_effects())
 
 
+def rune_effect_value(rune_name: str, key: str) -> float:
+    """Return one required numeric rune value, failing loudly.
+
+    The public read behind ``value_ref.ValueRef(registry="RUNE_EFFECTS", …)``:
+    keystones are runtime damage producers, so CLAUDE.md rule 5's no-literals
+    discipline reaches them, and a declaration referencing a rune number needs
+    the same fail-loud accessor items already have.  It reuses
+    ``_RequiredRuneValues`` rather than re-reading the registry, so "read a
+    rune number" keeps one implementation.
+    """
+    entry = RUNE_EFFECTS.get(rune_name)
+    if not isinstance(entry, Mapping):
+        raise KeyError(f"RUNE_EFFECTS[{rune_name!r}] is missing")
+    return _RequiredRuneValues(rune_name, entry).number(key)
+
+
 @dataclass(frozen=True, slots=True)
 class KeystoneProcEffect:
     """A stack-triggered keystone proc with a cooldown (Electrocute-class).
