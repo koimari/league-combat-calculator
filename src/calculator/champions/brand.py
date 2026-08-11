@@ -45,9 +45,9 @@ _ABLAZE_MAX_STACKS = 3
 _R_MAX_BOUNCES = 3
 
 
-def _r_bounces(options: dict[str, Any]) -> int:
+def _r_bounces(ctx: SlotCtx) -> int:
     """Pyroclasm bounces hitting the target, clamped to the in-game 1-3."""
-    return max(1, min(_R_MAX_BOUNCES, int(options.get("r_bounces", 3))))
+    return max(1, min(_R_MAX_BOUNCES, int(ctx.option("r_bounces"))))
 
 
 def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -59,7 +59,7 @@ def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     per_bounce = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    total = per_bounce * _r_bounces(ctx.options)
+    total = per_bounce * _r_bounces(ctx)
     entry = damage_entry(
         ability.get("name", "Pyroclasm"),
         rank,
@@ -74,7 +74,7 @@ def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart(
             "magic",
             per_bounce,
-            count=_r_bounces(ctx.options),
+            count=_r_bounces(ctx),
             time_offset=0.0,
             hit_interval=0.15,
         ),
@@ -98,11 +98,11 @@ def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
 
     applications = sum(1 for slot in ("Q", "W", "E") if slot in ctx.results)
     if "R" in ctx.results:
-        applications += _r_bounces(ctx.options)
+        applications += _r_bounces(ctx)
     if applications < 1:
         return None
 
-    max_hp = ctx.target.get("target_max_health", 0.0)
+    max_hp = ctx.target_stat("target_max_health")
     stacks = min(applications, _ABLAZE_MAX_STACKS)
     dot_per_stack = _ABLAZE_DOT_PCT_MAX_HP * max_hp
     parts = [DamagePart("magic", dot_per_stack, count=stacks)]
@@ -115,7 +115,7 @@ def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
             "Max Health Damage",
             ctx.level,
             ctx.target,
-            ap=ctx.stats.get("ability_power", 0.0),
+            ap=ctx.stat("ability_power"),
             ap_ratio_per_100=True,
         )
         if detonation is None:

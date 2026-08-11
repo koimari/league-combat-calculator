@@ -26,7 +26,7 @@ def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    recasts = min(max(int(ctx.options.get("q_recasts", 3)), 0), 3)
+    recasts = min(max(int(ctx.option("q_recasts")), 0), 3)
     marked = bool(ctx.options.get("q_marked_target", True))
     dart = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     spike = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)

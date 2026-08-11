@@ -66,7 +66,7 @@ def _seismic_shard(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:
         return entry
-    shield = GRANITE_SHIELD_MAX_HP_RATIO * ctx.stats.get("health", 0.0)
+    shield = GRANITE_SHIELD_MAX_HP_RATIO * ctx.stat("health")
     try:
         window = float(ctx.options.get("fight_duration_seconds"))
     except (TypeError, ValueError):
@@ -107,8 +107,8 @@ def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Increased Bonus Armor", rank, ctx.stats, ctx.target
     )
     if armor_grant > 0.0:
-        ctx.stats["armor"] = ctx.stats.get("armor", 0.0) + armor_grant
-        ctx.stats["bonus_armor"] = ctx.stats.get("bonus_armor", 0.0) + armor_grant
+        ctx.stats["armor"] = ctx.stat("armor") + armor_grant
+        ctx.stats["bonus_armor"] = ctx.stat("bonus_armor") + armor_grant
     on_hit_bonus = extract_named(
         ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
     )

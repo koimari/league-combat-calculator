@@ -57,8 +57,8 @@ def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
             ctx.stats,
             ctx.target,
         )
-        bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
-        ap = float(ctx.stats.get("ability_power", 0.0))
+        bonus_ad = float(ctx.stat("bonus_attack_damage"))
+        ap = float(ctx.stat("ability_power"))
         initial = (
             base
             + _R_ARC_OF_RUIN_BONUS_AD_RATIO * bonus_ad

@@ -85,7 +85,7 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    w_seconds = max(0.5, float(ctx.options.get("w_seconds", 3.0)))
+    w_seconds = max(0.5, float(ctx.option("w_seconds")))
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )

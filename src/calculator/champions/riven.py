@@ -55,12 +55,10 @@ def _blade_of_the_exile(ctx: SlotCtx):
     rank = ctx.rank_for("R")
     if rank < 1:
         return None
-    value = _R_BONUS_AD_RATIO * float(ctx.stats.get("bonus_attack_damage", 0.0) or 0.0)
-    ctx.stats["attack_damage"] = (
-        float(ctx.stats.get("attack_damage", 0.0) or 0.0) + value
-    )
+    value = _R_BONUS_AD_RATIO * float(ctx.stat("bonus_attack_damage") or 0.0)
+    ctx.stats["attack_damage"] = float(ctx.stat("attack_damage") or 0.0) + value
     ctx.stats["bonus_attack_damage"] = (
-        float(ctx.stats.get("bonus_attack_damage", 0.0) or 0.0) + value
+        float(ctx.stat("bonus_attack_damage") or 0.0) + value
     )
     entry = damage_entry(
         ability.get("name", "Blade of the Exile"),
@@ -89,7 +87,7 @@ def _runic_blade(ctx: SlotCtx):
     percent = extract_named(
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
     )
-    per_hit = float(ctx.stats.get("attack_damage", 0.0) or 0.0) * percent / 100.0
+    per_hit = float(ctx.stat("attack_damage") or 0.0) * percent / 100.0
     return on_hit_entry(ability.get("name", "Runic Blade"), per_hit, "physical")
 
 

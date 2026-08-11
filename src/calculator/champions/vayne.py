@@ -50,7 +50,7 @@ def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: empowered-auto damage entry, cooldown scaled by R's published CDR."""
     entry = _tumble_damage(ctx)
     if entry is not None:
-        reduction = ctx.stats.get("tumble_cd_reduction_percent", 0.0)
+        reduction = ctx.stat("tumble_cd_reduction_percent")
         entry["cooldown"] *= 1.0 - reduction / 100.0
         entry["empowers_next_auto"] = True
     return entry

@@ -67,7 +67,7 @@ def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
     if bool(ctx.options.get("q_mortal_will", True)):
         per_level = extract_value(ability, "Per-Level Scaling", ctx.level)
         empowered = per_level + _MORTAL_WILL_BONUS_AD_RATIO * float(
-            ctx.stats.get("bonus_attack_damage", 0.0) or 0.0
+            ctx.stat("bonus_attack_damage") or 0.0
         )
 
     value = base + empowered
@@ -95,9 +95,9 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
-    ap = float(ctx.stats.get("ability_power", 0.0) or 0.0)
-    bonus_health = float(ctx.stats.get("bonus_health", 0.0) or 0.0)
+    target_max = float(ctx.target_stat("target_max_health") or 0.0)
+    ap = float(ctx.stat("ability_power") or 0.0)
+    bonus_health = float(ctx.stat("bonus_health") or 0.0)
     percent = extract_value(ability, "Physical Damage", rank, 0)
     percent += extract_value(ability, "Physical Damage", rank, 1) * ap / 100.0
     percent += _W_BONUS_HEALTH_PER_100 * bonus_health / 100.0

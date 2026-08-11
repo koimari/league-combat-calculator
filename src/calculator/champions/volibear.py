@@ -67,7 +67,7 @@ def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.options.get("relentless_storm_stacks", _RELENTLESS_STORM_MAX_STACKS)
     )
     stacks = min(max(stacks, 0), _RELENTLESS_STORM_MAX_STACKS)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     per_stack = _STORM_AS_PER_STACK + _STORM_AS_PER_100_AP * ap / 100.0
     bonus_as = stacks * per_stack
 
@@ -117,7 +117,7 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     if not ctx.options.get("w_wounded", True):
         return damage_entry(name, rank, cooldown, base, "physical")
 
-    bonus_ad = ctx.stats.get("bonus_attack_damage", 0.0)
+    bonus_ad = ctx.stat("bonus_attack_damage")
     extra_ratio = (
         _WOUNDED_BONUS_BASE + _WOUNDED_BONUS_PER_100_BONUS_AD * bonus_ad / 100.0
     )
@@ -145,9 +145,9 @@ def _sky_splitter(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:
         return entry
-    shield = _SKY_SPLITTER_SHIELD_MAX_HP_RATIO * ctx.stats.get(
-        "health", 0.0
-    ) + _SKY_SPLITTER_SHIELD_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+    shield = _SKY_SPLITTER_SHIELD_MAX_HP_RATIO * ctx.stat(
+        "health"
+    ) + _SKY_SPLITTER_SHIELD_AP_RATIO * ctx.stat("ability_power")
     return attach_self_shield(
         entry,
         amount=shield,

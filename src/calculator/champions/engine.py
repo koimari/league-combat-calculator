@@ -21,9 +21,15 @@ vanish). Dropping a non-damaging slot is the parser's decision.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from ..ability_spec import CC_KIND_VOCABULARY
+from .inputs import (
+    ChampionInputError,
+    champion_stat,
+    declared_option_defaults,
+    target_stat,
+)
 from .skill_orders import get_ability_rank
 
 # ---------------------------------------------------------------------------
@@ -156,6 +162,13 @@ class SlotCtx:
     ``stats``, ``target``, and ``results`` are shared across all slots of
     one parse: BUFF/DEBUFF phases mutate the first two, and ``results``
     accumulates emitted entries in evaluation order.
+
+    The three input blocks are read through :meth:`stat`, :meth:`target_stat`
+    and :meth:`option`, never with a ``.get(key, <literal>)`` — the fallback
+    literal is the shape that keeps a formula answering after its input stops
+    arriving, and D-24's declared ``zero_policy`` default would stamp the
+    resulting zero ``MEASURED``.  ``champions/inputs.py`` holds the
+    vocabularies and their declared defaults.
     """
 
     slot: str  # slot-map key being parsed
@@ -167,6 +180,48 @@ class SlotCtx:
     options: dict[str, Any] = field(default_factory=dict)
     results: dict[str, dict[str, Any]] = field(default_factory=dict)
     ability_ranks: dict[str, int] | None = None
+    # The champion's declared OPTIONS defaults, resolved once per parse.
+    # Empty for a synthetic fixture with no module, which is why reading an
+    # option it never declared raises there too.
+    option_defaults: Mapping[str, Any] = field(default_factory=dict)
+
+    def stat(self, name: str) -> float:
+        """One build stat by declared name (``inputs.CHAMPION_STATS``)."""
+        return champion_stat(self.stats, name, champion=self.champion_name)
+
+    def target_stat(self, name: str) -> float:
+        """One target stat by declared name (``inputs.TARGET_STATS``)."""
+        return target_stat(self.target, name, champion=self.champion_name)
+
+    def option(self, key: str) -> Any:
+        """One declared option: the user's value, or the module's default.
+
+        The default comes from the module's own ``OPTIONS`` row — the same
+        row the frontend renders — so the number a formula falls back to and
+        the number the user is shown cannot disagree.  A key the module never
+        declared raises: that is an option nothing wired, and a stack count
+        of zero from an unwired option is the failure D-24's guard exists to
+        make loud.
+        """
+        if key not in self.option_defaults:
+            raise ChampionInputError(
+                f"{self.champion_name or 'a champion module'} read option "
+                f"{key!r}, which its OPTIONS declaration does not contain — "
+                f"an undeclared option is unwired input, not a default (D-24)"
+            )
+        value = self.options.get(key)
+        return self.option_defaults[key] if value is None else value
+
+    def bump_stat(self, name: str, delta: float) -> float:
+        """Accumulate onto a declared build stat, returning the new value.
+
+        BUFF-phase slots add to the shared stat block; going through the
+        vocabulary keeps a mid-parse write from inventing a stat name no
+        reader could ever resolve.
+        """
+        updated = self.stat(name) + delta
+        self.stats[name] = updated
+        return updated
 
     def ability(self, slot: str | None = None, index: int = 0) -> dict | None:
         """Return the ability JSON at (slot, index), or None if absent.
@@ -419,6 +474,12 @@ def build_parser(
             if parser_phase == phase:
                 ordered.append((slot, parser))
 
+    # The module's OPTIONS defaults, resolved on the first parse rather than
+    # here: this builder runs while the champion module is still executing,
+    # so its OPTIONS list does not exist yet.  A module's declaration is
+    # source, so one resolution per champion per process is the whole cost.
+    declared_options: dict[str, Any] | None = None
+
     def parse_abilities(
         champion_data: dict[str, Any],
         level: int,
@@ -429,11 +490,14 @@ def build_parser(
         target_stats: dict[str, float] | None = None,
     ) -> dict[str, dict[str, Any]]:
         """Parse abilities by evaluating the slot map phase-by-phase."""
+        nonlocal declared_options
         # Deferred import: slotlib imports the phase constants from this
         # module, so engine.py must not import slotlib at module level.
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from .slotlib import build_stats_context
 
+        if declared_options is None:
+            declared_options = declared_option_defaults(champion_name)
         stats = build_stats_context(champion_stats, total_ability_power)
         target = dict(target_stats) if target_stats else {}
         results: dict[str, dict[str, Any]] = {}
@@ -449,6 +513,7 @@ def build_parser(
                 options=champion_options or {},
                 results=results,
                 ability_ranks=ability_ranks,
+                option_defaults=declared_options,
             )
             entry = parser(ctx)
             if entry is not None:

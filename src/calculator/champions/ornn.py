@@ -39,7 +39,7 @@ def _call_of_the_forge_god(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("R")
     if rank < 1:
         return None
-    passes = min(max(int(ctx.options.get("r_passes", 2)), 1), 2)
+    passes = min(max(int(ctx.option("r_passes")), 1), 2)
     attr = "Total Magic Damage" if passes == 2 else "Magic Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     per_pass = total / passes

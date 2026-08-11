@@ -62,7 +62,7 @@ def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("q_gathering_storm", 0)), 0), 2)
+    stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Mortal Steel"),

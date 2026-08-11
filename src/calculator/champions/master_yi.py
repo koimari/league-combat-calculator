@@ -45,7 +45,7 @@ def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    ad = ctx.stats.get("attack_damage", 0.0)
+    ad = ctx.stat("attack_damage")
     per_proc = _SECOND_STRIKE_AD_RATIO * ad
     return ability_on_hit_entry(
         ability.get("name", "Double Strike"),

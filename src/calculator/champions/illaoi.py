@@ -14,7 +14,7 @@ def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    count = min(max(int(ctx.options.get("p_tentacles", 1)), 0), 12)
+    count = min(max(int(ctx.option("p_tentacles")), 0), 12)
     if count <= 0:
         return None
     value = extract_named(
@@ -57,13 +57,11 @@ def _harsh_lesson(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    target_max = float(ctx.target_stat("target_max_health") or 0.0)
     pct = extract_value(ability, "Additional Physical Damage", rank) / 100.0
     ad_ratio = extract_value(ability, "Additional Physical Damage", rank, 1) / 100.0
     minimum = extract_value(ability, "Minimum Physical Damage", rank)
-    value = max(
-        minimum, pct * target_max + ad_ratio * ctx.stats.get("attack_damage", 0.0)
-    )
+    value = max(minimum, pct * target_max + ad_ratio * ctx.stat("attack_damage"))
     entry = damage_entry(
         ability.get("name", "Harsh Lesson"),
         rank,

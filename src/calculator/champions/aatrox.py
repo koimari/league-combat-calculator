@@ -22,6 +22,7 @@ hardcoded.
 import re
 from typing import Any
 
+from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
@@ -149,7 +150,7 @@ def derive_self_healing(
     base_ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
     per_100 = float(ratio_match.group(2)) / 100.0 if ratio_match else 0.0
     e_ratio = base_ratio + per_100 * (
-        float(champion_stats.get("bonus_health", 0.0)) / 100.0
+        float(champion_stat(champion_stats, "bonus_health")) / 100.0
     )
     r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
     r_inc = _leveling_value(_ability(champion_data, "R"), "Increased Healing", r_rank)

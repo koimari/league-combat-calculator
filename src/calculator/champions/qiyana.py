@@ -28,14 +28,14 @@ _royal_privilege.phase = ONHIT
 
 
 def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability_index = 1 if int(ctx.options.get("q_variant", 0)) > 0 else 0
+    ability_index = 1 if int(ctx.option("q_variant")) > 0 else 0
     ability = ctx.ability("Q", ability_index)
     if ability is None:
         return None
     rank = ctx.rank_for("Q")
     if rank < 1:
         return None
-    variant = min(max(int(ctx.options.get("q_variant", 0)), 0), 2)
+    variant = min(max(int(ctx.option("q_variant")), 0), 2)
     low_health = bool(ctx.options.get("q_target_below_half", False))
     attr = "Increased Damage" if variant == 2 and low_health else "Physical Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)

@@ -34,12 +34,12 @@ _W_TRAP_CAP = 10
 
 def _bushwhack_traps(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: Bushwhack variant prices ``w_traps`` detonations; Pounce passthrough."""
-    if int(ctx.options.get("w_variant", 0)) != 0:
+    if int(ctx.option("w_variant")) != 0:
         return _W_SLOT(ctx)
     entry = _W_SLOT(ctx)
     if entry is None:
         return None
-    traps = min(max(int(ctx.options.get("w_traps", 1)), 1), _W_TRAP_CAP)
+    traps = min(max(int(ctx.option("w_traps")), 1), _W_TRAP_CAP)
     if traps > 1:
         entry["parts"] = tuple(
             dataclasses.replace(part, count=part.count * traps)

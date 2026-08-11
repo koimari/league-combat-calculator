@@ -18,7 +18,7 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    procs = min(max(int(ctx.options.get("p_procs", 0)), 0), 10)
+    procs = min(max(int(ctx.option("p_procs")), 0), 10)
     if procs <= 0:
         return no_damage(
             ctx,

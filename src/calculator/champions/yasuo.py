@@ -90,7 +90,7 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("q_gathering_storm", 0)), 0), 2)
+    stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Steel Tempest"),
@@ -106,7 +106,7 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     # crit_modifier (which already multiplies the multiplier by 0.9).
     flat = extract_value(ability, "Physical Damage", rank, 0)
     ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
-    ad_part = ctx.stats.get("attack_damage", 0.0) * ad_ratio
+    ad_part = ctx.stat("attack_damage") * ad_ratio
     entry["parts"] = (
         DamagePart("physical", flat),
         DamagePart("physical", ad_part, crit_effectiveness=1.0),
@@ -149,7 +149,7 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("e_stacks", 0)), 0), 4)
+    stacks = min(max(int(ctx.option("e_stacks")), 0), 4)
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(
         ability, "Bonus Damage per Stack", rank, ctx.stats, ctx.target

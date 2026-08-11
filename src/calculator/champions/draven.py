@@ -87,7 +87,7 @@ def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    passes = min(max(int(ctx.options.get("r_passes", 2)), 1), 2)
+    passes = min(max(int(ctx.option("r_passes")), 1), 2)
     per_pass = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Whirling Death"),
@@ -109,7 +109,7 @@ def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _league_of_draven(ctx: SlotCtx) -> dict[str, Any] | None:
-    stacks = min(max(int(ctx.options.get("adoration_stacks", 0)), 0), 10000)
+    stacks = min(max(int(ctx.option("adoration_stacks")), 0), 10000)
     cash_in = bool(ctx.options.get("adoration_cash_in", False))
     reason = (
         f"{stacks} Adoration stack(s); cash-in yields {25 + 2 * stacks} bonus gold."

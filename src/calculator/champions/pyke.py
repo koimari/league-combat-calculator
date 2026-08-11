@@ -52,10 +52,8 @@ def _death_from_below(ctx: SlotCtx):
     if damage_leveling is None:
         return None
     damage = sum_modifiers(damage_leveling, level, ctx.stats, ctx.target)
-    damage += _R_DAMAGE_BONUS_AD_RATIO * float(
-        ctx.stats.get("bonus_attack_damage", 0.0) or 0.0
-    )
-    damage += _R_DAMAGE_PER_LETHALITY * float(ctx.stats.get("lethality", 0.0) or 0.0)
+    damage += _R_DAMAGE_BONUS_AD_RATIO * float(ctx.stat("bonus_attack_damage") or 0.0)
+    damage += _R_DAMAGE_PER_LETHALITY * float(ctx.stat("lethality") or 0.0)
     entry = damage_entry(
         ability.get("name", "Death from Below"),
         level,

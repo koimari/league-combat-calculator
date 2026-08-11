@@ -44,7 +44,7 @@ def _pix_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
     per_bolt_flat = extract_named(
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
     )
-    ap = float(ctx.stats.get("ability_power", 0.0))
+    ap = float(ctx.stat("ability_power"))
     per_bolt = per_bolt_flat + _PIX_BOLT_AP_RATIO * ap
     return on_hit_entry(
         ability.get("name", "Pix, Faerie Companion"),

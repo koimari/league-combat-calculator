@@ -90,11 +90,9 @@ def _moonsilver_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     tripled_as = sum_modifiers(leveling, ctx.level)
 
     # Parse-time context: the cleave slot's auto count reads attack_speed.
-    ctx.stats["bonus_attack_speed"] = (
-        ctx.stats.get("bonus_attack_speed", 0.0) + tripled_as
-    )
-    ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + ctx.stats.get(
-        "attack_speed_ratio", 0.0
+    ctx.stats["bonus_attack_speed"] = ctx.stat("bonus_attack_speed") + tripled_as
+    ctx.stats["attack_speed"] = ctx.stat("attack_speed") + ctx.stat(
+        "attack_speed_ratio"
     ) * (tripled_as / 100.0)
 
     entry = damage_entry(
@@ -127,10 +125,8 @@ def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
     if duration is None:
         return None
 
-    uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
-    num_autos = math.floor(
-        ctx.stats.get("attack_speed", 0.0) * float(duration) * uptime
-    )
+    uptime = float(ctx.option("auto_attack_uptime"))
+    num_autos = math.floor(ctx.stat("attack_speed") * float(duration) * uptime)
     cleaves = num_autos // _CLEAVE_EVERY_N_ATTACKS
     if cleaves <= 0:
         return None
@@ -138,7 +134,7 @@ def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
     per_cleave = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
-    autos_per_second = ctx.stats.get("attack_speed", 0.0) * uptime
+    autos_per_second = ctx.stat("attack_speed") * uptime
     return {
         "name": "Moonsilver Blade (cleave)",
         "damage_type": "magic",
@@ -200,7 +196,7 @@ def _moonfall(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    pulled = int(ctx.options.get("champions_pulled", 1))
+    pulled = int(ctx.option("champions_pulled"))
     pulled = min(max(pulled, 1), _R_MAX_CHAMPIONS_PULLED)
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     total += (pulled - 1) * extract_named(

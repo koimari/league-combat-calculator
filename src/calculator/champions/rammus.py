@@ -45,9 +45,9 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("W")
     if rank < 1:
         return None
-    autos = min(max(int(ctx.options.get("w_thorns_autos", 0)), 0), 30)
-    armor = float(ctx.stats.get("armor", 0.0) or 0.0)
-    magic_resistance = float(ctx.stats.get("magic_resistance", 0.0) or 0.0)
+    autos = min(max(int(ctx.option("w_thorns_autos")), 0), 30)
+    armor = float(ctx.stat("armor") or 0.0)
+    magic_resistance = float(ctx.stat("magic_resistance") or 0.0)
     per_auto = (
         _THORNS_BASE
         + _THORNS_ARMOR_RATIO * armor

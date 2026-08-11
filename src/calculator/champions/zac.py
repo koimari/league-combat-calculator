@@ -15,6 +15,7 @@ reviewed bounce packet pricing is unchanged.
 """
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
@@ -65,7 +66,7 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
     """Return Zac's sourced Cell Division revive fields for StartingDefenses."""
     delay = next(d for threshold, d in _REVIVE_DELAY_BRACKETS if level >= threshold)
     return {
-        "revive_health_amount": float(stats.get("health", 0.0))
+        "revive_health_amount": float(champion_stat(stats, "health"))
         * _REVIVE_MAX_HEALTH_RATIO,
         "revive_delay": delay,
         "revive_cooldown": REVIVE_COOLDOWN_SECONDS,

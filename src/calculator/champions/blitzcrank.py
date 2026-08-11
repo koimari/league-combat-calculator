@@ -93,9 +93,9 @@ def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    bonus = POWER_FIST_TOTAL_AD_RATIO * ctx.stats.get(
-        "attack_damage", 0.0
-    ) + POWER_FIST_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+    bonus = POWER_FIST_TOTAL_AD_RATIO * ctx.stat(
+        "attack_damage"
+    ) + POWER_FIST_AP_RATIO * ctx.stat("ability_power")
 
     return {
         "name": ability.get("name", "Power Fist"),
@@ -188,7 +188,7 @@ def _rocket_grab(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:
         return entry
-    shield = MANA_BARRIER_SHIELD_RATIO * ctx.stats.get("max_mana", 0.0)
+    shield = MANA_BARRIER_SHIELD_RATIO * ctx.stat("max_mana")
     entry["event_order_certified"] = "single_hit"
     return attach_self_shield(
         entry,

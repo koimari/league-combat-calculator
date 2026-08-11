@@ -46,7 +46,7 @@ def _normal_projectile_time(distance: float) -> float:
 
 
 def _is_primary_target(ctx: SlotCtx) -> bool:
-    return int(ctx.target.get("roster_target_index", 0.0)) == 0
+    return int(ctx.target_stat("roster_target_index")) == 0
 
 
 def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -60,9 +60,7 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     ground = str(ctx.options.get("q_ground", "normal"))
     if ground not in {"normal", "worked"}:
         raise ValueError("Taliyah q_ground must be normal or worked")
-    distance = _clamp(
-        float(ctx.options.get("q_target_distance", 800.0)), 0.0, _Q_MAX_RANGE
-    )
+    distance = _clamp(float(ctx.option("q_target_distance")), 0.0, _Q_MAX_RANGE)
 
     if ground == "worked":
         primary = _is_primary_target(ctx)
@@ -142,7 +140,7 @@ def _unraveled_earth(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    requested = int(ctx.options.get("e_detonations", 4))
+    requested = int(ctx.option("e_detonations"))
     detonations = int(_clamp(float(requested), 0.0, 4.0))
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     detonation = extract_named(

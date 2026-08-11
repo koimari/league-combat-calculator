@@ -87,7 +87,7 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
     enhanced = bool(ctx.options.get("q_spirit_blade_hit", True))
     attribute = "Increased Bonus Damage" if enhanced else "Bonus Magic Damage"
     per_hit = _named_level_rank_damage(ctx, ability, attribute, rank)
-    baseline_target_health = float(ctx.target.get("target_max_health", 0.0))
+    baseline_target_health = float(ctx.target_stat("target_max_health"))
     if baseline_target_health > 0.0:
         flat_ctx = replace(
             ctx,
@@ -139,12 +139,12 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
         f"{'' if hits == 1 else 's'}"
     )
     if hits:
-        attack_speed = ctx.stats.get("attack_speed", 0.0)
+        attack_speed = ctx.stat("attack_speed")
         if enhanced:
-            attack_speed += ctx.stats.get("attack_speed_ratio", 0.0) * (
+            attack_speed += ctx.stat("attack_speed_ratio") * (
                 _Q_ENHANCED_BONUS_ATTACK_SPEED / 100.0
             )
-        first_delay = float(ctx.options.get("q_first_attack_delay", 0.5))
+        first_delay = float(ctx.option("q_first_attack_delay"))
         interval = 1.0 / attack_speed if attack_speed > 0 else 0.0
         entry["empowers_next_auto"] = {
             "hits": hits,
@@ -166,8 +166,8 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    distance = min(600.0, max(300.0, float(ctx.options.get("e_dash_distance", 600))))
-    speed = _E_BASE_SPEED + ctx.stats.get("move_speed", 0.0)
+    distance = min(600.0, max(300.0, float(ctx.option("e_dash_distance"))))
+    speed = _E_BASE_SPEED + ctx.stat("move_speed")
     travel = distance / speed if speed > 0 else 0.0
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

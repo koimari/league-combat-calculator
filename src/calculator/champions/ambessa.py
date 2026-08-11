@@ -27,6 +27,7 @@ AD ratio from its description text); nothing is hardcoded.
 import re
 from typing import Any
 
+from .inputs import champion_stat
 from .engine import SlotCtx, SlotParser, build_parser
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
@@ -153,7 +154,7 @@ def _parse_passive_damage(
         ad_match = re.search(r"\(\+\s*(\d+(?:\.\d+)?)%\s+bonus\s+AD\)", desc)
         if ad_match:
             ratio = float(ad_match.group(1)) / 100.0
-            return damage + ratio * stats_context.get("bonus_attack_damage", 0.0)
+            return damage + ratio * champion_stat(stats_context, "bonus_attack_damage")
 
     return damage
 
@@ -161,7 +162,7 @@ def _parse_passive_damage(
 def _drakehounds_step_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """Resolve one Drakehound's Step proc from structured data/prose."""
     return _parse_passive_damage(
-        ability, ctx.level, ctx.stats, ctx.stats.get("ability_power", 0.0)
+        ability, ctx.level, ctx.stats, ctx.stat("ability_power")
     )
 
 

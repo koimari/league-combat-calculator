@@ -78,7 +78,7 @@ def _bladework(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    attacks = min(max(int(ctx.options.get("e_attacks", 2)), 1), 2)
+    attacks = min(max(int(ctx.option("e_attacks")), 1), 2)
     entry = no_damage(
         ctx,
         name=ability.get("name", "Bladework"),

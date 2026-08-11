@@ -62,7 +62,7 @@ def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    punches = min(max(int(ctx.options.get("p_right_punches", 0)), 0), 30)
+    punches = min(max(int(ctx.option("p_right_punches")), 0), 30)
     if punches <= 0:
         return no_damage(
             ctx,
@@ -74,7 +74,7 @@ def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
             ),
         )
     flat = extract_named(ability, "Per-Level Scaling", ctx.level)
-    bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
+    bonus_ad = float(ctx.stat("bonus_attack_damage"))
     per_punch = flat + _RIGHT_PUNCH_BONUS_AD_RATIO * bonus_ad
     total = per_punch * punches
     return {
@@ -136,9 +136,8 @@ def _knuckle_down(ctx: SlotCtx) -> dict[str, Any] | None:
             if len(values_in_unit) >= 5:
                 per_100_ad = float(values_in_unit[index])
         total += (
-            value / 100.0
-            + per_100_ad / 100.0 * ctx.stats.get("attack_damage", 0.0) / 100.0
-        ) * float(ctx.target.get("target_max_health", 0.0))
+            value / 100.0 + per_100_ad / 100.0 * ctx.stat("attack_damage") / 100.0
+        ) * float(ctx.target_stat("target_max_health"))
     entry = damage_entry(
         ability.get("name", "Knuckle Down"),
         rank,
@@ -194,10 +193,9 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
         # percentage (25).
         if "of expended Grit" in str(unit):
             grit_ratio = (
-                value / 100.0
-                + 0.25 * float(ctx.stats.get("bonus_attack_damage", 0.0)) / 100.0
+                value / 100.0 + 0.25 * float(ctx.stat("bonus_attack_damage")) / 100.0
             )
-    grit = max(0.0, float(ctx.options.get(_W_GRIT_OPTION, 0) or 0))
+    grit = max(0.0, float(ctx.option(_W_GRIT_OPTION) or 0))
     entry = damage_entry(
         ability.get("name", "Haymaker"),
         rank,

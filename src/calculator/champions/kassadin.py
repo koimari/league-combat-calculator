@@ -48,7 +48,7 @@ def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    passive = PASSIVE_W_BASE + PASSIVE_W_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+    passive = PASSIVE_W_BASE + PASSIVE_W_AP_RATIO * ctx.stat("ability_power")
     active = (
         extract_named(
             ability, "Increased Bonus Magic Damage", rank, ctx.stats, ctx.target
@@ -86,7 +86,7 @@ def _riftwalk(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("r_stacks", 0)), 0), 4)
+    stacks = min(max(int(ctx.option("r_stacks")), 0), 4)
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     bonus = extract_named(
         ability, "Bonus Damage Per Stack", rank, ctx.stats, ctx.target

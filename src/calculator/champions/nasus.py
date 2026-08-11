@@ -53,7 +53,7 @@ def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    stacks = max(0, int(ctx.options.get("q_stacks", 0)))
+    stacks = max(0, int(ctx.option("q_stacks")))
     bonus = (
         extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
         + stacks

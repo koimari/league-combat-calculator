@@ -130,7 +130,7 @@ def _starting_stacks(ctx: SlotCtx) -> int:
     stack count, the bleed's rate and the steroid can agree: asking for
     5 stacks without the buff describes a state the game cannot reach.
     """
-    stacks = int(ctx.options.get("starting_hemorrhage_stacks", 5))
+    stacks = int(ctx.option("starting_hemorrhage_stacks"))
     return min(max(stacks, 0), P_BLEED_MAX_STACKS)
 
 
@@ -147,7 +147,7 @@ def _hemorrhage(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    bonus_ad = ctx.stats.get("bonus_attack_damage", 0.0)
+    bonus_ad = ctx.stat("bonus_attack_damage")
     single_stack = (
         _per_level(ability, _P_BLEED_EFFECT, _P_PER_STACK_TOTAL, ctx.level)
         + P_BLEED_BONUS_AD_RATIO * bonus_ad

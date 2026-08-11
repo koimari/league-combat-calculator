@@ -145,14 +145,14 @@ def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
     # via stat_buff for the fight engine.
     magic_pen = extract_value(ability, "Magic Penetration", rank)
     ctx.stats["magic_penetration_percent"] = (
-        ctx.stats.get("magic_penetration_percent", 0.0) + magic_pen
+        ctx.stat("magic_penetration_percent") + magic_pen
     )
 
     burst = extract_named(ability, "Initial Magic Damage", rank, ctx.stats)
     cooldown = extract_cooldown(ability, rank)
 
     # Tibbers aura damage (not in JSON — wiki constants above).
-    aura_seconds = float(ctx.options.get("tibbers_aura_seconds", 5.0))
+    aura_seconds = float(ctx.option("tibbers_aura_seconds"))
     aura_base = _TIBBERS_AURA_BASE_PER_TICK[
         min(rank - 1, len(_TIBBERS_AURA_BASE_PER_TICK) - 1)
     ]

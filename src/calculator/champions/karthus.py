@@ -67,7 +67,7 @@ def _lay_waste(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     requested_isolated = bool(ctx.options.get("q_isolated", True))
-    roster_count = int(ctx.target.get("roster_target_count", 1.0))
+    roster_count = int(ctx.target_stat("roster_target_count"))
     isolated = requested_isolated and roster_count <= 1
     attribute = "Isolated Enhanced Damage" if isolated else "Magic Damage"
     raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
@@ -96,7 +96,7 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    requested = int(ctx.options.get("e_ticks", 5))
+    requested = int(ctx.option("e_ticks"))
     ticks = int(_clamp(float(requested), 0.0, float(_E_MAX_SELECTED_TICKS)))
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target

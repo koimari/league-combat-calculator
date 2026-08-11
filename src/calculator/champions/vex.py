@@ -83,7 +83,7 @@ def _gloom_detonation(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    detonations = max(0, int(ctx.options.get("p_gloom_detonations", 1)))
+    detonations = max(0, int(ctx.option("p_gloom_detonations")))
     if detonations <= 0:
         return None
     per_hit = extract_named(

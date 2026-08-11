@@ -63,7 +63,7 @@ def _short_fuse_refund_seconds(ability: dict[str, Any], level: int) -> float:
 def _short_fuse_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One Short Fuse proc: per-level JSON base + hardcoded 50% AP."""
     base = extract_value(ability, "Per-Level Scaling", ctx.level)
-    return base + SHORT_FUSE_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+    return base + SHORT_FUSE_AP_RATIO * ctx.stat("ability_power")
 
 
 _short_fuse_packet = proc_damage(
@@ -105,7 +105,7 @@ def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    mines = max(1, int(ctx.options.get("mines_hit", 4)))
+    mines = max(1, int(ctx.option("mines_hit")))
     full = extract_named(ability, "Magic Damage per Mine", rank, ctx.stats, ctx.target)
     reduced = extract_named(
         ability, "Reduced Damage per Mine", rank, ctx.stats, ctx.target

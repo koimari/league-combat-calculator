@@ -99,7 +99,7 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
         "Bonus Magic Damage",
         rank,
         ctx.target,
-        ap=ctx.stats.get("ability_power", 0.0),
+        ap=ctx.stat("ability_power"),
         ap_ratio_per_100=True,
     )
     if per_hit is None:

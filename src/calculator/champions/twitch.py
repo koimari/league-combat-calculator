@@ -68,7 +68,7 @@ def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
     stacks = _poison_stacks(ctx.options)
     if stacks <= 0:
         return None
-    per_stack = _poison_total_per_stack(ctx.level, ctx.stats.get("ability_power", 0.0))
+    per_stack = _poison_total_per_stack(ctx.level, ctx.stat("ability_power"))
     total = per_stack * stacks
     return {
         "name": ability.get("name", "Deadly Venom"),
@@ -93,7 +93,7 @@ def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
         "event_phase": "effect",
         "damage_events": [
             {
-                "time": float(ctx.options.get("fight_duration_seconds", 0.0) or 0.0),
+                "time": float(ctx.option("fight_duration_seconds") or 0.0),
                 "damage_type": "true",
                 "damage": total,
                 "event_precision": "phase_order",
@@ -121,7 +121,7 @@ def _contaminate(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     stacks = _poison_stacks(ctx.options)
     physical = base + per_stack * stacks
-    magic = _E_MAGIC_AP_RATIO * ctx.stats.get("ability_power", 0.0) * stacks
+    magic = _E_MAGIC_AP_RATIO * ctx.stat("ability_power") * stacks
 
     entry = damage_entry(
         ability.get("name", "Contaminate"),

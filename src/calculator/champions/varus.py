@@ -48,7 +48,7 @@ _BLIGHT_DETONATION_ATTR = "Bonus Magic Damage per Stack"
 
 def _missing_hp_fraction(ctx: SlotCtx) -> float:
     """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.options.get("target_missing_hp_pct", 50))
+    pct = float(ctx.option("target_missing_hp_pct"))
     return min(max(pct, 0.0), 100.0) / 100.0
 
 
@@ -73,7 +73,7 @@ def _w_active_empower(ctx: SlotCtx, rank: int) -> float:
     # starts at full health), so the percent is read flat and priced
     # against the shared target_missing_hp_pct option.
     percent = extract_value(ability, "Active Maximum Magic Damage", rank)
-    missing_health = float(ctx.target.get("target_max_health", 0.0) or 0.0) * (
+    missing_health = float(ctx.target_stat("target_max_health") or 0.0) * (
         _missing_hp_fraction(ctx)
     )
     return percent / 100.0 * missing_health

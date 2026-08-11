@@ -84,7 +84,7 @@ def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
-    total_ad = ctx.stats.get("attack_damage", 0.0)
+    total_ad = ctx.stat("attack_damage")
     return {
         "name": ability.get("name", "Precision Protocol"),
         "rank": rank,
@@ -114,7 +114,7 @@ def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Increased Mixed Damage", rank, ctx.stats, ctx.target
     )
     ratio = _q_true_ratio(ability, ctx.level)
-    total_ad = ctx.stats.get("attack_damage", 0.0)
+    total_ad = ctx.stat("attack_damage")
     return {
         "name": f"{ability.get('name', 'Precision Protocol')} (Q2)",
         "rank": rank,
@@ -149,10 +149,10 @@ def _tactical_sweep(ctx: SlotCtx) -> dict[str, Any] | None:
         percent = extract_value(ability, "Outer Cone Additional Damage", rank, 0)
         percent += (
             extract_value(ability, "Outer Cone Additional Damage", rank, 1)
-            * ctx.stats.get("bonus_attack_damage", 0.0)
+            * ctx.stat("bonus_attack_damage")
             / 100.0
         )
-        total += percent / 100.0 * ctx.target.get("target_max_health", 0.0)
+        total += percent / 100.0 * ctx.target_stat("target_max_health")
 
     return damage_entry(
         ability.get("name", "Tactical Sweep"),
@@ -257,7 +257,7 @@ def _tactical_sweep_with_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:
         return entry
-    shield = ADAPTIVE_DEFENSES_MAX_HP_RATIO * ctx.stats.get("health", 0.0)
+    shield = ADAPTIVE_DEFENSES_MAX_HP_RATIO * ctx.stat("health")
     entry["event_order_certified"] = "single_hit"
     return attach_self_shield(
         entry,

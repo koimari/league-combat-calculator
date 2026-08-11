@@ -32,7 +32,7 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    conversions = max(0, int(ctx.options.get("passive_procs", 1)))
+    conversions = max(0, int(ctx.option("passive_procs")))
     total_modified_raw = extract_named(
         ability,
         "Bonus Magic Damage",
@@ -40,7 +40,7 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.stats,
         ctx.target,
     )
-    total_ad = float(ctx.stats.get("attack_damage", 0.0))
+    total_ad = float(ctx.stat("attack_damage"))
     return {
         "name": ability.get("name", "Colossal Smash"),
         "auto_attack_conversion": {
@@ -62,10 +62,8 @@ def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     gust = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    ap = float(ctx.stats.get("ability_power", 0.0))
-    target_max_health = float(
-        ctx.target.get("target_max_health", ctx.target.get("health", 0.0))
-    )
+    ap = float(ctx.stat("ability_power"))
+    target_max_health = float(ctx.target_stat("target_max_health"))
     per_tick = target_max_health * (0.02 + ap * 0.0001)
 
     def max_health_tick(
@@ -153,7 +151,7 @@ def _justice_punch(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     distance = min(
         650.0,
-        max(250.0, float(ctx.options.get("e_dash_distance", 650.0))),
+        max(250.0, float(ctx.option("e_dash_distance"))),
     )
     hit_delay = _E_CAST_TIME + distance / _E_DASH_SPEED
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)

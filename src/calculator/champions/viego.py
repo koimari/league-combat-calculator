@@ -69,12 +69,12 @@ def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     active = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    second_strikes = min(max(int(ctx.options.get("q_second_strike", 0)), 0), 20)
+    second_strikes = min(max(int(ctx.option("q_second_strike")), 0), 20)
     second_damage = (
         second_strikes
         * (
-            _Q_SECOND_STRIKE_AD_RATIO * float(ctx.stats.get("attack_damage", 0.0))
-            + _Q_SECOND_STRIKE_AP_RATIO * float(ctx.stats.get("ability_power", 0.0))
+            _Q_SECOND_STRIKE_AD_RATIO * float(ctx.stat("attack_damage"))
+            + _Q_SECOND_STRIKE_AP_RATIO * float(ctx.stat("ability_power"))
         )
         if second_strikes > 0
         else 0.0
@@ -126,12 +126,12 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("R")
     if rank < 1:
         return None
-    ad = float(ctx.stats.get("attack_damage", 0.0))
+    ad = float(ctx.stat("attack_damage"))
     base = _R_BASE_AD_RATIO * ad
     missing_pct = extract_value(ability, "Physical Damage", rank, 0)
     per_100_bad = extract_value(ability, "Physical Damage", rank, 1)
-    bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
-    target_max = float(ctx.target.get("target_max_health", 0.0))
+    bonus_ad = float(ctx.stat("bonus_attack_damage"))
+    target_max = float(ctx.target_stat("target_max_health"))
 
     def missing_health_bonus(missing_ratio: float) -> float:
         return (

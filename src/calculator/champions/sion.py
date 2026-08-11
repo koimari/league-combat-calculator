@@ -44,7 +44,7 @@ def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    fraction = max(0.0, min(1.0, float(ctx.options.get("q_charge_fraction", 1.0))))
+    fraction = max(0.0, min(1.0, float(ctx.option("q_charge_fraction"))))
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
         ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target

@@ -33,8 +33,8 @@ def _silver_stake(ctx: SlotCtx) -> dict[str, Any] | None:
     base = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
-    missing_ratio = float(ctx.target.get("target_missing_health", 0.0) or 0.0) / max(
-        1.0, float(ctx.target.get("target_max_health", 1.0) or 1.0)
+    missing_ratio = float(ctx.target_stat("target_missing_health") or 0.0) / max(
+        1.0, float(ctx.target_stat("target_max_health") or 1.0)
     )
     value = base * (1.0 + max(0.0, min(1.0, missing_ratio)))
     result = on_hit_entry("Silver Stake", value, "magic")
@@ -52,9 +52,9 @@ def _ritual_nails(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     rank = ctx.rank_for()
-    casts = max(1, min(3, int(ctx.options.get("q_casts", 3))))
+    casts = max(1, min(3, int(ctx.option("q_casts"))))
     per = extract_named(ability, "Magic Damage per Nail", rank, ctx.stats, ctx.target)
-    stacks = max(0, min(3, int(ctx.options.get("soul_nails", 0))))
+    stacks = max(0, min(3, int(ctx.option("soul_nails"))))
     bonus_attr = {
         1: "One Stack Bonus Damage",
         2: "Two Stacks Bonus Damage",

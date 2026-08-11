@@ -69,9 +69,7 @@ def _formless_blade(ctx: SlotCtx):
     min_damage = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
     )
-    crit_chance = min(
-        max(float(ctx.stats.get("critical_strike_chance", 0.0)) / 100.0, 0.0), 1.0
-    )
+    crit_chance = min(max(float(ctx.stat("critical_strike_chance")) / 100.0, 0.0), 1.0)
     multiplier = 1.0 + (_Q_CRIT_MULTIPLIER_AT_MAX - 1.0) * crit_chance
     total = min_damage * multiplier
     entry = damage_entry(

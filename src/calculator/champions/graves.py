@@ -110,7 +110,7 @@ def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("e_true_grit_stacks", 1)), 0), 8)
+    stacks = min(max(int(ctx.option("e_true_grit_stacks")), 0), 8)
     armor = extract_named(ability, "Bonus Armor", rank, ctx.stats, ctx.target) * stacks
     mr = (
         extract_named(ability, "Bonus Magic Resistance", rank, ctx.stats, ctx.target)

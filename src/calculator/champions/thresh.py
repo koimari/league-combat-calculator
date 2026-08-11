@@ -54,7 +54,7 @@ def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_armor = _ARMOR_PER_SOUL * souls
 
     # BUFF phase guarantee: Q/W/E/R parse against the soul-buffed AP.
-    ctx.stats["ability_power"] = ctx.stats.get("ability_power", 0.0) + bonus_ap
+    ctx.stats["ability_power"] = ctx.stat("ability_power") + bonus_ap
 
     return {
         "name": ability.get("name", "Damnation"),

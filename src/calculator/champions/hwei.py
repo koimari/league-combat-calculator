@@ -41,7 +41,7 @@ def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
-    variant = min(max(int(ctx.options.get("q_variant", 0)), 0), 2)
+    variant = min(max(int(ctx.option("q_variant")), 0), 2)
     ability = ctx.ability("Q", variant + 1)
     if ability is None:
         return None
@@ -55,7 +55,7 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
     elif variant == 1:
         base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
         maximum = extract_named(ability, "Maximum Damage", rank, ctx.stats, ctx.target)
-        missing = min(max(float(ctx.options.get("q_missing_health", 1.0)), 0.0), 1.0)
+        missing = min(max(float(ctx.option("q_missing_health")), 0.0), 1.0)
         value = base + (maximum - base) * missing
         parts = (
             DamagePart(
@@ -67,7 +67,7 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
         )
         detail = f"Severing Bolt missing-health fraction {missing:.2f}; isolated/immobilized target gate is explicit."
     else:
-        explosions = min(max(int(ctx.options.get("q_explosions", 7)), 1), 7)
+        explosions = min(max(int(ctx.option("q_explosions")), 1), 7)
         shock = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
         fissure = extract_named(
             ability, "Total Fissure Magic Damage", rank, ctx.stats, ctx.target
@@ -95,7 +95,7 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
-    variant = min(max(int(ctx.options.get("w_variant", 0)), 0), 2)
+    variant = min(max(int(ctx.option("w_variant")), 0), 2)
     ability = ctx.ability("W", variant + 1)
     if ability is None:
         return None
@@ -120,7 +120,7 @@ def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
             slot="W",
         )
     bonus = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    hits = min(max(int(ctx.options.get("we_hits", 3)), 1), 3)
+    hits = min(max(int(ctx.option("we_hits")), 1), 3)
     entry = no_damage(
         ctx,
         name=ability.get("name", "Stirring Lights"),
@@ -140,7 +140,7 @@ def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
-    variant = min(max(int(ctx.options.get("e_variant", 0)), 0), 2)
+    variant = min(max(int(ctx.option("e_variant")), 0), 2)
     ability = ctx.ability("E", variant + 1)
     if ability is None:
         return None

@@ -78,7 +78,7 @@ def _charge(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    fraction = max(0.0, min(1.0, float(ctx.options.get("charge_fraction", 1.0))))
+    fraction = max(0.0, min(1.0, float(ctx.option("charge_fraction"))))
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     value = low + (high - low) * fraction

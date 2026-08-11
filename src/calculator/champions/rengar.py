@@ -68,7 +68,7 @@ def _ferocity_bonus(
 
 
 def _ferocity(ctx: SlotCtx) -> int:
-    return min(max(int(ctx.options.get("p_ferocity", 0)), 0), _FEROCITY_MAX)
+    return min(max(int(ctx.option("p_ferocity")), 0), _FEROCITY_MAX)
 
 
 def _unseen_predator(ctx: SlotCtx) -> dict[str, Any] | None:

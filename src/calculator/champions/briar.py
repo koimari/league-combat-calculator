@@ -38,6 +38,7 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from .inputs import target_stat
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
@@ -60,7 +61,7 @@ Q_SHRED_DURATION = 5.0
 
 def _missing_hp_fraction(ctx: SlotCtx) -> float:
     """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.options.get("target_missing_hp_pct", 50))
+    pct = float(ctx.option("target_missing_hp_pct"))
     return min(max(pct, 0.0), 100.0) / 100.0
 
 
@@ -79,7 +80,7 @@ def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
     single_stack = (
         P_BLEED_BASE_MIN
         + (P_BLEED_BASE_MAX - P_BLEED_BASE_MIN) * (level - 1) / 17.0
-        + P_BLEED_BONUS_AD_RATIO * ctx.stats.get("bonus_attack_damage", 0.0)
+        + P_BLEED_BONUS_AD_RATIO * ctx.stat("bonus_attack_damage")
     )
     name = ability.get("name", "Crimson Curse")
     return {
@@ -196,8 +197,8 @@ def _snack_attack(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     target = dict(ctx.target or {})
-    target["target_missing_health"] = target.get(
-        "target_max_health", 0.0
+    target["target_missing_health"] = target_stat(
+        target, "target_max_health"
     ) * _missing_hp_fraction(ctx)
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, target)
 
@@ -266,7 +267,7 @@ def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["applies_dot_stack"] = True
-    resist_bonus = R_RESIST_PER_TOTAL_AD * ctx.stats.get("attack_damage", 0.0)
+    resist_bonus = R_RESIST_PER_TOTAL_AD * ctx.stat("attack_damage")
     entry["stat_buff"] = {
         "armor": resist_bonus,
         "magic_resistance": resist_bonus,

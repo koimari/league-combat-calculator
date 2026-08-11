@@ -54,7 +54,7 @@ def _plasma_values(ctx: SlotCtx) -> tuple[float, float]:
 def _w_hit_time(ctx: SlotCtx) -> tuple[float, float]:
     """Return clamped W distance and time from cast start to impact."""
     distance = _clamp(
-        float(ctx.options.get("w_target_distance", 800.0)),
+        float(ctx.option("w_target_distance")),
         0.0,
         _W_MAX_RANGE,
     )
@@ -77,7 +77,7 @@ def _evolution_state(
         return False, "forced not evolved"
     if selected != "auto":
         raise ValueError(f"Kai'Sa {option_key} must be auto, base, or evolved")
-    owned = float(ctx.stats.get(stat_key, 0.0))
+    owned = float(ctx.stat(stat_key))
     return (
         owned >= _EVOLUTION_THRESHOLD,
         f"automatic: {owned:.1f}/{_EVOLUTION_THRESHOLD:g} {stat_label}",
@@ -88,7 +88,7 @@ def _plasma_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
     base, per_prior_stack = _plasma_values(ctx)
     stacks = int(
         _clamp(
-            float(ctx.options.get("plasma_starting_stacks", 0)),
+            float(ctx.option("plasma_starting_stacks")),
             0.0,
             float(_PLASMA_STACKS_TO_RUPTURE - 1),
         )
@@ -100,8 +100,8 @@ def _plasma_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
         "item AP",
     )
     applications = _W_EVOLVED_STACKS if w_evolved else _W_NORMAL_STACKS
-    target_health = float(ctx.target.get("target_max_health", 0.0))
-    ability_power = float(ctx.stats.get("ability_power", 0.0))
+    target_health = float(ctx.target_stat("target_max_health"))
+    ability_power = float(ctx.stat("ability_power"))
     rupture_ratio = (
         _RUPTURE_BASE_MISSING_HEALTH_RATIO + _RUPTURE_RATIO_PER_AP * ability_power
     )

@@ -66,7 +66,7 @@ def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     flat = extract_named(ability, _PROC_LEVELING_ATTR, ctx.level, ctx.stats, ctx.target)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     total = flat + _PROC_AP_RATIO * ap
     return {
         "name": ability.get("name", "Organic Deconstruction"),
@@ -87,7 +87,7 @@ def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
         "event_phase": "effect",
         "damage_events": [
             {
-                "time": float(ctx.options.get("fight_duration_seconds", 0.0) or 0.0),
+                "time": float(ctx.option("fight_duration_seconds") or 0.0),
                 "damage_type": "true",
                 "damage": total,
                 "event_precision": "phase_order",

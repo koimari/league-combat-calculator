@@ -29,7 +29,7 @@ def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    bonus_ms = max(0.0, float(ctx.options.get("bonus_movement_speed", 0.0)))
+    bonus_ms = max(0.0, float(ctx.option("bonus_movement_speed")))
     value = 0.30 * bonus_ms
     entry = on_hit_entry(ability.get("name", "Tailwind"), value, "magic")
     entry["detail"] = (
@@ -45,7 +45,7 @@ def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    charge = min(max(float(ctx.options.get("q_charge", 1.0)), 0.0), 1.0)
+    charge = min(max(float(ctx.option("q_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     value = low + (high - low) * charge

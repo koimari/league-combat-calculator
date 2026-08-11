@@ -89,7 +89,7 @@ def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
         if match is None:
             return None
         percent = value + float(match.group(1)) * stacks
-        return percent / 100.0 * ctx.target.get("target_max_health", 0.0)
+        return percent / 100.0 * ctx.target_stat("target_max_health")
 
     per_hit = sum_modifiers(
         leveling, rank, ctx.stats, ctx.target, modifier_override=_stack_rider
@@ -123,8 +123,8 @@ def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
     stack_health = _feast_stacks(ctx) * extract_value(
         ability, "Bonus Health Per Stack", rank
     )
-    ctx.stats["bonus_health"] = ctx.stats.get("bonus_health", 0.0) + stack_health
-    ctx.stats["health"] = ctx.stats.get("health", 0.0) + stack_health
+    ctx.stats["bonus_health"] = ctx.stat("bonus_health") + stack_health
+    ctx.stats["health"] = ctx.stat("health") + stack_health
 
     total = extract_named(ability, "Champion True Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

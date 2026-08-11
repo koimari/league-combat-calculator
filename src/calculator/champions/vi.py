@@ -53,14 +53,14 @@ def _q_geometry(ctx: SlotCtx) -> tuple[float, float, float, float]:
     )
     fraction = charge / _Q_MAX_CHARGE_SECONDS
     allowed_range = _Q_MIN_RANGE + (_Q_MAX_RANGE - _Q_MIN_RANGE) * fraction
-    requested_distance = max(0.0, float(ctx.options.get("q_dash_distance", 725.0)))
+    requested_distance = max(0.0, float(ctx.option("q_dash_distance")))
     distance = min(requested_distance, allowed_range)
     speed = _Q_MIN_SPEED + (_Q_MAX_SPEED - _Q_MIN_SPEED) * fraction
     return fraction, distance, speed, charge + distance / speed
 
 
 def _is_primary_target(ctx: SlotCtx) -> bool:
-    return int(ctx.target.get("roster_target_index", 0.0)) == 0
+    return int(ctx.target_stat("roster_target_index")) == 0
 
 
 def _w_trigger_slot(ctx: SlotCtx) -> str | None:
@@ -69,7 +69,7 @@ def _w_trigger_slot(ctx: SlotCtx) -> str | None:
         return None
     stacks = int(
         _clamp(
-            float(ctx.options.get("denting_blows_starting_stacks", 0)),
+            float(ctx.option("denting_blows_starting_stacks")),
             0.0,
             2.0,
         )
@@ -95,8 +95,8 @@ def _w_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
     per_100_bonus_ad = extract_value(
         ability, "Bonus Physical Damage", rank, modifier_index=1
     )
-    bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
-    max_health = float(ctx.target.get("target_max_health", 0.0))
+    bonus_ad = float(ctx.stat("bonus_attack_damage"))
+    max_health = float(ctx.target_stat("target_max_health"))
     percent = base_percent + per_100_bonus_ad * bonus_ad / 100.0
     raw = max_health * percent / 100.0
 
@@ -167,7 +167,7 @@ def _vault_breaker(ctx: SlotCtx) -> dict[str, Any] | None:
 def _e_hit_time(ctx: SlotCtx) -> float:
     q_time = _q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0
     delay = _clamp(
-        float(ctx.options.get("e_attack_delay", 0.25)),
+        float(ctx.option("e_attack_delay")),
         0.0,
         2.0,
     )
@@ -183,8 +183,8 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     flat = extract_value(ability, "Physical Damage", rank)
-    total_ad = float(ctx.stats.get("attack_damage", 0.0))
-    ability_power = float(ctx.stats.get("ability_power", 0.0))
+    total_ad = float(ctx.stat("attack_damage"))
+    ability_power = float(ctx.stat("ability_power"))
     hit_time = _e_hit_time(ctx)
     primary = _is_primary_target(ctx)
 
@@ -247,7 +247,7 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
         else (_q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0)
     )
     distance = _clamp(
-        float(ctx.options.get("r_start_distance", 800.0)),
+        float(ctx.option("r_start_distance")),
         _R_GRAB_RANGE,
         800.0,
     )

@@ -23,7 +23,7 @@ def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = min(max(int(ctx.options.get("p_stacks", 8)), 0), 8)
+    stacks = min(max(int(ctx.option("p_stacks")), 0), 8)
     row = find_named_leveling(ability, "Per-Level Scaling")
     per_stack = sum_modifiers(row, ctx.level, ctx.stats, ctx.target) if row else 0.0
     bonus_as = per_stack * stacks
@@ -71,7 +71,7 @@ def _counter_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    dodged = min(max(int(ctx.options.get("e_dodged_attacks", 0)), 0), 5)
+    dodged = min(max(int(ctx.option("e_dodged_attacks")), 0), 5)
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     value = low + (high - low) * dodged / 5.0
@@ -108,13 +108,13 @@ def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
     armor = (
         extract_value(ability, "Bonus Armor", rank)
         + extract_value(ability, "Bonus Armor", rank, 1)
-        * ctx.stats.get("bonus_attack_damage", 0.0)
+        * ctx.stat("bonus_attack_damage")
         / 100.0
     )
     mr = (
         extract_value(ability, "Bonus Magic Resistance", rank)
         + extract_value(ability, "Bonus Magic Resistance", rank, 1)
-        * ctx.stats.get("bonus_attack_damage", 0.0)
+        * ctx.stat("bonus_attack_damage")
         / 100.0
     )
     entry["stat_buff"] = {"bonus_armor": armor, "bonus_magic_resistance": mr}

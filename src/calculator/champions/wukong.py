@@ -40,11 +40,11 @@ def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
     per_stack = find_named_leveling(ability, "Per-Level Scaling", 1)
     if base is None or per_stack is None:
         return None
-    stacks = min(max(int(ctx.options.get("stone_skin_stacks", 0)), 0), 5)
+    stacks = min(max(int(ctx.option("stone_skin_stacks")), 0), 5)
     armor = sum_modifiers(base, ctx.level) + stacks * sum_modifiers(
         per_stack, ctx.level
     )
-    ctx.stats["armor"] = ctx.stats.get("armor", 0.0) + armor
+    ctx.stats["armor"] = ctx.stat("armor") + armor
     entry = damage_entry("Stone Skin", ctx.level, 0.0, 0.0, "physical")
     entry["stat_buff"] = {"armor": armor}
     entry["detail"] = f"{stacks} Strength of Stone stack(s); +{armor:.2f} bonus armor"
@@ -99,7 +99,7 @@ def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
     per_tick = extract_named(
         ability, "Physical Damage Per Tick", rank, ctx.stats, ctx.target
     )
-    casts = min(max(int(ctx.options.get("r_casts", 1)), 1), 2)
+    casts = min(max(int(ctx.option("r_casts")), 1), 2)
     ticks = 8 * casts
     total = per_tick * ticks
     entry = damage_entry(

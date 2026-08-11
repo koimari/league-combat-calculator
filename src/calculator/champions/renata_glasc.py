@@ -43,9 +43,9 @@ _E_SHIELD_DURATION = 3.0
 def _leverage_per_proc(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One Leverage proc: per-level % + 2% per 100 AP of target max health."""
     percent = extract_value(ability, "Per-Level Scaling", ctx.level, 0)
-    ap = float(ctx.stats.get("ability_power", 0.0) or 0.0)
+    ap = float(ctx.stat("ability_power") or 0.0)
     percent += _P_AP_RATIO_PER_100 * ap / 100.0
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    target_max = float(ctx.target_stat("target_max_health") or 0.0)
     return percent / 100.0 * target_max
 
 

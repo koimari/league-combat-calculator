@@ -27,7 +27,7 @@ def _urchin_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    attack_damage = ctx.stats.get("attack_damage", 0.0)
+    attack_damage = ctx.stat("attack_damage")
     entry = damage_entry(
         ability.get("name", "Urchin Strike"),
         rank,
@@ -106,7 +106,7 @@ def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _playful(ctx: SlotCtx) -> dict[str, Any] | None:
-    variant = min(max(int(ctx.options.get("e_variant", 0)), 0), 1)
+    variant = min(max(int(ctx.option("e_variant")), 0), 1)
     ability = ctx.ability("E", variant)
     if ability is None:
         return None
@@ -129,7 +129,7 @@ def _playful(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _chum_the_waters(ctx: SlotCtx) -> dict[str, Any] | None:
-    size = min(max(int(ctx.options.get("r_size", 0)), 0), 2)
+    size = min(max(int(ctx.option("r_size")), 0), 2)
     ability = ctx.ability()
     if ability is None:
         return None

@@ -224,8 +224,8 @@ def _burst_attack_speed(ctx: SlotCtx) -> float:
     sits AT the cap for any build. Bonus attack speed from items is
     therefore wasted during the burst — it only speeds his ordinary autos.
     """
-    attack_speed = ctx.stats.get("attack_speed", 0.0)
-    as_ratio = ctx.stats.get("attack_speed_ratio", 0.0)
+    attack_speed = ctx.stat("attack_speed")
+    as_ratio = ctx.stat("attack_speed_ratio")
     burst = attack_speed + as_ratio * (HYPER_CHARGE_BONUS_ATTACK_SPEED / 100.0)
     return min(burst, ATTACK_SPEED_CAP)
 
@@ -256,7 +256,7 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     ratio = extract_value(ability, "Physical Damage", rank) / 100.0
-    total_ad = ctx.stats.get("attack_damage", 0.0)
+    total_ad = ctx.stat("attack_damage")
     delta_ratio = ratio - 1.0
     return {
         "name": ability.get("name", "Hyper Charge"),
@@ -330,7 +330,7 @@ def _transform_ability(ctx: SlotCtx, stance: str) -> dict[str, Any] | None:
 def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
     """R Hammer: armor/MR buff + ONE empowered bonus-magic basic attack."""
     tier = _level_tier(ctx.level)
-    bonus_ad = ctx.stats.get("bonus_attack_damage", 0.0)
+    bonus_ad = ctx.stat("bonus_attack_damage")
     resists = HAMMER_BONUS_RESISTS[tier] + HAMMER_RESISTS_BONUS_AD_RATIO * bonus_ad
     bonus_damage = (
         HAMMER_EMPOWERED_AUTO_DAMAGE[tier]

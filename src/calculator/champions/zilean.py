@@ -1,5 +1,6 @@
 """Zilean — CP10.10 full-entry-reviewed packet module."""
 
+from .inputs import champion_stat
 from .packet_module import build_packet_module
 
 from ..champions.skill_orders import get_ability_rank
@@ -28,7 +29,7 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
     """Return Zilean's sourced Chronoshift revive fields for StartingDefenses."""
     rank = max(1, min(3, get_ability_rank("R", level, "Zilean")))
     amount = _REVIVE_HEAL_BASE[rank - 1] + _REVIVE_HEAL_AP_RATIO * float(
-        stats.get("ability_power", 0.0)
+        champion_stat(stats, "ability_power")
     )
     return {
         "revive_health_amount": amount,

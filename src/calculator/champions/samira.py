@@ -60,7 +60,7 @@ def _style_ms_per_stack(level: int) -> float:
 
 
 def _style_stacks(ctx: SlotCtx) -> int:
-    return min(max(int(ctx.options.get("p_style_stacks", 0)), 0), _STYLE_MAX)
+    return min(max(int(ctx.option("p_style_stacks")), 0), _STYLE_MAX)
 
 
 def _daredevil_impulse(ctx: SlotCtx) -> dict[str, Any] | None:

@@ -24,7 +24,7 @@ def _spider_queen(ctx: SlotCtx) -> dict[str, Any] | None:
     if not bool(ctx.options.get("spider_form", False)):
         return None
     tier = _spider_tier(ctx.level)
-    bonus = _SPIDER_BONUS_DAMAGE[tier] + 0.15 * ctx.stats.get("ability_power", 0.0)
+    bonus = _SPIDER_BONUS_DAMAGE[tier] + 0.15 * ctx.stat("ability_power")
     entry = no_damage(
         ctx,
         name="Spider Queen",
@@ -48,7 +48,7 @@ _spider_queen.phase = ONHIT
 
 
 def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
-    form = int(ctx.options.get("q_form", 0))
+    form = int(ctx.option("q_form"))
     form = min(max(form, 0), 1)
     ability = ctx.ability("Q", form)
     if ability is None:

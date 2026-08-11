@@ -26,15 +26,13 @@ def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = min(max(int(ctx.options.get("p_stacks", 4)), 0), 4)
+    stacks = min(max(int(ctx.option("p_stacks")), 0), 4)
     as_per_stack = _p_row(ability, 0, ctx)
     bonus_as = as_per_stack * stacks
     entry = on_hit_entry(ability.get("name", "Ionian Fervor"), 0.0, "magic")
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     if stacks >= 4:
-        damage = _p_row(ability, 2, ctx) + 0.20 * ctx.stats.get(
-            "bonus_attack_damage", 0.0
-        )
+        damage = _p_row(ability, 2, ctx) + 0.20 * ctx.stat("bonus_attack_damage")
         entry["on_hit"] = {
             "name": "Ionian Fervor max-stack hit",
             "damage_per_hit": damage,
@@ -85,7 +83,7 @@ def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    charge = min(max(float(ctx.options.get("w_charge", 1.0)), 0.0), 1.0)
+    charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
         ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target
@@ -131,7 +129,7 @@ def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    passes = min(max(int(ctx.options.get("r_passes", 2)), 1), 2)
+    passes = min(max(int(ctx.option("r_passes")), 1), 2)
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Vanguard's Edge"),

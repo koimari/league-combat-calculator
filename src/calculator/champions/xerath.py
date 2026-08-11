@@ -43,7 +43,7 @@ def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     recasts = int(round(extract_named(ability, "Number of Recasts", rank)))
     per_shot = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    stacks = min(max(int(ctx.options.get("r_arcane_perfection", 0)), 0), 6)
+    stacks = min(max(int(ctx.option("r_arcane_perfection")), 0), 6)
     if stacks > 0:
         maximum_stacks = int(round(extract_named(ability, "Maximum Stacks", rank)))
         per_stack = extract_named(

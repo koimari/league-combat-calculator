@@ -89,7 +89,7 @@ _R_AUTO_RECHARGE_MAX = 6.0
 
 def _fraction_option(ctx: SlotCtx, key: str) -> float:
     """Read a 0..1 uptime option, clamped (default: the whole duration)."""
-    return min(max(float(ctx.options.get(key, 1.0)), 0.0), 1.0)
+    return min(max(float(ctx.option(key)), 0.0), 1.0)
 
 
 def _ticks_at_uptime(ticks: int, uptime: float) -> int:
@@ -244,14 +244,12 @@ def _missile_count(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> tuple[in
         return charges, f"{charges} stored charge(s) fired"
     duration = float(duration)
 
-    haste = ctx.stats.get("ability_haste", 0.0)
+    haste = ctx.stat("ability_haste")
     recharge = effective_cooldown(extract_recharge(ability, rank), haste)
     autos = math.floor(
-        ctx.stats.get("attack_speed", 0.0)
-        * float(ctx.options.get("auto_attack_uptime", 0.0))
-        * duration
+        ctx.stat("attack_speed") * float(ctx.option("auto_attack_uptime")) * duration
     )
-    crit_chance = min(ctx.stats.get("critical_strike_chance", 0.0) / 100.0, 1.0)
+    crit_chance = min(ctx.stat("critical_strike_chance") / 100.0, 1.0)
     per_auto = _R_AUTO_RECHARGE_MIN + crit_chance * (
         _R_AUTO_RECHARGE_MAX - _R_AUTO_RECHARGE_MIN
     )
@@ -291,7 +289,7 @@ def _missile_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
     missiles, ammo_detail = _missile_count(ctx, ability, rank)
-    cycle = min(max(int(ctx.options.get("r_big_one_cycle_position", 0)), 0), 2)
+    cycle = min(max(int(ctx.option("r_big_one_cycle_position")), 0), 2)
     big_ones = (cycle + missiles) // _R_BIG_ONE_CYCLE
 
     parts = tuple(

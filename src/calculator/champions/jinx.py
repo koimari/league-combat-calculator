@@ -43,14 +43,13 @@ def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
         }
         entry["detail"] = "Fishbones: 110% AD basic attacks"
     else:
-        stacks = int(ctx.options.get("jinx_rev_up_stacks", 3))
+        stacks = int(ctx.option("jinx_rev_up_stacks"))
         stacks = min(max(stacks, 0), 3)
         first = extract_value(ability, "Bonus Attack Speed", rank)
         subsequent = extract_value(ability, "Attack Speed per Subsequent Stack", rank)
         bonus_as = 0.0 if stacks <= 0 else first + max(0, stacks - 1) * subsequent
         ctx.stats["attack_speed"] = (
-            ctx.stats.get("attack_speed", 0.0)
-            + ctx.stats.get("attack_speed_ratio", 0.0) * bonus_as / 100.0
+            ctx.stat("attack_speed") + ctx.stat("attack_speed_ratio") * bonus_as / 100.0
         )
         entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
         entry["detail"] = (
@@ -66,7 +65,7 @@ def _get_excited(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = int(ctx.options.get("jinx_get_excited_stacks", 0))
+    stacks = int(ctx.option("jinx_get_excited_stacks"))
     stacks = min(max(stacks, 0), 5)
     if stacks == 0:
         return None

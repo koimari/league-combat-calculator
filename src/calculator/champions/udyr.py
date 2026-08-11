@@ -27,6 +27,7 @@ rule already models.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import target_stat
 from .engine import ONHIT, SlotCtx, build_parser
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
@@ -99,7 +100,7 @@ def _target_max_health_percent(
         unit = units[idx] if idx < len(units) else ""
         stripped = unit.strip()
         if stripped == "%":
-            total += value / 100.0 * float(target.get("target_max_health", 0.0))
+            total += value / 100.0 * float(target_stat(target, "target_max_health"))
         else:
             total += resolve_scaling(unit, value, stats, target)
     return total

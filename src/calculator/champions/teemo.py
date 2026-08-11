@@ -57,7 +57,7 @@ def _shroom_detonations(ctx: SlotCtx) -> int:
     cap = 5
     if ability is not None and rank >= 1:
         cap = max(1, int(extract_value(ability, "Maximum Charges", rank) or 5))
-    return min(max(int(ctx.options.get("r_shrooms", 1)), 1), cap)
+    return min(max(int(ctx.option("r_shrooms")), 1), cap)
 
 
 def _noxious_trap(ctx: SlotCtx) -> dict[str, Any] | None:

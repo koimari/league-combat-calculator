@@ -281,11 +281,11 @@ def _packet_parser(
                 "magicResistance": "magic_resistance",
             }.get(stat)
             if stat_key:
-                static += value * float(ctx.stats.get(stat_key, 0.0))
+                static += value * float(ctx.stat(stat_key))
 
         damage_type = str(spec.get("damage_type", "magic"))
         if target_terms:
-            target_max = float(ctx.target.get("target_max_health", 0.0))
+            target_max = float(ctx.target_stat("target_max_health"))
 
             def hp_scaled(missing_ratio: float) -> float:
                 current_ratio = max(0.0, 1.0 - missing_ratio)
@@ -379,7 +379,7 @@ def _override_packet_static(ctx: SlotCtx, fix: dict[str, Any], rank: int) -> flo
             "magicResistance": "magic_resistance",
         }.get(stat)
         if stat_key:
-            static += value * float(ctx.stats.get(stat_key, 0.0))
+            static += value * float(ctx.stat(stat_key))
     return static
 
 

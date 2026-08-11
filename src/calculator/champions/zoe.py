@@ -48,7 +48,7 @@ def _spell_thief(ctx: SlotCtx):
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    summoner = int(ctx.options.get("w_summoner", 0))
+    summoner = int(ctx.option("w_summoner"))
     if summoner != 0:
         reason = _W_SUMMONER_VARIANTS.get(
             summoner, "Unknown summoner Spell Shard mimic."

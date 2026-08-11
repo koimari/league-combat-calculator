@@ -59,7 +59,7 @@ def _plant_attack_damage(ctx: SlotCtx) -> float:
     """One plant basic attack at the champion's level (locked at spawn)."""
     span = _PLANT_DAMAGE_END - _PLANT_DAMAGE_START
     base = _PLANT_DAMAGE_START + span * (ctx.level - 1) / 17.0
-    return base + _PLANT_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+    return base + _PLANT_AP_RATIO * ctx.stat("ability_power")
 
 
 def _plants(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -74,8 +74,8 @@ def _plants(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    plants = min(max(int(ctx.options.get("plant_count", 1)), 0), 8)
-    attacks = min(max(int(ctx.options.get("plant_attacks", 4)), 0), 20)
+    plants = min(max(int(ctx.option("plant_count")), 0), 8)
+    attacks = min(max(int(ctx.option("plant_attacks")), 0), 20)
     count = plants * attacks
     if count <= 0:
         return no_damage(

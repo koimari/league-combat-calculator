@@ -42,6 +42,7 @@ from .attribute_classifier import (
     is_primary_damage_attribute,
 )
 from .engine import BUFF, DAMAGE, ONHIT, SlotCtx, SlotParser
+from .inputs import target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
 # ---------------------------------------------------------------------------
@@ -305,7 +306,7 @@ def pct_health_per_hit(
     if ap_ratio_per_100:
         percent += ap * _modifier_value(leveling, 1, rank) / 100.0
 
-    max_health = (target or {}).get("target_max_health", 0.0)
+    max_health = target_stat(target or {}, "target_max_health")
     per_proc = (percent / 100.0) * max_health
     if floor_attr:
         per_proc = max(per_proc, extract_value(ability, floor_attr, rank))
@@ -828,14 +829,14 @@ def stat_buff(
 
         value = extract_value(ability, attr, rank)
         if mode == "percent_of":
-            value = value / 100.0 * ctx.stats.get(percent_of, 0.0)
+            value = value / 100.0 * ctx.stat(percent_of)
 
         damage = 0.0
         if damage_attr is not None:
             damage = extract_named(ability, damage_attr, rank, ctx.stats, ctx.target)
 
         for key in apply_to:
-            ctx.stats[key] = ctx.stats.get(key, 0.0) + value
+            ctx.stats[key] = ctx.stat(key) + value
         if couples is not None:
             stats_key, couple_attr = couples
             ctx.stats[stats_key] = extract_value(ability, couple_attr, rank)

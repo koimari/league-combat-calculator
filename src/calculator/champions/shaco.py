@@ -127,8 +127,8 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    clone_attacks = min(max(int(ctx.options.get("r_clone_attacks", 0)), 0), 30)
-    ad = float(ctx.stats.get("attack_damage", 0.0))
+    clone_attacks = min(max(int(ctx.option("r_clone_attacks")), 0), 30)
+    ad = float(ctx.stat("attack_damage"))
     per_clone_hit = _CLONE_ATTACK_AD_RATIO * ad
     parts: list[DamagePart] = [DamagePart("magic", explosion)]
     if clone_attacks > 0:
@@ -138,7 +138,7 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
                 per_clone_hit,
                 count=clone_attacks,
                 time_offset=0.0,
-                hit_interval=1.0 / max(0.1, float(ctx.stats.get("attack_speed", 1.0))),
+                hit_interval=1.0 / max(0.1, float(ctx.stat("attack_speed"))),
             )
         )
     entry = damage_entry(

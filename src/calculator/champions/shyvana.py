@@ -41,7 +41,7 @@ def _inferno_aegis_shield(ctx: SlotCtx) -> float:
     if ability is None:
         return 0.0
     rank = ctx.rank_for("W")
-    nearby = min(max(int(ctx.options.get("w_nearby_champions", 1)), 0), 5)
+    nearby = min(max(int(ctx.option("w_nearby_champions")), 0), 5)
     base = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
     per_champion = extract_named(
         ability, "Increased shield per champion", rank, ctx.stats, ctx.target
@@ -57,12 +57,12 @@ def _scalemail(ctx: SlotCtx) -> dict[str, Any] | None:
     stack = find_named_leveling(ability, "Per-Level Scaling", 1)
     if base is None or stack is None:
         return None
-    stacks = min(max(int(ctx.options.get("scalemail_stacks", 0)), 0), 100)
+    stacks = min(max(int(ctx.option("scalemail_stacks")), 0), 100)
     bonus_armor = sum_modifiers(base, ctx.level) + stacks * sum_modifiers(
         stack, ctx.level
     )
-    ctx.stats["armor"] = ctx.stats.get("armor", 0.0) + bonus_armor
-    ctx.stats["magic_resistance"] = ctx.stats.get("magic_resistance", 0.0) + bonus_armor
+    ctx.stats["armor"] = ctx.stat("armor") + bonus_armor
+    ctx.stats["magic_resistance"] = ctx.stat("magic_resistance") + bonus_armor
     entry = damage_entry("Scalemail", ctx.level, 0.0, 0.0, "physical")
     entry["stat_buff"] = {"armor": bonus_armor, "magic_resistance": bonus_armor}
     entry["detail"] = f"{stacks} Scalemail stack(s); +{bonus_armor:.2f} armor/MR"
@@ -79,7 +79,7 @@ def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("Q")
     if rank < 1:
         return None
-    casts = min(max(int(ctx.options.get("q_casts", 1)), 1), 3)
+    casts = min(max(int(ctx.option("q_casts")), 1), 3)
     dragon = bool(ctx.options.get("dragon_form", False))
     human = extract_named(ability, "Area Physical Damage", rank, ctx.stats, ctx.target)
     dragon_third = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)

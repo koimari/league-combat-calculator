@@ -25,7 +25,7 @@ def _darkin_glaive(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     try:
-        variant = int(ctx.options.get("q_variant", 0))
+        variant = int(ctx.option("q_variant"))
     except (TypeError, ValueError):
         variant = 0
     variant = max(0, min(variant, 2))

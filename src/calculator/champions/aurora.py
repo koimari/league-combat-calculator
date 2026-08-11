@@ -55,9 +55,9 @@ def _spirit_abjuration(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     percent = _SPIRIT_PCT_BASE + _SPIRIT_PCT_PER_100_AP * ap / 100.0
-    per_proc = percent / 100.0 * ctx.target.get("target_max_health", 0.0)
+    per_proc = percent / 100.0 * ctx.target_stat("target_max_health")
 
     name = ability.get("name", "Spirit Abjuration")
     return ability_on_hit_entry(

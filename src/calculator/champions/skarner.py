@@ -77,7 +77,7 @@ def _seismic_bastion(ctx: SlotCtx):
         "magic",
     )
     entry["event_order_certified"] = "single_hit"
-    shield = _W_SHIELD_MAX_HEALTH_RATIO * float(ctx.stats.get("health", 0.0) or 0.0)
+    shield = _W_SHIELD_MAX_HEALTH_RATIO * float(ctx.stat("health") or 0.0)
     attach_self_shield(
         entry,
         amount=shield,
@@ -108,7 +108,7 @@ def _ixtals_impact(ctx: SlotCtx):
         """E's '6% of his maximum health' term (Skarner's own health)."""
         if "of his maximum health" not in unit:
             return None
-        return value / 100.0 * float(ctx.stats.get("health", 0.0) or 0.0)
+        return value / 100.0 * float(ctx.stat("health") or 0.0)
 
     damage = sum_modifiers(
         leveling, rank, ctx.stats, ctx.target, modifier_override=max_health_override

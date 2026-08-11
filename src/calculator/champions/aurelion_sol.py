@@ -93,15 +93,15 @@ def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     beam_per_second = (
         extract_value(ability, "Magic Damage per Second", rank, 0)
         * _w_beam_modifier(ctx)
         + ap * extract_value(ability, "Magic Damage per Second", rank, 1) / 100.0
     )
 
-    stacks = float(ctx.options.get("stardust_stacks", 0))
-    max_hp = ctx.target.get("target_max_health", 0.0)
+    stacks = float(ctx.option("stardust_stacks"))
+    max_hp = ctx.target_stat("target_max_health")
     per_burst = (
         extract_value(ability, "Bonus Magic Damage", rank, 0)
         + ap * extract_value(ability, "Bonus Magic Damage", rank, 1) / 100.0
@@ -191,12 +191,12 @@ def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
     # Cassiopeia rule).
     entry["dot_duration"] = _E_DURATION
 
-    stacks = float(ctx.options.get("stardust_stacks", 0))
+    stacks = float(ctx.option("stardust_stacks"))
     threshold_pct = _E_EXECUTE_BASE_PCT + _E_EXECUTE_PCT_PER_100_STARDUST * (
         stacks / 100.0
     )
     detail = f"Executes below {threshold_pct:.1f}% max HP"
-    max_hp = ctx.target.get("target_max_health", 0.0)
+    max_hp = ctx.target_stat("target_max_health")
     if max_hp > 0:
         detail += f" ({threshold_pct / 100.0 * max_hp:.0f} HP)"
     entry["detail"] = detail

@@ -86,7 +86,7 @@ from src.calculator.data_fetcher import fetch_item_data  # noqa: E402
 
 RECEIPT_PATH = ROOT / "docs" / "behavior-frontier.json"
 SRC_ROOT = ROOT / "src"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # ── the committed exclusion sets ─────────────────────────────────────────
 #
@@ -322,13 +322,20 @@ def no_runtime_behavior_block() -> dict[str, Any]:
 # ── the zero-policy frontier (D-24) ──────────────────────────────────────
 #
 # ``damage_entry`` and ``simple_damage`` carry the champion tree's one
-# declared ``zero_policy`` default, so the 384 call sites across 143 modules
-# are not edited.  That exception is only honest while the inputs those
-# formulas read are wired: a stack count or option that never resolved,
-# silently replaced by a literal, is a zero the default would stamp
-# ``MEASURED``.  Two populations are therefore measured and pinned
-# non-growing rather than swept — a sweep of ``champions/`` is exactly what
-# D-24 rules out.
+# declared ``zero_policy`` default, so their champion call sites are not
+# edited.  That exception is only honest while the inputs those formulas
+# read are wired: a stack count or option that never resolved, silently
+# replaced by a literal, is a zero the default would stamp ``MEASURED``.
+#
+# So the guard has a forbidden half and a ratcheted half, and the split is
+# the whole point.  Forbidden: a ``.get(key, <literal>)`` on one of the
+# three champion *input* blocks — the build's stats, the target's stats,
+# the user's options.  Those feed the damage formulas, and D-24 requires
+# the shape to be refused there, not counted.  ``champions/inputs.py``
+# holds the vocabularies and declared defaults that replaced them.
+# Ratcheted: the same shape on a block a champion module *produced* — an
+# emitted entry, a reviewed packet spec, an authored event row — which is
+# not an unwired input and is pinned non-growing instead.
 
 CHAMPIONS_ROOT = SRC_ROOT / "calculator" / "champions"
 
@@ -343,26 +350,49 @@ ENTRY_BUILDERS = ("damage_entry", "simple_damage")
 # carry ``total_raw``.
 ENTRY_MARKER_KEYS = frozenset({"parts", "total_raw"})
 
+# The names a champion *input* block is bound to.  A ``.get`` whose receiver
+# expression mentions one of these reads an input, however it is wrapped
+# (``ctx.options``, ``ctx.target or {}``, a ``stats_context`` parameter), and
+# the fallback literal is forbidden there.  Everything else under
+# ``champions/`` reads a value the tree itself produced.
+INPUT_BLOCK_NAMES = frozenset(
+    {
+        "stats",
+        "target",
+        "options",
+        "champion_stats",
+        "target_stats",
+        "champion_options",
+        "stats_context",
+    }
+)
+
 
 @dataclass(frozen=True, slots=True)
 class ZeroPolicyFrontier:
-    """The two populations the ruled exception is guarded by.
+    """The guard's three populations: one forbidden, two pinned.
 
-    ``literal_fallbacks`` are ``x.get(key, <number>)`` reads under
-    ``champions/``, tallied by the receiver they read from — an option, a
-    stat block, a target block — because the receiver is what says whose
-    wiring is being trusted.  ``hand_built_entries`` are ability-entry dict
-    literals that bypass the two builders, and are therefore leaves produced
-    by neither a ``BehaviorRule`` nor a policy-carrying builder.
+    ``forbidden_input_fallbacks`` are ``x.get(key, <number>)`` reads whose
+    receiver is a champion input block.  The set must be **empty** — this is
+    D-24's source assertion, not a counter — and each member is reported as
+    ``module:line  expression`` so a failure names the site.
+
+    ``produced_fallbacks`` are the same shape on a block the champion tree
+    produced rather than received, tallied by receiver.  ``hand_built_entries``
+    are ability-entry dict literals that bypass both builders, tallied by
+    module, and are therefore leaves carrying no policy at all.  Both are
+    pinned non-growing per module, not merely in total.
     """
 
-    literal_fallbacks: dict[str, int]
+    forbidden_input_fallbacks: tuple[str, ...]
+    produced_fallbacks: dict[str, int]
     hand_built_entries: dict[str, int]
 
     def totals(self) -> dict[str, int]:
-        """Both populations as one pair of numbers."""
+        """The three populations as three numbers."""
         return {
-            "literal_fallbacks": sum(self.literal_fallbacks.values()),
+            "forbidden_input_fallbacks": len(self.forbidden_input_fallbacks),
+            "produced_fallbacks": sum(self.produced_fallbacks.values()),
             "hand_built_entries": sum(self.hand_built_entries.values()),
         }
 
@@ -380,15 +410,32 @@ def _receiver(call: ast.Call) -> str:
     """The tail of the expression a ``.get`` is called on — ``ctx.options``.
 
     The receiver is the interesting half: ``options`` says a champion option
-    is being defaulted, ``stats`` says a stat block is.  Anything whose tail
-    is itself a call is bucketed as ``chained`` rather than given a name a
-    reader could not look up.
+    is being defaulted, ``entry`` says a produced entry is.  Anything whose
+    tail is itself a call is bucketed as ``chained`` rather than given a name
+    a reader could not look up.
     """
     receiver = ast.unparse(call.func.value)  # type: ignore[attr-defined]
     tail = receiver.split(".")[-1].strip("() ")
     if not tail or "(" in tail or ")" in tail or " " in tail:
         return "chained"
     return tail
+
+
+def _reads_an_input_block(call: ast.Call) -> bool:
+    """Whether a ``.get``'s receiver is one of the three champion inputs.
+
+    Structural rather than textual: the receiver expression is walked for a
+    name or attribute in :data:`INPUT_BLOCK_NAMES`, so ``ctx.options``,
+    ``(ctx.target or {})`` and a bare ``stats_context`` parameter all count
+    while ``entry`` and ``ability_damages.get("R", {})`` do not.
+    """
+    receiver = call.func.value  # type: ignore[attr-defined]
+    for node in ast.walk(receiver):
+        if isinstance(node, ast.Attribute) and node.attr in INPUT_BLOCK_NAMES:
+            return True
+        if isinstance(node, ast.Name) and node.id in INPUT_BLOCK_NAMES:
+            return True
+    return False
 
 
 def _policy_stamping_nodes(tree: ast.AST) -> set[int]:
@@ -404,8 +451,9 @@ def _policy_stamping_nodes(tree: ast.AST) -> set[int]:
 
 
 def zero_policy_frontier(root: Path = CHAMPIONS_ROOT) -> ZeroPolicyFrontier:
-    """Measure both populations over the champion tree."""
-    fallbacks: dict[str, int] = {}
+    """Measure the three populations over the champion tree."""
+    forbidden: list[str] = []
+    produced: dict[str, int] = {}
     entries: dict[str, int] = {}
     for path in sorted(root.rglob("*.py")):
         module = path.relative_to(root).as_posix()
@@ -421,8 +469,11 @@ def zero_policy_frontier(root: Path = CHAMPIONS_ROOT) -> ZeroPolicyFrontier:
                 and len(node.args) == 2
                 and _literal_default(node.args[1])
             ):
-                key = _receiver(node)
-                fallbacks[key] = fallbacks.get(key, 0) + 1
+                if _reads_an_input_block(node):
+                    forbidden.append(f"{module}:{node.lineno}  {ast.unparse(node)}")
+                else:
+                    key = _receiver(node)
+                    produced[key] = produced.get(key, 0) + 1
             if isinstance(node, ast.Dict) and ENTRY_MARKER_KEYS & {
                 key.value
                 for key in node.keys
@@ -430,28 +481,112 @@ def zero_policy_frontier(root: Path = CHAMPIONS_ROOT) -> ZeroPolicyFrontier:
             }:
                 entries[module] = entries.get(module, 0) + 1
     return ZeroPolicyFrontier(
-        literal_fallbacks=dict(sorted(fallbacks.items())),
+        forbidden_input_fallbacks=tuple(sorted(forbidden)),
+        produced_fallbacks=dict(sorted(produced.items())),
         hand_built_entries=dict(sorted(entries.items())),
     )
 
 
 def zero_policy_block(frontier: ZeroPolicyFrontier) -> dict[str, Any]:
-    """The receipt's zero-policy section — measured, reasoned, non-growing."""
+    """The receipt's zero-policy section — one refusal and two ratchets."""
     return {
         "issue": ZERO_POLICY_ISSUE,
         "rule": (
-            "neither population may grow: a new .get(key, <literal>) under "
-            "champions/ and a new hand-built ability entry each fail --check, "
-            "so the ruled exception cannot widen without a decision"
+            "a .get(key, <literal>) on a champion input block (stats, "
+            "target, options) is forbidden outright — D-24's source "
+            "assertion, and the guard the declared zero_policy default only "
+            "holds with; the same shape on a block the tree produced is "
+            "pinned non-growing per receiver, and hand-built ability entries "
+            "per module, so neither can widen without a decision"
         ),
         "declared_default": (
             "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry "
             "and simple_damage and overridable per call (D-24)"
         ),
+        "input_vocabularies": (
+            "src/calculator/champions/inputs.py — the declared defaults that "
+            "replaced the forbidden literals, each with a reason and a "
+            "producer its name is asserted against"
+        ),
         "totals": frontier.totals(),
-        "literal_fallbacks_by_receiver": frontier.literal_fallbacks,
+        "forbidden_input_fallbacks": list(frontier.forbidden_input_fallbacks),
+        "produced_fallbacks_by_receiver": frontier.produced_fallbacks,
         "hand_built_entries_by_module": frontier.hand_built_entries,
     }
+
+
+_RATCHETED_ZERO_POLICY_SECTIONS = {
+    "produced_fallbacks_by_receiver": "receiver",
+    "hand_built_entries_by_module": "module",
+}
+
+
+def _zero_policy_failures(
+    committed: Mapping[str, Any], fresh: Mapping[str, Any]
+) -> list[str]:
+    """The zero-policy half of the gate: one refusal, two per-key ratchets.
+
+    Fails closed on every path.  A receipt with the section deleted, a
+    missing total, or a non-integer where a count belongs is a failure, not
+    a skipped check — the earlier version read the committed numbers with
+    chained ``.get``s and an ``isinstance`` guard, so deleting the section
+    disabled the gate silently, which is the shape this campaign removes.
+    """
+    failures: list[str] = []
+    committed_zero = committed.get("zero_policy_frontier")
+    fresh_zero = fresh["zero_policy_frontier"]
+
+    forbidden = fresh_zero["forbidden_input_fallbacks"]
+    if forbidden:
+        failures.append(
+            "zero-policy frontier: "
+            f"{len(forbidden)} champion-input .get(key, <literal>) "
+            "fallback(s) — forbidden outright, because the declared "
+            "zero_policy default would stamp the resulting zero MEASURED "
+            f"(D-24, {ZERO_POLICY_ISSUE}); read them through "
+            "champions/inputs.py instead: " + "; ".join(forbidden)
+        )
+
+    if not isinstance(committed_zero, Mapping):
+        failures.append(
+            "zero-policy frontier: the committed receipt has no "
+            "zero_policy_frontier section; run --write"
+        )
+        return failures
+
+    for population, measured in fresh_zero["totals"].items():
+        recorded = committed_zero.get("totals", {}).get(population)
+        if not isinstance(recorded, int):
+            failures.append(
+                f"zero-policy frontier: the receipt records no total for "
+                f"{population}; run --write"
+            )
+        elif measured > recorded:
+            failures.append(
+                f"zero-policy frontier: {population} grew from {recorded} to "
+                f"{measured}; the ruled default at champions/slotlib may not "
+                f"cover a wider population ({ZERO_POLICY_ISSUE})"
+            )
+
+    # Per-key, not only per-total: a total-only ratchet lets a site removed
+    # from one module pay for a site added to another.
+    for section, unit in _RATCHETED_ZERO_POLICY_SECTIONS.items():
+        recorded_section = committed_zero.get(section)
+        if not isinstance(recorded_section, Mapping):
+            failures.append(
+                f"zero-policy frontier: the receipt records no {section}; "
+                "run --write"
+            )
+            continue
+        for key, measured in fresh_zero[section].items():
+            recorded = recorded_section.get(key, 0)
+            if not isinstance(recorded, int) or measured > recorded:
+                failures.append(
+                    f"zero-policy frontier: {section} for {unit} {key!r} "
+                    f"grew from {recorded!r} to {measured} "
+                    f"({ZERO_POLICY_ISSUE})"
+                )
+    return failures
 
 
 def build_receipt(report: FrontierReport) -> dict[str, Any]:
@@ -562,16 +697,7 @@ def check(
                 f"(committed-only={sorted(recorded_modules - fresh_modules)}, "
                 f"declared-only={sorted(fresh_modules - recorded_modules)})"
             )
-    committed_zero = committed.get("zero_policy_frontier", {})
-    fresh_zero = fresh["zero_policy_frontier"]
-    for population, measured in fresh_zero["totals"].items():
-        recorded = committed_zero.get("totals", {}).get(population)
-        if isinstance(recorded, int) and measured > recorded:
-            failures.append(
-                f"zero-policy frontier: {population} grew from {recorded} to "
-                f"{measured}; the ruled default at champions/slotlib may not "
-                f"cover a wider population ({ZERO_POLICY_ISSUE})"
-            )
+    failures.extend(_zero_policy_failures(committed, fresh))
     ratchet = committed.get("no_runtime_behavior", {})
     members = ratchet.get("members", [])
     ceiling = ratchet.get("ratchet_ceiling")

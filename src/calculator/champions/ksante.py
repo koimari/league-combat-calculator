@@ -27,21 +27,19 @@ def _marked_attack(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     all_out = bool(ctx.options.get("all_out", False))
     extra = (
         0.01
-        + 0.01 * ctx.stats.get("bonus_armor", 0.0) / 100.0
-        + 0.01 * ctx.stats.get("bonus_magic_resistance", 0.0) / 100.0
+        + 0.01 * ctx.stat("bonus_armor") / 100.0
+        + 0.01 * ctx.stat("bonus_magic_resistance") / 100.0
         if all_out
         else 0.0
     )
-    return base + (ratio + extra) * float(
-        ctx.target.get("target_max_health", 0.0) or 0.0
-    )
+    return base + (ratio + extra) * float(ctx.target_stat("target_max_health") or 0.0)
 
 
 def _dauntless(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    count = min(max(int(ctx.options.get("p_marks", 1)), 0), 8)
+    count = min(max(int(ctx.option("p_marks")), 0), 8)
     if count <= 0:
         return None
     value = _marked_attack(ctx, ability)
@@ -88,7 +86,7 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    charge = min(max(float(ctx.options.get("w_charge", 1.0)), 0.0), 1.0)
+    charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     physical = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     if bool(ctx.options.get("all_out", False)):
         low = extract_named(

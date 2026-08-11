@@ -59,7 +59,7 @@ def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    stacks = int(ctx.options.get("senna_mist_stacks", 40))
+    stacks = int(ctx.option("senna_mist_stacks"))
     stacks = min(max(stacks, 0), 300)
     bonus_ad = _MIST_AD_PER_STACK * stacks
     thresholds = stacks // _MIST_STACKS_PER_THRESHOLD
@@ -67,21 +67,19 @@ def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_range = _MIST_RANGE_PER_THRESHOLD * thresholds
 
     # BUFF phase guarantee: Q/W/R parse against the Mist-buffed AD.
-    ctx.stats["bonus_attack_damage"] = (
-        ctx.stats.get("bonus_attack_damage", 0.0) + bonus_ad
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
+    ctx.stats["attack_damage"] = ctx.stat("base_attack_damage") + ctx.stat(
+        "bonus_attack_damage"
     )
-    ctx.stats["attack_damage"] = ctx.stats.get(
-        "base_attack_damage", 0.0
-    ) + ctx.stats.get("bonus_attack_damage", 0.0)
     ctx.stats["critical_strike_chance"] = (
-        ctx.stats.get("critical_strike_chance", 0.0) + bonus_crit
+        ctx.stat("critical_strike_chance") + bonus_crit
     )
 
     # Weakened Soul: bonus physical damage = level-scaled % of the
     # target's current health on the consuming hit. Max-health proxy
     # (see module docstring).
     percent = extract_value(ability, "Current Health Damage", ctx.level)
-    max_health = ctx.target.get("target_max_health", 0.0)
+    max_health = ctx.target_stat("target_max_health")
     per_proc = percent / 100.0 * max_health
 
     return {
@@ -128,7 +126,7 @@ def _dawning_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
         return entry
     ability = ctx.ability()
     shield = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
-    stacks = int(ctx.options.get("senna_mist_stacks", 40))
+    stacks = int(ctx.option("senna_mist_stacks"))
     shield += _DAWNING_SHADOW_MIST_RATIO * stacks
     entry["event_order_certified"] = "single_hit"
     return attach_self_shield(

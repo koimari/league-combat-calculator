@@ -21,9 +21,9 @@ def _dream_laden_bough(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    ticks = max(1, min(6, int(ctx.options.get("p_ticks", 6))))
-    max_hp = float(ctx.target.get("target_max_health", 0.0) or 0.0)
-    ap = float(ctx.stats.get("ability_power", 0.0))
+    ticks = max(1, min(6, int(ctx.option("p_ticks"))))
+    max_hp = float(ctx.target_stat("target_max_health") or 0.0)
+    ap = float(ctx.stat("ability_power"))
     total = max_hp * (0.05 + 0.0125 * ap / 100.0)
     per_tick = total / 6.0
     return {

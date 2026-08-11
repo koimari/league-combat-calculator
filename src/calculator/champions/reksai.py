@@ -33,7 +33,7 @@ def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    fury = max(0, min(100, int(ctx.options.get("e_fury", 0))))
+    fury = max(0, min(100, int(ctx.option("e_fury"))))
     if fury >= 100:
         value = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
         dtype = "true"

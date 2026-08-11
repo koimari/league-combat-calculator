@@ -104,7 +104,7 @@ def _pop_blossom(ctx: SlotCtx):
         "magic",
     )
     shield_rank = min(max(rank, 1), 3) - 1
-    ap = float(ctx.stats.get("ability_power", 0.0) or 0.0)
+    ap = float(ctx.stat("ability_power") or 0.0)
     shield = (
         _R_SHIELD_AMOUNT[shield_rank]
         + _R_SHIELD_PER_CHAMPION[shield_rank]

@@ -14,11 +14,11 @@ def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    target_max = float(ctx.target_stat("target_max_health") or 0.0)
     # The parent page describes the champion branch as 1% (+0.6% per 100 AP)
     # of target maximum health. The level row in the cache is for the
     # minion-only rider and must not replace that formula.
-    damage = target_max * (0.01 + 0.006 * ctx.stats.get("ability_power", 0.0) / 100.0)
+    damage = target_max * (0.01 + 0.006 * ctx.stat("ability_power") / 100.0)
     if target_max <= 0.0:
         return no_damage(
             ctx,
@@ -54,7 +54,7 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("q_snippy_stacks", 4)), 0), 4)
+    stacks = min(max(int(ctx.option("q_snippy_stacks")), 0), 4)
     center = bool(ctx.options.get("q_center", True))
     if center:
         attr = "Maximum Center Damage" if stacks >= 4 else "Minimum Center Damage"
@@ -100,7 +100,7 @@ def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    bonus = 15.0 + 0.20 * ctx.stats.get("ability_power", 0.0)
+    bonus = 15.0 + 0.20 * ctx.stat("ability_power")
     entry = damage_entry(
         ability.get("name", "Skip 'n Slash"),
         rank,
@@ -123,7 +123,7 @@ def _needlework(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    casts = min(max(int(ctx.options.get("r_casts", 3)), 1), 3)
+    casts = min(max(int(ctx.option("r_casts")), 1), 3)
     attrs = (
         "Damage with A Thousand Cuts",
         "Second Cast Total Damage",

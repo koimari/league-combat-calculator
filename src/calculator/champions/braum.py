@@ -104,8 +104,8 @@ def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     """
     events: list[tuple[float, int]] = []
 
-    uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
-    autos_per_second = ctx.stats.get("attack_speed", 0.0) * uptime
+    uptime = float(ctx.option("auto_attack_uptime"))
+    autos_per_second = ctx.stat("attack_speed") * uptime
     if autos_per_second > 0:
         events.extend(
             (i / autos_per_second, _AUTO)
@@ -115,9 +115,7 @@ def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     q_ability = ctx.ability("Q")
     q_rank = ctx.rank_for("Q")
     if q_ability is not None and q_rank >= 1:
-        haste = ctx.stats.get("ability_haste", 0.0) + ctx.stats.get(
-            "basic_ability_haste", 0.0
-        )
+        haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
         cd = effective_cooldown(extract_cooldown(q_ability, q_rank), haste)
         casts = 1 + int(duration / cd) if cd > 0 else 1
         events.extend((i * cd, _Q_HIT) for i in range(casts))
@@ -226,7 +224,7 @@ def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
 
     def own_max_health(unit: str, value: float) -> float | None:
         if "Braum" in unit and "maximum health" in unit:
-            return value / 100.0 * ctx.stats.get("health", 0.0)
+            return value / 100.0 * ctx.stat("health")
         return None
 
     total = sum_modifiers(
@@ -263,7 +261,7 @@ def _stand_behind_me(ctx: SlotCtx) -> dict[str, Any] | None:
     def self_buff(attr: str, bonus_stat: str) -> float:
         flat = extract_value(ability, attr, rank)
         percent = extract_value(ability, attr, rank, modifier_index=1)
-        return flat + percent / 100.0 * ctx.stats.get(bonus_stat, 0.0)
+        return flat + percent / 100.0 * ctx.stat(bonus_stat)
 
     entry["stat_buff"] = {
         "armor": self_buff("Self Bonus Armor", "bonus_armor"),

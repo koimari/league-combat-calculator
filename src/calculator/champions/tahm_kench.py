@@ -36,7 +36,7 @@ def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    stacks = min(max(int(ctx.options.get("q_passive_stacks", 0)), 0), 3)
+    stacks = min(max(int(ctx.option("q_passive_stacks")), 0), 3)
     if stacks:
         total += extract_named(
             ctx.ability("P") or ability,

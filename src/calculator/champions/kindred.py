@@ -43,7 +43,7 @@ def _dance_of_arrows(ctx: SlotCtx) -> dict[str, Any] | None:
     result = typed_damage(ctx, "Physical Damage", "physical")
     if result:
         result["detail"] = (
-            f"Dance of Arrows; {int(ctx.options.get('marks', 0))} Mark of "
+            f"Dance of Arrows; {int(ctx.option('marks'))} Mark of "
             "the Kindred stacks grant the sourced attack-speed state."
         )
     return result
@@ -71,7 +71,7 @@ _E_POUNCE_CRIT_EFFECTIVENESS = 0.5
 
 
 def _marks(ctx: SlotCtx) -> int:
-    return min(max(int(ctx.options.get("marks", 0)), 0), _MARK_MAX)
+    return min(max(int(ctx.option("marks")), 0), _MARK_MAX)
 
 
 def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -100,7 +100,7 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("e_stacks", 3)), 1), _E_STACK_MAX)
+    stacks = min(max(int(ctx.option("e_stacks")), 1), _E_STACK_MAX)
     if stacks < _E_STACK_MAX:
         return no_damage(
             ctx,
@@ -122,7 +122,7 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
         if "of target's missing health" not in unit:
             return None
         percent = value + 0.5 * marks
-        missing = float(ctx.target.get("target_missing_health", 0.0) or 0.0)
+        missing = float(ctx.target_stat("target_missing_health") or 0.0)
         return percent / 100.0 * missing
 
     damage = sum_modifiers(
@@ -166,7 +166,7 @@ def _hunters_vigor(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("W", 0)
     if ability is None:
         return None
-    stacks = min(max(int(ctx.options.get("w_hunters_vigor_stacks", 100)), 0), 100)
+    stacks = min(max(int(ctx.option("w_hunters_vigor_stacks")), 0), 100)
     if stacks < 100:
         return no_damage(
             ctx,
@@ -208,7 +208,7 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    attacks = min(max(int(ctx.options.get("w_attacks", 3)), 1), 8)
+    attacks = min(max(int(ctx.option("w_attacks")), 1), 8)
     marks = _marks(ctx)
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
@@ -219,7 +219,7 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
         if "of target's current health" not in unit:
             return None
         percent = value + 1.0 * marks
-        current = float(ctx.target.get("target_current_health", 0.0) or 0.0)
+        current = float(ctx.target_stat("target_current_health") or 0.0)
         return percent / 100.0 * current
 
     per = sum_modifiers(

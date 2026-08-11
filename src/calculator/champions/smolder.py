@@ -92,7 +92,7 @@ def _super_scorcher_breath(ctx: SlotCtx) -> dict[str, Any] | None:
 
     crit_chance = min(
         1.0,
-        max(0.0, float(ctx.stats.get("critical_strike_chance", 0.0) or 0.0) / 100.0),
+        max(0.0, float(ctx.stat("critical_strike_chance") or 0.0) / 100.0),
     )
     factor = 1.0 + _Q_CRIT_INCREASE_PER_CRIT * crit_chance
     if abs(factor - 1.0) > 1e-12:
@@ -116,8 +116,8 @@ def _super_scorcher_breath(ctx: SlotCtx) -> dict[str, Any] | None:
 
     stacks = max(0, int(ctx.options.get("p_stacks", _TIER3_STACKS)))
     if stacks >= _TIER3_STACKS:
-        target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
-        bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0) or 0.0)
+        target_max = float(ctx.target_stat("target_max_health") or 0.0)
+        bonus_ad = float(ctx.stat("bonus_attack_damage") or 0.0)
         burn_total = target_max * (
             _BURN_BONUS_AD_PER_100 * bonus_ad / 100.0 / 100.0
             + _BURN_STACKS_PER_100 * stacks / 100.0 / 100.0

@@ -93,7 +93,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    attacks = min(max(int(ctx.options.get("daisy_attacks", 6)), 0), 20)
+    attacks = min(max(int(ctx.option("daisy_attacks")), 0), 20)
     if attacks <= 0:
         return no_damage(
             ctx,
@@ -101,7 +101,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
             reason="daisy_attacks is 0 — set it to price Daisy's attacks.",
         )
     index = min(rank - 1, len(_DAISY_AD_BY_RANK) - 1)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     per_attack = _DAISY_AD_BY_RANK[index] + _DAISY_AD_AP_RATIO * ap
     per_smash = _DAISY_SMASH_BY_RANK[index] + _DAISY_SMASH_AP_RATIO * ap
 

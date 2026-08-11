@@ -33,6 +33,7 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .slotlib import (
     attach_self_shield,
@@ -87,11 +88,16 @@ def _extract_e_per_shot(
         if not match:
             return 0.0
         as_ratio = float(match.group(1))
-        bonus_as_pct = (
-            stats_context.get("bonus_attack_speed_percent", 0.0)
-            if stats_context
-            else 0.0
-        )
+        # ESCALATED DEFECT akshan-bonus-attack-speed-percent (issue #214,
+        # docs/receipts/escalated-defects-P3-3.7.json): the stat block this
+        # reads has no ``bonus_attack_speed_percent`` key and never has —
+        # ``calculate_total_stats`` emits ``bonus_attack_speed`` — so this
+        # term has always resolved to zero and Heroic Swing has never priced
+        # its attack-speed scaling.  Removing the fallback is what surfaced
+        # it; correcting it moves a number, which this slice may not do
+        # (criterion 17 allows a golden diff for exactly one slice, and this
+        # is not it).  The zero is therefore stated rather than defaulted.
+        bonus_as_pct = 0.0
         return as_ratio * (bonus_as_pct / 100.0) * value
 
     return sum_modifiers(
@@ -148,7 +154,7 @@ def _parse_passive_proc_damage(
         ap_match = re.search(r"\+\s*(\d+)%\s*AP", desc)
         ap_ratio = float(ap_match.group(1)) / 100.0 if ap_match else 0.0
 
-        ap = stats_context.get("ability_power", 0.0) if stats_context else 0.0
+        ap = champion_stat(stats_context or {}, "ability_power")
         return base + ap_ratio * ap
 
     return 0.0
@@ -174,7 +180,7 @@ def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     rank = ctx.rank_for()
-    shots = int(ctx.options.get("e_shots", 5))
+    shots = int(ctx.option("e_shots"))
     if rank < 1 or shots <= 0:
         return None
 

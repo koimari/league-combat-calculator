@@ -70,7 +70,7 @@ _CARDS = tuple(
 def _pick_a_card(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: exactly one selected card (w_card option, default gold)."""
     try:
-        index = int(ctx.options.get("w_card", 0))
+        index = int(ctx.option("w_card"))
     except (TypeError, ValueError):
         index = 0
     index = max(0, min(index, len(_CARDS) - 1))

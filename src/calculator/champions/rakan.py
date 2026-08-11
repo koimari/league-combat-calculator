@@ -86,7 +86,7 @@ def _q_with_p_shield(ctx: Any) -> dict[str, Any] | None:
     entry = simple_damage(attr="Magic Damage", dmg_type="magic")(ctx)
     if entry is None or int(entry.get("rank", 0) or 0) < 1:
         return entry
-    shield = _p_shield_amount(ctx.level, ctx.stats.get("ability_power", 0.0))
+    shield = _p_shield_amount(ctx.level, ctx.stat("ability_power"))
     return attach_self_shield(
         entry,
         amount=shield,

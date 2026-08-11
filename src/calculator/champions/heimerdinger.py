@@ -11,30 +11,30 @@ from .slotlib import damage_entry, extract_cooldown, extract_named, extract_rech
 
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("Q", min(max(int(ctx.options.get("q_variant", 0)), 0), 1))
+    ability = ctx.ability("Q", min(max(int(ctx.option("q_variant")), 0), 1))
     if ability is None:
         return None
-    variant = min(max(int(ctx.options.get("q_variant", 0)), 0), 1)
+    variant = min(max(int(ctx.option("q_variant")), 0), 1)
     rank = ctx.rank_for("Q")
     if rank < 1:
         return None
-    turret_count = min(max(int(ctx.options.get("q_turrets", 3)), 1), 3)
-    attacks = min(max(int(ctx.options.get("q_turret_attacks", 3)), 1), 12)
+    turret_count = min(max(int(ctx.option("q_turrets")), 1), 3)
+    attacks = min(max(int(ctx.option("q_turret_attacks")), 1), 12)
     if variant == 0:
         shot = (
             7.0
             + (23.0 - 7.0) * (ctx.level - 1) / 17.0
-            + 0.35 * ctx.stats.get("ability_power", 0.0)
+            + 0.35 * ctx.stat("ability_power")
         )
-        beam = 40.0 + 20.0 * (rank - 1) + 0.55 * ctx.stats.get("ability_power", 0.0)
+        beam = 40.0 + 20.0 * (rank - 1) + 0.55 * ctx.stat("ability_power")
         name = "H-28G Evolution Turret"
     else:
         r_rank = min(max(ctx.rank_for("R"), 1), 3)
-        shot = 80.0 + 20.0 * (r_rank - 1) + 0.35 * ctx.stats.get("ability_power", 0.0)
-        beam = 100.0 + 40.0 * (r_rank - 1) + 0.70 * ctx.stats.get("ability_power", 0.0)
+        shot = 80.0 + 20.0 * (r_rank - 1) + 0.35 * ctx.stat("ability_power")
+        beam = 100.0 + 40.0 * (r_rank - 1) + 0.70 * ctx.stat("ability_power")
         name = "H-28Q Apex Turret"
     total_shots = turret_count * attacks
-    beam_count = min(max(int(ctx.options.get("q_beams", 1)), 0), turret_count)
+    beam_count = min(max(int(ctx.option("q_beams")), 0), turret_count)
     parts = [
         DamagePart(
             "magic",
@@ -77,7 +77,7 @@ def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("W")
     if rank < 1:
         return None
-    rockets = min(max(int(ctx.options.get("w_rockets", 5)), 1), 5)
+    rockets = min(max(int(ctx.option("w_rockets")), 1), 5)
     first = extract_named(
         ability, "Initial Rocket Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -106,7 +106,7 @@ def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
-    variant = min(max(int(ctx.options.get("e_upgrade", 0)), 0), 1)
+    variant = min(max(int(ctx.option("e_upgrade")), 0), 1)
     ability = ctx.ability("E", variant)
     if ability is None:
         return None
@@ -117,9 +117,7 @@ def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     else:
         r_rank = min(max(ctx.rank_for("R"), 1), 3)
-        value = (100.0, 200.0, 300.0)[r_rank - 1] + 0.60 * ctx.stats.get(
-            "ability_power", 0.0
-        )
+        value = (100.0, 200.0, 300.0)[r_rank - 1] + 0.60 * ctx.stat("ability_power")
     entry = damage_entry(
         ability.get("name", "CH-2 Electron Storm Grenade"),
         rank,

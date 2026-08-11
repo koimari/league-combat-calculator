@@ -45,7 +45,7 @@ def _haste_factor(ctx: SlotCtx) -> float:
     later apply to entry cooldowns. The refund is a flat 1.5s of REAL
     time, so the refund math runs in hasted seconds and converts back
     through this factor when writing pre-haste entry cooldowns."""
-    return 1.0 + ctx.stats.get("ability_haste", 0.0) / 100.0
+    return 1.0 + ctx.stat("ability_haste") / 100.0
 
 
 def _q_hasted_period(ctx: SlotCtx) -> float | None:
@@ -115,7 +115,7 @@ def _rising_spell_force(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = min(max(int(ctx.options.get("passive_stacks", 5)), 0), PASSIVE_MAX_STACKS)
+    stacks = min(max(int(ctx.option("passive_stacks")), 0), PASSIVE_MAX_STACKS)
     bonus_as = PASSIVE_AS_PER_STACK * stacks
     entry = damage_entry(
         ability.get("name", "Rising Spell Force"), ctx.level, 0.0, 0.0, "physical"

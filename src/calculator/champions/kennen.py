@@ -54,7 +54,7 @@ def _slicing_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    bolts = max(1, min(6, int(ctx.options.get("r_bolts", 6))))
+    bolts = max(1, min(6, int(ctx.option("r_bolts"))))
     per = extract_named(ability, "Magic Damage Per Bolt", rank, ctx.stats, ctx.target)
     return {
         "name": ability.get("name", "Slicing Maelstrom"),

@@ -77,7 +77,7 @@ def _travelers_call(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     chimes = max(0, int(ctx.options.get("chimes", _DEFAULT_CHIMES)))
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     per_meep = (
         _MEEP_BASE + _MEEP_PER_TIER * (chimes // _CHIMES_PER_TIER) + _MEEP_AP_RATIO * ap
     )

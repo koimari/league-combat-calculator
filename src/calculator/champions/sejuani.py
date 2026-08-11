@@ -50,7 +50,7 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
 
     def sejuani_max_health(unit: str, value: float) -> float | None:
         if unit == "% of her maximum health":
-            return value / 100.0 * float(ctx.stats.get("health", 0.0) or 0.0)
+            return value / 100.0 * float(ctx.stat("health") or 0.0)
         return None
 
     first = find_named_leveling(ability, "Physical Damage", 0)

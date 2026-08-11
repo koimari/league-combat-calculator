@@ -82,7 +82,7 @@ def _mist_walker_attack_damage(ctx: SlotCtx) -> float:
     span = _MIST_WALKER_DAMAGE_END - _MIST_WALKER_DAMAGE_START
     interpolated = _MIST_WALKER_DAMAGE_START + span * (ctx.level - 1) / 17.0
     base = interpolated * growth_multiplier(ctx.level)
-    return base + _MIST_WALKER_AD_RATIO * ctx.stats.get("bonus_attack_damage", 0.0)
+    return base + _MIST_WALKER_AD_RATIO * ctx.stat("bonus_attack_damage")
 
 
 def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -91,7 +91,7 @@ def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     walkers = min(max(int(ctx.options.get("mist_walkers", _MIST_WALKER_MAX)), 0), 4)
-    attacks = min(max(int(ctx.options.get("mist_walker_attacks", 5)), 0), 12)
+    attacks = min(max(int(ctx.option("mist_walker_attacks")), 0), 12)
     count = walkers * attacks
     if count <= 0:
         return no_damage(
@@ -136,7 +136,7 @@ def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    attacks = min(max(int(ctx.options.get("maiden_attacks", 5)), 0), 10)
+    attacks = min(max(int(ctx.option("maiden_attacks")), 0), 10)
     if attacks <= 0:
         return no_damage(
             ctx,
@@ -144,7 +144,7 @@ def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
             reason="maiden_attacks is 0 — set it to price Maiden basic attacks.",
         )
     base = _MAIDEN_BASE_BY_RANK[min(rank - 1, len(_MAIDEN_BASE_BY_RANK) - 1)]
-    per = base + _MAIDEN_AD_RATIO * ctx.stats.get("bonus_attack_damage", 0.0)
+    per = base + _MAIDEN_AD_RATIO * ctx.stat("bonus_attack_damage")
     entry = damage_entry(
         ability.get("name", "Eulogy of the Isles"),
         rank,

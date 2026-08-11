@@ -34,6 +34,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .module_helpers import rank
 from .packet_module import build_packet_module
@@ -106,8 +107,8 @@ def _voidling_attack_damage(
     return (
         flat_level
         + flat_rank
-        + bad_ratio / 100.0 * stats.get("bonus_attack_damage", 0.0)
-        + ap_ratio / 100.0 * stats.get("ability_power", 0.0)
+        + bad_ratio / 100.0 * champion_stat(stats, "bonus_attack_damage")
+        + ap_ratio / 100.0 * champion_stat(stats, "ability_power")
     )
 
 
@@ -129,7 +130,7 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
     if w_rank < 1:
         return None
 
-    count = min(max(int(ctx.options.get("voidling_count", 3)), 2), 4)
+    count = min(max(int(ctx.option("voidling_count")), 2), 4)
     per_attack = _voidling_attack_damage(ability, ctx.level, w_rank, ctx.stats)
     interval = 1.0 / _voidling_attack_speed(ctx.level)
     window = float(ctx.options.get("fight_duration_seconds", _VOIDLING_DEFAULT_WINDOW))

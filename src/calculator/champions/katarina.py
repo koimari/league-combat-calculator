@@ -39,7 +39,7 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    daggers = max(1, min(15, int(ctx.options.get("r_daggers", 15))))
+    daggers = max(1, min(15, int(ctx.option("r_daggers"))))
     physical = extract_named(
         ability, "Physical Damage Per Dagger", rank, ctx.stats, ctx.target
     )
@@ -131,8 +131,8 @@ def _spin_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One dagger spin: flat(level) + 60% bonus AD + level-banded AP."""
     flat = extract_value(ability, "Bonus Magic Damage", ctx.level, 0)
     bonus_ad_ratio = extract_value(ability, "Bonus Magic Damage", ctx.level, 1) / 100.0
-    ad = ctx.stats.get("bonus_attack_damage", 0.0)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ad = ctx.stat("bonus_attack_damage")
+    ap = ctx.stat("ability_power")
     return flat + bonus_ad_ratio * ad + _sinister_steel_ratio(ctx.level) * ap
 
 

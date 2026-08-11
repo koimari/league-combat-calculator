@@ -38,7 +38,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     """
     if not bool(ctx.options.get("q_active", True)):
         return None
-    if int(ctx.options.get("q_focus_stacks", 4)) < 4:
+    if int(ctx.option("q_focus_stacks")) < 4:
         return None
     ability = ctx.ability()
     if ability is None:
@@ -53,7 +53,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
 
     # Apply the bonus AS to the shared stats context (BUFF phase).
     as_ratio = ctx.stats["attack_speed_ratio"]
-    ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + as_ratio * (
+    ctx.stats["attack_speed"] = ctx.stat("attack_speed") + as_ratio * (
         bonus_as_pct / 100.0
     )
 

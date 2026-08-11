@@ -59,7 +59,7 @@ def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    ticks = min(max(int(ctx.options.get("w_ticks", 8)), 1), 8)
+    ticks = min(max(int(ctx.option("w_ticks")), 1), 8)
     per_instance = extract_named(
         ability, "Damage per Instance", rank, ctx.stats, ctx.target
     )
@@ -110,7 +110,7 @@ def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    ticks = min(max(int(ctx.options.get("r_ticks", 20)), 1), 20)
+    ticks = min(max(int(ctx.option("r_ticks")), 1), 20)
     per_tick = extract_named(
         ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target
     )

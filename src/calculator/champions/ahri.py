@@ -41,7 +41,7 @@ def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    fragments = max(0, int(ctx.options.get("p_essence_fragments", 9)))
+    fragments = max(0, int(ctx.option("p_essence_fragments")))
     if fragments < 9:
         return None
     return {

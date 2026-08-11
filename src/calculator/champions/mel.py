@@ -90,9 +90,7 @@ def _golden_eclipse(ctx: SlotCtx):
     # and the per-stack share is priced explicitly below.
     flat_share = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_value(ability, "Magic Damage", rank, modifier_index=2)
-    per_stack += _R_PER_STACK_AP_RATIO * float(
-        ctx.stats.get("ability_power", 0.0) or 0.0
-    )
+    per_stack += _R_PER_STACK_AP_RATIO * float(ctx.stat("ability_power") or 0.0)
     stacks = int(ctx.options.get("r_overwhelm_stacks", _R_DEFAULT_OVERWHELM_STACKS))
     stacks = max(0, min(stacks, 50))
     total = flat_share + per_stack * stacks

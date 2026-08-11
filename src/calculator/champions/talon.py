@@ -53,7 +53,7 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    count = max(0, int(ctx.options.get("passive_procs", 1)))
+    count = max(0, int(ctx.option("passive_procs")))
     if count <= 0:
         return None
 
@@ -64,9 +64,7 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
 
     per_tick = sum_modifiers(tick_leveling, ctx.level, ctx.stats, ctx.target)
     per_tick += (
-        _P_BLEED_BONUS_AD_RATIO
-        / _P_BLEED_TICKS
-        * ctx.stats.get("bonus_attack_damage", 0.0)
+        _P_BLEED_BONUS_AD_RATIO / _P_BLEED_TICKS * ctx.stat("bonus_attack_damage")
     )
     total = per_tick * _P_BLEED_TICKS
     return {
@@ -92,7 +90,7 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
         "event_phase": "effect",
         "damage_events": [
             {
-                "time": float(ctx.options.get("fight_duration_seconds", 0.0) or 0.0),
+                "time": float(ctx.option("fight_duration_seconds") or 0.0),
                 "damage_type": "physical",
                 "damage": total,
                 "event_precision": "phase_order",

@@ -62,7 +62,7 @@ def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
     # "% of damage stored" has no stat the scaling layer can resolve.
     ad_percent = extract_value(ability, "Physical Damage", rank, 0)
     stored_percent = extract_value(ability, "Physical Damage", rank, 1)
-    ad_damage = (ad_percent / 100.0) * float(ctx.stats.get("attack_damage", 0.0))
+    ad_damage = (ad_percent / 100.0) * float(ctx.stat("attack_damage"))
 
     # The stored pool: pre-mitigation raw spell damage the fight rotation
     # prices for the kit's damaging abilities (Q + E).  R is evaluated

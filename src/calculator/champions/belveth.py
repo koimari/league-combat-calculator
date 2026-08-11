@@ -59,7 +59,7 @@ R_ONHIT_CADENCE = 1  # patch 26.15: R passive procs on every attack
 
 def _missing_hp_fraction(ctx: SlotCtx) -> float:
     """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.options.get("target_missing_hp_pct", 50))
+    pct = float(ctx.option("target_missing_hp_pct"))
     return min(max(pct, 0.0), 100.0) / 100.0
 
 
@@ -95,15 +95,13 @@ def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
 
     temp_as = PASSIVE_TEMP_BONUS_AS
     per_stack = _per_level_scaling(ability, 0, ctx.level)
-    stacks = max(0, int(ctx.options.get("lavender_stacks", 0)))
+    stacks = max(0, int(ctx.option("lavender_stacks")))
     bonus_as = temp_as + per_stack * stacks
 
     # Parse-time context: E's slash count reads bonus_attack_speed.
-    ctx.stats["bonus_attack_speed"] = (
-        ctx.stats.get("bonus_attack_speed", 0.0) + bonus_as
-    )
-    ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + ctx.stats.get(
-        "attack_speed_ratio", 0.0
+    ctx.stats["bonus_attack_speed"] = ctx.stat("bonus_attack_speed") + bonus_as
+    ctx.stats["attack_speed"] = ctx.stat("attack_speed") + ctx.stat(
+        "attack_speed_ratio"
     ) * (bonus_as / 100.0)
 
     entry = damage_entry(
@@ -134,7 +132,7 @@ def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     per_dash = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    casts = min(max(int(ctx.options.get("q_casts", 4)), 1), 4)
+    casts = min(max(int(ctx.option("q_casts")), 1), 4)
     cooldown = Q_DIRECTION_COOLDOWNS[min(rank - 1, len(Q_DIRECTION_COOLDOWNS) - 1)]
 
     return {
@@ -189,7 +187,7 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
 
     # Final bonus AS: items + passive (P is BUFF phase, already applied).
     # True Form's total-AS multiplier is NOT bonus AS and never counts.
-    bonus_as = ctx.stats.get("bonus_attack_speed", 0.0)
+    bonus_as = ctx.stat("bonus_attack_speed")
     slashes = E_BASE_SLASHES + math.floor(bonus_as / E_BONUS_AS_PER_EXTRA_SLASH + 1e-9)
 
     return {
@@ -237,7 +235,7 @@ def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     missing = _missing_hp_fraction(ctx)
-    max_hp = (ctx.target or {}).get("target_max_health", 0.0)
+    max_hp = ctx.target_stat("target_max_health")
 
     def missing_health_override(unit: str, value: float) -> float | None:
         # The JSON's missing-health modifier resolves against the shared

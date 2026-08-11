@@ -129,12 +129,12 @@ def _maximum_dosage(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank >= R_NEARBY_BONUS_RANK:
         percent *= 1.0 + R_NEARBY_CHAMPION_BONUS * _nearby_champions(ctx)
 
-    max_health = ctx.stats.get("health", 0.0)
+    max_health = ctx.stat("health")
     grant = percent * max_health * _missing_health_fraction(ctx)
     # Raise base and total together — bonus health is untouched, which is
     # what keeps the grant away from bonus-health item conversions.
     ctx.stats["health"] = max_health + grant
-    ctx.stats["base_health"] = ctx.stats.get("base_health", 0.0) + grant
+    ctx.stats["base_health"] = ctx.stat("base_health") + grant
 
     entry = damage_entry(
         ability.get("name", "Maximum Dosage"),
@@ -237,7 +237,7 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
 
     percent = extract_value(ability, "Magic Damage", rank) / 100.0
     minimum = extract_value(ability, "Minimum Damage", rank)
-    target_max = float(ctx.target.get("target_max_health", 0.0))
+    target_max = float(ctx.target_stat("target_max_health"))
 
     # Q is current-health damage.  The fight evaluator calls this closure
     # once per hit with the running target-health loss, so a repeated Q is

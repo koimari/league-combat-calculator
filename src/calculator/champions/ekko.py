@@ -75,13 +75,13 @@ def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
     if entry is None:
         return None
     if ready:
-        target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
-        missing_ratio = float(ctx.options.get("w_target_missing_health", 0.5))
+        target_max = float(ctx.target_stat("target_max_health") or 0.0)
+        missing_ratio = float(ctx.option("w_target_missing_health"))
         missing_ratio = min(max(missing_ratio, 0.0), 1.0)
         base = max(
             15.0,
             target_max
-            * (0.03 + 0.03 * ctx.stats.get("ability_power", 0.0) / 100.0)
+            * (0.03 + 0.03 * ctx.stat("ability_power") / 100.0)
             * missing_ratio,
         )
         entry["on_hit"] = {

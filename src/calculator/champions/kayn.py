@@ -24,10 +24,8 @@ def _reaping_slash(ctx: SlotCtx) -> dict[str, Any] | None:
     value = extract_named(ability, "Total Physical Damage", rank, ctx.stats, ctx.target)
     if form == "darkin":
         per_hit = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-        max_hp = float(ctx.target.get("target_max_health", 0.0) or 0.0)
-        health_part = max_hp * (
-            0.06 + 0.035 * ctx.stats.get("bonus_attack_damage", 0.0) / 100.0
-        )
+        max_hp = float(ctx.target_stat("target_max_health") or 0.0)
+        health_part = max_hp * (0.06 + 0.035 * ctx.stat("bonus_attack_damage") / 100.0)
         value = per_hit * hits + health_part * hits
         parts = (
             DamagePart(

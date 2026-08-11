@@ -58,7 +58,7 @@ def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("E")
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("rend_stacks", 1)), 1), 254)
+    stacks = min(max(int(ctx.option("rend_stacks")), 1), 254)
     first = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     additional = extract_named(
         ability, "Bonus Damage per Additional Stack", rank, ctx.stats, ctx.target

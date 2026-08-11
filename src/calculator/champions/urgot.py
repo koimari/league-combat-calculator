@@ -86,8 +86,8 @@ def _echoing_flames_per_proc(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One leg shot: per-level % AD + per-level % of target max health."""
     ad_percent = extract_value(ability, "Per-Level Scaling", ctx.level, 0)
     max_hp_percent = extract_value(ability, "Max Health Damage", ctx.level, 0)
-    ad = float(ctx.stats.get("attack_damage", 0.0) or 0.0)
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    ad = float(ctx.stat("attack_damage") or 0.0)
+    target_max = float(ctx.target_stat("target_max_health") or 0.0)
     return ad_percent / 100.0 * ad + max_hp_percent / 100.0 * target_max
 
 

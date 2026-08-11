@@ -103,7 +103,7 @@ def _transcendent(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None or _splinters(ctx) < SPLINTERS_FULL:
         return None
 
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     delta = ap * TRANSCENDENT_AP_MULTIPLIER
     ctx.stats["ability_power"] = ap + delta
 
@@ -150,9 +150,7 @@ def _dark_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     q_haste = _q_only_haste(ctx)
     if q_haste > 0:
-        global_haste = ctx.stats.get("ability_haste", 0.0) + ctx.stats.get(
-            "basic_ability_haste", 0.0
-        )
+        global_haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
         entry["cooldown"] *= (100.0 + global_haste) / (100.0 + global_haste + q_haste)
     return entry
 
@@ -212,7 +210,7 @@ def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
     if _splinters(ctx) < SPLINTERS_W_TRUE_DAMAGE:
         return damage_entry(name, rank, cooldown, magic, "magic")
 
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     true_bonus = (W_TRUE_RATIO_BASE + W_TRUE_RATIO_PER_100_AP * ap / 100.0) * magic
     return {
         "name": name,

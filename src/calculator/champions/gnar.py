@@ -123,7 +123,7 @@ def _rage_gene(ctx: SlotCtx) -> dict[str, Any] | None:
         ("armor", armor),
         ("magic_resistance", mr),
     ):
-        ctx.stats[key] = ctx.stats.get(key, 0.0) + value
+        ctx.stats[key] = ctx.stat(key) + value
 
     entry = damage_entry(ability.get("name", "Rage Gene"), 0, 0.0, 0.0, "physical")
     entry["stat_buff"] = {
@@ -239,7 +239,7 @@ def _crunch(ctx: SlotCtx) -> dict[str, Any] | None:
 
     def _own_max_hp(unit: str, value: float) -> float | None:
         if unit.strip() == _CRUNCH_OWN_HP_UNIT:
-            return value / 100.0 * ctx.stats.get("health", 0.0)
+            return value / 100.0 * ctx.stat("health")
         return None
 
     total = sum_modifiers(

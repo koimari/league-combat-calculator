@@ -152,25 +152,94 @@ def test_counters_five_to_seven_are_not_reported_here() -> None:
 
 
 def test_the_zero_policy_populations_are_committed_and_reproduce() -> None:
-    """The two measured populations are in the receipt, not in the tool."""
+    """The three measured populations are in the receipt, not in the tool."""
     receipt = _receipt()["zero_policy_frontier"]
-    measured = behavior_frontier.zero_policy_frontier().totals()
-    assert receipt["totals"] == measured
+    measured = behavior_frontier.zero_policy_frontier()
+    assert receipt["totals"] == measured.totals()
+    assert receipt["produced_fallbacks_by_receiver"] == measured.produced_fallbacks
+    assert receipt["hand_built_entries_by_module"] == measured.hand_built_entries
     assert receipt["issue"].strip()
     assert "slotlib" in receipt["declared_default"]
+    assert "inputs.py" in receipt["input_vocabularies"]
 
 
-def test_a_new_literal_fallback_under_champions_fails_the_gate() -> None:
-    """R-05: the guard has a red it can produce on demand.
+def test_the_forbidden_population_is_empty_and_the_gate_says_so() -> None:
+    """D-24's source assertion is a refusal, not a counter.
+
+    A champion input read with a literal fallback fails ``--check`` on its
+    first occurrence, whatever the receipt records — the ratchet applies to
+    the shape on blocks the tree *produced*, never to the three inputs.
+    """
+    report = behavior_frontier.scan()
+    assert behavior_frontier.zero_policy_frontier().forbidden_input_fallbacks == ()
+    assert not behavior_frontier.check(report, behavior_frontier.build_receipt(report))
+
+
+def test_a_planted_input_fallback_fails_the_gate_end_to_end(tmp_path) -> None:
+    """The red is driven by real source under the real tree, not by a seam.
+
+    Every other negative here decrements a committed number through
+    ``check``'s ``committed`` argument, which exercises the comparison and
+    not the measurement.  This one writes a module into
+    ``src/calculator/champions/`` and runs ``main(["--check"])`` against the
+    committed receipt, so the scan, the classification and the gate are all
+    on the path.  The file is removed in ``finally`` and the check is asserted
+    green again afterwards.
+    """
+    planted = behavior_frontier.CHAMPIONS_ROOT / "_frontier_negative_fixture.py"
+    planted.write_text(
+        "def parse(ctx):\n"
+        '    """A stack count nothing wired, defaulted to a literal."""\n'
+        "    return ctx.options.get('q_stacks', 3)\n",
+        encoding="utf-8",
+    )
+    try:
+        assert behavior_frontier.main(["--check"]) == 1
+    finally:
+        planted.unlink()
+    assert behavior_frontier.main(["--check"]) == 0
+
+
+def test_a_new_produced_fallback_fails_the_gate() -> None:
+    """R-05: the ratcheted half has a red it can produce on demand.
 
     ``check``'s ``committed`` seam stands in for a receipt taken before the
     site was added, which is exactly the situation the ratchet exists for.
     """
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
-    committed["zero_policy_frontier"]["totals"]["literal_fallbacks"] -= 1
+    committed["zero_policy_frontier"]["totals"]["produced_fallbacks"] -= 1
     failures = behavior_frontier.check(report, committed)
-    assert any("literal_fallbacks grew" in failure for failure in failures)
+    assert any("produced_fallbacks grew" in failure for failure in failures)
+
+
+def test_the_ratchet_is_per_key_not_only_per_total() -> None:
+    """One module shrinking may not pay for another module growing."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    section = committed["zero_policy_frontier"]["hand_built_entries_by_module"]
+    victim, donor = sorted(section)[:2]
+    section[victim] -= 1
+    section[donor] += 1
+    failures = behavior_frontier.check(report, committed)
+    assert any(victim in failure for failure in failures)
+    assert not any("hand_built_entries grew" in failure for failure in failures)
+
+
+def test_a_receipt_missing_the_section_fails_closed() -> None:
+    """A deleted section is a failure, never a skipped check."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    del committed["zero_policy_frontier"]
+    failures = behavior_frontier.check(report, committed)
+    assert any("no zero_policy_frontier section" in failure for failure in failures)
+
+    committed = behavior_frontier.build_receipt(report)
+    del committed["zero_policy_frontier"]["totals"]["hand_built_entries"]
+    del committed["zero_policy_frontier"]["hand_built_entries_by_module"]
+    failures = behavior_frontier.check(report, committed)
+    assert any("no total for hand_built_entries" in failure for failure in failures)
+    assert any("no hand_built_entries_by_module" in failure for failure in failures)
 
 
 def test_a_new_hand_built_entry_fails_the_gate() -> None:
@@ -186,9 +255,9 @@ def test_shrinking_a_population_is_not_a_failure() -> None:
     """The ratchet is non-growing, not equality: migrating one is progress."""
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
-    committed["zero_policy_frontier"]["totals"]["literal_fallbacks"] += 5
+    committed["zero_policy_frontier"]["totals"]["produced_fallbacks"] += 5
     failures = behavior_frontier.check(report, committed)
-    assert not any("literal_fallbacks" in failure for failure in failures)
+    assert not any("produced_fallbacks" in failure for failure in failures)
 
 
 def test_the_scan_finds_a_planted_fallback_and_a_planted_entry(tmp_path) -> None:
@@ -196,9 +265,15 @@ def test_the_scan_finds_a_planted_fallback_and_a_planted_entry(tmp_path) -> None
     (tmp_path / "fake_champion.py").write_text(
         "def parse(ctx):\n"
         "    stacks = ctx.options.get('q_stacks', 3)\n"
-        "    return {'name': 'Q', 'total_raw': float(stacks)}\n",
+        "    rank = entry.get('rank', 0)\n"
+        "    return {'name': 'Q', 'total_raw': float(stacks + rank)}\n",
         encoding="utf-8",
     )
     frontier = behavior_frontier.zero_policy_frontier(tmp_path)
-    assert frontier.totals() == {"literal_fallbacks": 1, "hand_built_entries": 1}
-    assert frontier.literal_fallbacks == {"options": 1}
+    assert frontier.totals() == {
+        "forbidden_input_fallbacks": 1,
+        "produced_fallbacks": 1,
+        "hand_built_entries": 1,
+    }
+    assert frontier.produced_fallbacks == {"entry": 1}
+    assert "fake_champion.py:2" in frontier.forbidden_input_fallbacks[0]

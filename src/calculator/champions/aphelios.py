@@ -46,31 +46,22 @@ def _weapon_master(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("P")
     if not ability:
         return None
-    ad_points = min(max(int(ctx.options.get("aphelios_bonus_ad_points", 0)), 0), 6)
-    as_points = min(max(int(ctx.options.get("aphelios_bonus_as_points", 0)), 0), 6)
-    lethality_points = min(
-        max(int(ctx.options.get("aphelios_lethality_points", 0)), 0), 6
-    )
+    ad_points = min(max(int(ctx.option("aphelios_bonus_ad_points")), 0), 6)
+    as_points = min(max(int(ctx.option("aphelios_bonus_as_points")), 0), 6)
+    lethality_points = min(max(int(ctx.option("aphelios_lethality_points")), 0), 6)
     entry = damage_entry(ability["name"], 1, 0.0, 0.0, "physical")
     bonus_ad = 4.0 * ad_points
     bonus_as = 9.0 * as_points
     if bonus_ad:
-        ctx.stats["attack_damage"] = ctx.stats.get("attack_damage", 0.0) + bonus_ad
-        ctx.stats["bonus_attack_damage"] = (
-            ctx.stats.get("bonus_attack_damage", 0.0) + bonus_ad
-        )
+        ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
+        ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
     if bonus_as:
-        ctx.stats["bonus_attack_speed"] = (
-            ctx.stats.get("bonus_attack_speed", 0.0) + bonus_as
-        )
+        ctx.stats["bonus_attack_speed"] = ctx.stat("bonus_attack_speed") + bonus_as
         ctx.stats["attack_speed"] = (
-            ctx.stats.get("attack_speed", 0.0)
-            + ctx.stats.get("attack_speed_ratio", 0.0) * bonus_as / 100.0
+            ctx.stat("attack_speed") + ctx.stat("attack_speed_ratio") * bonus_as / 100.0
         )
     if lethality_points:
-        ctx.stats["lethality"] = (
-            ctx.stats.get("lethality", 0.0) + 4.5 * lethality_points
-        )
+        ctx.stats["lethality"] = ctx.stat("lethality") + 4.5 * lethality_points
     entry["stat_buff"] = {
         "bonus_attack_damage": bonus_ad,
         "bonus_attack_speed": bonus_as,
@@ -125,9 +116,9 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
     # AD and attack-speed-derived count, not raw AD alone.
     values = (0.20, 0.235, 0.27, 0.305, 0.34, 0.375, 0.41)
     ratio = values[min(max(rank, 1), len(values)) - 1]
-    bonus_as = max(0.0, float(ctx.stats.get("bonus_attack_speed", 0.0)))
+    bonus_as = max(0.0, float(ctx.stat("bonus_attack_speed")))
     count = max(1, int(6 + 2 * bonus_as / 100.0))
-    per_hit = ratio * float(ctx.stats.get("attack_damage", 0.0))
+    per_hit = ratio * float(ctx.stat("attack_damage"))
     entry = damage_entry(
         ability.get("name", "Onslaught"),
         rank,
@@ -152,8 +143,8 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     r_rank = 1 if ctx.level < 11 else (2 if ctx.level < 16 else 3)
     base = (125.0, 175.0, 225.0)[r_rank - 1]
-    ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
-    ap = float(ctx.stats.get("ability_power", 0.0))
+    ad = float(ctx.stat("bonus_attack_damage"))
+    ap = float(ctx.stat("ability_power"))
     entry = damage_entry(
         ability["name"], r_rank, 120.0, base + 0.20 * ad + ap, "physical"
     )

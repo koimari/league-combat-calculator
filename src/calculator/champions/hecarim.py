@@ -15,14 +15,12 @@ def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     percent = extract_value(ability, "Per-Level Scaling", ctx.level)
-    bonus_ms = float(ctx.options.get("bonus_movement_speed", 0.0))
+    bonus_ms = float(ctx.option("bonus_movement_speed"))
     if bonus_ms <= 0.0:
-        bonus_ms = max(0.0, float(ctx.stats.get("move_speed", 325.0)) - 325.0)
+        bonus_ms = max(0.0, float(ctx.stat("move_speed")) - 325.0)
     bonus_ad = percent * bonus_ms / 100.0
-    ctx.stats["bonus_attack_damage"] = (
-        ctx.stats.get("bonus_attack_damage", 0.0) + bonus_ad
-    )
-    ctx.stats["attack_damage"] = ctx.stats.get("attack_damage", 0.0) + bonus_ad
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
+    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
     entry = damage_entry(
         ability.get("name", "Warpath"), ctx.level, 0.0, 0.0, "physical"
     )
@@ -43,11 +41,9 @@ def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("q_stacks", 0)), 0), 3)
+    stacks = min(max(int(ctx.option("q_stacks")), 0), 3)
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    multiplier = 1.0 + stacks * (
-        0.03 + 0.03 * ctx.stats.get("bonus_attack_damage", 0.0) / 100.0
-    )
+    multiplier = 1.0 + stacks * (0.03 + 0.03 * ctx.stat("bonus_attack_damage") / 100.0)
     value = base * multiplier
     return {
         "name": ability.get("name", "Rampage"),
@@ -101,7 +97,7 @@ def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    distance = min(max(float(ctx.options.get("e_charge", 1.0)), 0.0), 1.0)
+    distance = min(max(float(ctx.option("e_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
         ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target

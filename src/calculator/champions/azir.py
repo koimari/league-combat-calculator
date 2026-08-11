@@ -76,9 +76,9 @@ def _arise(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     per_soldier = _soldier_attack_damage(
-        ability, rank, ctx.level, ctx.stats.get("ability_power", 0.0)
+        ability, rank, ctx.level, ctx.stat("ability_power")
     )
-    soldiers = max(1, int(ctx.options.get("soldier_count", 1)))
+    soldiers = max(1, int(ctx.option("soldier_count")))
     per_attack = per_soldier * (1.0 + SOLDIER_EXTRA_DAMAGE * (soldiers - 1))
 
     # Charge ability: rechargeRate is the sustained-use cooldown (the

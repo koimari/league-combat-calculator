@@ -98,7 +98,7 @@ def _trap_grants(ctx: SlotCtx) -> int:
         return 0
     rank = ctx.rank_for("W")
     cap = max(1, int(extract_value(ability, "Maximum Number of Traps", rank) or 5))
-    return min(max(int(ctx.options.get("w_traps", 1)), 0), cap)
+    return min(max(int(ctx.option("w_traps")), 0), cap)
 
 
 def _e_cast_count(ctx: SlotCtx, duration: float) -> int:
@@ -107,9 +107,7 @@ def _e_cast_count(ctx: SlotCtx, duration: float) -> int:
     rank = ctx.rank_for("E")
     if ability is None or rank < 1:
         return 0
-    haste = ctx.stats.get("ability_haste", 0.0) + ctx.stats.get(
-        "basic_ability_haste", 0.0
-    )
+    haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
     cd = effective_cooldown(extract_cooldown(ability, rank), haste)
     return 1 + int(duration / cd) if cd > 0 else 1
 
@@ -130,11 +128,11 @@ def _headshot_counts(ctx: SlotCtx, trap_grants: int) -> tuple[int, int, int, int
     a headshot is on the auto that would land the 5th stack, so pre-stacked
     stacks advance the cadence — heads = (pre_stacks + autos) // 6.
     """
-    pre_stacks = min(max(int(ctx.options.get("p_pre_stacks", 0)), 0), 5)
+    pre_stacks = min(max(int(ctx.option("p_pre_stacks")), 0), 5)
     duration = ctx.options.get("fight_duration_seconds")
     if duration is not None:
-        uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
-        num_autos = math.floor(ctx.stats.get("attack_speed", 0.0) * uptime * duration)
+        uptime = float(ctx.option("auto_attack_uptime"))
+        num_autos = math.floor(ctx.stat("attack_speed") * uptime * duration)
         if num_autos > 0:
             remaining = num_autos
             trap_used = min(trap_grants, remaining)
@@ -180,9 +178,9 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    total_ad = ctx.stats.get("attack_damage", 0.0)
-    crit_chance = min(ctx.stats.get("critical_strike_chance", 0.0) / 100.0, 1.0)
-    bonus_crit_damage = ctx.stats.get("crit_damage_bonus", 0.0)
+    total_ad = ctx.stat("attack_damage")
+    crit_chance = min(ctx.stat("critical_strike_chance") / 100.0, 1.0)
+    bonus_crit_damage = ctx.stat("crit_damage_bonus")
     bonus = total_ad * (
         _headshot_level_ratio(ctx.level) + crit_chance * (1.0 + bonus_crit_damage)
     )

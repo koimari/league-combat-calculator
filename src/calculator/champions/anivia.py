@@ -19,6 +19,7 @@ hardcoded.
 
 from typing import Any
 
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_named, simple_damage
 
@@ -32,7 +33,7 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    duration = max(float(ctx.options.get("r_duration", 5.0)), 1.5)
+    duration = max(float(ctx.option("r_duration")), 1.5)
     total_ticks = int(duration / 0.5)
     initial_ticks = min(3, total_ticks)
     empowered_ticks = total_ticks - initial_ticks
@@ -81,7 +82,7 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
     resurrection window on the cached 240-second cooldown.
     """
     return {
-        "revive_health_amount": float(stats.get("health", 0.0))
+        "revive_health_amount": float(champion_stat(stats, "health"))
         * REVIVE_MAX_HEALTH_RATIO,
         "revive_delay": REVIVE_DELAY_SECONDS,
         "revive_cooldown": REVIVE_COOLDOWN_SECONDS,

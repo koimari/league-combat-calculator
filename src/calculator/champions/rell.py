@@ -54,8 +54,8 @@ def _break_the_mold(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("P", 0)
     if ability is None:
         return None
-    armor = float(ctx.stats.get("armor", 0.0))
-    magic_resistance = float(ctx.stats.get("magic_resistance", 0.0))
+    armor = float(ctx.stat("armor"))
+    magic_resistance = float(ctx.stat("magic_resistance"))
     per_hit = (
         _BREAK_THE_MOLD_ARMOR_RATIO * armor
         + _BREAK_THE_MOLD_MR_RATIO * magic_resistance

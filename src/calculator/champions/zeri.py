@@ -60,9 +60,7 @@ def _spark_surge(ctx: SlotCtx):
     per_round = extract_named(
         ability, "Burst Fire Bonus Magic Damage", rank, ctx.stats, ctx.target
     )
-    crit_chance = min(
-        max(float(ctx.stats.get("critical_strike_chance", 0.0)) / 100.0, 0.0), 1.0
-    )
+    crit_chance = min(max(float(ctx.stat("critical_strike_chance")) / 100.0, 0.0), 1.0)
     multiplier = 1.0 + (_E_BONUS_CRIT_MULTIPLIER_AT_MAX - 1.0) * crit_chance
     per_round *= multiplier
     total = per_round * _E_LIGHTNING_ROUNDS_ROUNDS

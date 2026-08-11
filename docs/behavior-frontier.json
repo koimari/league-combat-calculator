@@ -260,10 +260,11 @@
       "value": null
     }
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "slice": "3.7",
   "zero_policy_frontier": {
     "declared_default": "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry and simple_damage and overridable per call (D-24)",
+    "forbidden_input_fallbacks": [],
     "hand_built_entries_by_module": {
       "ahri.py": 4,
       "akali.py": 2,
@@ -329,24 +330,21 @@
       "zoe.py": 1,
       "zyra.py": 1
     },
+    "input_vocabularies": "src/calculator/champions/inputs.py \u2014 the declared defaults that replaced the forbidden literals, each with a reason and a producer its name is asserted against",
     "issue": "issue #213",
-    "literal_fallbacks_by_receiver": {
-      "chained": 3,
-      "champion_stats": 3,
+    "produced_fallbacks_by_receiver": {
+      "chained": 1,
       "entry": 21,
       "event": 4,
       "fix": 2,
-      "options": 148,
       "part_timing": 1,
-      "spec": 5,
-      "stats": 185,
-      "stats_context": 3,
-      "target": 37
+      "spec": 5
     },
-    "rule": "neither population may grow: a new .get(key, <literal>) under champions/ and a new hand-built ability entry each fail --check, so the ruled exception cannot widen without a decision",
+    "rule": "a .get(key, <literal>) on a champion input block (stats, target, options) is forbidden outright \u2014 D-24's source assertion, and the guard the declared zero_policy default only holds with; the same shape on a block the tree produced is pinned non-growing per receiver, and hand-built ability entries per module, so neither can widen without a decision",
     "totals": {
+      "forbidden_input_fallbacks": 0,
       "hand_built_entries": 91,
-      "literal_fallbacks": 412
+      "produced_fallbacks": 34
     }
   }
 }
