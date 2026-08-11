@@ -83,6 +83,8 @@ from src.calculator import interpreters  # noqa: E402
 from src.calculator import item_behavior_catalog as catalog  # noqa: E402
 from src.calculator import item_coverage  # noqa: E402
 from src.calculator.data_fetcher import fetch_item_data  # noqa: E402
+from src.calculator.item_behavior import ReceiptOnly  # noqa: E402
+from src.calculator.survival import compile as compile_module  # noqa: E402
 
 RECEIPT_PATH = ROOT / "docs" / "behavior-frontier.json"
 SRC_ROOT = ROOT / "src"
@@ -293,6 +295,69 @@ def scan(root: Path = SRC_ROOT) -> FrontierReport:
         f"{family.value}/{lane.value}" for family, lane in pairs
     )
     return report
+
+
+def compiled_walk_delta() -> dict[str, Any]:
+    """D-98's derivation, landed beside ``COMPILED_WALK_UNREPRESENTABLE_ITEMS``.
+
+    The hand set is the compiled score kernel's per-item capability report;
+    :func:`interpreters.compilability_for` is the per-owner fold that succeeds
+    it (D-43).  This block is the two answers side by side with the difference
+    committed, because at 3.8 they are **not** set-equal and pretending
+    otherwise would be the prose-outruns-code failure inside the instrument
+    that measures it.
+
+    ``legacy_only`` is the direction that blocks the flip.  A member here is an
+    item the hand set withholds and the fold would let compile, so flipping
+    today would silently drop a mechanic — the campaign's own incident shape.
+    ``derived_only`` is the safe direction: the fold is more conservative than
+    the hand set, and every member says which family made it so.
+
+    Both are gated by set equality against the committed receipt rather than
+    by a count, so a declaration that closes one of them shows up as a diff in
+    a committed artifact (D-40).
+    """
+    legacy = frozenset(compile_module.COMPILED_WALK_UNREPRESENTABLE_ITEMS)
+    derived: dict[str, list[str]] = {}
+    for owner in sorted(item_names() | legacy):
+        if not isinstance(interpreters.compilability_for(owner), ReceiptOnly):
+            continue
+        # The families that made the fold refuse.  An owner with a registry
+        # entry and no rule at all refuses for a different reason and gets the
+        # empty list, which is the honest rendering of "nothing models it yet".
+        derived[owner] = sorted(
+            {
+                rule.family.value
+                for rule in catalog.behavior_rules(owner)
+                if isinstance(rule.compilability, ReceiptOnly)
+            }
+        )
+    return {
+        "legacy_symbol": "survival.compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS",
+        "derived_symbol": "interpreters.compilability_for",
+        "legacy": sorted(legacy),
+        "derived": dict(sorted(derived.items())),
+        "legacy_only": sorted(legacy - set(derived)),
+        "derived_only": sorted(set(derived) - legacy),
+        "flip_blocked_by": [
+            "Compilability is a two-member union with one free-text reason, so "
+            "no declared axis separates 'the compiled survival ledger cannot "
+            "stage this transition' from 'the compiled score kernel cannot "
+            "represent this damage modifier' (D-101) or from 'this support "
+            "template is not instantaneous'.  compilability_for folds all "
+            "three, and the hand set answers only the first.",
+            "Immortal Path and Eclipse are in the hand set for a survival "
+            "state no BehaviorRule declares at all — a below-half "
+            "received-healing multiplier and a stack self-shield — so no fold "
+            "over declarations can reproduce them.",
+            "Catalyst of Aeons and the three Doran's items compile to rules "
+            "that are all Compilable; their hand-set reasons are the "
+            "conservatism notes D-43 names, and turning them into "
+            "declarations is a migration, not a flip.",
+            "counter_3 is not yet 0: stat_derivation is unmigrated, so the "
+            "declaration base this fold reads is knowingly incomplete.",
+        ],
+    }
 
 
 def no_runtime_behavior_block() -> dict[str, Any]:
@@ -589,11 +654,43 @@ def _zero_policy_failures(
     return failures
 
 
+def _compiled_walk_delta_failures(
+    committed: Mapping[str, Any], fresh: Mapping[str, Any]
+) -> list[str]:
+    """The derivation-beside-legacy block, gated by set equality (D-40, D-98).
+
+    Fails closed: a receipt with the section deleted is a failure and not a
+    skipped check, so the gate cannot be disarmed by removing what it reads.
+    """
+    recorded = committed.get("compiled_walk_delta")
+    if not isinstance(recorded, Mapping):
+        failures = [
+            "compiled-walk delta: the committed receipt has no "
+            "compiled_walk_delta section; run --write"
+        ]
+        return failures
+    measured = fresh["compiled_walk_delta"]
+    failures = []
+    for key in ("legacy", "legacy_only", "derived_only"):
+        if set(recorded.get(key, ())) != set(measured[key]):
+            failures.append(
+                f"compiled-walk delta: {key} differs from the committed set "
+                f"(committed-only={sorted(set(recorded.get(key, ())) - set(measured[key]))}, "
+                f"measured-only={sorted(set(measured[key]) - set(recorded.get(key, ())))})"
+            )
+    if set(recorded.get("derived", {})) != set(measured["derived"]):
+        failures.append(
+            "compiled-walk delta: the derived owner set differs from the "
+            "committed one"
+        )
+    return failures
+
+
 def build_receipt(report: FrontierReport) -> dict[str, Any]:
     """The committed frontier artifact."""
     return {
         "schema_version": SCHEMA_VERSION,
-        "slice": "3.7",
+        "slice": "3.8",
         "counters": {
             "counter_1": {
                 "counts": "runtime item-name dispatch sites",
@@ -643,6 +740,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
             module: dict(sorted(tally.items()))
             for module, tally in sorted(report.by_module.items())
         },
+        "compiled_walk_delta": compiled_walk_delta(),
         "no_runtime_behavior": no_runtime_behavior_block(),
         "zero_policy_frontier": zero_policy_block(zero_policy_frontier()),
         "h4_tags": {
@@ -698,6 +796,7 @@ def check(
                 f"declared-only={sorted(fresh_modules - recorded_modules)})"
             )
     failures.extend(_zero_policy_failures(committed, fresh))
+    failures.extend(_compiled_walk_delta_failures(committed, fresh))
     ratchet = committed.get("no_runtime_behavior", {})
     members = ratchet.get("members", [])
     ceiling = ratchet.get("ratchet_ceiling")

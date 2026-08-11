@@ -73,6 +73,222 @@
       "class_c": 38
     }
   },
+  "compiled_walk_delta": {
+    "derived": {
+      "Abyssal Mask": [
+        "ally_packet"
+      ],
+      "Actualizer": [],
+      "Archangel's Staff": [],
+      "Ardent Censer": [
+        "ally_packet"
+      ],
+      "Axiom Arc": [],
+      "Bandlepipes": [
+        "ally_packet"
+      ],
+      "Banshee's Veil": [
+        "combat_state"
+      ],
+      "Black Cleaver": [
+        "ally_packet"
+      ],
+      "Bloodletter's Curse": [
+        "ally_packet"
+      ],
+      "Bloodsong": [
+        "ally_packet",
+        "delta_amp"
+      ],
+      "Cryptbloom": [
+        "ally_packet"
+      ],
+      "Cull": [
+        "ally_packet"
+      ],
+      "Dawncore": [],
+      "Death's Dance": [
+        "damage_routing"
+      ],
+      "Dream Maker": [
+        "ally_packet"
+      ],
+      "Edge of Night": [
+        "combat_state"
+      ],
+      "Endless Hunger": [],
+      "Experimental Hexplate": [],
+      "Fimbulwinter": [
+        "ally_packet"
+      ],
+      "Force of Nature": [
+        "combat_state"
+      ],
+      "Frozen Heart": [],
+      "Guardian Angel": [
+        "threshold_defense"
+      ],
+      "Haunting Guise": [
+        "delta_amp"
+      ],
+      "Hexoptics C44": [],
+      "Horizon Focus": [
+        "delta_amp"
+      ],
+      "Hubris": [],
+      "Immortal Path": [
+        "delta_amp"
+      ],
+      "Imperial Mandate": [
+        "ally_packet",
+        "delta_amp"
+      ],
+      "Jak'Sho, The Protean": [
+        "combat_state"
+      ],
+      "Knight's Vow": [
+        "ally_packet"
+      ],
+      "Liandry's Torment": [
+        "delta_amp"
+      ],
+      "Locket of the Iron Solari": [
+        "ally_packet"
+      ],
+      "Lord Dominik's Regards": [
+        "delta_amp"
+      ],
+      "Manamune": [],
+      "Maw of Malmortius": [
+        "threshold_defense"
+      ],
+      "Moonstone Renewer": [
+        "ally_packet"
+      ],
+      "Overlord's Bloodmail": [],
+      "Phage": [
+        "ally_packet"
+      ],
+      "Rabadon's Deathcap": [],
+      "Riftmaker": [
+        "delta_amp"
+      ],
+      "Rod of Ages": [],
+      "Runic Compass": [
+        "ally_packet"
+      ],
+      "Shadowflame": [
+        "delta_amp"
+      ],
+      "Shurelya's Battlesong": [
+        "ally_packet"
+      ],
+      "Solstice Sleigh": [
+        "ally_packet"
+      ],
+      "Spear of Shojin": [
+        "delta_amp"
+      ],
+      "Staff of Flowing Water": [
+        "ally_packet"
+      ],
+      "Stridebreaker": [
+        "ally_packet"
+      ],
+      "Swiftmarch": [],
+      "Tear of the Goddess": [],
+      "Verdant Barrier": [
+        "combat_state"
+      ],
+      "Warmog's Armor": [],
+      "Whispering Circlet": [],
+      "Winter's Approach": [],
+      "World Atlas": [
+        "ally_packet"
+      ],
+      "Yun Tal Wildarrows": []
+    },
+    "derived_only": [
+      "Abyssal Mask",
+      "Actualizer",
+      "Archangel's Staff",
+      "Ardent Censer",
+      "Axiom Arc",
+      "Bandlepipes",
+      "Black Cleaver",
+      "Bloodletter's Curse",
+      "Bloodsong",
+      "Cryptbloom",
+      "Cull",
+      "Dawncore",
+      "Dream Maker",
+      "Endless Hunger",
+      "Experimental Hexplate",
+      "Frozen Heart",
+      "Haunting Guise",
+      "Hexoptics C44",
+      "Horizon Focus",
+      "Hubris",
+      "Imperial Mandate",
+      "Liandry's Torment",
+      "Locket of the Iron Solari",
+      "Lord Dominik's Regards",
+      "Manamune",
+      "Moonstone Renewer",
+      "Overlord's Bloodmail",
+      "Phage",
+      "Rabadon's Deathcap",
+      "Riftmaker",
+      "Rod of Ages",
+      "Runic Compass",
+      "Shadowflame",
+      "Shurelya's Battlesong",
+      "Solstice Sleigh",
+      "Spear of Shojin",
+      "Staff of Flowing Water",
+      "Stridebreaker",
+      "Swiftmarch",
+      "Tear of the Goddess",
+      "Warmog's Armor",
+      "Whispering Circlet",
+      "Winter's Approach",
+      "World Atlas",
+      "Yun Tal Wildarrows"
+    ],
+    "derived_symbol": "interpreters.compilability_for",
+    "flip_blocked_by": [
+      "Compilability is a two-member union with one free-text reason, so no declared axis separates 'the compiled survival ledger cannot stage this transition' from 'the compiled score kernel cannot represent this damage modifier' (D-101) or from 'this support template is not instantaneous'.  compilability_for folds all three, and the hand set answers only the first.",
+      "Immortal Path and Eclipse are in the hand set for a survival state no BehaviorRule declares at all \u2014 a below-half received-healing multiplier and a stack self-shield \u2014 so no fold over declarations can reproduce them.",
+      "Catalyst of Aeons and the three Doran's items compile to rules that are all Compilable; their hand-set reasons are the conservatism notes D-43 names, and turning them into declarations is a migration, not a flip.",
+      "counter_3 is not yet 0: stat_derivation is unmigrated, so the declaration base this fold reads is knowingly incomplete."
+    ],
+    "legacy": [
+      "Banshee's Veil",
+      "Catalyst of Aeons",
+      "Death's Dance",
+      "Doran's Blade",
+      "Doran's Ring",
+      "Doran's Shield",
+      "Eclipse",
+      "Edge of Night",
+      "Fimbulwinter",
+      "Force of Nature",
+      "Guardian Angel",
+      "Immortal Path",
+      "Jak'Sho, The Protean",
+      "Knight's Vow",
+      "Maw of Malmortius",
+      "Verdant Barrier"
+    ],
+    "legacy_only": [
+      "Catalyst of Aeons",
+      "Doran's Blade",
+      "Doran's Ring",
+      "Doran's Shield",
+      "Eclipse"
+    ],
+    "legacy_symbol": "survival.compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS"
+  },
   "counters": {
     "counter_1": {
       "counts": "runtime item-name dispatch sites",
@@ -243,7 +459,7 @@
     }
   },
   "schema_version": 2,
-  "slice": "3.7",
+  "slice": "3.8",
   "zero_policy_frontier": {
     "declared_default": "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry and simple_damage and overridable per call (D-24)",
     "forbidden_input_fallbacks": [],

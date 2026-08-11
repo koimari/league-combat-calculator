@@ -277,3 +277,51 @@ def test_the_scan_finds_a_planted_fallback_and_a_planted_entry(tmp_path) -> None
     }
     assert frontier.produced_fallbacks == {"entry": 1}
     assert "fake_champion.py:2" in frontier.forbidden_input_fallbacks[0]
+
+
+def test_the_compiled_walk_derivation_lands_beside_the_hand_set() -> None:
+    """D-98's first half for ``COMPILED_WALK_UNREPRESENTABLE_ITEMS``.
+
+    The derivation is landed beside the legacy set and its difference is
+    committed, because at 3.8 the two are not set-equal.  The gate is set
+    equality against the receipt in both directions, so a declaration that
+    closes part of the gap is a diff in a committed artifact rather than a
+    number that quietly improved.
+    """
+    receipt = _receipt()["compiled_walk_delta"]
+    measured = behavior_frontier.compiled_walk_delta()
+
+    assert set(receipt["legacy"]) == set(measured["legacy"])
+    assert set(receipt["legacy_only"]) == set(measured["legacy_only"])
+    assert set(receipt["derived_only"]) == set(measured["derived_only"])
+    assert set(receipt["derived"]) == set(measured["derived"])
+
+
+def test_the_flip_is_blocked_and_the_receipt_says_by_what() -> None:
+    """A gap with no stated cause is the prose this campaign deletes.
+
+    ``legacy_only`` is the direction that forbids the one-symbol flip: each
+    member is an item the hand set withholds and the fold would let compile,
+    so flipping while it is non-empty would silently drop a mechanic.  While
+    it is non-empty the receipt owes a reason per blocker.
+    """
+    receipt = _receipt()["compiled_walk_delta"]
+
+    assert receipt["legacy_only"], (
+        "legacy_only is empty — the flip is no longer blocked from this "
+        "direction and this test is the one that should say so"
+    )
+    assert len(receipt["flip_blocked_by"]) >= len(receipt["legacy_only"]) // 3
+    for reason in receipt["flip_blocked_by"]:
+        assert reason.strip()
+
+
+def test_the_committed_delta_gate_fails_when_the_section_is_deleted() -> None:
+    """R-05: the new check reproduces its own red on demand."""
+    report = behavior_frontier.scan()
+    committed = _receipt()
+    committed.pop("compiled_walk_delta")
+
+    failures = behavior_frontier.check(report, committed)
+
+    assert any("compiled_walk_delta" in failure for failure in failures)
