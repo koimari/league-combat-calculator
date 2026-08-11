@@ -39,6 +39,7 @@ from src.calculator.item_behavior import (
     TRIGGER_STREAM,
     TriggerEvent,
     Typing,
+    UtilityDimension,
     ZeroPolicy,
     is_value_reference,
     policy_values,
@@ -213,3 +214,47 @@ def test_the_kernel_contract_carries_no_program_type() -> None:
         holder_is_melee=True,
     )
     assert context.data_version == 3
+
+
+def test_the_utility_vocabulary_lands_beside_the_two_it_replaces() -> None:
+    """D-98's delta, asserted before the flip that deletes the legacy sets.
+
+    ``UtilityDimension`` is the single home of the outcome vocabulary, and it
+    is landed *beside* the two containers it replaces rather than instead of
+    them: ``item_coverage._UTILITY_DIMENSIONS`` (43 items over the dimension
+    strings) and Phase 1's ``coverage_evidence.UTILITY_DIMENSIONS`` (the
+    measured distinct set).  All three must name the same strings, which is
+    what makes the following commit a one-symbol flip rather than a rewrite
+    with a behaviour change hidden in it.
+
+    Set equality, never a count: a 43 and a 29 are two plausible-looking
+    wrong answers for one population, which is exactly why the legacy set's
+    own comment refuses to pin an integer.
+    """
+    # Imported here rather than at module scope: this suite is
+    # ``item_behavior``'s front door, and the leaf-ness test above asserts the
+    # module imports nothing but ``value_ref`` and ``ability_spec``.
+    from src.calculator import item_coverage
+    from src.calculator.coverage_evidence import UTILITY_DIMENSIONS
+
+    declared = {dimension.value for dimension in UtilityDimension}
+    measured = {
+        dimension
+        for dimensions in item_coverage._UTILITY_DIMENSIONS.values()  # noqa: SLF001
+        for dimension in dimensions
+    }
+
+    assert declared == measured
+    assert declared == set(UTILITY_DIMENSIONS)
+    assert len(UtilityDimension) == len(declared), "two members share a value"
+
+
+def test_every_utility_member_is_spelled_the_way_it_serializes() -> None:
+    """The member name is the value upper-cased — no second spelling exists.
+
+    The dimension strings are a public payload field.  An enum whose member
+    name and value can drift would give a reader two names for one dimension,
+    which is the drift the single-home ruling exists to stop.
+    """
+    for dimension in UtilityDimension:
+        assert dimension.name == dimension.value.upper()

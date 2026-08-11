@@ -108,6 +108,59 @@ class RuleFamily(Enum):
 RULE_FAMILY_COUNT = 18
 
 
+class UtilityDimension(Enum):
+    """What an item changes about a fight besides the damage number.
+
+    The single home of the outcome vocabulary.  Two surfaces read it and
+    neither owns it: ``item_coverage`` publishes an item's dimensions in the
+    coverage payload, and Phase 1's ``coverage_evidence.UTILITY_DIMENSIONS``
+    is a projection of these values, so a claim and a payload cannot disagree
+    about what a dimension is called.  It lives here rather than beside
+    either reader because a vocabulary with two homes is two vocabularies.
+
+    Closed, and closure is the point: a dimension that names no mechanism is
+    a product label, and product labels drift into coverage claims.  A new
+    member arrives with the claim that names the packet or the option
+    producing it.
+
+    Not to be confused with ``ActionKind``, and deliberately not a revival of
+    the write-only survival field D-09 deleted in 0A — the deletion frontier
+    still asserts that name absent from ``src/``, so this docstring does not
+    spell it.  These are the *product-facing* outcome labels of a serialized
+    coverage record, a different thing that happens to share a word.
+    """
+
+    ALLY_SUPPORT = "ally_support"
+    ATTACK_SPEED_REDUCTION = "attack_speed_reduction"
+    CLEANSE = "cleanse"
+    COPIED_ON_HIT = "copied_on_hit"
+    CRITICAL_MITIGATION = "critical_mitigation"
+    DAMAGE_AMPLIFICATION = "damage_amplification"
+    DEFENSE = "defense"
+    ECONOMY = "economy"
+    ENERGIZED = "energized"
+    EXECUTE = "execute"
+    HEALTH_STATE = "health_state"
+    MOVEMENT = "movement"
+    MULTI_TARGET = "multi_target"
+    ON_HIT = "on_hit"
+    PROGRESSION = "progression"
+    QUEST = "quest"
+    RANGE = "range"
+    RESOURCE = "resource"
+    REVIVE = "revive"
+    SHIELD = "shield"
+    SLOW = "slow"
+    SLOW_RESISTANCE = "slow_resistance"
+    SPELL_PROTECTION = "spell_protection"
+    STASIS = "stasis"
+    STAT_BUFF = "stat_buff"
+    STAT_CONVERSION = "stat_conversion"
+    SUSTAIN = "sustain"
+    TAKEDOWN_STATE = "takedown_state"
+    VISION = "vision"
+
+
 # ── compilability (D-43) ──────────────────────────────────────────────────
 
 
@@ -2861,6 +2914,7 @@ __all__ = [
     "TriggerWindow",
     "Typing",
     "UltimateProcRule",
+    "UtilityDimension",
     "WindowBoundary",
     "WindowMerge",
     "ZeroPolicy",
