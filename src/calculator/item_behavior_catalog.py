@@ -37,6 +37,7 @@ from . import data_registry, item_effects, rune_effects
 from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
     AbsoluteWindow,
+    AfterTrigger,
     Always,
     AmpChainSlot,
     Attribution,
@@ -368,6 +369,7 @@ SECONDARY_KEY_FAMILY: Mapping[str, RuleFamily] = {
 # reaches keystones (D-46), so their numbers are references like any other.
 KEYSTONE_AMPS: Mapping[str, AmpChainSlot] = {
     "First Strike": AmpChainSlot.OPENING_WINDOW,
+    "Press the Attack": AmpChainSlot.LASTING_PROC_AMP,
 }
 
 # The fight's own ``t = 0``.  A coordinate the model measures from, not a
@@ -578,6 +580,55 @@ def _opening_window_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
+def _non_true_typing() -> Typing:
+    """Every attack class, but only the two damage classes resistances touch.
+
+    True damage is excluded because the mechanic excludes it, and D-04 makes
+    that a thing the declaration says rather than a comparison buried in a
+    ledger filter.
+    """
+    return Typing(
+        damage_classes=frozenset({DamageClass.MAGIC, DamageClass.PHYSICAL}),
+        attack_classes=frozenset(AttackClass),
+    )
+
+
+def _lasting_proc_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """A Press the Attack-class keystone: everything after the proc lands.
+
+    ``AfterTrigger(strict=True)`` is the wiki's triggering-attack rule: the
+    swing that procs the buff, and the proc itself, land the same instant the
+    buff turns on and are therefore outside it.  The exclusion of true damage
+    is the rule's ``typing``, not a comparison inside the ledger filter.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.lasting_proc_amp",
+        payload=DeltaAmpRule(
+            pool=Pool.CERTIFIED_ONLY,
+            activation=AfterTrigger(trigger=TriggerEvent.BASIC_ATTACK_HIT, strict=True),
+            consumption=Persist(),
+            magnitude=Fixed(ValueRef(registry, owner, "damage_amp_ratio")),
+            attribution=Attribution.HOLDER,
+            typing=_non_true_typing(),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
+            subject=Subject.HOLDER,
+            lane_chain_rank=chain_rank(AmpChainSlot.LASTING_PROC_AMP),
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_RUNE_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the amp is a sourced ratio of the certified non-true damage after "
+            "the first proc; a zero means nothing qualifying landed after it, "
+            "which the rule measured over the ledger",
+        ),
+    )
+
+
 def _compile_keystone_amp(owner: str) -> tuple[BehaviorRule, ...]:
     """The amp-chain slots one compiled keystone declares.
 
@@ -589,6 +640,8 @@ def _compile_keystone_amp(owner: str) -> tuple[BehaviorRule, ...]:
     slot = KEYSTONE_AMPS[owner]
     if slot is AmpChainSlot.OPENING_WINDOW:
         return (_opening_window_rule(owner, "RUNE_EFFECTS"),)
+    if slot is AmpChainSlot.LASTING_PROC_AMP:
+        return (_lasting_proc_amp_rule(owner, "RUNE_EFFECTS"),)
     raise BehaviorCatalogError(
         f"RUNE_EFFECTS[{owner!r}] is declared in the {slot.value} chain slot "
         "and no compiler builds that slot's rule yet"

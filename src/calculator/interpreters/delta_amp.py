@@ -9,16 +9,21 @@ references into the registries, and the arithmetic that turns one into the
 other lives in exactly one function per magnitude shape.
 
 The pair engine reads a slot through :func:`resolve_slot`, which folds every
-holder's contribution the way the engine folded it before: a multiplier that
-starts at ``1.0`` and takes one ``+=`` per holder.  That is not an accident
-of style — ``(1.0 + f) - 1.0`` is not ``f`` in binary floating point, and the
-whole point of shipping Hypershot first is that a moved number means the
-kernel is wrong rather than the mechanic.
+holder's contribution the way the engine folded it before: ``1.0`` plus the
+holders' sum, never ``math.fsum`` and never a running ``+=``.  That is not an
+accident of style — the three spellings land on different floats once a slot
+has two occupants, and the whole point of shipping Hypershot first is that a
+moved number means the kernel is wrong rather than the mechanic.
 
 Nothing here is a compiled-kernel lane: H5 is descoped, so every amp rule
 carries ``ReceiptOnly`` and this interpreter serves ``PAIR_ENGINE`` only.
 The receipt-walk half of the family arrives with the amps the coupled walk
 actually owns.
+
+Everything the engine takes from a declaration comes through
+:meth:`DeltaAmpPairInterpreter.compile` — the fraction, the window bounds —
+and everything it *asks* of one comes through :class:`AmpSlot`.  A question a
+rule does not answer raises; it never resolves to a zero.
 """
 
 from __future__ import annotations
@@ -28,9 +33,10 @@ from dataclasses import dataclass
 
 from ..item_behavior import (
     AbsoluteWindow,
+    AfterTrigger,
     AmpChainSlot,
-    BonusTyping,
     BehaviorRule,
+    BonusTyping,
     BuildContext,
     DeltaAmpRule,
     EngineLane,
@@ -226,6 +232,37 @@ class AmpSlot:
         return self.value(WINDOW_START_FIELD, index), self.value(
             WINDOW_END_FIELD, index
         )
+
+    def prices_damage_type(self, damage_type: str, index: int = 0) -> bool:
+        """Whether the holder's declared typing admits this damage class.
+
+        ``DamageClass``' string values are the engine's own spellings, so the
+        ledger's ``damage_type`` and the declaration's ``damage_classes`` are
+        one vocabulary rather than two that have to be kept in step.
+        """
+        typing = self.rules[index].payload.typing
+        return damage_type in {cls.value for cls in typing.damage_classes}
+
+    def applies_after(
+        self, event_time: float, trigger_time: float, index: int = 0
+    ) -> bool:
+        """Whether an event is inside an after-trigger activation.
+
+        The boundary is the declaration's ``strict`` flag, not the engine's
+        comparison operator: whether the event that armed a buff is itself
+        amplified is a modelling ruling, and it belongs where a reader can
+        find it.
+        """
+        activation = self.rules[index].payload.activation
+        if not isinstance(activation, AfterTrigger):
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares no after-trigger "
+                "activation, so it has no answer for an event's position "
+                "relative to one"
+            )
+        if activation.strict:
+            return event_time > trigger_time
+        return event_time >= trigger_time
 
     def bonus_damage_type(self, source_type: str, index: int = 0) -> str:
         """What this amp's own bonus lands as, given the event it amplified."""

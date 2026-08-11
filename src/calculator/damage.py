@@ -7509,9 +7509,7 @@ def _add_keystone_window_amp_damage(
     effect = state.keystone_effect
     if not isinstance(effect, rune_effects.KeystoneWindowAmpEffect):
         return
-    window = _amp_slot(state, AmpChainSlot.OPENING_WINDOW, effect.keystone_name)
-    if window is None:
-        return
+    window = _required_amp_slot(state, AmpChainSlot.OPENING_WINDOW, effect)
     # The pool, the window and the ratio are the rule's; the ledger is the
     # engine's. `Pool.CERTIFIED_ONLY` is why coarse-timed rows are excluded
     # and disclosed below.
@@ -7617,6 +7615,7 @@ def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -
     effect = state.keystone_effect
     if not isinstance(effect, rune_effects.KeystoneProcAmpEffect):
         return
+    lasting = _required_amp_slot(state, AmpChainSlot.LASTING_PROC_AMP, effect)
     proc_times, cooldown_gated = _refreshing_stack_proc_times(state, effect)
     if not proc_times:
         # A selected keystone that never fires must say so — only basic
@@ -7640,19 +7639,22 @@ def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -
     # (adaptive, never true damage) are amplified while the first — which
     # lands the same instant the buff turns on — is excluded by the
     # strictly-after cut, matching the wiki's triggering-attack rule.
-    amp_start = proc_times[0]
     events, certified, coarse_sources = _certified_only_pool(state, rotation)
+    amp_ratio = lasting.fractions[0]
+    # The buff turns on with the first proc.  Which events that leaves inside
+    # it is the rule's: `AfterTrigger(strict=True)` excludes the swing that
+    # armed it, and the declared typing excludes true damage.
     amplified = [
         event
         for event in events
         if event["source_key"] in certified
-        and event["time"] > amp_start
-        and event["damage_type"] != "true"
+        and lasting.applies_after(event["time"], proc_times[0])
+        and lasting.prices_damage_type(event["damage_type"])
     ]
     if amplified:
         amp_by_type: dict[str, float] = {}
         for event in amplified:
-            bonus = effect.damage_amp_ratio * event["damage"]
+            bonus = amp_ratio * event["damage"]
             amp_by_type[event["damage_type"]] = (
                 amp_by_type.get(event["damage_type"], 0.0) + bonus
             )
@@ -7666,8 +7668,8 @@ def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -
             "damage_events": [
                 {
                     "time": event["time"],
-                    "damage": effect.damage_amp_ratio * event["damage"],
-                    "damage_type": event["damage_type"],
+                    "damage": amp_ratio * event["damage"],
+                    "damage_type": lasting.bonus_damage_type(event["damage_type"]),
                 }
                 for event in amplified
             ],
@@ -9244,6 +9246,27 @@ def _amp_slot(
         fight_duration_seconds=state.fight_duration_seconds,
         target_bonus_health=max(0.0, state.target_bonus_health),
     )
+
+
+def _required_amp_slot(
+    state: FightState, slot: AmpChainSlot, effect: "rune_effects.KeystoneEffect"
+) -> "delta_amp.AmpSlot":
+    """The chain slot a compiled keystone effect *must* have a declaration for.
+
+    A selected keystone that resolved to an amp-shaped effect and declares no
+    rule is a programming error, not an amp worth zero — the effect's own
+    existence is the proof a holder is present.  It raises rather than
+    returning ``None``, because returning would price the mechanic at zero
+    with nothing saying so, which is the failure this campaign exists to end.
+    """
+    resolved = _amp_slot(state, slot, effect.keystone_name)
+    if resolved is None:
+        raise delta_amp.DeltaAmpInterpretationError(
+            f"{effect.keystone_name} resolved to a {type(effect).__name__} and "
+            f"declares no rule in the {slot.value} chain slot; a keystone the "
+            "engine prices needs a declaration to price it from"
+        )
+    return resolved
 
 
 def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> None:

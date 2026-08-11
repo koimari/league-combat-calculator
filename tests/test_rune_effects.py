@@ -155,7 +155,31 @@ class TestPressTheAttack:
         assert effect.stacks_required == 3
         assert effect.stack_duration_seconds == 4.0
         assert effect.cooldown_seconds == 6.0
-        assert effect.damage_amp_ratio == pytest.approx(0.08)
+
+    def test_the_lasting_amp_lives_in_the_declaration(self):
+        """One number, one home: the amp chain slot owns the ratio (3.2)."""
+        from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+            delta_amp,
+        )
+        from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+            AmpChainSlot,
+        )
+
+        slot = delta_amp.resolve_slot(
+            ["Press the Attack"],
+            AmpChainSlot.LASTING_PROC_AMP,
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+        )
+        assert slot is not None
+        assert slot.fractions[0] == pytest.approx(0.08)
+        # The triggering swing lands the instant the buff turns on, so it is
+        # outside a strict after-trigger activation.
+        assert not slot.applies_after(2.0, 2.0)
+        assert slot.applies_after(2.5, 2.0)
+        assert slot.prices_damage_type("magic")
+        assert not slot.prices_damage_type("true")
 
     def test_proc_damage_by_level_has_no_ratio_scaling(self):
         effect = rune_effects.resolve_keystone("Press the Attack")
@@ -191,6 +215,27 @@ class TestPressTheAttack:
                     "effects": {
                         k: v
                         for k, v in entry["effects"].items()
+                        if k != "stack_duration_seconds"
+                    },
+                }
+                if name == "Press the Attack"
+                else entry
+            )
+            for name, entry in rune_effects.RUNE_EFFECTS.items()
+        }
+        monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
+        with pytest.raises(KeyError, match="Press the Attack.*stack_duration_seconds"):
+            rune_effects.resolve_keystone("Press the Attack")
+
+    def test_a_missing_amp_ratio_raises_through_the_reference(self, monkeypatch):
+        """Rule 5 reaches keystones: the declaration's read fails loud too."""
+        broken = {
+            name: (
+                {
+                    **entry,
+                    "effects": {
+                        k: v
+                        for k, v in entry["effects"].items()
                         if k != "damage_amp_ratio"
                     },
                 }
@@ -200,8 +245,12 @@ class TestPressTheAttack:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
+        from src.calculator.value_ref import (  # pylint: disable=import-outside-toplevel
+            ValueRef,
+        )
+
         with pytest.raises(KeyError, match="Press the Attack.*damage_amp_ratio"):
-            rune_effects.resolve_keystone("Press the Attack")
+            ValueRef("RUNE_EFFECTS", "Press the Attack", "damage_amp_ratio").get()
 
 
 class TestArcaneComet:

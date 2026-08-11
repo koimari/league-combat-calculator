@@ -135,10 +135,14 @@ class KeystoneProcAmpEffect:
     Basic attacks build stacks that expire ``stack_duration_seconds``
     after the last application; reaching ``stacks_required`` consumes
     them for ``raw_damage`` adaptive damage and turns on a lasting
-    ``damage_amp_ratio`` amplifier of all non-true damage. The buff ends
-    only out of combat, so a continuous fight keeps it from first proc
-    to the end. Stack walking and amp summation live in the fight
-    engine, which owns the timeline and the damage ledger.
+    amplifier of all non-true damage. The buff ends only out of combat, so a
+    continuous fight keeps it from first proc to the end. Stack walking lives
+    in the fight engine, which owns the timeline.
+
+    **The amplifier is not here.** Its ratio, the events it prices and the
+    boundary that excludes the swing that armed it are the amp chain's
+    ``LASTING_PROC_AMP`` slot, declared as a ``BehaviorRule`` over
+    ``RUNE_EFFECTS`` references. What is left is the proc itself.
     """
 
     keystone_name: str
@@ -147,7 +151,6 @@ class KeystoneProcAmpEffect:
     stacks_required: int
     stack_duration_seconds: float
     cooldown_seconds: float
-    damage_amp_ratio: float
     raw_damage: Callable[[DamageInputs], float]
     damage_type: Callable[[Mapping[str, float]], str]
 
@@ -333,7 +336,6 @@ def _compile_press_the_attack(entry: Mapping[str, Any]) -> KeystoneProcAmpEffect
         stacks_required=int(effects.number("max_stacks")),
         stack_duration_seconds=effects.number("stack_duration_seconds"),
         cooldown_seconds=top.number("cooldown"),
-        damage_amp_ratio=effects.number("damage_amp_ratio"),
         raw_damage=raw,
         damage_type=adaptive_type,
     )
