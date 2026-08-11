@@ -1046,9 +1046,9 @@ def test_a3_has_a_permanent_injection_seam():
         sources,
         path,
         sources[path].replace(
-            '    if "Cull" in names:',
+            "    triggers = _support_triggers(trigger_effects, attacker)",
             '    if "Zhonya\'s Hourglass" in names:\n        pass\n'
-            '    if "Cull" in names:',
+            "    triggers = _support_triggers(trigger_effects, attacker)",
             1,
         ),
     )

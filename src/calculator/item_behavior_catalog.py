@@ -427,6 +427,9 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         # producer's own signature key from ALLY_ENTRY_SHAPES, so the two
         # tables cannot name different keys for one mechanic.
         "everlasting_base_shield": RuleFamily.ALLY_PACKET,
+        "reap_gold_per_minion": RuleFamily.ALLY_PACKET,
+        "rage_duration": RuleFamily.ALLY_PACKET,
+        "support_quest_threshold": RuleFamily.ALLY_PACKET,
     },
     "ALLY_ITEM_EFFECTS": {
         key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)
@@ -1843,6 +1846,65 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
             "own level; a zero means the holder healed or shielded nobody"
         ),
     ),
+    AllyProducer.REAP: AllyPacketDeclaration(
+        trigger=PacketTrigger.FIGHT_START,
+        packets=(PacketSpec(PacketKind.ECONOMY, Recipients.SELF),),
+        secondary_target=None,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=False,
+        reads=("reap_max_gold", "reap_gold_per_minion", "reap_completion_gold"),
+        ramps=(),
+        zero_reason=(
+            "the gold is a sourced per-minion rate over the authored kill "
+            "count, plus a sourced completion bonus; a zero means the caller "
+            "supplied no kills, and the packet is withheld rather than booked"
+        ),
+    ),
+    AllyProducer.RAGE: AllyPacketDeclaration(
+        trigger=PacketTrigger.BASIC_ATTACK,
+        packets=(PacketSpec(PacketKind.MOVEMENT, Recipients.SELF),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "rage_duration",
+            "rage_bonus_move_speed_melee",
+            "rage_bonus_move_speed_ranged",
+        ),
+        ramps=(),
+        zero_reason=(
+            "the bonus is a sourced ratio chosen by the holder's range class; "
+            "a zero means the authored auto stream carried no basic attack"
+        ),
+    ),
+    AllyProducer.SHARED_RICHES: AllyPacketDeclaration(
+        trigger=PacketTrigger.FIGHT_START,
+        packets=(PacketSpec(PacketKind.ECONOMY, Recipients.SELF),),
+        secondary_target=None,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=False,
+        reads=("support_quest_threshold",),
+        ramps=(),
+        zero_reason=(
+            "the gold is the authored quest progress capped by the sourced "
+            "threshold; a zero means the caller supplied no progress, and the "
+            "packet is withheld rather than booked"
+        ),
+    ),
+    AllyProducer.WARD: AllyPacketDeclaration(
+        trigger=PacketTrigger.FIGHT_START,
+        packets=(PacketSpec(PacketKind.VISION, Recipients.SELF),),
+        secondary_target=None,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=False,
+        reads=("ward_charges", "support_quest_threshold"),
+        ramps=(),
+        zero_reason=(
+            "the ward count is the authored use count capped by the sourced "
+            "charge count; a zero means the caller placed none, and the packet "
+            "is withheld rather than booked"
+        ),
+    ),
     AllyProducer.COMMAND: AllyPacketDeclaration(
         trigger=PacketTrigger.CROWD_CONTROL,
         packets=(PacketSpec(PacketKind.DAMAGE_MODIFIER, Recipients.TRIGGERING_ENEMY),),
@@ -1866,10 +1928,6 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
 # :data:`UNMIGRATED_FAMILIES`, so without this the promises would disappear
 # with the stub rather than being kept.
 ALLY_PACKET_UNMIGRATED_PRODUCERS: Mapping[AllyProducer, str] = {
-    AllyProducer.REAP: _UTILITY_SLICE,
-    AllyProducer.RAGE: _UTILITY_SLICE,
-    AllyProducer.SHARED_RICHES: _UTILITY_SLICE,
-    AllyProducer.WARD: _UTILITY_SLICE,
     AllyProducer.DEVOTION: _ACTIVES_SLICE,
     AllyProducer.PURIFY: _ACTIVES_SLICE,
     AllyProducer.INTERVENTION: _ACTIVES_SLICE,

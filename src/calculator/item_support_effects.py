@@ -397,20 +397,24 @@ def _bus_streams(
     )
 
 
-def _support_quest_packets(attacker: Any, quest_item: str) -> list[dict[str, Any]]:
+def _support_quest_packets(
+    attacker: Any, shared_riches: AllyPacketSlot, ward: AllyPacketSlot
+) -> list[dict[str, Any]]:
     """One support-quest item's authored economy and vision outcomes.
 
-    World Atlas and Runic Compass carry the same quest, so the body was
-    written once inside a two-element loop with a ``not in names`` continue.
-    That guard form hides which names the compiler actually guards behind a
-    loop variable, and every projection of this module reads those names, so
-    the body moves here and each item gets its own literal guard at the call
-    site.  Byte-for-byte the same packets, in the same order.
+    World Atlas and Runic Compass carry the same quest, and the two outcomes
+    — the gold and the ward — are two declared producers on the one record,
+    because Phase 2 declares a capability and a packet source for each.  The
+    item is whichever transformed stage the build equipped, read off the
+    declarations rather than spelled: ``validate_resolved_loadout`` already
+    refuses a build carrying two support quest items, and ``_producer``'s
+    two-holder stop is that same rule restated where the packets are built.
     """
     packets: list[dict[str, Any]] = []
+    quest_item = shared_riches.owner
     source_meta = ITEM_INPUT_OPTIONS[quest_item]
     gold = max(0.0, _option(attacker, quest_item, "shared_riches_gold"))
-    gold_cap = required_effect_value(quest_item, "support_quest_threshold")
+    gold_cap = shared_riches.value("support_quest_threshold")
     if gold > 0.0:
         packets.append(
             _packet(
@@ -429,10 +433,7 @@ def _support_quest_packets(attacker: Any, quest_item: str) -> list[dict[str, Any
         )
     ward_uses = max(
         0.0,
-        min(
-            _option(attacker, quest_item, "ward_uses"),
-            required_effect_value(quest_item, "ward_charges"),
-        ),
+        min(_option(attacker, quest_item, "ward_uses"), ward.value("ward_charges")),
     )
     if ward_uses > 0.0:
         packets.append(
@@ -491,16 +492,18 @@ def derive_item_support_effects(
     # Reap is a progression/economy branch, not a guessed combat bonus.  The
     # authored minion-kill count is bounded by its sourced 100-kill quest and
     # produces one inspectable gold receipt only after the caller supplies it.
-    if "Cull" in names:
-        minion_kills = max(0.0, _option(attacker, "Cull", "reap_minion_kills"))
-        cap = required_effect_value("Cull", "reap_max_gold")
-        per_minion = required_effect_value("Cull", "reap_gold_per_minion")
-        completion_gold = required_effect_value("Cull", "reap_completion_gold")
+    reap = _producer(slots, AllyProducer.REAP)
+    if reap is not None:
+        reap.declared(PacketKind.ECONOMY)
+        minion_kills = max(0.0, _option(attacker, reap.owner, "reap_minion_kills"))
+        cap = reap.value("reap_max_gold")
+        per_minion = reap.value("reap_gold_per_minion")
+        completion_gold = reap.value("reap_completion_gold")
         earned = min(minion_kills, cap) * per_minion
         if minion_kills >= cap:
             earned += completion_gold
         if earned > 0.0:
-            source_meta = ITEM_INPUT_OPTIONS["Cull"]
+            source_meta = ITEM_INPUT_OPTIONS[reap.owner]
             packets.append(
                 _packet(
                     attacker=attacker,
@@ -521,16 +524,18 @@ def derive_item_support_effects(
     # Rage is emitted from the same authored auto stream used by the damage
     # ledger.  No movement state is invented when the stream is absent or
     # coarse; each qualifying basic attack gets its own timestamped packet.
-    if "Phage" in names:
+    rage = _producer(slots, AllyProducer.RAGE)
+    if rage is not None:
+        rage.declared(PacketKind.MOVEMENT)
         is_melee = bool(attacker.stats.get("is_melee", False))
         speed_key = (
             "rage_bonus_move_speed_melee"
             if is_melee
             else "rage_bonus_move_speed_ranged"
         )
-        bonus_speed = required_effect_value("Phage", speed_key)
-        duration = required_effect_value("Phage", "rage_duration")
-        source_meta = ITEM_INPUT_OPTIONS["Phage"]
+        bonus_speed = rage.value(speed_key)
+        duration = rage.value("rage_duration")
+        source_meta = ITEM_INPUT_OPTIONS[rage.owner]
         for event in damage_events:
             if event.source_key != "auto_attacks" and not event.basic_attack:
                 continue
@@ -554,10 +559,12 @@ def derive_item_support_effects(
     # Support Quest is represented as explicit economy and vision outcomes.
     # The role-quest contract decides which transformed item is equipped; this
     # packet layer records only the authored progress/ward state for that item.
-    if "World Atlas" in names:
-        packets.extend(_support_quest_packets(attacker, "World Atlas"))
-    if "Runic Compass" in names:
-        packets.extend(_support_quest_packets(attacker, "Runic Compass"))
+    shared_riches = _producer(slots, AllyProducer.SHARED_RICHES)
+    ward = _producer(slots, AllyProducer.WARD)
+    if shared_riches is not None and ward is not None:
+        shared_riches.declared(PacketKind.ECONOMY)
+        ward.declared(PacketKind.VISION)
+        packets.extend(_support_quest_packets(attacker, shared_riches, ward))
 
     # Fimbulwinter's Everlasting is a self shield that fires only from an
     # explicitly marked immobilize, or a slow for a melee holder.  Its

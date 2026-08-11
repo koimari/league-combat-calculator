@@ -31,7 +31,7 @@
       "class_c": 8
     },
     "calculator/item_support_effects.py": {
-      "counter_1": 40
+      "counter_1": 26
     },
     "calculator/loadout_rules.py": {
       "class_c": 28
@@ -88,7 +88,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 190
+      "value": 176
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -102,7 +102,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 103
+      "value": 99
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",

@@ -132,14 +132,11 @@ class TestASlotRefusesWhatItsDeclarationDoesNotCarry:
         from src.calculator.item_support_effects import _producer  # noqa: PLC0415
 
         slots = resolve_slots(catalog.owners_for(AllyProducer.SHARED_RICHES))
-        assert AllyProducer.SHARED_RICHES not in slots  # not migrated yet
-        doubled = {AllyProducer.CONSONANCE: _slot(AllyProducer.CONSONANCE)}
-        doubled[AllyProducer.CONSONANCE] = (
-            doubled[AllyProducer.CONSONANCE],
-            doubled[AllyProducer.CONSONANCE],
-        )
+        assert (
+            len(slots[AllyProducer.SHARED_RICHES]) == 2
+        ), "the two support-quest stages are the live two-holder case"
         with pytest.raises(ValueError, match="how two of them combine"):
-            _producer(doubled, AllyProducer.CONSONANCE)
+            _producer(slots, AllyProducer.SHARED_RICHES)
 
 
 class TestDFiftysSecondTargetIsDeclaredNotInferred:
