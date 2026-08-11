@@ -250,7 +250,12 @@ class CoverageClaimError(ValueError):
     """A claim whose shape cannot be backed; raised at import, never caught."""
 
 def status_policy(lane: ClaimLane, status: ClaimStatus) -> EvidencePolicy:
-    """The matrix: modeled_* needs Symbol+TestRef; modeled_state needs OptionSchema;
+    """The matrix: modeled_* needs Symbol+TestRef; modeled_state needs a third member
+    naming where its state comes from — one of STATE_HOME_KINDS = {OptionSchema,
+    PacketSource, EffectKey}, the three routes the live classifier reaches that status
+    by, because seven of the twenty stateful items supply their state as an authored
+    packet or a sourced registry value and not as a scenario control, and a vocabulary
+    that can only say "control" forces those seven onto the frontier as prose;
     stats_only/not_target_relevant needs SourceRef and forbids PacketSource;
     blocked/review_pending needs exactly one Absence with issue refs;
     modeled_event_certified adds a certification_guard Symbol; support_packet needs a
