@@ -399,19 +399,24 @@ MODULE_FORMULA_ZERO = ZeroPolicy(
 
 Every numeric leaf a champion authors is born in one of the two builders
 below, so this is the single place the disposition has to be stated — the
-384 call sites across 143 modules are deliberately **not** edited, and a
-required-no-default field there would be a campaign-wide champion sweep
-smuggled in by an idiom.  ``MEASURED`` is the honest default at this layer
+375 call sites across 141 champion modules are deliberately **not** edited,
+and a required-no-default field there would be a campaign-wide champion
+sweep smuggled in by an idiom.  Those two figures are measured, not
+recalled: ``tests/test_zero_policy.py`` counts the calls and states the
+counting rule, so restating them anywhere turns it red.  ``MEASURED`` is the honest default at this layer
 and only at this layer: a module formula that evaluates to zero *computed*
 that zero.  Any slot whose zero means something else passes its own policy.
 
 The default's safety rests on the inputs being wired, which is why it ships
-with a guard rather than on its own: ``scripts/behavior_frontier.py``'s
-zero-policy frontier counts every ``.get(key, <literal>)``-shaped fallback in
-``champions/`` and every hand-built entry that bypasses these builders, and
-asserts neither population grows.  A zero produced by an option that never
-resolved is the incident's own shape and must fail loud rather than be
-stamped ``MEASURED`` here.
+with a guard rather than on its own.  A ``.get(key, <literal>)`` on one of
+the three champion input blocks is **forbidden** — ``champions/inputs.py``
+holds their vocabularies and declared defaults, and reading an undeclared
+name raises — so a zero produced by an option that never resolved fails loud
+instead of being stamped ``MEASURED`` here.
+``scripts/behavior_frontier.py``'s zero-policy frontier enforces that
+refusal and additionally pins the two ratcheted populations non-growing:
+the same shape on a block the tree *produced*, and hand-built entries that
+bypass these builders.
 """
 
 
