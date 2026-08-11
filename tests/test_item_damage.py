@@ -27,6 +27,7 @@ from src.calculator.damage import (
 )
 from src.calculator.interpreters import (
     cast_proc,
+    charged_strike,
     on_hit_strike,
     periodic,
     resistance_shred,
@@ -45,6 +46,17 @@ def _mr_shred(*owners: str) -> "resistance_shred.ShredSlot | None":
         fight_duration_seconds=5.0,
         target_bonus_health=0.0,
         holder_is_melee=False,
+    )
+
+
+def _charged_strikes(*owners: str, level: int = 18, is_melee: bool = True):
+    """The charged strikes a build declares, resolved through their rules."""
+    return charged_strike.resolve_slots(
+        owners,
+        level=level,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
     )
 
 
@@ -199,8 +211,9 @@ def _simulate_kraken_damage(
     kraken_proc_autos,
 ):
     """Readable test adapter around the generic stacking-proc simulation."""
-    effects = resolve_damage_effects([{"name": "Kraken Slayer"}])
-    effect = effects.stacking_on_hits[0]
+    effect = _charged_strikes(
+        "Kraken Slayer", level=level, is_melee=is_melee
+    ).stacking_on_hits[0]
     return sum(
         _simulate_stacking_on_hit_damage(
             effect,
@@ -237,7 +250,7 @@ class TestBastionbreakerShapedCharge:
     def test_shaped_charge_ranged_damage(self) -> None:
         """Ranged: 25 + 0.75 * 22 lethality = 41.5 true damage."""
         stats = {"lethality": 22.0}
-        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        effect = _charged_strikes("Bastionbreaker").shaped_charges[0]
         damage = effect.source.raw_damage(
             DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
@@ -246,14 +259,14 @@ class TestBastionbreakerShapedCharge:
     def test_shaped_charge_melee_damage(self) -> None:
         """Melee: 50 + 1.5 * 22 lethality = 83 true damage."""
         stats = {"lethality": 22.0}
-        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        effect = _charged_strikes("Bastionbreaker").shaped_charges[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000.0, 1000.0))
         assert abs(damage - 83.0) < 0.01
 
     def test_shaped_charge_multiple_procs(self) -> None:
         """20s cooldown: 50s fight = 3 procs."""
         stats = {"lethality": 22.0}
-        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        effect = _charged_strikes("Bastionbreaker").shaped_charges[0]
         per_proc = effect.source.raw_damage(
             DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
@@ -3605,21 +3618,21 @@ class TestHeartsteelDamage:
     def test_heartsteel_damage_calculation(self) -> None:
         """70 + 6% of 3000 max HP = 70 + 180 = 250 raw physical damage."""
         stats = {"health": 3000.0}
-        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        effect = _charged_strikes("Heartsteel").first_autos[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 250.0) < 0.01
 
     def test_heartsteel_damage_low_health(self) -> None:
         """70 + 6% of 1000 max HP = 70 + 60 = 130 raw physical damage."""
         stats = {"health": 1000.0}
-        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        effect = _charged_strikes("Heartsteel").first_autos[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 130.0) < 0.01
 
     def test_heartsteel_damage_zero_health(self) -> None:
         """With 0 health the damage is just the base 70."""
         stats = {"health": 0.0}
-        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        effect = _charged_strikes("Heartsteel").first_autos[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 70.0) < 0.01
 
@@ -4077,7 +4090,7 @@ class TestHullbreakerSkipper:
     def test_proc_damage_melee(self) -> None:
         """Melee proc: 120% base AD + 5% max HP."""
         stats = {"base_attack_damage": 100.0, "health": 2000.0}
-        effect = resolve_damage_effects(_build("Hullbreaker")).stacking_on_hits[0]
+        effect = _charged_strikes("Hullbreaker").stacking_on_hits[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         # 1.20 * 100 + 0.05 * 2000 = 120 + 100 = 220
         assert abs(damage - 220.0) < 0.1
@@ -4085,7 +4098,7 @@ class TestHullbreakerSkipper:
     def test_proc_damage_ranged(self) -> None:
         """Ranged proc: 84% base AD + 3.5% max HP."""
         stats = {"base_attack_damage": 100.0, "health": 2000.0}
-        effect = resolve_damage_effects(_build("Hullbreaker")).stacking_on_hits[0]
+        effect = _charged_strikes("Hullbreaker").stacking_on_hits[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         # 0.84 * 100 + 0.035 * 2000 = 84 + 70 = 154
         assert abs(damage - 154.0) < 0.1

@@ -60,7 +60,12 @@ from .item_behavior import (
     DeltaAmpRule,
     ExcludeTrigger,
     Fixed,
+    ChainTargets,
+    EmpoweredAutoBuffRule,
+    EmpoweredHitRule,
+    EnergizedCharge,
     Isolation,
+    LevelSteppedRate,
     LivePredicate,
     Magnitude,
     MeleeRangedSplit,
@@ -83,18 +88,22 @@ from .item_behavior import (
     RampPerSecond,
     RampPerStack,
     ReceiptOnly,
+    RepeatingStrikeRule,
     Resistance,
     ResistanceShredRule,
     RuleFamily,
     Scaling,
     SecondaryTargetRule,
     SelfShield,
+    ShapedChargeRule,
     SpellbladeRule,
     StackGate,
     StackRamp,
     Subject,
     Term,
     TargetBonusHealthScaled,
+    TemporaryLethality,
+    TimesMissingHealth,
     TimesValue,
     TriggerEvent,
     TriggerWindow,
@@ -487,7 +496,21 @@ class LevelRampKeys(NamedTuple):
     scale: LevelScale
 
 
-TermSchema = tuple[Basis, "str | tuple[str, str] | LevelRampKeys"]
+class LevelSteppedKeys(NamedTuple):
+    """A schema coefficient that is flat until a level and then steps per level.
+
+    The fourth coefficient shape.  Both ends may themselves be melee/ranged
+    pairs, because the one schema that needs this pays a melee holder more at
+    both, and ``from_level_key`` names the registry key holding the level the
+    stepping starts at rather than stating a level here.
+    """
+
+    base: "str | tuple[str, str]"
+    per_level: "str | tuple[str, str]"
+    from_level_key: str
+
+
+TermSchema = tuple[Basis, "str | tuple[str, str] | LevelRampKeys | LevelSteppedKeys"]
 
 ON_HIT_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
     "flat": ((Basis.FLAT, "base"),),
@@ -526,6 +549,100 @@ ACTIVE_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
         (Basis.ABILITY_POWER, "ap_ratio"),
     ),
 }
+
+# The charged-strike schemas, across all four tags.  ``level_missing_hp`` is
+# the one schema whose flat share *steps* with level rather than being a
+# constant or a two-ended ramp, and whose sum is then scaled by how much
+# health the target is missing; both of those are shapes of the mechanic and
+# neither is a share, which is why the table stays a list of shares.
+CHARGED_STRIKE_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
+    "flat": ((Basis.FLAT, "base"),),
+    "flat_base_ad": (
+        (Basis.FLAT, "base"),
+        (Basis.BASE_ATTACK_DAMAGE, "base_ad_ratio"),
+    ),
+    "flat_max_hp": (
+        (Basis.FLAT, "base"),
+        (Basis.HOLDER_MAX_HEALTH, "max_hp_ratio"),
+    ),
+    "flat_plus_lethality": (
+        (Basis.FLAT, "base"),
+        (Basis.LETHALITY, "lethality_ratio"),
+    ),
+    "current_hp": (
+        (
+            Basis.TARGET_CURRENT_HEALTH,
+            ("current_hp_ratio_melee", "current_hp_ratio_ranged"),
+        ),
+    ),
+    "base_ad_max_hp": (
+        (
+            Basis.BASE_ATTACK_DAMAGE,
+            ("base_ad_ratio_melee", "base_ad_ratio_ranged"),
+        ),
+        (Basis.HOLDER_MAX_HEALTH, ("max_hp_ratio_melee", "max_hp_ratio_ranged")),
+    ),
+    "level_missing_hp": (
+        (
+            Basis.FLAT,
+            LevelSteppedKeys(
+                base=("base_melee", "base_ranged"),
+                per_level=("per_level_melee", "per_level_ranged"),
+                from_level_key="scaling_start_level",
+            ),
+        ),
+    ),
+    # The shaped charge names no formula in the registry at all: its shape is
+    # part of the mechanic's definition, so the compiler supplies the name.
+    "shaped_charge": (
+        (Basis.FLAT, ("base_melee", "base_ranged")),
+        (Basis.LETHALITY, ("lethality_ratio_melee", "lethality_ratio_ranged")),
+    ),
+}
+
+# Which charged-strike tag declares which of the four shapes.
+EMPOWERED_HIT_TAG = "on_hit_once"
+REPEATING_STRIKE_TAG = "on_hit_stacking"
+SHAPED_CHARGE_TAG = "shaped_charge"
+EMPOWERED_AUTO_BUFF_TAG = "ult_empowered_autos"
+
+# The schema name the shaped charge's own compiler supplies, the damage class
+# its mechanic is defined in, and the key holding how deep the missing-health
+# scaling reaches.
+SHAPED_CHARGE_FORMULA = "shaped_charge"
+MISSING_HEALTH_BONUS_KEY = "missing_hp_bonus_max"
+
+# The keys the charged strikes' optional mechanics live under, grouped so each
+# is declared whole or not at all.
+ENERGIZED_KEYS = ("energized_max_stacks", "energized_attack_stacks")
+ENERGIZED_ABILITY_FLAG = "energized_ability_trigger"
+TEMPORARY_LETHALITY_KEYS = (
+    "temporary_lethality_melee",
+    "temporary_lethality_ranged",
+    "temporary_lethality_duration",
+)
+CHAIN_TARGET_KEYS = ("chain_targets_min", "chain_targets_max")
+
+# The structural flag that says an empowered hit fires as many times as the
+# holder has empowered attacks, the key holding that count, and the key
+# holding how many on-hit applications a repeating strike waits for.
+USES_EMPOWERED_AUTO_COUNT = "uses_empowered_auto_count"
+EMPOWERED_AUTO_COUNT_KEY = "empowered_auto_count"
+HITS_REQUIRED_KEY = "hits_required"
+
+# What an empowered hit that fires exactly once declares.  Spelled rather
+# than left to the absence of a key: "this fires once" is a statement about
+# the mechanic, and a second such strike must not inherit it by omission.
+FIRES_ONCE = Const(1.0, "count")
+
+# The five keys an ultimate's empowered-attack window is made of.
+EMPOWERED_AUTO_BUFF_KEYS = (
+    "bonus_attack_speed_percent",
+    "empowered_auto_count",
+    "duration",
+    "reduced_crit_ratio",
+    "natural_crit_true_damage_ratio",
+)
 
 # The cast-proc schemas, across all three tags.  ``charged_ap`` is the one
 # schema whose registry compiler multiplied the *sum* rather than a share, so
@@ -1236,6 +1353,19 @@ def _compile_delta_amp(
     return tuple(rules)
 
 
+def _rate_reference(
+    owner: str, registry: ValueRegistry, keys: "str | tuple[str, str]"
+) -> ValueRef | MeleeRangedSplit:
+    """One schema rate: a single sourced key, or a melee/ranged pair of them."""
+    if isinstance(keys, tuple):
+        melee_key, ranged_key = keys
+        return MeleeRangedSplit(
+            melee=ValueRef(registry, owner, melee_key),
+            ranged=ValueRef(registry, owner, ranged_key),
+        )
+    return ValueRef(registry, owner, keys)
+
+
 def _formula_terms(
     owner: str, registry: ValueRegistry, schema: tuple[TermSchema, ...]
 ) -> tuple[Term, ...]:
@@ -1248,7 +1378,13 @@ def _formula_terms(
     """
     terms: list[Term] = []
     for basis, keys in schema:
-        if isinstance(keys, LevelRampKeys):
+        if isinstance(keys, LevelSteppedKeys):
+            coefficient = LevelSteppedRate(
+                base=_rate_reference(owner, registry, keys.base),
+                per_level=_rate_reference(owner, registry, keys.per_level),
+                from_level=ValueRef(registry, owner, keys.from_level_key),
+            )
+        elif isinstance(keys, LevelRampKeys):
             coefficient = LevelValueRef(
                 registry, owner, keys.min_key, keys.max_key, keys.scale
             )
@@ -1273,6 +1409,7 @@ def _damage_formula(
     *,
     scaling: Scaling | None = None,
     damage_class: DamageClass | None = None,
+    formula_name: str | None = None,
 ) -> DamageFormula:
     """The declared formula one entry's ``formula`` name describes.
 
@@ -1281,13 +1418,13 @@ def _damage_formula(
     that quietly deals nothing: the whole point of the closed vocabulary is
     that a new schema costs one deliberate decision.
 
-    ``scaling`` and ``damage_class`` are the two things a schema name cannot
-    always say: a factor over the whole sum belongs to the mechanic rather
-    than to the shape, and one registry tag carries no ``damage_type`` key at
-    all because its damage class is part of the mechanic's definition.  Both
-    default to what the entry itself states.
+    ``scaling``, ``damage_class`` and ``formula_name`` are the three things a
+    schema name cannot always say: a factor over the whole sum belongs to the
+    mechanic rather than to the shape, and one registry tag carries neither a
+    ``damage_type`` key nor a ``formula`` key at all because both are part of
+    its mechanic's definition.  All three default to what the entry states.
     """
-    name = str(entry.get("formula"))
+    name = str(entry.get("formula")) if formula_name is None else formula_name
     schema = schemas.get(name)
     if schema is None:
         raise BehaviorCatalogError(
@@ -1565,6 +1702,197 @@ def _ultimate_proc_rule(
             "which the rotation walk measured",
         ),
     )
+
+
+def _empowered_hit_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """One item's empowered hit: a charge spent on one attack, not every one."""
+    energized = _group_refs(owner, registry, entry, ENERGIZED_KEYS)
+    lethality = _group_refs(owner, registry, entry, TEMPORARY_LETHALITY_KEYS)
+    chain = _group_refs(owner, registry, entry, CHAIN_TARGET_KEYS)
+    return BehaviorRule(
+        family=RuleFamily.CHARGED_STRIKE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.empowered_hit",
+        payload=EmpoweredHitRule(
+            formula=_damage_formula(
+                owner, registry, entry, CHARGED_STRIKE_FORMULA_TERMS, {}
+            ),
+            max_procs=(
+                ValueRef(registry, owner, EMPOWERED_AUTO_COUNT_KEY)
+                if entry.get(USES_EMPOWERED_AUTO_COUNT)
+                else FIRES_ONCE
+            ),
+            basic_damage=bool(entry.get(BASIC_DAMAGE_KEY, False)),
+            energized=(
+                EnergizedCharge(
+                    *energized,
+                    abilities_also_charge=bool(
+                        entry.get(ENERGIZED_ABILITY_FLAG, False)
+                    ),
+                )
+                if energized is not None
+                else None
+            ),
+            temporary_lethality=(
+                TemporaryLethality(*lethality) if lethality is not None else None
+            ),
+            chain_targets=ChainTargets(*chain) if chain is not None else None,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the empowered hit is a sum of sourced shares priced once per "
+            "charge spent; a zero means the fight spent no charge or every "
+            "share resolved to zero, both of which the rule measured",
+        ),
+    )
+
+
+def _repeating_strike_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """One item's every-Nth-hit strike.
+
+    ``level_missing_hp`` is the schema whose base steps with level above a
+    declared one and whose sum then grows with the target's missing health.
+    Both are shapes rather than shares, which is why one is a coefficient and
+    the other a scaling instead of two more terms.
+    """
+    scaling = (
+        TimesMissingHealth(ValueRef(registry, owner, MISSING_HEALTH_BONUS_KEY))
+        if MISSING_HEALTH_BONUS_KEY in _schema_keys(owner, registry, entry)
+        else None
+    )
+    return BehaviorRule(
+        family=RuleFamily.CHARGED_STRIKE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.repeating_strike",
+        payload=RepeatingStrikeRule(
+            formula=_damage_formula(
+                owner,
+                registry,
+                entry,
+                CHARGED_STRIKE_FORMULA_TERMS,
+                {},
+                scaling=scaling,
+            ),
+            hits_required=ValueRef(registry, owner, HITS_REQUIRED_KEY),
+            basic_damage=bool(entry.get(BASIC_DAMAGE_KEY, False)),
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the strike is a sum of sourced shares priced every declared "
+            "number of on-hit applications; a zero means the fight landed "
+            "fewer, which the swing schedule measured",
+        ),
+    )
+
+
+def _shaped_charge_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """One item's shaped charge: true damage an ability arms, on a cooldown.
+
+    The registry entry names neither a formula nor a damage type, because both
+    are part of this mechanic's definition rather than of the item's tuning.
+    The compiler supplies them, which is why they are arguments here and not
+    a fourth and fifth key nobody would source.
+    """
+    return BehaviorRule(
+        family=RuleFamily.CHARGED_STRIKE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.shaped_charge",
+        payload=ShapedChargeRule(
+            formula=_damage_formula(
+                owner,
+                registry,
+                entry,
+                CHARGED_STRIKE_FORMULA_TERMS,
+                {},
+                damage_class=DamageClass.TRUE,
+                formula_name=SHAPED_CHARGE_FORMULA,
+            ),
+            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the charge is a sum of sourced shares of the holder's lethality; "
+            "a zero means the rotation armed none, which the cast walk "
+            "measured",
+        ),
+    )
+
+
+def _empowered_auto_buff_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """One item's ultimate-triggered empowered-attack window.
+
+    The family's one member that deals no damage of its own: it changes how
+    the holder's own attacks land.  Every one of its five numbers is required,
+    because a window with a duration and no attack count — or an attack count
+    with no critical multiplier — is a mechanic with a hole in it.
+    """
+    del entry
+    references = tuple(
+        ValueRef(registry, owner, key) for key in EMPOWERED_AUTO_BUFF_KEYS
+    )
+    return BehaviorRule(
+        family=RuleFamily.CHARGED_STRIKE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.empowered_autos",
+        payload=EmpoweredAutoBuffRule(*references),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.STRUCTURAL_ZERO,
+            "the window deals no damage of its own; it changes how the "
+            "holder's own attacks land, and the attacks carry the number",
+        ),
+    )
+
+
+_CHARGED_STRIKE_RULES: Mapping[str, Any] = {
+    EMPOWERED_HIT_TAG: _empowered_hit_rule,
+    REPEATING_STRIKE_TAG: _repeating_strike_rule,
+    SHAPED_CHARGE_TAG: _shaped_charge_rule,
+    EMPOWERED_AUTO_BUFF_TAG: _empowered_auto_buff_rule,
+}
+
+
+def _compile_charged_strike(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the charged strike one registry entry declares.
+
+    Four tags, four shapes: a hit that spends a charge, a hit that lands every
+    Nth application, a charge an ability arms, and an ultimate that empowers
+    the holder's own attacks.  Dispatch is on the tag, so no item name decides
+    a shape.
+    """
+    del family
+    tag = str(entry.get("type"))
+    rule = _CHARGED_STRIKE_RULES[tag](owner, registry, entry)
+    validate_rule(rule)
+    return (rule,)
 
 
 def _compile_cast_proc(
@@ -2709,7 +3037,7 @@ def _unmigrated(
 # exactly one, which is what keeps a slice's diff a one-symbol change.
 _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.ON_HIT_STRIKE: _compile_on_hit_strike,
-    RuleFamily.CHARGED_STRIKE: _unmigrated,
+    RuleFamily.CHARGED_STRIKE: _compile_charged_strike,
     RuleFamily.SPELLBLADE: _compile_spellblade,
     RuleFamily.CAST_PROC: _compile_cast_proc,
     RuleFamily.PERIODIC: _compile_periodic,
@@ -2730,7 +3058,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.CHARGED_STRIKE: "3.4",
     RuleFamily.OPENING_DEFENSE: "3.5",
     RuleFamily.THRESHOLD_DEFENSE: "3.5",
     RuleFamily.COMBAT_STATE: "3.5",

@@ -11,7 +11,7 @@ Hand-validated against revision-backed patch 26.15 wiki data:
 import pytest
 
 from src.calculator import item_effects
-from src.calculator.interpreters import on_hit_strike
+from src.calculator.interpreters import charged_strike, on_hit_strike
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
@@ -550,8 +550,14 @@ class TestAbilityItemOnHits:
 def _kraken_raw_full_hp(kraken, stats, target_health):
     """Kraken's per-proc raw damage at full target HP, from the item
     source of truth (the compiled stacking spec)."""
-    effects = item_effects.resolve_damage_effects([kraken])
-    assert effects.stacking_on_hits, "expected a stacking on-hit item"
+    slots = charged_strike.resolve_slots(
+        [str(kraken.get("name", ""))],
+        level=int(stats.get("level", 18)),
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert slots.stacking_on_hits, "expected a stacking on-hit item"
     inputs = item_effects.DamageInputs(
         champion_stats=stats,
         level=int(stats.get("level", 18)),
@@ -559,7 +565,7 @@ def _kraken_raw_full_hp(kraken, stats, target_health):
         target_max_health=target_health,
         target_current_health=target_health,
     )
-    return effects.stacking_on_hits[0].source.raw_damage(inputs)
+    return slots.stacking_on_hits[0].source.raw_damage(inputs)
 
 
 class TestSharedOnHitCounter:

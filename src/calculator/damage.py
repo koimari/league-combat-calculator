@@ -135,6 +135,7 @@ from .ability_spec import DamagePart
 from .interpreters import (
     active_cast,
     cast_proc,
+    charged_strike,
     delta_amp,
     periodic,
     on_hit_strike,
@@ -477,6 +478,8 @@ class FightState:
     item_periodics: "periodic.PeriodicSlots"
     # The cast-triggered procs this build declares, split by shape.
     item_cast_procs: "cast_proc.CastProcSlots"
+    # The charged strikes this build declares, split by shape.
+    item_charged_strikes: "charged_strike.ChargedStrikeSlots"
     # The one spellblade this build arms, resolved through its rule.
     item_spellblade: "item_effects.SpellbladeEffect | None"
     secondary_target_bolts: "secondary_target.SecondaryTargetSlot | None"
@@ -2148,6 +2151,13 @@ def _resolve_combat_state(
         target_bonus_health=max(0.0, config.target_bonus_health),
         holder_is_melee=bool(is_melee),
     )
+    item_charged_strikes = charged_strike.resolve_slots(
+        owners,
+        level=level,
+        fight_duration_seconds=fight_duration_seconds,
+        target_bonus_health=max(0.0, config.target_bonus_health),
+        holder_is_melee=bool(is_melee),
+    )
     actualizer_active_until = (
         item_effects.actualizer_active_seconds(
             items,
@@ -2222,7 +2232,7 @@ def _resolve_combat_state(
 
     # ── Ultimate-triggered AS buffs (Fiendhunter Bolts) ──────
     # NOTE: Hexplate 50% bonus AS is now baked into champion stats (stats.py)
-    ultimate_auto_buff = damage_effects.ultimate_auto_buff
+    ultimate_auto_buff = item_charged_strikes.empowered_auto_buff
     empowered_autos = 0
 
     if ultimate_auto_buff is not None and auto_attack_uptime > 0:
@@ -2331,6 +2341,7 @@ def _resolve_combat_state(
             holder_is_melee=bool(is_melee),
         ),
         item_cast_procs=item_cast_procs,
+        item_charged_strikes=item_charged_strikes,
         item_periodics=periodic.resolve_slots(
             owners,
             level=level,
@@ -5133,7 +5144,7 @@ def _shaped_charge_proc_receipts(
 
 def _add_shaped_charge_damage(state: FightState, rotation: RotationResult) -> None:
     """Add ability-triggered lethality procs from the authored cast ledger."""
-    for effect in state.damage_effects.shaped_charges:
+    for effect in state.item_charged_strikes.shaped_charges:
         source = effect.source
         proc_receipts = _shaped_charge_proc_receipts(state, rotation, effect.cooldown)
         if proc_receipts is None or not proc_receipts:
@@ -5183,7 +5194,7 @@ def _auto_attack_timestamps(state: FightState) -> list[float]:
     normal_rate = state.attack_speed * state.auto_attack_uptime
     if normal_rate <= 0:
         return []
-    buff = state.damage_effects.ultimate_auto_buff
+    buff = state.item_charged_strikes.empowered_auto_buff
     empowered = state.empowered_autos if buff is not None else 0
     if empowered <= 0:
         if (
@@ -5322,7 +5333,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     breakdown = state.breakdown
     num_auto_attacks = state.num_auto_attacks
     empowered_autos = state.empowered_autos
-    ultimate_auto_buff = state.damage_effects.ultimate_auto_buff
+    ultimate_auto_buff = state.item_charged_strikes.empowered_auto_buff
     crit_chance = state.crit_chance
     crit_multiplier = state.crit_multiplier
     basic_amp = state.basic_amp
@@ -8246,7 +8257,7 @@ def _add_copied_stacking_on_hit_packets(
     if (
         not copied_events
         or not proc_indices
-        or not state.damage_effects.stacking_on_hits
+        or not state.item_charged_strikes.stacking_on_hits
     ):
         return True
     if len(swing_times) != state.num_auto_attacks:
@@ -8257,7 +8268,7 @@ def _add_copied_stacking_on_hit_packets(
         copied_by_auto.setdefault(int(index), []).append(event)
     apps = rotation.ability_item_applications
 
-    for effect in state.damage_effects.stacking_on_hits:
+    for effect in state.item_charged_strikes.stacking_on_hits:
         if item_effects.counter_trigger(effect.source.item_name) == "on_attack":
             # Statikk's chain carries on-hit effects, not on-attack effects.
             continue
@@ -8375,7 +8386,7 @@ def _add_single_proc_on_hits(
     # one-rotation scenario) still consume and price the ready charge.
     ability_consumed_items = {
         effect.source.item_name
-        for effect in state.damage_effects.first_autos
+        for effect in state.item_charged_strikes.first_autos
         if _author_energized_ability_proc(state, rotation, effect, effectiveness)
     }
 
@@ -8545,7 +8556,7 @@ def _add_single_proc_on_hits(
                 breakdown[cleave_key] = cleave_row
                 state.total_damage += cleave_total
 
-        for effect in state.damage_effects.first_autos:
+        for effect in state.item_charged_strikes.first_autos:
             source = effect.source
             if not item_effects.first_auto_state_ready(
                 state.items, state.item_options, source.item_name
@@ -8880,7 +8891,7 @@ def _add_single_proc_on_hits(
         # Auto-segment procs ride specific swings, whose times the auto
         # stream already authored (``swing_times`` above); ability-segment
         # procs have no timestamps yet, so any of those keeps the row coarse.
-        for effect in state.damage_effects.stacking_on_hits:
+        for effect in state.item_charged_strikes.stacking_on_hits:
             source = effect.source
             # The item taxonomy decides which ability applications
             # advance this counter (Kraken/Hullbreaker count ON-HIT

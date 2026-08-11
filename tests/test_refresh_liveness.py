@@ -83,6 +83,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "Deal {{as|90% AD}}",
         0.90,
     ),
+    RuleFamily.CHARGED_STRIKE: (
+        "Stormrazor",
+        "base",
+        "attack deals {{as|100 '''bonus''' magic damage}}",
+        "attack deals {{as|175 '''bonus''' magic damage}}",
+        175.0,
+    ),
     RuleFamily.CAST_PROC: (
         "Hextech Alternator",
         "base",

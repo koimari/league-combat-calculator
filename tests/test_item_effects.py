@@ -11,7 +11,12 @@ import copy
 import pytest
 
 from src.calculator import item_effects
-from src.calculator.interpreters import cast_proc, on_hit_strike, spellblade
+from src.calculator.interpreters import (
+    cast_proc,
+    charged_strike,
+    on_hit_strike,
+    spellblade,
+)
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
@@ -71,6 +76,17 @@ from src.calculator.item_effects import (
 def _build(*names: str) -> list[dict]:
     """Make a minimal item build from item names."""
     return [{"name": name} for name in names]
+
+
+def _charged_strikes(*owners: str, is_melee: bool = True):
+    """The charged strikes a build declares, through their rules."""
+    return charged_strike.resolve_slots(
+        owners,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
 
 
 def _cast_proc_slots(*owners: str, is_melee: bool = True):
@@ -688,7 +704,7 @@ class TestResolveDamageEffects:
         with pytest.raises(
             KeyError, match="Voltaic Cyclosword.*temporary_lethality_duration"
         ):
-            resolve_damage_effects(_build("Voltaic Cyclosword"))
+            _charged_strikes("Voltaic Cyclosword")
 
     def test_titanic_secondary_packet_uses_melee_and_empowered_ratios(self) -> None:
         assert hydra_secondary_target_damage(
@@ -762,18 +778,15 @@ class TestResolveDamageEffects:
         assert permanent_ap_multiplier(_build("Blackfire Torch")) == pytest.approx(1.0)
 
     def test_auto_trigger_families_compile_without_item_dispatch(self) -> None:
-        effects = resolve_damage_effects(
-            _build(
-                "Rapid Firecannon",
-                "Dead Man's Plate",
-                "Heartsteel",
-                "Statikk Shiv",
-                "Stormrazor",
-                "Voltaic Cyclosword",
-                "Hullbreaker",
-                "Kraken Slayer",
-                "Eclipse",
-            )
+        effects = _charged_strikes(
+            "Rapid Firecannon",
+            "Dead Man's Plate",
+            "Heartsteel",
+            "Statikk Shiv",
+            "Stormrazor",
+            "Voltaic Cyclosword",
+            "Hullbreaker",
+            "Kraken Slayer",
         )
 
         assert [effect.source.item_name for effect in effects.first_autos] == [
@@ -827,8 +840,9 @@ class TestResolveDamageEffects:
         assert effects.crit_damage_bonus == pytest.approx(0.30)
         assert effects.first_auto_crit is not None
         assert effects.first_auto_crit.reduced_crit_ratio == pytest.approx(0.80)
-        assert effects.ultimate_auto_buff is not None
-        assert effects.ultimate_auto_buff.empowered_auto_count == 3
+        buff = _charged_strikes("Fiendhunter Bolts").empowered_auto_buff
+        assert buff is not None
+        assert buff.empowered_auto_count == 3
         assert effects.basic_amp is not None
         assert effects.basic_amp.item_name == "Hexoptics C44"
         assert effects.ability_amp_source == "Actualizer"
@@ -853,7 +867,7 @@ class TestResolveDamageEffects:
         assert effect.average_pen(autos) == pytest.approx(expected)
 
     def test_shaped_charge_compiles_formula_and_cooldown(self) -> None:
-        effects = resolve_damage_effects(_build("Bastionbreaker"))
+        effects = _charged_strikes("Bastionbreaker")
         inputs = DamageInputs(
             champion_stats={"lethality": 20.0},
             level=18,
@@ -1445,7 +1459,7 @@ class TestCp20ItemState:
     """The residual item family has typed state and no guessed fallbacks."""
 
     def test_umbral_nightstalker_formula_reads_lethality(self) -> None:
-        effect = item_effects.resolve_damage_effects(_build("Umbral Glaive"))
+        effect = _charged_strikes("Umbral Glaive", is_melee=False)
         assert len(effect.first_autos) == 1
         source = effect.first_autos[0].source
         assert source.damage_type == "true"

@@ -37,10 +37,12 @@ from ..item_behavior import (
     Basis,
     BuildContext,
     DamageFormula,
+    LevelSteppedRate,
     MeleeRangedSplit,
     NoFloor,
     NoScaling,
     Term,
+    TimesMissingHealth,
     TimesValue,
 )
 from ..item_effects import DamageInputs
@@ -95,6 +97,34 @@ def basis_value(basis: Basis, inputs: DamageInputs) -> float:
     )
 
 
+def _split_rates(coefficient: object, ctx: BuildContext) -> tuple[float, float]:
+    """A reference or a range split as ``(melee, ranged)``, read at build time."""
+    if isinstance(coefficient, MeleeRangedSplit):
+        return (
+            resolve(coefficient.melee, ctx.level),
+            resolve(coefficient.ranged, ctx.level),
+        )
+    rate = resolve(coefficient, ctx.level)  # type: ignore[arg-type]
+    return (rate, rate)
+
+
+def _stepped_rates(stepped: LevelSteppedRate, ctx: BuildContext) -> tuple[float, float]:
+    """A level-stepped rate's ``(melee, ranged)`` values at the build's level.
+
+    Flat below the declared level and growing by one step per level from it
+    upwards, counting the threshold level itself as the first step — which is
+    the arithmetic the registry compiler wrote and the reason this is not a
+    two-ended ramp.
+    """
+    threshold = int(resolve(stepped.from_level, ctx.level))
+    bases = _split_rates(stepped.base, ctx)
+    if ctx.level < threshold:
+        return bases
+    steps = ctx.level - threshold + 1
+    per_level = _split_rates(stepped.per_level, ctx)
+    return (bases[0] + per_level[0] * steps, bases[1] + per_level[1] * steps)
+
+
 def _resolved_coefficient(term: Term, ctx: BuildContext) -> tuple[float, float]:
     """One term's ``(melee, ranged)`` rates, both read at build time.
 
@@ -102,13 +132,9 @@ def _resolved_coefficient(term: Term, ctx: BuildContext) -> tuple[float, float]:
     the closure's branch uniform: it always picks, and a holder's range class
     can never fall through to a rate nobody declared.
     """
-    if isinstance(term.coefficient, MeleeRangedSplit):
-        return (
-            resolve(term.coefficient.melee, ctx.level),
-            resolve(term.coefficient.ranged, ctx.level),
-        )
-    rate = resolve(term.coefficient, ctx.level)
-    return (rate, rate)
+    if isinstance(term.coefficient, LevelSteppedRate):
+        return _stepped_rates(term.coefficient, ctx)
+    return _split_rates(term.coefficient, ctx)
 
 
 # A zero-valued reading used only to prove every declared basis has one, at
@@ -146,6 +172,11 @@ def compile_formula(
             f"{ctx.owner}: {type(floor).__name__} is not a declared floor shape"
         )
     factor = _scaling_factor(formula, ctx)
+    missing_health_bonus = (
+        resolve(formula.scaling.bonus_at_full_missing, ctx.level)
+        if isinstance(formula.scaling, TimesMissingHealth)
+        else None
+    )
 
     def raw(inputs: DamageInputs) -> float:
         total = 0.0
@@ -154,6 +185,11 @@ def compile_formula(
             total += rate * basis_value(basis, inputs)
         if factor is not None:
             total *= factor
+        if missing_health_bonus is not None:
+            missing = max(
+                0.0, 1.0 - inputs.target_current_health / inputs.target_max_health
+            )
+            total *= 1.0 + missing_health_bonus * missing
         if minimum is None:
             return total
         return max(minimum, total)
@@ -170,7 +206,10 @@ def _scaling_factor(formula: DamageFormula, ctx: BuildContext) -> float | None:
     incidentally harmless.
     """
     scaling = formula.scaling
-    if isinstance(scaling, NoScaling):
+    if isinstance(scaling, (NoScaling, TimesMissingHealth)):
+        # A missing-health factor is not a build-time number: it is read per
+        # event from the target's live pools, so the closure computes it and
+        # this function has nothing to hand back.
         return None
     if isinstance(scaling, TimesValue):
         return resolve(scaling.factor, ctx.level)
@@ -188,6 +227,8 @@ def reads_target_current_health(formula: DamageFormula) -> bool:
     ``formula == "current_hp"`` — a string comparison that would have gone on
     being true of one formula name while a second one grew the same basis.
     """
+    if isinstance(formula.scaling, TimesMissingHealth):
+        return True
     return any(term.basis is Basis.TARGET_CURRENT_HEALTH for term in formula.terms)
 
 

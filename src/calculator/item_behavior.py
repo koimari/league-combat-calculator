@@ -623,16 +623,34 @@ class Basis(Enum):
 
 
 @dataclass(frozen=True, slots=True)
+class LevelSteppedRate:
+    """A rate that starts growing per level once a declared level is reached.
+
+    The third coefficient shape, beside a plain reference and a range split.
+    It is not a level *ramp*: a ramp interpolates between two stated ends,
+    while this one is flat below its threshold and adds a fixed amount per
+    level from it upwards, which is a different mechanic and a different
+    float.  Both halves may themselves be range splits, because the one
+    schema that needs this pays a melee holder more at both ends.
+    """
+
+    base: Union[AnyValueRef, "MeleeRangedSplit"]
+    per_level: Union[AnyValueRef, "MeleeRangedSplit"]
+    from_level: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
 class Term:
     """One share of one basis: ``coefficient × basis``.
 
-    ``coefficient`` is a sourced reference, or a :class:`MeleeRangedSplit`
-    where the registry pays a melee holder differently — the same shape the
-    amp chain uses, and for the same reason: the choice is made once per
-    build from a stat, before any event exists.
+    ``coefficient`` is a sourced reference, a :class:`MeleeRangedSplit` where
+    the registry pays a melee holder differently — the same shape the amp
+    chain uses, and for the same reason: the choice is made once per build
+    from a stat, before any event exists — or a :class:`LevelSteppedRate`
+    where it grows with the holder's level past a declared one.
     """
 
-    coefficient: Union[AnyValueRef, MeleeRangedSplit]
+    coefficient: Union[AnyValueRef, MeleeRangedSplit, LevelSteppedRate]
     basis: Basis
 
 
@@ -671,9 +689,22 @@ class TimesValue:
     factor: AnyValueRef
 
 
-Scaling = Union[NoScaling, TimesValue]
+@dataclass(frozen=True, slots=True)
+class TimesMissingHealth:
+    """The sum grows towards a sourced bonus as the target's health falls.
 
-SCALING_TYPES: tuple[type, ...] = (NoScaling, TimesValue)
+    ``bonus_at_full_missing`` is what the strike gains against a target on
+    one hit point; against a full-health target it gains nothing.  It is a
+    factor over the whole sum and not a share, which is why it is a scaling
+    rather than a term reading :data:`Basis.TARGET_MISSING_HEALTH`.
+    """
+
+    bonus_at_full_missing: AnyValueRef
+
+
+Scaling = Union[NoScaling, TimesValue, TimesMissingHealth]
+
+SCALING_TYPES: tuple[type, ...] = (NoScaling, TimesValue, TimesMissingHealth)
 
 
 @dataclass(frozen=True, slots=True)
@@ -739,6 +770,88 @@ class SecondaryTargetRule:
     max_targets: AnyValueRef
     damage_share: AnyValueRef
     applies_on_hit: bool
+
+
+@dataclass(frozen=True, slots=True)
+class EnergizedCharge:
+    """Stacks an item accrues from attacking, spent on one empowered hit."""
+
+    max_stacks: AnyValueRef
+    stacks_per_attack: AnyValueRef
+    abilities_also_charge: bool
+
+
+@dataclass(frozen=True, slots=True)
+class TemporaryLethality:
+    """Lethality an empowered hit grants its holder for a declared window."""
+
+    melee: AnyValueRef
+    ranged: AnyValueRef
+    duration: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class ChainTargets:
+    """How many further enemies one empowered hit arcs to."""
+
+    minimum: AnyValueRef
+    maximum: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class EmpoweredHitRule:
+    """A strike that spends a charge on one hit rather than paying every hit.
+
+    ``max_procs`` is always declared and is ``Const(1, "count")`` for the
+    strikes that fire once: "this fires once" is a statement about the
+    mechanic and reading it out of the *absence* of a key is how a second
+    such strike would silently inherit somebody else's answer.
+
+    The three optional records are mechanics only some of these strikes have:
+    Energized stacks, Voltaic's temporary lethality, Statikk's arc.  Each is a
+    declared ``None`` where the mechanic does not exist.
+    """
+
+    formula: DamageFormula
+    max_procs: AnyValueRef
+    basic_damage: bool
+    energized: EnergizedCharge | None
+    temporary_lethality: TemporaryLethality | None
+    chain_targets: ChainTargets | None
+
+
+@dataclass(frozen=True, slots=True)
+class RepeatingStrikeRule:
+    """A strike that lands on every Nth on-hit application."""
+
+    formula: DamageFormula
+    hits_required: AnyValueRef
+    basic_damage: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ShapedChargeRule:
+    """A charge an ability arms, paid as true damage on a cooldown."""
+
+    formula: DamageFormula
+    cooldown: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class EmpoweredAutoBuffRule:
+    """An ultimate that empowers a declared number of the holder's attacks.
+
+    The one strike-family member that deals no damage of its own: it changes
+    how the holder's *own* attacks land — faster, guaranteed critical, with a
+    reduced critical multiplier and a true-damage rider on natural criticals —
+    so it carries five numbers and no formula.
+    """
+
+    bonus_attack_speed_percent: AnyValueRef
+    empowered_auto_count: AnyValueRef
+    duration: AnyValueRef
+    reduced_crit_ratio: AnyValueRef
+    natural_crit_true_damage_ratio: AnyValueRef
 
 
 class ProcTrigger(Enum):
@@ -1185,6 +1298,10 @@ class AllyPacketRule:
 
 RulePayload = Union[
     ActiveCastRule,
+    EmpoweredAutoBuffRule,
+    EmpoweredHitRule,
+    RepeatingStrikeRule,
+    ShapedChargeRule,
     CooldownProcRule,
     UltimateProcRule,
     PeriodicRule,
@@ -1201,6 +1318,10 @@ RulePayload = Union[
 # a payload its family does not name.
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ActiveCastRule: RuleFamily.ACTIVE_CAST,
+    EmpoweredAutoBuffRule: RuleFamily.CHARGED_STRIKE,
+    EmpoweredHitRule: RuleFamily.CHARGED_STRIKE,
+    RepeatingStrikeRule: RuleFamily.CHARGED_STRIKE,
+    ShapedChargeRule: RuleFamily.CHARGED_STRIKE,
     CooldownProcRule: RuleFamily.CAST_PROC,
     UltimateProcRule: RuleFamily.CAST_PROC,
     PeriodicRule: RuleFamily.PERIODIC,
@@ -1276,6 +1397,32 @@ def _validate_payload(rule: BehaviorRule) -> None:
         return
     if isinstance(payload, OnHitStrikeRule):
         _validate_formula(rule, payload.formula)
+        return
+    if isinstance(payload, EmpoweredHitRule):
+        _validate_formula(rule, payload.formula)
+        _validate_refs(rule, {"max_procs": payload.max_procs})
+        return
+    if isinstance(payload, RepeatingStrikeRule):
+        _validate_formula(rule, payload.formula)
+        _validate_refs(rule, {"hits_required": payload.hits_required})
+        return
+    if isinstance(payload, ShapedChargeRule):
+        _validate_formula(rule, payload.formula)
+        _validate_refs(rule, {"cooldown": payload.cooldown})
+        return
+    if isinstance(payload, EmpoweredAutoBuffRule):
+        _validate_refs(
+            rule,
+            {
+                "bonus_attack_speed_percent": payload.bonus_attack_speed_percent,
+                "empowered_auto_count": payload.empowered_auto_count,
+                "duration": payload.duration,
+                "reduced_crit_ratio": payload.reduced_crit_ratio,
+                "natural_crit_true_damage_ratio": (
+                    payload.natural_crit_true_damage_ratio
+                ),
+            },
+        )
         return
     if isinstance(payload, CooldownProcRule):
         _validate_cooldown_proc(rule, payload)
@@ -1468,7 +1615,10 @@ def _validate_formula(rule: BehaviorRule, formula: DamageFormula) -> None:
             raise BehaviorRuleError(
                 f"{rule.mechanic_id}: a term says what it is a share of"
             )
-        if not isinstance(term.coefficient, (*VALUE_REF_TYPES, MeleeRangedSplit)):
+        if not isinstance(
+            term.coefficient,
+            (*VALUE_REF_TYPES, MeleeRangedSplit, LevelSteppedRate),
+        ):
             raise BehaviorRuleError(
                 f"{rule.mechanic_id}: a term's coefficient is a sourced "
                 "reference, never a number in the declaration"
@@ -1720,7 +1870,11 @@ __all__ = [
     "CooldownProcRule",
     "Consumption",
     "DamageFormula",
+    "ChainTargets",
     "DamageThreshold",
+    "EmpoweredAutoBuffRule",
+    "EmpoweredHitRule",
+    "EnergizedCharge",
     "DeltaAmpRule",
     "EngineLane",
     "ExcludeTrigger",
@@ -1729,6 +1883,7 @@ __all__ = [
     "Floor",
     "Isolation",
     "KernelField",
+    "LevelSteppedRate",
     "LivePredicate",
     "MAGNITUDE_TYPES",
     "Magnitude",
@@ -1756,6 +1911,7 @@ __all__ = [
     "RampPerSecond",
     "RampPerStack",
     "ReceiptOnly",
+    "RepeatingStrikeRule",
     "Recipients",
     "Resistance",
     "ResistanceShredRule",
@@ -1766,13 +1922,16 @@ __all__ = [
     "Scaling",
     "SecondaryTargetRule",
     "SelfShield",
+    "ShapedChargeRule",
     "SpellbladeRule",
     "StackGate",
     "StackRamp",
     "Subject",
     "TRIGGER_STREAM",
     "TargetBonusHealthScaled",
+    "TemporaryLethality",
     "Term",
+    "TimesMissingHealth",
     "TimesValue",
     "TriggerEvent",
     "TriggerWindow",

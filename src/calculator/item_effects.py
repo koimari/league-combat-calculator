@@ -3680,13 +3680,9 @@ class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
     on_hit_heals: tuple[OnHitHealEffect, ...] = ()
-    first_autos: tuple[FirstAutoEffect, ...] = ()
     auto_cooldowns: tuple[AutoCooldownEffect, ...] = ()
-    stacking_on_hits: tuple[StackingOnHitEffect, ...] = ()
     per_ability_hits: tuple[DamageSource, ...] = ()
-    shaped_charges: tuple[CooldownProcEffect, ...] = ()
     phantom_hit: PhantomHitEffect | None = None
-    ultimate_auto_buff: UltimateAutoBuffEffect | None = None
     stacking_pen: StackingPenEffect | None = None
     navori_refund_percent: float = 0.0
     crit_damage_bonus: float = 0.0
@@ -3803,204 +3799,6 @@ def _compile_per_ability_hit(
         suffix="Shock - abilities",
         breakdown_key="muramana_ability",
     )
-
-
-def _explicit_damage_source(
-    item_name: str,
-    required: _RequiredValues,
-    raw_damage: RawDamageFormula,
-) -> DamageSource:
-    """Compile registry-owned presentation metadata for special behaviors."""
-    return DamageSource(
-        item_name=item_name,
-        breakdown_key=str(required.value("breakdown_key")),
-        display_name=str(required.value("display_name")),
-        damage_type=required.value("damage_type"),
-        raw_damage=raw_damage,
-        basic_damage=bool(required.values.get("basic_damage", False)),
-    )
-
-
-def _compile_first_auto(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> FirstAutoEffect:
-    """Compile a first-auto raw formula without exposing item identity."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "flat":
-        base = required.number("base")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    elif formula == "flat_base_ad":
-        base = required.number("base")
-        base_ad_ratio = required.number("base_ad_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + base_ad_ratio * inputs.champion_stats.get(
-                "base_attack_damage", 0.0
-            )
-
-    elif formula == "flat_max_hp":
-        base = required.number("base")
-        max_hp_ratio = required.number("max_hp_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + max_hp_ratio * inputs.champion_stats.get("health", 0.0)
-
-    elif formula == "flat_plus_lethality":
-        base = required.number("base")
-        lethality_ratio = required.number("lethality_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + lethality_ratio * inputs.champion_stats.get("lethality", 0.0)
-
-    elif formula == "current_hp":
-        melee_ratio = required.number("current_hp_ratio_melee")
-        ranged_ratio = required.number("current_hp_ratio_ranged")
-
-        def raw(inputs: DamageInputs) -> float:
-            ratio = melee_ratio if inputs.is_melee else ranged_ratio
-            return ratio * inputs.target_current_health
-
-    else:
-        raise ValueError(
-            f"Unsupported first-auto formula {formula!r} for {item_name!r}"
-        )
-
-    max_procs = 1
-    if values.get("uses_empowered_auto_count"):
-        max_procs = int(required.number("empowered_auto_count"))
-    temporary_lethality_keys = (
-        "temporary_lethality_melee",
-        "temporary_lethality_ranged",
-        "temporary_lethality_duration",
-    )
-    # Voltaic's first-auto proc is the only registered temporary-lethality
-    # effect.  Its three values are one typed contract; accepting a partial
-    # record would silently turn a parser break into zero lethality/duration.
-    if item_name == "Voltaic Cyclosword" or any(
-        key in values for key in temporary_lethality_keys
-    ):
-        temporary_lethality = {
-            key: required.number(key) for key in temporary_lethality_keys
-        }
-    else:
-        temporary_lethality = {}
-    return FirstAutoEffect(
-        _explicit_damage_source(item_name, required, raw),
-        max_procs=max_procs,
-        temporary_lethality_melee=temporary_lethality.get(
-            "temporary_lethality_melee", 0.0
-        ),
-        temporary_lethality_ranged=temporary_lethality.get(
-            "temporary_lethality_ranged", 0.0
-        ),
-        temporary_lethality_duration=temporary_lethality.get(
-            "temporary_lethality_duration", 0.0
-        ),
-        energized_max_stacks=(
-            int(required.number("energized_max_stacks"))
-            if "energized_max_stacks" in values
-            else 0
-        ),
-        energized_attack_stacks=(
-            int(required.number("energized_attack_stacks"))
-            if "energized_attack_stacks" in values
-            else 0
-        ),
-        energized_ability_trigger=bool(values.get("energized_ability_trigger", False)),
-        chain_targets_min=(
-            int(required.number("chain_targets_min"))
-            if "chain_targets_min" in values
-            else 0
-        ),
-        chain_targets_max=(
-            int(required.number("chain_targets_max"))
-            if "chain_targets_max" in values
-            else 0
-        ),
-    )
-
-
-def _compile_stacking_on_hit(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> StackingOnHitEffect:
-    """Compile every-Nth-on-hit damage and its current-HP dependency."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "base_ad_max_hp":
-        base_ad_melee = required.number("base_ad_ratio_melee")
-        base_ad_ranged = required.number("base_ad_ratio_ranged")
-        hp_melee = required.number("max_hp_ratio_melee")
-        hp_ranged = required.number("max_hp_ratio_ranged")
-
-        def raw(inputs: DamageInputs) -> float:
-            base_ad_ratio = base_ad_melee if inputs.is_melee else base_ad_ranged
-            hp_ratio = hp_melee if inputs.is_melee else hp_ranged
-            stats = inputs.champion_stats
-            return base_ad_ratio * stats.get(
-                "base_attack_damage", 0.0
-            ) + hp_ratio * stats.get("health", 0.0)
-
-        tracks_target_health = False
-    elif formula == "level_missing_hp":
-        base_melee = required.number("base_melee")
-        per_level_melee = required.number("per_level_melee")
-        base_ranged = required.number("base_ranged")
-        per_level_ranged = required.number("per_level_ranged")
-        scaling_start = int(required.number("scaling_start_level"))
-        missing_bonus = required.number("missing_hp_bonus_max")
-
-        def raw(inputs: DamageInputs) -> float:
-            base = base_melee if inputs.is_melee else base_ranged
-            per_level = per_level_melee if inputs.is_melee else per_level_ranged
-            if inputs.level >= scaling_start:
-                base += per_level * (inputs.level - scaling_start + 1)
-            missing_ratio = max(
-                0.0,
-                1.0 - inputs.target_current_health / inputs.target_max_health,
-            )
-            return base * (1.0 + missing_bonus * missing_ratio)
-
-        tracks_target_health = True
-    else:
-        raise ValueError(f"Unsupported stacking formula {formula!r} for {item_name!r}")
-
-    return StackingOnHitEffect(
-        source=_explicit_damage_source(item_name, required, raw),
-        hits_required=int(required.number("hits_required")),
-        tracks_target_health=tracks_target_health,
-    )
-
-
-def _compile_shaped_charge(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> CooldownProcEffect:
-    """Compile an ability-triggered lethality proc without scheduling it."""
-    required = _RequiredValues(item_name, values)
-    base_melee = required.number("base_melee")
-    base_ranged = required.number("base_ranged")
-    ratio_melee = required.number("lethality_ratio_melee")
-    ratio_ranged = required.number("lethality_ratio_ranged")
-
-    def raw(inputs: DamageInputs) -> float:
-        base = base_melee if inputs.is_melee else base_ranged
-        ratio = ratio_melee if inputs.is_melee else ratio_ranged
-        return base + ratio * inputs.champion_stats.get("lethality", 0.0)
-
-    source = DamageSource(
-        item_name=item_name,
-        breakdown_key=f"shaped_charge_{item_name}",
-        display_name=f"{item_name} (Shaped Charge)",
-        damage_type="true",
-        raw_damage=raw,
-    )
-    return CooldownProcEffect(source, required.number("cooldown"))
 
 
 _KNOWN_EFFECT_TYPES = frozenset(
@@ -4144,13 +3942,9 @@ def _resolve_damage_effects_uncached(
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
     on_hit_heals: list[OnHitHealEffect] = []
-    first_autos: list[FirstAutoEffect] = []
-    stacking_on_hits: list[StackingOnHitEffect] = []
     auto_cooldowns: list[AutoCooldownEffect] = []
     per_ability_hits: list[DamageSource] = []
-    shaped_charges: list[CooldownProcEffect] = []
     phantom_hit: PhantomHitEffect | None = None
-    ultimate_auto_buff: UltimateAutoBuffEffect | None = None
     stacking_pen: StackingPenEffect | None = None
     navori_refund_percent = 0.0
     crit_damage_bonus = 0.0
@@ -4175,26 +3969,14 @@ def _resolve_damage_effects_uncached(
             )
         if effect_type == "on_hit_heal":
             on_hit_heals.append(_compile_on_hit_heal(item_name, values))
-        elif effect_type == "on_hit_once":
-            first_autos.append(_compile_first_auto(item_name, values))
-        elif effect_type == "on_hit_stacking":
-            stacking_on_hits.append(_compile_stacking_on_hit(item_name, values))
-        elif effect_type == "shaped_charge":
-            shaped_charges.append(_compile_shaped_charge(item_name, values))
         elif effect_type == "ult_empowered_autos":
+            # The window itself is a declared charged strike; what stays here
+            # is its assumption note.  ``conditional_notes`` is the one prose
+            # surface this projection owns — ``unmodeled_splash_note`` below
+            # proves it already owns notes for tags it does not otherwise
+            # handle — and keeping the note in the item's own loop position is
+            # what keeps the published note order the order items were bought.
             required = _RequiredValues(item_name, values)
-            ultimate_auto_buff = UltimateAutoBuffEffect(
-                item_name=item_name,
-                bonus_attack_speed_percent=required.number(
-                    "bonus_attack_speed_percent"
-                ),
-                empowered_auto_count=int(required.number("empowered_auto_count")),
-                duration=required.number("duration"),
-                reduced_crit_ratio=required.number("reduced_crit_ratio"),
-                natural_crit_true_damage_ratio=required.number(
-                    "natural_crit_true_damage_ratio"
-                ),
-            )
             conditional_notes.append(
                 "R is assumed to be cast at the start of the fight. "
                 f"{item_name} empowered attacks "
@@ -4300,13 +4082,9 @@ def _resolve_damage_effects_uncached(
 
     return BuildDamageEffects(
         on_hit_heals=tuple(on_hit_heals),
-        first_autos=tuple(first_autos),
-        stacking_on_hits=tuple(stacking_on_hits),
         auto_cooldowns=tuple(auto_cooldowns),
         per_ability_hits=tuple(per_ability_hits),
-        shaped_charges=tuple(shaped_charges),
         phantom_hit=phantom_hit,
-        ultimate_auto_buff=ultimate_auto_buff,
         stacking_pen=stacking_pen,
         navori_refund_percent=navori_refund_percent,
         crit_damage_bonus=crit_damage_bonus,

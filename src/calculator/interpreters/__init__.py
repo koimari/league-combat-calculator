@@ -46,6 +46,7 @@ from . import (
     active_cast,
     ally_packet,
     cast_proc,
+    charged_strike,
     delta_amp,
     on_hit_strike,
     periodic,
@@ -227,6 +228,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.RECEIPT_WALK,
     ): ally_packet.WALK_INTERPRETER,
     (RuleFamily.CAST_PROC, EngineLane.PAIR_ENGINE): cast_proc.PAIR_INTERPRETER,
+    (
+        RuleFamily.CHARGED_STRIKE,
+        EngineLane.PAIR_ENGINE,
+    ): charged_strike.PAIR_INTERPRETER,
     (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
     (
         RuleFamily.ON_HIT_STRIKE,
