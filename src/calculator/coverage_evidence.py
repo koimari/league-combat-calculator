@@ -416,10 +416,30 @@ class TestRef:
     node_id: str
 
     def validate(self, *, claim: str) -> None:
-        """``<path>.py::<node>`` with no whitespace."""
+        """``<path>.py::<node>``, whitespace only inside a parametrization id.
+
+        The location part names one place and may not be a sentence.  The
+        ``[...]`` suffix is not a location: pytest builds it out of the
+        parameter values verbatim, so ``[Ardent Censer]`` and
+        ``[Jak'Sho, The Parametrized]`` are what a real collected id looks
+        like, and a blanket no-whitespace rule would make every claim backed
+        by a per-item parametrized node unauthorable — which is precisely how
+        the dynamic families are meant to be backed.
+        """
         text = _require_text(self.node_id, claim=claim, field="TestRef.node_id")
-        _require_no_whitespace(text, claim=claim, field="TestRef.node_id")
-        path, separator, node = text.partition("::")
+        location, bracket, parametrization = text.partition("[")
+        _require_no_whitespace(location, claim=claim, field="TestRef.node_id")
+        if bracket and not parametrization.endswith("]"):
+            raise CoverageClaimError(
+                f"{claim}: TestRef.node_id {text!r} opens a parametrization id "
+                "and never closes it"
+            )
+        if any(character in text for character in "\r\n\t"):
+            raise CoverageClaimError(
+                f"{claim}: TestRef.node_id {text!r} spans lines; a node id is "
+                "one line"
+            )
+        path, separator, node = location.partition("::")
         if not separator or not node or not path.endswith(".py"):
             raise CoverageClaimError(
                 f"{claim}: TestRef.node_id {text!r} is not " "'<path>.py::<node>'"

@@ -487,6 +487,11 @@ def test_key_that_is_not_a_triple_is_rejected() -> None:
             id="test-ref-is-a-k-expression",
         ),
         pytest.param(
+            TestRef(node_id="tests/test_a.py::test_x[Ardent Censer"),
+            "never closes it",
+            id="test-ref-unclosed-parametrization",
+        ),
+        pytest.param(
             SourceRef(url="http://wiki.leagueoflegends.com/en-us/X", revision_id=1),
             "is not an https url",
             id="source-ref-not-https",
@@ -710,6 +715,28 @@ TERMINAL = rung(
     keys_on=(),
     status="review_pending",
 )
+
+
+@pytest.mark.parametrize(
+    "node_id",
+    [
+        "tests/test_coverage_claims.py::test_a_claim[Ardent Censer]",
+        "tests/test_coverage_claims.py::test_a_claim[Jak'Sho, The Protean]",
+        "tests/test_x.py::TestGroup::test_case[Rylai's Crystal Scepter-3]",
+    ],
+    ids=["space", "comma and apostrophe", "class and compound id"],
+)
+def test_a_parametrization_id_may_carry_the_spaces_pytest_puts_in_it(
+    node_id: str,
+) -> None:
+    """The ``[...]`` suffix is a parameter value, not a location.
+
+    pytest builds it out of the parameter verbatim, so an item name lands in
+    it spaces and all.  Rejecting those would make every claim backed by a
+    per-item parametrized node unauthorable, which is precisely how the
+    dynamic families are meant to be backed.
+    """
+    validate_evidence(TestRef(node_id=node_id), claim="item:X@attacker")
 
 
 def test_a_well_formed_ladder_validates() -> None:
