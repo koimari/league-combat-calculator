@@ -60,6 +60,7 @@ from . import (
     resistance_shred,
     secondary_target,
     spellblade,
+    sustain,
     threshold_defense,
 )
 
@@ -206,11 +207,15 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
             EngineLane.COMPILED_SCORE_WALK,
         }
     ),
+    # Sustain is the second family the defensive resolver also builds: the
+    # received-healing multiplier scales state three earlier defences wrote,
+    # so it is resolved with them rather than by whoever heals.
     RuleFamily.SUSTAIN: frozenset(
         {
             EngineLane.PAIR_ENGINE,
             EngineLane.RECEIPT_WALK,
             EngineLane.COMPILED_SCORE_WALK,
+            EngineLane.DEFENSE_RESOLVER,
         }
     ),
     # A derived stat is resolved before any damage exists, and the pair
@@ -289,6 +294,11 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         RuleFamily.SPELLBLADE,
         EngineLane.PAIR_ENGINE,
     ): spellblade.PAIR_INTERPRETER,
+    (
+        RuleFamily.SUSTAIN,
+        EngineLane.DEFENSE_RESOLVER,
+    ): sustain.RESOLVER_INTERPRETER,
+    (RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE): sustain.PAIR_INTERPRETER,
     (
         RuleFamily.THRESHOLD_DEFENSE,
         EngineLane.DEFENSE_RESOLVER,

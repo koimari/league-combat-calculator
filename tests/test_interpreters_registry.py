@@ -44,7 +44,7 @@ def test_every_family_declares_the_lanes_that_owe_it_an_answer() -> None:
     """Declared, not inferred — otherwise an empty registry reports full cover."""
     for family in RuleFamily:
         assert interpreters.lanes_for(family)
-    assert len(interpreters.declared_pairs()) == 52
+    assert len(interpreters.declared_pairs()) == 53
 
 
 def test_counter_four_is_the_gap_between_the_table_and_the_registry() -> None:
@@ -142,18 +142,35 @@ def test_a_declaration_no_lane_serves_is_reported_rather_than_silent() -> None:
 def test_an_interpreter_no_declaration_reaches_is_an_orphan_branch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """D-51's interpreter->author direction, with a red it can reproduce."""
-    stub = _StubInterpreter(RuleFamily.SUSTAIN, frozenset({EngineLane.PAIR_ENGINE}))
+    """D-51's interpreter->author direction, with a red it can reproduce.
+
+    The pair is read off the frontier rather than named: every migration
+    slice registers another one, and a hard-coded family would make this
+    test quietly stop testing the direction it exists for.
+    """
+    family, lane = interpreters.uninterpreted_pairs()[0]
+    stub = _StubInterpreter(family, frozenset({lane}))
     monkeypatch.setattr(
         interpreters,
         "INTERPRETERS",
-        dict(interpreters.INTERPRETERS)
-        | {(RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE): stub},
+        dict(interpreters.INTERPRETERS) | {(family, lane): stub},
     )
     report = interpreters.reachability_report(frozenset())
     assert (
-        "sustain/pair_engine is registered and no declaration reaches it"
+        f"{family.value}/{lane.value} is registered and no declaration reaches it"
         in report.orphan_branches
+    )
+    # And the gate raises on it: the owner set is narrowed to the holders
+    # that declare nothing of this family, which is what "no declaration
+    # reaches this branch" means once the family itself has declarations.
+    monkeypatch.setattr(
+        interpreters,
+        "rule_owners",
+        lambda: frozenset(
+            owner
+            for owner in catalog.rule_owners()
+            if all(rule.family is not family for rule in catalog.behavior_rules(owner))
+        ),
     )
     with pytest.raises(interpreters.InterpreterRegistryError, match="orphan|reaches"):
         interpreters.validate_registrations()

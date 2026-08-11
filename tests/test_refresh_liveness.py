@@ -132,6 +132,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "below {{as|45% of your '''maximum''' health}}",
         0.45,
     ),
+    RuleFamily.SUSTAIN: (
+        "Spirit Visage",
+        "shield_received_multiplier",
+        "health regeneration}} by 25%.",
+        "health regeneration}} by 40%.",
+        1.40,
+    ),
     RuleFamily.DAMAGE_ROUTING: (
         "The Collector",
         "threshold",

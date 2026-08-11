@@ -1274,6 +1274,145 @@ class DamageDeferralRule:
     values: tuple[AnyValueRef, ...]
 
 
+# ── sustain ───────────────────────────────────────────────────────────────
+#
+# Five shapes that all put health back, and share no arithmetic at all: a
+# vampirism stat the build's stat block folds, a share of damage dealt paid
+# straight back, a resource drain that only becomes health when there is no
+# resource to fill, a heal bought with mana spent, and a regeneration window
+# a hit opens.  The sixth is the multiplier on everything a subject
+# *receives*, which is shaped like a defence because the resolver builds it
+# after every shield it multiplies.
+
+
+class SustainStat(Enum):
+    """Which vampirism stat a grant contributes to.
+
+    Two members, because the two really do behave differently — life steal
+    reads basic-attack damage and omnivamp reads every source — and the
+    registry pins them under two keys the build's stat fold reads separately.
+    """
+
+    LIFESTEAL_PERCENT = "lifesteal_percent"
+    OMNIVAMP_PERCENT = "omnivamp_percent"
+
+
+@dataclass(frozen=True, slots=True)
+class SustainStatRule:
+    """A sourced vampirism percentage the build's stat fold sums.
+
+    ``overrides_cached_stat`` is the honest half: a few item pages replaced a
+    stat passive with a named effect, and the registry pins the correction
+    under a ``stat_override_`` key that *wins over* the cached stat block
+    rather than adding to it.  Declaring which of the two a grant is keeps
+    "the wiki stat is wrong and here is the right one" from looking like
+    "here is a second source of life steal".
+    """
+
+    stat: SustainStat
+    percent: AnyValueRef
+    overrides_cached_stat: bool
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class PostMitigationHealRule:
+    """A share of damage dealt, paid straight back as health.
+
+    ``area_effectiveness`` is the conservative share paid where the damage's
+    scope is not a single-target basic attack — an assumption, declared,
+    because the model cannot tell an area ability from a single-target one
+    for every champion and pricing the full share would overpay.
+    """
+
+    ratio: AnyValueRef
+    area_effectiveness: AnyValueRef
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class OnHitHealRule:
+    """A flat amount of health one authored on-hit application restores.
+
+    The plainest sustain there is, and it still declares its trigger: "on
+    hit" is a stream the bus carries, and a heal that named no trigger would
+    be a number with no event to attach it to.
+    """
+
+    amount: AnyValueRef
+    trigger: TriggerEvent
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ResourceDrainRule:
+    """A tick that restores resource first and heals only when it cannot.
+
+    Five references because the drain answers five questions: the resting
+    rate, the rate while recently in combat, how long "recently" lasts, what
+    share of an unusable restore becomes health, and how often it ticks.
+    """
+
+    restoration_per_second: AnyValueRef
+    combat_restoration_per_second: AnyValueRef
+    combat_window: AnyValueRef
+    health_conversion: AnyValueRef
+    tick_interval: AnyValueRef
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ManaSpentHealRule:
+    """A heal bought with mana spent, capped per cast and per second.
+
+    ``damage_taken_to_mana_ratio`` is the other half of the same passive and
+    is declared here rather than in a second rule: one entry, one mechanic,
+    and the roster walk that reads the restore and the pair path that reads
+    the heal are two readers of one declaration.
+    """
+
+    heal_ratio: AnyValueRef
+    cap_per_cast: AnyValueRef
+    cap_per_second: AnyValueRef
+    damage_taken_to_mana_ratio: AnyValueRef
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class RegenerationRule:
+    """A regeneration window a qualifying hit opens, capped by missing health.
+
+    ``total_melee`` and ``total_reduced`` are the whole window's amounts, not
+    per-tick rates: the registry states what the window is worth and the
+    tick interval says how it is paid out, which is the one arrangement that
+    survives a patch changing either independently.
+    """
+
+    total_melee: AnyValueRef
+    total_reduced: AnyValueRef
+    duration: AnyValueRef
+    missing_health_cap: AnyValueRef
+    tick_interval: AnyValueRef
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ReceivedHealingRule:
+    """A multiplier on every heal and shield the subject receives.
+
+    Shaped like a defence — it carries a :class:`DefenseMechanic`, writes
+    resolved defensive state and reads its numbers as references — because
+    the resolver builds it, and it has to run *after* every shield it
+    multiplies, which makes its position in the resolution order arithmetic
+    rather than presentation.
+    """
+
+    mechanic: DefenseMechanic
+    writes: tuple[DefenseField, ...]
+    exclusivity: DefenseExclusivity
+    values: tuple[AnyValueRef, ...]
+
+
 # ── defence ───────────────────────────────────────────────────────────────
 
 
@@ -1770,6 +1909,13 @@ RulePayload = Union[
     ExecuteRule,
     ShieldBypassRule,
     DamageDeferralRule,
+    SustainStatRule,
+    OnHitHealRule,
+    PostMitigationHealRule,
+    ResourceDrainRule,
+    ManaSpentHealRule,
+    RegenerationRule,
+    ReceivedHealingRule,
     OpeningDefenseRule,
     ThresholdDefenseRule,
     CombatStateRule,
@@ -1800,6 +1946,13 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ExecuteRule: RuleFamily.DAMAGE_ROUTING,
     ShieldBypassRule: RuleFamily.DAMAGE_ROUTING,
     DamageDeferralRule: RuleFamily.DAMAGE_ROUTING,
+    SustainStatRule: RuleFamily.SUSTAIN,
+    OnHitHealRule: RuleFamily.SUSTAIN,
+    PostMitigationHealRule: RuleFamily.SUSTAIN,
+    ResourceDrainRule: RuleFamily.SUSTAIN,
+    ManaSpentHealRule: RuleFamily.SUSTAIN,
+    RegenerationRule: RuleFamily.SUSTAIN,
+    ReceivedHealingRule: RuleFamily.SUSTAIN,
     OpeningDefenseRule: RuleFamily.OPENING_DEFENSE,
     ThresholdDefenseRule: RuleFamily.THRESHOLD_DEFENSE,
     CombatStateRule: RuleFamily.COMBAT_STATE,
@@ -1815,9 +1968,10 @@ DEFENSE_PAYLOAD_TYPES: tuple[type, ...] = (
     CombatStateRule,
     ReactiveRule,
     # Shaped like a defence and filed under another family: the resolver
-    # builds it at the opening with every other defence, and what it does
-    # with the damage is a different question from where it is built.
+    # builds them at the opening with every other defence, and what they do
+    # with the damage is a different question from where they are built.
     DamageDeferralRule,
+    ReceivedHealingRule,
 )
 
 
@@ -1945,6 +2099,9 @@ def _validate_payload(rule: BehaviorRule) -> None:
         return
     if isinstance(payload, (CritDamageBonusRule, ForcedCritRule)):
         _validate_crit_profile(rule, payload)
+        return
+    if isinstance(payload, SUSTAIN_VALUE_PAYLOADS):
+        _validate_sustain(rule, payload)
         return
     if isinstance(payload, ExecuteRule):
         _validate_damage_routing(rule, payload)
@@ -2315,6 +2472,62 @@ def _validate_shred_payload(rule: BehaviorRule, payload: ResistanceShredRule) ->
         )
 
 
+# Which references each value-shaped sustain payload declares.  A table
+# rather than five validator branches: every one of them answers "are all my
+# numbers references", and the only thing that differs is which fields to
+# ask for.
+SUSTAIN_PAYLOAD_REFERENCES: dict[type, tuple[str, ...]] = {
+    SustainStatRule: ("percent",),
+    OnHitHealRule: ("amount",),
+    PostMitigationHealRule: ("ratio", "area_effectiveness"),
+    ResourceDrainRule: (
+        "restoration_per_second",
+        "combat_restoration_per_second",
+        "combat_window",
+        "health_conversion",
+        "tick_interval",
+    ),
+    ManaSpentHealRule: (
+        "heal_ratio",
+        "cap_per_cast",
+        "cap_per_second",
+        "damage_taken_to_mana_ratio",
+    ),
+    RegenerationRule: (
+        "total_melee",
+        "total_reduced",
+        "duration",
+        "missing_health_cap",
+        "tick_interval",
+    ),
+}
+
+SUSTAIN_VALUE_PAYLOADS: tuple[type, ...] = tuple(SUSTAIN_PAYLOAD_REFERENCES)
+
+
+def _validate_sustain(rule: BehaviorRule, payload: RulePayload) -> None:
+    """A sustain rule heals its holder and reads only sourced numbers."""
+    if payload.subject is not Subject.HOLDER:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a sustain rule puts health back on the holder "
+            "and declares no other subject; a heal aimed elsewhere is an ally "
+            "packet"
+        )
+    if isinstance(payload, SustainStatRule) and not isinstance(
+        payload.stat, SustainStat
+    ):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a stat grant says which vampirism stat it feeds"
+        )
+    _validate_refs(
+        rule,
+        {
+            name: getattr(payload, name)
+            for name in SUSTAIN_PAYLOAD_REFERENCES[type(payload)]
+        },
+    )
+
+
 def _validate_damage_routing(
     rule: BehaviorRule, payload: ExecuteRule | ShieldBypassRule
 ) -> None:
@@ -2583,11 +2796,13 @@ __all__ = [
     "LivePredicate",
     "MAGNITUDE_TYPES",
     "Magnitude",
+    "ManaSpentHealRule",
     "MeleeRangedSplit",
     "NEvents",
     "NextEventOnly",
     "NoFloor",
     "NoScaling",
+    "OnHitHealRule",
     "OnHitStrikeRule",
     "OpeningDefenseRule",
     "PAYLOAD_FAMILY",
@@ -2601,6 +2816,7 @@ __all__ = [
     "Persist",
     "Persistence",
     "Pool",
+    "PostMitigationHealRule",
     "Probe",
     "ProcTrigger",
     "RULE_FAMILY_COUNT",
@@ -2609,14 +2825,19 @@ __all__ = [
     "RampPerStack",
     "ReactiveRule",
     "ReceiptOnly",
+    "ReceivedHealingRule",
     "Recipients",
+    "RegenerationRule",
     "RepeatingStrikeRule",
     "Resistance",
     "ResistanceShredRule",
+    "ResourceDrainRule",
     "RuleFamily",
     "RulePayload",
     "SCALING_TYPES",
     "SUBJECT_AUTHORITY",
+    "SUSTAIN_PAYLOAD_REFERENCES",
+    "SUSTAIN_VALUE_PAYLOADS",
     "Scaling",
     "SecondaryTargetRule",
     "SelfShield",
@@ -2627,6 +2848,8 @@ __all__ = [
     "StackGate",
     "StackRamp",
     "Subject",
+    "SustainStat",
+    "SustainStatRule",
     "TRIGGER_STREAM",
     "TargetBonusHealthScaled",
     "TemporaryLethality",

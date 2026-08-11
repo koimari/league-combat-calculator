@@ -28,8 +28,10 @@ from typing import Any, Callable, Mapping, Sequence
 from .champions.skill_orders import get_ability_rank
 from .interpreters import opening_defense, resolve_defense
 from .interpreters.defense_state import declared_defenses
+from .interpreters.sustain import received_healing_multiplier
 from .item_behavior import (
     AllyProducer,
+    BehaviorRule,
     DEFENSE_FIELD_COMBINE,
     DefenseCombine,
     DefenseField,
@@ -39,7 +41,7 @@ from .item_behavior import (
     RuleFamily,
 )
 from .item_behavior_catalog import DEFENSE_RECEIPTS, behavior_rules
-from .item_effects import ITEM_EFFECTS, required_effect_value
+from .item_effects import ITEM_EFFECTS
 from .value_ref import SourceReceipt
 
 # How each defensive source is published.  A template per mechanic, because
@@ -447,12 +449,11 @@ def _apply_champion_revive(
 
 # ── the one defence still resolved by name (3.7) ─────────────────────────
 #
-# Spirit Visage's Boundless Vitality multiplies every heal and shield the
-# subject receives, which is ``sustain``'s shape and this slice's successor's
-# work.  It keeps the branch it always had, in the position the resolution
-# order gives it, and is named in
-# ``item_behavior_catalog.DEFENSE_UNMIGRATED_MECHANICS`` with the slice that
-# retires it — a refusal with a date rather than an omission.
+# One defence is a *fold over the ledger* rather than a set of granted
+# fields: Boundless Vitality multiplies state three earlier mechanics wrote,
+# so the arithmetic belongs where the state lives.  Its number, the field it
+# lands in and its citation all come from its own declaration; what stays
+# here is the fold and the three sentences that describe it.
 
 
 _SHIELD_FIELDS = (
@@ -464,40 +465,50 @@ _SHIELD_FIELDS = (
 )
 
 
+# The three sentences the fold publishes.  The percentage is interpolated
+# from the declared multiplier rather than typed: a registry that moved the
+# number and a note that did not would be prose outrunning code, in the one
+# place a reader looks to check it.
+_BOUNDLESS_SHIELD_NOTE = (
+    "Boundless Vitality increases every modeled shield by {share:.0%}."
+)
+_BOUNDLESS_THRESHOLD_NOTE = (
+    "Boundless Vitality increases Protoplasm Harness's modeled healing by "
+    "{share:.0%}."
+)
+_BOUNDLESS_ALL_HEALS_NOTE = (
+    "Boundless Vitality increases all modeled healing received by {share:.0%}."
+)
+
+
 def _apply_boundless_vitality(
-    ledger: _DefenseLedger, names: frozenset[str], subject
+    ledger: _DefenseLedger,
+    declared: Mapping[DefenseMechanic, BehaviorRule],
+    subject: DefenseSubject,
 ) -> None:
-    """Spirit Visage's received-healing multiplier — ``sustain``, retired at 3.7."""
+    """Spirit Visage's received-healing multiplier, folded over the ledger."""
     del subject
-    owner = "Spirit Visage"
-    if owner not in names:
+    rule = declared.get(DefenseMechanic.BOUNDLESS_VITALITY)
+    if rule is None:
         return
-    multiplier = float(ITEM_EFFECTS[owner]["shield_received_multiplier"])
+    owner = rule.owner
+    multiplier = received_healing_multiplier(rule)
+    share = multiplier - 1.0
     has_shield = any(ledger.read(field) > 0 for field in _SHIELD_FIELDS)
     if has_shield:
         ledger.write(DefenseField.HEALING_RECEIVED_MULTIPLIER, multiplier)
         for field in _SHIELD_FIELDS:
             ledger.fields[field] = ledger.read(field) * multiplier
-        ledger.notes.append("Boundless Vitality increases every modeled shield by 25%.")
-        ledger.cite(
-            DefenseMechanic.BOUNDLESS_VITALITY,
-            owner,
-            DEFENSE_RECEIPTS[DefenseMechanic.BOUNDLESS_VITALITY],
-        )
+        ledger.notes.append(_BOUNDLESS_SHIELD_NOTE.format(share=share))
+        ledger.cite(DefenseMechanic.BOUNDLESS_VITALITY, owner, rule.receipt)
 
     if ledger.read(DefenseField.THRESHOLD_HEALTH_HEAL) > 0:
         ledger.write(DefenseField.HEALING_RECEIVED_MULTIPLIER, multiplier)
         ledger.fields[DefenseField.THRESHOLD_HEALTH_HEAL] = (
             ledger.read(DefenseField.THRESHOLD_HEALTH_HEAL) * multiplier
         )
-        ledger.notes.append(
-            "Boundless Vitality increases Protoplasm Harness's modeled healing by 25%."
-        )
-        ledger.cite(
-            DefenseMechanic.BOUNDLESS_VITALITY,
-            owner,
-            DEFENSE_RECEIPTS[DefenseMechanic.BOUNDLESS_VITALITY],
-        )
+        ledger.notes.append(_BOUNDLESS_THRESHOLD_NOTE.format(share=share))
+        ledger.cite(DefenseMechanic.BOUNDLESS_VITALITY, owner, rule.receipt)
 
     # Boundless Vitality applies to every heal received, including
     # timestamped item/champion heals handled by the participant ledger.
@@ -505,15 +516,9 @@ def _apply_boundless_vitality(
     # pre-resolved with this same multiplier and are not multiplied again
     # by the survival walk.
     ledger.write(DefenseField.HEALING_RECEIVED_MULTIPLIER, multiplier)
-    ledger.cite(
-        DefenseMechanic.BOUNDLESS_VITALITY,
-        owner,
-        DEFENSE_RECEIPTS[DefenseMechanic.BOUNDLESS_VITALITY],
-    )
+    ledger.cite(DefenseMechanic.BOUNDLESS_VITALITY, owner, rule.receipt)
     if not any("all modeled heals" in note for note in ledger.notes):
-        ledger.notes.append(
-            "Boundless Vitality increases all modeled healing received by 25%."
-        )
+        ledger.notes.append(_BOUNDLESS_ALL_HEALS_NOTE.format(share=share))
 
 
 def _apply_everlasting(
@@ -546,14 +551,34 @@ def _apply_everlasting(
             return
 
 
-# Defences resolved outside the four defence families: one declared by
-# another family (Everlasting) and one whose own family lands in the next
-# slice.
-_UNMIGRATED_DEFENSES: Mapping[
-    DefenseMechanic, Callable[[_DefenseLedger, frozenset[str], DefenseSubject], None]
+# The two defences this resolver applies itself rather than through
+# ``resolve_defense``, and why each one is here.  **Neither is undeclared**:
+# Everlasting is declared as the ally packet that grants the shield, and
+# Boundless Vitality is declared as ``sustain`` — what they have in common is
+# that what they publish is not a set of fields the ledger can simply apply.
+# One is a refusal to model a trigger, the other a fold over state three
+# earlier mechanics wrote, and both take the position the resolution order
+# gives them.
+_LEDGER_APPLIED_DEFENSES: Mapping[
+    DefenseMechanic,
+    Callable[
+        [
+            _DefenseLedger,
+            frozenset[str],
+            Mapping[DefenseMechanic, BehaviorRule],
+            DefenseSubject,
+        ],
+        None,
+    ],
 ] = {
-    DefenseMechanic.EVERLASTING: _apply_everlasting,
-    DefenseMechanic.BOUNDLESS_VITALITY: _apply_boundless_vitality,
+    DefenseMechanic.EVERLASTING: lambda ledger, names, declared, subject: (
+        _apply_everlasting(ledger, names, subject)
+    ),
+    DefenseMechanic.BOUNDLESS_VITALITY: (
+        lambda ledger, names, declared, subject: _apply_boundless_vitality(
+            ledger, declared, subject
+        )
+    ),
 }
 
 
@@ -583,9 +608,9 @@ def resolve_starting_defenses(
     names = frozenset(str(item.get("name", "")) for item in items)
     declared = declared_defenses(names)
     for mechanic in DefenseMechanic:
-        legacy = _UNMIGRATED_DEFENSES.get(mechanic)
-        if legacy is not None:
-            legacy(ledger, names, subject)
+        applied = _LEDGER_APPLIED_DEFENSES.get(mechanic)
+        if applied is not None:
+            applied(ledger, names, declared, subject)
             continue
         rule = declared.get(mechanic)
         if rule is None:

@@ -77,9 +77,11 @@ from .item_behavior import (
     LevelSteppedRate,
     LivePredicate,
     Magnitude,
+    ManaSpentHealRule,
     MeleeRangedSplit,
     NoFloor,
     NoScaling,
+    OnHitHealRule,
     OnHitStrikeRule,
     OpeningDefenseRule,
     PacketKind,
@@ -90,6 +92,7 @@ from .item_behavior import (
     Persist,
     Persistence,
     Pool,
+    PostMitigationHealRule,
     Probe,
     ProcTrigger,
     Recipients,
@@ -99,9 +102,12 @@ from .item_behavior import (
     RampPerStack,
     ReactiveRule,
     ReceiptOnly,
+    ReceivedHealingRule,
+    RegenerationRule,
     RepeatingStrikeRule,
     Resistance,
     ResistanceShredRule,
+    ResourceDrainRule,
     RuleFamily,
     Scaling,
     SecondaryTargetRule,
@@ -113,6 +119,8 @@ from .item_behavior import (
     StackGate,
     StackRamp,
     Subject,
+    SustainStat,
+    SustainStatRule,
     Term,
     TargetBonusHealthScaled,
     TemporaryLethality,
@@ -254,9 +262,10 @@ H4_TAG_REASONS: Mapping[str, str] = {
         "stat from another"
     ),
     "sustain": (
-        "self-referential: read only by item_coverage's own claim, while the "
-        "behaviour is reached by item name. The mechanic is sustain and the "
-        "family it names is SUSTAIN"
+        "was self-referential — read only by item_coverage's own claim while "
+        "the behaviour was reached by item name — until 3.7 gave every entry "
+        "carrying it a SUSTAIN declaration, which is the family this tag "
+        "always named. H4's decision on the tag stands"
     ),
     "target_mitigation": (
         "was self-referential — read only by item_coverage's own claim while "
@@ -361,14 +370,12 @@ UNDECLARED_DEFENSE_MECHANICS: Mapping[DefenseMechanic, str] = {
 # defence families: Death's Dance defers damage and Spirit Visage multiplies
 # healing received, and a slice that declared them here would be doing
 # another family's work under this one's zero-diff claim.
-DEFENSE_UNMIGRATED_MECHANICS: Mapping[DefenseMechanic, str] = {
-    DefenseMechanic.BOUNDLESS_VITALITY: (
-        "3.7 — Boundless Vitality multiplies every heal and shield the subject "
-        "receives, which is sustain's shape; it also has to run *after* every "
-        "shield it multiplies, so its position in the resolution order is "
-        "arithmetic and moving it is not a refactor"
-    ),
-}
+# Empty since 3.7 declared the last two: every DefenseMechanic the resolver
+# builds now reaches a declaration, and the two that pointed outside the four
+# defence families ride their own family's interpreter.  Kept rather than
+# deleted because the *shape* is what keeps a future mechanic's refusal dated
+# — an omission with no table to name it is the silence this phase removes.
+DEFENSE_UNMIGRATED_MECHANICS: Mapping[DefenseMechanic, str] = {}
 
 
 # ── citations ─────────────────────────────────────────────────────────────
@@ -1215,6 +1222,7 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         "health_threshold": RuleFamily.THRESHOLD_DEFENSE,
         "revive_health_ratio": RuleFamily.THRESHOLD_DEFENSE,
         "damage_deferral_melee": RuleFamily.DAMAGE_ROUTING,
+        "shield_received_multiplier": RuleFamily.SUSTAIN,
         "spell_shield_ready": RuleFamily.COMBAT_STATE,
         "stasis_duration": RuleFamily.COMBAT_STATE,
         "reactive_shield_base": RuleFamily.REACTIVE,
@@ -3232,6 +3240,228 @@ def _compile_damage_routing(
     return tuple(rules)
 
 
+# ── sustain (3.7) ─────────────────────────────────────────────────────────
+#
+# Six mechanics that put health back and share no arithmetic.  Five are
+# tagged ``sustain`` and are told apart by their entry's own value keys —
+# the same device the defence and ally families use — and the sixth,
+# Spirit Visage's Boundless Vitality, is tagged as a starting defence
+# because that is where the resolver builds it.
+#
+# The signature key of each shape, and every key it then requires.  A shape
+# is claimed whole or not at all: an entry carrying its signature and missing
+# a companion raises when the rule is compiled, rather than declaring a
+# quietly weaker mechanic.
+
+SUSTAIN_STAT_KEYS: Mapping[str, SustainStat] = {
+    "lifesteal_percent": SustainStat.LIFESTEAL_PERCENT,
+    "stat_override_omnivamp_percent": SustainStat.OMNIVAMP_PERCENT,
+}
+
+# The prefix that makes a stat grant a *correction* to the cached stat block
+# rather than a second source of it.  One spelling, read here and by
+# ``item_effects.override_item_stat``, so the two cannot disagree about what
+# an override is.
+STAT_OVERRIDE_PREFIX = "stat_override_"
+
+ON_HIT_HEAL_KEY = "health_per_on_hit"
+
+POST_MITIGATION_HEAL_KEYS = (
+    "direct_heal_post_mitigation_ratio",
+    "direct_heal_aoe_effectiveness",
+)
+
+RESOURCE_DRAIN_KEYS = (
+    "drain_restoration_per_second",
+    "drain_combat_restoration_per_second",
+    "drain_combat_duration",
+    "drain_health_conversion",
+    "drain_tick_interval",
+)
+
+MANA_SPENT_HEAL_KEYS = (
+    "mana_spent_heal_ratio",
+    "mana_spent_heal_cap_per_cast",
+    "mana_spent_heal_cap_per_second",
+    "damage_taken_to_mana_ratio",
+)
+
+REGENERATION_KEYS = (
+    "enduring_focus_total_melee",
+    "enduring_focus_total_reduced",
+    "enduring_focus_duration",
+    "enduring_focus_missing_health_cap",
+    "health_regen_tick_interval",
+)
+
+_SOURCED_HEAL_ZERO = ZeroPolicy(
+    Disposition.MEASURED,
+    "every share is a sourced registry number; a zero means the registry "
+    "states the mechanic restores nothing, which the rule read rather than "
+    "defaulted",
+)
+
+
+def _sustain_rule(
+    owner: str,
+    registry: ValueRegistry,
+    mechanic: str,
+    payload: Any,
+) -> BehaviorRule:
+    """One sustain declaration, with the citation its entry resolves to."""
+    return BehaviorRule(
+        family=RuleFamily.SUSTAIN,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.{mechanic}",
+        payload=payload,
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=_SOURCED_HEAL_ZERO,
+    )
+
+
+def _sustain_stat_rules(
+    owner: str, registry: ValueRegistry, schema: frozenset[str]
+) -> list[BehaviorRule]:
+    """Every vampirism stat one entry grants, in the order the table names them."""
+    return [
+        _sustain_rule(
+            owner,
+            registry,
+            f"{stat.value}_grant",
+            SustainStatRule(
+                stat=stat,
+                percent=ValueRef(registry, owner, key),
+                overrides_cached_stat=key.startswith(STAT_OVERRIDE_PREFIX),
+                subject=Subject.HOLDER,
+            ),
+        )
+        for key, stat in SUSTAIN_STAT_KEYS.items()
+        if key in schema
+    ]
+
+
+def _compile_sustain(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile every sustain mechanic one registry entry declares.
+
+    A fan-out rather than a ladder: an entry may grant a stat *and* carry a
+    named mechanic, and Doran's Blade does exactly that — its retired
+    omnivamp correction and its Life Draining heal are two declarations on
+    one entry.  An entry tagged into the family carrying no signature key is
+    a stop.
+    """
+    schema = _schema_keys(owner, registry, entry)
+    rules = _sustain_rule_list(owner, registry, schema)
+    rules.extend(_compile_defense(family, owner, registry, entry))
+    if not rules:
+        raise BehaviorCatalogError(
+            f"{registry}[{owner!r}] is tagged into the sustain family and "
+            "carries none of its signature keys; sustain that restores nothing "
+            "is a parse that failed, not an item with no behaviour"
+        )
+    for rule in rules:
+        validate_rule(rule)
+    return tuple(rules)
+
+
+def _sustain_rule_list(
+    owner: str, registry: ValueRegistry, schema: frozenset[str]
+) -> list[BehaviorRule]:
+    """The four keyed sustain shapes one entry declares, in declaration order."""
+    rules = _sustain_stat_rules(owner, registry, schema)
+    if ON_HIT_HEAL_KEY in schema:
+        rules.append(
+            _sustain_rule(
+                owner,
+                registry,
+                "on_hit_heal",
+                OnHitHealRule(
+                    amount=ValueRef(registry, owner, ON_HIT_HEAL_KEY),
+                    trigger=TriggerEvent.BASIC_ATTACK_HIT,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    if POST_MITIGATION_HEAL_KEYS[0] in schema:
+        ratio, area = (
+            ValueRef(registry, owner, key) for key in POST_MITIGATION_HEAL_KEYS
+        )
+        rules.append(
+            _sustain_rule(
+                owner,
+                registry,
+                "post_mitigation_heal",
+                PostMitigationHealRule(
+                    ratio=ratio, area_effectiveness=area, subject=Subject.HOLDER
+                ),
+            )
+        )
+    if RESOURCE_DRAIN_KEYS[0] in schema:
+        rate, combat_rate, window, conversion, tick = (
+            ValueRef(registry, owner, key) for key in RESOURCE_DRAIN_KEYS
+        )
+        rules.append(
+            _sustain_rule(
+                owner,
+                registry,
+                "resource_drain",
+                ResourceDrainRule(
+                    restoration_per_second=rate,
+                    combat_restoration_per_second=combat_rate,
+                    combat_window=window,
+                    health_conversion=conversion,
+                    tick_interval=tick,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    if MANA_SPENT_HEAL_KEYS[0] in schema:
+        heal, per_cast, per_second, taken = (
+            ValueRef(registry, owner, key) for key in MANA_SPENT_HEAL_KEYS
+        )
+        rules.append(
+            _sustain_rule(
+                owner,
+                registry,
+                "mana_spent_heal",
+                ManaSpentHealRule(
+                    heal_ratio=heal,
+                    cap_per_cast=per_cast,
+                    cap_per_second=per_second,
+                    damage_taken_to_mana_ratio=taken,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    if REGENERATION_KEYS[0] in schema:
+        melee, reduced, duration, cap, tick = (
+            ValueRef(registry, owner, key) for key in REGENERATION_KEYS
+        )
+        rules.append(
+            _sustain_rule(
+                owner,
+                registry,
+                "regeneration_window",
+                RegenerationRule(
+                    total_melee=melee,
+                    total_reduced=reduced,
+                    duration=duration,
+                    missing_health_cap=cap,
+                    tick_interval=tick,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    return rules
+
+
 # ── ally packets (3.6) ────────────────────────────────────────────────────
 #
 # The one family whose mechanics share no arithmetic.  Redemption heals a
@@ -4150,6 +4380,13 @@ def _defense_rule(
             absorbs=absorbs,
             values=values,
         )
+    elif family is RuleFamily.SUSTAIN:
+        payload = ReceivedHealingRule(
+            mechanic=mechanic,
+            writes=declaration.writes,
+            exclusivity=declaration.exclusivity,
+            values=values,
+        )
     elif family is RuleFamily.DAMAGE_ROUTING:
         payload = DamageDeferralRule(
             mechanic=mechanic,
@@ -4331,14 +4568,13 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.THRESHOLD_DEFENSE: _compile_threshold_defense,
     RuleFamily.COMBAT_STATE: _compile_combat_state,
     RuleFamily.REACTIVE: _compile_reactive,
-    RuleFamily.SUSTAIN: _unmigrated,
+    RuleFamily.SUSTAIN: _compile_sustain,
     RuleFamily.STAT_DERIVATION: _unmigrated,
     RuleFamily.ALLY_PACKET: _compile_ally_packet,
 }
 
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.SUSTAIN: "3.7",
     RuleFamily.STAT_DERIVATION: "3.7",
 }
 

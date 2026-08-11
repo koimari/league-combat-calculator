@@ -2076,7 +2076,6 @@ FRONTIER: Mapping[str, str] = {
     "tag:conditional_attack_speed": _H4_DEAD_TAG,
     "tag:target_attack_speed_aura": _H4_DEAD_TAG,
     "tag:stat_conversion": _H4_SELF_REFERENTIAL_TAG,
-    "tag:sustain": _H4_SELF_REFERENTIAL_TAG,
 }
 
 validate_claim_table(COVERAGE_EVIDENCE)
