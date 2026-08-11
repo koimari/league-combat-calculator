@@ -91,8 +91,11 @@ _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-
 _ABILITIES_ATOMS = json.loads(
     Path("data/atoms/abilities.json").read_text(encoding="utf-8")
 )["objects"]
-_SENNA_BIN = json.loads(
-    Path("data/bin/characters/senna.bin.json").read_text(encoding="utf-8")
+_SENNA_BIN_PATH = Path("data/bin/characters/senna.bin.json")
+_SENNA_BIN = (
+    json.loads(_SENNA_BIN_PATH.read_text(encoding="utf-8"))
+    if _SENNA_BIN_PATH.exists()
+    else None
 )
 _ITEMS = json.loads(Path("data/items.json").read_text(encoding="utf-8"))
 _GOLDEN = json.loads(Path("scripts/golden_baseline.json").read_text(encoding="utf-8"))
@@ -366,6 +369,8 @@ class TestSourceEvidence:
         # GameCalculation (mSpellCalculations.BonusOnHitDamage =
         # StatByCoefficient mStat 2, no mStatFormula, coefficient 0.2) —
         # NOT a DataValue, which is why a DataValue-only scan misses it.
+        if _SENNA_BIN is None:
+            pytest.skip("local Senna game-file evidence is unavailable")
         passive = _SENNA_BIN["Characters/Senna/Spells/SennaPassiveAbility/SennaPassive"]
         values = {dv["name"]: dv["values"] for dv in passive["mSpell"]["DataValues"]}
         assert values["MSStealDuration"] == [0.5] * 7

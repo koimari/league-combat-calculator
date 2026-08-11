@@ -157,8 +157,11 @@ _ABILITIES_ATOMS = json.loads(
     Path("data/atoms/abilities.json").read_text(encoding="utf-8")
 )["objects"]["AurelionSol"]
 _ITEMS = json.loads(Path("data/items.json").read_text(encoding="utf-8"))
-_ASOL_BIN = json.loads(
-    Path("data/bin/characters/aurelionsol.bin.json").read_text(encoding="utf-8")
+_ASOL_BIN_PATH = Path("data/bin/characters/aurelionsol.bin.json")
+_ASOL_BIN = (
+    json.loads(_ASOL_BIN_PATH.read_text(encoding="utf-8"))
+    if _ASOL_BIN_PATH.exists()
+    else None
 )
 _GOLDEN = json.loads(Path("scripts/golden_baseline.json").read_text(encoding="utf-8"))
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -320,6 +323,8 @@ def _binary_data_values(*, spell: str, name: str) -> list[float]:
     spell nodes), so the walk locates every DataValues list and picks
     the row whose containing path mentions the spell token.
     """
+    if _ASOL_BIN is None:
+        pytest.skip("local Aurelion Sol game-file evidence is unavailable")
     hits: list[tuple[str, list[float]]] = []
 
     def walk(obj, path: str = "") -> None:
@@ -580,6 +585,8 @@ class TestSourceEvidence:
                         return found
             return None
 
+        if _ASOL_BIN is None:
+            pytest.skip("local Aurelion Sol game-file evidence is unavailable")
         assert _find_threshold(_ASOL_BIN) == pytest.approx(0.25)
 
     def test_rule_declaration_and_option_state_receipt(self):

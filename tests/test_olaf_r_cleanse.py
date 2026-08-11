@@ -435,9 +435,10 @@ def _kernel_survival(
 
 
 def _game_file() -> dict:
-    return json.loads(
-        Path("data/bin/characters/olaf.bin.json").read_text(encoding="utf-8")
-    )
+    path = Path("data/bin/characters/olaf.bin.json")
+    if not path.exists():
+        pytest.skip("local Olaf game-file evidence is unavailable")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _r_ability() -> dict:

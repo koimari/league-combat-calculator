@@ -159,6 +159,8 @@ def _audit_entry() -> dict:
 
 def _binary_item() -> dict:
     """The parsed game-file record Items/3172 (16.15.8024387)."""
+    if not BINARY_ITEMS_PATH.exists():
+        pytest.skip("local item game-file evidence is unavailable")
     with BINARY_ITEMS_PATH.open(encoding="utf-8") as handle:
         binary = json.load(handle)
     record = binary.get("Items/3172")

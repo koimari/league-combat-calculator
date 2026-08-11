@@ -93,8 +93,11 @@ from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
-_GAME_FILE = json.loads(
-    Path("data/bin/characters/ashe.bin.json").read_text(encoding="utf-8")
+_GAME_FILE_PATH = Path("data/bin/characters/ashe.bin.json")
+_GAME_FILE = (
+    json.loads(_GAME_FILE_PATH.read_text(encoding="utf-8"))
+    if _GAME_FILE_PATH.exists()
+    else None
 )
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
@@ -219,6 +222,8 @@ def _q_value(attribute: str, rank: int) -> float:
 def _game_data_value(name: str, rank: int) -> float:
     """One Ashe Q DataValue at *rank* from the game file (rank 1-indexed;
     the game arrays are 0-indexed with rank 1 at index 1)."""
+    if _GAME_FILE is None:
+        pytest.skip("local Ashe game-file evidence is unavailable")
     spell = _GAME_FILE["Characters/Ashe/Spells/AsheQAbility/AsheQ"]["mSpell"]
     for entry in spell["DataValues"]:
         if entry.get("name") == name:
@@ -322,6 +327,8 @@ class TestSourceAndTypedValues:
         assert _game_data_value("BonusAS", 5) == pytest.approx(60.0)
         # The game file carries NO combat-extension field for Focus: the
         # only timed fields are the stack duration + the 1s falloff timer.
+        if _GAME_FILE is None:
+            pytest.skip("local Ashe game-file evidence is unavailable")
         names = {
             entry.get("name")
             for entry in _GAME_FILE["Characters/Ashe/Spells/AsheQAbility/AsheQ"][

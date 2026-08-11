@@ -224,11 +224,10 @@ def test_module_fails_closed_on_the_local_burn_authority_conflict():
 
 
 def test_game_binary_pins_the_conflicting_four_ticks_per_second():
-    payload = json.loads(
-        (ROOT / renata_glasc.BAILOUT_AUTHORITY["gamefile_path"]).read_text(
-            encoding="utf-8"
-        )
-    )
+    path = ROOT / renata_glasc.BAILOUT_AUTHORITY["gamefile_path"]
+    if not path.exists():
+        pytest.skip("local Renata game-file evidence is unavailable")
+    payload = json.loads(path.read_text(encoding="utf-8"))
     spell = payload["Characters/Renata/Spells/RenataWAbility/RenataW"]["mSpell"]
     values = {entry["name"]: entry["values"] for entry in spell["DataValues"]}
     assert values["TicksPerSecond"] == [4.0] * 7

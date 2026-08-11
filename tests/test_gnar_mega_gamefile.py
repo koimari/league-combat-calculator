@@ -121,10 +121,17 @@ _AWAIT = "awaiting P4-Gnar-Mega ..."
 # ---------------------------------------------------------------------------
 
 _GNAR_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))["Gnar"]
-_GNAR_BIN = json.loads(
-    Path("data/bin/characters/gnar.bin.json").read_text(encoding="utf-8")
+_GNAR_BIN_PATH = Path("data/bin/characters/gnar.bin.json")
+_GNAR_BIN = (
+    json.loads(_GNAR_BIN_PATH.read_text(encoding="utf-8"))
+    if _GNAR_BIN_PATH.exists()
+    else None
 )
-_GNAR_ROOT = _GNAR_BIN["Characters/Gnar/CharacterRecords/Root"]
+_GNAR_ROOT = (
+    _GNAR_BIN["Characters/Gnar/CharacterRecords/Root"]
+    if _GNAR_BIN is not None
+    else None
+)
 _GNARBIG_PATH = Path("data/bin/characters/gnarbig.bin.json")
 _ATOMS = {
     "stats": json.loads(Path("data/atoms/stats.json").read_text(encoding="utf-8")),
@@ -146,7 +153,9 @@ _GROWTH_18 = 17 * (0.7025 + 0.0175 * 17)
 _GROWTH_20 = 19 * (0.7025 + 0.0175 * 19)
 
 
-def _root_value(root: dict, key: str) -> float:
+def _root_value(root: dict | None, key: str) -> float:
+    if root is None:
+        pytest.skip("local Gnar game-file evidence is unavailable")
     value = root[key]["baseValue"]
     assert isinstance(value, (int, float)), key
     return float(value)
@@ -624,12 +633,16 @@ class TestGnarBigRootAuthority:
         # Root level: gnar.bin.json carries the GnarBig SPELL nodes but
         # no Characters/GnarBig/CharacterRecords/Root — the stat block
         # (the constants' authority) is what is missing.
+        if _GNAR_BIN is None:
+            pytest.skip("local Gnar game-file evidence is unavailable")
         assert "Characters/GnarBig/CharacterRecords/Root" not in _GNAR_BIN
         assert any(
             "GnarBig" in key for key in _GNAR_BIN
         ), "expected the GnarBig spell nodes to coexist in gnar.bin.json"
 
     def test_gnar_root_is_present(self) -> None:
+        if _GNAR_BIN is None:
+            pytest.skip("local Gnar game-file evidence is unavailable")
         assert _GNAR_ROOT is not None
 
     @pytest.mark.xfail(

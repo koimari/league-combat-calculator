@@ -463,9 +463,10 @@ def _kernel_survival(
 
 
 def _game_file() -> dict:
-    return json.loads(
-        Path("data/bin/characters/rengar.bin.json").read_text(encoding="utf-8")
-    )
+    path = Path("data/bin/characters/rengar.bin.json")
+    if not path.exists():
+        pytest.skip("local Rengar game-file evidence is unavailable")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 # ---------------------------------------------------------------------------

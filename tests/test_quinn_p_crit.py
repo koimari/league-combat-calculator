@@ -115,8 +115,11 @@ _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-
 _ABILITIES_ATOMS = json.loads(
     Path("data/atoms/abilities.json").read_text(encoding="utf-8")
 )["objects"]
-_QUINN_BIN = json.loads(
-    Path("data/bin/characters/quinn.bin.json").read_text(encoding="utf-8")
+_QUINN_BIN_PATH = Path("data/bin/characters/quinn.bin.json")
+_QUINN_BIN = (
+    json.loads(_QUINN_BIN_PATH.read_text(encoding="utf-8"))
+    if _QUINN_BIN_PATH.exists()
+    else None
 )
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
@@ -249,6 +252,8 @@ def _params(level: int = _LEVEL, **overrides) -> FightParams:
 
 
 def _quinn_passive_binary() -> dict:
+    if _QUINN_BIN is None:
+        pytest.skip("local Quinn game-file evidence is unavailable")
     return _QUINN_BIN["Characters/Quinn/Spells/QuinnPassiveAbility/QuinnPassive"][
         "mSpell"
     ]

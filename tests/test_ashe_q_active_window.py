@@ -85,8 +85,11 @@ from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
-_GAME_FILE = json.loads(
-    Path("data/bin/characters/ashe.bin.json").read_text(encoding="utf-8")
+_GAME_FILE_PATH = Path("data/bin/characters/ashe.bin.json")
+_GAME_FILE = (
+    json.loads(_GAME_FILE_PATH.read_text(encoding="utf-8"))
+    if _GAME_FILE_PATH.exists()
+    else None
 )
 _ABILITIES_ATOMS = json.loads(
     Path("data/atoms/abilities.json").read_text(encoding="utf-8")
@@ -232,6 +235,8 @@ def _q_value(attribute: str, rank: int) -> float:
 
 def _game_data_value(name: str, rank: int) -> float:
     """One Ashe Q DataValue at *rank* (rank 1 at array index 1)."""
+    if _GAME_FILE is None:
+        pytest.skip("local Ashe game-file evidence is unavailable")
     spell = _GAME_FILE["Characters/Ashe/Spells/AsheQAbility/AsheQ"]["mSpell"]
     for entry in spell["DataValues"]:
         if entry.get("name") == name:
@@ -307,6 +312,8 @@ class TestSourceAndTypedValues:
         # The active window: BuffDuration 6.0 at EVERY array entry (the
         # game file has 7 entries: level 0 + ranks 1-6) — no rank row
         # changes the window.
+        if _GAME_FILE is None:
+            pytest.skip("local Ashe game-file evidence is unavailable")
         spell = _GAME_FILE["Characters/Ashe/Spells/AsheQAbility/AsheQ"]["mSpell"]
         buff = next(e for e in spell["DataValues"] if e.get("name") == "BuffDuration")
         assert all(value == pytest.approx(6.0) for value in buff["values"])
@@ -946,6 +953,8 @@ class TestSourceReceipts:
     def test_game_file_is_the_flat_window_evidence(self):
         # The game file the completion must cite: BuffDuration 6.0 at
         # every rank — the receipt for the window's duration.
+        if _GAME_FILE is None:
+            pytest.skip("local Ashe game-file evidence is unavailable")
         spell = _GAME_FILE["Characters/Ashe/Spells/AsheQAbility/AsheQ"]["mSpell"]
         buff = next(e for e in spell["DataValues"] if e.get("name") == "BuffDuration")
         assert buff["values"] == [6.0] * len(buff["values"])
