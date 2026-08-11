@@ -70,8 +70,12 @@ def data_version() -> int:
     return _DATA_VERSION
 
 
-def live_generation(memo: MutableMapping[tuple[int, Any], Any]) -> int:
-    """The live :func:`data_version`, after evicting a superseded generation.
+def store_for_generation(
+    memo: MutableMapping[tuple[int, Any], Any],
+    key: tuple[int, Any],
+    value: Any,
+) -> None:
+    """Write one memo entry, dropping any superseded generation first.
 
     Prefixing a memo key with the cache generation makes a stale entry
     unreachable, which is correctness — but unreachable is not gone.  An
@@ -81,17 +85,17 @@ def live_generation(memo: MutableMapping[tuple[int, Any], Any]) -> int:
     everything it ever memoized.  Before ``id()`` was prefixed, a recycled
     address at least overwrote its predecessor.
 
-    Every entry in a memo passed here shares one generation, because this
-    function is what puts keys in it: on the first read after a bump the
-    whole mapping is dropped.  That is one comparison against the first key,
-    not a scan, so the hot-path cost is a dict lookup either way.
+    The eviction lives on the **write** path, and deliberately: a read that
+    hits has already matched the live generation in its key, so it needs no
+    check at all, and these are the optimizer's inner loops.  Every entry
+    shares one generation because this function is what puts keys there, so
+    the check is one comparison against the first key rather than a scan.
     """
-    version = _DATA_VERSION
-    for key in memo:
-        if key[0] != version:
+    for existing in memo:
+        if existing[0] != key[0]:
             memo.clear()
         break
-    return version
+    memo[key] = value
 
 
 # ── who keys on the counter ──────────────────────────────────────────────

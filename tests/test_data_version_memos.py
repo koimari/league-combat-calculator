@@ -213,7 +213,7 @@ UNBOUNDED_KEYED_MEMOS = {
 ``_CAST_ORDER_PARAMS_MEMO`` and ``_STATE_PROTO_MEMO`` clear wholesale at 512
 entries and ``_ITEM_BY_ID_MEMO`` is rebuilt rather than appended to, so the
 generation prefix costs them nothing.  These four grow without limit, which
-is why they read the generation through ``live_generation``.
+is why their writes go through ``store_for_generation``.
 """
 
 
