@@ -14,3 +14,56 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Swain self-healing events from its authored packet."""
+    healing = []
+    r_ability = _healing._ability(champion_data, "R")
+    r_rank = _healing._rank(ability_damages, "R")
+    heal_leveling = _healing.find_named_leveling(r_ability, "Heal per Tick")
+
+    def swain_bonus_health(unit: str, value: float) -> float | None:
+        if unit == "% of his bonus health":
+            return value / 100.0 * float(champion_stats.get("bonus_health", 0.0))
+        return None
+
+    heal_per_tick = (
+        _healing.sum_modifiers(
+            heal_leveling,
+            r_rank,
+            champion_stats,
+            {},
+            modifier_override=swain_bonus_health,
+        )
+        if heal_leveling is not None
+        else 0.0
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "R"
+    ):
+        _healing._heal_from_damage(
+            healing,
+            event,
+            heal_per_tick,
+            "Demonic Ascension",
+            link_to_damage=False,
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Swain", derive_self_healing)

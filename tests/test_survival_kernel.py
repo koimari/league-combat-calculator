@@ -19,8 +19,6 @@ breakdown + duration) equality, plus which path served it:
   skip the compiled path entirely.
 """
 
-from dataclasses import replace
-
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.participant_timeline import (

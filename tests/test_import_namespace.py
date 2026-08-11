@@ -115,7 +115,7 @@ def test_app_does_not_insert_src_dir_on_sys_path():
 
 
 def test_growth_formula_lives_only_in_stats():
-    """The 0.7025/0.0175 growth term is owned by stats.growth_factor."""
+    """The 0.7025/0.0175 growth term is owned by stats.growth_multiplier."""
     owners = []
     for path in sorted((ROOT / "src").rglob("*.py")):
         if "__pycache__" in str(path) or path.name == "stats.py":
@@ -125,19 +125,17 @@ def test_growth_formula_lives_only_in_stats():
                 owners.append(f"{path.relative_to(ROOT)}:{lineno}: {line}")
     assert not owners, "duplicate growth formula:\n" + "\n".join(owners)
     stats_src = _src_text("src/calculator/stats.py")
-    assert "def growth_factor" in stats_src
     assert "def growth_multiplier" in stats_src
 
 
-def test_growth_factor_enforces_level_bound():
+def test_growth_multiplier_enforces_level_bound():
     import src.calculator.stats as stats
 
-    assert stats.growth_factor(1) == 0.0
-    expected = 17 * (0.7025 + 0.0175 * 17)
-    assert stats.growth_factor(18) == pytest.approx(expected)
+    assert stats.growth_multiplier(1) == pytest.approx(0.7025)
+    assert stats.growth_multiplier(18) == pytest.approx(0.7025 + 0.0175 * 17)
     for bad in (0, -1, 21):
         with pytest.raises(ValueError):
-            stats.growth_factor(bad)
+            stats.growth_multiplier(bad)
 
 
 def test_cooldown_formula_lives_only_in_damage():

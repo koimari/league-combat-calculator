@@ -16,7 +16,6 @@ import math
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
-
 from .state_lifecycle import (
     SourceReceipt,
     StackRule,
@@ -1231,16 +1230,6 @@ def swiftmarch_adaptive_force(
         return 0.0
     ratio = required_effect_value(item_name, "adaptive_force_per_total_move_speed")
     return max(0.0, float(total_move_speed)) * float(ratio)
-
-
-def item_option_active(
-    items: list[dict[str, Any]],
-    item_options: Mapping[str, Mapping[str, int]] | None,
-    item_name: str,
-    option_name: str,
-) -> bool:
-    """Return whether a boolean-like integer item state is active."""
-    return input_option_value(items, item_options, item_name, option_name) > 0
 
 
 def actualizer_active_seconds(
@@ -6464,35 +6453,6 @@ def guinsoo_swing_schedule(
 # pylint: enable=too-many-arguments,too-many-locals
 
 
-# pylint: disable=too-many-arguments
-def yun_tal_swing_schedule(
-    items: list[dict[str, Any]],
-    *,
-    attack_speed: float,
-    attack_speed_ratio: float,
-    duration_seconds: float,
-    uptime: float = 1.0,
-    critical_chance: float = 0.0,
-) -> tuple[float, ...]:
-    """Return the same composed authored schedule for Yun Tal Flurry.
-
-    The shared implementation also composes Guinsoo when both items are
-    equipped; this named wrapper keeps the item-facing API explicit for
-    focused tests and future consumers.
-    """
-    return guinsoo_swing_schedule(
-        items,
-        attack_speed=attack_speed,
-        attack_speed_ratio=attack_speed_ratio,
-        duration_seconds=duration_seconds,
-        uptime=uptime,
-        critical_chance=critical_chance,
-    )
-
-
-# pylint: enable=too-many-arguments
-
-
 def energized_proc_indices(
     item_name: str,
     num_attacks: int,
@@ -6663,26 +6623,6 @@ def hydra_secondary_item_name(items: Sequence[Mapping[str, Any]]) -> str | None:
     return None
 
 
-def hydra_primary_target_damage(
-    *,
-    max_health: float,
-    is_melee: bool,
-    empowered: bool = False,
-    item_name: str = "Titanic Hydra",
-) -> float:
-    """Return one Hydra Cleave packet for the selected primary target.
-
-    Titanic Crescent's empowered packet replaces the ordinary primary
-    Cleave value.  Keeping both values behind typed accessors lets the fight
-    ledger price only the active delta when the base on-hit row already
-    contains the ordinary packet.
-    """
-    prefix = "active_" if empowered else ""
-    suffix = "max_hp_ratio_melee" if is_melee else "max_hp_ratio_ranged"
-    ratio = required_effect_value(item_name, prefix + suffix)
-    return float(max_health) * ratio
-
-
 def hydra_cleave_secondary_ad_damage(
     *, total_attack_damage: float, is_melee: bool, item_name: str
 ) -> float:
@@ -6716,23 +6656,6 @@ def cleave_on_hit_item_name(items: Sequence[Mapping[str, Any]]) -> str | None:
         if ITEM_EFFECTS.get(name, {}).get("cleave_on_hit"):
             return name
     return None
-
-
-def navori_cooldown_refund_seconds(
-    *,
-    base_cooldown: float,
-    attack_count: int = 1,
-    item_name: str = "Navori Flickerblade",
-) -> float:
-    """Return basic-ability cooldown seconds refunded by Navori autos.
-
-    The refund fraction is parser-owned and applies once per basic attack;
-    callers supply the authored attack count from the event ledger.
-    """
-    if attack_count <= 0 or base_cooldown <= 0:
-        return 0.0
-    fraction = required_effect_value(item_name, "cd_refund_percent")
-    return float(base_cooldown) * fraction * int(attack_count)
 
 
 def item_bonus_health_multiplier(items: list[dict[str, Any]]) -> float:

@@ -331,3 +331,39 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Camille self-healing events from its authored packet."""
+    healing = []
+    w_ability = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    base_raw = _healing.extract_named(
+        w_ability, "Physical Damage", w_rank, champion_stats, {}
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "W"
+    ):
+        raw = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        post = float(event.get("damage", 0.0) or 0.0)
+        outer_raw = max(0.0, raw - base_raw)
+        amount = outer_raw * (post / raw) if raw > 0.0 else 0.0
+        _healing._heal_from_damage(healing, event, amount, "Tactical Sweep")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Camille", derive_self_healing)

@@ -28,7 +28,6 @@ from src.calculator.item_effects import (
     _passive_attack_speed_bonus,
     guinsoo_attack_speed_percent,
     guinsoo_swing_schedule,
-    yun_tal_swing_schedule,
     energized_proc_indices,
     energized_schedule_receipt,
     hydra_cleave_secondary_ad_damage,
@@ -40,7 +39,6 @@ from src.calculator.item_effects import (
     muramana_bonus_ad,
     passive_attack_speed_bonus,
     permanent_ap_multiplier,
-    navori_cooldown_refund_seconds,
     runaan_secondary_target_count,
     runaan_secondary_target_damage,
     riftmaker_bonus_ap,
@@ -67,9 +65,6 @@ from src.calculator.item_effects import (
     validate_item_input_options,
     shield_reduction_fraction,
     required_effect_value,
-    death_dance_deferral_fraction,
-    death_dance_defy_heal_amount,
-    eclipse_shield_amount,
     ally_item_effect_value,
 )
 
@@ -97,24 +92,6 @@ def test_redemption_area_damage_receipt_values_are_typed() -> None:
     assert ally_item_effect_value(
         "Redemption", "enemy_max_health_true_damage_ratio"
     ) == pytest.approx(0.10)
-
-
-def test_ordered_defense_accessors_use_typed_item_values() -> None:
-    assert death_dance_deferral_fraction(
-        _build("Death's Dance"), is_melee=True
-    ) == pytest.approx(0.30)
-    assert death_dance_deferral_fraction(
-        _build("Death's Dance"), is_melee=False
-    ) == pytest.approx(0.10)
-    assert death_dance_defy_heal_amount(
-        _build("Death's Dance"), bonus_attack_damage=200.0
-    ) == pytest.approx(150.0)
-    assert eclipse_shield_amount(
-        _build("Eclipse"), bonus_attack_damage=200.0, is_melee=True
-    ) == pytest.approx(240.0)
-    assert eclipse_shield_amount(
-        _build("Eclipse"), bonus_attack_damage=200.0, is_melee=False
-    ) == pytest.approx(120.0)
 
 
 def _patch_effect(monkeypatch: pytest.MonkeyPatch, item_name: str, **overrides) -> None:
@@ -482,7 +459,7 @@ class TestResolveDamageEffects:
 
     def test_yun_tal_flurry_starts_after_first_attack(self) -> None:
         build = _build("Yun Tal Wildarrows")
-        times = yun_tal_swing_schedule(
+        times = guinsoo_swing_schedule(
             build,
             attack_speed=1.0,
             attack_speed_ratio=1.0,
@@ -502,7 +479,7 @@ class TestResolveDamageEffects:
             attack_refund_base=1.0,
             attack_refund_crit=2.0,
         )
-        times = yun_tal_swing_schedule(
+        times = guinsoo_swing_schedule(
             _build("Yun Tal Wildarrows"),
             attack_speed=1.0,
             attack_speed_ratio=1.0,
@@ -709,12 +686,6 @@ class TestResolveDamageEffects:
             is_melee=False,
             item_name="Ravenous Hydra",
         ) == pytest.approx(50)
-
-    def test_navori_refund_uses_parser_owned_fraction(self) -> None:
-        assert navori_cooldown_refund_seconds(
-            base_cooldown=8.0, attack_count=3
-        ) == pytest.approx(3.6)
-        assert navori_cooldown_refund_seconds(base_cooldown=8.0, attack_count=0) == 0.0
 
     def test_warmogs_health_multiplier_reads_registry(self) -> None:
         assert item_bonus_health_multiplier(_build("Warmog's Armor")) == pytest.approx(
@@ -1387,7 +1358,6 @@ class TestActualizerAbilityDamageAmp:
 
     def test_no_actualizer(self) -> None:
         items = [{"name": "Liandry's Torment"}]
-        stats = {"bonus_mana": 300.0}
         assert resolve_damage_effects(items).ability_amp is None
 
 

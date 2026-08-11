@@ -18,7 +18,6 @@ def test_level_14_rengar_ldr_against_ambessa_target_context() -> None:
         get_item_by_name("Sundered Sky"),
     ]
 
-    rengar_stats = calculate_total_stats(rengar, 14, rengar_items)
     ambessa_stats = calculate_total_stats(ambessa, 14, ambessa_items)
     # LDR's 35% is BONUS armor penetration (autoresearch pass 30): it only
     # cuts Ambessa's BONUS armor, so the fight needs her base/bonus split.

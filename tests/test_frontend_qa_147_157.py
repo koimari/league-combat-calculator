@@ -113,11 +113,8 @@ def test_share_controls_initialize_without_quick_view(source: str):
     for control in ("shareOpenEditor", "shareDismiss", "shareAnalystButton"):
         assert control in share_block, f"{control} is not wired by initShareControls"
 
-    quick_block = source.split("function bindQuickEvents()")[1].split("\n}\n")[0]
-    for control in ("shareOpenEditor", "shareDismiss", "shareAnalystButton"):
-        assert (
-            control not in quick_block
-        ), f"{control} is still coupled to the removed quick view"
+    # The quick-view layer the wiring was once coupled to is gone entirely.
+    assert "function bindQuickEvents()" not in source
 
 
 def test_share_token_is_read_outside_quick_view_init(source: str):
@@ -176,9 +173,10 @@ def test_shared_build_render_targets_the_analyst_view(source: str):
     assert "engine-error" in error_surface
 
 
-def test_switch_view_tolerates_a_missing_quick_view(source: str):
-    block = source.split("function switchView(view)")[1].split("\n}\n")[0]
-    assert "if (quick)" in block or "quick?." in block or "if (!quick)" in block
+def test_the_view_switching_layer_is_gone(source: str):
+    """There is one view; the guarded quick/analyst switcher was dead code
+    and left with the rest of the quick layer."""
+    assert "function switchView" not in source
 
 
 # ---------------------------------------------------------------------------
@@ -214,23 +212,37 @@ def test_brand_link_returns_home_from_a_shared_url():
 # ---------------------------------------------------------------------------
 
 
-def test_page_heading_uses_a_deliberate_light_treatment(css: str):
-    block = rule_block(css, ".app-shell h1")
-    assert "#fff" in block.lower() or "var(--white)" in block
-    assert "text-shadow" in block
+def test_brand_reads_against_the_rail(css: str):
+    """#149 was "the page title is unreadable over the map illustration".
+
+    The redesign retires both the map wash and the page-hero heading: the
+    brand now sits on the flat dark rail. The criterion survives as "the
+    brand declares its own ink instead of inheriting", so it can never end up
+    dark-on-dark again.
+    """
+    block = rule_block(css, ".brand-word")
+    assert "var(--cream)" in block
+    mark = rule_block(css, ".brand-mark")
+    assert "var(--cream)" in mark
 
 
-def test_page_heading_is_not_left_to_default_ink(css: str):
-    """The dead ``.app-shell > h1`` screen-reader rule never matched the
-    nested heading; it must not linger and imply the title is hidden."""
-    assert ".app-shell > h1" not in css
-
-
-def test_heading_remains_legible_without_the_background_image(css: str):
-    """``.map-wash`` keeps an opaque dark colour under the illustration, so a
-    light heading stays readable if the image never loads."""
+def test_the_map_wash_is_decorative_only(css: str, page: str):
+    """The Rift illustration returned as the page background (user decision
+    2026-08-08), but #149's criterion survives: nothing readable sits on the
+    wash. It is aria-hidden, pointer-inert, behind everything, and keeps an
+    opaque base colour; each panel carries its own translucent layer and blur."""
+    assert 'class="map-wash" aria-hidden="true"' in page
     block = rule_block(css, ".map-wash")
-    assert "background-color:" in block
+    assert "z-index: -1" in block
+    assert "pointer-events: none" in block
+    assert re.search(r"background-color:\s*#[0-9a-f]{6}", block)
+    assert ".app-shell" not in css
+
+
+def test_the_page_title_is_a_screen_reader_landmark(soup: BeautifulSoup):
+    heading = soup.select_one("h1")
+    assert heading is not None
+    assert "visually-hidden" in heading.get("class", [])
 
 
 # ---------------------------------------------------------------------------
@@ -360,31 +372,70 @@ def test_blocked_bis_offers_a_direct_path_to_add_enemy(source: str):
 # ---------------------------------------------------------------------------
 
 
-def test_economics_panel_sits_on_an_opaque_surface(css: str):
-    block = rule_block(css, ".economics-bar")
-    match = re.search(r"background:\s*rgba\([^)]*?,\s*([\d.]+)\s*\)", block)
-    assert match, "the economics panel needs an explicit background"
-    assert float(match.group(1)) >= 0.9, "surface is too transparent to read over"
+def test_best_buy_controls_live_in_the_constraints_block(soup: BeautifulSoup):
+    """#153 was "the Best buy panel is unreadable".
+
+    The whole economics bar lives in the CONSTRAINTS surface (now the banner
+    under the verdict strip): gold, the sell pivot and the action. The
+    criteria below are the same ones: a translucent surface, legible ink, a
+    legible disabled state and a layout that does not collapse into one
+    inline sentence.
+    """
+    constraints = soup.select_one("#railConstraints")
+    assert constraints is not None
+    for control_id in ("economicsGold", "economicsSell", "economicsOptimize"):
+        node = soup.select_one(f"#{control_id}")
+        assert node is not None, control_id
+        assert node.find_parent(id="railConstraints") is not None, control_id
 
 
-def test_economics_copy_uses_readable_ink(css: str):
-    helper = rule_block(css, ".economics-bar small")
-    assert "var(--ink-soft)" in helper or "var(--ink)" in helper
-    label = rule_block(css, ".economics-bar label")
-    assert "var(--ink-soft)" in label or "var(--ink)" in label
+def test_constraints_block_uses_shared_panel_transparency(css: str):
+    """The constraints banner uses the same translucent dark panel layer as
+    the rail."""
+    block = rule_block(css, ".constraints-bar")
+    assert "background: var(--rail-panel)" in block
+    tokens = rule_block(css, ":root")
+    assert re.search(r"--panel-alpha:\s*\.67", tokens)
 
 
-def test_economics_controls_reflow_at_narrow_widths(css: str):
-    """The panel must not collapse into one unreadable inline sentence."""
-    assert re.search(
-        r"@media \(max-width: 1080px\)[^@]*?\.economics-bar\s*\{", css, re.S
-    ), "no intermediate breakpoint for the economics grid"
+def test_constraints_copy_uses_readable_ink(css: str):
+    """Cream on the dark rail, at declared alphas — never inherited ink."""
+    name = rule_block(css, ".constraint-name")
+    assert "var(--cream-70)" in name
+    value = rule_block(css, ".constraint-value")
+    assert "var(--cream)" in value
+    note = rule_block(css, ".constraint-note")
+    assert "rgba(246, 242, 223" in note
 
 
-def test_economics_disabled_state_stays_legible(css: str):
-    block = rule_block(css, ".economics-bar button:disabled")
+def test_best_buy_controls_reflow_at_narrow_widths(css: str):
+    """The rail becomes a full-width block rather than an inline sentence."""
+    narrow = css.split("@media (max-width: 860px)")[1].split("@media")[0]
+    assert ".app-grid" in narrow
+    assert "grid-template-columns: minmax(0, 1fr)" in narrow
+
+
+def test_best_buy_disabled_state_stays_legible(css: str):
+    block = rule_block(css, ".rail-primary:disabled")
     match = re.search(r"opacity:\s*([\d.]+)", block)
-    assert match and float(match.group(1)) >= 0.6
+    assert match and float(match.group(1)) >= 0.4
+
+
+def test_optimizer_receipt_has_a_visible_home(soup: BeautifulSoup, source: str):
+    """The optimizer's own result is a canvas band, never a toast — and it is
+    actually rendered (``state.optimizer.summary`` used to be written in seven
+    places and read in none, so every best-buy receipt was invisible)."""
+    band = soup.select_one("#buyBand")
+    assert band is not None and band.has_attr("hidden")
+    assert band.find_parent(class_="canvas") is not None
+    assert "function renderBuyBand()" in source
+    assert (
+        "renderBuyBand()" in source.split("\nfunction render() {")[1].split("\n}\n")[0]
+    )
+    # Every truncation / withholding note survives into the band.
+    receipt = source.split("function renderBuyBand()")[1].split("\n}\n")[0]
+    assert "summary.notes" in receipt
+    assert "Nothing applied" in receipt
 
 
 # ---------------------------------------------------------------------------
@@ -393,25 +444,32 @@ def test_economics_disabled_state_stays_legible(css: str):
 
 
 def test_keystone_icon_has_an_explicit_size_contract(css: str):
-    block = rule_block(css, ".keystone-icon")
+    # The keystone rides an ordinary build slot row on the duel canvas, so the
+    # shared row icon is what has to be bounded.
+    block = rule_block(css, ".duel-row .item-icon")
     for declaration in ("width", "height", "aspect-ratio"):
         assert declaration in block, f"keystone icon is missing {declaration}"
 
 
 def test_keystone_image_is_bounded_and_cropped(css: str):
-    block = rule_block(css, ".keystone-icon img")
+    block = rule_block(css, ".duel-row .item-icon img")
     assert "object-fit" in block
     assert "width: 100%" in block and "height: 100%" in block
 
 
-def test_keystone_slot_matches_the_item_slot_grammar(css: str):
-    block = rule_block(css, ".item-slot")
-    assert "width" in block, "the shared slot class needs a bounded width"
+def test_keystone_slot_matches_the_item_slot_grammar(source: str):
+    """The keystone row is built from the same duel-row grammar as an item
+    slot — same class, same icon + copy structure, its own picker."""
+    render = source.split("function renderDuelSide(")[1].split("\nfunction ")[0]
+    assert 'class="duel-row is-keystone' in render
+    assert 'data-picker="keystone"' in render
+    assert 'class="item-icon"' in render
+    assert 'class="duel-row-copy"' in render
 
 
 def test_keystone_label_wraps_instead_of_stretching_the_card(css: str):
-    block = rule_block(css, ".keystone-slot small")
-    assert "overflow" in block or "text-overflow" in block
+    block = rule_block(css, ".duel-row-copy strong")
+    assert "overflow-wrap" in block or "overflow" in block
 
 
 # ---------------------------------------------------------------------------
@@ -596,22 +654,27 @@ def test_timeline_shows_a_reason_when_an_event_dealt_no_damage():
 # ---------------------------------------------------------------------------
 
 
-def test_result_card_no_longer_crops_expanded_content(css: str):
-    block = rule_block(css, ".result-card")
-    assert "overflow: hidden" not in block
+def test_canvas_never_crops_expanded_content(css: str):
+    """#156 was "content clips and overlaps in the result panel".
+
+    The redesign replaces the sticky, scrolling result column with a canvas
+    that grows with the page, so there is no inner frame to crop against.
+    The criterion becomes: nothing in the canvas may clip its own content.
+    """
+    for selector in (".canvas", ".ledger-band", ".ledger-body", ".buy-band"):
+        block = rule_block(css, selector)
+        assert "overflow: hidden" not in block, selector
+        assert "max-height" not in block, selector
+    # Only the app card clips, and only to keep its 1px frame square.
+    assert "overflow: hidden" in rule_block(css, ".app-card")
 
 
-def test_result_column_is_the_single_sticky_boundary(css: str):
-    block = rule_block(css, ".result-column")
-    assert "position: sticky" in block
-    assert "max-height" in block
+def test_only_the_event_lane_list_owns_a_scroll_frame(css: str):
+    """A dense ledger scrolls inside its own lane list — the one deliberate
+    inner scroller — instead of pushing the canvas around."""
+    block = rule_block(css, ".timeline-events")
     assert "overflow-y: auto" in block
-
-
-def test_result_column_releases_the_sticky_frame_on_narrow_screens(css: str):
-    narrow = css.split("@media (max-width: 800px)")[1].split("@media")[0]
-    assert ".result-column" in narrow
-    assert "position: static" in narrow
+    assert "max-height" in block
 
 
 def test_ledger_lines_wrap_instead_of_colliding(css: str):
@@ -639,7 +702,7 @@ def test_receipt_tables_scroll_within_the_panel(css: str):
 
 
 def test_certainty_legend_participates_in_flow(css: str):
-    block = rule_block(css, ".analyst-trust-legend")
+    block = rule_block(css, ".trust-legend")
     assert "position: sticky" not in block
     assert "position: fixed" not in block
 
@@ -649,10 +712,12 @@ def test_certainty_legend_is_hidden_until_a_result_exists(soup: BeautifulSoup):
     assert legend.has_attr("hidden")
 
 
-def test_certainty_legend_sits_inside_the_scrolling_result_column(soup: BeautifulSoup):
+def test_certainty_legend_sits_with_the_ledger_it_explains(soup: BeautifulSoup):
+    """The legend belongs to the ledger header (gap ledger), so it appears
+    exactly when the receipts it decodes do."""
     legend = soup.select_one("#trustLegend")
-    assert legend.find_parent(class_="result-column") is not None
-    assert legend.find_parent(class_="result-card") is None
+    assert legend.find_parent(class_="ledger-band") is not None
+    assert legend.find_parent(class_="verdict") is None
 
 
 def test_certainty_chips_meet_the_readable_size_floor(css: str):

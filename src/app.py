@@ -36,11 +36,11 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_from_directory,
     url_for,
 )
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.comparison import compare_payload
 from src.calculator.application_errors import ApplicationError
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
@@ -50,7 +50,6 @@ from src.calculator.certainty import (
 from src.calculator.data_fetcher import (
     fetch_champion_data,
     get_champion,
-    get_item_by_name,
 )
 from src.calculator.item_effects import (
     item_input_options_meta,
@@ -76,8 +75,8 @@ from src.calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
     get_champion_module_meta,
-    registered_engine_champion_names,
-    reviewed_champion_names,
+    get_supported_fight_modes,
+    get_unsupported_fight_mode_reason,
 )
 from src.calculator.champion_coverage import attacker_availability
 from src.calculator.capabilities import public_capability_contract
@@ -89,19 +88,24 @@ from src.calculator.optimizer import (
 )
 from src.calculator.stats import MAX_LEVEL
 from src.calculator.stats import get_item_stats
-from src.calculator.bis import bis_payload
+from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
 from src.calculator.public_response import (
     ICON_HOSTS as _ICON_HOSTS,
     https_icon as _https_icon,
     public_loadout_summary,
 )
 from src.calculator.scenario import (
+    ENGINE_CHAMPIONS as _ENGINE_CHAMPIONS,
+    VERIFIED_CHAMPIONS as _VERIFIED_CHAMPIONS,
     ChampionLoadout,
+    load_public_champion as _load_public_champion,
     parse_scenario_request,
+    resolve_named_item as _resolve_named_item,
     resolve_scenario,
 )
 from src.calculator.role_quests import (
     boot_upgrade_contract,
+    role_quest_domain_contract,
     support_quest_item_contract,
     support_quest_item_stage,
 )
@@ -114,6 +118,7 @@ from src.calculator.pipeline import (
     ONE_ROTATION_DURATION,
     MAX_ROTATIONS,
     PUBLIC_INPUT_LIMITS,
+    rank_allocation_contract,
 )
 from src.calculator.request_parsing import (
     request_int as _request_int,
@@ -233,11 +238,14 @@ _SCOPE_LABELS = {
 # other two because it is deterministic and the most expensive endpoint.
 _OPERATION_POLICY = {
     "calculate": {"rate_limit_scope": "calculate", "cache_namespace": "calculate"},
+    "compare": {"rate_limit_scope": "calculate", "cache_namespace": "compare"},
     "bis": {"rate_limit_scope": "calculate", "cache_namespace": "bis"},
+    "bis_batch": {
+        "rate_limit_scope": "calculate",
+        "cache_namespace": "bis_batch",
+    },
     "optimize": {"rate_limit_scope": "optimize", "cache_namespace": "optimize"},
 }
-_VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
-_ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
 
 
 _DEV_UPDATE_COOKIE = "lol_calc_dev_update"
@@ -587,27 +595,6 @@ def _json_object() -> dict:
     return data
 
 
-def _resolve_named_item(name: str, *, kind: str = "Item") -> dict:
-    """Resolve one item name and translate data misses into a public 404."""
-    try:
-        return get_item_by_name(name)
-    except KeyError as exc:
-        raise LookupError(f"{kind} '{name}' not found") from exc
-
-
-def _load_public_champion(name: str) -> dict:
-    """Load one champion that the public UI and engine both support."""
-    try:
-        champion = get_champion(name)
-    except KeyError as exc:
-        raise LookupError(f"Champion '{name}' not found") from exc
-    if champion["name"] not in _ENGINE_CHAMPIONS:
-        availability = attacker_availability(champion, _VERIFIED_CHAMPIONS)
-        reason = availability["blockers"][0]["label"]
-        raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
-    return champion
-
-
 def _public_loadout_summary(loadout) -> dict:
     """Sanitize one resolved loadout for the browser."""
     return public_loadout_summary(loadout, _VERIFIED_CHAMPIONS)
@@ -626,26 +613,6 @@ def _dev_mode() -> bool:
 def _local_dev_request() -> bool:
     """Require both local dev mode and a loopback network peer."""
     if not _dev_mode() or not request.remote_addr:
-        return False
-    try:
-        peer_is_loopback = ipaddress.ip_address(request.remote_addr).is_loopback
-        host = urlsplit(f"//{request.host}").hostname
-        host_is_local = host == "localhost" or (
-            host is not None and ipaddress.ip_address(host).is_loopback
-        )
-        return peer_is_loopback and host_is_local
-    except ValueError:
-        return False
-
-
-def _prototype_local_request() -> bool:
-    """Keep the visual prototype available to loopback browsers only.
-
-    The prototype intentionally uses illustrative client-side data. It is a
-    useful design surface for local interaction review, but it must never be
-    mistaken for the calculator's production data path or be publicly served.
-    """
-    if not request.remote_addr:
         return False
     try:
         peer_is_loopback = ipaddress.ip_address(request.remote_addr).is_loopback
@@ -806,24 +773,6 @@ def index():
         input_limits=PUBLIC_INPUT_LIMITS,
         auth_user=session.get("username") if session else None,
     )
-
-
-@app.route("/prototype/manrope-blackwhite/")
-def manrope_prototype_index():
-    """Serve the local-only visual prototype without replacing the calculator."""
-    if not _prototype_local_request():
-        return Response(status=404)
-    root = Path(__file__).resolve().parent.parent / "prototypes" / "manrope-blackwhite"
-    return send_from_directory(root, "index.html")
-
-
-@app.route("/prototype/manrope-blackwhite/<path:asset_path>")
-def manrope_prototype_asset(asset_path: str):
-    """Serve prototype assets only to a loopback browser session."""
-    if not _prototype_local_request():
-        return Response(status=404)
-    root = Path(__file__).resolve().parent.parent / "prototypes" / "manrope-blackwhite"
-    return send_from_directory(root, asset_path)
 
 
 @app.route("/healthz")
@@ -1008,6 +957,11 @@ def api_champions():
             ability_slots[slot] = {
                 key: ability[key] for key in ("slot", "name", "icon", "ingested")
             }
+        # A module that certifies only a subset of fight modes publishes that
+        # restriction (and its sourced reason) so the interface can request a
+        # supported mode instead of failing closed at calculation time. None
+        # means unrestricted: every public fight mode is certified.
+        supported_modes = get_supported_fight_modes(champ_data["name"])
         result.append(
             {
                 "name": champ_data["name"],
@@ -1016,6 +970,12 @@ def api_champions():
                 "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
                 "engine_registration": engine_registration_kind(champ_data["name"]),
                 "engine_backend_enabled": (champ_data["name"] in _ENGINE_CHAMPIONS),
+                "supported_fight_modes": (
+                    list(supported_modes) if supported_modes is not None else None
+                ),
+                "unsupported_fight_mode_reason": get_unsupported_fight_mode_reason(
+                    champ_data["name"]
+                ),
                 "availability": availability,
                 "patch_last_changed": champ_data.get("patchLastChanged"),
                 "abilities": ability_slots,
@@ -1180,6 +1140,11 @@ def api_config():
                 "support_item": support_quest_item_contract(),
                 "boot_upgrades": boot_upgrade_contract(),
             },
+            "domain_contract": {
+                "role_quest": role_quest_domain_contract(),
+                "rank_allocation": rank_allocation_contract(),
+                "bis_objectives": bis_objective_contract(),
+            },
             "capabilities": public_capability_contract(
                 input_limits=PUBLIC_INPUT_LIMITS,
                 max_rotations=MAX_ROTATIONS,
@@ -1274,6 +1239,41 @@ def api_calculate():
     return jsonify(payload)
 
 
+@app.route("/api/compare", methods=["POST"])
+# pylint: disable=too-many-return-statements
+def api_compare():
+    """Calculate Build A and Build B behind one request boundary."""
+    try:
+        data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key(
+            _OPERATION_POLICY["compare"]["cache_namespace"], data
+        )
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["compare"]["rate_limit_scope"]
+    )
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    try:
+        payload = compare_payload(data)
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if cache_key is not None:
+        cache_set(cache_key, payload)
+    return jsonify(payload)
+
+
 @app.route("/api/bis", methods=["POST"])
 def api_bis():
     """Rank one slot through the pure BIS application boundary."""
@@ -1297,6 +1297,44 @@ def api_bis():
 
     try:
         payload = bis_payload(data)
+    except KeyError as exc:
+        missing = exc.args[0] if exc.args else "requested data"
+        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if cache_key is not None:
+        cache_set(cache_key, payload)
+    return jsonify(payload)
+
+
+@app.route("/api/bis/batch", methods=["POST"])
+# pylint: disable=too-many-return-statements
+def api_bis_batch():
+    """Score dependent BIS slots with one shared timeline cache."""
+    try:
+        data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key(
+            _OPERATION_POLICY["bis_batch"]["cache_namespace"], data
+        )
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["bis_batch"]["rate_limit_scope"]
+    )
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    try:
+        payload = bis_batch_payload(data)
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
@@ -1347,7 +1385,11 @@ def api_optimize():
         )
         if optimization_scope == "purchase" and available_gold is None:
             raise ValueError("available_gold is required for purchase optimization")
-        max_purchase_items = _request_int(data, "max_purchase_items", 2, 1, 2)
+        max_purchase_items = (
+            _request_int(data, "max_purchase_items", 0, 1, 7)
+            if data.get("max_purchase_items") not in (None, "")
+            else None
+        )
         allow_sell = data.get("allow_sell", False)
         if not isinstance(allow_sell, bool):
             raise ValueError("allow_sell must be true or false")
@@ -1849,7 +1891,7 @@ def api_metrics():
     try:
         # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
         from src.metrics import compute_scorecard
-    except ImportError as exc:
+    except ImportError:
         app.logger.exception("Failed to import the beta metrics scorecard")
         return jsonify({"error": "Metrics module unavailable"}), 503
     try:

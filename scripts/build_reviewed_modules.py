@@ -393,11 +393,6 @@ def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]
     return specs
 
 
-def _wiki_spec(entries: list[dict[str, Any]], slot: str) -> dict[str, Any] | None:
-    specs = _wiki_specs(entries, slot)
-    return specs[0] if specs else None
-
-
 def _axword_spec(ability: dict[str, Any]) -> dict[str, Any] | None:
     damage = ability.get("damage")
     if not isinstance(damage, dict) or not damage.get("base"):

@@ -289,3 +289,47 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Ambessa self-healing events from its authored packet."""
+    healing = []
+    r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
+    ratio = _healing._leveling_value(
+        _healing._ability(champion_data, "R"), "Healing Percentage", r_rank
+    )
+    # Public Execution heals from post-mitigation active ability damage.
+    if ratio > 0:
+        for event in damage_events:
+            source = _healing._event_source(event)
+            if source not in {"Q", "Q2", "W", "E", "R"}:
+                continue
+            amount = max(0.0, float(event.get("damage", 0.0))) * ratio / 100.0
+            if amount > 0:
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)),
+                        "amount": amount,
+                        "source": "Public Execution",
+                        "kind": "champion_passive",
+                        **_healing._trigger_fields(event),
+                    }
+                )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Ambessa", derive_self_healing)

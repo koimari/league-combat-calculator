@@ -35,25 +35,13 @@ def growth_multiplier(level: int) -> float:
 
     This is the parenthesized term of the growth formula (1.0 at level 18);
     formulas that scale a *relative* value by the progression curve (e.g.
-    Yorick's Mist Walker interpolation) use this, while absolute per-level
-    growth uses :func:`growth_factor`.  Level-bound contract shared with
+    Yorick's Mist Walker interpolation) use this, and ``growth_stat`` owns
+    the absolute per-level form.  Level-bound contract shared with
     ``growth_stat``.
     """
     if level < 1 or level > MAX_LEVEL:
         raise ValueError(f"Level must be between 1 and {MAX_LEVEL}, got {level}")
     return 0.7025 + 0.0175 * (level - 1)
-
-
-def growth_factor(level: int) -> float:
-    """The shared LoL stat-growth term ``(level-1) * (0.7025 + 0.0175 * (level-1))``.
-
-    One named owner for the per-level growth term so pet/companion attack
-    speeds and any other relative-growth formula use the same primitive and
-    the same level-bound contract as ``growth_stat``.
-    """
-    if level < 1 or level > MAX_LEVEL:
-        raise ValueError(f"Level must be between 1 and {MAX_LEVEL}, got {level}")
-    return (level - 1) * growth_multiplier(level)
 
 
 def growth_stat(base: float, growth: float, level: int) -> float:

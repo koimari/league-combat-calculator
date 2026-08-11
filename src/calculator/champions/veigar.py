@@ -28,6 +28,7 @@ hardcoded.
 from typing import Any, Callable
 
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, extract_value, simple_damage
 from ..ability_spec import ControlEvent, DamagePart
@@ -149,7 +150,7 @@ ASSUMPTIONS = [
 SOURCES = list(load_champion_sources("Veigar"))
 
 SLOTS = {
-    "P": _no_damage(
+    "P": no_damage_parser(
         "P",
         "Phenomenal Evil Power is a stacking AP passive; no enemy damage.",
     ),

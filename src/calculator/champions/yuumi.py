@@ -81,3 +81,45 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "R"} else "out_of_scope") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Yuumi self-healing events from its authored packet."""
+    healing = []
+    r_rank = _healing._rank(ability_damages, "R")
+    per_wave = _healing.extract_named(
+        _healing._ability(champion_data, "R"), "Heal per Hit", r_rank, champion_stats
+    )
+    if per_wave > 0.0:
+        for cast in cast_timeline or []:
+            if cast.get("slot") != "R":
+                continue
+            start = float(cast.get("time", 0.0))
+            for index in range(5):
+                healing.append(
+                    {
+                        "time": start + index * 0.7,
+                        "amount": float(per_wave),
+                        "source": "Final Chapter",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Yuumi", derive_self_healing)

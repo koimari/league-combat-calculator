@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 import src.app as app_module
-from src.calculator.data_fetcher import fetch_item_data, get_champion
+from src.calculator.data_fetcher import get_champion
 from src.calculator.loadout_rules import role_quest_legal_items
 from src.calculator.optimizer import (
     get_eligible_legendaries,
@@ -192,17 +192,17 @@ class TestMidQuestBootTierContract:
             "state.attacker[`questBoot${to}`] = state.attacker[`questBoot${from}`];"
         ) in source
 
-        # Rerender reads the quest boot straight from state in both the
-        # analyst strip and the prototype slot grid — nothing resets it.
+        # Rerender reads the quest boot straight from state on the duel
+        # canvas — its own slot row, keyed by side; nothing resets it.
         assert "state.attacker[`questBoot${side}`]" in source
-        assert "state.attacker[`questBoot${sideUpper}`]" in source
+        assert (
+            "rows.push(duelRowHtml(state.attacker[`questBoot${side}`], "
+            "questBootPath(side)));"
+        ) in source
 
         # The picker only offers the tier the current quest state allows.
-        assert (
-            'return state.attacker.role === "mid" && state.attacker.roleQuestComplete\n'
-            "    ? TIER_THREE_BOOTS\n"
-            "    : TIER_TWO_BOOTS;"
-        ) in source
+        assert "return bootIdsForTier(" in source
+        assert "roleBootsTier(state.attacker.role" in source
 
         # The level handler clamps against the role cap but never rewrites
         # the quest boot (level changes must keep the selected pair).

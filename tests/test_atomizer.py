@@ -6,7 +6,6 @@ tests pin the Atom contract and the per-effect independence rule that the
 old item atomizer violated (issue #140).
 """
 
-import json
 from pathlib import Path
 
 from src.calculator.atomizer import Atomizer, number_and_unit, split_effect_fragments

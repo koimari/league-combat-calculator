@@ -11,7 +11,6 @@ from dataclasses import replace
 from .champions import (
     engine_registration_kind,
     get_comparison_curve_unavailable_reason,
-    reviewed_champion_names,
 )
 from .defensive_effects import resolve_starting_defenses
 from .item_coverage import require_certified_target_timeline
@@ -25,14 +24,13 @@ from .public_response import (
 )
 from .role_quests import role_quest_meta
 from .scenario import (
+    VERIFIED_CHAMPIONS as _VERIFIED_CHAMPIONS,
     ResolvedScenario,
     ScenarioRequest,
     parse_scenario_request,
     resolve_scenario,
 )
 from .stats import calculate_total_stats
-
-_VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
 
 
 def _loadout_summary(loadout) -> dict:
@@ -248,8 +246,10 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
     return response
 
 
-def calculate_payload(data: Mapping[str, object]) -> dict:
+def calculate_payload(
+    data: Mapping[str, object], *, deterministic: bool = False
+) -> dict:
     """Return the complete JSON-safe calculate payload without Flask state."""
-    request = parse_scenario_request(data)
+    request = parse_scenario_request(data, deterministic=deterministic)
     resolved = resolve_scenario(request)
     return _calculate_resolved(request, resolved)

@@ -7,21 +7,37 @@ when damage landed.  It intentionally does not invent targeting, cooldown,
 or crowd-control behavior that the packets do not provide.
 """
 
+# Several imported names remain public compatibility aliases for the timeline
+# test and extension surface.
+# pylint: disable=duplicate-code,unused-import
+
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, replace
+from collections.abc import Iterable, Mapping, MutableMapping
+from dataclasses import replace
 import math
 from operator import itemgetter
-from collections.abc import Iterable, Mapping, MutableMapping
 from typing import Any
 
 from .ability_spec import ACTION_BLOCKING_CC_KINDS
-from .pipeline import FightParams, require_fight_mode_support, run_fight
 from . import rune_effects
+from .pipeline import FightParams, run_fight
+from .roster_composition import (
+    Combatant,
+    actor_params as _actor_params,
+    actor_params_with_resource_restores as _actor_params_with_resource_restores,
+    catalyst_resource_restores as _catalyst_resource_restores,
+    coalesce_darius_q_heals as _coalesce_darius_q_heals,
+    defensive_signature as _defensive_signature,
+    from_loadout as _from_loadout,
+    has_catalyst as _has_catalyst,
+    main_combatant as _main_combatant,
+    require_roster_fight_window_support,
+    target_params as _target_params,
+    target_overrides as _target_overrides,
+)
 from .scenario import ResolvedLoadout
-from .timeline_coverage import combine_timeline_coverages
-from .item_coverage import item_model_coverage
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
@@ -45,6 +61,7 @@ from .item_effects import (
     thorns_effects,
 )
 from .interaction_effects import target_physical_damage_reduction_params
+from .delivery_eligibility import support_packet_priority
 from .resistance import (
     apply_armor_penetration,
     apply_magic_penetration,
@@ -73,7 +90,19 @@ from .survival import (
     survival_action_from_event,
     uncompilable_item_receipt as _uncompilable_item_receipt,
 )
-from .delivery_eligibility import support_packet_priority
+from .timeline_optimizer import (
+    CoupledSearchContext,
+    _build_signature_panel,
+    _context_setup,
+    _grievous_packs_for,
+    _score_with_search_context,
+    _SignaturePanel,
+)
+from .timeline_receipts import (
+    _target_allocation_receipt,
+    _utility_outcome_receipt,
+    assemble_public_receipt,
+)
 
 # Issue #137: the survival kernel lives in ``src/calculator/survival``; the
 # underscored name below is kept as an alias so the public surface of this
@@ -81,284 +110,46 @@ from .delivery_eligibility import support_packet_priority
 _WalkCompiler = WalkCompiler
 
 
-def require_roster_fight_window_support(
-    params: FightParams,
-    *,
-    enemies: Iterable[ResolvedLoadout] = (),
-    allies: Iterable[ResolvedLoadout] = (),
-) -> None:
-    """Reject a fight window a selected roster member cannot join.
-
-    The coupled timeline runs every selected ally and enemy as an attacker
-    through the same certified fight pipeline as the main champion, so a
-    member whose module supports only one rotation cannot join a timed
-    window. Failing here names the member instead of crashing mid-timeline.
-    """
-    for side, roster in (("Enemy", enemies), ("Ally", allies)):
-        for loadout in roster:
-            name = str(loadout.champion_data.get("name", ""))
-            try:
-                require_fight_mode_support(params, name)
-            except ValueError as exc:
-                raise ValueError(
-                    f"{side} {name} cannot join this fight window: {exc}"
-                ) from exc
-
-
-@dataclass(frozen=True, slots=True)
-class Combatant:
-    """One participant with its resolved stats and build."""
-
-    participant_id: str
-    team: str
-    champion_data: dict[str, Any]
-    level: int
-    items: tuple[dict[str, Any], ...]
-    stats: dict[str, float]
-    defenses: Any
-    request: Any = None
-
-
-def _coalesce_darius_q_heals(
-    healing: MutableMapping[str, list[dict[str, Any]]],
-) -> None:
-    """Combine Darius Q pair receipts into one live heal per cast.
-
-    The kept copy is replaced, never mutated in place: a packet-cached
-    typed action is keyed by the original dict's identity (issue #169),
-    so an in-place formula swap would let a stale cached conversion win.
-    """
-    for events in healing.values():
-        groups: dict[tuple[float, int], tuple[int, int]] = {}
-        kept: list[dict[str, Any]] = []
-        for event in events:
-            marker = event.get("_darius_q_group")
-            if not isinstance(marker, tuple) or len(marker) != 2:
-                kept.append(event)
-                continue
-            key = (float(marker[0]), int(marker[1]))
-            first = groups.get(key)
-            if first is None:
-                groups[key] = (len(kept), 1)
-                kept.append(event)
-            else:
-                groups[key] = (first[0], first[1] + 1)
-        for index, count in groups.values():
-            kept[index] = {
-                **kept[index],
-                "amount_formula": (
-                    lambda current_health, maximum_health, count=count: (
-                        max(0.0, maximum_health - current_health)
-                        * min(0.51, 0.17 * count)
-                    )
-                ),
-            }
-        events[:] = kept
-
-
-def _from_loadout(
-    participant_id: str,
-    team: str,
-    loadout: ResolvedLoadout,
-) -> Combatant:
-    return Combatant(
-        participant_id=participant_id,
-        team=team,
-        champion_data=loadout.champion_data,
-        level=loadout.request.level,
-        items=loadout.item_data,
-        stats=loadout.stats,
-        defenses=loadout.defenses,
-        request=loadout.request,
-    )
-
-
-def _main_combatant(
-    champion_data: dict[str, Any],
-    level: int,
-    items: list[dict[str, Any]],
-    *,
-    stats: dict[str, float],
-    defenses: Any,
-    params: FightParams,
-) -> Combatant:
-    return Combatant(
-        participant_id="main",
-        team="main",
-        champion_data=champion_data,
-        level=level,
-        items=tuple(items),
-        stats=stats,
-        defenses=defenses,
-        request=type(
-            "MainRequest",
-            (),
-            {
-                "role": params.role,
-                "role_quest_complete": params.role_quest_complete,
-                "ability_ranks": params.ability_ranks,
-                "champion_options": params.champion_options,
-                "support_target_selections": params.support_target_selections,
-                "cast_order": params.cast_order,
-                "item_options": params.item_options,
-            },
-        )(),
-    )
-
-
-def _target_overrides(defender: Combatant) -> dict[str, float | str]:
-    """Everything a one-pair fight reads from its target, as replace() kwargs.
-
-    This dict is also the pair-result cache signature for fights against a
-    candidate main build: two candidates with equal overrides produce
-    byte-identical incoming fights, so keeping the params and the signature
-    in one place guarantees the cache can never ignore a field the engine
-    reads.
-    """
-    defenses = defender.defenses
-    attack_speed_multiplier = 1.0
-    if any(item.get("name") == "Frozen Heart" for item in defender.items):
-        attack_speed_multiplier = 1.0 - float(
-            required_effect_value("Frozen Heart", "attack_speed_reduction")
+def _cache_signature(value: Any) -> Any:
+    """Freeze nested request values for a hashable pair cache key."""
+    if isinstance(value, Mapping):
+        return tuple(
+            sorted((str(key), _cache_signature(item)) for key, item in value.items())
         )
-    return {
-        **target_physical_damage_reduction_params(defender),
-        "target_health": float(defender.stats.get("health", 0.0)),
-        "target_bonus_health": float(defender.stats.get("bonus_health", 0.0)),
-        "target_armor": float(defender.stats.get("armor", 0.0)),
-        "target_magic_resistance": float(defender.stats.get("magic_resistance", 0.0)),
-        "target_magic_shield": float(defenses.magic_shield),
-        "target_physical_shield": float(defenses.physical_shield),
-        "target_general_shield": float(defenses.general_shield),
-        "target_basic_damage_multiplier": float(defenses.basic_damage_multiplier),
-        "target_basic_damage_flat_reduction": float(
-            defenses.basic_damage_flat_reduction
-        ),
-        "target_basic_damage_flat_reduction_cap": float(
-            defenses.basic_damage_flat_reduction_cap
-        ),
-        "target_champion_damage_flat_reduction": float(
-            defenses.champion_damage_flat_reduction
-        ),
-        "target_champion_dot_damage_flat_reduction": float(
-            defenses.champion_dot_damage_flat_reduction
-        ),
-        "target_critical_strike_damage_multiplier": float(
-            defenses.critical_strike_damage_multiplier
-        ),
-        "attacker_attack_speed_multiplier": attack_speed_multiplier,
-        "target_threshold_shield_amount": float(defenses.threshold_shield_amount),
-        "target_threshold_shield_health_ratio": float(
-            defenses.threshold_shield_health_ratio
-        ),
-        "target_threshold_shield_duration": float(defenses.threshold_shield_duration),
-        "target_threshold_shield_damage_type": str(
-            defenses.threshold_shield_damage_type
-        ),
-        "target_threshold_health_bonus": float(defenses.threshold_health_bonus),
-        "target_threshold_health_heal": float(defenses.threshold_health_heal),
-        "target_threshold_health_ratio": float(defenses.threshold_health_ratio),
-        "target_threshold_health_duration": float(defenses.threshold_health_duration),
-        "target_revive_health_amount": float(defenses.revive_health_amount),
-        "target_revive_delay": float(defenses.revive_delay),
-        "target_revive_cooldown": float(defenses.revive_cooldown),
-    }
+    if isinstance(value, (list, tuple)):
+        return tuple(_cache_signature(item) for item in value)
+    try:
+        hash(value)
+    except TypeError:
+        return repr(value)
+    return value
 
 
-def _target_params(base: FightParams, defender: Combatant) -> FightParams:
-    return replace(base, **_target_overrides(defender))
-
-
-def _has_catalyst(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Return whether a participant owns Catalyst's ordered resource passive."""
-    return any(str(item.get("name", "")) == "Catalyst of Aeons" for item in items)
-
-
-def _catalyst_resource_restores(
-    actor: Combatant,
-    incoming: Mapping[str, Iterable[Mapping[str, Any]]],
-    duration: float,
-) -> tuple[tuple[tuple[float, float], ...], bool]:
-    """Derive Catalyst restores from complete incoming champion packets.
-
-    Eternity uses pre-mitigation damage from champions.  The coupled ledger
-    accepts packets with a finite ``raw_damage`` and a timestamp inside the
-    authored window; packets without damage (zero or missing ``raw_damage`` —
-    shield/heal/control markers) are not damage taken and are skipped while
-    the ledger stays complete.  A NON-finite ``raw_damage`` or an
-    out-of-window timestamp returns ``complete=False``: the fail-closed
-    signal, which callers turn into a named error — never a post-mitigation
-    or aggregate substitute.
-    """
-    if not _has_catalyst(actor.items):
-        return (), True
-    ratio = sustain_effect_value("Catalyst of Aeons", "damage_taken_to_mana_ratio")
-    restores: list[tuple[float, float]] = []
-    for event in incoming.get(actor.participant_id, ()):
-        if not isinstance(event, Mapping):
-            continue
-        source_id = str(event.get("attacker", ""))
-        if not source_id or source_id == actor.participant_id:
-            continue
-        if event.get("_reactive") or event.get("_deferred"):
-            continue
-        try:
-            event_time = float(event.get("time", 0.0))
-            raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
-        except (TypeError, ValueError):
-            return (), False
-        if (
-            not math.isfinite(event_time)
-            or not math.isfinite(raw_damage)
-            or event_time < 0.0
-            or event_time > duration + 1e-9
-        ):
-            return (), False
-        if raw_damage <= 0.0:
-            # Zero-damage/marker packets are not damage taken and therefore
-            # do not mint mana.  They remain valid ledger rows.
-            continue
-        amount = raw_damage * ratio
-        if amount > 0.0:
-            restores.append((event_time, amount))
-    restores.sort(key=lambda row: row[0])
-    return tuple(restores), True
-
-
-def _actor_params_with_resource_restores(
-    base: FightParams,
-    actor: Combatant,
-    resource_restores: Mapping[str, tuple[tuple[float, float], ...]] | None,
-) -> FightParams:
-    """Attach one actor's typed external resource ledger to its fight params."""
-    params = _actor_params(base, actor)
-    if resource_restores is None:
-        return params
-    return replace(
-        params,
-        resource_restore_events=tuple(resource_restores.get(actor.participant_id, ())),
+def _offensive_signature(attacker: Combatant) -> tuple[Any, ...]:
+    """Capture every candidate-owned input used by a cached pair fight."""
+    request = attacker.request
+    return (
+        str(attacker.champion_data.get("name", "")),
+        int(attacker.level),
+        tuple(str(item.get("name", "")) for item in attacker.items),
+        _cache_signature(attacker.stats),
+        _cache_signature(getattr(request, "ability_ranks", None)),
+        _cache_signature(getattr(request, "champion_options", None)),
+        _cache_signature(getattr(request, "cast_order", None)),
+        _cache_signature(getattr(request, "item_options", None)),
+        str(getattr(request, "role", "") or ""),
+        bool(getattr(request, "role_quest_complete", False)),
     )
 
 
-def _actor_params_with_ledger_owner(
-    base: FightParams,
-    actor: Combatant,
-    resource_restores: Mapping[str, tuple[tuple[float, float], ...]] | None,
-) -> FightParams:
-    """Attach the actor's mana-ledger account owner to its fight params.
-
-    P3 slice 1: the engine's typed mana ledger keys one account per
-    participant, so every pair fight of the coupled timeline carries the
-    attacker's participant id (``main``/``ally:...``/``enemy:...``).  The
-    one-pair pipeline path keeps the engine default (``"main"``).
-    """
-    params = _actor_params_with_resource_restores(base, actor, resource_restores)
-    return replace(params, resource_ledger_owner=actor.participant_id)
-
-
-def _defensive_signature(defender: Combatant) -> tuple[Any, ...]:
-    """A hashable key equal exactly when ``_target_params`` would be equal."""
-    return tuple(_target_overrides(defender).values())
+def _pair_cache_key(attacker: Combatant, defender: Combatant) -> tuple[Any, ...]:
+    """Key reusable pairs by both offensive and defensive loadout state."""
+    return (
+        attacker.participant_id,
+        defender.participant_id,
+        _offensive_signature(attacker),
+        _defensive_signature(defender),
+    )
 
 
 def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
@@ -708,32 +499,6 @@ def _warmog_heart_tick_events(
     return events
 
 
-def _actor_params(base: FightParams, actor: Combatant) -> FightParams:
-    """Use a roster actor's role while preserving the selected fight window."""
-    request = actor.request
-    return replace(
-        base,
-        role=getattr(request, "role", "") or "",
-        role_quest_complete=bool(getattr(request, "role_quest_complete", False)),
-        # Roster controls are explicit scenario inputs.  An omitted cast order
-        # must remain None so the actor's champion module supplies its own
-        # declared order; only the synthetic main request carries the
-        # top-level order.
-        ability_ranks=getattr(request, "ability_ranks", None) or None,
-        champion_options=getattr(request, "champion_options", None),
-        support_target_selections=getattr(request, "support_target_selections", None),
-        cast_order=getattr(request, "cast_order", None),
-        item_options=getattr(request, "item_options", None),
-        ally_stat_bonuses=None,
-        # The selected rune page belongs to the main request. Roster
-        # participants have no rune-page input in this scenario contract.
-        keystone=base.keystone if actor.participant_id == "main" else "",
-        keystone_options=(
-            base.keystone_options if actor.participant_id == "main" else {}
-        ),
-    )
-
-
 def _first_pair_defender_id(
     attacker: Combatant, all_actors: Iterable[Combatant]
 ) -> str | None:
@@ -864,97 +629,43 @@ def _support_selection(
     return max(0, value), True
 
 
-def _aery_support_templates(
+def _apply_item_support_selection(
     attacker: Combatant,
-    result: Mapping[str, Any],
-    trigger_effects: Iterable[Mapping[str, Any]],
-) -> list[dict[str, Any]]:
-    """Turn the first accepted ally heal or shield signal into Aery's shield."""
-    if str(result.get("keystone", "")) != "Summon Aery":
-        return []
-    effect = rune_effects.resolve_keystone("Summon Aery")
-    if not isinstance(effect, rune_effects.KeystoneAeryEffect):
-        return []
-    stats = result.get("champion_stats", attacker.stats)
-    if not isinstance(stats, Mapping):
+    template: Mapping[str, Any],
+    all_actors: list[Combatant],
+) -> dict[str, Any]:
+    """Apply an authored recipient choice to a one-target item packet."""
+    kind = str(template.get("kind", ""))
+    scope = str(template.get("target_scope", ""))
+    if kind not in {"shield", "heal"} or scope not in {
+        "one_teammate",
+        "explicit_selected_ally",
+        "healed_or_shielded_ally",
+        "most_wounded_ally",
+        "nearest_most_wounded_ally",
+        "other_nearest_wounded_ally",
+    }:
+        return dict(template)
+    selected_index, selected_explicit = _support_selection(attacker, template)
+    if not selected_explicit:
+        return dict(template)
+    attacker_side = "main" if attacker.team in {"main", "ally"} else attacker.team
+    teammates = [
+        actor
+        for actor in all_actors
+        if ("main" if actor.team in {"main", "ally"} else actor.team) == attacker_side
+        and actor.participant_id != attacker.participant_id
+    ]
+    if selected_index >= len(teammates):
         raise ValueError(
-            f"Summon Aery support receipt for {attacker.participant_id} "
-            "is missing participant stats"
+            f"Support target index {selected_index} is outside the teammate "
+            f"roster for {attacker.participant_id} from "
+            f"{template.get('source', '')!r}"
         )
-    templates: list[dict[str, Any]] = []
-    ready_at = 0.0
-    ordered = sorted(
-        (event for event in trigger_effects if isinstance(event, Mapping)),
-        key=lambda event: (
-            float(event.get("time", 0.0) or 0.0),
-            0 if str(event.get("target", "")) != attacker.participant_id else 1,
-            str(event.get("_event_id", "")),
-        ),
-    )
-    for trigger_index, trigger in enumerate(ordered):
-        if str(trigger.get("kind", "")) not in {"heal", "shield"}:
-            continue
-        try:
-            trigger_time = float(trigger.get("time", 0.0) or 0.0)
-            trigger_amount = float(trigger.get("amount", 0.0) or 0.0)
-        except (TypeError, ValueError) as exc:
-            raise ValueError(
-                f"Summon Aery trigger for {attacker.participant_id} "
-                "has invalid time or amount"
-            ) from exc
-        if not math.isfinite(trigger_time) or not math.isfinite(trigger_amount):
-            raise ValueError(
-                f"Summon Aery trigger for {attacker.participant_id} "
-                "has non-finite time or amount"
-            )
-        if (
-            trigger_amount <= 0.0 and not callable(trigger.get("amount_formula"))
-        ) or trigger_time < ready_at:
-            continue
-        target = str(trigger.get("target", ""))
-        if not target:
-            raise ValueError(
-                f"Summon Aery trigger for {attacker.participant_id} "
-                "is missing its resolved target"
-            )
-        source_event_id = str(
-            trigger.get(
-                "_event_id", f"{attacker.participant_id}:support:{trigger_index}"
-            )
-        )
-        templates.append(
-            {
-                "time": trigger_time + effect.shield_flight_seconds,
-                "kind": "shield",
-                "amount": effect.shield_amount(attacker.level, stats),
-                "duration": effect.shield_duration_seconds,
-                "source": "Summon Aery · Shield",
-                "source_key": "rune_Summon Aery",
-                "attacker": attacker.participant_id,
-                "target": target,
-                "target_scope": (
-                    "self"
-                    if target == attacker.participant_id
-                    else "explicit_selected_ally"
-                ),
-                "target_policy": trigger.get("target_policy", "affected_ally"),
-                "_event_id": f"{attacker.participant_id}:aery:{trigger_index}",
-                "_trigger_event_id": source_event_id,
-                "aery_trigger_source": str(trigger.get("source", "")),
-            }
-        )
-        # Return travel has no fixed source duration.  The same lower-bound
-        # cadence as the offensive Aery path uses the sourced linger window.
-        ready_at = trigger_time + effect.shield_flight_seconds + effect.linger_seconds
-    return templates
-
-
-def _guardian_selection_template() -> dict[str, Any]:
-    """Return the public selection contract for Guardian's Guard target."""
     return {
-        "source": "Guardian · Guard target",
-        "target_scope": "one_teammate",
-        "target_selection_key": "guardian:target",
+        **template,
+        "target": teammates[selected_index].participant_id,
+        "target_policy": "selected_teammate",
     }
 
 
@@ -984,6 +695,15 @@ def _guardian_target(
         )
     policy = "selected_teammate" if selected_explicit else "first_selected_teammate"
     return teammates[selected_index], policy
+
+
+def _guardian_selection_template() -> dict[str, Any]:
+    """Return the public selection contract for Guardian's Guard target."""
+    return {
+        "source": "Guardian · Guard target",
+        "target_scope": "one_teammate",
+        "target_selection_key": "guardian:target",
+    }
 
 
 def _schedule_guardian_events(
@@ -1179,6 +899,71 @@ def _schedule_aftershock_events(
         )
         support_effects[holder.participant_id].append(candidate)
         ready_at = trigger_time + effect.cooldown_seconds
+
+
+def _schedule_grasp_events(
+    all_actors: list[Combatant],
+    outgoing: Mapping[str, list[dict[str, Any]]],
+    support_effects: dict[str, list[dict[str, Any]]],
+    *,
+    keystone_name: str,
+) -> None:
+    """Author Grasp's permanent health gain after each accepted proc."""
+    if keystone_name != "Grasp of the Undying":
+        return
+    effect = rune_effects.resolve_keystone("Grasp of the Undying")
+    if not isinstance(effect, rune_effects.KeystoneGraspEffect):
+        return
+    holder = next(
+        (actor for actor in all_actors if actor.participant_id == "main"), None
+    )
+    if holder is None:
+        return
+    proc_events = sorted(
+        (
+            event
+            for event in outgoing.get(holder.participant_id, [])
+            if str(event.get("source_key", "")) == effect.breakdown_key
+        ),
+        key=lambda event: (
+            float(event.get("time", 0.0) or 0.0),
+            int(event.get("sequence", 0) or 0),
+            str(event.get("_event_id", "")),
+        ),
+    )
+    seen: set[float] = set()
+    bonus_health = effect.bonus_health(bool(holder.stats.get("is_melee", True)))
+    for event in proc_events:
+        trigger_time = float(event.get("time", 0.0) or 0.0)
+        if trigger_time in seen:
+            continue
+        seen.add(trigger_time)
+        trigger_id = str(event.get("_event_id", ""))
+        activation_time = trigger_time + 1e-9
+        candidate = {
+            "time": activation_time,
+            "kind": "stat_buff",
+            "amount": 0.0,
+            "source": "Grasp of the Undying · Permanent health",
+            "source_key": "rune_Grasp of the Undying",
+            "attacker": holder.participant_id,
+            "target": holder.participant_id,
+            "target_scope": "self",
+            "target_policy": "self",
+            "sequence": int(event.get("sequence", 0) or 0),
+            "event_precision": "exact",
+            "bonus_health": bonus_health,
+            "_grasp_permanent_health": True,
+            "_reactive": True,
+            "_priority": 1.0,
+            "_event_id": f"{holder.participant_id}:grasp:{trigger_id}",
+            "_trigger_event_id": trigger_id,
+            "grasp_bonus_health": bonus_health,
+        }
+        candidate["_sk"] = _action_key(
+            activation_time, 1.0, holder.participant_id, candidate
+        )
+        support_effects[holder.participant_id].append(candidate)
 
 
 def _schedule_glacial_events(
@@ -1425,109 +1210,89 @@ def _schedule_stormraider_events(
         ready_at = trigger_time + effect.cooldown_at(holder.level)
 
 
-def _schedule_grasp_events(
-    all_actors: list[Combatant],
-    outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
-    *,
-    keystone_name: str,
-) -> None:
-    """Author Grasp's permanent health gain after each accepted proc."""
-    if keystone_name != "Grasp of the Undying":
-        return
-    effect = rune_effects.resolve_keystone("Grasp of the Undying")
-    if not isinstance(effect, rune_effects.KeystoneGraspEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
-    )
-    if holder is None:
-        return
-    proc_events = sorted(
-        (
-            event
-            for event in outgoing.get(holder.participant_id, [])
-            if str(event.get("source_key", "")) == effect.breakdown_key
-        ),
+def _aery_support_templates(
+    attacker: Combatant,
+    result: Mapping[str, Any],
+    trigger_effects: Iterable[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Turn the first accepted ally heal or shield signal into Aery's shield."""
+    if str(result.get("keystone", "")) != "Summon Aery":
+        return []
+    effect = rune_effects.resolve_keystone("Summon Aery")
+    if not isinstance(effect, rune_effects.KeystoneAeryEffect):
+        return []
+    stats = result.get("champion_stats", attacker.stats)
+    if not isinstance(stats, Mapping):
+        raise ValueError(
+            f"Summon Aery support receipt for {attacker.participant_id} "
+            "is missing participant stats"
+        )
+    templates: list[dict[str, Any]] = []
+    ready_at = 0.0
+    ordered = sorted(
+        (event for event in trigger_effects if isinstance(event, Mapping)),
         key=lambda event: (
             float(event.get("time", 0.0) or 0.0),
-            int(event.get("sequence", 0) or 0),
+            0 if str(event.get("target", "")) != attacker.participant_id else 1,
             str(event.get("_event_id", "")),
         ),
     )
-    seen: set[float] = set()
-    bonus_health = effect.bonus_health(bool(holder.stats.get("is_melee", True)))
-    for event in proc_events:
-        trigger_time = float(event.get("time", 0.0) or 0.0)
-        if trigger_time in seen:
+    for trigger_index, trigger in enumerate(ordered):
+        if str(trigger.get("kind", "")) not in {"heal", "shield"}:
             continue
-        seen.add(trigger_time)
-        trigger_id = str(event.get("_event_id", ""))
-        activation_time = trigger_time + 1e-9
-        candidate = {
-            "time": activation_time,
-            "kind": "stat_buff",
-            "amount": 0.0,
-            "source": "Grasp of the Undying · Permanent health",
-            "source_key": "rune_Grasp of the Undying",
-            "attacker": holder.participant_id,
-            "target": holder.participant_id,
-            "target_scope": "self",
-            "target_policy": "self",
-            "sequence": int(event.get("sequence", 0) or 0),
-            "event_precision": "exact",
-            "bonus_health": bonus_health,
-            "_grasp_permanent_health": True,
-            "_reactive": True,
-            "_priority": 1.0,
-            "_event_id": f"{holder.participant_id}:grasp:{trigger_id}",
-            "_trigger_event_id": trigger_id,
-            "grasp_bonus_health": bonus_health,
-        }
-        candidate["_sk"] = _action_key(
-            activation_time, 1.0, holder.participant_id, candidate
+        try:
+            trigger_time = float(trigger.get("time", 0.0) or 0.0)
+            trigger_amount = float(trigger.get("amount", 0.0) or 0.0)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Summon Aery trigger for {attacker.participant_id} "
+                "has invalid time or amount"
+            ) from exc
+        if not math.isfinite(trigger_time) or not math.isfinite(trigger_amount):
+            raise ValueError(
+                f"Summon Aery trigger for {attacker.participant_id} "
+                "has non-finite time or amount"
+            )
+        if (
+            trigger_amount <= 0.0 and not callable(trigger.get("amount_formula"))
+        ) or trigger_time < ready_at:
+            continue
+        target = str(trigger.get("target", ""))
+        if not target:
+            raise ValueError(
+                f"Summon Aery trigger for {attacker.participant_id} "
+                "is missing its resolved target"
+            )
+        source_event_id = str(
+            trigger.get(
+                "_event_id", f"{attacker.participant_id}:support:{trigger_index}"
+            )
         )
-        support_effects[holder.participant_id].append(candidate)
-
-
-def _apply_item_support_selection(
-    attacker: Combatant,
-    template: Mapping[str, Any],
-    all_actors: list[Combatant],
-) -> dict[str, Any]:
-    """Apply an authored recipient choice to a one-target item packet."""
-    kind = str(template.get("kind", ""))
-    scope = str(template.get("target_scope", ""))
-    if kind not in {"shield", "heal"} or scope not in {
-        "one_teammate",
-        "explicit_selected_ally",
-        "healed_or_shielded_ally",
-        "most_wounded_ally",
-        "nearest_most_wounded_ally",
-        "other_nearest_wounded_ally",
-    }:
-        return dict(template)
-    selected_index, selected_explicit = _support_selection(attacker, template)
-    if not selected_explicit:
-        return dict(template)
-    attacker_side = "main" if attacker.team in {"main", "ally"} else attacker.team
-    teammates = [
-        actor
-        for actor in all_actors
-        if ("main" if actor.team in {"main", "ally"} else actor.team) == attacker_side
-        and actor.participant_id != attacker.participant_id
-    ]
-    if selected_index >= len(teammates):
-        raise ValueError(
-            f"Support target index {selected_index} is outside the teammate "
-            f"roster for {attacker.participant_id} from "
-            f"{template.get('source', '')!r}"
+        templates.append(
+            {
+                "time": trigger_time + effect.shield_flight_seconds,
+                "kind": "shield",
+                "amount": effect.shield_amount(attacker.level, stats),
+                "duration": effect.shield_duration_seconds,
+                "source": "Summon Aery · Shield",
+                "source_key": "rune_Summon Aery",
+                "attacker": attacker.participant_id,
+                "target": target,
+                "target_scope": (
+                    "self"
+                    if target == attacker.participant_id
+                    else "explicit_selected_ally"
+                ),
+                "target_policy": trigger.get("target_policy", "affected_ally"),
+                "_event_id": f"{attacker.participant_id}:aery:{trigger_index}",
+                "_trigger_event_id": source_event_id,
+                "aery_trigger_source": str(trigger.get("source", "")),
+            }
         )
-    return {
-        **template,
-        "target": teammates[selected_index].participant_id,
-        "target_policy": "selected_teammate",
-    }
+        # Return travel has no fixed source duration.  The same lower-bound
+        # cadence as the offensive Aery path uses the sourced linger window.
+        ready_at = trigger_time + effect.shield_flight_seconds + effect.linger_seconds
+    return templates
 
 
 def _support_effect_templates(
@@ -1622,8 +1387,13 @@ def _support_effect_templates(
             "self_and_one_teammate",
         }:
             continue
+        resolved_heal_event = dict(heal_event)
+        if not resolved_heal_event.get("target_selection_key"):
+            resolved_heal_event["target_selection_key"] = (
+                f"heal:{resolved_heal_event.get('source', 'ability')}:{heal_index}"
+            )
         target_ids, target_policy = _support_target_ids(
-            attacker, heal_event, all_actors
+            attacker, resolved_heal_event, all_actors
         )
         raw_id = heal_event.get("_event_id") or (
             f"{attacker.participant_id}:heal:{heal_index}"
@@ -1636,7 +1406,11 @@ def _support_effect_templates(
                 continue
             templates.append(
                 {
-                    **{key: value for key, value in heal_event.items() if key != "_sk"},
+                    **{
+                        key: value
+                        for key, value in resolved_heal_event.items()
+                        if key != "_sk"
+                    },
                     # The clone is a support heal packet (like the scanner
                     # packet it replaces), so it rides the heal application
                     # phase and counts toward the attacker's healing output.
@@ -1775,6 +1549,39 @@ def _support_effect_templates(
                         "target": attacker.participant_id,
                         "_event_id": (
                             f"{attacker.participant_id}:cleanse:W:{cast_index}"
+                        ),
+                    }
+                )
+    elif champion_name == "Milio":
+        for cast_index, cast in enumerate(result.get("cast_timeline", ())):
+            if str(cast.get("slot", "")) != "R":
+                continue
+            cast_time = float(cast.get("time", 0.0))
+            group = f"{attacker.participant_id}:milio:r:{cast_index}"
+            recipients, _target_policy = _support_target_ids(
+                attacker,
+                {"target_scope": "self_and_all_teammates"},
+                all_actors,
+            )
+            for recipient_index, recipient_id in enumerate(recipients):
+                templates.append(
+                    {
+                        "kind": "cleanse",
+                        "time": cast_time,
+                        "amount": 1.0,
+                        "target_scope": "self_and_all_teammates",
+                        "target_policy": "self_and_all_selected_teammates",
+                        "cleanse_item": "Milio R",
+                        "cleanse_group": group,
+                        "cast_blocked_by_attacker_control": True,
+                        "source_key": "Milio R",
+                        "utility_kind": "cleanse",
+                        "source": "Milio R — Breath of Life",
+                        "attacker": attacker.participant_id,
+                        "target": recipient_id,
+                        "_event_id": (
+                            f"{attacker.participant_id}:cleanse:R:"
+                            f"{cast_index}:{recipient_index}"
                         ),
                     }
                 )
@@ -1921,303 +1728,6 @@ def _attach_support_effects(
         ):
             outgoing[template["attacker"]].append(packet)
             incoming[template["target"]].append(packet)
-
-
-def _utility_outcome_receipt(
-    actor: Combatant,
-    support_events: Iterable[Mapping[str, Any]],
-    outgoing_events: Iterable[Mapping[str, Any]],
-) -> dict[str, Any]:
-    """Summarise authored non-TDD outcomes without inventing a conversion.
-
-    Movement and cleanse are real event dimensions, but their units are not
-    interchangeable with healing, shielding, or damage.  Keep them as
-    separate receipts so the Utility objective can expose what was applied
-    while refusing to turn a percent/second or a cleanse count into a made-up
-    scalar score.  Item dimensions are sourced from the same full-entry
-    coverage table used by the API picker.
-    """
-    support = [
-        event
-        for event in support_events
-        if event.get("kind") != "damage"
-        if float(event.get("applied_amount", event.get("amount", 0.0)) or 0.0) > 0.0
-    ]
-    movement = [event for event in support if event.get("kind") == "movement"]
-    # A Purify cast rides a heal packet carrying the ``cleanse`` marker
-    # (kind "heal", cleanse=True); the utility panel must count it as a
-    # cleanse action alongside the dedicated kind=="cleanse" packets (P3
-    # package 3G).
-    cleanse = [
-        event
-        for event in support
-        if event.get("kind") == "cleanse" or bool(event.get("cleanse"))
-    ]
-    slow = [event for event in support if event.get("kind") == "slow"]
-    slow_resistance = [
-        event
-        for event in support
-        if event.get("kind") == "movement"
-        and event.get("slow_resist_percent") is not None
-    ]
-    # Damage modifiers ride the unfiltered stream: a multiplier-based
-    # window (Briar E charge, e.g.) carries amount=0 so the applied_amount
-    # filter above would hide it; the flat-amount reduction list below
-    # keeps the legacy ratio_seconds semantics.
-    damage_modifiers = [
-        event for event in support_events if event.get("kind") == "damage_modifier"
-    ]
-    damage_reduction = [
-        event
-        for event in damage_modifiers
-        if float(event.get("amount", 0.0) or 0.0) > 0.0
-    ]
-    economy = [event for event in support if event.get("kind") == "economy"]
-    vision = [event for event in support if event.get("kind") == "vision"]
-    # Manaflow-style resource packets are receipt-only progression events in
-    # native mana units (including the zero-amount Helping Hand boundary,
-    # which is read from the unfiltered stream so the named boundary stays
-    # visible even though it never applies to a champion target).
-    resource = [event for event in support_events if event.get("kind") == "resource"]
-    blackout = [
-        event
-        for event in support_events
-        if event.get("kind") == "vision" and bool(event.get("ward_only"))
-    ]
-    movement_speed_percent_seconds = sum(
-        abs(
-            float(
-                event.get("bonus_move_speed_percent", event.get("amount", 0.0)) or 0.0
-            )
-        )
-        * max(0.0, float(event.get("duration", 0.0) or 0.0))
-        for event in movement
-    )
-    slow_percent_seconds = sum(
-        abs(float(event.get("slow_percent", event.get("amount", 0.0)) or 0.0))
-        * max(0.0, float(event.get("duration", 0.0) or 0.0))
-        for event in slow
-    )
-    targeting = [
-        event.get("targeting")
-        for event in outgoing_events
-        if isinstance(event.get("targeting"), Mapping)
-    ]
-    secondary = [
-        row
-        for row in targeting
-        if str(row.get("kind", ""))
-        in {
-            "active_secondary",
-            "chain_lightning",
-            "chain_lightning_copied_on_hit",
-            "cleave_secondary",
-            "hydra_cleave",
-            "runaan_bolt",
-            "runaan_bolt_copied_on_hit",
-        }
-    ]
-    coverage = [item_model_coverage(item) for item in actor.items]
-    dimensions = sorted(
-        {
-            str(dimension)
-            for entry in coverage
-            for dimension in entry.get("outcome_dimensions", [])
-        }
-    )
-    applied_dimensions = set()
-    if movement:
-        applied_dimensions.add("movement")
-    if cleanse:
-        applied_dimensions.add("cleanse")
-    if slow:
-        applied_dimensions.add("slow")
-    if slow_resistance:
-        applied_dimensions.add("slow_resistance")
-    if damage_modifiers:
-        applied_dimensions.add("damage_reduction")
-    if secondary:
-        applied_dimensions.add("multi_target")
-    if economy:
-        applied_dimensions.add("economy")
-    if vision:
-        applied_dimensions.add("vision")
-    if resource:
-        applied_dimensions.add("resource")
-    if blackout:
-        applied_dimensions.add("vision")
-    return {
-        "contract": "utility_outcomes_v1",
-        "dimensions": dimensions,
-        "applied_dimensions": sorted(applied_dimensions),
-        "movement": {
-            "event_count": len(movement),
-            "speed_percent_seconds": round(movement_speed_percent_seconds, 6),
-        },
-        "cleanse": {"event_count": len(cleanse)},
-        "slow": {
-            "event_count": len(slow),
-            "percent_seconds": round(slow_percent_seconds, 6),
-        },
-        "slow_resistance": {
-            "event_count": len(slow_resistance),
-            "percent_seconds": round(
-                sum(
-                    abs(float(event.get("slow_resist_percent", 0.0) or 0.0))
-                    * max(0.0, float(event.get("duration", 0.0) or 0.0))
-                    for event in slow_resistance
-                ),
-                6,
-            ),
-        },
-        "damage_reduction": {
-            "event_count": len(damage_modifiers),
-            "ratio_seconds": round(
-                sum(
-                    max(0.0, float(event.get("amount", 0.0) or 0.0))
-                    * max(0.0, float(event.get("duration", 0.0) or 0.0))
-                    for event in damage_reduction
-                ),
-                6,
-            ),
-            "multiplier_windows": [
-                {
-                    "source": str(event.get("source", "")),
-                    "multiplier": round(float(event.get("multiplier", 1.0) or 1.0), 6),
-                    "duration": round(
-                        max(0.0, float(event.get("duration", 0.0) or 0.0)), 6
-                    ),
-                    "expires_at": round(
-                        float(event.get("time", 0.0))
-                        + max(0.0, float(event.get("duration", 0.0) or 0.0)),
-                        6,
-                    ),
-                }
-                for event in damage_modifiers
-                if float(event.get("multiplier", 1.0) or 1.0) < 1.0
-            ],
-        },
-        "economy": {
-            "event_count": len(economy),
-            "gold": round(
-                sum(
-                    float(event.get("gold_amount", event.get("amount", 0.0)) or 0.0)
-                    for event in economy
-                ),
-                6,
-            ),
-        },
-        "vision": {
-            "event_count": len(vision),
-            "ward_uses": round(
-                sum(
-                    float(event.get("ward_uses", event.get("amount", 0.0)) or 0.0)
-                    for event in vision
-                ),
-                6,
-            ),
-            "blackout": {
-                "event_count": len(blackout),
-                "trigger_windows": round(
-                    sum(
-                        float(event.get("blackout_trigger_windows", 0.0) or 0.0)
-                        for event in blackout
-                    ),
-                    6,
-                ),
-            },
-        },
-        "resource": {
-            "event_count": len(resource),
-            "bonus_mana": round(
-                sum(float(event.get("amount", 0.0) or 0.0) for event in resource),
-                6,
-            ),
-        },
-        "multi_target": {
-            "packet_count": len(secondary),
-            "allocated_packet_count": sum(
-                1 for row in secondary if row.get("allocated_target_index") is not None
-            ),
-        },
-        "scored_support_amount": round(
-            sum(
-                float(event.get("applied_amount", 0.0) or 0.0)
-                for event in support
-                if event.get("kind") not in {"economy", "vision", "resource"}
-            ),
-            6,
-        ),
-        "item_coverage": [
-            {
-                "name": entry.get("name", ""),
-                "status": entry.get("status", ""),
-                "dimensions": list(entry.get("outcome_dimensions", [])),
-                "reason": entry.get("reason", ""),
-            }
-            for entry in coverage
-            if entry.get("outcome_dimensions")
-        ],
-        "metric_note": (
-            "Movement, cleanse, economy, vision, and resource remain separate "
-            "units; no cross-unit utility score is inferred. Healing, shielding, "
-            "and applied support amounts remain event-derived values."
-        ),
-    }
-
-
-def _target_allocation_receipt(
-    public_events: Iterable[Mapping[str, Any]],
-    target_count: int,
-    breakdown_rows: Iterable[Mapping[str, Any]] = (),
-) -> dict[str, Any]:
-    """Prove roster allocation for every authored secondary-target packet."""
-    rows = [
-        event.get("targeting")
-        for event in public_events
-        if isinstance(event.get("targeting"), Mapping)
-    ]
-    rows.extend(
-        row.get("targeting")
-        for row in breakdown_rows
-        if isinstance(row.get("targeting"), Mapping)
-    )
-    for row in breakdown_rows:
-        sources = row.get("sources")
-        if not isinstance(sources, list):
-            continue
-        rows.extend(
-            source.get("targeting")
-            for source in sources
-            if isinstance(source, Mapping)
-            and isinstance(source.get("targeting"), Mapping)
-        )
-    secondary = [
-        row
-        for row in rows
-        if str(row.get("kind", ""))
-        in {
-            "active_secondary",
-            "chain_lightning",
-            "chain_lightning_copied_on_hit",
-            "cleave_secondary",
-            "hydra_cleave",
-            "runaan_bolt",
-            "runaan_bolt_copied_on_hit",
-        }
-    ]
-    missing = [row for row in secondary if row.get("allocated_target_index") is None]
-    return {
-        "contract": "ordered_roster_target_allocation_v1",
-        "target_count": max(0, int(target_count)),
-        "secondary_packet_count": len(secondary),
-        "allocated_secondary_packet_count": len(secondary) - len(missing),
-        "complete": not missing,
-        "policy": "roster_index_from_engine_targeting" if secondary else "none",
-        "unallocated_reasons": (
-            ["secondary packet is missing allocated_target_index"] if missing else []
-        ),
-    }
 
 
 def _thorns_return_damage(
@@ -2495,20 +2005,6 @@ def _grey_leveling_values(ability: Mapping[str, Any], attribute: str) -> list[fl
             if values:
                 return [float(value) for value in values]
     return []
-
-
-def _grey_rank_ratio(
-    ability: Mapping[str, Any],
-    attribute: str,
-    rank: int,
-    default: float = 0.0,
-) -> float:
-    """One rank-indexed sourced percentage (a row of 5 values)."""
-    values = _grey_leveling_values(ability, attribute)
-    if not values:
-        return default
-    index = min(max(int(rank), 1) - 1, len(values) - 1)
-    return float(values[index]) / 100.0
 
 
 def _grey_level_ratio(ability: Mapping[str, Any], attribute: str, level: int) -> float:
@@ -3462,1025 +2958,6 @@ def _simulate_survival(
     return assemble_survival_rows(states_list, combatant_list)
 
 
-class CoupledSearchContext:
-    """Reusable composition state for one coupled optimizer search.
-
-    Everything here is derived from the fixed request — the roster, the
-    fight params, and per-defensive-signature panels of compiled invariant
-    walk actions — so it must only ever be shared across evaluations of one
-    ``optimize_build`` call.  It is pure speed: force-disabling it must
-    reproduce identical results (pinned by the optimizer equivalence test).
-    """
-
-    __slots__ = (
-        "panels",
-        "roster_actors",
-        "actor_params",
-        "main_request",
-        "index_of",
-        "grievous_packs",
-        "thorns_profiles",
-        "main_pair_params",
-        "roster_pair_params",
-        "pair_id_strings",
-        "base_compiler",
-        "base_sorted",
-        "base_heal_dedup",
-        # P3 package 3S: the staged Knight's Vow redirect children for the
-        # search-invariant base panel (signature panels carry their own).
-        "kv_redirect_children",
-        "validated_roster_window",
-        # The main champion's wound-declaring sources are champion-fixed;
-        # derived once per search instead of once per evaluation.
-        "main_champion_wounds",
-        # Issue #137: set when search-invariant compilation (roster pairs or
-        # a signature panel) hit an unrepresentable transition; the compiled
-        # path is then skipped for the rest of the search.
-        "uncompilable",
-    )
-
-    def __init__(self) -> None:
-        self.panels: dict[tuple[Any, ...], "_SignaturePanel"] = {}
-        self.uncompilable = False
-        self.roster_actors: list[Combatant] | None = None
-        self.actor_params: dict[str, FightParams] = {}
-        self.main_request: Any = None
-        self.index_of: dict[str, int] = {}
-        self.grievous_packs: dict[int, dict[str, Any]] = {}
-        self.thorns_profiles: dict[int, tuple[ThornsEffect, ...]] = {}
-        self.main_pair_params: list[tuple[Combatant, FightParams]] = []
-        self.roster_pair_params: dict[tuple[str, str], FightParams] = {}
-        self.pair_id_strings: dict[str, list[str]] = defaultdict(list)
-        self.base_compiler: _WalkCompiler | None = None
-        self.base_sorted: list[tuple[Any, ...]] = []
-        self.base_heal_dedup: dict[int, dict[tuple[str, float], float]] = {}
-        self.kv_redirect_children: dict[str, Any] = {}
-        self.validated_roster_window = False
-        self.main_champion_wounds: dict[str, Any] | None = None
-
-
-class _SignaturePanel:
-    """The invariant walk actions for one main defensive signature.
-
-    ``sig`` holds only the fights into this signature (enemies into the
-    candidate main); everything signature-independent lives in the search
-    context's base compiler.  ``sorted_actions`` is the presorted merge of
-    both.  ``kv_redirect_children`` carries the staged Knight's Vow
-    redirect children for this signature (P3 package 3S).
-    """
-
-    __slots__ = ("sig", "n_actions", "sorted_actions", "kv_redirect_children")
-
-    def __init__(
-        self,
-        base_sorted: list[tuple[Any, ...]],
-        sig: _WalkCompiler,
-        kv_redirect_children: dict[str, Any] | None = None,
-    ) -> None:
-        self.sig = sig
-        self.n_actions = sig.next_aidx
-        self.kv_redirect_children = kv_redirect_children or {}
-        merged = base_sorted + sorted(sig.actions, key=itemgetter(0))
-        merged.sort(key=itemgetter(0))
-        self.sorted_actions = merged
-
-
-def _grievous_packs_for(
-    context: CoupledSearchContext, actor_i: int, profiles: tuple[Any, ...]
-) -> dict[str, Any]:
-    """Per-damage-type Grievous packs for one attacker's fixed profiles."""
-    packs = context.grievous_packs.get(actor_i)
-    if packs is None:
-        packs = {
-            damage_type: _grievous_pack(profiles, damage_type)
-            for damage_type in ("physical", "magic", "true")
-        }
-        context.grievous_packs[actor_i] = packs
-    return packs
-
-
-def _context_setup(
-    context: CoupledSearchContext,
-    params: FightParams,
-    enemies: list[ResolvedLoadout],
-    allies: list[ResolvedLoadout],
-    champion_name: str,
-    level: int,
-    pair_result_cache: dict[tuple[Any, ...], dict[str, Any]],
-    all_actors_by_index: list[Combatant],
-) -> None:
-    """Derive the search-invariant roster state on the context's first use.
-
-    Everything prebuilt here is per-pair, not per-candidate: actor and
-    target fight params (with ``enforce_resource_limits`` pre-set so the
-    engine's own forcing replace becomes a no-op), their one-time
-    ``validate_for_champion`` runs, thorns profiles, and Grievous packs.
-    """
-    if context.roster_actors is not None:
-        return
-    if not context.validated_roster_window:
-        require_roster_fight_window_support(params, enemies=enemies, allies=allies)
-        context.validated_roster_window = True
-    # Issue #137: the roster is search-invariant, so a loadout the compiled
-    # kernel cannot represent poisons the whole context.  Checked BEFORE any
-    # pair fight runs so the fallback costs nothing beyond the capability
-    # scan.  (Defense fields are already excluded by the dispatch
-    # pre-check; this covers walk-authored item mechanics.)  Warmog's Heart
-    # is exempt: the roster holder's ticks compile into the base panel
-    # below (issue #169).
-    for loadout in (*enemies, *allies):
-        item_receipt = _uncompilable_item_receipt(
-            loadout.item_data,
-            loadout_stats=loadout.stats,
-            warmog_ticks_compiled=True,
-        )
-        if item_receipt is not None:
-            raise UncompilableActionError(
-                receipt=f"roster:{loadout.champion_data.get('name', '')}:{item_receipt}",
-                source=str(loadout.champion_data.get("name", "")),
-                invariant=True,
-            )
-    ally_actors = [
-        _from_loadout(f"ally:{loadout.champion_data['name']}", "ally", loadout)
-        for loadout in allies
-    ]
-    enemy_actors = [
-        _from_loadout(f"enemy:{loadout.champion_data['name']}", "enemy", loadout)
-        for loadout in enemies
-    ]
-    context.roster_actors = [*ally_actors, *enemy_actors]
-    context.index_of = {"main": 0}
-    for offset, actor in enumerate(context.roster_actors, start=1):
-        context.index_of[actor.participant_id] = offset
-        context.actor_params[actor.participant_id] = _actor_params(params, actor)
-        context.thorns_profiles[offset] = thorns_effects(list(actor.items))
-        _grievous_packs_for(context, offset, healing_reduction_profiles(actor.items))
-    context.main_request = type(
-        "MainRequest",
-        (),
-        {
-            "role": params.role,
-            "role_quest_complete": params.role_quest_complete,
-            "ability_ranks": params.ability_ranks,
-            "champion_options": params.champion_options,
-            "support_target_selections": params.support_target_selections,
-            "cast_order": params.cast_order,
-            "item_options": params.item_options,
-        },
-    )()
-    main_params = _actor_params(
-        params,
-        Combatant(
-            participant_id="main",
-            team="main",
-            champion_data={},
-            level=0,
-            items=(),
-            stats={},
-            defenses=None,
-            request=context.main_request,
-        ),
-    )
-    context.actor_params["main"] = main_params
-    # Every pair fight carries its legacy roster-target allocation: the
-    # ordered defender lists are [*enemies] for main/ally attackers and
-    # [main, *allies] for enemy attackers, exactly like the receipt
-    # composition's attack groups.  Secondary-target item branches
-    # (cleaves, actives) price against these fields, and both paths share
-    # one pair cache, so the params must be identical (issue #169).
-    for defender_index, defender in enumerate(enemy_actors):
-        pair_params = replace(
-            main_params,
-            enforce_resource_limits=True,
-            roster_target_index=defender_index,
-            roster_target_count=len(enemy_actors),
-            **_target_overrides(defender),
-        )
-        pair_params.validate_for_champion(champion_name, level)
-        context.main_pair_params.append((defender, pair_params))
-    for attacker in context.roster_actors:
-        attacker_params = context.actor_params[attacker.participant_id]
-        attacker_params.validate_for_champion(
-            str(attacker.champion_data.get("name", "")), attacker.level
-        )
-        if attacker.team == "ally":
-            ordered_defenders = list(enumerate(enemy_actors))
-            defender_count = len(enemy_actors)
-        else:
-            ordered_defenders = [
-                (1 + position, defender)
-                for position, defender in enumerate(ally_actors)
-            ]
-            defender_count = 1 + len(ally_actors)
-        for defender_index, defender in ordered_defenders:
-            context.roster_pair_params[
-                (attacker.participant_id, defender.participant_id)
-            ] = replace(
-                attacker_params,
-                enforce_resource_limits=True,
-                roster_target_index=defender_index,
-                roster_target_count=defender_count,
-                **_target_overrides(defender),
-            )
-
-    # The signature-independent pair fights — allies into enemies, enemies
-    # into allies — compile once for the whole search.  Enemy attackers'
-    # support packets and their fights into the candidate main are
-    # signature-dependent and live in each signature's sig compiler.
-    base = _WalkCompiler(0)
-    context.base_heal_dedup = {
-        context.index_of[actor.participant_id]: {} for actor in context.roster_actors
-    }
-    support_attached: set[str] = set()
-    base_pairs = [
-        (attacker, defender) for attacker in ally_actors for defender in enemy_actors
-    ] + [(attacker, defender) for attacker in enemy_actors for defender in ally_actors]
-    # Roster position mirrors the legacy attack groups: enemies are indexed
-    # from 0 for allied attackers, while an enemy attacker's ordered
-    # defenders are [main, *allies], so the first ally sits at index 1.
-    enemy_index = {
-        defender.participant_id: index for index, defender in enumerate(enemy_actors)
-    }
-    ally_index = {
-        defender.participant_id: index for index, defender in enumerate(ally_actors)
-    }
-    for attacker, defender in base_pairs:
-        cache_key = (attacker.participant_id, defender.participant_id)
-        defender_index = (
-            enemy_index.get(defender.participant_id, 0)
-            if attacker.team == "ally"
-            else 1 + ally_index.get(defender.participant_id, -1)
-        )
-        packet = pair_result_cache.get(cache_key)
-        if packet is None:
-            packet = _pair_packet(
-                run_fight(
-                    attacker.champion_data,
-                    attacker.level,
-                    list(attacker.items),
-                    context.roster_pair_params[cache_key],
-                    validated=True,
-                ),
-                attacker.participant_id,
-                defender.participant_id,
-                defender_index,
-                champion_data=attacker.champion_data,
-            )
-            pair_result_cache[cache_key] = packet
-        attacker_i = context.index_of[attacker.participant_id]
-        base.add_packet(
-            packet,
-            attacker_i,
-            context.index_of[defender.participant_id],
-            context.grievous_packs[attacker_i],
-            params.fight_duration_seconds,
-            context.base_heal_dedup[attacker_i],
-            # An enemy attacker's ordered pair list is [main, *allies], so
-            # the legacy dedup always keeps its main-pair copy — which
-            # lives in the signature panel, not here.  Skip the ally-pair
-            # copies; the engine may price them differently per defender
-            # (issue #169, Dr. Mundo's Maximum Dosage).
-            suppress_actor_wide_heals=attacker.team == "enemy",
-        )
-        if attacker.team == "ally" and attacker.participant_id not in support_attached:
-            support_templates = packet.get("support")
-            if support_templates is None:
-                support_templates = _support_effect_templates(
-                    attacker,
-                    packet["result"],
-                    all_actors_by_index,
-                    damage_events=packet.get("events", ()),
-                    # P3 package 3K: the takedown synthesis (Cryptbloom's
-                    # Life From Death) must see the real defender so a
-                    # roster holder's kill is receipted identically to the
-                    # receipt composition (participant_timeline's per-pair
-                    # path passes target_id too).
-                    target_id=defender.participant_id,
-                )
-                packet["support"] = support_templates
-            base.add_support_templates(support_templates, attacker_i, context.index_of)
-            support_attached.add(attacker.participant_id)
-    for actor in context.roster_actors:
-        wearer_i = context.index_of[actor.participant_id]
-        profiles = context.thorns_profiles[wearer_i]
-        if not profiles:
-            continue
-        strikes = [
-            (aidx, time_value, sequence, all_actors_by_index[striker_i], striker_i)
-            for aidx, time_value, sequence, striker_i in (
-                base.auto_strikes_into.get(wearer_i, ())
-            )
-        ]
-        if strikes:
-            base.add_thorns(
-                actor,
-                wearer_i,
-                strikes,
-                profiles,
-                context.grievous_packs[wearer_i],
-                params.fight_duration_seconds,
-                "base",
-            )
-    # A roster holder's active Warmog's Heart ticks are search-invariant:
-    # author the same events the receipt walk schedules and convert them
-    # through the same typed-action constructor, once per search (issue
-    # #169).  The candidate's own Warmog still falls back per evaluation.
-    for actor in context.roster_actors:
-        actor_i = context.index_of[actor.participant_id]
-        for event in _warmog_heart_tick_events(actor, params.fight_duration_seconds):
-            base.actions.append(
-                survival_action_from_event(
-                    event,
-                    1.0,
-                    actor_i,
-                    context.index_of,
-                    subject_id=actor.participant_id,
-                )
-            )
-    # Knight's Vow (P3 package 3S): stage the receipt scheduler's Sacrifice
-    # split + holder heals onto the search-invariant base panel once.
-    kv_children: dict[str, Any] = {}
-    base_aidx = base.next_aidx
-    for kv_holder in all_actors_by_index:
-        kv_tether = resolve_knights_vow_tether(kv_holder, all_actors_by_index)
-        if kv_tether is None:
-            continue
-        base_aidx = stage_knights_vow_redirect_actions(
-            base, all_actors_by_index, kv_tether, kv_children, base_aidx
-        )
-        base_aidx = stage_knights_vow_heals(
-            base, all_actors_by_index, kv_tether, base_aidx
-        )
-    base.next_aidx = base_aidx
-    context.kv_redirect_children = kv_children
-    context.base_compiler = base
-    context.base_sorted = sorted(base.actions, key=itemgetter(0))
-
-
-def _build_signature_panel(
-    context: CoupledSearchContext,
-    main: Combatant,
-    params: FightParams,
-    pair_result_cache: dict[tuple[Any, ...], dict[str, Any]],
-    signature: tuple[Any, ...],
-    all_actors: list[Combatant],
-) -> "_SignaturePanel":
-    """Compile every roster pair fight for one main defensive signature.
-
-    Pair packets come from (or land in) the shared ``pair_result_cache``
-    with the same keys the legacy path uses, so both paths interoperate.
-    Compilation order mirrors the legacy attack-group order with the main
-    attacker's fresh pairs skipped: allies into enemies, then enemies into
-    the main and allies.
-    """
-    duration = params.fight_duration_seconds
-    base = context.base_compiler
-    assert base is not None, "context setup must precede panel builds"
-    sig = _WalkCompiler(base.next_aidx)
-    roster = context.roster_actors or []
-    enemy_actors = [actor for actor in roster if actor.team == "enemy"]
-    ally_count = sum(1 for actor in roster if actor.team == "ally")
-    for attacker in enemy_actors:
-        cache_key = (attacker.participant_id, "main", signature)
-        packet = pair_result_cache.get(cache_key)
-        if packet is None:
-            packet = _pair_packet(
-                run_fight(
-                    attacker.champion_data,
-                    attacker.level,
-                    list(attacker.items),
-                    replace(
-                        context.actor_params[attacker.participant_id],
-                        enforce_resource_limits=True,
-                        # The legacy attack group's ordered defenders for an
-                        # enemy attacker are [main, *allies] (issue #169).
-                        roster_target_index=0,
-                        roster_target_count=1 + ally_count,
-                        **_target_overrides(main),
-                    ),
-                    validated=True,
-                ),
-                attacker.participant_id,
-                "main",
-                champion_data=attacker.champion_data,
-            )
-            pair_result_cache[cache_key] = packet
-        attacker_i = context.index_of[attacker.participant_id]
-        # This main-pair packet carries the attacker's legacy-kept
-        # actor-wide heal copies (the ally-pair copies were suppressed in
-        # the base panel).  The dedup map is a per-signature copy: a sig
-        # build may never grow the shared base sets, or a key recorded by
-        # one signature would silently drop another signature's only copy.
-        sig.add_packet(
-            packet,
-            attacker_i,
-            0,
-            context.grievous_packs[attacker_i],
-            duration,
-            dict(context.base_heal_dedup.get(attacker_i) or {}),
-        )
-        support_templates = packet.get("support")
-        if support_templates is None:
-            support_templates = _support_effect_templates(
-                attacker,
-                packet["result"],
-                all_actors,
-                damage_events=packet.get("events", ()),
-                # P3 package 3K: the signature panel's packet is the
-                # enemy attacker's MAIN pair — the takedown synthesis must
-                # see that defender id.
-                target_id="main",
-            )
-            packet["support"] = support_templates
-        sig.add_support_templates(support_templates, attacker_i, context.index_of)
-    # Knight's Vow (P3 package 3S): stage the Sacrifice split onto the
-    # enemy->main actions when the MAIN is a roster holder's Worthy ally.
-    sig_children: dict[str, Any] = {}
-    sig_aidx = sig.next_aidx
-    for kv_holder in context.roster_actors:
-        kv_tether = resolve_knights_vow_tether(kv_holder, all_actors)
-        if kv_tether is None or kv_tether["target"].participant_id != "main":
-            continue
-        sig_aidx = stage_knights_vow_redirect_actions(
-            sig, all_actors, kv_tether, sig_children, sig_aidx
-        )
-    sig.next_aidx = sig_aidx
-    return _SignaturePanel(context.base_sorted, sig, kv_redirect_children=sig_children)
-
-
-def _score_with_search_context(
-    champion_data: dict[str, Any],
-    level: int,
-    items: list[dict[str, Any]],
-    params: FightParams,
-    *,
-    main_stats: dict[str, float],
-    main_defenses: Any,
-    enemies: list[ResolvedLoadout],
-    allies: list[ResolvedLoadout],
-    pair_result_cache: dict[tuple[Any, ...], dict[str, Any]],
-    context: CoupledSearchContext,
-    reuse_main_stats: bool,
-) -> dict[str, Any]:
-    """Score one candidate through the compiled panel walk.
-
-    Returns the exact score-only receipt ``build_participant_timeline``
-    would produce — same fields, same rounding, same float-addition order,
-    and the same rounded death-time cutoff on each attacker's outgoing
-    total — while compiling only the main champion's fresh outgoing
-    fights.
-    """
-    # Issue #137: a search-invariant compilation failure (roster pair or
-    # signature panel) poisons the context; every later evaluation raises
-    # immediately instead of re-attempting the compiled path.
-    if getattr(context, "uncompilable", False):
-        raise UncompilableActionError(
-            receipt="context_marked_uncompilable",
-            source=str(champion_data.get("name", "")),
-        )
-    if str(getattr(params, "keystone", "") or "") == "Guardian":
-        # Guardian's two-sided threshold window is authored after the full
-        # incoming roster ledger exists.  The score panel has no owner-side
-        # damage history, so receipt mode must own this selection.
-        raise UncompilableActionError(
-            receipt="keystone=Guardian",
-            source="Guardian",
-            invariant=True,
-        )
-    if str(getattr(params, "keystone", "") or "") == "Aftershock":
-        # Aftershock's resistance snapshot is authored after the main
-        # outgoing control ledger exists. The score panel has no trigger-id
-        # view for that self-state transition, so receipt mode owns it.
-        raise UncompilableActionError(
-            receipt="keystone=Aftershock",
-            source="Aftershock",
-            invariant=True,
-        )
-    if str(getattr(params, "keystone", "") or "") == "Glacial Augment":
-        # Glacial's ally reduction is authored after the full outgoing
-        # control ledger identifies the immobilized enemy. The score panel
-        # has no cross-participant source filter for that zone, so receipt
-        # mode owns the selection.
-        raise UncompilableActionError(
-            receipt="keystone=Glacial Augment",
-            source="Glacial Augment",
-            invariant=True,
-        )
-    if str(getattr(params, "keystone", "") or "") == "Stormraider's Surge":
-        # Stormraider's trigger scans exact post-mitigation damage windows
-        # after the main pair panel exists. The compiled panel has no
-        # target-specific event window for this utility receipt.
-        raise UncompilableActionError(
-            receipt="keystone=Stormraider's Surge",
-            source="Stormraider's Surge",
-            invariant=True,
-        )
-    if str(getattr(params, "keystone", "") or "") == "Grasp of the Undying":
-        # Grasp authors a permanent maximum-health transition after its
-        # empowered basic attack. The score panel cannot re-price later
-        # maximum-health packets from that transition, so receipt mode owns
-        # this selection.
-        raise UncompilableActionError(
-            receipt="keystone=Grasp of the Undying",
-            source="Grasp of the Undying",
-            invariant=True,
-        )
-    # The main candidate's own loadout is candidate-dependent: a failure
-    # here falls back per evaluation and never poisons the context.  Checked
-    # before any pair fight so the fallback costs only the capability scan.
-    main_item_receipt = _uncompilable_item_receipt(items)
-    if main_item_receipt is not None:
-        raise UncompilableActionError(
-            receipt=f"main:{main_item_receipt}",
-            source=str(champion_data.get("name", "")),
-        )
-    if context.roster_actors is None:
-        setup_allies = [
-            _from_loadout(f"ally:{loadout.champion_data['name']}", "ally", loadout)
-            for loadout in allies
-        ]
-        setup_enemies = [
-            _from_loadout(f"enemy:{loadout.champion_data['name']}", "enemy", loadout)
-            for loadout in enemies
-        ]
-        placeholder = Combatant(
-            participant_id="main",
-            team="main",
-            champion_data=champion_data,
-            level=level,
-            items=tuple(items),
-            stats=main_stats,
-            defenses=main_defenses,
-            request=None,
-        )
-        try:
-            _context_setup(
-                context,
-                params,
-                enemies,
-                allies,
-                str(champion_data.get("name", "")),
-                level,
-                pair_result_cache,
-                [placeholder, *setup_allies, *setup_enemies],
-            )
-        except UncompilableActionError as exc:
-            # Roster pair compilation is search-invariant: one failure means
-            # the compiled path can never be used for this search.
-            raise UncompilableActionError(
-                receipt=exc.receipt, source=exc.source, invariant=True
-            ) from exc
-    duration = params.fight_duration_seconds
-    main = Combatant(
-        participant_id="main",
-        team="main",
-        champion_data=champion_data,
-        level=level,
-        items=tuple(items),
-        stats=main_stats,
-        defenses=main_defenses,
-        request=context.main_request,
-    )
-    roster = context.roster_actors or []
-    all_actors = [main, *roster]
-    signature = _defensive_signature(main)
-    panel = context.panels.get(signature)
-    if panel is None:
-        try:
-            panel = _build_signature_panel(
-                context, main, params, pair_result_cache, signature, all_actors
-            )
-        except UncompilableActionError as exc:
-            # Signature-panel compilation is invariant per defensive
-            # signature; mark the whole context so later evaluations skip
-            # the compiled path instead of re-raising per candidate.
-            raise UncompilableActionError(
-                receipt=exc.receipt, source=exc.source, invariant=True
-            ) from exc
-        context.panels[signature] = panel
-
-    fresh = _WalkCompiler(panel.n_actions)
-    main_profiles = healing_reduction_profiles(main.items)
-    main_packs = {
-        damage_type: _grievous_pack(main_profiles, damage_type)
-        for damage_type in ("physical", "magic", "true")
-    }
-    main_champion_wounds = context.main_champion_wounds
-    if main_champion_wounds is None:
-        main_champion_wounds = {
-            str(packet.get("source_key", "")): packet
-            for packet in champion_grievous_wound_sources(main.champion_data)
-        }
-        context.main_champion_wounds = main_champion_wounds
-    reusable_stats = main.stats if reuse_main_stats else None
-    heal_dedup: dict[tuple[str, float], float] = {}
-    first_result = None
-    enemy_actors = [actor for actor in roster if actor.team == "enemy"]
-    for defender_index, (defender, pair_params) in enumerate(context.main_pair_params):
-        result = run_fight(
-            main.champion_data,
-            main.level,
-            list(main.items),
-            pair_params,
-            precomputed_stats=reusable_stats,
-            validated=True,
-            score_only=True,
-        )
-        if first_result is None:
-            first_result = result
-        # P3 package 3Q: the compiled stack machine (Force of Nature /
-        # Jak'Sho-style combat state) needs the same per-event metadata the
-        # receipt enrichment carries — the ability cast instance (so
-        # multi-packet abilities share one stack cadence) and the pair's
-        # final effective baseline resistances (so the dynamic repricing
-        # has a baseline to re-mitigate against).  Missing values stay
-        # absent: the kernel then refuses to invent a cadence or a
-        # mitigation ratio for that packet.
-        defender_stack_armed = (
-            float(getattr(defender.defenses, "force_stack_interval", 0.0) or 0.0) > 0.0
-            or float(getattr(defender.defenses, "jaksho_stack_interval", 0.0) or 0.0)
-            > 0.0
-            or bool(getattr(defender.defenses, "spell_shield_ready", False))
-        )
-        cast_timeline = result.get("cast_timeline", ())
-        baseline_fields = []
-        for field in ("effective_armor", "effective_mr"):
-            try:
-                baseline = float(result[field])
-            except (KeyError, TypeError, ValueError):
-                continue
-            if math.isfinite(baseline):
-                baseline_fields.append((f"_baseline_{field}", baseline))
-        damage_events = result.get("damage_events", [])
-        # Tuple-ledger rows (6-tuples, not dicts) cannot be enriched; a
-        # stack-armed or spell-shield-armed defender must fail closed
-        # through the compiler's metadata guards instead of crashing on
-        # ``dict(event)`` (P3 packages 3R / 3U).
-        if result.get("damage_events_tuple"):
-            damage_events = []
-        if damage_events and (baseline_fields or cast_timeline):
-            stamped_events = []
-            for event in damage_events:
-                enriched = dict(event)
-                if cast_timeline:
-                    enriched["ability_instance"] = _ability_instance_for_event(
-                        event, cast_timeline
-                    )
-                # P3 package 3U: the Annul spell-shield eligibility needs
-                # the authored-ability delivery flag (mirrors _pair_packet's
-                # enrichment); a basic attack must never consume the shield.
-                enriched["is_ability"] = _is_authored_ability_event(event)
-                if str(event.get("source_key", "")) == "auto_attacks" or bool(
-                    event.get("basic_attack")
-                ):
-                    enriched["basic_attack"] = True
-                for key, value in baseline_fields:
-                    enriched[key] = value
-                stamped_events.append(enriched)
-            result = {**result, "damage_events": stamped_events}
-        fresh.add_engine_result(
-            result,
-            "main",
-            0,
-            defender.participant_id,
-            context.index_of[defender.participant_id],
-            main_packs,
-            duration,
-            heal_dedup,
-            context.pair_id_strings[defender.participant_id],
-            defender_index,
-            champion_wounds=main_champion_wounds,
-            defender_stack_armed=defender_stack_armed,
-            defender_spell_shield_armed=bool(
-                getattr(defender.defenses, "spell_shield_ready", False)
-            ),
-        )
-    if first_result is not None:
-        # The item support scan reads per-event target/id fields that only
-        # pair enrichment adds (Black Cleaver Carve, Bloodsong), plus the
-        # first pair's takedown synthesis.  Give it the same view the
-        # receipt composition passes — a template it authors either
-        # compiles or fails closed, never silently vanishes (issue #169).
-        # A tuple-ledger fight needs none of this: the pipeline's tuple
-        # predicate excludes every event-scanning holder.
-        if first_result.get("damage_events_tuple") or not has_event_view_support_items(
-            main.items
-        ):
-            # Tuple-ledger fights carry no scannable rows by construction,
-            # and a holder with no event-view item never reads the enriched
-            # per-event copy — both scan the plain engine result.
-            support_templates = _support_effect_templates(
-                main, first_result, all_actors
-            )
-        else:
-            first_defender_id = context.main_pair_params[0][0].participant_id
-            support_scan_events = [
-                {
-                    **event,
-                    "target": first_defender_id,
-                    "_event_id": f"main:{first_defender_id}:{index}",
-                }
-                for index, event in enumerate(first_result.get("damage_events", []))
-            ]
-            support_templates = _support_effect_templates(
-                main,
-                first_result,
-                all_actors,
-                damage_events=support_scan_events,
-                target_id=first_defender_id,
-            )
-        fresh.add_support_templates(support_templates, 0, context.index_of)
-    # Thorns from this candidate's fresh strikes (enemy wearers), then the
-    # candidate's own thorns items struck by the invariant roster autos.
-    for defender in enemy_actors:
-        wearer_i = context.index_of[defender.participant_id]
-        profiles = context.thorns_profiles[wearer_i]
-        if not profiles:
-            continue
-        strikes = [
-            (aidx, time_value, sequence, main, 0)
-            for aidx, time_value, sequence, _striker_i in (
-                fresh.auto_strikes_into.get(wearer_i, ())
-            )
-        ]
-        if strikes:
-            fresh.add_thorns(
-                defender,
-                wearer_i,
-                strikes,
-                profiles,
-                context.grievous_packs[wearer_i],
-                duration,
-                "fresh",
-            )
-    main_thorns = thorns_effects(list(main.items))
-    if main_thorns:
-        strikes = [
-            (aidx, time_value, sequence, all_actors[striker_i], striker_i)
-            for aidx, time_value, sequence, striker_i in (
-                panel.sig.auto_strikes_into.get(0, ())
-            )
-        ]
-        if strikes:
-            fresh.add_thorns(
-                main, 0, strikes, main_thorns, main_packs, duration, "fresh"
-            )
-
-    # Grey-health consume heals (E8a) are compiled from the same incoming
-    # (enemy -> main, plus enemy thorns) and outgoing (main) damage actions
-    # the walk applies, with the candidate's own stats/ranks, so the
-    # compiled score walk matches the ordered receipt's fixed amounts.
-    grey_summary: dict[str, float] = {}
-    if (
-        str(champion_data.get("name", "")) in GREY_HEALTH_RULE_CHAMPIONS
-        and enemy_actors
-    ):
-        sig_actions = panel.sig.actions
-        # Auto-attack packets expose no ``raw_damage`` (the engine emits it
-        # only for authored ability hits), so the compiled rows carry a zero
-        # there; mirror the ordered ledger's ``raw_damage or damage``
-        # fallback so both paths price Mordekaiser's pre-mitigation term
-        # identically.
-        in_records = [
-            (
-                float(action.time),
-                float(action.amount),
-                (
-                    float(action.raw_damage)
-                    if float(action.raw_damage) > 0.0
-                    else float(action.amount)
-                ),
-            )
-            for action in sig_actions
-            if action.kind in (ActionKind.PLAIN_DAMAGE, ActionKind.DAMAGE)
-            and action.subject == 0
-            and float(action.time) <= duration
-        ]
-        in_records.extend(
-            (
-                float(action.time),
-                float(action.amount),
-                (
-                    float(action.raw_damage)
-                    if float(action.raw_damage) > 0.0
-                    else float(action.amount)
-                ),
-            )
-            for action in fresh.actions
-            if action.kind in (ActionKind.PLAIN_DAMAGE, ActionKind.DAMAGE)
-            and action.subject == 0
-            and float(action.time) <= duration
-        )
-        out_records = [
-            (
-                float(action.time),
-                float(action.amount),
-                (
-                    float(action.raw_damage)
-                    if float(action.raw_damage) > 0.0
-                    else float(action.amount)
-                ),
-            )
-            for action in fresh.actions
-            if action.kind in (ActionKind.PLAIN_DAMAGE, ActionKind.DAMAGE)
-            and action.attacker == 0
-            and float(action.time) <= duration
-        ]
-        main_cast_timeline = (
-            list(first_result.get("cast_timeline", []))
-            if first_result is not None
-            else []
-        )
-        grey_heals, grey_summary = _grey_health_receipts(
-            str(champion_data.get("name", "")),
-            champion_data,
-            level,
-            main.stats,
-            in_records,
-            out_records,
-            main_cast_timeline,
-            duration,
-            len(enemy_actors),
-            params.ability_ranks,
-        )
-        for index, (heal_time, source, amount) in enumerate(grey_heals):
-            aidx = fresh.next_aidx
-            fresh.next_aidx += 1
-            event_id = f"main:grey:{source}:{index}"
-            sort_key = _action_key(
-                float(heal_time),
-                1.0,
-                "main",
-                {"attacker": "main", "_event_id": event_id, "source": source},
-            )
-            fresh.actions.append(
-                SurvivalAction(
-                    sort_key=sort_key,
-                    time=float(heal_time),
-                    phase=1.0,
-                    kind=ActionKind.HEAL,
-                    subject=0,
-                    attacker=0,
-                    aidx=aidx,
-                    amount=float(amount),
-                    source_key=str(source),
-                    source=str(source),
-                    event_id=event_id,
-                )
-            )
-
-    # Knight's Vow (P3 package 3S): stage the Sacrifice holder-heals from
-    # the main's outgoing actions when the MAIN is a roster holder's Worthy
-    # ally (the redirect on the main lives in the signature panel).
-    kv_fresh_children: dict[str, Any] = {}
-    fresh_aidx = fresh.next_aidx
-    for kv_holder in all_actors:
-        kv_tether = resolve_knights_vow_tether(kv_holder, all_actors)
-        if kv_tether is None or kv_tether["target"].participant_id != "main":
-            continue
-        fresh_aidx = stage_knights_vow_heals(fresh, all_actors, kv_tether, fresh_aidx)
-    fresh.next_aidx = fresh_aidx
-
-    actions = panel.sorted_actions + sorted(fresh.actions, key=itemgetter(0))
-    actions = coalesce_darius_q_heals(actions)
-    # Sourced revives (champion passives) author one candidate per incoming
-    # damaging packet, mirroring the receipt walk's pre-walk expansion; the
-    # kernel applies the earliest one only when the participant is dead.
-    revive_actions, n_actions = revive_candidate_actions(
-        actions, all_actors, fresh.next_aidx
-    )
-    if revive_actions:
-        actions = actions + revive_actions
-    actions.sort(key=itemgetter(0))
-    # Issue #137: the score adapter arms the same canonical state dicts as
-    # the receipt walk and drives the identical kernel; the only difference
-    # is the ledger's parallel-array observation below.
-    states = build_states(all_actors)
-    ledger = ScoreLedger(
-        n_actions,
-        actions=actions,
-        index_of=context.index_of,
-    )
-    venom_packs = [
-        serpents_fang_venom(
-            list(actor.items), is_melee=bool(actor.stats.get("is_melee", True))
-        )
-        for actor in all_actors
-    ]
-    kv_redirect_children = {
-        **getattr(context, "kv_redirect_children", {}),
-        **getattr(panel, "kv_redirect_children", {}),
-        **kv_fresh_children,
-    }
-    ctx = TransitionContext(
-        duration=duration,
-        states=states,
-        combatants=all_actors,
-        index_of=context.index_of,
-        ledger=ledger,
-        venom_profiles=venom_packs,
-        redirect_children=kv_redirect_children,
-    )
-    run_survival_walk(actions, ctx)
-    finalize_states(states, duration)
-    rows_by_id = assemble_survival_rows(states, all_actors)
-    survival_rows = [rows_by_id[actor.participant_id] for actor in all_actors]
-    applied = ledger.applied
-    if grey_summary.get("source"):
-        survival_rows[0]["grey_health_stored"] = round(
-            float(grey_summary.get("grey_health_stored", 0.0)), 6
-        )
-        survival_rows[0]["grey_health_consumed"] = round(
-            float(grey_summary.get("grey_health_consumed", 0.0)), 6
-        )
-        survival_rows[0]["grey_health_source"] = str(grey_summary["source"])
-
-    count = len(all_actors)
-    base = context.base_compiler
-    support_value, healing_output = accumulate_support_values(
-        applied,
-        fresh.support_entries,
-        base.support_entries,
-        panel.sig.support_entries,
-        count,
-    )
-
-    public_breakdown = []
-    sig_damage_order = panel.sig.damage_order
-    base_damage_order = base.damage_order
-    fresh_damage_order = fresh.damage_order
-    fresh_thorns_order = fresh.thorns_order
-    base_thorns_order = base.thorns_order
-    totals = accumulate_damage_totals(
-        survival_rows,
-        applied,
-        sig_damage_order=sig_damage_order,
-        base_damage_order=base_damage_order,
-        fresh_damage_order=fresh_damage_order,
-        fresh_thorns_order=fresh_thorns_order,
-        base_thorns_order=base_thorns_order,
-        count=count,
-    )
-    for index, actor in enumerate(all_actors):
-        # Per-attacker float-sum order replays the legacy outgoing list:
-        # pair fights in defender order (enemies hit the main first, then
-        # allies), then thorns in strike order (fresh strikes precede the
-        # roster's).  One running total over the ordered parts keeps the
-        # exact same addition sequence without building a concat list.
-        # A dead attacker's total also replays the legacy cutoff against
-        # its ROUNDED death time: the walk applies an attacker's own
-        # event at the exact death instant, but the legacy sum excludes
-        # it whenever the true death time rounds down past it.
-        total = totals[index]
-        actor_survival = survival_rows[index]
-        public_breakdown.append(
-            {
-                "participant_id": actor.participant_id,
-                "team": actor.team,
-                "champion": actor.champion_data.get("name", ""),
-                "total_damage": round(float(total), 1),
-                "sources": [],
-                "outgoing_damage_before_death": round(float(total), 1),
-                "incoming_damage": round(
-                    float(actor_survival.get("health_damage", 0.0))
-                    + float(actor_survival.get("shield_absorbed", 0.0)),
-                    1,
-                ),
-                "health_damage": actor_survival.get("health_damage", 0.0),
-                "shield_absorbed": actor_survival.get("shield_absorbed", 0.0),
-                "effective_health": actor_survival.get("effective_health", 0.0),
-                "healing_received": actor_survival.get("healing_received", 0.0),
-                "healing_reduced": actor_survival.get("healing_reduced", 0.0),
-                "support_shield_received": actor_survival.get(
-                    "support_shield_received", 0.0
-                ),
-                "support_value": round(support_value[index], 1),
-                "healing_output": round(healing_output[index], 1),
-                "survived_window": bool(actor_survival.get("survived_window")),
-                "death_time": actor_survival.get("death_time"),
-            }
-        )
-    coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
-    return {
-        "duration": float(duration),
-        "participants": [
-            {
-                "participant_id": actor.participant_id,
-                "team": actor.team,
-                "champion": actor.champion_data.get("name", ""),
-                "level": actor.level,
-                "survival": survival_rows[index],
-            }
-            for index, actor in enumerate(all_actors)
-        ],
-        "breakdown": public_breakdown,
-        "timeline_coverage": combine_timeline_coverages(
-            coverage_reports,
-            target_count=len(coverage_reports),
-        ),
-    }
-
-
 def build_participant_timeline(
     champion_data: dict[str, Any],
     level: int,
@@ -4535,6 +3012,10 @@ def build_participant_timeline(
         and not include_receipt
         and pair_result_cache is not None
         and enemies
+        # The Enemy Hits constraint is enforced by the receipt walk's
+        # composition gates; rather than teach the compiled panels a second
+        # copy of that rule, flag-off scoring takes the receipt walk.
+        and params.enemies_attack
         # Issue #137: the dispatch no longer names items and no longer scans
         # defense objects — the kernel is one implementation, so a defense-
         # armed mechanic (threshold lifelines, reactive shields, stasis,
@@ -4580,6 +3061,7 @@ def build_participant_timeline(
         _from_loadout(f"enemy:{loadout.champion_data['name']}", "enemy", loadout)
         for loadout in enemies
     ]
+    enemy_attackers = [actor for actor in enemy_actors if not actor.is_practice_dummy]
     ally_actors = [
         _from_loadout(f"ally:{loadout.champion_data['name']}", "ally", loadout)
         for loadout in allies
@@ -4594,10 +3076,6 @@ def build_participant_timeline(
     incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
     healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     support_effects: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    # Fail-closed item denial receipts (Fimbulwinter Everlasting): named
-    # reasons for triggers that cannot fire (ranged_slow, mana_gate,
-    # cooldown, duplicate_instance, untyped_cc, unknown_cc_kind).  Receipts
-    # only — never applied, exposed as a public section of the timeline.
     item_denial_receipts: list[dict[str, Any]] = []
     ordered_item_support_ids: set[str] = set()
     support_attached: set[str] = set()
@@ -4615,18 +3093,20 @@ def build_participant_timeline(
     )
     coverage_reports: list[dict[str, Any]] = []
 
-    teams = {"main": [main], "ally": ally_actors, "enemy": enemy_actors}
+    teams = {"main": [main], "ally": ally_actors, "enemy": enemy_attackers}
     attack_groups = (
         ("main", [*enemy_actors]),
         ("ally", [*enemy_actors]),
-        ("enemy", [main, *ally_actors]),
+        # The Enemy Hits constraint: with enemies_attack off, the enemy team
+        # gets no defenders, so none of its pair fights are ever composed.
+        ("enemy", [main, *ally_actors] if params.enemies_attack else []),
     )
     for attacker_team, defenders in attack_groups:
         attackers = teams[attacker_team]
         for attacker in attackers:
             if not defenders:
                 continue
-            actor_params = _actor_params_with_ledger_owner(
+            actor_params = _actor_params_with_resource_restores(
                 params, attacker, _resource_restores
             )
             for defender_index, defender in enumerate(defenders):
@@ -4651,14 +3131,7 @@ def build_participant_timeline(
                 # fights instead of re-simulating them.  Fights the candidate
                 # attacks with are always recomputed.
                 cacheable = attacker.participant_id != "main"
-                if defender.participant_id == "main":
-                    cache_key = (
-                        attacker.participant_id,
-                        defender.participant_id,
-                        _defensive_signature(defender),
-                    )
-                else:
-                    cache_key = (attacker.participant_id, defender.participant_id)
+                cache_key = _pair_cache_key(attacker, defender)
                 packet = (
                     pair_result_cache.get(cache_key)
                     if cacheable and pair_result_cache is not None
@@ -4720,9 +3193,7 @@ def build_participant_timeline(
                             )
                         except (KeyError, TypeError, ValueError):
                             # An incomplete parser receipt cannot be turned
-                            # into a guessed defensive event: the shield is
-                            # dropped and the loss is receipted with a
-                            # NAMED reason (P3 package 3C), never silent.
+                            # into a guessed defensive event.
                             shield_amount = 0.0
                             shield_duration = 0.0
                             item_denial_receipts.append(
@@ -4786,15 +3257,20 @@ def build_participant_timeline(
                 if attacker.participant_id not in support_attached:
                     support_templates = packet.get("support")
                     if support_templates is None:
+                        support_denials: list[dict[str, Any]] = []
                         support_templates = _support_effect_templates(
                             attacker,
                             result,
                             all_actors,
                             damage_events=packet.get("events", ()),
                             target_id=defender.participant_id,
-                            denial_receipts=item_denial_receipts,
+                            denial_receipts=support_denials,
                         )
                         packet["support"] = support_templates
+                        packet["support_denials"] = support_denials
+                    item_denial_receipts.extend(
+                        dict(row) for row in packet.get("support_denials", ())
+                    )
                     for template in support_templates:
                         packet_template = dict(template) if copy_templates else template
                         support_effects[template["target"]].append(packet_template)
@@ -4821,9 +3297,12 @@ def build_participant_timeline(
     # roster).  Resolve that schedule once so ally/enemy support packets are
     # not silently dropped merely because the pairwise damage loop had no row.
     for attacker in all_actors:
+        if attacker.is_practice_dummy:
+            support_attached.add(attacker.participant_id)
+            continue
         if attacker.participant_id in support_attached:
             continue
-        actor_params = _actor_params_with_ledger_owner(
+        actor_params = _actor_params_with_resource_restores(
             params, attacker, _resource_restores
         )
         fallback = run_fight(
@@ -4921,6 +3400,20 @@ def build_participant_timeline(
         support_effects,
         keystone_name=str(getattr(params, "keystone", "") or ""),
     )
+
+    if not params.enemies_attack:
+        # The Enemy Hits constraint promises exactly zero enemy damage. Enemy
+        # pair fights were never composed above; this sweep also drops every
+        # event an enemy authors reactively off our own strikes — thorns
+        # strike-backs, authored reactive packets, redirect retaliation.
+        enemy_ids = {actor.participant_id for actor in enemy_actors}
+        for ledger in (incoming, outgoing):
+            for participant_id, events in list(ledger.items()):
+                ledger[participant_id] = [
+                    event
+                    for event in events
+                    if str(event.get("attacker", "")) not in enemy_ids
+                ]
 
     # Grey-health receipts (E8a): when the main is the defender and is a
     # grey-health champion, the incoming ledger accumulates the sourced %
@@ -5074,7 +3567,7 @@ def build_participant_timeline(
         for event in events:
             attacker_id = str(event.get("attacker", ""))
             applied = float(event.get("applied_amount", 0.0))
-            if event.get("kind") in {"damage", "damage_modifier"}:
+            if event.get("kind") == "damage":
                 continue
             support_by_attacker[attacker_id] += applied
             if event.get("kind") == "heal":
@@ -5120,877 +3613,18 @@ def build_participant_timeline(
                 "death_time": actor_survival.get("death_time"),
             }
         )
-    if not include_receipt:
-        # Optimizer scoring reads only the survival rows, the per-actor
-        # damage breakdown, and the ordering receipt.  Skip the public
-        # event/healing/support serialization for the thousands of candidate
-        # evaluations that never show a timeline to anyone.
-        return {
-            "duration": float(params.fight_duration_seconds),
-            "participants": [
-                {
-                    "participant_id": actor.participant_id,
-                    "team": actor.team,
-                    "champion": actor.champion_data.get("name", ""),
-                    "level": actor.level,
-                    "survival": survival[actor.participant_id],
-                }
-                for actor in all_actors
-            ],
-            "breakdown": public_breakdown,
-            "timeline_coverage": combine_timeline_coverages(
-                coverage_reports,
-                target_count=len(coverage_reports),
-            ),
-        }
-
-    focus_row = next(
-        (
-            row
-            for row in public_breakdown
-            if row["participant_id"] == focus_participant_id
-        ),
-        None,
+    return assemble_public_receipt(
+        params=params,
+        all_actors=all_actors,
+        survival=survival,
+        support_effects=support_effects,
+        healing=healing,
+        outgoing=outgoing,
+        focus_participant_id=focus_participant_id,
+        enemy_actors=enemy_actors,
+        coverage_reports=coverage_reports,
+        include_receipt=include_receipt,
+        public_breakdown=public_breakdown,
+        support_by_attacker=support_by_attacker,
+        item_denial_receipts=item_denial_receipts,
     )
-    focus_survival = survival.get(focus_participant_id)
-    focus_support = sum(
-        float(event.get("applied_amount", 0.0))
-        for events in support_effects.values()
-        for event in events
-        if event.get("attacker") == focus_participant_id
-        and event.get("kind") != "damage_modifier"
-    )
-    focus_healing = sum(
-        float(event.get("applied_amount", 0.0))
-        for event in healing.get(focus_participant_id, [])
-    )
-    public_events = sorted(
-        (event for events in outgoing.values() for event in events),
-        key=lambda event: event.get("_sk")
-        or _action_key(
-            float(event.get("time", 0.0)),
-            0.5 if event.get("_reactive") else 0.0,
-            str(event.get("target", "")),
-            event,
-        ),
-    )
-    public_healing_events = sorted(
-        (event for events in healing.values() for event in events),
-        key=lambda event: event.get("_sk")
-        or _action_key(
-            float(event.get("time", 0.0)),
-            1.0,
-            str(event.get("attacker", "")),
-            event,
-        ),
-    )
-    public_support_events = sorted(
-        (event for events in support_effects.values() for event in events),
-        key=lambda event: (
-            float(event.get("time", 0.0)),
-            -1.0 if event.get("kind") in {"shield", "temporary_health"} else 1.0,
-            str(event.get("target", "")),
-            str(event.get("attacker", "")),
-            str(event.get("_event_id", "")),
-        ),
-    )
-    support_by_actor = {
-        actor.participant_id: [
-            event
-            for event in public_support_events
-            if event.get("attacker") == actor.participant_id
-        ]
-        for actor in all_actors
-    }
-    outgoing_by_actor = {
-        actor.participant_id: [
-            event
-            for event in public_events
-            if event.get("attacker") == actor.participant_id
-        ]
-        for actor in all_actors
-    }
-    utility_by_actor = {
-        actor.participant_id: _utility_outcome_receipt(
-            actor,
-            support_by_actor[actor.participant_id],
-            outgoing_by_actor[actor.participant_id],
-        )
-        for actor in all_actors
-    }
-    return {
-        "duration": float(params.fight_duration_seconds),
-        "participants": [
-            {
-                "participant_id": actor.participant_id,
-                "team": actor.team,
-                "champion": actor.champion_data.get("name", ""),
-                "level": actor.level,
-                "stats": dict(actor.stats),
-                "items": [item.get("name", "") for item in actor.items],
-                "survival": survival[actor.participant_id],
-            }
-            for actor in all_actors
-        ],
-        "breakdown": public_breakdown,
-        "events": [
-            {
-                "time": round(float(event.get("time", 0.0)), 3),
-                "attacker": event.get("attacker"),
-                "target": event.get("target"),
-                "source": event.get("source_key", ""),
-                "damage_type": event.get("damage_type", ""),
-                "damage": round(float(event.get("damage", 0.0)), 1),
-                "raw_damage": round(
-                    float(event.get("raw_damage", event.get("damage", 0.0))), 1
-                ),
-                "pair_damage": round(
-                    float(event.get("pair_damage", event.get("damage", 0.0))), 1
-                ),
-                "overkill": round(float(event.get("overkill", 0.0)), 1),
-                "event_precision": event.get("event_precision", "exact"),
-                **(
-                    {"cc_kind": str(event["cc_kind"])}
-                    if event.get("cc_kind") is not None
-                    else {}
-                ),
-                **(
-                    {"cc_duration": round(float(event["cc_duration"]), 3)}
-                    if event.get("cc_duration") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        "control_source_atoms": [
-                            dict(atom) for atom in event.get("control_source_atoms", [])
-                        ]
-                    }
-                    if event.get("control_source_atoms")
-                    else {}
-                ),
-                **({"damage_over_time": True} if event.get("damage_over_time") else {}),
-                **({"skillshot": True} if event.get("skillshot") else {}),
-                **({"area_damage": True} if event.get("area_damage") else {}),
-                **(
-                    {"event_id": str(event["_event_id"])}
-                    if event.get("_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger_event_id": str(event["_trigger_event_id"])}
-                    if event.get("_trigger_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"sequence": int(event["sequence"])}
-                    if event.get("sequence") is not None
-                    else {}
-                ),
-                **({"reactive": True} if event.get("_reactive") else {}),
-                **(
-                    {"spell_shield_source": str(event["spell_shield_source"])}
-                    if event.get("spell_shield_source")
-                    else {}
-                ),
-                **(
-                    {"threshold_shield_triggered": True}
-                    if event.get("threshold_shield_triggered")
-                    else {}
-                ),
-                **(
-                    {
-                        "reactive_shield_triggered": dict(
-                            event["reactive_shield_triggered"]
-                        )
-                    }
-                    if event.get("reactive_shield_triggered")
-                    else {}
-                ),
-                **(
-                    {
-                        "maw_lifeline_omnivamp_activated": round(
-                            float(event["maw_lifeline_omnivamp_activated"]), 3
-                        )
-                    }
-                    if event.get("maw_lifeline_omnivamp_activated") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        "threshold_shield_expires_at": round(
-                            float(event["threshold_shield_expires_at"]), 3
-                        )
-                    }
-                    if event.get("threshold_shield_expires_at") is not None
-                    else {}
-                ),
-                **(
-                    {"threshold_health_triggered": True}
-                    if event.get("threshold_health_triggered")
-                    else {}
-                ),
-                **(
-                    {"execute_triggered": True}
-                    if event.get("execute_triggered")
-                    else {}
-                ),
-                **(
-                    {"redirected_amount": round(float(event["_redirected_amount"]), 1)}
-                    if event.get("_redirected_amount") is not None
-                    else {}
-                ),
-                **(
-                    {"redirected_from": str(event["_redirected_from"])}
-                    if event.get("_redirected_from")
-                    else {}
-                ),
-                **(
-                    {"redirect_fraction": round(float(event["_redirect_fraction"]), 6)}
-                    if event.get("_redirect_fraction") is not None
-                    else {}
-                ),
-                **(
-                    {"redirect_source": str(event["redirect_source"])}
-                    if event.get("redirect_source")
-                    else {}
-                ),
-                **(
-                    {"redirect_pre_mitigation": True}
-                    if event.get("redirect_pre_mitigation")
-                    else {}
-                ),
-                **(
-                    {"redirect_attributed_to": str(event["redirect_attributed_to"])}
-                    if event.get("redirect_attributed_to")
-                    else {}
-                ),
-                **(
-                    {"redirect_range_units": int(event["redirect_range_units"])}
-                    if event.get("redirect_range_units") is not None
-                    else {}
-                ),
-                **(
-                    {"redirect_skipped_reason": str(event["redirect_skipped_reason"])}
-                    if event.get("redirect_skipped_reason")
-                    else {}
-                ),
-                **(
-                    {
-                        "incoming_damage_multiplier": round(
-                            float(event["incoming_damage_multiplier"]), 3
-                        )
-                    }
-                    if event.get("incoming_damage_multiplier") is not None
-                    else {}
-                ),
-                **(
-                    {"incoming_damage_source": str(event["incoming_damage_source"])}
-                    if event.get("incoming_damage_source")
-                    else {}
-                ),
-                **(
-                    {
-                        "incoming_damage_reduction": round(
-                            float(event["incoming_damage_reduction"]), 1
-                        )
-                    }
-                    if event.get("incoming_damage_reduction") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        "support_damage_multiplier": dict(
-                            event["support_damage_multiplier"]
-                        )
-                    }
-                    if event.get("support_damage_multiplier")
-                    else {}
-                ),
-                **(
-                    {
-                        "support_damage_reduction": dict(
-                            event["support_damage_reduction"]
-                        )
-                    }
-                    if event.get("support_damage_reduction")
-                    else {}
-                ),
-                **(
-                    {
-                        "support_resistance_reduction": list(
-                            event["support_resistance_reduction"]
-                        )
-                    }
-                    if event.get("support_resistance_reduction")
-                    else {}
-                ),
-                **(
-                    {"support_on_hit_magic": list(event["support_on_hit_magic"])}
-                    if event.get("support_on_hit_magic")
-                    else {}
-                ),
-                **(
-                    {"crowd_control": dict(event["crowd_control"])}
-                    if event.get("crowd_control")
-                    else {}
-                ),
-                **(
-                    {"crowd_control_blocked": dict(event["crowd_control_blocked"])}
-                    if event.get("crowd_control_blocked")
-                    else {}
-                ),
-                **(
-                    {"projectile_defense": dict(event["projectile_defense"])}
-                    if event.get("projectile_defense")
-                    else {}
-                ),
-                **(
-                    {"targeting": dict(event["targeting"])}
-                    if isinstance(event.get("targeting"), Mapping)
-                    else {}
-                ),
-                **(
-                    {"deferred_from": str(event["_deferred_from"])}
-                    if event.get("_deferred_from")
-                    else {}
-                ),
-                **(
-                    {"wound_source": str(event["_wound_source"])}
-                    if event.get("_wound_source")
-                    else {}
-                ),
-                **(
-                    {
-                        "wound_duration": round(float(event["grievous_duration"]), 3),
-                        "wound_until": round(
-                            float(
-                                event.get(
-                                    "_wound_until",
-                                    float(event.get("time", 0.0))
-                                    + float(event["grievous_duration"]),
-                                )
-                            ),
-                            3,
-                        ),
-                    }
-                    if event.get("grievous_duration") is not None
-                    else {}
-                ),
-                **(
-                    {"healing_reduction": dict(event["healing_reduction"])}
-                    if event.get("healing_reduction")
-                    else {}
-                ),
-                **(
-                    {"venom": dict(event["venom"])}
-                    if event.get("venom") is not None
-                    else {}
-                ),
-                **(
-                    {"skipped_reason": str(event["skipped_reason"])}
-                    if event.get("skipped_reason")
-                    else {}
-                ),
-                **(
-                    {"grey_health_stored": round(float(event["grey_health_stored"]), 1)}
-                    if event.get("grey_health_stored") is not None
-                    else {}
-                ),
-            }
-            for event in public_events
-        ],
-        "healing_events": [
-            {
-                "time": round(float(event.get("time", 0.0)), 3),
-                "attacker": event.get("attacker"),
-                "source": event.get("source", ""),
-                **(
-                    {"event_id": str(event["_event_id"])}
-                    if event.get("_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger_event_id": str(event["_trigger_event_id"])}
-                    if event.get("_trigger_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger_target": str(event["trigger_target"])}
-                    if event.get("trigger_target") is not None
-                    else {}
-                ),
-                "amount": round(float(event.get("amount", 0.0)), 1),
-                "raw_amount": round(
-                    float(event.get("raw_amount", event.get("amount", 0.0))), 1
-                ),
-                "applied_amount": round(
-                    float(event.get("applied_amount", event.get("amount", 0.0))), 1
-                ),
-                "overheal": round(
-                    float(
-                        event.get(
-                            "overheal",
-                            max(
-                                0.0,
-                                float(
-                                    event.get(
-                                        "reduced_amount", event.get("amount", 0.0)
-                                    )
-                                )
-                                - float(
-                                    event.get(
-                                        "applied_amount", event.get("amount", 0.0)
-                                    )
-                                ),
-                            ),
-                        )
-                    ),
-                    1,
-                ),
-                "temporary_health": round(float(event.get("temporary_health", 0.0)), 1),
-                **(
-                    {
-                        "temporary_health_expires_at": round(
-                            float(event["temporary_health_expires_at"]), 3
-                        )
-                    }
-                    if event.get("temporary_health_expires_at") is not None
-                    else {}
-                ),
-                "reduced_amount": round(
-                    float(event.get("reduced_amount", event.get("amount", 0.0))), 1
-                ),
-                "healing_reduction_factor": round(
-                    float(event.get("healing_reduction_factor", 1.0)), 3
-                ),
-                **(
-                    {"skipped_reason": str(event["skipped_reason"])}
-                    if event.get("skipped_reason")
-                    else {}
-                ),
-                **({"grey_health": True} if event.get("_grey_health") else {}),
-                **(
-                    {"spell_shield_triggered": True}
-                    if event.get("spell_shield_triggered")
-                    else {}
-                ),
-                **(
-                    {"charges": int(event["charges"])}
-                    if event.get("charges") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        "ichorshield_generated": round(
-                            float(event["ichorshield_generated"]), 1
-                        )
-                    }
-                    if event.get("ichorshield_generated") is not None
-                    else {}
-                ),
-                **(
-                    {"ichorshield_total": round(float(event["ichorshield_total"]), 1)}
-                    if event.get("ichorshield_total") is not None
-                    else {}
-                ),
-            }
-            for event in public_healing_events
-        ],
-        "item_denial_receipts": sorted(
-            (
-                {
-                    "time": round(float(event.get("time", 0.0) or 0.0), 3),
-                    "source": str(event.get("source", "")),
-                    "reason": str(event.get("reason", "")),
-                    "attacker": event.get("attacker"),
-                    "target": event.get("target"),
-                    **(
-                        {"cc_kind": str(event["cc_kind"])}
-                        if event.get("cc_kind")
-                        else {}
-                    ),
-                    **(
-                        {"event_id": str(event["event_id"])}
-                        if event.get("event_id") is not None
-                        else {}
-                    ),
-                    **(
-                        {"mana_gate_status": str(event["mana_gate_status"])}
-                        if event.get("mana_gate_status")
-                        else {}
-                    ),
-                    **(
-                        {"source_url": str(event["source_url"])}
-                        if event.get("source_url")
-                        else {}
-                    ),
-                    **(
-                        {"source_revision_id": event["source_revision_id"]}
-                        if event.get("source_revision_id") is not None
-                        else {}
-                    ),
-                    **(
-                        {"nearby_enemy_range_units": event["nearby_enemy_range_units"]}
-                        if event.get("nearby_enemy_range_units") is not None
-                        else {}
-                    ),
-                    **(
-                        {"range_center": event["range_center"]}
-                        if event.get("range_center") is not None
-                        else {}
-                    ),
-                    **(
-                        {"range_input_status": str(event["range_input_status"])}
-                        if event.get("range_input_status")
-                        else {}
-                    ),
-                    **(
-                        {"denied_component": str(event["denied_component"])}
-                        if event.get("denied_component")
-                        else {}
-                    ),
-                }
-                for event in item_denial_receipts
-            ),
-            key=lambda row: (float(row.get("time", 0.0)), str(row.get("reason", ""))),
-        ),
-        "support_events": [
-            {
-                "time": round(float(event.get("time", 0.0)), 3),
-                "attacker": event.get("attacker"),
-                "target": event.get("target"),
-                "recipient": event.get("target"),
-                **(
-                    {"event_id": str(event["_event_id"])}
-                    if event.get("_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger_event_id": str(event["_trigger_event_id"])}
-                    if event.get("_trigger_event_id") is not None
-                    else {}
-                ),
-                **(
-                    {"source_event_id": str(event["_source_event_id"])}
-                    if event.get("_source_event_id") is not None
-                    else {}
-                ),
-                "source": event.get("source", ""),
-                "kind": event.get("kind", ""),
-                "amount": round(float(event.get("amount", 0.0)), 6),
-                "raw_amount": round(
-                    float(event.get("raw_amount", event.get("amount", 0.0))), 6
-                ),
-                "applied_amount": round(
-                    float(event.get("applied_amount", event.get("amount", 0.0))), 6
-                ),
-                "reduced_amount": round(
-                    float(event.get("reduced_amount", event.get("amount", 0.0))), 6
-                ),
-                "overheal": round(
-                    float(
-                        event.get(
-                            "overheal",
-                            max(
-                                0.0,
-                                float(
-                                    event.get(
-                                        "reduced_amount", event.get("amount", 0.0)
-                                    )
-                                )
-                                - float(
-                                    event.get(
-                                        "applied_amount", event.get("amount", 0.0)
-                                    )
-                                ),
-                            ),
-                        )
-                    ),
-                    6,
-                ),
-                "healing_reduction_factor": round(
-                    float(event.get("healing_reduction_factor", 1.0)), 6
-                ),
-                "target_scope": event.get("target_scope", ""),
-                "target_policy": event.get("target_policy", ""),
-                "target_selection_key": event.get("target_selection_key", ""),
-                **(
-                    {"shield_pool": str(event["shield_pool"])}
-                    if event.get("shield_pool")
-                    else {}
-                ),
-                **(
-                    {
-                        "crowd_control_immunity_while_shield": True,
-                        "crowd_control_immunity_source": str(
-                            event.get(
-                                "crowd_control_immunity_source",
-                                event.get("source", ""),
-                            )
-                        ),
-                    }
-                    if event.get("crowd_control_immunity_while_shield")
-                    else {}
-                ),
-                **(
-                    {"source_atom": dict(event["source_atom"])}
-                    if event.get("source_atom") is not None
-                    else {}
-                ),
-                **(
-                    {"duration_atom": dict(event["duration_atom"])}
-                    if event.get("duration_atom") is not None
-                    else {}
-                ),
-                **(
-                    {"activation_delay_atom": dict(event["activation_delay_atom"])}
-                    if event.get("activation_delay_atom") is not None
-                    else {}
-                ),
-                **(
-                    {"amount_formula_atom": dict(event["amount_formula_atom"])}
-                    if event.get("amount_formula_atom") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        "source_atoms": [
-                            dict(atom) for atom in event.get("source_atoms", [])
-                        ]
-                    }
-                    if event.get("source_atoms")
-                    else {}
-                ),
-                **(
-                    {
-                        key: round(float(event[key]), 6)
-                        for key in (
-                            "bonus_attack_speed_percent",
-                            "bonus_armor",
-                            "bonus_magic_resistance",
-                            "bonus_health",
-                            "permanent_bonus_health",
-                            "on_hit_magic_damage",
-                            "ability_power",
-                            "ability_haste",
-                            "bonus_move_speed_percent",
-                            "slow_resist_percent",
-                            "slow_percent",
-                            "chain_fraction",
-                            "multiplier",
-                            "cooldown",
-                            "charges_consumed",
-                            "beam_delay",
-                            "reveal_duration",
-                            "armor_reduction_percent",
-                            "mr_reduction_percent",
-                            "stack_count",
-                            "current_mana",
-                            "mana_threshold",
-                            "nearby_enemy_count",
-                            "nearby_enemy_range_units",
-                            "requested_multi_target_multiplier",
-                            "multi_target_multiplier",
-                            "cooldown_until",
-                            "aftershock_duration",
-                            "aftershock_cooldown",
-                            "glacial_ray_count",
-                            "glacial_zone_radius_units",
-                            "glacial_zone_width_units",
-                            "glacial_zone_duration",
-                            "glacial_slow_percent",
-                            "glacial_damage_reduction_ratio",
-                            "stormraider_damage_threshold_ratio",
-                            "stormraider_damage_window_seconds",
-                            "stormraider_trigger_damage",
-                            "stormraider_target_max_health",
-                            "stormraider_cooldown_seconds",
-                            "fleet_starting_charges",
-                            "fleet_charge_cap",
-                            "fleet_move_speed_duration_seconds",
-                            "stacks_before",
-                            "stacks_after",
-                            "stacks_gained",
-                            "max_stacks",
-                            "adaptive_force",
-                            "gold_amount",
-                            "ward_uses",
-                            "quest_threshold",
-                            "minion_kills",
-                            "shield_gate_time",
-                            "activation_delay",
-                            "on_block_heal_amount",
-                            "on_block_heal_delay",
-                        )
-                        if event.get(key) is not None
-                    }
-                ),
-                **(
-                    {
-                        key: bool(event[key])
-                        for key in (
-                            "damage_reduction",
-                            "next_event_only",
-                            "all_sources",
-                            "cleanse",
-                            "persistent",
-                            "completion_granted",
-                            "requires_existing_shield",
-                            "shield_gate_assumed",
-                        )
-                        if event.get(key) is not None
-                    }
-                ),
-                # The same-time action phase the packet rides (damage 0.0,
-                # shields 0.5, heals 1.0): explicit so public receipts prove
-                # ordering (P3 package 3C).
-                **(
-                    {"priority": round(float(event["_priority"]), 6)}
-                    if event.get("_priority") is not None
-                    else {}
-                ),
-                **(
-                    {"trigger": str(event["trigger"])}
-                    if event.get("trigger") is not None
-                    else {}
-                ),
-                **(
-                    {
-                        key: str(event[key])
-                        for key in (
-                            "resistance_type",
-                            "owner",
-                            "aftershock_trigger_kind",
-                            "source_participant",
-                            "shield_gate_target",
-                            "range_assumption",
-                            "trigger_kind",
-                            "packet",
-                            "trigger_source",
-                            "source_url",
-                            "on_block_heal_source",
-                            "range_center",
-                            "range_input_status",
-                            "range_boundary_status",
-                        )
-                        if event.get(key) is not None
-                    }
-                ),
-                **(
-                    {"duration": round(float(event["duration"]), 3)}
-                    if event.get("duration") is not None
-                    else {}
-                ),
-                **(
-                    {"expires_at": round(float(event["expires_at"]), 3)}
-                    if event.get("expires_at") is not None
-                    else {}
-                ),
-                **(
-                    {"venom": dict(event["venom"])}
-                    if event.get("venom") is not None
-                    else {}
-                ),
-                **(
-                    {"guardian_triggered": dict(event["guardian_triggered"])}
-                    if event.get("guardian_triggered") is not None
-                    else {}
-                ),
-                **(
-                    {"aftershock": dict(event["aftershock"])}
-                    if event.get("aftershock") is not None
-                    else {}
-                ),
-                **(
-                    {"crowd_control_blocked": dict(event["crowd_control_blocked"])}
-                    if event.get("crowd_control_blocked") is not None
-                    else {}
-                ),
-                **(
-                    {"source_revision_id": int(event["source_revision_id"])}
-                    if event.get("source_revision_id") is not None
-                    else {}
-                ),
-                **(
-                    {"skipped_reason": str(event["skipped_reason"])}
-                    if event.get("skipped_reason")
-                    else {}
-                ),
-            }
-            for event in public_support_events
-        ],
-        "utility_outcomes": {
-            "contract": "utility_outcomes_v1",
-            "participants": {
-                actor.participant_id: utility_by_actor[actor.participant_id]
-                for actor in all_actors
-            },
-            "focus": utility_by_actor.get(focus_participant_id, {}),
-            "metric_note": (
-                "Utility dimensions are reported in their native units. The "
-                "calculator does not convert movement, cleanse, vision, or "
-                "economy into TDD or a guessed common scalar."
-            ),
-        },
-        "target_allocation": _target_allocation_receipt(
-            public_events, len(enemy_actors), public_breakdown
-        ),
-        "objective": {
-            "main_team_damage_before_death": round(
-                sum(
-                    row["total_damage"]
-                    for row in public_breakdown
-                    if row["team"] in {"main", "ally"}
-                ),
-                1,
-            ),
-            "enemy_team_damage_before_death": round(
-                sum(
-                    row["total_damage"]
-                    for row in public_breakdown
-                    if row["team"] == "enemy"
-                ),
-                1,
-            ),
-            "surviving_main_team": sum(
-                1
-                for actor in all_actors
-                if actor.team in {"main", "ally"}
-                and survival[actor.participant_id]["survived_window"]
-            ),
-            "focus_participant_id": focus_participant_id,
-            "focus_damage_before_death": round(
-                float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0,
-                1,
-            ),
-            "focus_survival": focus_survival,
-            "focus_support_value": round(focus_support, 1),
-            "focus_utility_outcomes": utility_by_actor.get(focus_participant_id, {}),
-            "focus_healing": round(focus_healing, 1),
-            "main_team_effective_health": round(
-                sum(
-                    float(survival[actor.participant_id]["effective_health"])
-                    for actor in all_actors
-                    if actor.team in {"main", "ally"}
-                ),
-                1,
-            ),
-            "enemy_team_effective_health": round(
-                sum(
-                    float(survival[actor.participant_id]["effective_health"])
-                    for actor in all_actors
-                    if actor.team == "enemy"
-                ),
-                1,
-            ),
-            "total_support_value": round(sum(support_by_attacker.values()), 1),
-            "total_healing_reduced": round(
-                sum(float(state["healing_reduced"]) for state in survival.values()),
-                1,
-            ),
-        },
-        "timeline_coverage": combine_timeline_coverages(
-            coverage_reports,
-            target_count=len(coverage_reports),
-        ),
-    }

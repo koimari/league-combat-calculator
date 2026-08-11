@@ -1376,59 +1376,6 @@ class TestBurnTimedModeUptime:
         assert actual == pytest.approx(self._expected_burn(fight, 3.5), rel=1e-6)
 
 
-class TestSheenSpellblade:
-    """Sheen is the sourced component shared by the Spellblade family."""
-
-    def test_parser_reads_cached_spellblade_values(self) -> None:
-        from src.calculator.data_fetcher import fetch_item_data
-        from src.calculator.passive_parser import parse_item_effect
-
-        parsed = parse_item_effect("Sheen", fetch_item_data())
-        assert parsed == {
-            "damage_type": "physical",
-            "base_ad_ratio": 1.0,
-            "cooldown": 1.5,
-            "weave_delay": 1.5,
-        }
-
-    def test_spellblade_compiles_and_scales_from_base_ad(self) -> None:
-        effect = resolve_damage_effects(_build("Sheen")).spellblade
-        assert effect is not None
-        assert effect.source.item_name == "Sheen"
-        assert effect.cooldown == pytest.approx(1.5)
-        assert effect.weave_delay == pytest.approx(1.5)
-        assert effect.source.raw_damage(
-            DamageInputs({"base_attack_damage": 110.0}, 18, True, 1000.0, 1000.0)
-        ) == pytest.approx(110.0)
-
-    def test_spellblade_procs_in_the_existing_timed_event_pipeline(
-        self,
-        ahri_data: dict,
-    ) -> None:
-        from src.calculator.data_fetcher import get_item_by_name
-        from src.calculator.stats import calculate_total_stats
-
-        item = get_item_by_name("Sheen")
-        items = [item]
-        stats = calculate_total_stats(ahri_data, 18, items)
-        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
-        result = calculate_fight_damage(
-            stats,
-            abilities,
-            items,
-            FightConfig(
-                target_health=3000.0,
-                target_armor=0.0,
-                target_magic_resistance=0.0,
-                fight_duration_seconds=5.0,
-                auto_attack_uptime=1.0,
-            ),
-        )
-        row = result["breakdown"]["spellblade_Sheen"]
-        assert row["count"] >= 1
-        assert row["damage_type"] == "physical"
-
-
 class TestBloodsongSpellbladeAndExposeWeakness:
     """Tests for Bloodsong's Spellblade and Expose Weakness passives."""
 
@@ -5786,6 +5733,28 @@ class TestRecurveBowSting(_FightHarness):
 
 class TestSheenSpellblade:
     """Sheen's Spellblade: 100% base AD physical on the post-cast attack."""
+
+    def test_parser_reads_cached_spellblade_values(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect("Sheen", fetch_item_data())
+        assert parsed == {
+            "damage_type": "physical",
+            "base_ad_ratio": 1.0,
+            "cooldown": 1.5,
+            "weave_delay": 1.5,
+        }
+
+    def test_spellblade_compiles_and_scales_from_base_ad(self) -> None:
+        effect = resolve_damage_effects(_build("Sheen")).spellblade
+        assert effect is not None
+        assert effect.source.item_name == "Sheen"
+        assert effect.cooldown == pytest.approx(1.5)
+        assert effect.weave_delay == pytest.approx(1.5)
+        assert effect.source.raw_damage(
+            DamageInputs({"base_attack_damage": 110.0}, 18, True, 1000.0, 1000.0)
+        ) == pytest.approx(110.0)
 
     def test_registered_with_trinity_scheduling_values(self) -> None:
         """Sheen carries the line's 1.5s cooldown that starts post-attack."""

@@ -169,3 +169,56 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+import re  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Alistar self-healing events from its authored packet."""
+    healing = []
+    p_text = " ".join(
+        effect.get("description", "")
+        for effect in _healing._ability(champion_data, "P").get("effects", [])
+    )
+    stack_match = re.search(r"At\s+(\d+)\s+stacks", p_text, flags=re.IGNORECASE)
+    stack_cap = int(stack_match.group(1)) if stack_match else 0
+    self_match = re.search(
+        r"heal(?:s|ing)? himself for\s+(\d+(?:\.\d+)?)%\s+of his " r"maximum health",
+        p_text,
+        flags=re.IGNORECASE,
+    )
+    self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
+    qw_seen = 0
+    for event in damage_events:
+        if _healing._event_source(event) not in {"Q", "W"}:
+            continue
+        if stack_cap <= 0:
+            break
+        qw_seen += 1
+        if qw_seen % stack_cap == 0:
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": self_ratio * float(champion_stats.get("health", 0.0)),
+                    "source": "Triumphant Roar",
+                    "kind": "champion_passive",
+                    **_healing._trigger_fields(event),
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Alistar", derive_self_healing)

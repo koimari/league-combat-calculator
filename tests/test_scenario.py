@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.calculator.calculate import calculate_payload
 from src.calculator.data_fetcher import get_champion
 from src.calculator.scenario import ChampionLoadout, parse_roster
 
@@ -395,3 +396,82 @@ def test_level_20_base_health_follows_the_growth_formula():
     health = get_champion("Galio")["stats"]["health"]
     expected = health["flat"] + health["perLevel"] * 19 * (0.7025 + 0.0175 * 19)
     assert loadout.stats["base_health"] == pytest.approx(expected, abs=0.5)
+
+
+def test_practice_dummy_preserves_exact_decimal_stat_overrides_and_has_no_abilities():
+    loadout = ChampionLoadout.from_request(
+        {
+            "kind": "practice_dummy",
+            "items": [],
+            "target_stats": {"armor": 85.7, "ability_power": 956},
+        },
+        field="enemies[0]",
+    ).resolve()
+
+    assert loadout.is_practice_dummy
+    assert loadout.stats["armor"] == 85.7
+    assert loadout.stats["ability_power"] == 956.0
+    assert loadout.champion_data["abilities"] == {
+        slot: [] for slot in ("P", "Q", "W", "E", "R")
+    }
+    assert loadout.public_summary()["kind"] == "practice_dummy"
+
+
+def test_practice_dummy_keeps_item_stats_when_a_field_has_no_override():
+    loadout = ChampionLoadout.from_request(
+        {
+            "kind": "practice_dummy",
+            "items": ["Rabadon's Deathcap"],
+            "target_stats": {"armor": 85.7},
+        },
+        field="enemies[0]",
+    ).resolve()
+
+    assert loadout.stats["armor"] == 85.7
+    assert loadout.stats["ability_power"] > 0
+
+
+def test_practice_dummy_is_passive_in_the_coupled_timeline():
+    payload = calculate_payload(
+        {
+            "champion": "Ziggs",
+            "level": 12,
+            "items": [],
+            "enemies": [
+                {
+                    "kind": "practice_dummy",
+                    "items": [],
+                    "target_stats": {"armor": 85.7, "ability_power": 956},
+                }
+            ],
+        }
+    )
+
+    target = payload["targets"][0]["target"]
+    assert target["stats"]["armor"] == 85.7
+    assert target["stats"]["ability_power"] == 956.0
+    assert all(
+        not str(event.get("attacker", "")).startswith("enemy:")
+        for event in payload["combat"]["events"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("target_stats", {"unknown": 1}, "unknown stat"),
+        ("target_stats", {"armor": True}, "must be a number"),
+        ("target_stats", {"ability_power": 100001}, "must be between"),
+        ("ability_ranks", {"Q": 1}, "no abilities"),
+    ],
+)
+def test_practice_dummy_rejects_unsupported_or_invalid_controls(field, value, message):
+    with pytest.raises(ValueError, match=message):
+        ChampionLoadout.from_request(
+            {"kind": "practice_dummy", field: value}, field="enemies[0]"
+        )
+
+
+def test_practice_dummy_is_restricted_to_the_enemy_roster():
+    with pytest.raises(ValueError, match="only available as an enemy"):
+        parse_roster({"allies": [{"kind": "practice_dummy"}]}, "allies", maximum=4)

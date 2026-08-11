@@ -1079,7 +1079,56 @@ def test_coupled_akali_orianna_receipt_is_bidirectional():
     )
 
 
-def test_shadowflame_packets_enter_coupled_ledger_before_target_death():
+def test_enemy_hits_off_composes_zero_enemy_damage():
+    """enemies_attack=false is the Enemy Hits constraint unchecked: the
+    coupled receipt carries no enemy-authored event at all — pair fights,
+    autos, and Thornmail strike-backs included — while the main champion's
+    own output is composed exactly as before."""
+    app.config["TESTING"] = True
+    payload = {
+        "champion": "Akali",
+        "level": 12,
+        "role": "mid",
+        "fight_mode": "time_based",
+        "fight_duration": 6,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 0.5,
+        "ability_ranks": {"Q": 3, "W": 1, "E": 2, "R": 1},
+        "enemies": [
+            {
+                "champion": "Orianna",
+                "level": 12,
+                "role": "mid",
+                "items": ["Thornmail"],
+                "ability_ranks": {"Q": 3, "W": 1, "E": 2, "R": 1},
+            }
+        ],
+    }
+    client = app.test_client()
+    on = client.post("/api/calculate", json=payload).get_json()["combat"]
+    off = client.post(
+        "/api/calculate", json={**payload, "enemies_attack": False}
+    ).get_json()["combat"]
+
+    assert any(event["attacker"] == "enemy:Orianna" for event in on["events"])
+    assert all(event["attacker"] != "enemy:Orianna" for event in off["events"])
+
+    # A never-attacking enemy either has no breakdown row at all or a zero
+    # one; it must still exist as a participant (it is being fought).
+    assert all(
+        row["total_damage"] == 0.0
+        for row in off["breakdown"]
+        if row["participant_id"] == "enemy:Orianna"
+    )
+    assert any(row["participant_id"] == "enemy:Orianna" for row in off["participants"])
+    main_row = next(row for row in off["breakdown"] if row["participant_id"] == "main")
+    assert main_row["total_damage"] > 0.0
+    main = next(row for row in off["participants"] if row["participant_id"] == "main")
+    assert main["survival"]["damage_taken"] == 0.0
+    assert main["survival"]["survived_window"] is True
+
+
+def test_enemy_hits_off_keeps_shadowflame_packets_before_target_death():
     """Cinderbloom keeps its trigger times in the coupled damage ledger."""
     app.config["TESTING"] = True
     response = app.test_client().post(
@@ -1095,14 +1144,25 @@ def test_shadowflame_packets_enter_coupled_ledger_before_target_death():
             "fight_duration": 30,
             "include_auto_attacks": True,
             "ability_ranks": {"Q": 5, "W": 3, "E": 1, "R": 2},
-            "champion_options": {"splinters": 99, "r_spheres": 3},
+            "champion_options": {"splinters": 100, "r_spheres": 3},
+            "enemies_attack": False,
             "enemies": [
                 {
                     "champion": "Ryze",
                     "level": 11,
                     "role": "mid",
                     "role_quest_complete": True,
-                    "items": ["Rod of Ages"],
+                    "items": [
+                        "Rod of Ages",
+                        "Seraph's Embrace",
+                        "Doran's Ring",
+                        "Dark Seal",
+                    ],
+                    "boots": "Chainlaced Crushers",
+                    "item_options": {
+                        "Rod of Ages": {"timeless_stacks": 3},
+                        "Dark Seal": {"glory_stacks": 5},
+                    },
                     "ability_ranks": {"Q": 5, "W": 1, "E": 3, "R": 2},
                 }
             ],
@@ -1142,6 +1202,7 @@ def test_syndra_100_stack_r_executes_in_the_coupled_timeline():
             "include_auto_attacks": False,
             "ability_ranks": {"Q": 5, "W": 3, "E": 1, "R": 2},
             "champion_options": {"splinters": 100, "r_spheres": 3},
+            "enemies_attack": False,
             "enemies": [{"champion": "Ryze", "level": 11, "items": []}],
         },
     )
@@ -5306,20 +5367,25 @@ def test_support_attributes_match_the_profile_lookup_source():
 
 
 def test_healing_rule_champions_matches_the_dispatch_source():
-    """The scoring fast path skips heal derivation via HEALING_RULE_CHAMPIONS.
+    """Every healing name has a declaration in its champion module.
 
-    A heal rule added to ``derive_self_healing``'s name dispatch without
-    extending that set would be silently skipped in scoring, so the set is
-    pinned to the dispatch branches actually present in the source.
+    The scoring fast path reads the same exported set as the public healing
+    entrypoint. A missing local declaration would make the import fail before
+    a fight can silently skip the rule.
     """
-    import inspect
-    import re as re_module
+    import importlib
 
     from src.calculator import healing
+    from src.calculator.champions import _CHAMPION_MODULES
+    from src.calculator.champions.healing_contract import ChampionHealingRule
 
-    source = inspect.getsource(healing.derive_self_healing)
-    dispatched = set(re_module.findall(r'name == "([^"]+)"', source))
-    assert dispatched == set(healing.HEALING_RULE_CHAMPIONS)
+    for name in healing.HEALING_RULE_CHAMPIONS:
+        module = importlib.import_module(
+            f"src.calculator.champions.{_CHAMPION_MODULES[name]}"
+        )
+        declaration = getattr(module, "SELF_HEALING_RULE", None)
+        assert isinstance(declaration, ChampionHealingRule)
+        assert declaration.champion_name == name
 
 
 def test_search_context_walk_matches_receipts_with_thorns_support_and_heals():

@@ -83,3 +83,42 @@ def test_cp10_10_source_receipts_are_parent_plus_all_templates():
         assert isinstance(metadata["sources"], list)
         assert len(metadata["sources"]) == 6
         assert metadata["sources"][0]["label"].endswith("parent entry")
+
+
+def test_zaahen_q_variants_select_the_matching_sourced_damage_row():
+    metadata = get_champion_options_meta("Zaahen")
+    assert [option["key"] for option in metadata["options"]] == ["q_variant"]
+
+    common = {
+        "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        "champion_stats": {
+            "attack_damage": 200.0,
+            "base_attack_damage": 100.0,
+            "bonus_attack_damage": 80.0,
+            "ability_power": 200.0,
+            "health": 2_000.0,
+            "bonus_health": 500.0,
+            "attack_speed": 1.0,
+            "move_speed": 375.0,
+        },
+    }
+    results = []
+    for variant in range(3):
+        parsed = parse_champion_abilities(
+            _champion("Zaahen"),
+            18,
+            200.0,
+            champion_options={"q_variant": variant},
+            **common,
+        )["Q"]
+        results.append(parsed)
+
+    assert [result["total_raw"] for result in results] == pytest.approx(
+        [307.0, 307.0, 157.0]
+    )
+    assert [result["parts"][0].count for result in results] == [2, 2, 1]
+    assert [result["detail"] for result in results] == [
+        "Q variant: Total Physical Damage.",
+        "Q variant: Physical Damage per Hit.",
+        "Q variant: Bonus Physical Damage.",
+    ]

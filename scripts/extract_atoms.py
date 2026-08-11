@@ -405,9 +405,6 @@ ENEMY_TOKENS = {"enemy", "enemies", "hostile"}
 # --------------------------------------------------------------------------
 # Vocabulary
 # --------------------------------------------------------------------------
-PASSIVE_MAP_FILE = VOCAB_DIR / "champion-passive-atoms.json"
-
-
 def load_passive_map() -> dict[str, list[dict]]:
     """Wiki-driven champion atom assignments for mechanics the binaries
     cannot express via SpellObject tags (form-change passives, shared-script
@@ -1092,7 +1089,6 @@ def build_report(
     total_atoms = 0
     total_unclassified = 0
     total_noise = 0
-    family_totals: dict[str, int] = {}
     champions = []
     for r in results:
         fam_counts: dict[str, int] = {}

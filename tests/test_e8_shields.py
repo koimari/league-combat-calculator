@@ -15,8 +15,6 @@ Every shield is authored through the existing ledger interface:
   invented for them.
 """
 
-import json
-
 import pytest
 
 from src.app import app

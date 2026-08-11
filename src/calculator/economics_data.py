@@ -72,8 +72,3 @@ def sourced_combine_cost(item: dict[str, Any]) -> int | None:
                 )
             return int(value)
     return None
-
-
-def sourced_exclusivity_groups() -> dict[str, list[str]]:
-    """Return the full 26.12 item-group table (21 groups)."""
-    return dict(_Tables.load().get("groups_26_12", {}))

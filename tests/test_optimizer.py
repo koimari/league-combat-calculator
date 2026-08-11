@@ -3,9 +3,9 @@
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.loadout_rules import exclusivity_groups
 from src.calculator.optimizer import (
     _evaluate_build,
-    exclusivity_groups,
     get_eligible_legendaries,
     get_eligible_boots,
     optimizer_supported_items,
@@ -1152,6 +1152,527 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
     assert result["spent_gold"] == 1000
     assert result["remaining_gold"] == 0
     assert result["is_certified_best"] is True
+
+
+def _patch_purchase_world(monkeypatch, pool, score):
+    """Point the purchase search at a synthetic pool with a scripted scorer."""
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_purchase_items", lambda _role="": list(pool)
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda _items: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._public_search_timeline_coverage",
+        lambda _audit: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._build_timeline_coverage",
+        lambda *_args, **_kwargs: {"complete": True},
+    )
+    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+
+
+def test_purchase_optimizer_fills_more_than_two_slots_when_gold_allows(monkeypatch):
+    """11k-gold-style requests must consider 3+ buys, not stop at two."""
+    wand = _purchase_item("Blasting Wand", "EPIC", 500)
+    tome = _purchase_item("Amplifying Tome", "BASIC", 500)
+    ruby = _purchase_item("Ruby Crystal", "BASIC", 500)
+
+    values = {"Blasting Wand": 100.0, "Amplifying Tome": 90.0, "Ruby Crystal": 80.0}
+
+    def score(_champion, _level, items, **_kwargs):
+        return sum(values[name] for name in {item["name"] for item in items})
+
+    _patch_purchase_world(monkeypatch, [wand, tome, ruby], score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=1500,
+        include_boots=False,
+    )
+
+    assert sorted(result["purchase_items"]) == [
+        "Amplifying Tome",
+        "Blasting Wand",
+        "Ruby Crystal",
+    ]
+    assert result["spent_gold"] == 1500
+    assert result["remaining_gold"] == 0
+    assert result["is_certified_best"] is True
+    assert result["winner_event_order_certified"] is True
+
+
+def test_purchase_optimizer_falls_back_to_local_search_beyond_the_cap(monkeypatch):
+    """A plan space above the exhaustive cap returns a best-found plan
+    instead of withholding: the value-per-gold start must prefer two
+    efficient cheap items ({Wand, Tome} = 100) over the single expensive
+    item ({Rod} = 90) that pure damage-greedy locks onto."""
+    rod = _purchase_item("Large Rod", "LEGENDARY", 1000)
+    wand = _purchase_item("Blasting Wand", "EPIC", 500)
+    tome = _purchase_item("Amplifying Tome", "BASIC", 500)
+
+    def score(_champion, _level, items, **_kwargs):
+        names = {item["name"] for item in items}
+        if "Large Rod" in names:
+            return 90.0
+        if {"Blasting Wand", "Amplifying Tome"} <= names:
+            return 100.0
+        if names & {"Blasting Wand", "Amplifying Tome"}:
+            return 75.0
+        return 0.0
+
+    _patch_purchase_world(monkeypatch, [rod, wand, tome], score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=1000,
+        include_boots=False,
+        candidate_cap=1,
+    )
+
+    assert sorted(result["purchase_items"]) == ["Amplifying Tome", "Blasting Wand"]
+    assert result["is_certified_best"] is False
+    assert result["search_guarantee"] == "purchase_local_search"
+    assert result["winner_event_order_certified"] is True
+    assert result["spent_gold"] == 1000
+
+
+def test_purchase_search_returns_best_found_when_time_budget_expires_early(
+    monkeypatch,
+):
+    """Enumeration overrunning the clock must never blank the result: the
+    scoring loop always evaluates real purchase plans before it honors the
+    deadline, so the user gets a best-found plan instead of an error."""
+    import time as time_module
+
+    wand = _purchase_item("Blasting Wand", "EPIC", 500)
+    tome = _purchase_item("Amplifying Tome", "BASIC", 500)
+
+    def score(_champion, _level, items, **_kwargs):
+        return 1.0 + 10.0 * len(items)
+
+    _patch_purchase_world(monkeypatch, [wand, tome], score)
+    from src.calculator import optimizer as optimizer_module
+
+    original_enumerate = optimizer_module._enumerate_affordable_shapes
+
+    def slow_enumerate(*args, **kwargs):
+        result = original_enumerate(*args, **kwargs)
+        time_module.sleep(0.25)
+        return result
+
+    monkeypatch.setattr(
+        "src.calculator.optimizer._enumerate_affordable_shapes", slow_enumerate
+    )
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=1000,
+        include_boots=False,
+        time_budget_ms=100,
+    )
+
+    assert result["truncated"] is True
+    assert result["purchase_items"]
+    assert result["is_certified_best"] is False
+
+
+def test_purchase_search_keeps_plans_affordable_only_through_component_credit(
+    monkeypatch,
+):
+    """Affordability pruning must price with component credit: a legendary
+    whose list price exceeds the gold is still buyable when owned components
+    cover the difference, and must win, certified."""
+    from src.calculator.economy import item_total, recipe_demand
+
+    rabadon = get_item_by_name("Rabadon's Deathcap")
+    component_ids = set(recipe_demand(rabadon))
+    assert component_ids, "fixture assumes Rabadon's Deathcap has a recipe"
+    components = [
+        item for item in get_selectable_items() if int(item["id"]) in component_ids
+    ]
+    assert components, "fixture assumes recipe components are shop items"
+    credit = sum(item_total(item) for item in components)
+    net_cost = item_total(rabadon) - credit
+    assert net_cost < item_total(rabadon)
+
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_purchase_items", lambda _role="": [rabadon]
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda _items: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._public_search_timeline_coverage",
+        lambda _audit: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._build_timeline_coverage",
+        lambda *_args, **_kwargs: {"complete": True},
+    )
+
+    def score(_champion, _level, items, **_kwargs):
+        names = {item["name"] for item in items}
+        return 100.0 if "Rabadon's Deathcap" in names else 1.0
+
+    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=net_cost,
+        locked_items=[item["name"] for item in components],
+        include_boots=False,
+    )
+
+    assert result["purchase_items"] == ["Rabadon's Deathcap"]
+    assert result["spent_gold"] == net_cost
+    assert result["is_certified_best"] is True
+
+
+def test_purchase_local_search_never_claims_exhaustive_certification(monkeypatch):
+    """A local-search run whose best plan buys nothing must not dress up as
+    a certified 'no affordable purchase' — that claim needs the exhaustive
+    walk to have actually finished."""
+    wand = _purchase_item("Blasting Wand", "EPIC", 500)
+    tome = _purchase_item("Amplifying Tome", "BASIC", 500)
+
+    def score(_champion, _level, _items, **_kwargs):
+        return 42.0
+
+    _patch_purchase_world(monkeypatch, [wand, tome], score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=1000,
+        include_boots=False,
+        candidate_cap=1,
+    )
+
+    assert result["recommendation_type"] != "no_affordable_purchase"
+    assert result["is_certified_best"] is False
+    assert result["search_guarantee"] == "purchase_local_search"
+    assert result["purchase_items"] == []
+
+
+def test_purchase_exhaustive_walk_can_hold_a_component_and_its_legendary(
+    monkeypatch,
+):
+    """Buying Thornmail then Bramble Vest keeps both; component-first buy
+    order would force the vest into the Thornmail recipe and make the
+    two-item loadout unreachable, silently narrowing the certified claim."""
+    from src.calculator.economy import item_total
+
+    vest = get_item_by_name("Bramble Vest")
+    thornmail = get_item_by_name("Thornmail")
+    gold = item_total(vest) + item_total(thornmail)
+
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_purchase_items",
+        lambda _role="": [vest, thornmail],
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda _items: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._public_search_timeline_coverage",
+        lambda _audit: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._build_timeline_coverage",
+        lambda *_args, **_kwargs: {"complete": True},
+    )
+
+    def score(_champion, _level, items, **_kwargs):
+        names = {item["name"] for item in items}
+        if {"Thornmail", "Bramble Vest"} <= names:
+            return 100.0
+        if "Thornmail" in names:
+            return 50.0
+        return 10.0
+
+    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=gold,
+        include_boots=False,
+    )
+
+    assert sorted(result["items"]) == ["Bramble Vest", "Thornmail"]
+    assert result["spent_gold"] == gold
+    assert result["is_certified_best"] is True
+
+
+def test_purchase_non_improving_buys_are_reported_as_keep_gold(monkeypatch):
+    """Affordable items that don't improve the objective are not 'no
+    affordable purchase' — the honest certified answer is keep-your-gold."""
+    wand = _purchase_item("Blasting Wand", "EPIC", 500)
+    tome = _purchase_item("Amplifying Tome", "BASIC", 500)
+
+    def score(_champion, _level, _items, **_kwargs):
+        return 42.0
+
+    _patch_purchase_world(monkeypatch, [wand, tome], score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=1000,
+        include_boots=False,
+    )
+
+    assert result["recommendation_type"] == "keep_gold"
+    assert result["purchase_items"] == []
+    assert result["is_certified_best"] is True
+
+
+def test_purchase_below_cheapest_item_is_no_affordable_purchase(monkeypatch):
+    """Gold below every price is the one state that may claim
+    no_affordable_purchase, and it stays certified."""
+    wand = _purchase_item("Blasting Wand", "EPIC", 500)
+
+    def score(_champion, _level, _items, **_kwargs):
+        return 42.0
+
+    _patch_purchase_world(monkeypatch, [wand], score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=100,
+        include_boots=False,
+    )
+
+    assert result["recommendation_type"] == "no_affordable_purchase"
+    assert result["is_certified_best"] is True
+
+
+def test_coupled_scorer_prefers_faster_kill_over_bystander_tankiness():
+    """When two builds both kill the roster inside the window, damage ties
+    at the victim's health.  The scorer must then prefer the faster kill,
+    not the tankier buyer — the EHP tie-break alone let a Damage-objective
+    search recommend Warmog's Armor on Syndra because every killing build
+    tied and tankiness decided the winner."""
+    from src.calculator.scenario import parse_scenario_request, resolve_scenario
+
+    payload = {
+        "champion": "Syndra",
+        "level": 16,
+        "role": "mid",
+        "ability_ranks": {"Q": 5, "W": 4, "E": 4, "R": 3},
+        "enemies": [{"champion": "Jhin", "level": 18}],
+        "enemies_attack": False,
+        "fight_mode": "time_based",
+        "fight_duration": 10,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 0,
+        "auto_attack_uptime_mode": "calculated",
+        "include_actives": True,
+    }
+    request = parse_scenario_request(payload, deterministic=True, parse_crossover=False)
+    resolved = resolve_scenario(request)
+
+    def coupled_score(names):
+        from src.calculator.participant_timeline import CoupledSearchContext
+
+        items = [get_item_by_name(name) for name in names]
+        audit = {
+            "evaluations": 0,
+            "partial_evaluations": 0,
+            "excluded_evaluations": 0,
+            "exact_sources": set(),
+            "coarse_sources": set(),
+            "excluded_sources": set(),
+            "build_coverages": {},
+            "withheld_builds": {},
+        }
+        context = {
+            "enemies": list(resolved.enemies),
+            "allies": [],
+            "pair_result_cache": {},
+            "score_memo": {},
+            "search_context": CoupledSearchContext(),
+        }
+        return _evaluate_build(
+            resolved.champion_data,
+            16,
+            items,
+            fight_params=resolved.fight_params,
+            objective="total_damage",
+            timeline_audit=audit,
+            require_complete_timeline=True,
+            combat_context=context,
+        )
+
+    fast_kill = coupled_score(
+        ["Actualizer", "Rabadon's Deathcap", "Shadowflame", "Stormsurge"]
+    )
+    tanky_kill = coupled_score(
+        ["Actualizer", "Spear of Shojin", "Warmog's Armor", "Winter's Approach"]
+    )
+
+    assert int(fast_kill) == int(tanky_kill), "both builds must cap at the kill"
+    assert fast_kill > tanky_kill
+
+
+def test_purchase_greedy_first_slot_is_argmax_even_when_deadline_expired(
+    monkeypatch,
+):
+    """A search whose budget was eaten upstream must still recommend the
+    best single buy, not the first pool item that beat the baseline — the
+    regression that recommended Overlord's Bloodmail on Syndra."""
+    # The weak item sorts first (LEGENDARY before EPIC), so a first-improving
+    # shortcut would buy it; only a full argmax scan finds the strong one.
+    weak = _purchase_item("Large Rod", "LEGENDARY", 500)
+    strong = _purchase_item("Blasting Wand", "EPIC", 500)
+    values = {"Large Rod": 10.0, "Blasting Wand": 30.0}
+
+    def score(_champion, _level, items, **_kwargs):
+        return sum(values.get(item["name"], 0.0) for item in items) + 1.0
+
+    _patch_purchase_world(monkeypatch, [weak, strong], score)
+    monkeypatch.setattr(
+        "src.calculator.optimizer._PurchaseSearch.expired", lambda self: True
+    )
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=500,
+        include_boots=False,
+    )
+
+    assert result["purchase_items"] == ["Blasting Wand"]
+    assert result["truncated"] is True
+
+
+def test_purchase_winner_receipt_still_reports_incomplete_combine(monkeypatch):
+    """Search pricing may skip the shop-wide combine scan for speed, but the
+    winning plan's receipt must still carry an honest incomplete_combine
+    flag (buying Ruby Crystal completes the owned Thornmail component set)."""
+    from src.calculator.economy import item_total
+
+    ruby = get_item_by_name("Ruby Crystal")
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_purchase_items", lambda _role="": [ruby]
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda _items: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._public_search_timeline_coverage",
+        lambda _audit: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._build_timeline_coverage",
+        lambda *_args, **_kwargs: {"complete": True},
+    )
+
+    def score(_champion, _level, items, **_kwargs):
+        names = [item["name"] for item in items]
+        return 10.0 * names.count("Ruby Crystal") + 1.0
+
+    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=item_total(ruby),
+        locked_items=["Bramble Vest", "Chain Vest"],
+        include_boots=False,
+    )
+
+    assert result["purchase_items"] == ["Ruby Crystal"]
+    assert result["incomplete_combine"] is True
+
+
+def test_purchase_never_recommends_duplicate_items(monkeypatch):
+    """The economy model reviews some components as stackable, but manual
+    builds and /api/calculate reject all duplicates — a recommendation the
+    app then refuses to display is broken end to end (the double-Kindlegem
+    regression)."""
+    kindlegem = get_item_by_name("Kindlegem")
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_purchase_items", lambda _role="": [kindlegem]
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda _items: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._public_search_timeline_coverage",
+        lambda _audit: {"complete": True},
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer._build_timeline_coverage",
+        lambda *_args, **_kwargs: {"complete": True},
+    )
+
+    def score(_champion, _level, items, **_kwargs):
+        return 10.0 * len(items) + 1.0
+
+    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=5000,
+        include_boots=False,
+    )
+
+    assert result["purchase_items"] == ["Kindlegem"]
+    assert len(result["items"]) == len(set(result["items"]))
+
+
+def test_purchase_reserves_the_boots_slot_when_boots_are_enabled(monkeypatch):
+    """With boots enabled the UI holds one slot for them, so a purchase
+    plan may fill at most five ordinary slots — a six-item no-boots plan
+    silently loses its sixth item in the interface."""
+    pool = [
+        _purchase_item(name, "EPIC", 500)
+        for name in (
+            "Blasting Wand",
+            "Amplifying Tome",
+            "Ruby Crystal",
+            "Aether Wisp",
+            "Large Rod",
+            "Doran's Ring",
+        )
+    ]
+
+    def score(_champion, _level, items, **_kwargs):
+        return 10.0 * len(items) + 1.0
+
+    _patch_purchase_world(monkeypatch, pool, score)
+    result = optimize_purchase(
+        {"name": "Test Champion"},
+        18,
+        available_gold=3000,
+        include_boots=True,
+    )
+
+    assert len(result["items"]) <= 5
 
 
 def test_purchase_price_fails_closed_with_item_and_key():

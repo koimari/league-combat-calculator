@@ -25,7 +25,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits, extract_named
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 
@@ -191,3 +191,35 @@ MODULE_COVERAGE = {
     "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Smolder self-healing events from its authored packet."""
+    healing = []
+    r = _healing._ability(champion_data, "R")
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(r, "Self Heal", r_rank, champion_stats)
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "R"
+    ):
+        _healing._heal_from_damage(
+            healing, event, r_heal, "MMOOOMMMM!", link_to_damage=False
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Smolder", derive_self_healing)

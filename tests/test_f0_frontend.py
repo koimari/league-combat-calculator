@@ -1,7 +1,6 @@
 """F0 ground-up frontend review contract tests.
 
-These tests pin the F0 redesign (see docs/frontend-review-findings.md and
-docs/frontend-design.md) without a browser:
+These tests pin the F0 redesign without a browser:
 
 * the analyst builder exists exactly once — no duplicate template ids, one
   ``.content-grid``, quick view is the visible default
@@ -75,20 +74,27 @@ def _isolate_app_config():
 
 
 def test_analyst_builder_exists_exactly_once():
-    """The analyst builder must not be duplicated in the template."""
+    """The setup rail and duel canvas each exist once in the template.
+
+    Redesign note: ``.content-grid`` (builder column + result column) became
+    ``.app-grid`` (setup rail + duel canvas). The control surface below is
+    unchanged — only its home moved.
+    """
     soup = _soup()
     # The analyst view is the only builder host (quick removed 2026-08-06).
     assert soup.select_one("#analystView") is not None
     assert soup.select_one("#quickView") is None
-    assert len(soup.select(".content-grid")) == 1
+    assert len(soup.select(".app-grid")) == 1
+    assert len(soup.select(".rail")) == 1
+    assert len(soup.select(".canvas")) == 1
     for control_id in (
         "championPicker",
         "championName",
         "statsGrid",
         "abilityRow",
         "championOptionsRow",
-        "slotsA",
-        "slotsB",
+        "duelA",
+        "duelB",
         "bisButton",
         "enemies",
         "allies",
@@ -103,6 +109,41 @@ def test_analyst_builder_exists_exactly_once():
         "stateReadout",
     ):
         assert len(soup.select(f"#{control_id}")) == 1, control_id
+
+
+def test_every_setup_step_is_a_labelled_disclosure():
+    """Each numbered rail step opens in place, and says so to assistive tech.
+    The step-head button is the accessible disclosure; the collapsed brief
+    card carries the same data-step-toggle as a large pointer target."""
+    soup = _soup()
+    heads = soup.select("button.step-toggle[data-step-toggle]")
+    assert [t["data-step-toggle"] for t in heads] == ["champion", "roster"]
+    for toggle in heads:
+        assert toggle.get("aria-expanded") == "false"
+        controls = toggle.get("aria-controls")
+        assert controls and soup.select_one(f"#{controls}") is not None
+        assert soup.select_one(f"#{controls}").has_attr("hidden")
+    briefs = soup.select(".step-brief[data-step-toggle]")
+    assert [b["data-step-toggle"] for b in briefs] == ["champion", "roster"]
+    # Every editor stays mounted while collapsed: the staleness module reads
+    # #abilityRow whether or not its step is open.
+    assert soup.select_one("#abilityRow").find_parent(class_="step-body") is not None
+
+
+def test_constraint_rows_are_labelled_disclosures():
+    soup = _soup()
+    rows = soup.select("[data-constraint-toggle]")
+    assert [r["data-constraint-toggle"] for r in rows] == [
+        "gold",
+        "objective",
+        "window",
+        "state",
+        "enemyHits",
+    ]
+    for row in rows:
+        assert row.get("aria-expanded") == "false"
+        body = soup.select_one(f"#{row['aria-controls']}")
+        assert body is not None and body.has_attr("hidden")
 
 
 def test_no_duplicate_ids_in_template():
@@ -156,29 +197,48 @@ def test_empty_champion_state_hides_dependent_controls_and_stats():
 # ---------------------------------------------------------------------------
 
 
-def test_damage_breakdown_lives_in_the_visible_result_column():
+def test_damage_breakdown_lives_in_the_visible_ledger_band():
+    """The breakdown is proof behind a deliberate expansion, on the canvas.
+
+    Redesign note: its home moved from ``.result-card`` to the event-ledger
+    band under the fight timeline. The criterion is unchanged — one instance,
+    inside the visible analyst surface, never a detached container at the
+    bottom of the page.
+    """
     soup = _soup()
     breakdown = soup.select_one("#damageBreakdown")
     assert breakdown is not None
-    # The breakdown renders inside the result card of the analyst view
-    # (renderExactBreakdown flips its own hidden attribute).  The only hidden
-    # ancestor may be the analyst view wrapper itself, never a legacy
-    # sibling container at the bottom of the page.
-    result_card = breakdown.find_parent(class_="result-card")
-    assert result_card is not None
+    assert breakdown.find_parent(class_="ledger-band") is not None
+    assert breakdown.find_parent(class_="canvas") is not None
     assert breakdown.find_parent(id="analystView") is not None
-    # The old detached placement (sibling of the hidden legacy divs) is gone:
-    # there is exactly one damageBreakdown and it is not a direct child of
-    # the analystView wrapper.
     assert len(soup.select("#damageBreakdown")) == 1
+    assert soup.select_one("#defenseReceipts").find_parent(class_="ledger-band")
 
 
-def test_engine_error_surface_lives_in_the_result_column():
+def test_event_ledger_is_a_native_disclosure_with_the_trust_legend():
+    soup = _soup()
+    band = soup.select_one("#ledgerBand")
+    assert band is not None and band.name == "details"
+    summary = band.find("summary")
+    assert summary is not None
+    assert "Open event ledger" in summary.get_text()
+    # The legend lives with the ledger header (gap ledger), not floating.
+    assert soup.select_one("#trustLegend").find_parent(class_="ledger-band")
+
+
+def test_engine_error_surface_lives_above_the_verdict():
     soup = _soup()
     error = soup.select_one("#engineError")
     assert error is not None
-    assert error.find_parent(class_="result-column") is not None
+    assert error.find_parent(class_="banners") is not None
+    assert error.find_parent(class_="canvas") is not None
     assert error.get("role") == "alert"
+    # Banners sit above the verdict strip, never below the result they qualify.
+    banners = soup.select_one(".banners")
+    verdict = soup.select_one(".verdict")
+    assert banners is not None and verdict is not None
+    order = [node for node in soup.select(".canvas > *")]
+    assert order.index(banners) < order.index(verdict)
 
 
 def test_legacy_hidden_dom_is_removed():
@@ -232,29 +292,59 @@ def test_practice_target_affordance_is_wired():
     soup = _soup()
     button = soup.select_one("#addPracticeEnemy")
     assert button is not None
-    assert "vs practice target" in button.get_text()
+    assert "vs target dummy" in button.get_text()
     source = _source()
     assert 'event.target.closest("#addPracticeEnemy")' in source
     assert "PRACTICE_TARGETS" in source
     assert "no-duplicate-champions" in source or "present.has" in source
 
 
+def test_practice_target_is_the_passive_dummy_with_exact_stat_inputs():
+    source = _source()
+    assert 'const PRACTICE_DUMMY_KIND = "practice_dummy"' in source
+    assert (
+        'const PRACTICE_DUMMY_IMAGE = "/static/img/practice-dummy-enemy.png"' in source
+    )
+    assert "data-dummy-stat" in source
+    assert "targetStatOverrides" in source
+    assert "No skills or outgoing actions" in source
+    assert (ROOT / "static" / "img" / "practice-dummy-enemy.png").is_file()
+
+
+def test_ability_variant_buttons_write_the_declared_backend_option():
+    source = _source()
+    assert 'data-ability-variant="${ability.slot}"' in source
+    assert (
+        'abilityOptionBinding(ability.slot, "ability_variants") === option.key'
+        in source
+    )
+    assert "options[option.key] = abilityInput(variantAbility.slot).variant" in source
+    assert "input.variant = Number(abilityVariantButton.dataset.value)" in source
+    assert (
+        'const variantBinding = abilityOptionBinding(ability.slot, "ability_variants")'
+        in source
+    )
+    assert "ability.variants?.length > 1 && variantBinding" in source
+    assert "legacyVariantKeys" in source
+    assert 'declared.has("hammer_stance") ? "hammer_stance" : "mega"' in source
+
+
 def test_quick_to_analyst_bridge_is_wired():
-    """Quick mode and its Open-in-Analyst bridge were removed (2026-08-06);
-    share links load directly into the analyst view."""
+    """Quick mode, its Open-in-Analyst bridge and the whole view-switching
+    layer were removed; share links load directly into the analyst view."""
     soup = _soup()
     assert soup.select_one("#quickAnalystButton") is None
     source = _source()
-    assert 'switchView("analyst")' in source
+    assert "switchView" not in source
     assert "renderSharedBuild(shareToken)" in source
 
 
 def test_shared_link_loads_into_the_analyst_view():
     """Share tokens render directly in the analyst view (product decision
-    2026-08-06) — no quick read-only card."""
+    2026-08-06) — no quick read-only card, no view switch."""
     source = _source()
     assert "renderSharedBuild(shareToken)" in source
-    assert 'switchView("analyst")' in source
+    assert "loadSharedBuildIntoAnalyst(payload)" in source
 
 
 def test_bis_hint_when_scenario_incomplete():
@@ -326,14 +416,30 @@ def test_favicon_link_present():
     assert link is not None and link.get("href")
 
 
-def test_analyst_mode_has_a_single_visible_heading():
-    """The analyst view has one page-level H1; the champion name is an H2."""
+def test_page_has_one_h1_and_a_sane_heading_order():
+    """One page-level H1, then a H2 per setup step, then the champion name.
+
+    Redesign note: the new IA has no visible page title — the rail header
+    carries the brand — so the H1 is a screen-reader landmark. The heading
+    tree must still describe the page: H1 page, H2 step, H3 champion.
+    """
     soup = _soup()
-    h1s = soup.select("#analystView h1")
+    h1s = soup.select("h1")
     assert len(h1s) == 1
-    assert h1s[0].get_text(strip=True) == "Item calculator"
+    assert "visually-hidden" in h1s[0].get("class", [])
+    assert "calculator" in h1s[0].get_text(strip=True).lower()
+    step_headings = soup.select(".step .step-head")
+    assert [h.name for h in step_headings] == ["h2", "h2"]
     champion = soup.select_one("#championName")
-    assert champion is not None and champion.name == "h2"
+    assert champion is not None and champion.name == "h3"
+
+
+def test_visually_hidden_helper_actually_hides():
+    css = _css()
+    block = css.split(".visually-hidden {")[1].split("}")[0]
+    assert "position: absolute" in block
+    assert "clip-path" in block or "clip:" in block
+    assert "width: 1px" in block
 
 
 # ---------------------------------------------------------------------------

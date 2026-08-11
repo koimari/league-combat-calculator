@@ -229,3 +229,40 @@ SOURCES = [
 ]
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Hecarim self-healing events from its authored packet."""
+    healing = []
+    w_casts = [
+        float(cast.get("time", 0.0))
+        for cast in (cast_timeline or [])
+        if cast.get("slot") == "W"
+    ]
+    if w_casts:
+        for event in damage_events:
+            event_time = float(event.get("time", 0.0))
+            if not any(
+                cast_time <= event_time <= cast_time + 4.0 for cast_time in w_casts
+            ):
+                continue
+            amount = 0.25 * max(0.0, float(event.get("damage", 0.0)))
+            _healing._heal_from_damage(healing, event, amount, "Spirit of Dread")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Hecarim", derive_self_healing)

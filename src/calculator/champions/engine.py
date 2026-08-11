@@ -95,6 +95,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "double_shot",
         "target_max_health_sensitive",
         "requires_auto_timeline_coupling",
+        "stored_damage",
         "execute_threshold_ratio",
         "execute_source",
         "detail",  # display text copied onto the ability's breakdown row

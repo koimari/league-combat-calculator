@@ -176,3 +176,42 @@ SOURCES = [
 ]
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Illaoi self-healing events from its authored packet."""
+    healing = []
+    tentacle_hits = _healing._attributed_events(
+        damage_events, lambda source, _event: source == "passive"
+    )
+    for event in tentacle_hits:
+        healing.append(
+            {
+                "time": float(event.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": lambda current_health, maximum_health: (
+                    max(0.0, maximum_health - current_health) * 0.05
+                ),
+                "source": "Prophet of an Elder God",
+                "kind": "champion_passive",
+                **_healing._trigger_fields(event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Illaoi", derive_self_healing)

@@ -31,8 +31,23 @@ _PURCHASABLE_RANKS = {BASIC, EPIC, LEGENDARY, BOOTS}
 _STACKABLE_RANKS = {BASIC}
 
 
+_ITEM_BY_ID_SOURCE: dict[str, Any] | None = None
+_ITEM_BY_ID_MEMO: dict[int, dict[str, Any]] = {}
+
+
 def _item_by_id() -> dict[int, dict[str, Any]]:
-    return {int(item_id): item for item_id, item in fetch_item_data().items()}
+    """Id-keyed view of the item cache, memoized by cache-object identity.
+
+    The optimizer prices thousands of plans per request; rebuilding this
+    mapping per call dominated enumeration.  A data refresh returns a new
+    cache object, which invalidates the memo on the next call.
+    """
+    global _ITEM_BY_ID_SOURCE, _ITEM_BY_ID_MEMO  # pylint: disable=global-statement
+    source = fetch_item_data()
+    if source is not _ITEM_BY_ID_SOURCE:
+        _ITEM_BY_ID_SOURCE = source
+        _ITEM_BY_ID_MEMO = {int(item_id): item for item_id, item in source.items()}
+    return _ITEM_BY_ID_MEMO
 
 
 def item_total(item: dict[str, Any]) -> int:
@@ -196,89 +211,37 @@ class PurchasePlan:
     final_items: list[dict[str, Any]] = field(default_factory=list)
     final_boots: dict[str, Any] | None = None
     price_rows: list[PriceRow] = field(default_factory=list)
-    gold_before: int = 0
     spend: int = 0
     refund: int = 0
     remaining: int = 0
     incomplete_combine: bool = False
 
 
-def _canonical_name(
-    inventory: dict[int, int], by_id: dict[int, dict[str, Any]]
-) -> list[str]:
-    return [
-        by_id[item_id]["name"]
-        for item_id in sorted(inventory)
-        for _ in range(inventory[item_id])
-    ]
+_COMBINABLE_ROWS_SOURCE: dict[int, dict[str, Any]] | None = None
+_COMBINABLE_ROWS: list[tuple[int, dict[int, int]]] = []
 
 
-def _complete_recipe(
-    inventory: dict[int, int],
+def _combinable_recipe_rows(
     by_id: dict[int, dict[str, Any]],
 ) -> list[tuple[int, dict[int, int]]]:
-    """Return every recipe fully satisfied by ``inventory`` (multiset)."""
-    completed: list[tuple[int, dict[int, int]]] = []
-    for item_id, item in by_id.items():
-        demand = recipe_demand(item)
-        if not demand:
-            continue
-        if all(
-            inventory.get(component_id, 0) >= count
-            for component_id, count in demand.items()
-        ):
-            completed.append((item_id, demand))
-    return completed
+    """(item_id, demand) for every purchasable, combinable recipe.
 
-
-def _cascade(
-    inventory: dict[int, int],
-    rows: list[PriceRow],
-    by_id: dict[int, dict[str, Any]],
-    policy: str,
-) -> dict[int, int]:
-    """Combine every completed recipe at zero additional cost (shop policy).
-
-    Under ``component_accumulate`` the inventory is left as components and no
-    cascade runs; the caller marks the plan incomplete_combine instead.
+    Memoized by the identity of ``by_id``: the optimizer scans the shop's
+    recipes thousands of times per request, and re-walking every item's
+    purchasability and recipe per scan dominated plan pricing.
     """
-    if policy != "shop_combine":
-        return inventory
-    guard = 0
-    while guard < len(by_id) + 1:
-        guard += 1
-        progressed = False
-        for item_id, demand in _complete_recipe(inventory, by_id):
-            item = by_id[item_id]
-            if not is_purchasable(item):
+    global _COMBINABLE_ROWS_SOURCE, _COMBINABLE_ROWS  # pylint: disable=global-statement
+    if by_id is not _COMBINABLE_ROWS_SOURCE:
+        rows = []
+        for item_id, item in by_id.items():
+            if not is_purchasable(item) or is_transformation_item(item):
                 continue
-            consumed = [
-                {
-                    "name": by_id[component_id]["name"],
-                    "count": count,
-                    "value": item_total(by_id[component_id]) * count,
-                }
-                for component_id, count in sorted(demand.items())
-            ]
-            for component_id, count in demand.items():
-                inventory[component_id] -= count
-                if inventory[component_id] <= 0:
-                    del inventory[component_id]
-            inventory[item_id] = inventory.get(item_id, 0) + 1
-            rows.append(
-                PriceRow(
-                    item=item["name"],
-                    list_price=item_total(item),
-                    components_consumed=consumed,
-                    combined_charged=0,
-                    net=0,
-                )
-            )
-            progressed = True
-            break
-        if not progressed:
-            break
-    return inventory
+            demand = recipe_demand(item)
+            if demand:
+                rows.append((item_id, demand))
+        _COMBINABLE_ROWS_SOURCE = by_id
+        _COMBINABLE_ROWS = rows
+    return _COMBINABLE_ROWS
 
 
 def combine_candidates(
@@ -290,19 +253,14 @@ def combine_candidates(
     Each candidate is ``(item_id, demand, fee)`` where fee is the real
     combine price (total minus the totals of the components it consumes).
     """
-    candidates: list[tuple[int, dict[int, int], int]] = []
-    for item_id, item in by_id.items():
-        if not is_purchasable(item) or is_transformation_item(item):
-            continue
-        demand = recipe_demand(item)
-        if not demand:
-            continue
-        if not all(
+    candidates: list[tuple[int, dict[int, int], int]] = [
+        (item_id, demand, combine_cost(by_id[item_id]))
+        for item_id, demand in _combinable_recipe_rows(by_id)
+        if all(
             inventory.get(component_id, 0) >= count
             for component_id, count in demand.items()
-        ):
-            continue
-        candidates.append((item_id, demand, combine_cost(item)))
+        )
+    ]
     candidates.sort(key=lambda row: (-row[2], row[0]))
     return candidates
 
@@ -317,6 +275,7 @@ def apply_purchase_plan(
     combine_policy: str = "shop_combine",
     role: str = "",
     role_quest_complete: bool = False,
+    flag_incomplete_combine: bool = True,
 ) -> PurchasePlan:
     """Apply a real-shop plan to the owned inventory and return the priced result.
 
@@ -349,7 +308,6 @@ def apply_purchase_plan(
     plan = PurchasePlan(
         sell_items=[item["name"] for item in (sell_items or ())],
         purchases=[item["name"] for item in buys],
-        gold_before=gold_on_hand,
     )
     remaining = gold_on_hand
     for sold in sell_items or ():
@@ -467,7 +425,14 @@ def apply_purchase_plan(
             )
         )
 
-    if combine_policy == "shop_combine" and combine_candidates(inventory, by_id):
+    # The shop-wide recipe scan is a receipt detail, not a pricing input;
+    # search pricing skips it (flag_incomplete_combine=False) and recomputes
+    # it for the winning plan via plan_incomplete_combine.
+    if (
+        flag_incomplete_combine
+        and combine_policy == "shop_combine"
+        and combine_candidates(inventory, by_id)
+    ):
         plan.incomplete_combine = True
     plan.final_items = [
         registry[item_id]
@@ -477,6 +442,12 @@ def apply_purchase_plan(
     plan.final_boots = boots
     plan.remaining = remaining
     return plan
+
+
+def plan_incomplete_combine(plan: PurchasePlan) -> bool:
+    """Recompute the incomplete_combine receipt for a priced plan's inventory."""
+    inventory = collections.Counter(int(item["id"]) for item in plan.final_items)
+    return bool(combine_candidates(inventory, _item_by_id()))
 
 
 def validate_economy_loadout(
@@ -504,9 +475,7 @@ def validate_economy_loadout(
         return
     counts = collections.Counter(names)
     for name, count in counts.items():
-        if count > 1 and not is_stackable(
-            plan.final_items[0] if False else _find_by_name(plan.final_items, name)
-        ):
+        if count > 1 and not is_stackable(_find_by_name(plan.final_items, name)):
             raise ValueError(f"{name} cannot appear {count} times in one inventory")
     equipped = ([plan.final_boots] if plan.final_boots else []) + plan.final_items
     if len(equipped) > inventory_capacity(role, role_quest_complete):

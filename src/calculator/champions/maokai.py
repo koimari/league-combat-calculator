@@ -150,3 +150,126 @@ parse_abilities = build_parser(SLOTS, "Maokai")
 SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
 REVIEW_STATUS = "reviewed_module"
+
+
+def derive_self_healing(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Resolve Sap Magic's cooldown and empowered-attack heal."""
+    del ability_damages
+    passive = _healing._ability(champion_data, "P")
+    level = max(1, int(champion_stats.get("level", 18) or 18))
+    cooldown_values: list[float] = []
+    for modifier in (passive.get("cooldown") or {}).get("modifiers", []):
+        values = modifier.get("values", [])
+        if values:
+            cooldown_values = [float(value) for value in values]
+            break
+    percentage = _healing._leveling_value(passive, "Max Health Damage", level)
+    if not cooldown_values or percentage <= 0.0:
+        return []
+    cooldown = cooldown_values[min(level - 1, len(cooldown_values) - 1)]
+    if cooldown <= 0.0:
+        return []
+
+    def sap_magic_heal(current_health: float, maximum_health: float) -> float:
+        if maximum_health <= 0.0:
+            return 0.0
+        if current_health > maximum_health * 0.95 + 1e-9:
+            return 0.0
+        return maximum_health * percentage / 100.0
+
+    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    auto_events = _healing._attributed_events(
+        damage_events, lambda source, _event: source == "auto_attacks"
+    )
+    trigger_by_time: dict[float, int] = {}
+    for cast in cast_timeline or []:
+        slot = cast.get("slot")
+        if slot not in {"Q", "W", "E", "R"}:
+            continue
+        try:
+            cast_time = float(cast.get("time", 0.0))
+        except (TypeError, ValueError):
+            continue
+        trigger_by_time[cast_time] = trigger_by_time.get(cast_time, 0) + (
+            2 if slot == "E" else 1
+        )
+    trigger_times = sorted(trigger_by_time)
+    auto_by_time: dict[float, dict[str, Any]] = {}
+    for event in auto_events:
+        auto_by_time.setdefault(round(float(event.get("time", 0.0)), 6), event)
+    auto_times = sorted(auto_by_time)
+    trigger_index = 0
+    auto_index = 0
+    cycle_start = 0.0
+    healing = []
+    while trigger_index < len(trigger_times) or auto_index < len(auto_times):
+        trigger_count = 0
+        previous_trigger = cycle_start
+        completed = None
+        while trigger_index < len(trigger_times):
+            trigger_time = trigger_times[trigger_index]
+            trigger_count += trigger_by_time[trigger_time]
+            candidate = cycle_start + cooldown - 4.0 * trigger_count
+            if candidate <= trigger_time + 1e-9:
+                earlier = (
+                    cycle_start
+                    + cooldown
+                    - 4.0 * (trigger_count - trigger_by_time[trigger_time])
+                )
+                completed = (
+                    max(previous_trigger, earlier)
+                    if earlier <= trigger_time + 1e-9
+                    else trigger_time
+                )
+                break
+            previous_trigger = trigger_time
+            trigger_index += 1
+        if completed is None:
+            completed = cycle_start + cooldown - 4.0 * trigger_count
+        if completed > duration + 1e-9:
+            break
+        while (
+            auto_index < len(auto_times) and auto_times[auto_index] < completed - 1e-9
+        ):
+            auto_index += 1
+        if auto_index >= len(auto_times):
+            break
+        proc_auto = auto_by_time[auto_times[auto_index]]
+        heal_time = float(proc_auto.get("time", 0.0)) + 0.25
+        if heal_time > duration + 1e-9:
+            break
+        healing.append(
+            {
+                "time": heal_time,
+                "amount": 0.0,
+                "amount_formula": sap_magic_heal,
+                "source": "Sap Magic",
+                "kind": "champion_passive",
+                "actor_wide": True,
+                **_healing._trigger_fields(proc_auto),
+            }
+        )
+        proc_time = float(proc_auto.get("time", 0.0))
+        while (
+            trigger_index < len(trigger_times)
+            and trigger_times[trigger_index] <= proc_time + 1e-9
+        ):
+            trigger_index += 1
+        cycle_start = proc_time
+        auto_index += 1
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+from .healing_contract import (  # pylint: disable=wrong-import-position
+    declare_healing_rule,
+)
+
+SELF_HEALING_RULE = declare_healing_rule("Maokai", derive_self_healing)

@@ -3,10 +3,13 @@ Flask==3.1.3
 gunicorn==26.0.0
 # P6 persistence: PostgreSQL via SQLAlchemy 2.x with the psycopg3 driver.
 SQLAlchemy==2.0.51
-psycopg[binary]==3.3.4
+psycopg==3.3.4
+
+# Security pin for a package preinstalled by the Python base image.
+setuptools==84.0.0
 
 # P0a managed Redis result-cache backend.
-redis==7.4.1
+redis==8.1.0
 
 # P0b error tracking (lazy import; only initialised when SENTRY_DSN is set).
 sentry-sdk==2.66.1

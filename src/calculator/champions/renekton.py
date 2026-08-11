@@ -5,7 +5,6 @@ E2 DoT fix: W (Ruthless Predator) prices 2 strikes; R (Dominus) prices
 """
 
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
 
@@ -49,3 +48,34 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Renekton self-healing events from its authored packet."""
+    healing = []
+    ability = _healing._ability(champion_data, "Q")
+    rank = _healing._rank(ability_damages, "Q")
+    amount = _healing.extract_named(
+        ability, "Champion Healing", rank, champion_stats, {}
+    )
+    for event in damage_events:
+        if _healing._event_source(event) == "Q":
+            _healing._heal_from_damage(healing, event, amount, "Cull the Meek")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Renekton", derive_self_healing)

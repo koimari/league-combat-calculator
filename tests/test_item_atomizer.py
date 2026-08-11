@@ -13,7 +13,6 @@ and add full-corpus gates: 0% silent later-position effects and a
 provenance gate over all 324 items.
 """
 
-import json
 import re
 from pathlib import Path
 
@@ -21,7 +20,6 @@ from src.calculator.atomizer import split_effect_fragments
 from src.calculator.atomizer_domains import (
     _ITEM_KEYWORDS,
     atomize_item,
-    atomize_item_catalogue,
 )
 from src.calculator.data_fetcher import fetch_item_data
 
@@ -259,7 +257,6 @@ def test_full_corpus_provenance_gate():
     items = fetch_item_data()
     assert items
     checked = 0
-    name = None
     for item in items.values():
         atoms = atomize_item(item)
         frags = _effect_fragments(item)

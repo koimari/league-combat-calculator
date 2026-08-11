@@ -15,6 +15,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
@@ -617,7 +618,7 @@ def build_packet_module(
                     )
                 else:
                     parsers.append(
-                        _no_formula_parser(
+                        no_damage_parser(
                             slot,
                             reason=str(
                                 variant.get(
@@ -696,7 +697,7 @@ def build_packet_module(
                 )
             )
         else:
-            slots[slot] = _no_formula_parser(slot)
+            slots[slot] = no_damage_parser(slot)
     parser = build_parser(slots, champion_name)
 
     def parse_abilities(*args, **kwargs):

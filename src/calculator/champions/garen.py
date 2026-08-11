@@ -170,3 +170,63 @@ SOURCES = [
 ]
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Garen self-healing events from its authored packet."""
+    healing = []
+    p = _healing._ability(champion_data, "P")
+    p_level = int(champion_stats.get("level", 0) or 0)
+    per_tick = 0.0
+    for effect in p.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") != "Max Health Damage":
+                continue
+            modifiers = leveling.get("modifiers", [])
+            if not modifiers:
+                continue
+            values = modifiers[0].get("values", [])
+            if not values:
+                continue
+            per_tick = float(values[min(max(p_level, 1) - 1, len(values) - 1)]) / 100.0
+    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    if per_tick > 0.0 and duration > 0.0:
+        tick = 0.5
+        sequence = 0
+        while tick <= duration + 1e-9:
+            healing.append(
+                {
+                    "time": tick,
+                    "amount": 0.0,
+                    "amount_formula": (
+                        lambda _current_health, maximum_health, ratio=per_tick: (
+                            maximum_health * ratio
+                        )
+                    ),
+                    "source": "Perseverance",
+                    "kind": "regen",
+                    "actor_wide": True,
+                    "requires_damage_free_seconds": 8.0,
+                    "sequence": sequence,
+                }
+            )
+            sequence += 1
+            tick += 0.5
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Garen", derive_self_healing)

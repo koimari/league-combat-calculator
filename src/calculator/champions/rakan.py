@@ -128,3 +128,43 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Rakan self-healing events from its authored packet."""
+    healing = []
+    level = max(1, int(champion_stats.get("level", 18) or 18))
+    heal = _healing.extract_named(
+        _healing._ability(champion_data, "Q"), "Heal", level, champion_stats
+    )
+    if heal > 0.0:
+        for event in _healing._attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)) + 3.0,
+                    "amount": heal,
+                    "source": "Gleaming Quill",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Rakan", derive_self_healing)

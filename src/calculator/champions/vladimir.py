@@ -387,3 +387,72 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Vladimir self-healing events from its authored packet."""
+    healing = []
+    q_rank = _healing._rank(ability_damages, "Q")
+    q_heal = _healing.extract_named(
+        _healing._ability(champion_data, "Q"), "Heal", q_rank, champion_stats
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "Q"
+    ):
+        _healing._heal_from_damage(
+            healing, event, q_heal, "Transfusion", link_to_damage=False
+        )
+    # Sanguine Pool (W): heals for 30% of pre-mitigation damage dealt
+    # (patch 12.13: "Healing increased to 30% of damage dealt from 15%";
+    # 18% against minions — champion targets assumed here).
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "W"
+    ):
+        # Pre-mitigation damage per the wiki ("30% of the pre-mitigation
+        # damage dealt"); the engine exposes it as event["raw_damage"].
+        dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        _healing._heal_from_damage(healing, event, 0.30 * dealt, "Sanguine Pool")
+    # Hemoplague (R): flat heal per infected champion, reduced for later
+    # targets (wiki: "Heal: 150 / 250 / 350 (+ 70% AP)" and
+    # "Reduced Heal: 60 / 100 / 140 (+ 28% AP)").  Each pair fight sees
+    # only its own R packet, so every copy is authored at the full value
+    # with the reduced amount attached as an explicit receipt; the
+    # coupled participant ledger re-prices later roster targets so the
+    # first infected champion pays the full heal and each additional
+    # champion pays the reduced heal.
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(
+        _healing._ability(champion_data, "R"), "Heal", r_rank, champion_stats
+    )
+    r_reduced = _healing.extract_named(
+        _healing._ability(champion_data, "R"), "Reduced Heal", r_rank, champion_stats
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "R"
+    ):
+        _healing._heal_from_damage(
+            healing,
+            event,
+            r_heal,
+            "Hemoplague",
+            later_target_amount=r_reduced,
+            link_to_damage=False,
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Vladimir", derive_self_healing)

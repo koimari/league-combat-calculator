@@ -234,6 +234,15 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
         ),
     }
 
+    if not is_main and not is_ally:
+        fields["target_stats"] = _field(
+            payload_field="target_stats",
+            state_path="targets.*.targetStats",
+            frontend_token="data-dummy-stat",
+            conditional=True,
+            availability="practice_dummy",
+        )
+
     if is_main:
         fields.update(
             {
@@ -405,6 +414,13 @@ def public_capability_contract(
             state_path="fight.aaUptimeMode",
             frontend_token="uptimeModeToggle",
         ),
+        # The Enemy Hits constraint: unchecked, enemies deal zero damage in
+        # the coupled timeline (participant_timeline owns the semantics).
+        "enemies_attack": _field(
+            payload_field="enemies_attack",
+            state_path="fight.enemiesAttack",
+            frontend_token='id="enemyHitsToggle"',
+        ),
     }
     return {
         "schema_version": CAPABILITY_SCHEMA_VERSION,
@@ -473,8 +489,3 @@ def public_capability_contract(
             },
         },
     }
-
-
-def copy_capability_contract(contract: Mapping[str, Any]) -> dict[str, Any]:
-    """Return a safe response copy for callers that may mutate JSON values."""
-    return deepcopy(dict(contract))

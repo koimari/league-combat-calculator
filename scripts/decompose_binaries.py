@@ -23,8 +23,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import sys
 from pathlib import Path
 
 LO_APP = "/Applications/League of Legends.app"
@@ -103,7 +101,6 @@ def champion_wads():
 
 
 def decompose_champions(table, out: Path) -> list[str]:
-    from league_tools import WAD
 
     done = []
     for wad_path in champion_wads():
@@ -157,7 +154,6 @@ def decompose_items(table, out: Path):
 
 
 def decompose_map11(table, out: Path):
-    import glob
 
     map_wads = list((FINAL_DIR / "Maps/Shipping").glob("*.wad.client"))
     for mw in map_wads:

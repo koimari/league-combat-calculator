@@ -1,27 +1,30 @@
 """E9 — Practice-Tool corpus verification.
 
-Every corpus scenario pinned at the CURRENT git HEAD is driven through
-``/api/calculate`` and its exact expected receipt is asserted against the
+Every active corpus scenario is driven through ``/api/calculate`` on the
+CURRENT engine and its exact expected receipt is asserted against the
 coupled combat ledger (``combat``) and the legacy aggregate response.
 
 SHA semantics
 -------------
-Each scenario stores the git HEAD it was verified at.  A scenario is only
-asserted when its ``sha`` equals the current ``git rev-parse HEAD`` — the
-legacy four scenarios (cp21-*/e0-*/vladimir-*) are pinned at older commits
-and are deliberately skipped: their expected values predate the E-series
-rework and are re-verified only after a deliberate re-capture.  This makes
-the corpus self-validating: any future engine change that breaks a pinned
-receipt also makes that scenario's ``sha`` stale, and the test starts
-failing loudly on the NEW receipt the moment the SHA is re-pinned.
+Each scenario's ``sha`` records the git HEAD its receipt was probed at —
+provenance for the audit trail, not a gate.  Receipts are asserted against
+the current engine unconditionally: an engine change that moves a receipt
+fails here with the numeric diff, and the fix is to re-probe
+``/api/calculate``, update ``expected``, and record the new ``sha`` in the
+same commit.  (An earlier design skipped every receipt and failed a
+pin-freshness meta-test whenever ``src/`` changed at all, which forced a
+re-pin commit per engine PR while deferring the actual numeric signal.)
+
+The four legacy scenarios (cp21-*/e0-*/vladimir-*) predate the E-series
+rework: their expected values are only valid at their recorded commits, so
+they are skipped until a deliberate re-capture promotes them.
 
 Every expected number below was produced by probing ``/api/calculate`` at
-the pinned commit; nothing is hand-invented (each scenario carries its
+the recorded commit; nothing is hand-invented (each scenario carries its
 formula in ``expected.formula`` for the audit trail).
 """
 
 import json
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -36,35 +39,15 @@ CORPUS_PATH = REPO_ROOT / "data" / "practice-corpus" / "scenarios.json"
 AMOUNT_ABS = 0.15
 TIME_ABS = 0.01
 
-
-def _current_head() -> str:
-    """The worktree's current git HEAD (the corpus pin target)."""
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
-
-
-def _src_tree_sha(commit: str) -> str:
-    """The ``src/`` tree object at ``commit``.
-
-    The corpus SHA pins the engine the receipt was probed at.  Because the
-    corpus commit itself only touches data/docs/tests, comparing ``src``
-    trees is the exact check: the receipt is valid iff the engine at the
-    pinned commit is byte-identical to the engine at HEAD.
-    """
-    result = subprocess.run(
-        ["git", "rev-parse", f"{commit}:src"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
+# Pre-E-series scenarios whose expected values are only valid at their
+# recorded commits; excluded from current-engine verification until a
+# deliberate re-capture promotes them.
+LEGACY_SCENARIOS = {
+    "cp21-ziggs-outer-blast",
+    "cp21-bis-utility-ahri",
+    "e0-vladimir-sanguine-pool-heal",
+    "vladimir-hemoplague-multitarget",
+}
 
 
 def _load_corpus() -> dict:
@@ -75,11 +58,6 @@ def _load_corpus() -> dict:
 @pytest.fixture(scope="module")
 def corpus() -> dict:
     return _load_corpus()
-
-
-@pytest.fixture(scope="module")
-def head() -> str:
-    return _current_head()
 
 
 def _payload(setup: dict) -> dict:
@@ -409,17 +387,13 @@ def test_all_scenarios_have_required_fields(corpus):
             ), f"{scenario['id']} is a fight scenario without practice steps"
 
 
-_PINNED = [
-    s
-    for s in _load_corpus()["scenarios"]
-    if s.get("sha") and _src_tree_sha(s["sha"]) == _src_tree_sha(_current_head())
-]
+_ACTIVE = [s for s in _load_corpus()["scenarios"] if s["id"] not in LEGACY_SCENARIOS]
 
 _FIMBULWINTER_AUTHORITY_BLOCKED = {
     "e9-item-serpents-fang-venom",
     "e9-item-fimbulwinter-everlasting",
 }
-_PINNED_CASES = [
+_ACTIVE_CASES = [
     (
         pytest.param(
             scenario,
@@ -431,41 +405,18 @@ _PINNED_CASES = [
         if scenario["id"] in _FIMBULWINTER_AUTHORITY_BLOCKED
         else scenario
     )
-    for scenario in _PINNED
+    for scenario in _ACTIVE
 ]
 
 
-@pytest.mark.parametrize("scenario", _PINNED_CASES, ids=[s["id"] for s in _PINNED])
-def test_scenario_receipt_at_pinned_head(corpus, head, scenario):
-    """Every scenario pinned at an engine identical to HEAD reproduces it."""
-    assert _src_tree_sha(scenario["sha"]) == _src_tree_sha(head)
+@pytest.mark.parametrize("scenario", _ACTIVE_CASES, ids=[s["id"] for s in _ACTIVE])
+def test_scenario_receipt_reproduces_on_current_engine(scenario):
+    """Every active scenario's receipt reproduces on the engine at HEAD.
+
+    A failure here means an engine change moved this receipt: re-probe
+    ``/api/calculate``, update ``expected``, and record the new ``sha``.
+    """
     kind = scenario["expected"]["kind"]
     assert kind in _KIND_ASSERTIONS, f"unknown receipt kind {kind!r}"
     data = _run_calculate(scenario["setup"])
     _KIND_ASSERTIONS[kind](data, scenario["expected"])
-
-
-def test_every_new_scenario_is_pinned_at_current_engine(corpus, head):
-    """New (E9) scenarios must pin the engine they were written against.
-
-    ``scenario["sha"]`` is the worktree HEAD at write time; the receipt is
-    valid iff that commit's ``src/`` tree equals HEAD's.  The four legacy
-    scenarios predate the E-series rework and are exempt: they keep their
-    original SHAs and are re-verified only after a deliberate re-capture.
-    """
-    legacy = {
-        "cp21-ziggs-outer-blast",
-        "cp21-bis-utility-ahri",
-        "e0-vladimir-sanguine-pool-heal",
-        "vladimir-hemoplague-multitarget",
-    }
-    head_src = _src_tree_sha(head)
-    for scenario in corpus["scenarios"]:
-        if scenario["id"] in legacy:
-            continue
-        assert scenario["sha"], f"{scenario['id']} is missing its pinned SHA"
-        assert _src_tree_sha(scenario["sha"]) == head_src, (
-            f"{scenario['id']} pinned at {scenario['sha']} but the current "
-            f"engine (HEAD {head}) differs -- re-probe /api/calculate and "
-            "re-pin the receipt before committing"
-        )

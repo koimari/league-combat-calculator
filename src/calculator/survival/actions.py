@@ -69,14 +69,9 @@ class ActionKind(Enum):
     DAMAGE_MODIFIER = "damage_modifier"
     ON_HIT_MAGIC = "on_hit_magic"
     UTILITY = "utility"
-    # Embedded transitions (implemented as kernel functions, never standalone
-    # actions): timed-shield expiry, lifeline threshold triggers, reactive
-    # shields, Maw omnivamp, Defy.
-    TIMED_SHIELD_EXPIRY = "timed_shield_expiry"
-    THRESHOLD_TRIGGER = "threshold_trigger"
-    REACTIVE_SHIELD = "reactive_shield"
-    MAW_OMNIVAMP = "maw_omnivamp"
-    DEFY = "defy"
+    # Timed-shield expiry, lifeline threshold triggers, reactive shields,
+    # Maw omnivamp, and Defy are embedded transitions implemented as kernel
+    # functions; they never appear as standalone actions.
 
 
 # Kinds a damage event may classify to; every one applies the shared damage
@@ -162,6 +157,7 @@ class SurvivalAction(NamedTuple):
     # and untargetable still block (the Cleanse atom: castable while
     # disabled, but not under suppression/stasis).
     cast_while_disabled: bool = False
+    cast_blocked_by_attacker_control: bool = False
     # P2 Slice 7: the per-cast cleanse group (Milio R fan-out — one cast
     # authors one packet per recipient; the group is the shared one-use
     # latch key so all recipients of one cast consume ONE use).
@@ -609,6 +605,7 @@ def survival_action_from_event(
         amount_formula=get("amount_formula"),
         requires_existing_shield=bool(get("requires_existing_shield")),
         cast_while_disabled=bool(get("cast_while_disabled")),
+        cast_blocked_by_attacker_control=bool(get("cast_blocked_by_attacker_control")),
         cleanse_group=str(get("cleanse_group", "") or ""),
         requires_maw_lifeline_omnivamp=bool(get("requires_maw_lifeline_omnivamp")),
         shield_gate_subject=(

@@ -18,7 +18,7 @@ edge case and the recommended resolution, with arXiv literature anchors.
 ## 0. Semantics of the deterministic single number
 
 The engine runs with `deterministic=True` in every scoring path (optimizer,
-BIS, golden corpus); `/api/calculate` alone still rolls natural crits. In that
+BIS, `/api/compare`, golden corpus); `/api/calculate` alone still rolls natural crits. In that
 mode **every stochastic draw is replaced by its expectation**: crits are
 blended at their probability-weighted mean, procs fire
 on their deterministic cadence, and health-dependent terms are evaluated along

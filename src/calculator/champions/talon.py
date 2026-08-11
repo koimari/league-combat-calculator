@@ -150,3 +150,34 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Talon self-healing events from its authored packet."""
+    healing = []
+    level = max(1, int(champion_stats.get("level", 18) or 18))
+    heal = _healing._leveling_value(
+        _healing._ability(champion_data, "Q"), "Heal", level
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "Q"
+    ):
+        _healing._heal_from_damage(healing, event, heal, "Noxian Diplomacy")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Talon", derive_self_healing)

@@ -19,6 +19,7 @@ All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
+import re
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
@@ -31,6 +32,13 @@ from .slotlib import (
     simple_damage,
     stat_buff,
 )
+from ..healing_helpers import (
+    _ability,
+    _attributed_events,
+    _is_persistent,
+    _leveling_value,
+    _trigger_fields,
+)
 
 _Q_SWEETSPOT_ATTRS = [
     "First Sweetspot Damage",
@@ -42,6 +50,16 @@ _Q_NORMAL_ATTRS = [
     "Second Cast Damage",
     "Third Cast Damage",
 ]
+_Q_VARIANT_ATTRS = [
+    *_Q_NORMAL_ATTRS[:1],
+    *_Q_SWEETSPOT_ATTRS[:1],
+    *_Q_NORMAL_ATTRS[1:2],
+    *_Q_SWEETSPOT_ATTRS[1:2],
+    *_Q_NORMAL_ATTRS[2:3],
+    *_Q_SWEETSPOT_ATTRS[2:3],
+    "Maximum Non-Minion Non-Sweetspot Damage",
+    "Maximum Non-Minion Sweetspot Damage",
+]
 
 
 def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -52,6 +70,24 @@ def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
+
+    if "q_variant" in ctx.options:
+        try:
+            variant = int(ctx.options["q_variant"])
+        except (TypeError, ValueError):
+            variant = len(_Q_VARIANT_ATTRS) - 1
+        variant = max(0, min(variant, len(_Q_VARIANT_ATTRS) - 1))
+        attribute = _Q_VARIANT_ATTRS[variant]
+        total = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
+        entry = damage_entry(
+            ability.get("name", "The Darkin Blade"),
+            rank,
+            extract_cooldown(ability, rank),
+            total,
+            "physical",
+        )
+        entry["detail"] = f"Q variant: {attribute}."
+        return entry
 
     attrs = (
         _Q_SWEETSPOT_ATTRS
@@ -89,6 +125,15 @@ def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
 _deathbringer_stance.phase = ONHIT
 
 OPTIONS = [
+    {
+        "key": "q_variant",
+        "type": "int",
+        "default": 7,
+        "min": 0,
+        "max": 7,
+        "label": "Q damage variant",
+        "legacy_keys": ["sweetspot"],
+    },
     {"key": "sweetspot", "type": "bool", "default": True, "label": "Q Sweetspot hits"},
 ]
 
@@ -113,6 +158,71 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Aatrox")
 
 
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Price Deathbringer Stance and Umbral Dash healing for Aatrox."""
+    del cast_timeline, fight_duration_seconds
+    healing: list[dict[str, Any]] = []
+    passive_events = _attributed_events(
+        damage_events,
+        lambda source, _event: "passive" in source.lower(),
+    )
+    e_description = " ".join(
+        effect.get("description", "")
+        for effect in _ability(champion_data, "E").get("effects", [])
+    )
+    ratio_match = re.search(
+        r"heals for\s+(\d+(?:\.\d+)?)%\s*\(\+\s*(\d+(?:\.\d+)?)%\s*per\s*100\s*bonus health",
+        e_description,
+        flags=re.IGNORECASE,
+    )
+    base_ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
+    per_100 = float(ratio_match.group(2)) / 100.0 if ratio_match else 0.0
+    e_ratio = base_ratio + per_100 * (
+        float(champion_stats.get("bonus_health", 0.0)) / 100.0
+    )
+    r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
+    r_inc = _leveling_value(_ability(champion_data, "R"), "Increased Healing", r_rank)
+    healing_amp = 1.0 + r_inc / 100.0 if r_rank > 0 else 1.0
+
+    for event in passive_events:
+        amount = max(0.0, float(event.get("damage", 0.0))) * healing_amp
+        if amount > 0:
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": amount,
+                    "source": "Deathbringer Stance",
+                    "kind": "champion_passive",
+                    **_trigger_fields(event),
+                }
+            )
+
+    for event in damage_events:
+        if _is_persistent(event):
+            continue
+        amount = max(0.0, float(event.get("damage", 0.0))) * e_ratio * healing_amp
+        if amount > 0:
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": amount,
+                    "source": "Umbral Dash",
+                    "kind": "champion_passive",
+                    **_trigger_fields(event),
+                }
+            )
+    return healing
+
+
 # Authoritative review metadata (issue #161).
 SOURCES = [
     {
@@ -126,3 +236,9 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Aatrox", derive_self_healing)

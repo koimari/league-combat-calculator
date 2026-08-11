@@ -283,13 +283,6 @@ class TransitionContext:
         """The subject's cached per-event defense constants."""
         return self._defense_profiles[subject]
 
-    def venom_for(self, attacker: int) -> tuple[float, float] | None:
-        if self.venom_profiles is None or not (
-            0 <= attacker < len(self.venom_profiles)
-        ):
-            return None
-        return self.venom_profiles[attacker]
-
     def reductions_for(self, attacker: int) -> tuple[Any, ...]:
         if self.reduction_profiles is None or not (
             0 <= attacker < len(self.reduction_profiles)
@@ -3100,6 +3093,17 @@ def run_survival_walk(
             continue
         if kind is ActionKind.DAMAGE_MODIFIER:
             _apply_damage_modifier(ctx, action, state)
+            continue
+        if (
+            kind is ActionKind.UTILITY
+            and (action.cleanse or action.cleanse_item)
+            and action.cast_blocked_by_attacker_control
+            and 0 <= action.attacker < len(states)
+            and states[action.attacker]["crowd_control_until"] > event_time
+        ):
+            _write_gated_cleanse_use(ctx, action, states[action.attacker])
+            ledger.mark_blocked(action)
+            ledger.skip(action, "attacker_state_blocked", damage_phase=True)
             continue
         if kind in (ActionKind.ON_HIT_MAGIC, ActionKind.UTILITY):
             _apply_utility(ctx, action, state)

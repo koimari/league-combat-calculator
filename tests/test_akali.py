@@ -1,9 +1,5 @@
 """Tests for Akali champion ability parsing and damage calculation."""
 
-import pytest
-
-from src.calculator.stats import calculate_total_stats
-from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions.slotlib import build_stats_context, extract_named
 from src.calculator.damage import FightConfig, calculate_fight_damage
 

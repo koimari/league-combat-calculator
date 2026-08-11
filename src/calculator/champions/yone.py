@@ -8,18 +8,13 @@ Stack mechanics modeled (E3):
   ``q_gathering_storm`` is the explicit pre-stack state.
 - P (Way of the Hunter): the soul-mark / spirit-form store is a state
   row.
-- E (Soul Unbound) (E9-3): the mark stores a portion of the
-  post-mitigation damage dealt during Spirit Form — the "Damage Stored"
-  row (25/27.5/30/32.5/35% of damage dealt) — and the recast deals that
-  stored damage as TRUE damage.  The reviewed packet's static read of
-  the percentage row emitted 0.0 (the row has no damage context), so
-  the module now prices E as the stored percentage of the fight's
-  ability-cast damage (its own Q/W/R results, evaluated in-slot after
-  them) at the +5s auto-recast boundary; the basic-attack share of the
-  stored damage needs the E window's auto ledger and is state.
+- E (Soul Unbound) (E9-3): Spirit Form stores a portion of the
+  post-mitigation physical and magic damage dealt to champions, then the
+  recast deals that stored amount as true damage. The fight engine applies
+  this from the authored ability and auto-attack event ledger.
 
-W (Spirit Cleave) and R (Fate Sealed) keep the reviewed CP10.10 packet
-pricing. All numeric values are read from the champion JSON data.
+W (Spirit Cleave) and R (Fate Sealed) read the sourced physical and magic
+rows. All numeric values are read from the champion JSON data.
 """
 
 from __future__ import annotations
@@ -65,11 +60,6 @@ certified_constants, atom_ids = CERTIFIED_CONSTANTS, ATOM_IDS
 _E_SPIRIT_FORM_SECONDS = 5.0
 
 PACKET_SHA256 = "806d48d7af49a8e38076a40e8ab180ee25751185eb1c7a31caf2b97e338aaaf1"
-
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Yone", PACKET_SHA256, single_hit_slots=frozenset({"W"}))
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 
 def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -157,20 +147,74 @@ def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: the death-mark's stored damage dealt as true damage at the recast.
+def _mixed_damage_entry(
+    ctx: SlotCtx,
+    *,
+    attributes: tuple[tuple[str, str], ...],
+) -> dict[str, Any] | None:
+    """Build one mixed packet from its sourced physical and magic rows."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    parts = tuple(
+        DamagePart(
+            damage_type,
+            extract_named(ability, attribute, rank, ctx.stats, ctx.target),
+        )
+        for damage_type, attribute in attributes
+    )
+    total = sum(part.amount for part in parts)
+    entry = damage_entry(
+        ability.get("name", f"Ability {ctx.slot}"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "mixed",
+    )
+    entry["parts"] = parts
+    entry["total_raw"] = total
+    entry["detail"] = "Sourced physical and magic damage instances"
+    return entry
 
-    Spirit Form stores the sourced percentage of the post-mitigation
-    damage Yone deals to the target, and the (auto-)recast consumes the
-    mark to deal that stored damage as true damage.  The static read of
-    the percentage row has no damage context, so the module prices E
-    against its OWN parsed results: the stored share of the fight's
-    ability-cast damage (Q/W/R total_raw, evaluated in-slot after them
-    — E is last in the slot map).  With 0 target resists post-mitigation
-    equals pre-mitigation, so total_raw is the exact stored amount; the
-    basic-attack share of the stored damage and the exact in-window
-    timing are state (boundary note).
-    """
+
+def _spirit_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: physical damage lands before the equal magic damage instance."""
+    return _mixed_damage_entry(
+        ctx,
+        attributes=(
+            ("physical", "Physical Damage"),
+            ("magic", "Magic Damage"),
+        ),
+    )
+
+
+def _fate_sealed(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: magic damage lands before the equal physical damage instance."""
+    return _mixed_damage_entry(
+        ctx,
+        attributes=(
+            ("magic", "Magic Damage"),
+            ("physical", "Physical Damage"),
+        ),
+    )
+
+
+_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
+    build_packet_module(
+        "Yone",
+        PACKET_SHA256,
+        single_hit_slots=frozenset({"W"}),
+        slot_parsers={"W": _spirit_cleave, "R": _fate_sealed},
+    )
+)
+PACKET_SPEC = _BATCH_SLOTS.packet_spec
+
+
+def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: declare a post-mitigation damage store for the fight engine."""
     ability = ctx.ability("E")
     if ability is None:
         return None
@@ -178,25 +222,24 @@ def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     ratio = extract_value(ability, "Damage Stored", rank, 0) / 100.0
-    ability_damage = sum(
-        float(entry.get("total_raw", 0.0) or 0.0)
-        for slot in ("Q", "W", "R")
-        if (entry := ctx.results.get(slot)) is not None
-    )
-    total = ratio * ability_damage
     entry = damage_entry(
         ability.get("name", "Soul Unbound"),
         rank,
         extract_cooldown(ability, rank),
-        total,
+        0.0,
         "true",
     )
-    entry["parts"] = (DamagePart("true", total, time_offset=_E_SPIRIT_FORM_SECONDS),)
+    entry["parts"] = ()
+    entry["stored_damage"] = {
+        "ratio": ratio,
+        "duration": _E_SPIRIT_FORM_SECONDS,
+        "source_slots": ("Q", "W", "R"),
+        "include_auto_attacks": True,
+    }
     entry["detail"] = (
-        f"{ratio * 100:g}% of the fight's ability-cast damage "
-        f"({ability_damage:.2f}) stored and re-dealt as true damage at "
-        "the auto-recast (+5s); the basic-attack share of the stored "
-        "damage is state"
+        f"{ratio * 100:g}% of post-mitigation physical and magic champion "
+        "damage during Spirit Form, re-dealt as true damage at the "
+        "five-second auto-recast"
     )
     return entry
 
@@ -204,9 +247,9 @@ def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = {
     "P": _way_of_the_hunter,
     "Q": _mortal_steel,
-    "W": _BATCH_SLOTS["W"],
-    "R": _BATCH_SLOTS["R"],
-    # E is last so the stored-damage read sees Q/W/R in ctx.results.
+    "W": _spirit_cleave,
+    "R": _fate_sealed,
+    # E declares metadata consumed after the fight event ledger is authored.
     "E": _soul_unbound,
 }
 parse_abilities = build_parser(SLOTS, "Yone")
@@ -227,19 +270,16 @@ ASSUMPTIONS = [
     "normal Q; its empower is the 0.75s knock-up, modeled as crowd-"
     "control state, so q_gathering_storm only changes the Q row's detail",
     "P (Way of the Hunter) soul mark is state",
-    "E (Soul Unbound) prices the stored damage as the 'Damage Stored' "
-    "percentage (25/27.5/30/32.5/35% of damage dealt by rank) of the "
-    "fight's ability-cast damage (the module's own Q/W/R results, "
-    "post-mitigation == pre-mitigation at 0 target resists), re-dealt as "
-    "true damage at the +5s auto-recast; the basic-attack share of the "
-    "stored damage needs the E window's auto ledger and is state — the "
-    "old static read of the percentage row emitted 0.0 with no boundary "
-    "note",
-    "W (Spirit Cleave) and R (Fate Sealed) keep the reviewed CP10.10 packet pricing",
+    "E (Soul Unbound) stores the sourced percentage of post-mitigation "
+    "physical and magic champion damage from Q/W/R and basic attacks "
+    "inside each five-second Spirit Form window. The fight engine emits "
+    "the stored amount as a true-damage recast event.",
+    "W (Spirit Cleave) uses the sourced physical row followed by the "
+    "sourced magic row.",
+    "R (Fate Sealed) uses the sourced magic row followed by the sourced "
+    "physical row.",
 ]
 
 SOURCES = load_champion_sources("Yone")
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
-}
+MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
 REVIEW_STATUS = "reviewed_module"

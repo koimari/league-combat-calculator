@@ -16,7 +16,7 @@ E3 fix over the CP10.3 packet module:
   dagger; the model cannot simulate dagger pickups mid-fight).
 """
 
-from typing import Any, Callable
+from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser

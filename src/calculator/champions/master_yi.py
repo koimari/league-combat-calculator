@@ -114,3 +114,50 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Master Yi self-healing events from its authored packet."""
+    healing = []
+    w_rank = _healing._rank(ability_damages, "W")
+    w_ability = _healing._ability(champion_data, "W")
+    min_tick = _healing.extract_named(
+        w_ability, "Minimum Heal Per Tick", w_rank, champion_stats
+    )
+    max_tick = _healing.extract_named(
+        w_ability, "Maximum Heal Per Tick", w_rank, champion_stats
+    )
+    if min_tick > 0.0:
+        for cast_time in _healing._cast_slot_times(cast_timeline, "W"):
+            start = float(cast_time)
+            for index in range(1, 9):
+                healing.append(
+                    {
+                        "time": start + index * 0.5,
+                        "amount": 0.0,
+                        "amount_formula": _healing._missing_health_scaled_heal(
+                            min_tick, max_tick
+                        ),
+                        "source": "Meditate",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Master Yi", derive_self_healing)

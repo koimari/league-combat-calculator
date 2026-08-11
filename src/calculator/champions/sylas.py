@@ -27,6 +27,50 @@ MODULE_COVERAGE = {
 }
 REVIEW_STATUS = "reviewed_module"
 
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Sylas self-healing events from its authored packet."""
+    healing = []
+    w = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    min_heal = _healing.extract_named(w, "Minimum Heal", w_rank, champion_stats)
+    max_heal = _healing.extract_named(w, "Maximum Heal", w_rank, champion_stats)
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "W"
+    ):
+        if float(event.get("damage", 0.0)) <= 0.0:
+            continue
+        healing.append(
+            {
+                "time": float(event.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": _healing._missing_health_scaled_heal(
+                    min_heal, max_heal
+                ),
+                "source": "Kingslayer",
+                "kind": "champion_ability",
+                **_healing._trigger_fields(event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Sylas", derive_self_healing)
+
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Abscond/Abduct) carries no shield in the current kit: the CP-era "
     "SylasEShield atom (80/115/150/185/220 + 100% AP for 2s) was removed "

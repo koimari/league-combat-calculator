@@ -86,6 +86,17 @@ _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_on
 _NONSTANDARD_RANK_CHAMPIONS = frozenset({"Elise", "Jayce", "Karma", "Nidalee", "Udyr"})
 
 
+def rank_allocation_contract() -> dict[str, object]:
+    """Return the backend-owned rank allocation modes for public clients."""
+    return {
+        "default": "manual",
+        "by_champion": {
+            champion: "level_derived"
+            for champion in sorted(_NONSTANDARD_RANK_CHAMPIONS)
+        },
+    }
+
+
 def _item_self_healing_events(
     result: Mapping[str, Any],
     items: list[Mapping[str, Any]] | None = None,
@@ -686,6 +697,11 @@ class FightParams(FightConfig):
     role: str = ""
     role_quest_complete: bool = False
     ally_stat_bonuses: dict[str, float] | None = None
+    # The Enemy Hits constraint. False composes no enemy pair fights in the
+    # coupled timeline and suppresses every enemy-authored event (thorns,
+    # authored reactives) — enemies deal exactly zero damage. The one-pair
+    # engine never reads this; participant_timeline owns the semantics.
+    enemies_attack: bool = True
 
     @classmethod
     def from_request(
@@ -795,6 +811,7 @@ class FightParams(FightConfig):
             keystone_options=keystone_options,
             role=role,
             role_quest_complete=role_quest_complete,
+            enemies_attack=_request_bool(data, "enemies_attack", True),
             deterministic=deterministic,
         )
         params._validate_request_values()
@@ -1129,6 +1146,13 @@ def run_fight(
         and not any(
             proc.source.item_name == "Eclipse"
             for proc in item_damage_effects.cooldown_procs
+        )
+        # Champion executes use the same per-event threshold receipt. Keep
+        # dict rows so the participant walk can apply the terminal state.
+        and not any(
+            float(ability.get("execute_threshold_ratio", 0.0) or 0.0) > 0
+            for ability in ability_damages.values()
+            if isinstance(ability, Mapping)
         )
     )
     result = calculate_fight_damage(

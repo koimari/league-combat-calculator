@@ -92,24 +92,48 @@ def test_overlay_markup_renders_in_the_served_page():
 
 
 def test_overlay_has_exactly_three_steps_with_required_copy():
+    """The tour describes the shipped IA.
+
+    Redesign note: the previous copy walked a Quick mode that was removed in
+    2026-08, so the tour taught a screen nobody could reach. It now walks the
+    three regions the user actually meets — the setup rail, the duel, and the
+    receipts — and still ends on the certainty chips.
+    """
     soup = _soup()
     steps = soup.select(".onboarding-step")
     assert len(steps) == 3
     headings = [step.find("h3").get_text(strip=True) for step in steps]
     assert headings == [
-        "Pick your champion + role",
-        "Set up Build A and Build B",
-        "Read the result and proof",
+        "Set the scenario in the rail",
+        "Build and read the duel",
+        "Open the receipts",
     ]
-    assert "identity card" in steps[0].get_text()
-    assert "six item slots" in steps[1].get_text()
-    assert "result column" in steps[2].get_text()
+    # Step 1 names the two numbered steps, the constraints block, and where
+    # builds actually live now that they are not a rail step.
+    first = steps[0].get_text()
+    for token in ("Champion", "Roster", "Builds", "Constraints".lower()):
+        assert token.lower() in first.lower(), token
+    # Step 2 explains how to read the delta spine without relying on colour.
+    second = steps[1].get_text().lower()
+    assert "delta" in second
+    assert "green ahead" in second and "red behind" in second
+    # Step 3 names the ledger and the certainty chips.
+    assert "event ledger" in steps[2].get_text().lower()
     assert "EXACT" in steps[2].get_text()
     assert "ESTIMATE" in steps[2].get_text()
     assert "BOUNDARY" in steps[2].get_text()
     # Progress dots match the step count.
     dots = soup.select(".onboarding-dots span")
     assert len(dots) == 3
+
+
+def test_overlay_copy_does_not_reference_the_removed_quick_mode():
+    page = _page()
+    overlay = BeautifulSoup(page, "html.parser").select_one("#onboardingOverlay")
+    assert overlay is not None
+    text = overlay.get_text(" ", strip=True).lower()
+    for stale in ("quick mode", "best next item", "in analyst"):
+        assert stale not in text, stale
 
 
 def test_overlay_has_skip_back_next_and_close_controls():
@@ -174,9 +198,8 @@ def test_overlay_js_is_additive():
     onboarding_block = source.split("// --- First-run onboarding overlay")[-1]
     assert "function initOnboardingOverlay()" in onboarding_block
     assert "render(" not in onboarding_block
-    assert "switchView(" not in onboarding_block
-    # The existing quick-view bootstrap is untouched.
-    assert "initQuickView();" in source
+    # The existing bootstrap is untouched.
+    assert "initShareControls();" in source
 
 
 def test_overlay_js_handles_unavailable_storage_quietly():

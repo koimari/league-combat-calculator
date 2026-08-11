@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage, source_row
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
 
@@ -218,3 +218,36 @@ SOURCES = [
 ]
 MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
 REVIEW_STATUS = "reviewed_module"
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Ekko self-healing events from its authored packet."""
+    healing = []
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(
+        _healing._ability(champion_data, "R"), "Minimum Heal", r_rank, champion_stats
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "R"
+    ):
+        _healing._heal_from_damage(
+            healing, event, r_heal, "Chronobreak", link_to_damage=False
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+from .healing_contract import (
+    declare_healing_rule,
+)  # pylint: disable=wrong-import-position
+
+SELF_HEALING_RULE = declare_healing_rule("Ekko", derive_self_healing)

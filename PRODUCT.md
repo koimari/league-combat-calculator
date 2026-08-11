@@ -28,17 +28,14 @@ Users configure one main champion, allies, enemies, levels, ability ranks, roles
 - Missing or uncertified event order must remain visibly unavailable rather than silently becoming a heuristic.
 - The interface must keep a compact answer-first summary while preserving an optional audit trail.
 - All numeric outputs are patch-pinned and must retain their source or modeling boundary.
-- The current scope is a damage-result and survivability presentation pass; calculation behavior is out of scope unless a prototype exposes a blocking UI defect.
 
 ## Brand Commitments
 
-The product is part of Scryglass. Existing content uses the Scryglass name, patch context, champion and item imagery, and a dark calculator surface. The user explicitly asked for ten materially different visual directions rather than small variations on the current red-and-black treatment.
+The product is part of Scryglass. Content uses the Scryglass name, patch context, and champion and item imagery. The approved direction is one committed look — a dark setup rail beside a cream duel canvas — replacing the earlier red-and-black treatment. `docs/redesign/design-language.md` is the written system and `docs/redesign/target-2a.html` / `target-2b.html` are the pixel targets.
 
 ## Evidence on Hand
 
 - Incumbent route: `templates/index.html`, `static/css/style.css`, and `static/js/app.js`.
-- Existing damage-breakdown prototypes: `prototypes/damage-breakdown/`.
-- Representative event data in the damage-breakdown prototypes includes Akali as the main participant and Orianna as an enemy participant.
 
 ## Product Principles
 
@@ -57,4 +54,4 @@ The web surface must remain keyboard navigable, preserve visible focus, maintain
 
 ## Open Decisions
 
-The ten directions in this request are exploratory prototypes. No visual direction is approved for production until the user selects one.
+The visual direction is settled: option 2a/2b is approved and implemented. The four decisions it locked in — rebuild the template and stylesheet to the new IA, a dedicated single-build layout when comparison is off, one theme, desktop-first — are recorded in `docs/redesign/gap-ledger.md`.
