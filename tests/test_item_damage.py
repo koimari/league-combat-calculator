@@ -646,7 +646,7 @@ class TestShadowflameCinderbloom:
 
     def test_no_bonus_when_target_above_threshold(self) -> None:
         """No Shadowflame bonus when all damage is dealt above 40% HP."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -665,14 +665,14 @@ class TestShadowflameCinderbloom:
             },
         }
         # Target at 1000 HP, threshold 400 — 100 damage won't cross it
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert bonus == 0.0
 
     def test_bonus_when_target_below_threshold(self) -> None:
         """Damage dealt when target is below 40% should get 20% bonus."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         # Q does 700 damage (drops target from 1000 to 300, below 400)
         # W does 200 magic damage (target already below 40%)
@@ -709,7 +709,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 200),),
             },
         }
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         # W (200) dealt below threshold, gets 20% bonus = 40
@@ -717,7 +717,7 @@ class TestShadowflameCinderbloom:
 
     def test_magic_shield_delays_shadowflame_health_threshold(self) -> None:
         """A ready magic shield must absorb events before health falls."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             slot: {
@@ -738,10 +738,10 @@ class TestShadowflameCinderbloom:
             for slot in ("Q", "W", "E")
         }
 
-        no_shield, _ = _calculate_shadowflame_bonus(
+        no_shield, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
-        shielded, _ = _calculate_shadowflame_bonus(
+        shielded, _ = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             ability_damages,
@@ -754,7 +754,7 @@ class TestShadowflameCinderbloom:
 
     def test_timed_cast_timeline_controls_threshold_crossing(self) -> None:
         """Recasts must not be grouped ahead of intervening abilities."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -775,7 +775,7 @@ class TestShadowflameCinderbloom:
             "W": {"damage_type": "magic", "parts": (DamagePart("magic", 200),)},
         }
 
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             ability_damages,
@@ -792,7 +792,7 @@ class TestShadowflameCinderbloom:
         assert bonus == pytest.approx(100.0)
 
     def test_lifeline_shield_delays_shadowflame_health_threshold(self) -> None:
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             slot: {
@@ -808,10 +808,10 @@ class TestShadowflameCinderbloom:
             for slot, damage in (("Q", 600.0), ("W", 200.0), ("E", 200.0))
         }
 
-        no_lifeline, _ = _calculate_shadowflame_bonus(
+        no_lifeline, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, abilities, 1000.0
         )
-        lifeline, _ = _calculate_shadowflame_bonus(
+        lifeline, _ = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             abilities,
@@ -826,7 +826,7 @@ class TestShadowflameCinderbloom:
 
     def test_physical_damage_not_affected(self) -> None:
         """Physical damage below threshold should not get Shadowflame bonus."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -849,7 +849,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 700),),
             },
         }
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         # Auto attacks are physical — no crit bonus
@@ -857,7 +857,7 @@ class TestShadowflameCinderbloom:
 
     def test_mixed_damage_splits_correctly(self) -> None:
         """Mixed abilities (like Ahri Q) should split into magic and true events."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         # Q: 300 magic (mitigated) + 500 true = 800 total
         # Target at 1000 HP: after Q magic (300), HP = 700 (above 400)
@@ -903,7 +903,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 150),),
             },
         }
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert abs(bonus - 30.0) < 0.01
@@ -1000,7 +1000,7 @@ class TestShadowflameCinderbloom:
         Counting the Q2 breakdown row AGAIN as an "item effect" event would
         add a bogus below-threshold event worth another 80.
         """
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -1044,7 +1044,7 @@ class TestShadowflameCinderbloom:
             },
         }
         # Default cast_order includes "Q2" — step 1 already consumes it.
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert abs(bonus - 60.0) < 0.01

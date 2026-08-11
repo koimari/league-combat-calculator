@@ -1814,7 +1814,36 @@ class _ThresholdHealDrip:
 _LIANDRY_BURN_KEY = "burn_Liandry's Torment"
 
 
-def _calculate_shadowflame_bonus(
+def _liandry_max_health_reprice(
+    source_key: str,
+    damage: float,
+    event_time: float,
+    *,
+    pools: Any,
+    opening_max_health: float,
+    heal_drip: "_ThresholdHealDrip",
+) -> tuple[float, float]:
+    """Reprice one burn tick against the target's *current* maximum health.
+
+    Liandry's Torment burns for a percentage of maximum health, so a lifeline
+    that raises the target's maximum mid-fight raises every tick that lands
+    after it.  The reprice rides the ordered ledger only because that is
+    where the target's live pools exist; it has nothing to do with the
+    Cinderbloom bonus computed on the same walk, and keeping the two in one
+    block made every change to either unattributable to the other.
+
+    Returns the repriced damage and the delta it adds to the burn's total —
+    ``(damage, 0.0)`` for every event that is not a repriced burn tick.
+    """
+    if source_key != _LIANDRY_BURN_KEY:
+        return damage, 0.0
+    if not heal_drip.triggered or event_time <= heal_drip.trigger_time + 1e-9:
+        return damage, 0.0
+    adjusted = damage * pools.max_health / opening_max_health
+    return adjusted, adjusted - damage
+
+
+def _simulate_ordered_damage(
     effect: item_effects.MagicTrueCritEffect | None,
     breakdown: dict[str, Any],
     ability_damages: dict[str, dict[str, Any]],
@@ -1845,21 +1874,26 @@ def _calculate_shadowflame_bonus(
         dict[str, Any],
     ]
 ):
-    """Calculate bonus damage from Shadowflame's Cinderbloom passive.
+    """Simulate the ordered damage ledger against the target's pools.
 
-    Simulates damage dealt in ability-cast order. When the target's
-    modeled HP drops below 40% maximum health, subsequent magic and
-    true damage instances deal 120% damage (20% bonus).
+    **This is not one mechanic's function.**  Two unrelated things need the
+    target's live pools event by event, and this walk is the only place those
+    exist: Shadowflame's Cinderbloom, which amplifies magic and true damage
+    below a health threshold, and Liandry's max-health reprice, which raises
+    later burn ticks when a lifeline raises the target's maximum health.  The
+    reprice is reported in ``adjustments`` and is nobody's bonus — it belongs
+    to the burn's own row.
 
     Args:
         breakdown: Current damage breakdown dict.
         ability_damages: Parsed ability data with damage types.
-        target_health: Target's maximum health.
+        target_health: Target's maximum health at the start of the fight.
         cast_order: Ability cast order (e.g., ["E", "Q", "W", "R"]).
 
     Returns:
-        (total bonus damage from Shadowflame crits, bonus per damage
-        type — the crit bonus keeps the underlying damage's type).
+        (total Cinderbloom bonus, bonus per damage type — the crit bonus
+        keeps the underlying damage's type), optionally the bonus events and
+        the non-Cinderbloom adjustments the same walk produced.
     """
     if cast_order is None:
         cast_order = list(DEFAULT_CAST_ORDER)
@@ -1899,14 +1933,15 @@ def _calculate_shadowflame_bonus(
         event_time = float(event["time"])
         heal_drip.advance_to(pools, event_time)
         source_key = str(event.get("source_key", ""))
-        if (
-            source_key == _LIANDRY_BURN_KEY
-            and heal_drip.triggered
-            and event_time > heal_drip.trigger_time + 1e-9
-        ):
-            adjusted = damage * pools.max_health / target_health
-            liandry_delta += adjusted - damage
-            damage = adjusted
+        damage, reprice_delta = _liandry_max_health_reprice(
+            source_key,
+            damage,
+            event_time,
+            pools=pools,
+            opening_max_health=target_health,
+            heal_drip=heal_drip,
+        )
+        liandry_delta += reprice_delta
         if source_key == _LIANDRY_BURN_KEY:
             liandry_events.append(
                 {
@@ -9038,10 +9073,34 @@ def _add_first_auto_healing(state: FightState) -> None:
     }
 
 
+def _apply_liandry_reprice(state: FightState, adjustments: dict[str, Any]) -> None:
+    """Fold the max-health reprice back onto the burn's own breakdown row.
+
+    The burn's row is where this number belongs: it is more of Liandry's own
+    damage, not a bonus some other item granted, and filing it anywhere else
+    would attribute one item's damage to another.
+    """
+    liandry_delta = float(adjustments["liandry_delta"])
+    if abs(liandry_delta) <= 1e-9:
+        return
+    liandry_row = state.breakdown.get(_LIANDRY_BURN_KEY)
+    if liandry_row is None:  # pragma: no cover - registry invariant
+        raise RuntimeError("Liandry adjustment has no breakdown row")
+    liandry_row["total_damage"] = float(liandry_row["total_damage"]) + liandry_delta
+    liandry_row["damage_events"] = adjustments["liandry_events"]
+    state.total_damage += liandry_delta
+
+
 def _add_shadowflame_cinderbloom(
     state: FightState, config: FightConfig, rotation: RotationResult
 ) -> None:
-    """Resolve max-health-sensitive damage, then add Cinderbloom's bonus."""
+    """Run the ordered ledger, then let each mechanic that reads it apply.
+
+    Two mechanics ride one walk (see :func:`_simulate_ordered_damage`): the
+    Liandry reprice, which is the burn's own damage, and Cinderbloom, which
+    is this function's.  They are applied by two named steps so a change to
+    either has an attributable diff.
+    """
     effect = state.damage_effects.magic_true_crit
     has_threshold_health = config.target_threshold_health_bonus > 0
     if effect is None and not has_threshold_health:
@@ -9051,7 +9110,7 @@ def _add_shadowflame_cinderbloom(
         bonus_by_type,
         bonus_events,
         adjustments,
-    ) = _calculate_shadowflame_bonus(
+    ) = _simulate_ordered_damage(
         effect,
         state.breakdown,
         state.ability_damages,
@@ -9076,14 +9135,7 @@ def _add_shadowflame_cinderbloom(
         return_events=True,
         return_adjustments=True,
     )
-    liandry_delta = float(adjustments["liandry_delta"])
-    if abs(liandry_delta) > 1e-9:
-        liandry_row = state.breakdown.get(_LIANDRY_BURN_KEY)
-        if liandry_row is None:  # pragma: no cover - registry invariant
-            raise RuntimeError("Liandry adjustment has no breakdown row")
-        liandry_row["total_damage"] = float(liandry_row["total_damage"]) + liandry_delta
-        liandry_row["damage_events"] = adjustments["liandry_events"]
-        state.total_damage += liandry_delta
+    _apply_liandry_reprice(state, adjustments)
     if shadowflame_bonus > 0:
         state.breakdown[f"shadowflame_{effect.item_name}"] = {
             "name": f"{effect.item_name} (Cinderbloom)",
