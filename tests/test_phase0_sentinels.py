@@ -31,7 +31,8 @@ from src.calculator.ability_spec import (
     DamageClass,
 )
 from src.calculator.champions import registered_champion_names
-from src.calculator.damage import _in_cc_window, _merged_cc_windows
+from src.calculator.interpreters import delta_amp
+from src.calculator.item_behavior import AmpChainSlot
 from src.calculator.trigger_stream import is_immobilizing_event
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_support_effects import (
@@ -125,6 +126,28 @@ class _CommandSweep(NamedTuple):
 
 
 @lru_cache(maxsize=1)
+def command_slot() -> delta_amp.AmpSlot:
+    """Command's declared chain slot — where its window now comes from.
+
+    Phase 3 moved the window's duration, its merge policy and its expiry
+    boundary out of two engine helpers and into the rule's
+    ``TriggerWindow(IMMOBILIZE, merge=EXTEND, boundary=OPEN_CLOSED)``, which
+    is what these sentinels said the phase would do.  They read the same
+    facts through the declaration, so the sentinel and the policy it pins
+    have one referent instead of two.
+    """
+    slot = delta_amp.resolve_slot(
+        ["Imperial Mandate"],
+        AmpChainSlot.POST_IMMOBILIZE,
+        level=18,
+        fight_duration_seconds=10.0,
+        target_bonus_health=0.0,
+    )
+    assert slot is not None, "D-12: the sweep needs Command's declared window"
+    return slot
+
+
+@lru_cache(maxsize=1)
 def command_sweep() -> _CommandSweep:
     """Every registered champion's authored immobilizes, holding Mandate.
 
@@ -136,8 +159,8 @@ def command_sweep() -> _CommandSweep:
     through one rotation and counted, never skipped.
     """
     mandate = get_item_by_name("Imperial Mandate")
-    effect = item_effects.command_amp_effect([mandate])
-    assert effect is not None, "D-12: the sweep needs Command's sourced window"
+    slot = command_slot()
+    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
     authors: dict[str, tuple] = {}
     amped: dict[str, tuple[str, ...]] = {}
     swept: list[str] = []
@@ -175,11 +198,11 @@ def command_sweep() -> _CommandSweep:
         )
         if not times:
             continue
-        authors[name] = (times, tuple(_merged_cc_windows(list(times), effect.duration)))
+        authors[name] = (times, slot.trigger_windows(times))
         amped[name] = tuple(
             key for key in result["breakdown"] if str(key).startswith("damage_amp_")
         )
-    return _CommandSweep(authors, amped, tuple(swept), tuple(withheld), effect.duration)
+    return _CommandSweep(authors, amped, tuple(swept), tuple(withheld), duration)
 
 
 @lru_cache(maxsize=8)
@@ -271,9 +294,9 @@ class _LedgerCtx:
 class TestNoTwoCommandWindowsOverlap:
     """Repeat-Command stacking has no reachable fixture today (D-12).
 
-    ``_merged_cc_windows`` merges overlapping immobilizes by *extending* the
-    window rather than stacking a second 7%, which is the Wiki's reading and
-    the policy Phase 3 declares as ``merge=EXTEND``.  Whether that policy is
+    Command's rule merges overlapping immobilizes by *extending* the window
+    rather than stacking a second 7%, which is the Wiki's reading and the
+    policy Phase 3 declared as ``merge=EXTEND``.  Whether that policy is
     a behaviour change depends on a fact about the corpus, not about the
     helper: does any registered champion author two immobilizes close enough
     together to merge?  Today none does — every authored marker across the
@@ -335,15 +358,17 @@ class TestNoTwoCommandWindowsOverlap:
 
     def test_the_check_is_live_and_not_vacuous(self):
         """R-05: the same predicate, over a pair that does overlap."""
-        overlapping = _merged_cc_windows([0.0, 2.0], 4.0)
+        slot = command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        overlapping = slot.trigger_windows([0.0, duration / 2.0])
         assert len(overlapping) == 1
-        assert overlapping == [(0.0, 6.0)]
+        assert overlapping == ((0.0, duration / 2.0 + duration),)
 
 
 class TestCommandExpiryBoundaryDiverges:
     """The two engines answer the closing instant differently (D-13).
 
-    The pair engine's ``_in_cc_window`` is ``start < t <= end``: a packet
+    The pair engine's window test is ``start < t <= end``: a packet
     landing at exactly the window's closing instant is amped.  The walk keeps
     a modifier only while ``until > action.time``, so the same packet at the
     same instant is not.  Both agree everywhere else, including at the
@@ -351,10 +376,12 @@ class TestCommandExpiryBoundaryDiverges:
     arms the modifier after equal-time damage.
 
     Reachable only on exact float equality, which no committed scenario
-    produces, so Phase 0 characterises the divergence rather than unifying
+    produces, so Phase 0 characterised the divergence rather than unifying
     it: unifying it would be an unfixtured change to both engines at once.
-    Phase 3 declares the boundary ``OPEN_CLOSED`` for every dual-sided
-    mechanic, and this sentinel is what that declaration has to satisfy.
+    Phase 3 declared the boundary ``OPEN_CLOSED`` (D-13), and this sentinel
+    is what that declaration has to satisfy — it now reads the pair half
+    through the declaration itself, so the divergence is pinned between a
+    declared policy and the walk rather than between two spellings.
     """
 
     def test_the_population_is_five_timed_producers_and_is_not_empty(self):
@@ -374,19 +401,19 @@ class TestCommandExpiryBoundaryDiverges:
         assert timed < set(_declared_authorities())
 
     def test_the_pair_engine_amps_the_closing_instant(self):
-        effect = item_effects.command_amp_effect([get_item_by_name("Imperial Mandate")])
-        windows = _merged_cc_windows([0.0], effect.duration)
-        assert not _in_cc_window(windows, 0.0), "the trigger itself is excluded"
-        assert _in_cc_window(windows, effect.duration - 0.001)
-        assert _in_cc_window(windows, effect.duration), (
+        slot = command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        windows = slot.trigger_windows([0.0])
+        assert not slot.window_holds(windows, 0.0), "the trigger itself is excluded"
+        assert slot.window_holds(windows, duration - 0.001)
+        assert slot.window_holds(windows, duration), (
             "D-13: the pair engine stopped amping the closing instant.  That "
             "is one half of a two-engine unification, not a local fix — land "
             "it with the walk's half in the same slice."
         )
 
     def test_the_walk_drops_the_modifier_at_the_same_instant(self):
-        effect = item_effects.command_amp_effect([get_item_by_name("Imperial Mandate")])
-        end = effect.duration
+        end = command_slot().value(delta_amp.WINDOW_DURATION_FIELD)
         inside = {"active_damage_modifiers": [_armed(until=end)]}
         closing = {"active_damage_modifiers": [_armed(until=end)]}
         packet = {"damage_type": "magic", "is_ability": True, "attacker": -1}

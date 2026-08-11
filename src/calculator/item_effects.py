@@ -5652,48 +5652,6 @@ def thorns_effects(items: Sequence[Mapping[str, Any]]) -> tuple[ThornsEffect, ..
     return tuple(compiled)
 
 
-@dataclass(frozen=True, slots=True)
-class CommandAmpEffect:
-    """Imperial Mandate's Command as the holder's own fight prices it.
-
-    An authored immobilize marks the target *Vulnerable*: all damage it
-    takes for ``duration`` seconds is amplified by ``amp_fraction``. The
-    pair engine applies this to the holder's own post-CC damage; the
-    coupled walk's cross-participant packet (owner-skipped for the
-    holder) delivers the same amp to everyone else.
-    """
-
-    item_name: str
-    amp_fraction: float
-    duration: float
-
-
-def command_amp_effect(
-    items: Sequence[Mapping[str, Any]],
-) -> CommandAmpEffect | None:
-    """Compile the holder-side Command amp, or ``None`` without the item.
-
-    Args:
-        items: The holder's item data dicts.
-
-    Returns:
-        The sourced amp fraction and window duration when the build holds
-        Imperial Mandate, else ``None``.
-    """
-    for item in items:
-        item_name = str(item.get("name", ""))
-        if item_name != "Imperial Mandate":
-            continue
-        # Command's sourced numbers live in ALLY_ITEM_EFFECTS (the walk's
-        # cross-participant packet reads the same record); one home only.
-        return CommandAmpEffect(
-            item_name=item_name,
-            amp_fraction=ally_item_effect_value(item_name, "command_damage_amp"),
-            duration=ally_item_effect_value(item_name, "command_duration"),
-        )
-    return None
-
-
 def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     """Return parser-backed Sterak's base-AD conversion.
 

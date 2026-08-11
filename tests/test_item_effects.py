@@ -1482,31 +1482,3 @@ class TestCp20ItemState:
             )
             == 1
         )
-
-
-class TestCommandAmpEffect:
-    """Imperial Mandate's Command: the holder-side amp the pair engine prices.
-
-    The coupled walk's cross-participant packet (owner-skipped for the
-    holder) is tested in test_item_support_effects.py; this accessor feeds
-    the holder's own fight.
-    """
-
-    def test_imperial_mandate_compiles_sourced_command_values(self) -> None:
-        effect = item_effects.command_amp_effect(_build("Imperial Mandate"))
-        assert effect is not None
-        assert effect.item_name == "Imperial Mandate"
-        assert effect.amp_fraction == pytest.approx(0.07)
-        assert effect.duration == pytest.approx(4.0)
-
-    def test_builds_without_command_items_compile_none(self) -> None:
-        assert item_effects.command_amp_effect(_build("Wit's End")) is None
-
-    def test_missing_key_names_item_and_key(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        broken = dict(item_effects.ALLY_ITEM_EFFECTS["Imperial Mandate"])
-        broken.pop("command_damage_amp")
-        monkeypatch.setitem(item_effects.ALLY_ITEM_EFFECTS, "Imperial Mandate", broken)
-        with pytest.raises(KeyError, match="Imperial Mandate.*command_damage_amp"):
-            item_effects.command_amp_effect(_build("Imperial Mandate"))

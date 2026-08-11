@@ -2133,7 +2133,13 @@ def test_every_rule_claim_names_a_live_rung_whose_predicate_resolves() -> None:
 
 MANDATE_SPLIT_CLAIM = COVERAGE_EVIDENCE[("item", "Imperial Mandate", "support_packet")]
 COMMAND_PACKET = "Imperial Mandate — Command"
-COMMAND_ACCESSOR = "item_effects.command_amp_effect"
+# The accessor Command's numbers now arrive through.  Phase 3's amp slice
+# deleted the bespoke ``item_effects.command_amp_effect`` compiler: the rule
+# is declared once for both engines and its ``ValueRef``s read the same
+# ``ALLY_ITEM_EFFECTS`` record through this accessor.  M1's question is
+# unchanged — rename the thing the pair-engine half reads its number through
+# and every sentence about Command stays true while the number goes.
+COMMAND_ACCESSOR = "item_effects.ally_item_effect_value"
 SUPPORT_MODULE = "src/calculator/item_support_effects.py"
 EFFECTS_MODULE = "src/calculator/item_effects.py"
 
@@ -2219,18 +2225,19 @@ def test_M1_renaming_the_pair_engine_effect_accessor_is_noticed() -> None:
     """M1: the accessor Command's pair-engine half reads its number through.
 
     The incident's first layer.  ``damage._apply_command_amp`` prices the
-    holder's own amp by asking ``item_effects.command_amp_effect`` for the
-    sourced fraction, and a rename there leaves every sentence about Command
-    looking true and the number gone.
+    holder's own amp from the ``imperial_mandate.command`` declaration, whose
+    ``ValueRef``s read the sourced fraction through
+    ``item_effects.ally_item_effect_value``, and a rename there leaves every
+    sentence about Command looking true and the number gone.
     """
     accessor = Symbol(path=COMMAND_ACCESSOR, role="value_accessor")
     claim = _plus(MANDATE_SPLIT_CLAIM, accessor)
     coverage_resolver.resolve(accessor, claim, _live())
 
     renamed = dataclasses.replace(
-        _live(), importer=_importer_without("item_effects", "command_amp_effect")
+        _live(), importer=_importer_without("item_effects", "ally_item_effect_value")
     )
-    with pytest.raises(EvidenceUnresolved, match="names no 'command_amp_effect'"):
+    with pytest.raises(EvidenceUnresolved, match="names no 'ally_item_effect_value'"):
         coverage_resolver.resolve(accessor, claim, renamed)
 
 

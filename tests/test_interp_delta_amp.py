@@ -10,6 +10,8 @@ this migration's whole claim is that no number moved.  And a magnitude shape
 with no arithmetic raises instead of quietly contributing zero.
 """
 
+import dataclasses
+
 import pytest
 
 from src.calculator.interpreters import delta_amp
@@ -24,10 +26,16 @@ from src.calculator.item_behavior import (
     RampPerStack,
     RuleFamily,
     TargetBonusHealthScaled,
+    WindowBoundary,
+    WindowMerge,
     chain_rank,
 )
-from src.calculator.item_behavior_catalog import behavior_rules, build_context
-from src.calculator.item_effects import ITEM_EFFECTS
+from src.calculator.item_behavior_catalog import (
+    BehaviorCatalogError,
+    behavior_rules,
+    build_context,
+)
+from src.calculator.item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS
 from src.calculator.value_ref import Const
 
 
@@ -260,3 +268,119 @@ def test_a_second_mechanic_on_one_entry_is_declared_rather_than_missed() -> None
     families = [rule.family for rule in behavior_rules("Liandry's Torment")]
     assert families == [RuleFamily.DELTA_AMP]
     assert "damage_amp_per_second" in ITEM_EFFECTS["Liandry's Torment"]
+
+
+# ---------------------------------------------------------------------------
+# Command — one declaration, both engines (D-12, D-13)
+# ---------------------------------------------------------------------------
+
+
+def _command_slot(*owners: str) -> "delta_amp.AmpSlot | None":
+    """Resolve the post-immobilize chain slot for a build."""
+    return delta_amp.resolve_slot(
+        owners,
+        AmpChainSlot.POST_IMMOBILIZE,
+        level=18,
+        fight_duration_seconds=10.0,
+        target_bonus_health=0.0,
+    )
+
+
+def test_command_compiles_its_sourced_fraction_and_window() -> None:
+    """The two numbers the pair engine used to read through an accessor."""
+    slot = _command_slot("Imperial Mandate")
+    assert slot is not None
+    assert slot.owner == "Imperial Mandate"
+    assert slot.bonus_fraction == pytest.approx(0.07)
+    assert slot.value(delta_amp.WINDOW_DURATION_FIELD) == pytest.approx(4.0)
+
+
+def test_a_build_without_the_mandate_declares_no_command_slot() -> None:
+    """``None`` is the answer "nobody in this build declares it", not a zero."""
+    assert _command_slot("Wit's End") is None
+
+
+@pytest.mark.parametrize("dropped", ["command_damage_amp", "command_duration"])
+def test_a_missing_command_key_names_the_item_and_the_key(
+    monkeypatch: pytest.MonkeyPatch, dropped: str
+) -> None:
+    """A half-parsed amplifier is a stop, not an item that amplifies nothing.
+
+    The ally registry carries no effect tag, so key presence is what routes a
+    record to this compiler.  That is exactly the shape in which a dropped
+    key silently un-declares a mechanic — so the slot lists *all* of its keys
+    and a record holding some of them raises, naming the item and the keys.
+    """
+    broken = dict(ALLY_ITEM_EFFECTS["Imperial Mandate"])
+    broken.pop(dropped)
+    monkeypatch.setitem(ALLY_ITEM_EFFECTS, "Imperial Mandate", broken)
+    with pytest.raises(BehaviorCatalogError, match=f"Imperial Mandate.*{dropped}"):
+        _command_slot("Imperial Mandate")
+
+
+def test_a_second_immobilize_extends_the_window_rather_than_stacking() -> None:
+    """D-12's policy, as the declaration now states it."""
+    slot = _command_slot("Imperial Mandate")
+    assert slot is not None
+    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+    assert slot.trigger_windows([0.0, duration / 2.0]) == (
+        (0.0, duration / 2.0 + duration),
+    )
+    assert slot.trigger_windows([0.0, duration * 3.0]) == (
+        (0.0, duration),
+        (duration * 3.0, duration * 4.0),
+    )
+
+
+def test_the_expiry_boundary_is_open_closed() -> None:
+    """D-13: the trigger instant is outside the window and the expiry is in."""
+    slot = _command_slot("Imperial Mandate")
+    assert slot is not None
+    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+    windows = slot.trigger_windows([1.0])
+    assert not slot.window_holds(windows, 1.0)
+    assert slot.window_holds(windows, 1.0 + duration)
+    assert not slot.window_holds(windows, 1.0 + duration + 1e-6)
+
+
+def test_a_rule_with_no_trigger_window_refuses_the_question() -> None:
+    """Asking a windowless rule where its window is, is a programming error."""
+    slot = _slot("Horizon Focus")
+    assert slot is not None
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="trigger window"):
+        slot.trigger_windows([0.0])
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="trigger window"):
+        slot.window_holds(((0.0, 1.0),), 0.5)
+
+
+def test_an_undeclared_merge_or_boundary_has_no_arithmetic() -> None:
+    """R-05/D-51: the two unreached members raise rather than guessing.
+
+    ``REFRESH``/``INDEPENDENT`` and ``CLOSED_CLOSED`` are legal spellings no
+    rule declares; writing arithmetic for a shape nothing reaches is the
+    orphan branch D-51 forbids, so the interpreter stops instead.
+    """
+    slot = _command_slot("Imperial Mandate")
+    assert slot is not None
+    declared = slot.rules[0].payload.activation
+    for replacement in (
+        dataclasses.replace(declared, merge=WindowMerge.REFRESH),
+        dataclasses.replace(declared, merge=WindowMerge.INDEPENDENT),
+    ):
+        mutated = _with_activation(slot, replacement)
+        with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="window merge"):
+            mutated.trigger_windows([0.0])
+    closed = _with_activation(
+        slot, dataclasses.replace(declared, boundary=WindowBoundary.CLOSED_CLOSED)
+    )
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="expiry boundary"):
+        closed.window_holds(((0.0, 4.0),), 2.0)
+
+
+def _with_activation(slot: "delta_amp.AmpSlot", activation) -> "delta_amp.AmpSlot":
+    """The same resolved slot, with one holder's activation replaced."""
+    rule = slot.rules[0]
+    payload = dataclasses.replace(rule.payload, activation=activation)
+    return dataclasses.replace(
+        slot, rules=(dataclasses.replace(rule, payload=payload),)
+    )

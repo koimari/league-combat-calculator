@@ -60,7 +60,10 @@ from .item_behavior import (
     Subject,
     TargetBonusHealthScaled,
     TriggerEvent,
+    TriggerWindow,
     Typing,
+    WindowBoundary,
+    WindowMerge,
     ZeroPolicy,
     chain_rank,
     validate_rule,
@@ -351,15 +354,36 @@ DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
 }
 
 
+# Which value keys of an ``ALLY_ITEM_EFFECTS`` record declare an amp-chain
+# slot.  That registry carries no effect tag at all — every entry is an ally
+# packet by construction — so a cross-participant amplifier's *shape* has to
+# come from the keys its numbers live under.  Closed, and keyed by the number
+# keys rather than by the item's name, so no item-name literal enters the
+# dispatch.
+#
+# Every key of a slot is listed, not just the one that routes: a record
+# carrying *some* of them is a broken parse, and the whole point of routing
+# on keys is that it must not turn a broken parse into an item that quietly
+# declares no amplifier.
+ALLY_DELTA_AMP_SLOTS: Mapping[AmpChainSlot, tuple[str, ...]] = {
+    AmpChainSlot.POST_IMMOBILIZE: ("command_damage_amp", "command_duration"),
+}
+
+ALLY_DELTA_AMP_KEYS: frozenset[str] = frozenset(
+    key for keys in ALLY_DELTA_AMP_SLOTS.values() for key in keys
+)
+
 # A registry entry's ``type`` names its *primary* mechanic, but a few entries
 # carry a second one in their value keys — Liandry's Torment is a burn that
-# also amplifies the whole total.  Declared here and closed, so a second
+# also amplifies the whole total, and every ally-registry amp is a second
+# mechanic on an ally-packet record.  Declared here and closed, so a second
 # mechanic hiding in a value key is a table entry rather than an if-statement
 # somebody has to notice.  Counter 3's population is unchanged: it counts
 # entries with no rule at all, and this only changes which compilers an entry
 # is offered to.
 SECONDARY_KEY_FAMILY: Mapping[str, RuleFamily] = {
     "damage_amp_per_second": RuleFamily.DELTA_AMP,
+    **{key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)},
 }
 
 # Which keystones declare an amp-chain slot, and which slot.  A rune record
@@ -580,6 +604,95 @@ def _opening_window_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
+def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Imperial Mandate's Command: the window an immobilize opens.
+
+    **One declaration, both engines.**  An immobilize marks the target
+    *Vulnerable* and every attacker's damage inside the window is amplified,
+    which is why the subject is ``ANY_ATTACKER``: the pair engine prices the
+    holder's own contribution and the coupled walk prices everyone else's,
+    but the *rule* is one rule and the two halves must not be free to drift
+    into two readings of it.  The three facts that used to be an engine's
+    loop shape are now what the declaration says:
+
+    * ``TriggerWindow(IMMOBILIZE, …)`` — the trigger is an immobilize and
+      nothing wider; the bus's ``CC`` stream is where that lands (D-08).
+    * ``merge=EXTEND`` — a second immobilize *extends* the window rather than
+      opening a second one or refreshing it (D-12).  Repeat-Command stacking
+      shipped as a Phase 0 sentinel and becomes this policy here.
+    * ``boundary=OPEN_CLOSED`` — the trigger itself is outside the window and
+      an event exactly on the expiry is inside (D-13).
+
+    The authority move to ``COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW`` is
+    Phase 4's and is blocked on H2; this slice does not move it.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.command",
+        payload=DeltaAmpRule(
+            pool=Pool.ALL_EVENTS,
+            activation=TriggerWindow(
+                trigger=TriggerEvent.IMMOBILIZE,
+                duration=ValueRef(registry, owner, "command_duration"),
+                merge=WindowMerge.EXTEND,
+                boundary=WindowBoundary.OPEN_CLOSED,
+            ),
+            consumption=Persist(),
+            magnitude=Fixed(ValueRef(registry, owner, "command_damage_amp")),
+            attribution=Attribution.HOLDER,
+            typing=_all_damage_typing(),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
+            subject=Subject.ANY_ATTACKER,
+            lane_chain_rank=chain_rank(AmpChainSlot.POST_IMMOBILIZE),
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the amp is a sourced ratio of the damage inside a window an "
+            "authored immobilize opened; a zero means no immobilize was "
+            "authored or nothing landed inside the window, and the walk over "
+            "the ledger is what measured that",
+        ),
+    )
+
+
+def _compile_ally_delta_amp(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> tuple[BehaviorRule, ...]:
+    """The amp-chain slots one ally-registry record declares.
+
+    Dispatch is on the value keys, through :data:`ALLY_DELTA_AMP_SLOTS`,
+    which is the closed key set that makes it total — the same device
+    :data:`KEYSTONE_AMPS` is for runes, and for the same reason: the record
+    carries no effect tag to dispatch on.  A record holding some of a slot's
+    keys and not the rest raises: routing on key presence must not let a
+    broken parse read as an item that declares no amplifier.
+    """
+    rules: list[BehaviorRule] = []
+    for slot, keys in ALLY_DELTA_AMP_SLOTS.items():
+        missing = [key for key in keys if key not in entry]
+        if len(missing) == len(keys):
+            continue
+        if missing:
+            raise BehaviorCatalogError(
+                f"ALLY_ITEM_EFFECTS[{owner!r}] declares the {slot.value} chain "
+                f"slot and is missing {missing}; a partly-parsed amplifier is a "
+                "registry defect, not an item that quietly amplifies nothing"
+            )
+        if slot is AmpChainSlot.POST_IMMOBILIZE:
+            rules.append(_post_immobilize_rule(owner, registry))
+            continue
+        raise BehaviorCatalogError(
+            f"ALLY_ITEM_EFFECTS[{owner!r}] is declared in the {slot.value} chain "
+            "slot and no compiler builds that slot's rule yet"
+        )
+    return tuple(rules)
+
+
 def _non_true_typing() -> Typing:
     """Every attack class, but only the two damage classes resistances touch.
 
@@ -666,6 +779,8 @@ def _compile_delta_amp(
     rules: list[BehaviorRule] = []
     if registry == "RUNE_EFFECTS":
         rules.extend(_compile_keystone_amp(owner))
+    elif registry == "ALLY_ITEM_EFFECTS":
+        rules.extend(_compile_ally_delta_amp(owner, registry, entry))
     else:
         tag = str(entry.get("type"))
         if tag == "hypershot_amp":
@@ -1043,6 +1158,8 @@ validate_catalog()
 
 __all__ = [
     "ACTION_KIND_FAMILY",
+    "ALLY_DELTA_AMP_KEYS",
+    "ALLY_DELTA_AMP_SLOTS",
     "CACHED_ITEM_SOURCE",
     "CACHED_RUNE_SOURCE",
     "COMPILED_KERNEL_CANNOT_AMP",

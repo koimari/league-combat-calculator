@@ -21,13 +21,15 @@ rather than trusting a captured constant.
 """
 
 from functools import lru_cache
+from typing import NamedTuple
 
 import pytest
 
 from src import app as app_module
-from src.calculator import item_effects
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.data_fetcher import get_champion
+from src.calculator.interpreters import delta_amp
+from src.calculator.item_behavior import AmpChainSlot
 from src.calculator.stats import calculate_total_stats
 
 # The roster.  Syndra's E is the authored stun (the incident's own marker);
@@ -93,11 +95,33 @@ def no_command():
     return _roster(())
 
 
-def _command_effect():
-    """Command's sourced amp fraction and window, from ``item_effects``."""
-    effect = item_effects.command_amp_effect([get_item_by_name(COMMAND_ITEM)])
-    assert effect is not None, "the roster fixture needs Command's sourced values"
-    return effect
+class _CommandNumbers(NamedTuple):
+    """Command's sourced amp fraction and window, read off its declaration."""
+
+    amp_fraction: float
+    duration: float
+
+
+def _command_effect() -> _CommandNumbers:
+    """Command's sourced amp fraction and window, from its declared rule.
+
+    Both numbers used to arrive through a bespoke ``item_effects`` accessor.
+    They now arrive through the ``imperial_mandate.command`` declaration and
+    its ``ValueRef``s into ``ALLY_ITEM_EFFECTS`` — one home for the number,
+    one home for the shape.
+    """
+    slot = delta_amp.resolve_slot(
+        [COMMAND_ITEM],
+        AmpChainSlot.POST_IMMOBILIZE,
+        level=18,
+        fight_duration_seconds=8.0,
+        target_bonus_health=0.0,
+    )
+    assert slot is not None, "the roster fixture needs Command's declared rule"
+    return _CommandNumbers(
+        amp_fraction=slot.bonus_fraction,
+        duration=slot.value(delta_amp.WINDOW_DURATION_FIELD),
+    )
 
 
 def _outgoing(response, participant_id):

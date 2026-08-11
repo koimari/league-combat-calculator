@@ -635,8 +635,31 @@ class TestFightIntegration:
 
 
 # ---------------------------------------------------------------------------
-# Command window arithmetic (pure helpers in damage.py)
+# Command window arithmetic (the declared TriggerWindow)
 # ---------------------------------------------------------------------------
+
+
+def _command_slot():
+    """Command's declared chain slot, resolved for a Mandate holder.
+
+    The window arithmetic used to be two module helpers in ``damage.py``
+    taking a duration nobody sourced at the call site; Phase 3 moved both
+    into the rule's ``TriggerWindow(IMMOBILIZE, merge=EXTEND,
+    boundary=OPEN_CLOSED)`` and its interpreter.  These tests follow, so
+    they keep pinning the behaviour rather than a deleted spelling.
+    """
+    from src.calculator.interpreters import delta_amp
+    from src.calculator.item_behavior import AmpChainSlot
+
+    slot = delta_amp.resolve_slot(
+        ["Imperial Mandate"],
+        AmpChainSlot.POST_IMMOBILIZE,
+        level=18,
+        fight_duration_seconds=10.0,
+        target_bonus_health=0.0,
+    )
+    assert slot is not None
+    return slot
 
 
 class TestCommandWindows:
@@ -644,20 +667,32 @@ class TestCommandWindows:
     window merging (extend, not stack) and the strictly-after boundary."""
 
     def test_overlapping_immobilizes_extend_one_window(self) -> None:
-        from src.calculator.damage import _merged_cc_windows
+        from src.calculator.interpreters import delta_amp
 
-        assert _merged_cc_windows([0.0, 2.0], 4.0) == [(0.0, 6.0)]
+        slot = _command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        assert slot.trigger_windows([0.0, duration / 2.0]) == (
+            (0.0, duration / 2.0 + duration),
+        )
 
     def test_separated_immobilizes_open_separate_windows(self) -> None:
-        from src.calculator.damage import _merged_cc_windows
+        from src.calculator.interpreters import delta_amp
 
-        assert _merged_cc_windows([0.0, 10.0], 4.0) == [(0.0, 4.0), (10.0, 14.0)]
+        slot = _command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        far = duration * 2.5
+        assert slot.trigger_windows([0.0, far]) == (
+            (0.0, duration),
+            (far, far + duration),
+        )
 
     def test_boundary_is_strictly_after_start_inclusive_end(self) -> None:
-        from src.calculator.damage import _in_cc_window, _merged_cc_windows
+        from src.calculator.interpreters import delta_amp
 
-        windows = _merged_cc_windows([1.0], 4.0)
-        assert not _in_cc_window(windows, 1.0)  # the trigger itself
-        assert _in_cc_window(windows, 1.001)
-        assert _in_cc_window(windows, 5.0)  # inclusive end
-        assert not _in_cc_window(windows, 5.001)
+        slot = _command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        windows = slot.trigger_windows([1.0])
+        assert not slot.window_holds(windows, 1.0)  # the trigger itself
+        assert slot.window_holds(windows, 1.001)
+        assert slot.window_holds(windows, 1.0 + duration)  # inclusive end
+        assert not slot.window_holds(windows, 1.0 + duration + 0.001)

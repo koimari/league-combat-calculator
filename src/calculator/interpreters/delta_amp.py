@@ -48,6 +48,9 @@ from ..item_behavior import (
     RampPerStack,
     RuleFamily,
     TargetBonusHealthScaled,
+    TriggerWindow,
+    WindowBoundary,
+    WindowMerge,
     chain_rank,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
@@ -60,6 +63,7 @@ from ..value_ref import resolve
 AMP_FRACTION_FIELD = "amp_fraction"
 WINDOW_START_FIELD = "window_start"
 WINDOW_END_FIELD = "window_end"
+WINDOW_DURATION_FIELD = "window_duration"
 
 
 class DeltaAmpInterpretationError(ValueError):
@@ -182,6 +186,13 @@ class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
             fields.append(
                 field(WINDOW_END_FIELD, resolve(payload.activation.end, ctx.level))
             )
+        if isinstance(payload.activation, TriggerWindow):
+            fields.append(
+                field(
+                    WINDOW_DURATION_FIELD,
+                    resolve(payload.activation.duration, ctx.level),
+                )
+            )
         return tuple(fields)
 
 
@@ -264,6 +275,71 @@ class AmpSlot:
             return event_time > trigger_time
         return event_time >= trigger_time
 
+    def _trigger_activation(self, index: int) -> TriggerWindow:
+        """The trigger-window activation this holder declares, or a stop."""
+        activation = self.rules[index].payload.activation
+        if not isinstance(activation, TriggerWindow):
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares no trigger window, so "
+                "it has no answer for when a trigger opens one"
+            )
+        return activation
+
+    def trigger_windows(
+        self, trigger_times: Sequence[float], index: int = 0
+    ) -> tuple[tuple[float, float], ...]:
+        """The armed windows *trigger_times* open, merged as the rule declares.
+
+        ``EXTEND`` is the Wiki reading the engine already implements — "
+        subsequent immobilizes against a target extend the duration of the
+        effect" — and it is now the declaration's word rather than the shape
+        of a loop.  ``REFRESH`` and ``INDEPENDENT`` deliberately have no
+        arithmetic: no rule declares them, and writing a branch nothing
+        reaches is the orphan D-51 forbids.
+        """
+        activation = self._trigger_activation(index)
+        if activation.merge is not WindowMerge.EXTEND:
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares the "
+                f"{activation.merge.value} window merge and no rule this "
+                "interpreter serves does; the slice that declares one owns "
+                "the branch"
+            )
+        duration = self.value(WINDOW_DURATION_FIELD, index)
+        windows: list[list[float]] = []
+        for time in sorted(trigger_times):
+            if windows and time <= windows[-1][1]:
+                windows[-1][1] = max(windows[-1][1], time + duration)
+            else:
+                windows.append([time, time + duration])
+        return tuple((start, end) for start, end in windows)
+
+    def window_holds(
+        self,
+        windows: Sequence[tuple[float, float]],
+        time: float,
+        index: int = 0,
+    ) -> bool:
+        """Whether an event at *time* is inside one of *windows* (D-13).
+
+        ``OPEN_CLOSED`` is ``start < t <= end``: the trigger itself and
+        same-timestamp packets are outside, and an event exactly on the
+        expiry is inside.  That boundary used to be a comparison operator two
+        engines had to agree on by inspection; it is now the one thing the
+        declaration says and this method reads.  It is deliberately
+        timestamp-only coarseness — a same-tick packet ordered after the
+        trigger in the ledger is still excluded.
+        """
+        boundary = self._trigger_activation(index).boundary
+        if boundary is not WindowBoundary.OPEN_CLOSED:
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares the "
+                f"{boundary.value} expiry boundary and no rule this "
+                "interpreter serves does; the slice that declares one owns "
+                "the branch"
+            )
+        return any(start < time <= end for start, end in windows)
+
     def bonus_damage_type(self, source_type: str, index: int = 0) -> str:
         """What this amp's own bonus lands as, given the event it amplified."""
         typing = self.rules[index].payload.bonus_typing
@@ -286,6 +362,17 @@ class AmpSlot:
                 "its source, so it has no single aggregate damage type"
             )
         return typing.value
+
+    @property
+    def bonus_fraction(self) -> float:
+        """The holders' summed fraction — what a bonus is priced from.
+
+        Deliberately not ``multiplier - 1.0``: that round trip is not the
+        identity in floating point (``1.0 + 0.07 - 1.0`` is not ``0.07``),
+        and an amp priced from it would move every Command build's number by
+        the last bits for no reason anybody could name.
+        """
+        return sum(self.fractions)
 
     @property
     def multiplier(self) -> float:
@@ -367,6 +454,7 @@ def resolve_slot(
 
 __all__ = [
     "AMP_FRACTION_FIELD",
+    "WINDOW_DURATION_FIELD",
     "WINDOW_END_FIELD",
     "WINDOW_START_FIELD",
     "AmpSlot",
