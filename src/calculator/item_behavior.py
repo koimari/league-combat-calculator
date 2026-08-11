@@ -710,6 +710,45 @@ class SecondaryTargetRule:
     applies_on_hit: bool
 
 
+class PeriodicCadence(Enum):
+    """How a periodic strike spreads one item's damage over time.
+
+    The three shapes really are different mechanics rather than three
+    intervals: a burn is a *window* that every ability hit re-arms and that
+    resolves in full past the fight's end; an aura pays a rate for as long as
+    the fight lasts; a fixed-interval strike lands a whole packet every N
+    seconds and lands nothing in between.  The registry said which by using
+    three tags whose only shared vocabulary was the word "formula".
+    """
+
+    REFRESHED_BURN = "refreshed_burn"
+    CONTINUOUS_AURA = "continuous_aura"
+    FIXED_INTERVAL = "fixed_interval"
+
+
+@dataclass(frozen=True, slots=True)
+class PeriodicRule:
+    """Damage an item deals on a clock rather than on an event.
+
+    ``interval`` is the cadence the declaration's own ``cadence`` gives
+    meaning to — a burn's tick, an aura's event spacing, a fixed strike's
+    period — which is why it is one field rather than three optional ones.
+
+    The three optional fields are declared absences, present exactly for the
+    cadence that has them: only a burn has a ``duration`` (the window one
+    application lasts), and only a fixed-interval strike has published a
+    ``aoe_range_units`` targeting receipt or a ``self_heal_share``.  A zero in
+    any of their places would claim the mechanic exists and pays nothing.
+    """
+
+    formula: DamageFormula
+    cadence: PeriodicCadence
+    interval: AnyValueRef
+    duration: AnyValueRef | None
+    aoe_range_units: AnyValueRef | None
+    self_heal_share: AnyValueRef | None
+
+
 @dataclass(frozen=True, slots=True)
 class ActiveCastRule:
     """Damage the holder deals by pressing the item, once per fight.
@@ -983,6 +1022,7 @@ class AllyPacketRule:
 
 RulePayload = Union[
     ActiveCastRule,
+    PeriodicRule,
     AllyPacketRule,
     DeltaAmpRule,
     OnHitStrikeRule,
@@ -995,6 +1035,7 @@ RulePayload = Union[
 # a payload its family does not name.
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ActiveCastRule: RuleFamily.ACTIVE_CAST,
+    PeriodicRule: RuleFamily.PERIODIC,
     AllyPacketRule: RuleFamily.ALLY_PACKET,
     DeltaAmpRule: RuleFamily.DELTA_AMP,
     OnHitStrikeRule: RuleFamily.ON_HIT_STRIKE,
@@ -1067,6 +1108,9 @@ def _validate_payload(rule: BehaviorRule) -> None:
     if isinstance(payload, OnHitStrikeRule):
         _validate_formula(rule, payload.formula)
         return
+    if isinstance(payload, PeriodicRule):
+        _validate_periodic(rule, payload)
+        return
     if isinstance(payload, ActiveCastRule):
         _validate_formula(rule, payload.formula)
         _validate_refs(rule, {"cooldown": payload.cooldown})
@@ -1104,6 +1148,44 @@ def _validate_payload(rule: BehaviorRule) -> None:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: lane_chain_rank {payload.lane_chain_rank} names no "
             "slot in AMP_CHAIN_ORDER"
+        )
+
+
+# Which optional field each periodic cadence is allowed — and required — to
+# carry.  Presence is checked in both directions, because a field only ever
+# checked one way is a field a second mechanic can quietly stop filling in.
+PERIODIC_CADENCE_FIELDS: dict[PeriodicCadence, frozenset[str]] = {
+    PeriodicCadence.REFRESHED_BURN: frozenset({"duration"}),
+    PeriodicCadence.CONTINUOUS_AURA: frozenset(),
+    PeriodicCadence.FIXED_INTERVAL: frozenset({"aoe_range_units", "self_heal_share"}),
+}
+
+
+def _validate_periodic(rule: BehaviorRule, payload: PeriodicRule) -> None:
+    """A periodic strike names a cadence and only that cadence's fields."""
+    if not isinstance(payload.cadence, PeriodicCadence):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a periodic strike says how it spreads over time"
+        )
+    _validate_formula(rule, payload.formula)
+    _validate_refs(rule, {"interval": payload.interval})
+    allowed = PERIODIC_CADENCE_FIELDS[payload.cadence]
+    optional = {
+        "duration": payload.duration,
+        "aoe_range_units": payload.aoe_range_units,
+        "self_heal_share": payload.self_heal_share,
+    }
+    _validate_refs(rule, optional, optional=True)
+    for name, value in optional.items():
+        if value is not None and name not in allowed:
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a {payload.cadence.value} strike declares "
+                f"{name}, which belongs to a different cadence"
+            )
+    if payload.cadence is PeriodicCadence.REFRESHED_BURN and payload.duration is None:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a burn is a window one hit re-arms and has to "
+            "say how long that window is"
         )
 
 
@@ -1411,7 +1493,10 @@ __all__ = [
     "POLICY_IDENTIFIER_FIELDS",
     "PacketKind",
     "PacketSpec",
+    "PERIODIC_CADENCE_FIELDS",
     "PacketTrigger",
+    "PeriodicCadence",
+    "PeriodicRule",
     "Persist",
     "Persistence",
     "Pool",

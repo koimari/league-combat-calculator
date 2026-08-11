@@ -135,6 +135,7 @@ from .ability_spec import DamagePart
 from .interpreters import (
     active_cast,
     delta_amp,
+    periodic,
     on_hit_strike,
     resistance_shred,
     secondary_target,
@@ -463,6 +464,10 @@ class FightState:
     # projection field that defaulted to an empty tuple would price the whole
     # family at zero with nothing saying so.
     item_actives: tuple[item_effects.DamageSource, ...]
+    # The clock-driven strikes this build declares, split by cadence.  Off the
+    # projection for the same reason, and one field rather than three because
+    # the three cadences are one declared family.
+    item_periodics: "periodic.PeriodicSlots"
     secondary_target_bolts: "secondary_target.SecondaryTargetSlot | None"
     cast_order: list[str]
     target_health: float
@@ -2298,6 +2303,13 @@ def _resolve_combat_state(
             holder_is_melee=bool(is_melee),
         ),
         item_actives=active_cast.active_sources(
+            owners,
+            level=level,
+            fight_duration_seconds=fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=bool(is_melee),
+        ),
+        item_periodics=periodic.resolve_slots(
             owners,
             level=level,
             fight_duration_seconds=fight_duration_seconds,
@@ -6778,7 +6790,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
     resists = state.resists
     ability_damages = state.ability_damages
 
-    for effect in state.damage_effects.burns:
+    for effect in state.item_periodics.burns:
         source = effect.source
         raw_burn = source.raw_damage(_damage_inputs(state))
         burn_duration = effect.duration
@@ -6842,7 +6854,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         }
         state.total_damage += burn_mitigated
 
-    for source in state.damage_effects.immolates:
+    for source in state.item_periodics.auras:
         raw_immolate = source.raw_damage(_damage_inputs(state))
         raw_immolate *= state.fight_duration_seconds
         immolate_mitigated = _mitigate(
@@ -6866,7 +6878,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             state.breakdown[source.breakdown_key]["event_phase"] = "effect"
         state.total_damage += immolate_mitigated
 
-    for effect in state.damage_effects.periodic:
+    for effect in state.item_periodics.intervals:
         source = effect.source
         procs = (
             int(state.fight_duration_seconds / effect.interval)
@@ -6892,9 +6904,9 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                     "damage_type": source.damage_type,
                     "damage": damage_per_proc,
                     "event_precision": "exact",
-                    "target_range_units": item_effects.required_effect_value(
-                        "Unending Despair", "range_units"
-                    ),
+                    "target_range_units": state.item_periodics.range_units[
+                        source.breakdown_key
+                    ],
                     "target_scope": "enemy_champions_within_range",
                 }
                 for index in range(procs)

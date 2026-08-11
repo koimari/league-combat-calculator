@@ -83,6 +83,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "Deal {{as|90% AD}}",
         0.90,
     ),
+    RuleFamily.PERIODIC: (
+        "Unending Despair",
+        "bonus_hp_ratio",
+        "{{as|3% of your '''bonus''' health}}",
+        "{{as|8% of your '''bonus''' health}}",
+        0.08,
+    ),
     RuleFamily.DELTA_AMP: (
         "Horizon Focus",
         "amp",

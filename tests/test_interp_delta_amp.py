@@ -279,7 +279,7 @@ def test_the_whole_total_slot_holds_every_declared_general_amp() -> None:
 def test_a_second_mechanic_on_one_entry_is_declared_rather_than_missed() -> None:
     """Liandry's is a burn that also amplifies; a tag alone cannot say that."""
     families = [rule.family for rule in behavior_rules("Liandry's Torment")]
-    assert families == [RuleFamily.DELTA_AMP]
+    assert families == [RuleFamily.PERIODIC, RuleFamily.DELTA_AMP]
     assert "damage_amp_per_second" in ITEM_EFFECTS["Liandry's Torment"]
 
 

@@ -3681,9 +3681,6 @@ class BuildDamageEffects:
 
     on_hit_heals: tuple[OnHitHealEffect, ...] = ()
     spellblade: SpellbladeEffect | None = None
-    burns: tuple[BurnEffect, ...] = ()
-    immolates: tuple[DamageSource, ...] = ()
-    periodic: tuple[PeriodicEffect, ...] = ()
     cooldown_procs: tuple[CooldownProcEffect, ...] = ()
     ultimate_procs: tuple[UltimateProcEffect, ...] = ()
     first_autos: tuple[FirstAutoEffect, ...] = ()
@@ -3898,102 +3895,6 @@ def _compile_spellblade(
             float(values.get("self_heal_bonus_health_ratio", 0.0)),
         ),
     )
-
-
-def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
-    """Compile one refreshable burn's base-duration raw damage."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "max_hp":
-        ratio = required.number("max_hp_ratio_total")
-
-        def raw(inputs: DamageInputs) -> float:
-            return ratio * inputs.target_max_health
-
-    elif formula == "flat_ap":
-        base = required.number("base_total")
-        ap_ratio = required.number("ap_ratio_total")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    elif formula == "flat":
-        base = required.number("base_total")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    else:
-        raise ValueError(f"Unsupported burn formula {formula!r} for {item_name!r}")
-    source = damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="burn",
-        breakdown_key=f"burn_{item_name}",
-    )
-    return BurnEffect(
-        source,
-        required.number("duration"),
-        required.number("tick_interval"),
-    )
-
-
-def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource:
-    """Compile one Immolate formula as raw damage per second."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "bonus_hp_dps":
-        base = required.number("base_per_second")
-        bonus_hp_ratio = required.number("bonus_hp_ratio_per_second")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + bonus_hp_ratio * inputs.champion_stats.get(
-                "bonus_health", 0.0
-            )
-
-    elif formula == "flat_dps":
-        base = required.number("base_per_second")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    else:
-        raise ValueError(f"Unsupported Immolate formula for {item_name!r}")
-
-    return damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="Immolate",
-        breakdown_key=f"immolate_{item_name}",
-        event_interval=required.number("event_interval"),
-    )
-
-
-def _compile_periodic(item_name: str, values: Mapping[str, Any]) -> PeriodicEffect:
-    """Compile one fixed-interval periodic damage formula."""
-    required = _RequiredValues(item_name, values)
-    if required.value("formula") != "bonus_hp":
-        raise ValueError(f"Unsupported periodic formula for {item_name!r}")
-    bonus_hp_ratio = required.number("bonus_hp_ratio")
-
-    def raw(inputs: DamageInputs) -> float:
-        return bonus_hp_ratio * inputs.champion_stats.get("bonus_health", 0.0)
-
-    source = damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="Anguish",
-        breakdown_key=f"periodic_{item_name}",
-    )
-    self_heal_multiplier = (
-        required.number("self_heal_post_mitigation_multiplier")
-        if item_name == "Unending Despair"
-        else 0.0
-    )
-    return PeriodicEffect(source, required.number("interval"), self_heal_multiplier)
 
 
 def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffect:
@@ -4445,9 +4346,6 @@ def _resolve_damage_effects_uncached(
     """Compile a build's registered damage behaviors from the live registry."""
     on_hit_heals: list[OnHitHealEffect] = []
     spellblade: SpellbladeEffect | None = None
-    burns: list[BurnEffect] = []
-    immolates: list[DamageSource] = []
-    periodic: list[PeriodicEffect] = []
     cooldown_procs: list[CooldownProcEffect] = []
     ultimate_procs: list[UltimateProcEffect] = []
     first_autos: list[FirstAutoEffect] = []
@@ -4483,12 +4381,6 @@ def _resolve_damage_effects_uncached(
             on_hit_heals.append(_compile_on_hit_heal(item_name, values))
         elif effect_type == "spellblade" and spellblade is None:
             spellblade = _compile_spellblade(item_name, values)
-        elif effect_type == "burn":
-            burns.append(_compile_burn(item_name, values))
-        elif effect_type == "immolate":
-            immolates.append(_compile_immolate(item_name, values))
-        elif effect_type == "periodic_aoe":
-            periodic.append(_compile_periodic(item_name, values))
         elif effect_type == "proc":
             cooldown_procs.append(_compile_proc(item_name, values))
         elif effect_type == "ult_proc":
@@ -4621,9 +4513,6 @@ def _resolve_damage_effects_uncached(
     return BuildDamageEffects(
         on_hit_heals=tuple(on_hit_heals),
         spellblade=spellblade,
-        burns=tuple(burns),
-        immolates=tuple(immolates),
-        periodic=tuple(periodic),
         cooldown_procs=tuple(cooldown_procs),
         ultimate_procs=tuple(ultimate_procs),
         first_autos=tuple(first_autos),

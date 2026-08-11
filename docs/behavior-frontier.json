@@ -16,7 +16,7 @@
       "class_d": 1
     },
     "calculator/damage.py": {
-      "counter_1": 15
+      "counter_1": 14
     },
     "calculator/defensive_effects.py": {
       "counter_1": 77
@@ -25,7 +25,7 @@
       "counter_2": 409
     },
     "calculator/item_effects.py": {
-      "class_c": 447
+      "class_c": 446
     },
     "calculator/item_source.py": {
       "class_c": 8
@@ -85,7 +85,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 150
+      "value": 149
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -99,7 +99,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 89
+      "value": 83
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -130,7 +130,6 @@
         "opening_defense/defense_resolver",
         "opening_defense/receipt_walk",
         "periodic/compiled_score_walk",
-        "periodic/pair_engine",
         "periodic/receipt_walk",
         "reactive/compiled_score_walk",
         "reactive/defense_resolver",
@@ -153,7 +152,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 45
+      "value": 44
     }
   },
   "exclusions": {
@@ -173,7 +172,7 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 634
+      "sites": 633
     },
     "class_d_non_behavioural": {
       "modules": {

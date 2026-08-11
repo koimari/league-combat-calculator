@@ -30,6 +30,7 @@ from .damage import (
     split_by_damage_type,
 )
 from . import item_effects
+from .interpreters import periodic
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
 from .trigger_stream import holders_in, tuple_incapable_items
@@ -485,9 +486,8 @@ def _has_item_self_healing(
     ):
         return True
     return (
-        any(
-            periodic.self_heal_post_mitigation_multiplier > 0.0
-            for periodic in effects.periodic
+        periodic.declares_self_heal(
+            [str(item.get("name", "")) for item in (items or ())]
         )
         or bool(effects.on_hit_heals)
         or (

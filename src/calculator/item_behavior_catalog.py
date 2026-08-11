@@ -66,6 +66,8 @@ from .item_behavior import (
     PacketKind,
     PacketSpec,
     PacketTrigger,
+    PeriodicCadence,
+    PeriodicRule,
     Persist,
     Persistence,
     Pool,
@@ -513,6 +515,46 @@ ACTIVE_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
         (Basis.ABILITY_POWER, "ap_ratio"),
     ),
 }
+
+# The periodic schemas, across all three cadences.  One table rather than
+# three because the six formula names are distinct: the registry never spells
+# a burn's shares and an aura's with one name, and a table keyed by name is
+# what makes a collision a merge conflict rather than a silent re-pointing.
+# ``max_hp`` here is a share of the *target's* pool, where the on-hit table's
+# ``max_hp`` is a share of the holder's — the split the registry's own key
+# names could not express, and the reason the two tables are separate.
+PERIODIC_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
+    "max_hp": ((Basis.TARGET_MAX_HEALTH, "max_hp_ratio_total"),),
+    "flat_ap": (
+        (Basis.FLAT, "base_total"),
+        (Basis.ABILITY_POWER, "ap_ratio_total"),
+    ),
+    "flat": ((Basis.FLAT, "base_total"),),
+    "bonus_hp_dps": (
+        (Basis.FLAT, "base_per_second"),
+        (Basis.HOLDER_BONUS_HEALTH, "bonus_hp_ratio_per_second"),
+    ),
+    "flat_dps": ((Basis.FLAT, "base_per_second"),),
+    "bonus_hp": ((Basis.HOLDER_BONUS_HEALTH, "bonus_hp_ratio"),),
+}
+
+# Which cadence each periodic tag declares, and which key holds its clock.
+# The tag is the registry's whole statement of the mechanic's shape, so the
+# translation lives here rather than as three branches at the point of use.
+PERIODIC_CADENCE_TAGS: Mapping[str, tuple[PeriodicCadence, str]] = {
+    "burn": (PeriodicCadence.REFRESHED_BURN, "tick_interval"),
+    "immolate": (PeriodicCadence.CONTINUOUS_AURA, "event_interval"),
+    "periodic_aoe": (PeriodicCadence.FIXED_INTERVAL, "interval"),
+}
+
+# The key a burn's re-armed window lives under.
+BURN_DURATION_KEY = "duration"
+
+# The two keys a fixed-interval strike may publish beside its damage: the
+# radius its event receipt names, and the share of its post-mitigation damage
+# the holder heals for.
+AOE_RANGE_KEY = "range_units"
+SELF_HEAL_SHARE_KEY = "self_heal_post_mitigation_multiplier"
 
 # The registry key an active's life-steal inheritance lives under.  Absent
 # means the active inherits none — a declared ``None``, not a zero.
@@ -1238,6 +1280,54 @@ def _optional_ref(
     zero.  Presence in the entry is the test, so no item name decides it.
     """
     return ValueRef(registry, owner, key) if key in entry else None
+
+
+def _compile_periodic(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the on-a-clock strike one registry entry declares.
+
+    Three tags, one family: a burn, an aura and a fixed-interval strike are
+    three cadences of the same mechanic — damage the fight's clock produces
+    rather than damage an event produces — and the tag is what says which.
+    Dispatch is on that tag, so no item name decides a cadence.
+    """
+    del family
+    tag = str(entry.get("type"))
+    cadence, interval_key = PERIODIC_CADENCE_TAGS[tag]
+    rule = BehaviorRule(
+        family=RuleFamily.PERIODIC,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.{cadence.value}",
+        payload=PeriodicRule(
+            formula=_damage_formula(owner, registry, entry, PERIODIC_FORMULA_TERMS, {}),
+            cadence=cadence,
+            interval=ValueRef(registry, owner, interval_key),
+            duration=(
+                ValueRef(registry, owner, BURN_DURATION_KEY)
+                if cadence is PeriodicCadence.REFRESHED_BURN
+                else None
+            ),
+            aoe_range_units=_optional_ref(owner, registry, entry, AOE_RANGE_KEY),
+            self_heal_share=_optional_ref(owner, registry, entry, SELF_HEAL_SHARE_KEY),
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the tick is a sum of sourced shares priced over the clock the "
+            "cadence declares; a zero means the fight was too short to hold a "
+            "tick or every share resolved to zero, both of which the rule "
+            "measured",
+        ),
+    )
+    validate_rule(rule)
+    return (rule,)
 
 
 def _compile_active_cast(
@@ -2268,7 +2358,7 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.CHARGED_STRIKE: _unmigrated,
     RuleFamily.SPELLBLADE: _unmigrated,
     RuleFamily.CAST_PROC: _unmigrated,
-    RuleFamily.PERIODIC: _unmigrated,
+    RuleFamily.PERIODIC: _compile_periodic,
     RuleFamily.ACTIVE_CAST: _compile_active_cast,
     RuleFamily.SECONDARY_TARGET: _compile_secondary_target,
     RuleFamily.DELTA_AMP: _compile_delta_amp,
@@ -2289,7 +2379,6 @@ UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
     RuleFamily.CHARGED_STRIKE: "3.4",
     RuleFamily.SPELLBLADE: "3.4",
     RuleFamily.CAST_PROC: "3.4",
-    RuleFamily.PERIODIC: "3.4",
     RuleFamily.OPENING_DEFENSE: "3.5",
     RuleFamily.THRESHOLD_DEFENSE: "3.5",
     RuleFamily.COMBAT_STATE: "3.5",

@@ -47,6 +47,7 @@ from . import (
     ally_packet,
     delta_amp,
     on_hit_strike,
+    periodic,
     resistance_shred,
     secondary_target,
 )
@@ -228,6 +229,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         RuleFamily.ON_HIT_STRIKE,
         EngineLane.PAIR_ENGINE,
     ): on_hit_strike.PAIR_INTERPRETER,
+    (
+        RuleFamily.PERIODIC,
+        EngineLane.PAIR_ENGINE,
+    ): periodic.PAIR_INTERPRETER,
     (
         RuleFamily.RESISTANCE_SHRED,
         EngineLane.PAIR_ENGINE,

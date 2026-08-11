@@ -25,7 +25,7 @@ from src.calculator.damage import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _calculate_stacking_procs,
 )
-from src.calculator.interpreters import on_hit_strike, resistance_shred
+from src.calculator.interpreters import on_hit_strike, periodic, resistance_shred
 from src.calculator.item_behavior import Resistance
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
 
@@ -39,6 +39,17 @@ def _mr_shred(*owners: str) -> "resistance_shred.ShredSlot | None":
         fight_duration_seconds=5.0,
         target_bonus_health=0.0,
         holder_is_melee=False,
+    )
+
+
+def _periodic_slots(*owners: str) -> "periodic.PeriodicSlots":
+    """The clock-driven strikes a build declares, resolved through their rules."""
+    return periodic.resolve_slots(
+        owners,
+        level=11,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
     )
 
 
@@ -1269,7 +1280,7 @@ class TestBurnRefreshWindow:
         window must be exactly the base. Burn totals scale linearly with
         (spread + duration), so the ratio pins both windows.
         """
-        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        (burn,) = _periodic_slots("Liandry's Torment").burns
         duration = burn.duration
 
         plain = self._fight(
@@ -1296,7 +1307,7 @@ class TestBurnRefreshWindow:
         spread + tail + duration. Burn totals scale linearly with the
         window, so the ratio pins the semantics.
         """
-        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        (burn,) = _periodic_slots("Liandry's Torment").burns
         duration = burn.duration
 
         plain = self._fight(
@@ -1329,7 +1340,7 @@ class TestBurnRefreshWindow:
     def test_hatefog_refresh_window_uses_seconds_not_dash_count(self) -> None:
         """Malignance's Hatefog starts at R1: cast_spread minus the dash
         spread in SECONDS (r_extra x 0.5s), not minus the dash count."""
-        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        (burn,) = _periodic_slots("Liandry's Torment").burns
         (hatefog,) = resolve_damage_effects(_build("Malignance")).ultimate_procs
         duration = burn.duration
 
@@ -1399,7 +1410,7 @@ class TestBurnTimedModeUptime:
     def _expected_burn(self, fight, uptime_seconds):
         from src.calculator.resistance import apply_resistance
 
-        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        (burn,) = _periodic_slots("Liandry's Torment").burns
         inputs = DamageInputs(dict(self._STATS), 18, False, 4000.0, 4000.0)
         raw = burn.source.raw_damage(inputs) * (uptime_seconds / burn.duration)
         return apply_resistance(raw, fight["effective_mr"])
@@ -5928,8 +5939,7 @@ class TestBamisCinderImmolate(_FightHarness):
 
     def test_flat_dps_ignores_bonus_health(self) -> None:
         """The V14.19 flat Immolate must not scale with bonus health."""
-        effects = resolve_damage_effects(_build("Bami's Cinder"))
-        source = effects.immolates[0]
+        (source,) = _periodic_slots("Bami's Cinder").auras
         inputs = DamageInputs(
             champion_stats={"bonus_health": 2000.0},
             level=11,
@@ -5993,7 +6003,7 @@ class TestFatedAshesInflame(_FightHarness):
 
     def test_flat_burn_ignores_ability_power(self) -> None:
         """Inflame's total is 15 whether the caster has 0 or 500 AP."""
-        (burn,) = resolve_damage_effects(_build("Fated Ashes")).burns
+        (burn,) = _periodic_slots("Fated Ashes").burns
         assert burn.duration == pytest.approx(3.0)
         assert burn.tick_interval == pytest.approx(0.5)
         for ability_power in (0.0, 500.0):

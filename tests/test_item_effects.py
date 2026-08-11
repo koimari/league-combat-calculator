@@ -713,22 +713,11 @@ class TestResolveDamageEffects:
     def test_phase_families_compile_into_typed_buckets(self) -> None:
         effects = resolve_damage_effects(
             _build(
-                "Liandry's Torment",
-                "Sunfire Aegis",
-                "Unending Despair",
                 "Luden's Echo",
                 "Malignance",
             )
         )
 
-        assert [effect.source.item_name for effect in effects.burns] == [
-            "Liandry's Torment"
-        ]
-        assert [source.item_name for source in effects.immolates] == ["Sunfire Aegis"]
-        assert effects.immolates[0].event_interval == pytest.approx(1.0)
-        assert [effect.source.item_name for effect in effects.periodic] == [
-            "Unending Despair"
-        ]
         assert [effect.source.item_name for effect in effects.cooldown_procs] == [
             "Luden's Echo"
         ]
