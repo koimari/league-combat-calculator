@@ -39,7 +39,9 @@ from ..item_behavior import (
     DamageFormula,
     MeleeRangedSplit,
     NoFloor,
+    NoScaling,
     Term,
+    TimesValue,
 )
 from ..item_effects import DamageInputs
 from ..value_ref import resolve
@@ -143,17 +145,39 @@ def compile_formula(
         raise DamageFormulaError(
             f"{ctx.owner}: {type(floor).__name__} is not a declared floor shape"
         )
+    factor = _scaling_factor(formula, ctx)
 
     def raw(inputs: DamageInputs) -> float:
         total = 0.0
         for melee_rate, ranged_rate, basis in resolved:
             rate = melee_rate if inputs.is_melee else ranged_rate
             total += rate * basis_value(basis, inputs)
+        if factor is not None:
+            total *= factor
         if minimum is None:
             return total
         return max(minimum, total)
 
     return raw
+
+
+def _scaling_factor(formula: DamageFormula, ctx: BuildContext) -> float | None:
+    """The factor a declared scaling multiplies the whole sum by.
+
+    ``None`` for an unscaled formula, so the closure skips a multiplication it
+    would otherwise perform against a 1.0 nobody declared — the sum has to
+    reproduce the registry compiler's float exactly, and ``x * 1.0`` is only
+    incidentally harmless.
+    """
+    scaling = formula.scaling
+    if isinstance(scaling, NoScaling):
+        return None
+    if isinstance(scaling, TimesValue):
+        return resolve(scaling.factor, ctx.level)
+    raise DamageFormulaError(
+        f"{ctx.owner}: {type(scaling).__name__} is not a declared scaling shape; "
+        "a new member is a new branch here, never a silently unscaled sum"
+    )
 
 
 def reads_target_current_health(formula: DamageFormula) -> bool:

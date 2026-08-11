@@ -134,6 +134,7 @@ from . import shield_ledger
 from .ability_spec import DamagePart
 from .interpreters import (
     active_cast,
+    cast_proc,
     delta_amp,
     periodic,
     on_hit_strike,
@@ -474,6 +475,8 @@ class FightState:
     # projection for the same reason, and one field rather than three because
     # the three cadences are one declared family.
     item_periodics: "periodic.PeriodicSlots"
+    # The cast-triggered procs this build declares, split by shape.
+    item_cast_procs: "cast_proc.CastProcSlots"
     # The one spellblade this build arms, resolved through its rule.
     item_spellblade: "item_effects.SpellbladeEffect | None"
     secondary_target_bolts: "secondary_target.SecondaryTargetSlot | None"
@@ -2134,6 +2137,17 @@ def _resolve_combat_state(
             )
     level = int(champion_stats.get("level", 1))
     damage_effects = item_effects.resolve_damage_effects(items)
+    # The declared families this build brings.  Resolved before the
+    # resistances, because Malignance's magic-resistance shred is one of the
+    # numbers the resistance ladder is built from.
+    owners = [str(item.get("name", "")) for item in items]
+    item_cast_procs = cast_proc.resolve_slots(
+        owners,
+        level=level,
+        fight_duration_seconds=fight_duration_seconds,
+        target_bonus_health=max(0.0, config.target_bonus_health),
+        holder_is_melee=bool(is_melee),
+    )
     actualizer_active_until = (
         item_effects.actualizer_active_seconds(
             items,
@@ -2159,7 +2173,7 @@ def _resolve_combat_state(
     # R in the cast_order use base MR.  Both effective values are resolved
     # and the rotation tracks which one to use per-ability.
     malignance_mr_reduction = (
-        sum(effect.mr_reduction for effect in damage_effects.ultimate_procs)
+        sum(effect.mr_reduction for effect in item_cast_procs.ultimate_procs)
         if "R" in ability_damages
         else 0.0
     )
@@ -2297,7 +2311,6 @@ def _resolve_combat_state(
     resists.resolve_magic()
     resists.resolve_armor()
 
-    owners = [str(item.get("name", "")) for item in items]
     return FightState(
         champion_stats=champion_stats,
         ability_damages=ability_damages,
@@ -2317,6 +2330,7 @@ def _resolve_combat_state(
             target_bonus_health=max(0.0, config.target_bonus_health),
             holder_is_melee=bool(is_melee),
         ),
+        item_cast_procs=item_cast_procs,
         item_periodics=periodic.resolve_slots(
             owners,
             level=level,
@@ -6836,7 +6850,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         # fight — the last recast (rotation.last_cast_time) refreshes
         # the burn far beyond the GCD combo spread.
         dot_refresh_end = max(cast_spread, rotation.last_cast_time) + champion_dot_tail
-        for ultimate_proc in state.damage_effects.ultimate_procs:
+        for ultimate_proc in state.item_cast_procs.ultimate_procs:
             if "R" in ability_damages:
                 # R1 lands r_extra dashes (x0.5s each) before the last hit
                 r_start = cast_spread - r_extra * inter_cast_delay
@@ -7287,7 +7301,7 @@ def _add_item_proc_damage(
     """Add proc-type item damage and ultimate-triggered procs (Malignance)."""
     resists = state.resists
 
-    for effect in state.damage_effects.cooldown_procs:
+    for effect in state.item_cast_procs.cooldown_procs:
         if effect.late_phase:
             continue
         source = effect.source
@@ -7395,7 +7409,7 @@ def _add_item_proc_damage(
         state.total_damage += proc_mitigated
 
     # ── Ultimate-triggered procs (Malignance) ──
-    for effect in state.damage_effects.ultimate_procs:
+    for effect in state.item_cast_procs.ultimate_procs:
         # Only triggers if R was cast
         r_info = state.ability_damages.get("R")
         if r_info is None:
@@ -8975,7 +8989,7 @@ def _add_single_proc_on_hits(
                 ]
             state.total_damage += total_damage
 
-    for effect in state.damage_effects.cooldown_procs:
+    for effect in state.item_cast_procs.cooldown_procs:
         if not effect.late_phase:
             continue
         source = effect.source
@@ -9505,7 +9519,7 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
         amped_keys = set(state.cast_order)
         amped_keys.update(
             effect.source.breakdown_key
-            for effect in state.damage_effects.cooldown_procs
+            for effect in state.item_cast_procs.cooldown_procs
             if effect.source.is_ability_damage
         )
         amped_base = sum(

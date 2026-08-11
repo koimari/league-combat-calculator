@@ -50,11 +50,17 @@ INPUTS = DamageInputs(
 )
 
 
-def _formula(*terms: Term, floor=NoFloor()) -> DamageFormula:
+def _formula(*terms: Term, floor=NoFloor(), scaling=None) -> DamageFormula:
     """A formula over *terms*, magic by default so the class is never the point."""
     from src.calculator.ability_spec import DamageClass
+    from src.calculator.item_behavior import NoScaling
 
-    return DamageFormula(terms=terms, floor=floor, damage_class=DamageClass.MAGIC)
+    return DamageFormula(
+        terms=terms,
+        scaling=NoScaling() if scaling is None else scaling,
+        floor=floor,
+        damage_class=DamageClass.MAGIC,
+    )
 
 
 def test_every_basis_has_a_reading() -> None:
@@ -120,10 +126,15 @@ def test_a_floor_is_its_own_axis_not_a_term() -> None:
 def test_a_formula_with_no_terms_is_refused_at_declaration_time() -> None:
     """A strike that is a sum of nothing is an item that quietly deals nothing."""
     from src.calculator.ability_spec import DamageClass
-    from src.calculator.item_behavior import BehaviorRuleError
+    from src.calculator.item_behavior import BehaviorRuleError, NoScaling
 
     with pytest.raises(BehaviorRuleError):
-        DamageFormula(terms=(), floor=NoFloor(), damage_class=DamageClass.MAGIC)
+        DamageFormula(
+            terms=(),
+            scaling=NoScaling(),
+            floor=NoFloor(),
+            damage_class=DamageClass.MAGIC,
+        )
 
 
 def test_a_basis_with_no_reading_stops_the_build_not_the_fight() -> None:
@@ -142,3 +153,22 @@ def test_reading_the_targets_live_health_is_read_off_the_declaration() -> None:
     still = _formula(Term(Const(1, "unit_scale"), Basis.TARGET_MAX_HEALTH))
     assert damage_formula.reads_target_current_health(live)
     assert not damage_formula.reads_target_current_health(still)
+
+
+def test_a_scaling_multiplies_the_whole_sum_and_not_a_share() -> None:
+    """``(a + b) x k`` is one float and ``ka + kb`` is another."""
+    from src.calculator.item_behavior import TimesValue
+    from src.calculator.value_ref import Const
+
+    scaled = _formula(
+        Term(coefficient=Const(3.0, "count"), basis=Basis.FLAT),
+        Term(coefficient=Const(2.0, "count"), basis=Basis.PER_LEVEL),
+        scaling=TimesValue(Const(2.0, "count")),
+    )
+    unscaled = _formula(
+        Term(coefficient=Const(3.0, "count"), basis=Basis.FLAT),
+        Term(coefficient=Const(2.0, "count"), basis=Basis.PER_LEVEL),
+    )
+    raw_scaled = damage_formula.compile_formula(scaled, CTX)
+    raw_plain = damage_formula.compile_formula(unscaled, CTX)
+    assert raw_scaled(INPUTS) == pytest.approx(2.0 * raw_plain(INPUTS))

@@ -83,6 +83,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "Deal {{as|90% AD}}",
         0.90,
     ),
+    RuleFamily.CAST_PROC: (
+        "Hextech Alternator",
+        "base",
+        "deals {{as|65 '''bonus''' magic damage}}",
+        "deals {{as|90 '''bonus''' magic damage}}",
+        90.0,
+    ),
     RuleFamily.SPELLBLADE: (
         "Sheen",
         "base_ad_ratio",

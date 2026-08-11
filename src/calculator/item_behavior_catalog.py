@@ -28,7 +28,7 @@ here, and this stays a light import.
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, NamedTuple
@@ -53,7 +53,10 @@ from .item_behavior import (
     BonusTyping,
     BehaviorRule,
     BuildContext,
+    ChargedSplash,
+    CooldownProcRule,
     DamageFormula,
+    DamageThreshold,
     DeltaAmpRule,
     ExcludeTrigger,
     Fixed,
@@ -62,6 +65,7 @@ from .item_behavior import (
     Magnitude,
     MeleeRangedSplit,
     NoFloor,
+    NoScaling,
     OnHitStrikeRule,
     PacketKind,
     PacketSpec,
@@ -72,6 +76,7 @@ from .item_behavior import (
     Persistence,
     Pool,
     Probe,
+    ProcTrigger,
     Recipients,
     RULE_FAMILY_COUNT,
     RampModel,
@@ -81,15 +86,20 @@ from .item_behavior import (
     Resistance,
     ResistanceShredRule,
     RuleFamily,
+    Scaling,
     SecondaryTargetRule,
+    SelfShield,
     SpellbladeRule,
+    StackGate,
     StackRamp,
     Subject,
     Term,
     TargetBonusHealthScaled,
+    TimesValue,
     TriggerEvent,
     TriggerWindow,
     Typing,
+    UltimateProcRule,
     WindowBoundary,
     WindowMerge,
     ZeroPolicy,
@@ -516,6 +526,75 @@ ACTIVE_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
         (Basis.ABILITY_POWER, "ap_ratio"),
     ),
 }
+
+# The cast-proc schemas, across all three tags.  ``charged_ap`` is the one
+# schema whose registry compiler multiplied the *sum* rather than a share, so
+# its rule carries a `TimesValue` scaling and this table stays a list of
+# shares like every other.
+CAST_PROC_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
+    "charged_ap": (
+        (Basis.FLAT, "base_per_charge"),
+        (Basis.ABILITY_POWER, "ap_ratio_per_charge"),
+    ),
+    "flat_ap": ((Basis.FLAT, "base"), (Basis.ABILITY_POWER, "ap_ratio")),
+    "flat": ((Basis.FLAT, "base"),),
+    "flat_ap_max_hp": (
+        (Basis.FLAT, "base"),
+        (Basis.ABILITY_POWER, "ap_ratio"),
+        (Basis.TARGET_MAX_HEALTH, "target_max_hp_ratio"),
+    ),
+    "max_hp": (
+        (
+            Basis.TARGET_MAX_HEALTH,
+            ("target_max_hp_ratio_melee", "target_max_hp_ratio_ranged"),
+        ),
+    ),
+}
+
+# Which cast-proc tag arms which of the engine's two records, and — for the
+# cooldown proc — whether its row is stamped in the fight's late phase.  The
+# tag is the registry's whole statement of the mechanic's shape.
+CAST_PROC_TAGS: frozenset[str] = frozenset({"proc", "ult_proc", "max_hp_proc"})
+LATE_PHASE_TAGS: frozenset[str] = frozenset({"max_hp_proc"})
+ULTIMATE_PROC_TAG = "ult_proc"
+
+# The schema name whose sum is multiplied rather than shared out, and the two
+# keys that describe the split.
+CHARGED_FORMULA = "charged_ap"
+CHARGE_COUNT_KEY = "charges"
+SINGLE_TARGET_MULTIPLIER_KEY = "single_target_multiplier"
+
+# The registry's own trigger vocabulary, and the trigger an entry that names
+# none is on.  Spelled rather than defaulted at the point of use, because the
+# absence of a key really does mean "the coarse scheduler owns this".
+PROC_TRIGGER_KEY = "trigger"
+DEFAULT_PROC_TRIGGER = ProcTrigger.COARSE
+
+# The two keys a damage-threshold trigger carries, the structural flag that
+# says an entry refunds cooldown per attack windup and the key holding the
+# refund, and the sibling groups only some procs carry.
+THRESHOLD_KEYS = ("damage_threshold_ratio", "damage_threshold_window")
+ATTACK_REFUND_FLAG = "attack_refund"
+ATTACK_REFUND_KEY = "on_attack_cooldown_refund"
+STACK_GATE_KEYS = ("stack_required", "stack_window")
+SELF_SHIELD_KEYS = (
+    "shield_melee_base",
+    "shield_ranged_base",
+    "shield_melee_bonus_ad_ratio",
+    "shield_ranged_bonus_ad_ratio",
+    "shield_duration",
+)
+
+# The keys an ultimate proc's window and its one sibling live under.
+DURATION_KEY = "duration"
+MR_REDUCTION_KEY = "mr_reduction"
+
+# The structural flags a strike's row carries: whether it counts as ability
+# damage downstream, whether it is basic damage, and whether the cooldown
+# re-arms it.
+IS_ABILITY_DAMAGE_KEY = "is_ability_damage"
+BASIC_DAMAGE_KEY = "basic_damage"
+REPEAT_ON_COOLDOWN_KEY = "repeat_on_cooldown"
 
 # The spellblade schemas.  ``base_ad_crit`` reads the holder's crit chance as
 # a *fraction* — the basis caps it at one — which is the reading the registry
@@ -1191,6 +1270,9 @@ def _damage_formula(
     entry: Mapping[str, Any],
     schemas: Mapping[str, tuple[TermSchema, ...]],
     floors: Mapping[str, str],
+    *,
+    scaling: Scaling | None = None,
+    damage_class: DamageClass | None = None,
 ) -> DamageFormula:
     """The declared formula one entry's ``formula`` name describes.
 
@@ -1198,6 +1280,12 @@ def _damage_formula(
     is made of.  A name the table does not carry is a stop, never a strike
     that quietly deals nothing: the whole point of the closed vocabulary is
     that a new schema costs one deliberate decision.
+
+    ``scaling`` and ``damage_class`` are the two things a schema name cannot
+    always say: a factor over the whole sum belongs to the mechanic rather
+    than to the shape, and one registry tag carries no ``damage_type`` key at
+    all because its damage class is part of the mechanic's definition.  Both
+    default to what the entry itself states.
     """
     name = str(entry.get("formula"))
     schema = schemas.get(name)
@@ -1210,12 +1298,17 @@ def _damage_formula(
     floor_key = floors.get(name)
     return DamageFormula(
         terms=_formula_terms(owner, registry, schema),
+        scaling=NoScaling() if scaling is None else scaling,
         floor=(
             AtLeast(ValueRef(registry, owner, floor_key))
             if floor_key is not None
             else NoFloor()
         ),
-        damage_class=DamageClass(str(entry.get("damage_type"))),
+        damage_class=(
+            DamageClass(str(entry.get("damage_type")))
+            if damage_class is None
+            else damage_class
+        ),
     )
 
 
@@ -1355,6 +1448,145 @@ def _sibling_refs(
         for key in group:
             refs[key] = ValueRef(registry, owner, key) if declared else None
     return refs
+
+
+def _group_refs(
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+    keys: Sequence[str],
+) -> tuple[ValueRef, ...] | None:
+    """Every key of one sibling group, or ``None`` if the schema has none.
+
+    The same whole-or-nothing rule the spellblade siblings use: any key of the
+    group in the registry's schema makes every key required, so a parse that
+    dropped one raises naming item and key rather than compiling a mechanic
+    with a hole in it.
+    """
+    schema = _schema_keys(owner, registry, entry)
+    if not any(key in schema for key in keys):
+        return None
+    return tuple(ValueRef(registry, owner, key) for key in keys)
+
+
+def _cooldown_proc_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """One item's cooldown proc: what arms it, how much, and what rides along."""
+    trigger = ProcTrigger(str(entry.get(PROC_TRIGGER_KEY, DEFAULT_PROC_TRIGGER.value)))
+    charged = (
+        ChargedSplash(
+            charges=ValueRef(registry, owner, CHARGE_COUNT_KEY),
+            single_target_multiplier=ValueRef(
+                registry, owner, SINGLE_TARGET_MULTIPLIER_KEY
+            ),
+        )
+        if str(entry.get("formula")) == CHARGED_FORMULA
+        else None
+    )
+    threshold_refs = (
+        tuple(ValueRef(registry, owner, key) for key in THRESHOLD_KEYS)
+        if trigger is ProcTrigger.DAMAGE_THRESHOLD
+        else None
+    )
+    stack_refs = _group_refs(owner, registry, entry, STACK_GATE_KEYS)
+    shield_refs = _group_refs(owner, registry, entry, SELF_SHIELD_KEYS)
+    return BehaviorRule(
+        family=RuleFamily.CAST_PROC,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.proc",
+        payload=CooldownProcRule(
+            formula=_damage_formula(
+                owner,
+                registry,
+                entry,
+                CAST_PROC_FORMULA_TERMS,
+                {},
+                scaling=(
+                    TimesValue(charged.single_target_multiplier)
+                    if charged is not None
+                    else None
+                ),
+            ),
+            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
+            trigger=trigger,
+            repeat_on_cooldown=bool(entry.get(REPEAT_ON_COOLDOWN_KEY, True)),
+            is_ability_damage=bool(entry.get(IS_ABILITY_DAMAGE_KEY, False)),
+            basic_damage=bool(entry.get(BASIC_DAMAGE_KEY, False)),
+            late_phase=str(entry.get("type")) in LATE_PHASE_TAGS,
+            threshold=(
+                DamageThreshold(*threshold_refs) if threshold_refs is not None else None
+            ),
+            attack_cooldown_refund=(
+                ValueRef(registry, owner, ATTACK_REFUND_KEY)
+                if entry.get(ATTACK_REFUND_FLAG)
+                else None
+            ),
+            charged=charged,
+            stacks=StackGate(*stack_refs) if stack_refs is not None else None,
+            self_shield=SelfShield(*shield_refs) if shield_refs is not None else None,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the proc is a sum of sourced shares priced once per arming; a "
+            "zero means the trigger never armed or every share resolved to "
+            "zero, both of which the rule measured",
+        ),
+    )
+
+
+def _ultimate_proc_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """One item's ultimate proc: a window an R cast opens."""
+    return BehaviorRule(
+        family=RuleFamily.CAST_PROC,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.ultimate_proc",
+        payload=UltimateProcRule(
+            formula=_damage_formula(
+                owner, registry, entry, CAST_PROC_FORMULA_TERMS, {}
+            ),
+            duration=ValueRef(registry, owner, DURATION_KEY),
+            mr_reduction=_optional_ref(owner, registry, entry, MR_REDUCTION_KEY),
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the ultimate proc is a sum of sourced shares spread over its "
+            "declared window; a zero means the rotation cast no ultimate, "
+            "which the rotation walk measured",
+        ),
+    )
+
+
+def _compile_cast_proc(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the cast-triggered proc one registry entry declares.
+
+    Three tags, two shapes: an ultimate proc opens a window an R cast owns,
+    and everything else is a cooldown proc whose trigger the entry names.
+    Dispatch is on the tag, so no item name decides a shape.
+    """
+    del family
+    tag = str(entry.get("type"))
+    if tag == ULTIMATE_PROC_TAG:
+        rule = _ultimate_proc_rule(owner, registry, entry)
+    else:
+        rule = _cooldown_proc_rule(owner, registry, entry)
+    validate_rule(rule)
+    return (rule,)
 
 
 def _compile_spellblade(
@@ -2479,7 +2711,7 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.ON_HIT_STRIKE: _compile_on_hit_strike,
     RuleFamily.CHARGED_STRIKE: _unmigrated,
     RuleFamily.SPELLBLADE: _compile_spellblade,
-    RuleFamily.CAST_PROC: _unmigrated,
+    RuleFamily.CAST_PROC: _compile_cast_proc,
     RuleFamily.PERIODIC: _compile_periodic,
     RuleFamily.ACTIVE_CAST: _compile_active_cast,
     RuleFamily.SECONDARY_TARGET: _compile_secondary_target,
@@ -2499,7 +2731,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
     RuleFamily.CHARGED_STRIKE: "3.4",
-    RuleFamily.CAST_PROC: "3.4",
     RuleFamily.OPENING_DEFENSE: "3.5",
     RuleFamily.THRESHOLD_DEFENSE: "3.5",
     RuleFamily.COMBAT_STATE: "3.5",

@@ -26,6 +26,7 @@ from src.calculator.damage import (
     _calculate_stacking_procs,
 )
 from src.calculator.interpreters import (
+    cast_proc,
     on_hit_strike,
     periodic,
     resistance_shred,
@@ -44,6 +45,17 @@ def _mr_shred(*owners: str) -> "resistance_shred.ShredSlot | None":
         fight_duration_seconds=5.0,
         target_bonus_health=0.0,
         holder_is_melee=False,
+    )
+
+
+def _cast_proc_slots(*owners: str, is_melee: bool = True) -> "cast_proc.CastProcSlots":
+    """The cast-triggered procs a build declares, resolved through their rules."""
+    return cast_proc.resolve_slots(
+        owners,
+        level=11,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
     )
 
 
@@ -1357,7 +1369,7 @@ class TestBurnRefreshWindow:
         """Malignance's Hatefog starts at R1: cast_spread minus the dash
         spread in SECONDS (r_extra x 0.5s), not minus the dash count."""
         (burn,) = _periodic_slots("Liandry's Torment").burns
-        (hatefog,) = resolve_damage_effects(_build("Malignance")).ultimate_procs
+        (hatefog,) = _cast_proc_slots("Malignance").ultimate_procs
         duration = burn.duration
 
         fight = self._fight(
@@ -2175,19 +2187,19 @@ class TestEclipseEverRisingMoon:
 
     def test_ranged_single_proc_damage(self) -> None:
         """Ranged: 4% of 2000 max HP = 80 raw physical damage (one proc)."""
-        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        effect = _cast_proc_slots("Eclipse").cooldown_procs[0]
         damage = effect.source.raw_damage(DamageInputs({}, 18, False, 2000.0, 2000.0))
         assert abs(damage - 80.0) < 0.01
 
     def test_melee_single_proc_damage(self) -> None:
         """Melee: 6% of 2000 max HP = 120 raw physical damage (one proc)."""
-        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        effect = _cast_proc_slots("Eclipse").cooldown_procs[0]
         damage = effect.source.raw_damage(DamageInputs({}, 18, True, 2000.0, 2000.0))
         assert abs(damage - 120.0) < 0.01
 
     def test_multiple_procs_over_duration(self) -> None:
         """6s cooldown: 12s fight = 3 procs (0s, 6s, 12s)."""
-        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        effect = _cast_proc_slots("Eclipse").cooldown_procs[0]
         per_proc = effect.source.raw_damage(DamageInputs({}, 18, False, 1000.0, 1000.0))
         damage = per_proc * (1 + int(12.0 / effect.cooldown))
         # 3 procs * 4% * 1000 = 120
@@ -2195,7 +2207,7 @@ class TestEclipseEverRisingMoon:
 
     def test_zero_target_health_returns_zero(self) -> None:
         """Zero target max HP should result in zero Eclipse damage."""
-        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        effect = _cast_proc_slots("Eclipse").cooldown_procs[0]
         damage = effect.source.raw_damage(DamageInputs({}, 18, True, 0.0, 0.0))
         assert damage == 0.0
 
@@ -5572,7 +5584,7 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
 
         # The stamp is the ledger moment the rolling window held the
         # item's threshold share of the target's max health.
-        effect = resolve_damage_effects(_build("Stormsurge")).cooldown_procs[0]
+        effect = _cast_proc_slots("Stormsurge").cooldown_procs[0]
         proc_time = events[0]["time"]
         window = [
             event
@@ -6122,7 +6134,7 @@ class TestHextechAlternatorRevved(_FightHarness):
 
     def test_compiles_as_champion_damage_proc_without_ap_scaling(self) -> None:
         """Revved is a flat 65 whether the holder has 0 or 500 AP."""
-        (proc,) = resolve_damage_effects(_build("Hextech Alternator")).cooldown_procs
+        (proc,) = _cast_proc_slots("Hextech Alternator").cooldown_procs
         assert proc.trigger == "champion_damage"
         assert proc.cooldown == pytest.approx(40.0)
         for ability_power in (0.0, 500.0):
@@ -6204,7 +6216,7 @@ class TestScoutsSlingshotBullseye(_FightHarness):
 
     def test_compiles_with_spell_damage_and_refund(self) -> None:
         """Bullseye is spell damage (unlike Revved) and carries its refund."""
-        (proc,) = resolve_damage_effects(_build("Scout's Slingshot")).cooldown_procs
+        (proc,) = _cast_proc_slots("Scout's Slingshot").cooldown_procs
         assert proc.trigger == "champion_damage"
         assert proc.cooldown == pytest.approx(40.0)
         assert proc.on_attack_cooldown_refund == pytest.approx(1.0)
@@ -6219,7 +6231,7 @@ class TestScoutsSlingshotBullseye(_FightHarness):
         with pytest.MonkeyPatch.context() as patcher:
             patcher.setitem(item_effects.ITEM_EFFECTS, "Scout's Slingshot", broken)
             with pytest.raises(KeyError) as exc_info:
-                resolve_damage_effects(_build("Scout's Slingshot"))
+                _cast_proc_slots("Scout's Slingshot")
         message = exc_info.value.args[0]
         assert "Scout's Slingshot" in message
         assert "on_attack_cooldown_refund" in message

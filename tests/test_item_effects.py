@@ -11,7 +11,7 @@ import copy
 import pytest
 
 from src.calculator import item_effects
-from src.calculator.interpreters import on_hit_strike, spellblade
+from src.calculator.interpreters import cast_proc, on_hit_strike, spellblade
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
@@ -71,6 +71,17 @@ from src.calculator.item_effects import (
 def _build(*names: str) -> list[dict]:
     """Make a minimal item build from item names."""
     return [{"name": name} for name in names]
+
+
+def _cast_proc_slots(*owners: str, is_melee: bool = True):
+    """The cast-triggered procs a build declares, through their rules."""
+    return cast_proc.resolve_slots(
+        owners,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
 
 
 def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
@@ -375,7 +386,7 @@ class TestResolveDamageEffects:
         monkeypatch.setitem(ITEM_EFFECTS, "Malignance", broken)
 
         with pytest.raises(KeyError, match="Malignance.*mr_reduction"):
-            resolve_damage_effects(_build("Malignance"))
+            _cast_proc_slots("Malignance")
 
     def test_unknown_effect_type_names_item_and_type(
         self, monkeypatch: pytest.MonkeyPatch
@@ -722,17 +733,12 @@ class TestResolveDamageEffects:
         ) == pytest.approx(40.0)
 
     def test_phase_families_compile_into_typed_buckets(self) -> None:
-        effects = resolve_damage_effects(
-            _build(
-                "Luden's Echo",
-                "Malignance",
-            )
-        )
+        slots = _cast_proc_slots("Luden's Echo", "Malignance")
 
-        assert [effect.source.item_name for effect in effects.cooldown_procs] == [
+        assert [effect.source.item_name for effect in slots.cooldown_procs] == [
             "Luden's Echo"
         ]
-        assert [effect.source.item_name for effect in effects.ultimate_procs] == [
+        assert [effect.source.item_name for effect in slots.ultimate_procs] == [
             "Malignance"
         ]
 
@@ -783,7 +789,8 @@ class TestResolveDamageEffects:
             "Kraken Slayer",
         ]
         assert any(
-            effect.source.item_name == "Eclipse" for effect in effects.cooldown_procs
+            effect.source.item_name == "Eclipse"
+            for effect in _cast_proc_slots("Eclipse").cooldown_procs
         )
 
     def test_engine_modifiers_compile_as_typed_values(self) -> None:

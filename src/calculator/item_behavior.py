@@ -654,16 +654,45 @@ FLOOR_TYPES: tuple[type, ...] = (NoFloor, AtLeast)
 
 
 @dataclass(frozen=True, slots=True)
+class NoScaling:
+    """The formula's sum stands as summed."""
+
+
+@dataclass(frozen=True, slots=True)
+class TimesValue:
+    """The whole sum is multiplied by a sourced factor.
+
+    A multiplier over the *sum* is not a share and cannot be folded into the
+    terms: ``(base + ratio x AP) x 2`` and ``2 x base + 2 x ratio x AP`` are
+    the same number in algebra and two different floats in a fight, and the
+    registry's own compilers wrote the first.
+    """
+
+    factor: AnyValueRef
+
+
+Scaling = Union[NoScaling, TimesValue]
+
+SCALING_TYPES: tuple[type, ...] = (NoScaling, TimesValue)
+
+
+@dataclass(frozen=True, slots=True)
 class DamageFormula:
-    """A sum of sourced shares, floored, landing as one damage class.
+    """A sum of sourced shares, scaled, floored, landing as one damage class.
 
     Every strike family's number is one of these.  The union of *terms* is
-    what replaces the registry's formula-name ladder, and ``floor`` is its own
-    axis because "at least this much" is a mechanic (Blade of the Ruined
+    what replaces the registry's formula-name ladder; ``scaling`` is a factor
+    over the whole sum rather than a share of anything; and ``floor`` is its
+    own axis because "at least this much" is a mechanic (Blade of the Ruined
     King's minimum) rather than a term.
+
+    The order is stated because it is arithmetic and not style: the shares are
+    summed, the sum is scaled, and the floor is the minimum on the number the
+    mechanic finally pays.
     """
 
     terms: tuple[Term, ...]
+    scaling: Scaling
     floor: Floor
     damage_class: DamageClass
 
@@ -674,6 +703,8 @@ class DamageFormula:
                 "a DamageFormula names at least one term; a formula with no "
                 "shares is an item that quietly deals nothing"
             )
+        if not isinstance(self.scaling, SCALING_TYPES):
+            raise BehaviorRuleError("a DamageFormula declares its scaling")
         if not isinstance(self.floor, FLOOR_TYPES):
             raise BehaviorRuleError("a DamageFormula declares its floor")
         if not isinstance(self.damage_class, DamageClass):
@@ -708,6 +739,106 @@ class SecondaryTargetRule:
     max_targets: AnyValueRef
     damage_share: AnyValueRef
     applies_on_hit: bool
+
+
+class ProcTrigger(Enum):
+    """What arms a cooldown proc.
+
+    The registry's own ``trigger`` vocabulary, closed.  It is deliberately not
+    :class:`TriggerEvent`: that says which *bus stream* a pricing rule reads,
+    while these say which of the engine's proc schedulers owns the mechanic —
+    a coarse once-per-rotation row, a per-champion-damage counter, a
+    per-ability-damage counter, or a rolling damage threshold.
+    """
+
+    COARSE = "coarse"
+    CHAMPION_DAMAGE = "champion_damage"
+    ABILITY_DAMAGE = "ability_damage"
+    DAMAGE_THRESHOLD = "damage_threshold"
+
+
+@dataclass(frozen=True, slots=True)
+class DamageThreshold:
+    """A proc armed once a share of the target's health is dealt in a window."""
+
+    share_of_max_health: AnyValueRef
+    window_seconds: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class ChargedSplash:
+    """A proc that fires several charges, all of which may land on one target.
+
+    ``single_target_multiplier`` is what one target takes when every charge
+    hits it; the engine spreads the rest across a roster.  Both numbers are
+    sourced, and the *distribution* between them is arithmetic the interpreter
+    does rather than a third declared number.
+    """
+
+    charges: AnyValueRef
+    single_target_multiplier: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class StackGate:
+    """A proc that needs several qualifying hits inside a rolling window."""
+
+    required: AnyValueRef
+    window_seconds: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class SelfShield:
+    """A shield a proc grants its holder when it completes."""
+
+    melee_base: AnyValueRef
+    ranged_base: AnyValueRef
+    melee_bonus_ad_ratio: AnyValueRef
+    ranged_bonus_ad_ratio: AnyValueRef
+    duration: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class CooldownProcRule:  # pylint: disable=too-many-instance-attributes
+    """Damage a trigger arms and a cooldown re-arms.
+
+    The family's biggest payload, and every optional field is a mechanic some
+    proc has and most do not: Scout's Slingshot refunds cooldown per attack
+    windup, Luden's Echo splits into charges, Eclipse needs a pair of hits and
+    pays a shield for it.  Each is a declared ``None`` where it does not
+    exist, because a zero refund and no refund at all are different claims.
+
+    ``late_phase`` and ``is_ability_damage`` are shape rather than magnitude:
+    they say when in the fight's ordering the row is stamped and whether the
+    damage counts as ability damage for everything downstream.
+    """
+
+    formula: DamageFormula
+    cooldown: AnyValueRef
+    trigger: ProcTrigger
+    repeat_on_cooldown: bool
+    is_ability_damage: bool
+    basic_damage: bool
+    late_phase: bool
+    threshold: DamageThreshold | None
+    attack_cooldown_refund: AnyValueRef | None
+    charged: ChargedSplash | None
+    stacks: StackGate | None
+    self_shield: SelfShield | None
+
+
+@dataclass(frozen=True, slots=True)
+class UltimateProcRule:
+    """Damage an ultimate cast arms, spread over one declared duration.
+
+    ``mr_reduction`` is Malignance's sibling and a declared ``None``
+    everywhere else: an ultimate proc that shreds nothing and one that shreds
+    zero magic resistance are different claims about the item.
+    """
+
+    formula: DamageFormula
+    duration: AnyValueRef
+    mr_reduction: AnyValueRef | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1054,6 +1185,8 @@ class AllyPacketRule:
 
 RulePayload = Union[
     ActiveCastRule,
+    CooldownProcRule,
+    UltimateProcRule,
     PeriodicRule,
     SpellbladeRule,
     AllyPacketRule,
@@ -1068,6 +1201,8 @@ RulePayload = Union[
 # a payload its family does not name.
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ActiveCastRule: RuleFamily.ACTIVE_CAST,
+    CooldownProcRule: RuleFamily.CAST_PROC,
+    UltimateProcRule: RuleFamily.CAST_PROC,
     PeriodicRule: RuleFamily.PERIODIC,
     SpellbladeRule: RuleFamily.SPELLBLADE,
     AllyPacketRule: RuleFamily.ALLY_PACKET,
@@ -1142,6 +1277,14 @@ def _validate_payload(rule: BehaviorRule) -> None:
     if isinstance(payload, OnHitStrikeRule):
         _validate_formula(rule, payload.formula)
         return
+    if isinstance(payload, CooldownProcRule):
+        _validate_cooldown_proc(rule, payload)
+        return
+    if isinstance(payload, UltimateProcRule):
+        _validate_formula(rule, payload.formula)
+        _validate_refs(rule, {"duration": payload.duration})
+        _validate_refs(rule, {"mr_reduction": payload.mr_reduction}, optional=True)
+        return
     if isinstance(payload, SpellbladeRule):
         _validate_spellblade(rule, payload)
         return
@@ -1196,6 +1339,38 @@ PERIODIC_CADENCE_FIELDS: dict[PeriodicCadence, frozenset[str]] = {
     PeriodicCadence.CONTINUOUS_AURA: frozenset(),
     PeriodicCadence.FIXED_INTERVAL: frozenset({"aoe_range_units", "self_heal_share"}),
 }
+
+
+def _validate_cooldown_proc(rule: BehaviorRule, payload: CooldownProcRule) -> None:
+    """A cooldown proc names a trigger, a clock and whichever siblings it has."""
+    _validate_formula(rule, payload.formula)
+    _validate_refs(rule, {"cooldown": payload.cooldown})
+    _validate_refs(
+        rule,
+        {"attack_cooldown_refund": payload.attack_cooldown_refund},
+        optional=True,
+    )
+    if not isinstance(payload.trigger, ProcTrigger):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a cooldown proc says what arms it"
+        )
+    for name in (
+        "repeat_on_cooldown",
+        "is_ability_damage",
+        "basic_damage",
+        "late_phase",
+    ):
+        if not isinstance(getattr(payload, name), bool):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: {name} is a declared bool with no default"
+            )
+    if (payload.threshold is not None) != (
+        payload.trigger is ProcTrigger.DAMAGE_THRESHOLD
+    ):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a damage-threshold trigger carries its share "
+            "and window, and no other trigger may; the two are one statement"
+        )
 
 
 def _validate_spellblade(rule: BehaviorRule, payload: SpellbladeRule) -> None:
@@ -1540,9 +1715,12 @@ __all__ = [
     "CONSUMPTION_TYPES",
     "Comparison",
     "Compilability",
+    "ChargedSplash",
     "Compilable",
+    "CooldownProcRule",
     "Consumption",
     "DamageFormula",
+    "DamageThreshold",
     "DeltaAmpRule",
     "EngineLane",
     "ExcludeTrigger",
@@ -1558,6 +1736,7 @@ __all__ = [
     "NEvents",
     "NextEventOnly",
     "NoFloor",
+    "NoScaling",
     "OnHitStrikeRule",
     "PAYLOAD_FAMILY",
     "POLICY_IDENTIFIER_FIELDS",
@@ -1571,6 +1750,7 @@ __all__ = [
     "Persistence",
     "Pool",
     "Probe",
+    "ProcTrigger",
     "RULE_FAMILY_COUNT",
     "RampModel",
     "RampPerSecond",
@@ -1581,16 +1761,22 @@ __all__ = [
     "ResistanceShredRule",
     "RuleFamily",
     "RulePayload",
+    "SCALING_TYPES",
     "SUBJECT_AUTHORITY",
+    "Scaling",
     "SecondaryTargetRule",
+    "SelfShield",
     "SpellbladeRule",
+    "StackGate",
     "StackRamp",
     "Subject",
     "TRIGGER_STREAM",
     "TargetBonusHealthScaled",
     "Term",
+    "TimesValue",
     "TriggerEvent",
     "TriggerWindow",
+    "UltimateProcRule",
     "Typing",
     "WindowBoundary",
     "WindowMerge",

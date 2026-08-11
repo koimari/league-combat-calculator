@@ -3680,8 +3680,6 @@ class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
     on_hit_heals: tuple[OnHitHealEffect, ...] = ()
-    cooldown_procs: tuple[CooldownProcEffect, ...] = ()
-    ultimate_procs: tuple[UltimateProcEffect, ...] = ()
     first_autos: tuple[FirstAutoEffect, ...] = ()
     auto_cooldowns: tuple[AutoCooldownEffect, ...] = ()
     stacking_on_hits: tuple[StackingOnHitEffect, ...] = ()
@@ -3804,121 +3802,6 @@ def _compile_per_ability_hit(
         raw,
         suffix="Shock - abilities",
         breakdown_key="muramana_ability",
-    )
-
-
-def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffect:
-    """Compile one triggered proc's per-application raw damage."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "charged_ap":
-        base = required.number("base_per_charge")
-        ap_ratio = required.number("ap_ratio_per_charge")
-        multiplier = required.number("single_target_multiplier")
-        charges = int(required.number("charges"))
-        repeated_target_multiplier = (multiplier - 1.0) / max(1, charges - 1)
-
-        def raw(inputs: DamageInputs) -> float:
-            ap = inputs.champion_stats.get("ability_power", 0.0)
-            return (base + ap_ratio * ap) * multiplier
-
-    elif formula == "flat_ap":
-        base = required.number("base")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    elif formula == "flat":
-        base = required.number("base")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    elif formula == "flat_ap_max_hp":
-        base = required.number("base")
-        ap_ratio = required.number("ap_ratio")
-        hp_ratio = required.number("target_max_hp_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return (
-                base
-                + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-                + hp_ratio * inputs.target_max_health
-            )
-
-    else:
-        raise ValueError(f"Unsupported proc formula {formula!r} for {item_name!r}")
-    source = DamageSource(
-        item_name=item_name,
-        breakdown_key=f"proc_{item_name}",
-        display_name=f"{item_name} (proc)",
-        damage_type=required.value("damage_type"),
-        raw_damage=raw,
-        is_ability_damage=bool(values.get("is_ability_damage", False)),
-        multi_target_charges=charges if formula == "charged_ap" else 0,
-        repeated_target_multiplier=(
-            repeated_target_multiplier if formula == "charged_ap" else 1.0
-        ),
-        single_target_multiplier=(multiplier if formula == "charged_ap" else 1.0),
-    )
-    trigger = str(values.get("trigger", "coarse"))
-    threshold = trigger == "damage_threshold"
-    return CooldownProcEffect(
-        source,
-        required.number("cooldown"),
-        bool(values.get("repeat_on_cooldown", True)),
-        trigger=trigger,
-        damage_threshold_ratio=(
-            required.number("damage_threshold_ratio") if threshold else 0.0
-        ),
-        damage_threshold_window=(
-            required.number("damage_threshold_window") if threshold else 0.0
-        ),
-        # The structural flag decides whether a refund exists; its parsed
-        # value is then required, so a parse miss raises instead of
-        # silently compiling a refund-less Bullseye.
-        on_attack_cooldown_refund=(
-            required.number("on_attack_cooldown_refund")
-            if values.get("attack_refund")
-            else 0.0
-        ),
-    )
-
-
-def _compile_ultimate_proc(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> UltimateProcEffect:
-    """Compile one ultimate-triggered duration formula."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula not in {"flat_ap", "flat"}:
-        raise ValueError(f"Unsupported ultimate proc formula for {item_name!r}")
-    base = required.number("base")
-    ap_ratio = required.number("ap_ratio") if formula == "flat_ap" else 0.0
-
-    def raw(inputs: DamageInputs) -> float:
-        return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    source = damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="Hatefog",
-        breakdown_key=f"ult_proc_{item_name}",
-    )
-    return UltimateProcEffect(
-        source,
-        required.number("duration"),
-        # Malignance's Hatefog packet and its target MR reduction are one
-        # parser-owned sibling effect. Other ultimate procs have no MR
-        # reduction and therefore carry an explicit zero.
-        (
-            required.number("mr_reduction")
-            if item_name == "Malignance"
-            else (required.number("mr_reduction") if "mr_reduction" in values else 0.0)
-        ),
     )
 
 
@@ -4094,48 +3977,6 @@ def _compile_stacking_on_hit(
     )
 
 
-def _compile_max_hp_proc(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> CooldownProcEffect:
-    """Compile a cooldown proc based on target maximum health."""
-    required = _RequiredValues(item_name, values)
-    if required.value("formula") != "max_hp":
-        raise ValueError(f"Unsupported max-HP proc formula for {item_name!r}")
-    melee_ratio = required.number("target_max_hp_ratio_melee")
-    ranged_ratio = required.number("target_max_hp_ratio_ranged")
-    stack_required = int(required.number("stack_required"))
-    stack_window = required.number("stack_window")
-    shield_melee_base = 0.0
-    shield_ranged_base = 0.0
-    shield_melee_bonus_ad_ratio = 0.0
-    shield_ranged_bonus_ad_ratio = 0.0
-    shield_duration = 0.0
-    if item_name == "Eclipse":
-        shield_melee_base = required.number("shield_melee_base")
-        shield_ranged_base = required.number("shield_ranged_base")
-        shield_melee_bonus_ad_ratio = required.number("shield_melee_bonus_ad_ratio")
-        shield_ranged_bonus_ad_ratio = required.number("shield_ranged_bonus_ad_ratio")
-        shield_duration = required.number("shield_duration")
-
-    def raw(inputs: DamageInputs) -> float:
-        ratio = melee_ratio if inputs.is_melee else ranged_ratio
-        return ratio * inputs.target_max_health
-
-    return CooldownProcEffect(
-        source=_explicit_damage_source(item_name, required, raw),
-        cooldown=required.number("cooldown"),
-        late_phase=True,
-        stack_required=stack_required,
-        stack_window=stack_window,
-        self_shield_melee_base=shield_melee_base,
-        self_shield_ranged_base=shield_ranged_base,
-        self_shield_melee_bonus_ad_ratio=shield_melee_bonus_ad_ratio,
-        self_shield_ranged_bonus_ad_ratio=shield_ranged_bonus_ad_ratio,
-        self_shield_duration=shield_duration,
-    )
-
-
 def _compile_shaped_charge(
     item_name: str,
     values: Mapping[str, Any],
@@ -4204,6 +4045,33 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "ult_proc",
     }
 )
+
+
+def row_presentation(item_name: str) -> tuple[str, str] | None:
+    """The breakdown key and display name one entry names for itself.
+
+    ``None`` when the entry names neither, in which case the family's own
+    interpreter derives both from the owner and its prefix.  Naming one and
+    not the other is a stop rather than half a row: a breakdown key nobody can
+    read or a display name nobody can find is worse than either alone.
+
+    Both keys are code-owned (``_STRUCTURAL_EFFECT_KEYS``), so a parse cannot
+    drop them and a present key really does mean the entry claims its own row.
+    """
+    entry = ITEM_EFFECTS.get(item_name)
+    if not isinstance(entry, Mapping):
+        return None
+    key = entry.get("breakdown_key")
+    name = entry.get("display_name")
+    if key is None and name is None:
+        return None
+    if not isinstance(key, str) or not isinstance(name, str):
+        raise KeyError(
+            f"ITEM_EFFECTS[{item_name!r}] names half of its own breakdown row "
+            "(breakdown_key + display_name are one statement) — parser/schema "
+            "bug; a row with only one of them is unreadable"
+        )
+    return (key, name)
 
 
 def entry_schema_keys(item_name: str) -> frozenset[str]:
@@ -4276,8 +4144,6 @@ def _resolve_damage_effects_uncached(
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
     on_hit_heals: list[OnHitHealEffect] = []
-    cooldown_procs: list[CooldownProcEffect] = []
-    ultimate_procs: list[UltimateProcEffect] = []
     first_autos: list[FirstAutoEffect] = []
     stacking_on_hits: list[StackingOnHitEffect] = []
     auto_cooldowns: list[AutoCooldownEffect] = []
@@ -4309,16 +4175,10 @@ def _resolve_damage_effects_uncached(
             )
         if effect_type == "on_hit_heal":
             on_hit_heals.append(_compile_on_hit_heal(item_name, values))
-        elif effect_type == "proc":
-            cooldown_procs.append(_compile_proc(item_name, values))
-        elif effect_type == "ult_proc":
-            ultimate_procs.append(_compile_ultimate_proc(item_name, values))
         elif effect_type == "on_hit_once":
             first_autos.append(_compile_first_auto(item_name, values))
         elif effect_type == "on_hit_stacking":
             stacking_on_hits.append(_compile_stacking_on_hit(item_name, values))
-        elif effect_type == "max_hp_proc":
-            cooldown_procs.append(_compile_max_hp_proc(item_name, values))
         elif effect_type == "shaped_charge":
             shaped_charges.append(_compile_shaped_charge(item_name, values))
         elif effect_type == "ult_empowered_autos":
@@ -4440,8 +4300,6 @@ def _resolve_damage_effects_uncached(
 
     return BuildDamageEffects(
         on_hit_heals=tuple(on_hit_heals),
-        cooldown_procs=tuple(cooldown_procs),
-        ultimate_procs=tuple(ultimate_procs),
         first_autos=tuple(first_autos),
         stacking_on_hits=tuple(stacking_on_hits),
         auto_cooldowns=tuple(auto_cooldowns),
