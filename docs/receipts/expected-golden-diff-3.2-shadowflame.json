@@ -59,6 +59,6 @@
   "measured": {
     "golden": 0,
     "coupled_golden": 0,
-    "note": "Measured after the edit against both committed baselines: zero differing leaves in either jurisdiction, so no leaf qualifies under R-15 and no oracle receipt is owed. The declared count and the measured count agree, which is what R-20 asks the declaration to do."
+    "note": "Measured after the edit against both committed baselines. The pair-golden compare is identical to scripts/golden_baseline.json — zero differing leaves. The coupled compare still reports the campaign's standing difference set, which this slice did not add to and did not shrink: its size is the same before and after the edit, and every member is claimed by an earlier committed expected-diff receipt (tests/test_coupled_golden_allowlist.py). Zero leaves are attributable to this slice in either jurisdiction, so nothing qualifies under R-15 and no oracle receipt is owed. The declared count and the measured count agree, which is what R-20 asks the declaration to do."
   }
 }
