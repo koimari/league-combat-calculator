@@ -178,7 +178,7 @@ class TestETwinFang:
 
 
 class TestRPetrifyingGaze:
-    """R: simple cone nuke; CC facing condition never changes damage."""
+    """R: cone damage plus the facing-dependent control branch."""
 
     def test_r_is_magic(self, cassiopeia_data) -> None:
         abilities = _parse(cassiopeia_data, ALL_MAXED)
@@ -200,6 +200,23 @@ class TestRPetrifyingGaze:
         r3 = _parse(cassiopeia_data, ALL_MAXED)
         assert r1["R"]["cooldown"] == pytest.approx(120.0)
         assert r3["R"]["cooldown"] == pytest.approx(80.0)
+
+    def test_r_facing_target_has_typed_stun(self, cassiopeia_data) -> None:
+        abilities = _parse(cassiopeia_data, ALL_MAXED)
+        part = abilities["R"]["parts"][0]
+        assert part.cc_kind == "stun"
+        assert part.cc_duration == pytest.approx(2.0)
+        assert part.control_source_atoms[0]["atom_id"] == "timing.control_duration"
+
+    def test_r_away_target_has_typed_slow(self, cassiopeia_data) -> None:
+        abilities = _parse(
+            cassiopeia_data,
+            ALL_MAXED,
+            options={"r_target_facing": False},
+        )
+        part = abilities["R"]["parts"][0]
+        assert part.cc_kind == "slow"
+        assert part.cc_duration == pytest.approx(2.0)
 
 
 # ---------------------------------------------------------------------------
@@ -323,8 +340,10 @@ class TestPassiveAndMeta:
     def test_options_meta(self) -> None:
         meta = get_champion_options_meta("Cassiopeia")
         keys = {opt["key"] for opt in meta["options"]}
-        assert keys == {"target_poisoned"}
-        (opt,) = meta["options"]
-        assert opt["type"] == "bool"
-        assert opt["default"] is True
+        assert keys == {"target_poisoned", "r_target_facing"}
+        options = {option["key"]: option for option in meta["options"]}
+        assert options["target_poisoned"]["type"] == "bool"
+        assert options["target_poisoned"]["default"] is True
+        assert options["r_target_facing"]["type"] == "bool"
+        assert options["r_target_facing"]["default"] is True
         assert meta["assumptions"]

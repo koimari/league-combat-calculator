@@ -11,11 +11,15 @@ from typing import Any
 
 from .champions import _CHAMPION_MODULES
 from .champions.healing_contract import ChampionHealingRule
-from .healing_helpers import _taric_starlights_touch as _LEGACY_TARIC_STARLIGHTS_TOUCH
+from .healing_helpers import (
+    _leveling_ratio as _LEGACY_LEVELING_RATIO,
+    _taric_starlights_touch as _LEGACY_TARIC_STARLIGHTS_TOUCH,
+)
 from .healing_legacy import GREY_HEALTH_RULE_CHAMPIONS as _GREY_HEALTH_RULE_CHAMPIONS
 
 GREY_HEALTH_RULE_CHAMPIONS = _GREY_HEALTH_RULE_CHAMPIONS
 _taric_starlights_touch = _LEGACY_TARIC_STARLIGHTS_TOUCH
+_leveling_ratio = _LEGACY_LEVELING_RATIO
 
 
 def _load_declarations() -> dict[str, ChampionHealingRule]:

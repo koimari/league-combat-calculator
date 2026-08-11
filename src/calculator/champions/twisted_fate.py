@@ -32,6 +32,7 @@ from .slotlib import (
     find_named_leveling,
     simple_damage,
     sum_modifiers,
+    with_control,
 )
 
 # Pick a Card's three card branches, in the cycle order the game presents
@@ -61,9 +62,14 @@ def _card_parser(occurrence: int, name: str):
     return parse
 
 
-_CARDS = tuple(
-    _card_parser(occurrence, name)
-    for occurrence, name in zip(_CARD_OCCURRENCES, _CARD_NAMES)
+_CARDS = (
+    with_control(
+        _card_parser(_CARD_OCCURRENCES[0], _CARD_NAMES[0]),
+        kind="stun",
+        duration_attr="Stun Duration",
+    ),
+    _card_parser(_CARD_OCCURRENCES[1], _CARD_NAMES[1]),
+    _card_parser(_CARD_OCCURRENCES[2], _CARD_NAMES[2]),
 )
 
 

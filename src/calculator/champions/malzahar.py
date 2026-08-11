@@ -44,6 +44,7 @@ from .slotlib import (
     extract_value,
     find_named_leveling,
     fixed_count_pet_row,
+    with_control,
 )
 
 # E: 16 ticks over 4s (every 0.25s); R: 10 ticks over 2.5s (every 0.25s).
@@ -248,7 +249,17 @@ PACKET_SPEC = SLOTS.packet_spec
 # Override the packet DoT rows with the full-total tick pricing above and
 # the packet's single-attack W with the sourced voidling swarm, then
 # rebuild the parser so the module's parse_abilities sees them.
-SLOTS = {**SLOTS, "W": _void_swarm, "E": _malefic_visions, "R": _nether_grasp}
+SLOTS = {
+    **SLOTS,
+    "Q": with_control(
+        SLOTS["Q"],
+        kind="silence",
+        duration_attr="Silence Duration",
+    ),
+    "W": _void_swarm,
+    "E": _malefic_visions,
+    "R": _nether_grasp,
+}
 parse_abilities = build_parser(SLOTS, "Malzahar")
 OPTIONS = [
     *OPTIONS,

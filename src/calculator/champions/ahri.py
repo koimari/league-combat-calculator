@@ -26,7 +26,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .slotlib import extract_auto, extract_cooldown, extract_named, simple_damage
+from .slotlib import (
+    extract_auto,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    simple_damage,
+)
 
 
 def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -118,7 +124,14 @@ def _charm(ctx: SlotCtx) -> dict[str, Any] | None:
         "name": ability.get("name", "Charm"),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
-        "parts": (DamagePart("magic", damage, cc_kind="immobilize"),),
+        "parts": (
+            DamagePart(
+                "magic",
+                damage,
+                cc_kind="immobilize",
+                cc_duration=extract_value(ability, "Disable Duration", rank),
+            ),
+        ),
         "total_raw": damage,
         "damage_type": "magic",
         "event_order_certified": "single_hit",

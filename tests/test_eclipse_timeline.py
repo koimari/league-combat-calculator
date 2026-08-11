@@ -68,6 +68,7 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
             "damage": 80.0,
             "damage_type": "physical",
             "event_precision": "exact",
+            "target_id": "target:0",
         }
     ]
 
@@ -90,6 +91,7 @@ def test_eclipse_prefers_authored_ability_hit_time() -> None:
             "damage": 80.0,
             "damage_type": "physical",
             "event_precision": "hit",
+            "target_id": "target:0",
         }
     ]
     assert "proc_Eclipse" in fight["timeline_coverage"]["exact_sources"]

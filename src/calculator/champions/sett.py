@@ -274,6 +274,14 @@ ASSUMPTIONS = [
     "expended Grit also grants Sett an equal shield for 3s "
     "(self_shield_events). The outer physical ring is state",
     "E/R damage keep the reviewed CP10.7 packet pricing",
+    "P (Pit Grit) always-on missing-health regeneration is authored by "
+    "the HEALING_RULE_CHAMPIONS rule in healing.py: the cached prose row "
+    "0.075 / 0.25 / 0.5 / 1 / 1.025 / 1.05 (based on level) health per "
+    "0.5 seconds per 5% of missing health, capped at the sourced 19x "
+    "maximum at 95% missing health (1.425 / 4.75 / 9.5 / 19 / 19.475 / "
+    "19.95); the 6-value rows use the standard 1/6/11/16/17/18 "
+    "breakpoints and the survival walk re-prices each tick from the "
+    "fighter's live health",
 ]
 
 SOURCES = load_champion_sources("Sett")
@@ -282,3 +290,83 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
+
+
+def derive_self_healing(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Resolve Pit Grit's sourced missing-health regeneration stream."""
+    del ability_damages, damage_events, cast_timeline
+    p_text = (
+        " ".join(
+            effect.get("description", "")
+            for effect in _healing._ability(champion_data, "P").get("effects", [])
+        )
+        .replace("[", " ")
+        .replace("]", " ")
+    )
+    base_match = re.search(
+        r"regenerates\s+an additional\s+([\d.\s/]+?)\s*\(based on level\)"
+        r"\s*health every 0\.5 seconds per 5% of his missing health",
+        p_text,
+        flags=re.IGNORECASE,
+    )
+    max_match = re.search(
+        r"up-to an additional\s+([\d.\s/]+?)\s*\(based on level\)"
+        r"\s*health per 0\.5 seconds",
+        p_text,
+        flags=re.IGNORECASE,
+    )
+    if base_match is None or max_match is None:
+        return []
+    base_values = [
+        float(value) for value in re.findall(r"\d+(?:\.\d+)?", base_match.group(1))
+    ]
+    max_values = [
+        float(value) for value in re.findall(r"\d+(?:\.\d+)?", max_match.group(1))
+    ]
+    level = max(1, int(champion_stats.get("level", 18) or 18))
+    base = _healing._level_breakpoint_value(base_values, level)
+    maximum = _healing._level_breakpoint_value(max_values, level)
+    segments_cap = int(round(maximum / base)) if base > 0.0 else 0
+    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    if duration <= 0.0 or base <= 0.0:
+        return []
+
+    def pit_grit_heal(current_health: float, maximum_health: float) -> float:
+        if maximum_health <= 0.0:
+            return 0.0
+        missing_pct = max(0.0, maximum_health - current_health) / maximum_health * 100.0
+        return min(segments_cap, int(missing_pct // 5.0)) * base
+
+    healing = []
+    tick = 0.5
+    sequence = 0
+    while tick <= duration + 1e-9:
+        healing.append(
+            {
+                "time": tick,
+                "amount": 0.0,
+                "amount_formula": pit_grit_heal,
+                "source": "Pit Grit",
+                "kind": "regen",
+                "actor_wide": True,
+                "sequence": sequence,
+            }
+        )
+        sequence += 1
+        tick += 0.5
+    return healing
+
+
+from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+from .healing_contract import (  # pylint: disable=wrong-import-position
+    declare_healing_rule,
+)
+
+SELF_HEALING_RULE = declare_healing_rule("Sett", derive_self_healing)

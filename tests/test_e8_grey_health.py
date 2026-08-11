@@ -34,6 +34,7 @@ import pytest
 from src import app as app_module
 
 _ENEMY_NAMES = ["Ahri", "Annie"]
+_DEFAULT_ENEMY_RANKS = {"Q": 5, "W": 5, "E": 0, "R": 3}
 
 
 def _fight(
@@ -63,7 +64,7 @@ def _fight(
                 "level": 18,
                 "items": [],
                 "role": "mid",
-                "ability_ranks": enemy_ranks or {"Q": 5, "W": 5, "E": 5, "R": 3},
+                "ability_ranks": enemy_ranks or _DEFAULT_ENEMY_RANKS,
             }
             for index in range(enemy_count)
         ],

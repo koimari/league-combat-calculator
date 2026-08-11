@@ -19,6 +19,7 @@ float-addition order.
 from __future__ import annotations
 
 from typing import Any
+from collections.abc import Mapping
 
 from .actions import SurvivalAction
 
@@ -28,10 +29,20 @@ class ScoreLedger:
 
     ``applied[aidx]`` holds each action's applied amount (the accumulator's
     per-attacker float-sum order replays it) and ``status[aidx]`` is the
-    write-once trigger marker.
+    write-once trigger marker.  P3 package 3T: the ledger mirrors the
+    receipt adapter's walk-authored heal insertion (Maw's post-Lifeline
+    omnivamp heals) by holding the live actions list and growing the
+    parallel arrays for each inserted action.
     """
 
-    __slots__ = ("n_actions", "applied", "status")
+    __slots__ = (
+        "n_actions",
+        "applied",
+        "status",
+        "actions",
+        "index_of",
+        "current_index",
+    )
 
     # Ledger capability flags (issue #171): the kernel's hot loop skips
     # building annotate()/event-field kwargs entirely when the ledger
@@ -39,10 +50,19 @@ class ScoreLedger:
     records_annotations = False
     records_event_fields = False
 
-    def __init__(self, n_actions: int) -> None:
+    def __init__(
+        self,
+        n_actions: int,
+        *,
+        actions: list | None = None,
+        index_of: Mapping | None = None,
+    ) -> None:
         self.n_actions = n_actions
         self.applied: list[float] = [0.0] * n_actions
         self.status = bytearray(n_actions)
+        self.actions: list | None = actions
+        self.index_of: Mapping | None = index_of
+        self.current_index: int = -1
 
     # -- observation ---------------------------------------------------------
     # pylint: disable=unused-argument  # protocol-shaped no-op
@@ -90,15 +110,44 @@ class ScoreLedger:
         # applied marker, which fails the same trigger gate.
         return None
 
-    # -- walk-authored scheduling (fail closed) -------------------------------
+    # -- walk-authored scheduling (P3 package 3T) ----------------------------
     def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None:
-        # Compilation rejects every mechanic that could author a
-        # walk-time recovery (Maw omnivamp, Doran's Shield Enduring Focus,
-        # Death's Dance Defy), so this must never fire in score mode.
-        raise AssertionError(
-            "score ledger cannot schedule walk-authored heals; "
-            "the packet should have failed compilation"
+        """Insert a walk-authored recovery packet beside the current action,
+        mirroring the receipt adapter (Maw's post-Lifeline omnivamp heals).
+
+        The compiled walk drives the identical kernel, so a trigger-time
+        heal must land at the same timestamp with the same amount; the
+        parallel arrays grow by one slot for the inserted action.
+        """
+        if self.actions is None or self.index_of is None:
+            raise AssertionError(
+                "score ledger cannot schedule walk-authored heals without "
+                "the live actions list and index_of (compiler wiring)"
+            )
+        from .actions import action_key, survival_action_from_event
+
+        heal_event["_sk"] = action_key(
+            float(heal_event.get("time", 0.0)), 1.0, recipient_id, heal_event
         )
+        aidx = self.n_actions
+        self.n_actions += 1
+        self.applied.append(0.0)
+        self.status.append(0)
+        action = survival_action_from_event(
+            heal_event,
+            1.0,
+            self.index_of[recipient_id],
+            self.index_of,
+            subject_id=recipient_id,
+            aidx=aidx,
+        )
+        insertion = max(self.current_index + 1, 0)
+        while (
+            insertion < len(self.actions)
+            and self.actions[insertion].sort_key <= action.sort_key
+        ):
+            insertion += 1
+        self.actions.insert(insertion, action)
 
 
 __all__ = ["ScoreLedger"]

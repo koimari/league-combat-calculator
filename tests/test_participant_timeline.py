@@ -163,11 +163,21 @@ def test_guardian_angel_revives_target_after_first_lethal_packet():
         survival["first_death_time"] + 4.0, abs=1e-3
     )
     assert survival["revive_health_restored"] == pytest.approx(100.0)
+    assert survival["action_downtime"] == pytest.approx(4.0, abs=1e-3)
+    assert survival["action_downtime_intervals"] == [
+        {
+            "recipient": "enemy:Aatrox",
+            "kind": "death",
+            "start": survival["first_death_time"],
+            "end": survival["revive_time"],
+            "source": "auto_attacks",
+        }
+    ]
     assert survival["terminal_phase"] == "revived"
 
 
-def test_fimbulwinter_everlasting_is_attached_after_ahri_charm():
-    """Ahri's reviewed Charm marker arms the holder's ordered self shield."""
+def test_fimbulwinter_ahri_charm_reports_unavailable_mana_gate_authority():
+    """Ahri's reviewed Charm reaches the fail-closed mana-gate receipt."""
     main = get_champion("Ahri")
     loadout = ChampionLoadout(
         champion="Ahri", level=18, items=("Fimbulwinter",)
@@ -194,17 +204,179 @@ def test_fimbulwinter_everlasting_is_attached_after_ahri_charm():
         allies=[],
     )
 
-    everlasting = next(
+    assert not [
         event
         for event in result["support_events"]
         if event["source"] == "Fimbulwinter — Everlasting"
+    ]
+    everlasting = [
+        event
+        for event in result["item_denial_receipts"]
+        if event["source"] == "Fimbulwinter — Everlasting"
+    ]
+    assert everlasting
+    assert {event["reason"] for event in everlasting} == {
+        "mana_gate_authority_unavailable"
+    }
+    assert {event["mana_gate_status"] for event in everlasting} == {
+        "source_unavailable"
+    }
+    assert {event["source_revision_id"] for event in everlasting} == {3984419}
+    assert result["participants"][0]["survival"]["support_shield_received"] == 0.0
+
+
+def test_fimbulwinter_denial_receipts_are_split_from_applied_support_events():
+    """A ranged holder's slow never fires Everlasting and the rejection is
+    a NAMED denial receipt in the timeline's public section — never an
+    applied support event.
+
+    Cassiopeia's R authors a typed ``slow`` control part when
+    ``r_target_facing`` is off; Cassiopeia is ranged, so the CC-adjacent
+    event is denied with ``ranged_slow``.
+    """
+    champion = get_champion("Cassiopeia")
+    loadout = ChampionLoadout(
+        champion="Cassiopeia", level=18, items=("Fimbulwinter",)
+    ).resolve()
+    enemy = ChampionLoadout(champion="Aatrox", level=18, items=()).resolve()
+    params = FightParams.from_request(
+        {
+            "fight_mode": "one_rotation",
+            "ability_ranks": {"Q": 0, "W": 0, "E": 0, "R": 1},
+            "auto_attack_uptime": 0.0,
+            "champion_options": {"r_target_facing": False},
+        },
+        deterministic=True,
     )
-    assert everlasting["trigger_kind"] == "immobilize"
-    assert everlasting["current_mana"] > everlasting["mana_threshold"]
-    assert everlasting["nearby_enemy_count"] == pytest.approx(1.0)
-    assert everlasting["multi_target_multiplier"] == pytest.approx(1.0)
-    assert everlasting["source_revision_id"] == 3984419
-    assert result["participants"][0]["survival"]["support_shield_received"] > 0.0
+    result = build_participant_timeline(
+        champion,
+        18,
+        list(loadout.item_data),
+        params,
+        main_stats=loadout.stats,
+        main_defenses=resolve_starting_defenses(
+            "Cassiopeia", 18, loadout.stats, list(loadout.item_data)
+        ),
+        enemies=[enemy],
+        allies=[],
+    )
+    denials = [
+        row
+        for row in result["item_denial_receipts"]
+        if row["source"] == "Fimbulwinter — Everlasting"
+    ]
+    assert denials, "the ranged-slow rejection must be receipted"
+    assert all(row["reason"] == "ranged_slow" for row in denials)
+    # Receipts never leak into the applied support stream.
+    fimbulwinter_support = [
+        event
+        for event in result["support_events"]
+        if event["source"] == "Fimbulwinter — Everlasting"
+    ]
+    assert fimbulwinter_support == []
+    # The typed slow still certifies the CC dimension (every ability event
+    # carries a typed cc_kind).
+    assert result["timeline_coverage"]["complete"] is True
+
+
+def test_fimbulwinter_holder_keeps_dict_rows_in_score_only_fights():
+    """CC-trigger holders are excluded from the tuple-ledger fast path.
+
+    A score-only fight for a Fimbulwinter holder must keep dict damage rows
+    (the Everlasting scan reads the per-event CC metadata); a tuple ledger
+    would silently starve the scan (P3-3B hardening).
+    """
+    champion = get_champion("Ahri")
+    item = get_item_by_name("Fimbulwinter")
+    stats = calculate_total_stats(champion, 18, [item])
+    params = FightParams.from_request(
+        {"fight_mode": "one_rotation", "auto_attack_uptime": 0.0},
+        deterministic=True,
+    )
+    result = run_fight(champion, 18, [item], params, score_only=True)
+    assert "damage_events_tuple" not in result
+    assert result["damage_events"] and all(
+        isinstance(event, dict) for event in result["damage_events"]
+    )
+
+
+def test_eclipse_holder_keeps_dict_rows_in_score_only_fights():
+    """Eclipse's stack proc attaches its self shield to the damage events;
+    a score-only tuple ledger cannot carry it, so an Eclipse holder keeps
+    dict rows (P3-3C hardening; the compiled walk already fails closed)."""
+    champion = get_champion("Ziggs")
+    item = get_item_by_name("Eclipse")
+    stats = calculate_total_stats(champion, 18, [item])
+    params = FightParams.from_request(
+        {
+            "fight_mode": "one_rotation",
+            "ability_ranks": {"Q": 1, "W": 0, "E": 0, "R": 0},
+            "auto_attack_uptime": 0.0,
+        },
+        deterministic=True,
+    )
+    result = run_fight(champion, 18, [item], params, score_only=True)
+    assert "damage_events_tuple" not in result
+    assert result["damage_events"] and all(
+        isinstance(event, dict) for event in result["damage_events"]
+    )
+    # The proc row and its shield receipt survive the score-only fight.
+    row = result["breakdown"].get("proc_Eclipse")
+    if row is not None:
+        assert "self_shield_events" in row
+
+
+def test_legacy_score_path_is_stasis_blind_while_coupled_combat_prices_it():
+    """P3-3F named boundary: the one-way headline score (run_fight) has no
+    timeline, so it never prices starting stasis; the coupled combat
+    timeline does.  The two numbers are documented as different altitudes —
+    the headline is stasis-invariant, the coupled receipt reflects it."""
+    champion = get_champion("Ahri")
+    item = get_item_by_name("Zhonya's Hourglass")
+    params = FightParams.from_request(
+        {
+            "fight_mode": "one_rotation",
+            "ability_ranks": {"Q": 1, "W": 0, "E": 0, "R": 0},
+            "auto_attack_uptime": 1.0,
+            "item_options": {"Zhonya's Hourglass": {"stasis_active_seconds": 2.0}},
+        },
+        deterministic=True,
+    )
+    plain = FightParams.from_request(
+        {
+            "fight_mode": "one_rotation",
+            "ability_ranks": {"Q": 1, "W": 0, "E": 0, "R": 0},
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+    with_stasis = run_fight(champion, 18, [item], params)
+    without = run_fight(champion, 18, [item], plain)
+    # The headline is stasis-invariant (no timeline to price the window).
+    assert with_stasis["total_damage"] == pytest.approx(without["total_damage"])
+
+    # The coupled timeline prices the same input.
+    enemy = ChampionLoadout(champion="Aatrox", level=18, items=()).resolve()
+    stats = calculate_total_stats(champion, 18, [item])
+    result = build_participant_timeline(
+        champion,
+        18,
+        [item],
+        params,
+        main_stats=stats,
+        main_defenses=resolve_starting_defenses(
+            "Ahri",
+            18,
+            stats,
+            [item],
+            item_options={"Zhonya's Hourglass": {"stasis_active_seconds": 2.0}},
+        ),
+        enemies=[enemy],
+        allies=[],
+    )
+    survival = result["participants"][0]["survival"]
+    assert survival["stasis_until"] == pytest.approx(2.0)
+    assert float(survival["action_downtime"]) >= 2.0
 
 
 def test_protoplasm_reprices_delayed_target_max_health_ticks_in_coupled_walk():
@@ -405,6 +577,7 @@ def test_sundered_sky_heal_uses_live_missing_health_in_both_walks():
             "fight_duration": 4,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
         },
         deterministic=True,
     )
@@ -443,12 +616,8 @@ def test_sundered_sky_heal_uses_live_missing_health_in_both_walks():
     assert heal["raw_amount"] > heal["amount"]
     # Ahri's Essence Theft passive heal (95, 20% AP) lands first at t=0,
     # so the item heal's missing-health component re-prices from the
-    # already-healed live health: 118.0 before the E9-2 passive fix,
-    # 112.3 with it.  F2: the enemy Annie now opens with her optimal
-    # E (shield) -> R burst, which shifts her damage timing and leaves
-    # Ahri with less missing health at the heal: 121.6.  Pass 17: Ahri
-    # is RANGED, so Lightshield Strike heals 50% base AD (the melee
-    # 100% variant is not used) -> 69.6.
+    # already-healed live health. Ahri is ranged, so Lightshield Strike
+    # heals 50% base AD.
     assert heal["raw_amount"] == pytest.approx(69.6)
     assert fast["participants"] == legacy["participants"]
     assert fast["breakdown"] == legacy["breakdown"]
@@ -513,6 +682,7 @@ def test_dusk_and_dawn_self_heal_mutates_main_participant_health_ledger():
             "fight_duration": 4,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
             "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
         },
     )
@@ -531,9 +701,8 @@ def test_dusk_and_dawn_self_heal_mutates_main_participant_health_ledger():
     main = next(
         row for row in combat["participants"] if row["participant_id"] == "main"
     )
-    # Ahri's Essence Theft passive heal (107 with Dusk and Dawn's 60 AP)
-    # now lands at t=0 alongside the item heal: 15.0 before the E9-2
-    # passive fix, 122.0 with it.
+    # Ahri's Essence Theft passive heal (107 with Dusk and Dawn's 60 AP) and
+    # the item heal land at t=0 and t=1.5.
     assert main["survival"]["healing_received"] == 122.0
 
 
@@ -761,7 +930,7 @@ def test_target_unending_multitarget_heals_have_pair_receipts_and_dead_targets_s
             ],
             "allies": [
                 {
-                    "champion": "Lulu",
+                    "champion": "Yuumi",
                     "level": 18,
                     "items": [],
                     "role": "support",
@@ -1049,7 +1218,13 @@ def test_syndra_100_stack_r_executes_in_the_coupled_timeline():
         for event in payload["combat"]["events"]
         if event["attacker"] == "main" and event["source"] == "R"
     )
+    other_damage_events = [
+        event
+        for event in payload["combat"]["events"]
+        if event["attacker"] == "main" and event["source"] in {"Q", "Q2", "W", "E"}
+    ]
 
+    assert all(event["sequence"] < r_event["sequence"] for event in other_damage_events)
     assert target["survival"]["execute_source"] == "Unleashed Power"
     assert target["survival"]["execute_time"] == pytest.approx(r_event["time"])
     assert r_event["execute_triggered"] is True
@@ -1973,7 +2148,7 @@ def _bis_request(subject_team: str) -> dict:
         ],
         "allies": [
             {
-                "champion": "Lulu",
+                "champion": "Yuumi",
                 "level": 18,
                 "items": [],
                 "role": "support",
@@ -2545,6 +2720,76 @@ def test_simulator_amplifies_authored_support_shields_for_spirit_visage():
     )
 
     assert result["target"]["support_shield_received"] == 125.0
+
+
+def test_simulator_reprices_damage_inside_aftershock_resistance_window():
+    source = _dummy_combatant("source", "main", health=1000.0)
+    target = _dummy_combatant("target", "enemy", health=1000.0)
+    source.stats.update(
+        {
+            "armor": 50.0,
+            "magic_resistance": 50.0,
+            "bonus_armor": 0.0,
+            "bonus_magic_resistance": 0.0,
+        }
+    )
+    target.stats.update({"armor": 50.0, "magic_resistance": 50.0})
+    control = {
+        "time": 0.0,
+        "kind": "crowd_control",
+        "cc_kind": "stun",
+        "cc_duration": 1.0,
+        "damage": 0.0,
+        "attacker": "source",
+        "target": "target",
+        "source_key": "Q",
+        "source": "Test stun",
+        "sequence": 0,
+        "_event_id": "control",
+    }
+    hit = {
+        "time": 1.5,
+        "kind": "damage",
+        "damage": 100.0,
+        "damage_type": "physical",
+        "attacker": "target",
+        "target": "source",
+        "source_key": "auto_attacks",
+        "source": "Test hit",
+        "sequence": 1,
+        "_event_id": "hit",
+        "_baseline_effective_armor": 50.0,
+    }
+    aftershock = {
+        "time": 1e-9,
+        "kind": "stat_buff",
+        "amount": 0.0,
+        "duration": 2.5,
+        "bonus_armor": 45.0,
+        "bonus_magic_resistance": 45.0,
+        "attacker": "source",
+        "target": "source",
+        "source_key": "rune_Aftershock",
+        "source": "Aftershock · Resistance",
+        "_aftershock": True,
+        "_trigger_event_id": "control",
+        "_event_id": "aftershock",
+        "_priority": 0.0,
+    }
+    result = _simulate_survival(
+        [source, target],
+        {"source": [hit], "target": [control]},
+        {},
+        {"source": [aftershock]},
+        3.0,
+    )
+    baseline_factor = 100.0 / 150.0
+    aftershock_factor = 100.0 / 195.0
+    assert result["source"]["health_damage"] == pytest.approx(
+        100.0 * aftershock_factor / baseline_factor, abs=0.05
+    )
+    assert result["source"]["aftershock"]["bonus_armor"] == pytest.approx(45.0)
+    assert result["source"]["aftershock"]["until"] == pytest.approx(2.5)
 
 
 def test_simulator_orders_same_timestamp_events_without_comparing_payloads():
@@ -3543,6 +3788,84 @@ def test_survival_walk_blocks_stasis_damage_and_allows_explicit_revive():
     assert result["target"]["ending_health"] == 0.0
 
 
+def test_standalone_crowd_control_blocks_actions_and_merges_downtime():
+    source = _dummy_combatant("source", "enemy")
+    target = _dummy_combatant("target", "main")
+    outgoing = [
+        {
+            "time": 1.5,
+            "kind": "damage",
+            "damage": 10.0,
+            "raw_damage": 10.0,
+            "damage_type": "physical",
+            "attacker": "target",
+            "target": "source",
+            "source": "AA",
+            "source_key": "basic_attack",
+            "sequence": 0,
+            "_event_id": "blocked-by-cc",
+        },
+        {
+            "time": 3.0,
+            "kind": "damage",
+            "damage": 10.0,
+            "raw_damage": 10.0,
+            "damage_type": "physical",
+            "attacker": "target",
+            "target": "source",
+            "source": "AA",
+            "source_key": "basic_attack",
+            "sequence": 1,
+            "_event_id": "after-cc",
+        },
+    ]
+    incoming = {
+        "target": [
+            {
+                "time": 0.0,
+                "kind": "crowd_control",
+                "damage": 0.0,
+                "cc_kind": "stun",
+                "cc_duration": 2.0,
+                "attacker": "source",
+                "target": "target",
+                "source": "Q",
+                "source_key": "Q",
+                "sequence": 0,
+                "_event_id": "first-cc",
+            },
+            {
+                "time": 1.0,
+                "kind": "crowd_control",
+                "damage": 0.0,
+                "cc_kind": "root",
+                "cc_duration": 2.0,
+                "attacker": "source",
+                "target": "target",
+                "source": "W",
+                "source_key": "W",
+                "sequence": 1,
+                "_event_id": "overlapping-cc",
+            },
+        ],
+        "source": outgoing,
+    }
+    result = _simulate_survival(
+        [source, target],
+        incoming,
+        {},
+        {},
+        4.0,
+        receipt_events={"source": outgoing},
+    )
+
+    assert result["target"]["action_downtime"] == pytest.approx(3.0)
+    assert result["target"]["crowd_control_until"] == pytest.approx(3.0)
+    assert len(result["target"]["crowd_control_intervals"]) == 2
+    assert outgoing[0]["skipped_reason"] == "attacker_state_blocked"
+    assert "skipped_reason" not in outgoing[1]
+
+
 def test_revive_after_fight_window_cannot_change_terminal_state():
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = _dummy_combatant("target", "main", health=50.0)
@@ -4218,6 +4541,16 @@ def test_explicit_time_stop_input_starts_stasis_and_blocks_until_expiry():
     assert result["target"]["damage_taken"] == pytest.approx(30.0)
     assert result["target"]["stasis_until"] == pytest.approx(2.5)
     assert result["target"]["stasis_source"] == "Zhonya's Hourglass — Time Stop"
+    assert result["target"]["action_downtime"] == pytest.approx(2.5)
+    assert result["target"]["action_downtime_intervals"] == [
+        {
+            "recipient": "target",
+            "kind": "stasis",
+            "start": 0.0,
+            "end": 2.5,
+            "source": "Zhonya's Hourglass — Time Stop",
+        }
+    ]
 
 
 def test_invulnerability_and_untargetability_receipts_expose_expiry_boundaries():
@@ -4907,6 +5240,7 @@ def test_search_context_keeps_item_heals_and_ignores_post_window_packets():
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
             "role": "mid",
+            "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
         },
         deterministic=True,
     )

@@ -5,9 +5,10 @@ abilities rank 5, ultimates rank 3, no items, enemy Ahri) and asserts
 the sourced pet damage through the combat ledger:
 
 - Yorick: 4 Mist Walkers x 5 attacks of (15 : 100 by level x stat
-  progression + 20% AD) physical, plus the Maiden of the Mist 5 attacks
-  of (50/100/150 by R rank + 30% AD) magic — game-file constants, not
-  in data/champions.json (the ability text points to "See Pets").
+  progression + 20% bonus AD) physical, plus the Maiden of the Mist 5
+  attacks of (50/75/100 by R rank + 30% bonus AD) magic — game-file
+  constants (13.21 rank bases), not in data/champions.json (the ability
+  text points to "See Pets").
 - Zyra: 1 plant x 4 attacks of (15 : 75 by level + 20% AP) magic —
   game-file constant (ZyraP PlantDamage).
 - Ivern: Daisy 6 attacks = 4 basics of (70/100/130 by R rank + 15% AP)
@@ -59,7 +60,7 @@ _ENEMY = {
     "level": 18,
     "items": [],
     "role": "mid",
-    "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+    "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
 }
 _FULL_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 

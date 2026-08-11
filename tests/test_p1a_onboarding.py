@@ -4,7 +4,7 @@ Pins the first-run onboarding overlay and its two companion docs without a
 browser, following the F0/P5 static-contract pattern:
 
 * the overlay markup renders in the served page: one dismissible 3-step tour
-  (champion + role → Best next item → Analyst certainty chips), hidden by
+  (champion setup → build setup → result proof), hidden by
   default, ``role=dialog`` + ``aria-modal``, Skip/Back/Next/Close wired
 * app.js drives it purely additively: reads the ``scryglass_onboarded``
   localStorage flag, persists it on every dismiss path (Skip / × / Escape /

@@ -13,8 +13,9 @@ E9-2 gap fixes:
   cached "Shield Strength" row (50-110 + 50% AP) and rides the E damage
   entry as a module-authored self-shield (E8c payload), so the 1v1 ledger
   grants it without needing a teammate.
-- Q/E damage remain modeled; W bailout and R berserk stay documented
-  out-of-scope rows.
+- Q/E damage remain modeled. W Bailout stays fail-closed because the local
+  Wiki cache and game binary disagree on the burn cadence and damage class.
+  R berserk stays documented as an out-of-scope row.
 """
 
 from typing import Any
@@ -38,6 +39,25 @@ _P_AP_RATIO_PER_100 = 2.0
 # E shield duration (cached E description: "granted a shield for 3
 # seconds").
 _E_SHIELD_DURATION = 3.0
+
+# Bailout cannot enter the survival kernel until its burn has one exact local
+# authority. The Wiki cache says one 10%-maximum-health tick every 0.264s and
+# describes true damage. Its notes call the same health loss raw damage. The
+# local 16.15 game binary instead carries TicksPerSecond=4 (0.25s). Publishing
+# either interpretation would overstate or understate survival, so this
+# source-status receipt is descriptive only and runtime availability is false.
+BAILOUT_AUTHORITY = {
+    "runtime_available": False,
+    "reason": "burn_authority_conflict",
+    "wiki_burn_interval_seconds": 0.264,
+    "gamefile_ticks_per_second": 4.0,
+    "wiki_description_damage_class": "true",
+    "wiki_notes_damage_class": "raw",
+    "gamefile_path": "data/bin/characters/renata.bin.json",
+    "gamefile_sha256": (
+        "9f6ffc8c07f63734978479b3f56c2b364d07cd2bcb46f061936c0bebd03d5000"
+    ),
+}
 
 
 def _leverage_per_proc(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -80,6 +100,8 @@ def _loyalty_program(ctx: SlotCtx) -> dict[str, Any] | None:
             time_offset=0.0,
             hit_interval=part.hit_interval,
             cc_kind=part.cc_kind,
+            cc_duration=part.cc_duration,
+            skillshot=part.skillshot,
         )
         for part in entry["parts"]
     )
@@ -141,10 +163,20 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "option (default 1)",
     "E (Loyalty Program) grants Renata herself a 3s shield for the "
     "sourced Shield Strength (50-110 + 50% AP) — the rockets strike "
-    "'Renata and allies'; the ally half needs a roster teammate and is "
-    "not priced in the 1v1",
+    "'Renata and allies struck'; the ally half is a scanner packet with "
+    "scope all_teammates (every selected teammate the rockets pass "
+    "through), so a roster fight shields each selected ally and the 1v1 "
+    "prices only the module-authored self shield",
     "W (Bailout) revival and R (Hostile Takeover) berserk are "
     "documented out-of-scope rows (no enemy damage).",
+    "W (Bailout) is documented-only for ally support. The Wiki cache "
+    "describes a fatal-damage restore to 100% maximum health followed by "
+    "10% maximum-health burn ticks every 0.264s. The local game binary "
+    "carries TicksPerSecond=4, while the Wiki description calls the loss "
+    "true damage and its notes call it raw damage. The survival result "
+    "fails closed until one source resolves both conflicts. The ramping "
+    "attack-speed and movement-speed buff has no survival impact on the "
+    "recipient in this model.",
 ]
 
 SOURCES = list(_packet_sources)

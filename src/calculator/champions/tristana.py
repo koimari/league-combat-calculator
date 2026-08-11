@@ -25,6 +25,7 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     simple_damage,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -133,7 +134,11 @@ SLOTS = {
     "Q": _rapid_fire,
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "E": _explosive_charge,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": with_control(
+        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        kind="knockback",
+        duration_attr="Stun Duration",
+    ),
     "P": _draw_a_bead,
 }
 

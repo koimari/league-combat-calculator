@@ -146,7 +146,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -193,7 +196,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -233,7 +239,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -272,7 +281,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -350,7 +362,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -424,17 +439,20 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
    "expected": {
     "kind": "ability_event",
     "source": "R",
-    "raw_damage": 325.0,
-    "damage": 213.8,
+    "raw_damage": 399.1,
+    "damage": 262.6,
     "time": 0.0,
-    "formula": "Primordial Burst rank 3 minimum: 325 + 75% AP (0 AP) = 325 raw magic at full target HP; post-mitigation vs 52 MR = 213.8"
+    "formula": "Primordial Burst rank 3 minimum: 325 + 75% AP (0 AP), scaled by 1.5% per 1% target missing health and capped at 66.66% missing; Q/W leave 358.6 damage against 2358 max HP (~15.2% missing), so raw 399.1; post-mitigation vs 52 MR = 262.6"
    },
    "practice_tool_steps": "Load Veigar, buy nothing. Level 18, rank 3 R. Practice Tool: R a full-health practice dummy; combat log shows the minimum Primordial Burst of 325 magic damage (before the dummy's magic resistance)."
   },
@@ -460,7 +478,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -572,7 +593,7 @@
     "role": "top",
     "items": [],
     "ranks": {
-     "Q": 5,
+     "Q": 0,
      "W": 5,
      "E": 5,
      "R": 3
@@ -592,12 +613,12 @@
    "expected": {
     "kind": "revive",
     "first_death_time": 4.312,
-    "revive_time": 6.0,
+    "revive_time": 10.312,
     "revive_health_restored": 2114.0,
     "revive_source": "Rebirth",
-    "death_time": 11.858,
+    "death_time": 15.091,
     "revived": true,
-    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive lands at 6.0 in this fight; she is killed again at 11.858"
+    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive window is anchored to the lethal hit (P3 package 3P: death at 4.312 -> revive at 10.312 -> killed again at 15.091)"
    },
    "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) \u2014 read the death/revive events in the combat log."
   },
@@ -852,8 +873,8 @@
     "bonus_health": 400,
     "max_health": 2990.0,
     "triggered": true,
-    "death_time": 9.702,
-    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 9.702 (F2: Aatrox and Zed enemies now play their optimal rotations, shifting the incoming damage timeline earlier)."
+    "death_time": 11.858,
+    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 11.858 after the modeled crowd-control downtime (F2: Aatrox and Zed enemies play their optimal rotations)."
    },
    "practice_tool_steps": "Practice Tool: Darius buys Sterak's Gage (400 bonus HP). Take heavy burst from 3 enemies; when HP crosses below 30%, the Lifeline shield of 240 appears (combat log) and absorbs 240 damage."
   },

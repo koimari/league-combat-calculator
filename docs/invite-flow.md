@@ -51,10 +51,9 @@ The invitee journey, end to end:
    (`/auth/status` → `user.invite`).
 3. **First-run overlay** — after login the calculator loads and, on first
    browser visit (`localStorage` `scryglass_onboarded` not yet set), the
-   3-step welcome overlay appears: *Pick your champion + role* → *Press Best
-   next item* → *Dig deeper in Analyst*. It is dismissible (Skip / × /
-   Escape) and never blocks. The full walkthrough is in
-   `docs/onboarding-guide.md`.
+   welcome overlay explains champion setup, build setup, and result proof. It
+   is dismissible (Skip / × / Escape) and never blocks. The full walkthrough
+   is in `docs/onboarding-guide.md`.
 4. **The calculator** — the invitee lands in the analyst view (the app;
    per-slot Best-in-slot covers "best next item").
 

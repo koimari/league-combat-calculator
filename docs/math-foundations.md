@@ -167,23 +167,28 @@ target were below threshold" branch is the quantile event `P(H ≤ θ)` and is
 deliberately not priced.
 
 **Veigar R (Primordial Burst).** The reviewed module instantiates the wiki's
-"increased by 0% : 100% (based on target's missing health)" as a piecewise
-affine ramp:
+"increased by 0% : 100% (based on target's missing health)" and the live
+tooltip ("1.5% per 1% of target's missing health; capped at 66.66% missing
+health") as the pass-16 piecewise affine ramp (the game files cap the
+execute at `MaxExecuteMult = 2.0`):
 
 ```
-d(m) = d_min · (1 + clamp((m − 2/3)/(1/3), 0, 1)),   m = missing-health ratio
+d(m) = d_min · (1 + min(1, m/(2/3))),   m = missing-health ratio
 ```
 
 evaluated per cast against the target's live health (`_primordial_burst_scaled`,
-`_EXECUTE_MISSING_RATIO_START = 2/3`). The ramp is convex (slope 0 below
-`m = 2/3`, slope `3·d_min` above). Consequently **Jensen's inequality
-`E[d(M)] ≥ d(E[M])` bites**: evaluating the deterministic expected path
-understates the expected execute damage whenever the target's health
-distribution straddles the ramp region. The engine documents this; the error is
-first-order in the health-path variance and vanishes when the target is far
-from the ramp or when the damage path is deterministic (as it is in
-deterministic mode — the residual bias is only from the *champion-side*
-randomness that deterministic mode averages away).
+`_EXECUTE_MISSING_RATIO_START = 2/3`). The ramp is **concave** (slope
+`1.5·d_min` below `m = 2/3`, slope 0 above — the mirror image of the earlier
+convex ramp anchored at 2/3, which was rejected at pass 16 because it granted
+no bonus until the target dropped below 33% health and only reached +100% at
+0 health). Consequently **Jensen's inequality reverses
+`E[d(M)] ≤ d(E[M])`**: evaluating the deterministic expected path
+OVERstates the expected execute damage whenever the target's health
+distribution straddles the saturation point. The engine documents this; the
+error is first-order in the health-path variance and vanishes when the target
+is far from the saturation point or when the damage path is deterministic (as
+it is in deterministic mode — the residual bias is only from the
+*champion-side* randomness that deterministic mode averages away).
 
 **Theorem (hitting time / first-passage).** "When does the target's health
 first cross θ?" is the first-passage time `τ = inf{t : H(t) ≤ θ}` of the

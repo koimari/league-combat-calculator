@@ -16,6 +16,7 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
     simple_damage,
+    with_control,
 )
 
 
@@ -137,7 +138,12 @@ SLOTS = {
     "P": _assault,
     "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
     "W": _empower,
-    "E": _counter_strike,
+    "E": with_control(
+        _counter_strike,
+        kind="stun",
+        duration_attr="Stun Duration",
+        effect_index=1,
+    ),
     "R": _grandmaster,
 }
 parse_abilities = build_parser(SLOTS, "Jax")
@@ -159,6 +165,28 @@ OPTIONS = [
         "label": "Counter Strike attacks dodged",
     },
     {
+        "key": "e_active",
+        "type": "bool",
+        "default": False,
+        "label": "E (Counter Strike) evasion active",
+    },
+    {
+        "key": "e_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "E evasion start time in seconds",
+    },
+    {
+        "key": "e_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 2.0,
+        "label": "E evasion seconds; zero uses the sourced duration",
+    },
+    {
         "key": "r_passive_ready",
         "type": "bool",
         "default": False,
@@ -168,6 +196,7 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Relentless Assault is an explicit stack-derived attack-speed buff; it is applied before later casts and autos.",
     "Empower is one next-attack magic rider; Counter Strike uses the sourced 0–100% dodge-damage range.",
+    "Counter Strike's sourced 2-second evasion window blocks incoming basic attacks and reduces marked area-ability damage by 25% when e_active is selected.",
     "Grandmaster-at-Arms includes the active swing and defensive resistances; its passive hit is opt-in to avoid inventing prior stacks.",
 ]
 SOURCES = [

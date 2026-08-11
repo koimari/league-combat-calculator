@@ -160,8 +160,8 @@
               <div class="brief-chips" id="championBriefChips" aria-label="Ability ranks and casts"></div>
             </div>
 
-            <div class="step-body" id="stepChampionBody" hidden>
-              <div class="editor-identity">
+            <div class="step-body champion-card is-empty" id="stepChampionBody" hidden>
+              <div class="editor-identity champion-identity is-empty">
                 <button class="champion-portrait" id="championPicker" type="button" data-picker="champion" data-path="attacker.champion" aria-label="Choose champion">
                   <img id="championImage" src="/static/img/rift-illustration-4k.webp" alt="" hidden />
                 </button>
@@ -171,6 +171,7 @@
                 </div>
               </div>
 
+              <div id="identityControls" hidden aria-hidden="true">
               <div class="field-row">
                 <label class="field" for="roleSelect">
                   <span class="field-label">Role</span>
@@ -201,9 +202,10 @@
               <p class="field-label">Abilities · ranks &amp; casts</p>
               <div class="ability-row" id="abilityRow"></div>
               <div id="championOptionsRow"></div>
+              </div>
 
               <p class="field-label">Resolved stats</p>
-              <div class="stats-grid" id="statsGrid"></div>
+              <div class="stats-grid" id="statsGrid" hidden aria-hidden="true"></div>
 
               <button class="rail-primary" type="button" data-step-toggle="none">Done · back to the duel</button>
             </div>

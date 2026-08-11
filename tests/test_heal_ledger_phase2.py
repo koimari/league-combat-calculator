@@ -66,6 +66,7 @@ def _fight(
     auto_uptime: float = 0.0,
     include_autos: bool = False,
     options: dict | None = None,
+    ranks: dict | None = None,
 ) -> dict:
     """One deterministic 1v1 (or roster) fight at level 18, no items."""
     data = get_champion(champion)
@@ -77,10 +78,18 @@ def _fight(
             "include_auto_attacks": include_autos,
             "auto_attack_uptime": auto_uptime,
             **({"champion_options": options} if options else {}),
+            **({"ability_ranks": ranks} if ranks else {}),
         },
         deterministic=True,
     )
-    enemies = [ChampionLoadout(champion="Ahri", level=18, role="mid").resolve()]
+    enemies = [
+        ChampionLoadout(
+            champion="Ahri",
+            level=18,
+            role="mid",
+            ability_ranks={"E": 0},
+        ).resolve()
+    ]
     allies = (
         [ChampionLoadout(champion="Ashe", level=18, role="bottom").resolve()]
         if with_ally
@@ -239,14 +248,19 @@ def test_janna_r_heals_self_in_sourced_ticks_and_fans_out_every_tick():
         self_event = self_by_time[clone["time"]]
         assert clone["source_event_id"] == self_event["event_id"]
         assert clone["event_id"] == f'{self_event["event_id"]}:ally:1'
+    assert sum(clone["raw_amount"] for clone in clones) == pytest.approx(600.0, abs=0.6)
     assert _survival(res, "ally:Ashe")["healing_received"] == pytest.approx(
-        600.0, abs=0.6
+        sum(clone["applied_amount"] for clone in clones), abs=0.6
     )
 
     res_1v1 = _fight("Janna")
-    assert len(_main_heals(res_1v1, "Monsoon")) == 12
-    assert _survival(res_1v1, "main")["healing_received"] == pytest.approx(
+    one_v_one_heals = _main_heals(res_1v1, "Monsoon")
+    assert len(one_v_one_heals) == 12
+    assert sum(event["raw_amount"] for event in one_v_one_heals) == pytest.approx(
         600.0, abs=0.6
+    )
+    assert _survival(res_1v1, "main")["healing_received"] == pytest.approx(
+        sum(event["applied_amount"] for event in one_v_one_heals), abs=0.6
     )
     assert _support_heals(res_1v1, "Monsoon") == []
 
@@ -491,7 +505,11 @@ def test_rakan_q_self_heal_wins_at_210_and_scanner_ally_branch_stays_at_80():
     branch stays at its own rank-indexed amount (80).  1v1: exactly one
     self heal at 210 and no scanner packet; roster: self 210 once and one
     80 ally packet."""
-    res = _fight("Rakan", with_ally=True)
+    res = _fight(
+        "Rakan",
+        with_ally=True,
+        ranks={"Q": 5, "W": 5, "E": 5, "R": 0},
+    )
     self_heals = _main_heals(res, "Gleaming Quill")
     assert len(self_heals) == 1
     assert self_heals[0]["amount"] == pytest.approx(210.0, abs=0.06)
@@ -506,7 +524,10 @@ def test_rakan_q_self_heal_wins_at_210_and_scanner_ally_branch_stays_at_80():
         80.0, abs=0.06
     )
 
-    res_1v1 = _fight("Rakan")
+    res_1v1 = _fight(
+        "Rakan",
+        ranks={"Q": 5, "W": 5, "E": 5, "R": 0},
+    )
     assert len(_main_heals(res_1v1, "Gleaming Quill")) == 1
     assert _survival(res_1v1, "main")["healing_received"] == pytest.approx(
         210.0, abs=0.06

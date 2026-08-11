@@ -109,6 +109,8 @@ def _super_scorcher_breath(ctx: SlotCtx) -> dict[str, Any] | None:
                 time_offset=part.time_offset,
                 hit_interval=part.hit_interval,
                 cc_kind=part.cc_kind,
+                cc_duration=part.cc_duration,
+                skillshot=part.skillshot,
             )
             for part in entry["parts"]
         )

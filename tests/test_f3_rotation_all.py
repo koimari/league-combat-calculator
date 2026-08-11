@@ -58,9 +58,13 @@ _OVERRIDE_CHAMPIONS = [
 #   - Varus: R applies Blight stacks, so the data says R→Q, but the seed
 #     puts the Blight DETONATOR Q first (the auto-applied stacks ride Q;
 #     R's own stacks land later in the burst).
+#   - Jhin: W roots after the opening Q poke in the reviewed seed.  The
+#     control atom is retained for the timeline, while the seed keeps its
+#     verified poke-first order.
 _OVERRIDE_SEED_EXCEPTIONS = {
-    "Cassiopeia": {("W", "E")},
-    "Varus": {("R", "Q")},
+    "Cassiopeia": {("W", "E"), ("R", "Q"), ("R", "W"), ("R", "E")},
+    "Varus": {("R", "Q"), ("R", "E")},
+    "Jhin": {("W", "Q")},
 }
 
 # Level x build reference matrix (mirrors scripts/golden_snapshot.py).
@@ -77,7 +81,12 @@ _MATRIX_BUILDS = (
 _EXPECTED_DERIVED_ORDERS = {
     "Ahri": ["E", "Q", "W", "R"],  # charm cc setup opens the burst
     "Ambessa": ["R", "Q", "Q2", "W", "E"],  # R armor pen buff first
-    "Bel'Veth": ["Q", "W", "R", "E"],  # E missing-health execute last
+    "Bel'Veth": [
+        "W",
+        "Q",
+        "R",
+        "E",
+    ],  # W skillshot knock-up opens; E missing-health execute closes
     "Briar": ["Q", "E", "R", "W"],  # Q shred first, W execute last
     "Corki": ["E", "Q", "W", "R"],  # E resistance shred opens
     "Darius": ["E", "Q", "W", "R"],  # E pen buff + Q/W stacks feed R
@@ -91,7 +100,7 @@ _EXPECTED_DERIVED_ORDERS = {
     "Shaco": ["Q", "W", "R", "E"],  # E execute closes
     "Sion": ["E", "Q", "W", "R"],  # E armor shred opens
     "Twitch": ["W", "R", "Q", "E"],  # W poison stacks, R AD buff, E detonates
-    "Vayne": ["R", "Q", "W", "E"],  # R bonus-AD buff first
+    "Vayne": ["R", "E", "Q", "W"],  # R buff, then Condemn downtime
 }
 
 # Edge kinds that mean "setup before burst" / "consume after setup".

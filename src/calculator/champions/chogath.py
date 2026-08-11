@@ -37,6 +37,7 @@ from .slotlib import (
     find_named_leveling,
     simple_damage,
     sum_modifiers,
+    with_control,
 )
 
 # E empowers the next 3 basic attacks per cast. The count has no JSON
@@ -171,7 +172,11 @@ ASSUMPTIONS = [
 SLOTS = {
     "R": _feast,
     "Q": simple_damage(attr="Magic damage", dmg_type="magic"),
-    "W": simple_damage(attr="Magic damage", dmg_type="magic"),
+    "W": with_control(
+        simple_damage(attr="Magic damage", dmg_type="magic"),
+        kind="silence",
+        duration_attr="Silence Duration",
+    ),
     "E": _vorpal_spikes,
 }
 

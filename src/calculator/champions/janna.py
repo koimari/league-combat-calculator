@@ -124,6 +124,15 @@ ASSUMPTIONS = [
     "Tailwind's 30% bonus-movement-speed on-hit uses the explicit movement-speed input.",
     "Howling Gale interpolates the sourced minimum/maximum charge packet; W's passive movement speed is not double-counted as damage.",
     "Eye of the Storm and Monsoon are visible ally/defensive utility, not TDD.",
+    "E (Eye of the Storm) shields the selected teammate for the sourced "
+    "Shield Strength (80-240 + 55% AP) for 4s (scanner packet with "
+    "selection key shield:E:<cast>); the shield's bonus attack damage "
+    "(10-30 + 10% AP while the shield holds) is documented-only — the "
+    "roster model prices ally survivability, not ally outgoing damage, "
+    "so the AD rider has no survival effect here.",
+    "R (Monsoon) heals Janna and every selected teammate the sourced "
+    "per-tick stream (12 x Heal Per Tick == Total Heal 300-600 + 150% "
+    "AP) via the E1-rule fan-out; the knockback and channel are state.",
 ]
 SOURCES = [
     source_row(

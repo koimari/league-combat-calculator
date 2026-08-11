@@ -17,15 +17,15 @@ Documented missing engine hooks (not emitted by the current shared
 interfaces — see the E8d reply for file+function+why):
 - Taric Q per-charge heal (cached leveling has only "Maximum Charges"; the
   heal formula is prose "25 (+ 15% AP) (+ 1% of his maximum health) per
-  charge") and Taric R invulnerability (state, no heal/shield amount).
+  charge").
 - Bard W "Minimum Heal"/"Maximum Heal" rows are not in the support scanner's
   heal-attribute lookup set ({"Total Heal", "Heal", "Heal Per Tick"}).
 - Rakan P (Fancy Footwork) is a passive self-shield; the scanner reads only
   Q/W/E/R slots.
 - Yuumi E scope: the cached "grants herself a shield" prose yields
   target_scope "self"; the attached-bonus anchor target is not expressed.
-- Seraphine W heal is "% of target's missing health" (dynamic) — the scanner
-  emits the sourced shield but cannot price the heal.
+- Seraphine W heal is "% of target's missing health" (dynamic) and is gated
+  by the caster's shield state at cast time.
 """
 
 from dataclasses import replace
@@ -269,6 +269,228 @@ def test_ally_ledger_receives_sourced_support(champion, source, kind, amount):
             + ally_row["survival"]["overhealing"]
             >= amount
         )
+
+
+def test_taric_cosmic_radiance_targets_the_caster_and_selected_ally():
+    combat, ally_row = _roster_combat("Taric", ally="Jinx")
+    events = [
+        event
+        for event in combat["support_events"]
+        if event["attacker"] == "main"
+        and event["source"] == "Cosmic Radiance · Invulnerability"
+    ]
+
+    assert {event["target"] for event in events} == {"main", "ally:Jinx"}
+    assert all(event["kind"] == "invulnerability" for event in events)
+    assert all(event["duration"] == pytest.approx(2.5) for event in events)
+    assert all(event["activation_delay"] == pytest.approx(2.5) for event in events)
+    assert all(
+        event["activation_delay_atom"]["atom_id"] == "timing.invulnerability_delay"
+        for event in events
+    )
+    assert ally_row["survival"]["action_downtime"] >= 2.5
+
+
+def test_seraphine_w_pulse_checks_the_caster_shield_and_keeps_the_atom_receipt():
+    app_module.app.config["TESTING"] = True
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Seraphine",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 3,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 0, "W": 5, "E": 0, "R": 0},
+            "allies": [
+                {
+                    "champion": "Jinx",
+                    "level": 18,
+                    "items": [],
+                    "ally_effects_enabled": True,
+                }
+            ],
+            "enemies": [{"champion": "Ambessa", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 200
+    support = [
+        event
+        for event in response.get_json()["combat"]["support_events"]
+        if event["attacker"] == "main"
+        and event["source"].startswith("Surround Sound")
+        and event["kind"] == "heal"
+    ]
+    assert support
+    assert {event["target"] for event in support} == {"main", "ally:Jinx"}
+    assert all(event["time"] == pytest.approx(2.5) for event in support)
+    assert all(
+        event["skipped_reason"] == "existing_shield_required" for event in support
+    )
+    assert all(
+        event["amount_formula_atom"]["source"]
+        == "Seraphine.W[0].effects[1].leveling[0].modifiers[0]"
+        for event in support
+    )
+    assert all(event["shield_gate_target"] == "main" for event in support)
+
+
+def test_seraphine_w_option_allows_the_first_live_missing_health_pulse():
+    app_module.app.config["TESTING"] = True
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Seraphine",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 3,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 0, "W": 5, "E": 0, "R": 0},
+            "champion_options": {"w_already_shielded": True},
+            "allies": [
+                {
+                    "champion": "Jinx",
+                    "level": 18,
+                    "items": [],
+                    "ally_effects_enabled": True,
+                }
+            ],
+            "enemies": [{"champion": "Ambessa", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 200
+    support = [
+        event
+        for event in response.get_json()["combat"]["support_events"]
+        if event["attacker"] == "main"
+        and event["target"] == "ally:Jinx"
+        and event["source"].startswith("Surround Sound")
+        and event["kind"] == "heal"
+    ]
+    assert support
+    pulse = support[0]
+    assert pulse["requires_existing_shield"] is False
+    assert pulse["shield_gate_assumed"] is True
+    assert pulse["raw_amount"] > 0.0
+    assert pulse["applied_amount"] > 0.0
+
+
+def test_support_selection_can_choose_a_different_ally_per_packet_kind():
+    """Shield and heal packets expose separate roster selection keys."""
+    payload = {
+        "champion": "Sona",
+        "level": 18,
+        "items": [],
+        "fight_mode": "time_based",
+        "fight_duration": 6,
+        "include_auto_attacks": False,
+        "ability_ranks": {"Q": 0, "W": 5, "E": 0, "R": 0},
+        "allies": [
+            {
+                "champion": "Jinx",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            },
+            {
+                "champion": "Ashe",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            },
+        ],
+        "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+    }
+    default_response = app_module.app.test_client().post("/api/calculate", json=payload)
+    assert default_response.status_code == 200
+    default_support = [
+        event
+        for event in default_response.get_json()["combat"]["support_events"]
+        if event["attacker"] == "main"
+        and event["source"].startswith("Aria of Perseverance")
+        and event["target"] != "main"
+    ]
+    selections = {event["target_selection_key"]: 1 for event in default_support}
+
+    selected_response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={**payload, "support_target_selections": selections},
+    )
+    assert selected_response.status_code == 200
+    selected_support = [
+        event
+        for event in selected_response.get_json()["combat"]["support_events"]
+        if event["attacker"] == "main"
+        and event["source"].startswith("Aria of Perseverance")
+    ]
+    assert {event["kind"] for event in selected_support} == {"shield", "heal"}
+    assert {
+        event["target"] for event in selected_support if event["target"] != "main"
+    } == {"ally:Ashe"}
+    assert all(
+        event["target_policy"] == "self_and_selected_teammate"
+        for event in selected_support
+    )
+    assert all(
+        event["target_selection_key"] in selections for event in selected_support
+    )
+
+
+def test_item_heal_uses_the_selected_ally_key():
+    """Mikael's Blessing can target the second teammate in the roster."""
+    payload = {
+        "champion": "Janna",
+        "level": 18,
+        "items": ["Mikael's Blessing"],
+        "item_options": {"Mikael's Blessing": {"active_seconds": 1.0}},
+        "fight_mode": "time_based",
+        "fight_duration": 2,
+        "include_auto_attacks": False,
+        "allies": [
+            {
+                "champion": "Jinx",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            },
+            {
+                "champion": "Ashe",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            },
+        ],
+        "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+    }
+    client = app_module.app.test_client()
+    default_response = client.post("/api/calculate", json=payload)
+    assert default_response.status_code == 200
+    default_event = next(
+        event
+        for event in default_response.get_json()["combat"]["support_events"]
+        if event["source"] == "Mikael's Blessing — Purify"
+    )
+    assert default_event["target"] == "ally:Jinx"
+
+    selected_response = client.post(
+        "/api/calculate",
+        json={
+            **payload,
+            "support_target_selections": {default_event["target_selection_key"]: 1},
+        },
+    )
+    assert selected_response.status_code == 200
+    selected_event = next(
+        event
+        for event in selected_response.get_json()["combat"]["support_events"]
+        if event["source"] == "Mikael's Blessing — Purify"
+    )
+    assert selected_event["target"] == "ally:Ashe"
+    assert selected_event["target_policy"] == "selected_teammate"
 
 
 def test_yuumi_zoomies_emits_sourced_self_shield_ally_target_is_missing_hook():

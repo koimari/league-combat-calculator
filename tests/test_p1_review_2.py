@@ -33,7 +33,9 @@ _ENEMY = {
     "level": 18,
     "items": [],
     "role": "mid",
-    "ability_ranks": _FULL_RANKS,
+    # Keep support amount assertions independent of incoming Ahri Charm
+    # downtime. Control timing has dedicated interaction tests.
+    "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
 }
 _TARGET_2000 = {"target_max_health": 2000.0, "target_current_health": 2000.0}
 _ROUNDING = 0.6
@@ -293,7 +295,11 @@ class TestMasterYi:
 
     def test_meditate_heals_in_fight(self) -> None:
         data = _fight_enemy(
-            "MasterYi", mode="time_based", duration=4.0, include_autos=False
+            "MasterYi",
+            mode="time_based",
+            duration=4.0,
+            include_autos=False,
+            enemy_ranks={"Q": 5, "W": 5, "E": 0, "R": 3},
         )
         heals = [
             h

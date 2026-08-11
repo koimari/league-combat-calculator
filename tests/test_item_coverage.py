@@ -225,10 +225,10 @@ def test_candidate_receipt_is_complete_after_item_umbrella_reconciliation():
     receipt = optimizer_candidate_coverage(candidates)
     excluded_names = {entry["name"] for entry in receipt["excluded"]}
 
-    assert receipt["complete"] is True
+    assert receipt["complete"] is False
     assert receipt["eligible_candidates"] == len(candidates)
     assert receipt["scored_candidates"] + receipt["excluded_count"] == len(candidates)
-    assert excluded_names == set()
+    assert excluded_names == {"Fimbulwinter"}
     assert "Rod of Ages" not in excluded_names
     assert "Runaan's Hurricane" not in excluded_names
 
@@ -246,7 +246,7 @@ def test_optimizer_reports_exhaustive_legal_candidates_after_item_reconciliation
 
     assert result["items"]
     assert not (set(result["items"]) & excluded_names)
-    assert result["search_guarantee"] == "exhaustive_legal_candidates"
+    assert result["search_guarantee"] == "exhaustive_modeled_candidates"
     assert result["is_certified_best"] is False
 
 
@@ -502,8 +502,9 @@ def test_every_utility_dimension_item_has_explicit_non_pending_coverage():
 
 
 def test_no_stale_partial_state_items_remain_after_shared_ledger_reconciliation():
-    """All registered partial-state items are reconciled before ranking."""
-    assert _PARTIAL_BLOCKED_REASONS == {}
+    """Only the named Fimbulwinter authority gap remains withheld."""
+    assert set(_PARTIAL_BLOCKED_REASONS) == {"Fimbulwinter"}
+    assert "mana gate" in _PARTIAL_BLOCKED_REASONS["Fimbulwinter"]
 
 
 def test_sustain_dimension_never_claims_outgoing_model_support():
@@ -572,6 +573,14 @@ def test_defensive_state_coverage_names_the_authored_scenario_boundary(
     assert reason_fragment in coverage["reason"]
 
 
+def test_guardians_horn_target_coverage_uses_typed_flat_reduction():
+    coverage = target_item_model_coverage(get_item_by_name("Guardian's Horn"))
+
+    assert coverage["status"] == "modeled"
+    assert coverage["calculation_eligible"] is True
+    assert "3.75" in coverage["reason"]
+
+
 @pytest.mark.parametrize(
     "item_name",
     ["Locket of the Iron Solari", "Mikael's Blessing", "Redemption"],
@@ -595,10 +604,12 @@ def test_stridebreaker_utility_scope_is_explicitly_modelled(item_name):
     assert coverage["review_issue_refs"] == []
 
 
-def test_fimbulwinter_is_event_certified_and_not_optimizer_blocked():
+def test_fimbulwinter_is_event_certified_and_optimizer_blocked():
     coverage = item_model_coverage(get_item_by_name("Fimbulwinter"))
-    assert coverage["status"] == "modeled_state"
-    assert coverage["optimizer_eligible"] is True
+    assert coverage["status"] == "blocked"
+    assert coverage["optimizer_eligible"] is False
+    assert coverage["calculation_eligible"] is True
+    assert "mana_gate_authority_unavailable" in coverage["reason"]
     target = target_item_model_coverage(get_item_by_name("Fimbulwinter"))
     assert target["status"] == "modeled_event_certified"
     assert target["calculation_eligible"] is True

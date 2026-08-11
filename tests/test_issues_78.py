@@ -74,6 +74,8 @@ CONTROL_ATTRIBUTES = {
     "data-role-quest": [("main", "role_quest_complete")],
     "data-include-boots": [("main", "include_boots")],
     "data-champion-option": [("main", "champion_options")],
+    "data-keystone-option": [("main", "keystone")],
+    "data-keystone-option-key": [("main", "keystone")],
     "data-copy": [("main", "items")],
     # roster loadouts
     "data-roster-rank": [("enemy", "ability_ranks"), ("ally", "ability_ranks")],

@@ -104,6 +104,36 @@ def _receipt_text(rule) -> str:
     return " ".join(rule.sources) + " " + rule.rationale
 
 
+class TestSyndraExecuteOrder:
+    def test_100_splinters_places_r_after_every_other_damage_cast(
+        self, champion_by_name, items_by_name
+    ) -> None:
+        data = champion_by_name["Syndra"]
+        options = {"splinters": 100, "r_spheres": 3}
+        parsed = _parse(data, 11, (), items_by_name, champion_options=options)
+
+        order, rule = _resolve(data, parsed, champion_options=options)
+
+        assert order[-1] == "R"
+        assert all(
+            order.index(slot) < order.index("R") for slot in ("Q", "Q2", "W", "E")
+        )
+        assert "execute" in _receipt_text(rule).lower()
+
+
+def test_list_option_can_participate_in_the_rotation_cache(
+    champion_by_name, items_by_name
+) -> None:
+    data = champion_by_name["Yasuo"]
+    options = {"w_active": True, "w_blocked_skillshots": ["Q", "E"]}
+    parsed = _parse(data, 11, (), items_by_name, champion_options=options)
+
+    cold_order, _ = _resolve(data, parsed, champion_options=options)
+    warm_order, _ = _resolve(data, parsed, champion_options=options)
+
+    assert cold_order == warm_order
+
+
 class TestDianaMoonlightReset:
     def test_moonlight_reset_declares_the_q_to_e_consume_edge(
         self, champion_by_name, items_by_name
@@ -251,3 +281,21 @@ class TestNoSignalGuard:
         _order, rule = _resolve(data, parsed)
         assert "unclassified" in rule.rationale
         assert "no detectable setup/consume signal" not in rule.rationale
+
+
+class TestCacheBoundary:
+    def test_partial_fight_does_not_poison_full_kit_rule(
+        self, champion_by_name, items_by_name
+    ) -> None:
+        """A partial request must not become the cached full-kit order."""
+        data = champion_by_name["Ezreal"]
+        full = _parse(data, 11, (), items_by_name)
+        partial = {"Q": full["Q"]}
+
+        rotation_resolver._DERIVED_RULE_CACHE.clear()
+        rotation_resolver._MATRIX_DPS_CACHE.clear()
+        partial_order, _ = _resolve(data, partial)
+        full_order, _ = _resolve(data, full)
+
+        assert partial_order == ["Q"]
+        assert full_order == ["W", "Q", "E", "R"]

@@ -177,3 +177,53 @@ def source_row(
         "revision_id": revision_id,
         "revision_timestamp": revision_timestamp,
     }
+
+
+def mark_damage(parser: Callable[[SlotCtx], dict[str, Any] | None]):
+    """Annotate a local parser as a normal DAMAGE-phase slot."""
+
+    parser.phase = DAMAGE
+    return parser
+
+
+# P4: the shared Yasuo/Yone crit-conversion rule.  The cached P prose is
+# verbatim Yasuo's for both ("total critical strike chance is doubled ...
+# every 1% ... converted into 0.5 bonus attack damage ... 90% of the
+# critical damage champions usually have"); both champions carry the
+# champion stat criticalStrikeDamageModifier.flat = 0.9; the binaries
+# corroborate CritDamageMod 0.9 + CritToAD 50.0 (the x2 chance is
+# script-side).  The Q's degraded "Critical Strike Damage" rows (189% +
+# 28.35% AD = 1.05 x 1.8 + 1.05 x 0.27; 198% + 29.7% AD = 1.1 x 1.8 +
+# 1.1 x 0.27) are the display of this same converted system.
+CRIT_CHANCE_MULTIPLIER = 2.0
+CRIT_DAMAGE_MULTIPLIER_FACTOR = 0.9
+EXCESS_CRIT_BONUS_AD_PER_PERCENT = 0.5
+
+
+def crit_conversion_payload() -> dict[str, Any]:
+    """The engine's crit_modifier payload for the shared conversion."""
+    return {
+        "crit_chance_multiplier": CRIT_CHANCE_MULTIPLIER,
+        "crit_damage_multiplier_factor": CRIT_DAMAGE_MULTIPLIER_FACTOR,
+        "excess_crit_bonus_ad_per_percent": EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+    }
+
+
+def crit_conversion_certification(
+    atom_hash: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """(certified_constants, atom_ids) for the conversion rule.
+
+    The 0.9 factor is the champion stat criticalStrikeDamageModifier.flat
+    (the pinned atom hash varies per champion); the x2 chance + 0.5 AD
+    per excess % are cached-P-prose + binary roots.  A patch that
+    changes the roots trips the pinned hash (fail-closed staleness).
+    """
+    cert = dict(crit_conversion_payload())
+    atoms = {
+        "crit_damage_multiplier_factor": {
+            "atom_id": "stats.critical_strike_damage_modifier.flat",
+            "hash": atom_hash,
+        },
+    }
+    return cert, atoms

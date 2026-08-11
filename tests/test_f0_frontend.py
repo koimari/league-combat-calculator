@@ -175,6 +175,23 @@ def test_share_analyst_button_is_reachable_inside_analyst_view():
     assert button.find_parent(id="analystView") is not None
 
 
+def test_empty_champion_state_hides_dependent_controls_and_stats():
+    soup = _soup()
+    card = soup.select_one(".champion-card")
+    identity = soup.select_one(".champion-identity")
+    controls = soup.select_one("#identityControls")
+    stats = soup.select_one("#statsGrid")
+    assert card is not None and "is-empty" in card.get("class", [])
+    assert identity is not None and "is-empty" in identity.get("class", [])
+    assert controls is not None and controls.has_attr("hidden")
+    assert controls.get("aria-hidden") == "true"
+    assert stats is not None and stats.has_attr("hidden")
+    assert stats.get("aria-hidden") == "true"
+    source = _source()
+    assert "identityControls" in source
+    assert "statsGrid.hidden = !champion" in source
+
+
 # ---------------------------------------------------------------------------
 # Visible result-column surfaces (previously hidden containers)
 # ---------------------------------------------------------------------------

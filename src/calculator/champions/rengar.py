@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
@@ -48,6 +49,34 @@ PACKET_SPEC = _BATCH_SLOTS.packet_spec
 _FEROCITY_MAX = 4
 
 
+# Ferocity is a typed kernel state (state_lifecycle.StackRule).  The
+# numbers are prose in the reviewed cache entry (Rengar P effect 0:
+# "Rengar generates a stack of Ferocity for 1 second, stacking up 4 times
+# but not refreshing on subsequent triggers (unexpected) ... Generated
+# Ferocity is prevented from expiring for 10 seconds after dealing or
+# taking damage, excluding damage dealt by damage over time or proc
+# effects."), so the module pins them beside the P template source
+# receipt.  The 1-second value comes from the 2019 P template revision
+# (Data_Rengar/I rev 2864152) — the same revision the module's SOURCES
+# publishes; verify against current game files on patch updates.
+RENGAR_FEROCITY_STACK_RULE = StackRule(
+    name="Rengar — Unseen Predator (Ferocity stacks)",
+    max_stacks=4,
+    gain_per_application=1,
+    duration_seconds=1.0,
+    refresh="none",
+    expiry="all_at_once",
+    cap_behavior="noop",
+    combat_extension_seconds=10.0,
+    source=SourceReceipt(
+        label="Local League Wiki cache — Rengar P effect prose",
+        url="https://wiki.leagueoflegends.com/en-us/Template:Data_Rengar/I",
+        revision_id=2864152,
+        revision_timestamp="2019-11-03T20:06:28Z",
+    ),
+)
+
+
 def _ferocity_bonus(
     ctx: SlotCtx, ability: dict[str, Any], attribute: str
 ) -> float | None:
@@ -67,8 +96,23 @@ def _ferocity_bonus(
     return None
 
 
+def _ferocity_state(ctx: SlotCtx) -> TimedStackState:
+    """The kernel-owned Ferocity stack state seeded from the option.
+
+    ``p_ferocity`` is the explicit pre-stack state; the rule declares the
+    4-stack cap, the 1-second per-stack expiry (no refresh on subsequent
+    triggers), and the 10-second in-combat expiry freeze.  Live in-fight
+    gains are not wired: the rotation resolver does not feed per-cast
+    stack events into champion-module parses (named reason, ASSUMPTIONS).
+    """
+    return TimedStackState(
+        RENGAR_FEROCITY_STACK_RULE,
+        starting_stacks=max(0, min(int(ctx.options.get("p_ferocity", 0)), 4)),
+    )
+
+
 def _ferocity(ctx: SlotCtx) -> int:
-    return min(max(int(ctx.options.get("p_ferocity", 0)), 0), _FEROCITY_MAX)
+    return _ferocity_state(ctx).stacks
 
 
 def _unseen_predator(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -100,36 +144,38 @@ def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    if _ferocity(ctx) >= _FEROCITY_MAX:
-        bonus = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
-        entry = damage_entry(
-            ability.get("name", "Savagery"),
-            rank,
-            extract_cooldown(ability, rank),
-            bonus,
-            "physical",
-        )
+    # Both part sets are emitted unconditionally (P3 package 3V): the
+    # engine prices the FEROCITY parts for a live empowered cast (the
+    # post-rotation stack walk's consume) and the base parts otherwise,
+    # so the seeded static read below only drives the parse detail text.
+    base_bonus = extract_named(
+        ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
+    )
+    ferocity_bonus = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
+    empowered = _ferocity(ctx) >= _FEROCITY_MAX
+    entry = damage_entry(
+        ability.get("name", "Savagery"),
+        rank,
+        extract_cooldown(ability, rank),
+        ferocity_bonus if empowered else base_bonus,
+        "physical",
+    )
+    # The engine prices the BASE parts by default and the FEROCITY parts
+    # only for a live empowered cast (the post-rotation consume); the
+    # seeded total_raw remains the headline the parse panel shows.
+    entry["parts"] = (DamagePart("physical", base_bonus),)
+    entry["ferocity_parts"] = (DamagePart("physical", ferocity_bonus),)
+    if empowered:
         entry["detail"] = (
             "Ferocity-empowered: 35 : 260 by level + 20% AD (the wiki "
             "Ferocity Bonus), consuming all 4 stacks."
         )
     else:
-        bonus = extract_named(
-            ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
-        )
-        entry = damage_entry(
-            ability.get("name", "Savagery"),
-            rank,
-            extract_cooldown(ability, rank),
-            bonus,
-            "physical",
-        )
         entry["detail"] = (
             "Base Savagery: 20 : 160 by rank + 5% AD on the first "
             "empowered basic attack; the attack can crit at "
             "(100% + 30%) AD effectiveness."
         )
-    entry["parts"] = (DamagePart("physical", entry["total_raw"]),)
     return entry
 
 
@@ -141,33 +187,28 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    if _ferocity(ctx) >= _FEROCITY_MAX:
-        damage = _ferocity_bonus(ctx, ability, "Bonus Magic Damage") or 0.0
-        entry = damage_entry(
-            ability.get("name", "Battle Roar"),
-            rank,
-            extract_cooldown(ability, rank),
-            damage,
-            "magic",
-        )
+    base_damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Magic Damage") or 0.0
+    empowered = _ferocity(ctx) >= _FEROCITY_MAX
+    entry = damage_entry(
+        ability.get("name", "Battle Roar"),
+        rank,
+        extract_cooldown(ability, rank),
+        ferocity_damage if empowered else base_damage,
+        "magic",
+    )
+    entry["parts"] = (DamagePart("magic", base_damage),)
+    entry["ferocity_parts"] = (DamagePart("magic", ferocity_damage),)
+    if empowered:
         entry["detail"] = (
             "Ferocity-empowered: 50 : 240 by level + 80% AP (the wiki "
             "Ferocity Bonus), consuming all 4 stacks."
         )
     else:
-        damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-        entry = damage_entry(
-            ability.get("name", "Battle Roar"),
-            rank,
-            extract_cooldown(ability, rank),
-            damage,
-            "magic",
-        )
         entry["detail"] = (
             "Base Battle Roar: 50 : 170 by rank + 80% AP; the grey-health "
             "heal is state."
         )
-    entry["parts"] = (DamagePart("magic", entry["total_raw"]),)
     return entry
 
 
@@ -179,34 +220,29 @@ def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    if _ferocity(ctx) >= _FEROCITY_MAX:
-        damage = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
-        entry = damage_entry(
-            ability.get("name", "Bola Strike"),
-            rank,
-            extract_cooldown(ability, rank),
-            damage,
-            "physical",
-        )
+    base_damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
+    empowered = _ferocity(ctx) >= _FEROCITY_MAX
+    entry = damage_entry(
+        ability.get("name", "Bola Strike"),
+        rank,
+        extract_cooldown(ability, rank),
+        ferocity_damage if empowered else base_damage,
+        "physical",
+    )
+    entry["parts"] = (DamagePart("physical", base_damage),)
+    entry["ferocity_parts"] = (DamagePart("physical", ferocity_damage),)
+    if empowered:
         entry["detail"] = (
             "Ferocity-empowered: 50 : 335 by level + 80% bonus AD (the "
             "wiki Ferocity Bonus), consuming all 4 stacks; the root is "
             "crowd-control state."
         )
     else:
-        damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-        entry = damage_entry(
-            ability.get("name", "Bola Strike"),
-            rank,
-            extract_cooldown(ability, rank),
-            damage,
-            "physical",
-        )
         entry["detail"] = (
             "Base Bola Strike: 55 : 235 by rank + 80% bonus AD; the slow "
             "and reveal are state."
         )
-    entry["parts"] = (DamagePart("physical", entry["total_raw"]),)
     return entry
 
 
@@ -227,6 +263,11 @@ OPTIONS = [
         "min": 0,
         "max": 4,
         "label": "Ferocity stacks (4 = empowered next)",
+        # Public kernel receipt for the user decision: the option seeds
+        # the typed Ferocity stack state (state_lifecycle) whose rule
+        # carries the cap, the 1-second per-stack expiry, the no-refresh
+        # rule, and the 10-second in-combat expiry freeze.
+        "state": RENGAR_FEROCITY_STACK_RULE.public_receipt(),
     },
 ]
 
@@ -235,9 +276,16 @@ ASSUMPTIONS = [
     "last 1.5 seconds as grey health and the active heals the stored "
     "pool (the E8a grey-health primitive authors the heal from the "
     "incoming ledger at each W cast)",
-    "Ferocity caps at 4 stacks (1-second expiry not modeled); at 4 stacks "
-    "the next Q/W/E cast is empowered and prices the wiki Ferocity Bonus "
-    "values, consuming all stacks",
+    "Ferocity is a typed kernel stack state: cap 4, each stack lasts 1 "
+    "second, subsequent triggers do not refresh the timer, and expiry is "
+    "prevented for 10 seconds after dealing or taking damage (excluding "
+    "DoT/proc damage); at 4 stacks the next Q/W/E cast is empowered and "
+    "prices the wiki Ferocity Bonus values, consuming all stacks.  The "
+    "1-second value is prose in the reviewed P template (rev 2864152); "
+    "live in-fight gains are not wired: the rotation resolver does not "
+    "feed per-cast stack events into champion-module parses (named "
+    "reason), so the fight starts from the seeded state and the kernel "
+    "receipt documents the rule",
     "p_ferocity is the explicit pre-stack state; 0 prices base Q/W/E",
     "The reviewed CP10.6 packet misread Q's per-level Ferocity Bonus array "
     "as per-rank base damage; this module prices base Q from the rank "

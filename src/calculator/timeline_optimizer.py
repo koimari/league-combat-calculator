@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 import importlib
+import math
 from dataclasses import replace
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
@@ -22,7 +23,10 @@ from .healing_reduction import (
     healing_reduction_profiles,
 )
 from .item_effects import ThornsEffect, serpents_fang_venom, thorns_effects
-from .item_support_effects import has_event_view_support_items
+from .item_support_effects import (
+    has_event_view_support_items,
+    resolve_knights_vow_tether,
+)
 from .pipeline import FightParams, run_fight
 from .roster_composition import (
     Combatant,
@@ -49,7 +53,10 @@ from .survival import (
     resolve_grievous as _grievous_pack,
     revive_candidate_actions,
     run_survival_walk,
+    stage_knights_vow_heals,
+    stage_knights_vow_redirect_actions,
     survival_action_from_event,
+    uncompilable_item_receipt as _uncompilable_item_receipt,
 )
 from .timeline_coverage import combine_timeline_coverages
 
@@ -60,6 +67,35 @@ if TYPE_CHECKING:
 def _timeline_module():
     """Load timeline-only composition helpers after module initialization."""
     return importlib.import_module(".participant_timeline", package=__package__)
+
+
+def _timeline_helper(name: str, *args, **kwargs):
+    """Call one composer-owned helper after both modules initialize."""
+    return getattr(_timeline_module(), name)(*args, **kwargs)
+
+
+def _pair_packet(*args, **kwargs):
+    return _timeline_helper("_pair_packet", *args, **kwargs)
+
+
+def _support_effect_templates(*args, **kwargs):
+    return _timeline_helper("_support_effect_templates", *args, **kwargs)
+
+
+def _warmog_heart_tick_events(*args, **kwargs):
+    return _timeline_helper("_warmog_heart_tick_events", *args, **kwargs)
+
+
+def _ability_instance_for_event(*args, **kwargs):
+    return _timeline_helper("_ability_instance_for_event", *args, **kwargs)
+
+
+def _is_authored_ability_event(*args, **kwargs):
+    return _timeline_helper("_is_authored_ability_event", *args, **kwargs)
+
+
+def _grey_health_receipts(*args, **kwargs):
+    return _timeline_helper("_grey_health_receipts", *args, **kwargs)
 
 
 class CoupledSearchContext:
@@ -86,6 +122,9 @@ class CoupledSearchContext:
         "base_compiler",
         "base_sorted",
         "base_heal_dedup",
+        # P3 package 3S: the staged Knight's Vow redirect children for the
+        # search-invariant base panel (signature panels carry their own).
+        "kv_redirect_children",
         "validated_roster_window",
         # The main champion's wound-declaring sources are champion-fixed;
         # derived once per search instead of once per evaluation.
@@ -111,6 +150,7 @@ class CoupledSearchContext:
         self.base_compiler: _WalkCompiler | None = None
         self.base_sorted: list[tuple[Any, ...]] = []
         self.base_heal_dedup: dict[int, dict[tuple[str, float], float]] = {}
+        self.kv_redirect_children: dict[str, Any] = {}
         self.validated_roster_window = False
         self.main_champion_wounds: dict[str, Any] | None = None
 
@@ -121,14 +161,21 @@ class _SignaturePanel:
     ``sig`` holds only the fights into this signature (enemies into the
     candidate main); everything signature-independent lives in the search
     context's base compiler.  ``sorted_actions`` is the presorted merge of
-    both.
+    both.  ``kv_redirect_children`` carries the staged Knight's Vow
+    redirect children for this signature (P3 package 3S).
     """
 
-    __slots__ = ("sig", "n_actions", "sorted_actions")
+    __slots__ = ("sig", "n_actions", "sorted_actions", "kv_redirect_children")
 
-    def __init__(self, base_sorted: list[tuple[Any, ...]], sig: _WalkCompiler) -> None:
+    def __init__(
+        self,
+        base_sorted: list[tuple[Any, ...]],
+        sig: _WalkCompiler,
+        kv_redirect_children: dict[str, Any] | None = None,
+    ) -> None:
         self.sig = sig
         self.n_actions = sig.next_aidx
+        self.kv_redirect_children = kv_redirect_children or {}
         merged = base_sorted + sorted(sig.actions, key=itemgetter(0))
         merged.sort(key=itemgetter(0))
         self.sorted_actions = merged
@@ -178,9 +225,7 @@ def _context_setup(
     # is exempt: the roster holder's ticks compile into the base panel
     # below (issue #169).
     for loadout in (*enemies, *allies):
-        if loadout.is_practice_dummy:
-            continue
-        item_receipt = _timeline_module()._uncompilable_item_receipt(
+        item_receipt = _uncompilable_item_receipt(
             loadout.item_data,
             loadout_stats=loadout.stats,
             warmog_ticks_compiled=True,
@@ -203,11 +248,9 @@ def _context_setup(
     context.index_of = {"main": 0}
     for offset, actor in enumerate(context.roster_actors, start=1):
         context.index_of[actor.participant_id] = offset
+        context.actor_params[actor.participant_id] = _actor_params(params, actor)
         context.thorns_profiles[offset] = thorns_effects(list(actor.items))
         _grievous_packs_for(context, offset, healing_reduction_profiles(actor.items))
-        if actor.is_practice_dummy:
-            continue
-        context.actor_params[actor.participant_id] = _actor_params(params, actor)
     context.main_request = type(
         "MainRequest",
         (),
@@ -216,6 +259,7 @@ def _context_setup(
             "role_quest_complete": params.role_quest_complete,
             "ability_ranks": params.ability_ranks,
             "champion_options": params.champion_options,
+            "support_target_selections": params.support_target_selections,
             "cast_order": params.cast_order,
             "item_options": params.item_options,
         },
@@ -251,8 +295,6 @@ def _context_setup(
         pair_params.validate_for_champion(champion_name, level)
         context.main_pair_params.append((defender, pair_params))
     for attacker in context.roster_actors:
-        if attacker.is_practice_dummy:
-            continue
         attacker_params = context.actor_params[attacker.participant_id]
         attacker_params.validate_for_champion(
             str(attacker.champion_data.get("name", "")), attacker.level
@@ -286,12 +328,9 @@ def _context_setup(
         context.index_of[actor.participant_id]: {} for actor in context.roster_actors
     }
     support_attached: set[str] = set()
-    enemy_attackers = [actor for actor in enemy_actors if not actor.is_practice_dummy]
     base_pairs = [
         (attacker, defender) for attacker in ally_actors for defender in enemy_actors
-    ] + [
-        (attacker, defender) for attacker in enemy_attackers for defender in ally_actors
-    ]
+    ] + [(attacker, defender) for attacker in enemy_actors for defender in ally_actors]
     # Roster position mirrors the legacy attack groups: enemies are indexed
     # from 0 for allied attackers, while an enemy attacker's ordered
     # defenders are [main, *allies], so the first ally sits at index 1.
@@ -302,8 +341,7 @@ def _context_setup(
         defender.participant_id: index for index, defender in enumerate(ally_actors)
     }
     for attacker, defender in base_pairs:
-        pair_param_key = (attacker.participant_id, defender.participant_id)
-        cache_key = _timeline_module()._pair_cache_key(attacker, defender)
+        cache_key = (attacker.participant_id, defender.participant_id)
         defender_index = (
             enemy_index.get(defender.participant_id, 0)
             if attacker.team == "ally"
@@ -311,12 +349,12 @@ def _context_setup(
         )
         packet = pair_result_cache.get(cache_key)
         if packet is None:
-            packet = _timeline_module()._pair_packet(
+            packet = _pair_packet(
                 run_fight(
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
-                    context.roster_pair_params[pair_param_key],
+                    context.roster_pair_params[cache_key],
                     validated=True,
                 ),
                 attacker.participant_id,
@@ -343,11 +381,17 @@ def _context_setup(
         if attacker.team == "ally" and attacker.participant_id not in support_attached:
             support_templates = packet.get("support")
             if support_templates is None:
-                support_templates = _timeline_module()._support_effect_templates(
+                support_templates = _support_effect_templates(
                     attacker,
                     packet["result"],
                     all_actors_by_index,
                     damage_events=packet.get("events", ()),
+                    # P3 package 3K: the takedown synthesis (Cryptbloom's
+                    # Life From Death) must see the real defender so a
+                    # roster holder's kill is receipted identically to the
+                    # receipt composition (participant_timeline's per-pair
+                    # path passes target_id too).
+                    target_id=defender.participant_id,
                 )
                 packet["support"] = support_templates
             base.add_support_templates(support_templates, attacker_i, context.index_of)
@@ -379,9 +423,7 @@ def _context_setup(
     # #169).  The candidate's own Warmog still falls back per evaluation.
     for actor in context.roster_actors:
         actor_i = context.index_of[actor.participant_id]
-        for event in _timeline_module()._warmog_heart_tick_events(
-            actor, params.fight_duration_seconds
-        ):
+        for event in _warmog_heart_tick_events(actor, params.fight_duration_seconds):
             base.actions.append(
                 survival_action_from_event(
                     event,
@@ -391,6 +433,22 @@ def _context_setup(
                     subject_id=actor.participant_id,
                 )
             )
+    # Knight's Vow (P3 package 3S): stage the receipt scheduler's Sacrifice
+    # split + holder heals onto the search-invariant base panel once.
+    kv_children: dict[str, Any] = {}
+    base_aidx = base.next_aidx
+    for kv_holder in all_actors_by_index:
+        kv_tether = resolve_knights_vow_tether(kv_holder, all_actors_by_index)
+        if kv_tether is None:
+            continue
+        base_aidx = stage_knights_vow_redirect_actions(
+            base, all_actors_by_index, kv_tether, kv_children, base_aidx
+        )
+        base_aidx = stage_knights_vow_heals(
+            base, all_actors_by_index, kv_tether, base_aidx
+        )
+    base.next_aidx = base_aidx
+    context.kv_redirect_children = kv_children
     context.base_compiler = base
     context.base_sorted = sorted(base.actions, key=itemgetter(0))
 
@@ -416,17 +474,13 @@ def _build_signature_panel(
     assert base is not None, "context setup must precede panel builds"
     sig = _WalkCompiler(base.next_aidx)
     roster = context.roster_actors or []
-    enemy_actors = [
-        actor
-        for actor in roster
-        if actor.team == "enemy" and not actor.is_practice_dummy
-    ]
+    enemy_actors = [actor for actor in roster if actor.team == "enemy"]
     ally_count = sum(1 for actor in roster if actor.team == "ally")
     for attacker in enemy_actors:
-        cache_key = _timeline_module()._pair_cache_key(attacker, main)
+        cache_key = (attacker.participant_id, "main", signature)
         packet = pair_result_cache.get(cache_key)
         if packet is None:
-            packet = _timeline_module()._pair_packet(
+            packet = _pair_packet(
                 run_fight(
                     attacker.champion_data,
                     attacker.level,
@@ -463,15 +517,31 @@ def _build_signature_panel(
         )
         support_templates = packet.get("support")
         if support_templates is None:
-            support_templates = _timeline_module()._support_effect_templates(
+            support_templates = _support_effect_templates(
                 attacker,
                 packet["result"],
                 all_actors,
                 damage_events=packet.get("events", ()),
+                # P3 package 3K: the signature panel's packet is the
+                # enemy attacker's MAIN pair — the takedown synthesis must
+                # see that defender id.
+                target_id="main",
             )
             packet["support"] = support_templates
         sig.add_support_templates(support_templates, attacker_i, context.index_of)
-    return _SignaturePanel(context.base_sorted, sig)
+    # Knight's Vow (P3 package 3S): stage the Sacrifice split onto the
+    # enemy->main actions when the MAIN is a roster holder's Worthy ally.
+    sig_children: dict[str, Any] = {}
+    sig_aidx = sig.next_aidx
+    for kv_holder in context.roster_actors:
+        kv_tether = resolve_knights_vow_tether(kv_holder, all_actors)
+        if kv_tether is None or kv_tether["target"].participant_id != "main":
+            continue
+        sig_aidx = stage_knights_vow_redirect_actions(
+            sig, all_actors, kv_tether, sig_children, sig_aidx
+        )
+    sig.next_aidx = sig_aidx
+    return _SignaturePanel(context.base_sorted, sig, kv_redirect_children=sig_children)
 
 
 def _score_with_search_context(
@@ -504,10 +574,57 @@ def _score_with_search_context(
             receipt="context_marked_uncompilable",
             source=str(champion_data.get("name", "")),
         )
+    if str(getattr(params, "keystone", "") or "") == "Guardian":
+        # Guardian's two-sided threshold window is authored after the full
+        # incoming roster ledger exists.  The score panel has no owner-side
+        # damage history, so receipt mode must own this selection.
+        raise UncompilableActionError(
+            receipt="keystone=Guardian",
+            source="Guardian",
+            invariant=True,
+        )
+    if str(getattr(params, "keystone", "") or "") == "Aftershock":
+        # Aftershock's resistance snapshot is authored after the main
+        # outgoing control ledger exists. The score panel has no trigger-id
+        # view for that self-state transition, so receipt mode owns it.
+        raise UncompilableActionError(
+            receipt="keystone=Aftershock",
+            source="Aftershock",
+            invariant=True,
+        )
+    if str(getattr(params, "keystone", "") or "") == "Glacial Augment":
+        # Glacial's ally reduction is authored after the full outgoing
+        # control ledger identifies the immobilized enemy. The score panel
+        # has no cross-participant source filter for that zone, so receipt
+        # mode owns the selection.
+        raise UncompilableActionError(
+            receipt="keystone=Glacial Augment",
+            source="Glacial Augment",
+            invariant=True,
+        )
+    if str(getattr(params, "keystone", "") or "") == "Stormraider's Surge":
+        # Stormraider's trigger scans exact post-mitigation damage windows
+        # after the main pair panel exists. The compiled panel has no
+        # target-specific event window for this utility receipt.
+        raise UncompilableActionError(
+            receipt="keystone=Stormraider's Surge",
+            source="Stormraider's Surge",
+            invariant=True,
+        )
+    if str(getattr(params, "keystone", "") or "") == "Grasp of the Undying":
+        # Grasp authors a permanent maximum-health transition after its
+        # empowered basic attack. The score panel cannot re-price later
+        # maximum-health packets from that transition, so receipt mode owns
+        # this selection.
+        raise UncompilableActionError(
+            receipt="keystone=Grasp of the Undying",
+            source="Grasp of the Undying",
+            invariant=True,
+        )
     # The main candidate's own loadout is candidate-dependent: a failure
     # here falls back per evaluation and never poisons the context.  Checked
     # before any pair fight so the fallback costs only the capability scan.
-    main_item_receipt = _timeline_module()._uncompilable_item_receipt(items)
+    main_item_receipt = _uncompilable_item_receipt(items)
     if main_item_receipt is not None:
         raise UncompilableActionError(
             receipt=f"main:{main_item_receipt}",
@@ -607,6 +724,56 @@ def _score_with_search_context(
         )
         if first_result is None:
             first_result = result
+        # P3 package 3Q: the compiled stack machine (Force of Nature /
+        # Jak'Sho-style combat state) needs the same per-event metadata the
+        # receipt enrichment carries — the ability cast instance (so
+        # multi-packet abilities share one stack cadence) and the pair's
+        # final effective baseline resistances (so the dynamic repricing
+        # has a baseline to re-mitigate against).  Missing values stay
+        # absent: the kernel then refuses to invent a cadence or a
+        # mitigation ratio for that packet.
+        defender_stack_armed = (
+            float(getattr(defender.defenses, "force_stack_interval", 0.0) or 0.0) > 0.0
+            or float(getattr(defender.defenses, "jaksho_stack_interval", 0.0) or 0.0)
+            > 0.0
+            or bool(getattr(defender.defenses, "spell_shield_ready", False))
+        )
+        cast_timeline = result.get("cast_timeline", ())
+        baseline_fields = []
+        for field in ("effective_armor", "effective_mr"):
+            try:
+                baseline = float(result[field])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if math.isfinite(baseline):
+                baseline_fields.append((f"_baseline_{field}", baseline))
+        damage_events = result.get("damage_events", [])
+        # Tuple-ledger rows (6-tuples, not dicts) cannot be enriched; a
+        # stack-armed or spell-shield-armed defender must fail closed
+        # through the compiler's metadata guards instead of crashing on
+        # ``dict(event)`` (P3 packages 3R / 3U).
+        if result.get("damage_events_tuple"):
+            damage_events = []
+        if damage_events and (baseline_fields or cast_timeline):
+            stamped_events = []
+            for event in damage_events:
+                enriched = dict(event)
+                if cast_timeline:
+                    enriched["ability_instance"] = _ability_instance_for_event(
+                        event, cast_timeline
+                    )
+                # P3 package 3U: the Annul spell-shield eligibility needs
+                # the authored-ability delivery flag (mirrors _pair_packet's
+                # enrichment); a basic attack must never consume the shield.
+                enriched["is_ability"] = _is_authored_ability_event(event)
+                if str(event.get("source_key", "")) == "auto_attacks" or bool(
+                    event.get("basic_attack")
+                ):
+                    enriched["basic_attack"] = True
+                for key, value in baseline_fields:
+                    enriched[key] = value
+                stamped_events.append(enriched)
+            result = {**result, "damage_events": stamped_events}
         fresh.add_engine_result(
             result,
             "main",
@@ -619,6 +786,10 @@ def _score_with_search_context(
             context.pair_id_strings[defender.participant_id],
             defender_index,
             champion_wounds=main_champion_wounds,
+            defender_stack_armed=defender_stack_armed,
+            defender_spell_shield_armed=bool(
+                getattr(defender.defenses, "spell_shield_ready", False)
+            ),
         )
     if first_result is not None:
         # The item support scan reads per-event target/id fields that only
@@ -634,7 +805,7 @@ def _score_with_search_context(
             # Tuple-ledger fights carry no scannable rows by construction,
             # and a holder with no event-view item never reads the enriched
             # per-event copy — both scan the plain engine result.
-            support_templates = _timeline_module()._support_effect_templates(
+            support_templates = _support_effect_templates(
                 main, first_result, all_actors
             )
         else:
@@ -647,7 +818,7 @@ def _score_with_search_context(
                 }
                 for index, event in enumerate(first_result.get("damage_events", []))
             ]
-            support_templates = _timeline_module()._support_effect_templates(
+            support_templates = _support_effect_templates(
                 main,
                 first_result,
                 all_actors,
@@ -756,7 +927,7 @@ def _score_with_search_context(
             if first_result is not None
             else []
         )
-        grey_heals, grey_summary = _timeline_module()._grey_health_receipts(
+        grey_heals, grey_summary = _grey_health_receipts(
             str(champion_data.get("name", "")),
             champion_data,
             level,
@@ -794,6 +965,18 @@ def _score_with_search_context(
                 )
             )
 
+    # Knight's Vow (P3 package 3S): stage the Sacrifice holder-heals from
+    # the main's outgoing actions when the MAIN is a roster holder's Worthy
+    # ally (the redirect on the main lives in the signature panel).
+    kv_fresh_children: dict[str, Any] = {}
+    fresh_aidx = fresh.next_aidx
+    for kv_holder in all_actors:
+        kv_tether = resolve_knights_vow_tether(kv_holder, all_actors)
+        if kv_tether is None or kv_tether["target"].participant_id != "main":
+            continue
+        fresh_aidx = stage_knights_vow_heals(fresh, all_actors, kv_tether, fresh_aidx)
+    fresh.next_aidx = fresh_aidx
+
     actions = panel.sorted_actions + sorted(fresh.actions, key=itemgetter(0))
     actions = coalesce_darius_q_heals(actions)
     # Sourced revives (champion passives) author one candidate per incoming
@@ -809,13 +992,22 @@ def _score_with_search_context(
     # the receipt walk and drives the identical kernel; the only difference
     # is the ledger's parallel-array observation below.
     states = build_states(all_actors)
-    ledger = ScoreLedger(n_actions)
+    ledger = ScoreLedger(
+        n_actions,
+        actions=actions,
+        index_of=context.index_of,
+    )
     venom_packs = [
         serpents_fang_venom(
             list(actor.items), is_melee=bool(actor.stats.get("is_melee", True))
         )
         for actor in all_actors
     ]
+    kv_redirect_children = {
+        **getattr(context, "kv_redirect_children", {}),
+        **getattr(panel, "kv_redirect_children", {}),
+        **kv_fresh_children,
+    }
     ctx = TransitionContext(
         duration=duration,
         states=states,
@@ -823,6 +1015,7 @@ def _score_with_search_context(
         index_of=context.index_of,
         ledger=ledger,
         venom_profiles=venom_packs,
+        redirect_children=kv_redirect_children,
     )
     run_survival_walk(actions, ctx)
     finalize_states(states, duration)

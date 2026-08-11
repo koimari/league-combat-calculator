@@ -16,6 +16,20 @@ from typing import Any
 from .actions import SurvivalAction, action_key, survival_action_from_event
 from .transitions import participant_pools
 from ..item_effects import sustain_effect_value
+from ..interaction_effects import (
+    defense_composition,
+    defense_eligibility,
+    public_defense,
+    public_physical_damage_reduction,
+    resolve_physical_damage_reduction,
+    resolve_projectile_defense,
+    resolve_spell_shield,
+)
+from ..delivery_eligibility import (
+    delivery_declarations_receipt,
+    initial_full_block_uses,
+    spell_shield_rules_receipt,
+)
 
 # The optimizer rebuilds every participant's state once per candidate
 # evaluation, but the construction below derives only from the combatant's
@@ -77,6 +91,11 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         0.0, float(combatant.stats.get("magic_resistance", 0.0) or 0.0)
     )
     pools = participant_pools(combatant)
+    projectile_defense = resolve_projectile_defense(combatant)
+    eligibility = defense_eligibility(projectile_defense)
+    composition = defense_composition(projectile_defense)
+    spell_shield_contract = resolve_spell_shield(combatant)
+    physical_damage_reduction = resolve_physical_damage_reduction(combatant)
     return {
         # Every shield and health transition rides shield_ledger; this is the
         # one place this participant's absorbing state lives (issue #159).
@@ -107,6 +126,8 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         "temporary_health_until": 0.0,
         "temporary_health_expired_at": None,
         "temporary_health_source": "",
+        "permanent_bonus_health_received": 0.0,
+        "permanent_bonus_health_events": [],
         "healing_reduction_until": 0.0,
         "healing_reduction_factor": 1.0,
         "healing_reduction_sources": set(),
@@ -118,6 +139,41 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         "venom_factor": 1.0,
         "venom_events": [],
         "death_time": None,
+        "action_downtime_intervals": (
+            [
+                {
+                    "kind": "stasis",
+                    "start": 0.0,
+                    "end": starting_stasis_duration,
+                    "source": str(
+                        getattr(defenses, "starting_stasis_source", "") or ""
+                    ),
+                }
+            ]
+            if starting_stasis_duration > 0.0
+            else []
+        ),
+        "crowd_control_until": 0.0,
+        "crowd_control_intervals": [],
+        "crowd_control_immunity_until": 0.0,
+        "crowd_control_immunity_source": "",
+        # P2 Slice 3: the typed crowd-control immunity ledger.  The exact
+        # Black Shield ``shield_ledger.TimedShield`` entry is the ONLY
+        # immunity holder; the legacy projection fields above stay for
+        # the pinned public rows and are re-derived from the ledger.
+        "crowd_control_immunity_grants": [],
+        "crowd_control_immunity_blocked": [],
+        "crowd_control_immunity_decisions": [],
+        "crowd_control_immunity_eligibility": None,
+        # P2 Slice 4: the typed item-cleanse ledger.  ``cleanse_uses`` is
+        # the per-item one-use-per-fight latch on the HOLDER row;
+        # ``cleanse_use`` is its public receipt; ``cleanse`` is the
+        # recipient's last processed activation receipt; ``cleanse_denied``
+        # lists spent-use denials.
+        "cleanse_uses": {},
+        "cleanse_use": None,
+        "cleanse": None,
+        "cleanse_denied": [],
         "execute_time": None,
         "execute_source": "",
         # Combat-state mechanics are event-driven.  These fields are
@@ -137,6 +193,50 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         "spell_shield_source": str(getattr(defenses, "spell_shield_source", "") or ""),
         "spell_shield_used": False,
         "spell_shield_blocked_cast": None,
+        "spell_shield_heal_amount": 0.0,
+        "spell_shield_heal_delay": 0.0,
+        "spell_shield_heal_source": "",
+        "spell_shield_heal_triggered": False,
+        "spell_shield_heal_time": None,
+        # The kernel spell-shield contract (P2 Slice 2).  Annul shields
+        # resolve here from the starting defenses; Sivir's timed shield is
+        # armed later by the walk's SPELL_SHIELD action.
+        "spell_shield_eligibility": (
+            spell_shield_contract.eligibility
+            if spell_shield_contract is not None
+            else None
+        ),
+        "spell_shield_composition": (
+            spell_shield_contract.composition
+            if spell_shield_contract is not None
+            else None
+        ),
+        "spell_shield_uses_remaining": (
+            1 if spell_shield_contract is not None else None
+        ),
+        "spell_shield_blocked_packets": [],
+        "spell_shield_decisions": [],
+        "spell_shield_cooldown_seconds": (
+            spell_shield_contract.cooldown_seconds
+            if spell_shield_contract is not None
+            else None
+        ),
+        "spell_shield_cooldown_atom": (
+            dict(spell_shield_contract.cooldown_atom)
+            if spell_shield_contract is not None
+            and spell_shield_contract.cooldown_atom is not None
+            else None
+        ),
+        "projectile_defense": projectile_defense,
+        "projectile_defense_eligibility": eligibility,
+        "projectile_defense_composition": composition,
+        "projectile_defense_uses_remaining": (
+            initial_full_block_uses(composition) if composition is not None else None
+        ),
+        "projectile_defense_full_block_events": set(),
+        "projectile_defense_blocked": [],
+        "projectile_defense_event_id_matches": set(),
+        "physical_damage_reduction": physical_damage_reduction,
         "ichorshield_cap": max(
             0.0,
             float(getattr(defenses, "bloodthirster_shield_cap", 0.0) or 0.0),
@@ -161,6 +261,19 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
             getattr(defenses, "reactive_shield_source", "") or ""
         ),
         "reactive_shield_cooldown_until": 0.0,
+        # Guardian is an owner-side threshold ledger.  The holder keeps the
+        # damage window and the paired shield activation so either protected
+        # participant can trigger the same sourced cooldown.
+        "guardian_cooldown_until": 0.0,
+        "guardian_damage_history": [],
+        "guardian_pending_shields": {},
+        "guardian_trigger_events": [],
+        # Aftershock snapshots its two resistance bonuses on an accepted
+        # immobilize and keeps them active for the sourced 2.5-second window.
+        "aftershock_bonus_armor": 0.0,
+        "aftershock_bonus_magic_resistance": 0.0,
+        "aftershock_until": 0.0,
+        "aftershock_trigger_events": [],
         "incoming_damage_multiplier": max(
             0.0, float(getattr(defenses, "incoming_damage_multiplier", 1.0) or 1.0)
         ),
@@ -218,6 +331,7 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         # ordered walk adds only source-backed resistance deltas.
         "force_stacks": 0,
         "force_stacks_until": 0.0,
+        "force_cast_last_times": {},
         "force_last_stack_time": None,
         "force_last_cast_key": None,
         "force_stack_events": [],
@@ -379,7 +493,7 @@ def assemble_survival_rows(
         )
         threshold_shield = pools.threshold_shield
         threshold_health = pools.threshold_health
-        result[participant_id] = {
+        row = {
             "max_health": round(pools.max_health, 1),
             "ending_health": round(pools.health, 1),
             "ending_health_ratio": round(
@@ -399,6 +513,13 @@ def assemble_survival_rows(
             "temporary_health_until": round(state["temporary_health_until"], 3),
             "temporary_health_expired_at": state["temporary_health_expired_at"],
             "temporary_health_source": state["temporary_health_source"],
+            "permanent_bonus_health_received": round(
+                state["permanent_bonus_health_received"], 1
+            ),
+            "permanent_bonus_health_events": [
+                {"recipient": participant_id, **event}
+                for event in state["permanent_bonus_health_events"]
+            ],
             "effective_health": round(
                 pools.max_health
                 + state["starting_shield"]
@@ -450,15 +571,120 @@ def assemble_survival_rows(
             "stasis_until": round(state["stasis_until"], 3),
             "stasis_started_at": state["stasis_started_at"],
             "stasis_source": state["stasis_source"],
+            "crowd_control_until": round(state["crowd_control_until"], 3),
+            "crowd_control_immunity_until": round(
+                state["crowd_control_immunity_until"], 3
+            ),
+            "crowd_control_immunity_source": state["crowd_control_immunity_source"],
+            **(
+                {
+                    "crowd_control_immunity": _public_crowd_control_immunity_row(
+                        state, participant_id
+                    )
+                }
+                if state.get("crowd_control_immunity_grants")
+                else {}
+            ),
+            "crowd_control_intervals": [
+                {"recipient": participant_id, **event}
+                for event in state["crowd_control_intervals"]
+            ],
+            **(
+                {"cleanse": _public_cleanse_receipt(state)}
+                if state.get("cleanse") is not None
+                else {}
+            ),
+            **(
+                {"cleanse_use": dict(state["cleanse_use"])}
+                if state.get("cleanse_use") is not None
+                else {}
+            ),
+            **(
+                {"cleanse_denied": [dict(entry) for entry in state["cleanse_denied"]]}
+                if state.get("cleanse_denied")
+                else {}
+            ),
+            # P2 Slice 8 (Dr. Mundo Goes Where He Pleases): the passive
+            # immunity receipts — the resist decision, the 4%-current
+            # health cost, the canister drop, the named-unsupported
+            # pickup, the receipted cooldown and the armed state.
+            **(
+                {
+                    "crowd_control_resisted": [
+                        dict(e) for e in state["crowd_control_resisted"]
+                    ]
+                }
+                if state.get("crowd_control_resisted")
+                else {}
+            ),
+            **(
+                {"passive_cost": dict(state["passive_cost"])}
+                if state.get("passive_cost") is not None
+                else {}
+            ),
+            **(
+                {"canister": dict(state["canister"])}
+                if state.get("canister") is not None
+                else {}
+            ),
+            **(
+                {"pickup": dict(state["pickup"])}
+                if state.get("pickup") is not None
+                else {}
+            ),
+            **(
+                {"passive_cooldown": dict(state["passive_cooldown"])}
+                if state.get("passive_cooldown") is not None
+                else {}
+            ),
+            **(
+                {"passive_state": dict(state["passive_state"])}
+                if state.get("passive_state") is not None
+                else {}
+            ),
+            # P2 Slice 9 (Olaf Ragnarok): the 3s immunity window row.
+            **(
+                {"ragnarok_immunity": dict(state["ragnarok_immunity"])}
+                if state.get("ragnarok_immunity") is not None
+                else {}
+            ),
+            "action_downtime": round(
+                _merged_interval_duration(state["action_downtime_intervals"]),
+                3,
+            ),
+            "action_downtime_intervals": [
+                {"recipient": participant_id, **event}
+                for event in state["action_downtime_intervals"]
+            ],
+            "projectile_defense": _public_defense_row(state),
+            "projectile_defense_blocked": list(state["projectile_defense_blocked"]),
             "invulnerable_until": round(state["invulnerable_until"], 3),
             "untargetable_until": round(state["untargetable_until"], 3),
             "spell_shield_used": bool(state["spell_shield_used"]),
             "spell_shield_source": state["spell_shield_source"],
+            "spell_shield_heal_triggered": bool(state["spell_shield_heal_triggered"]),
             "spell_shield_until": (
                 None
                 if state["spell_shield_until"] == float("inf")
                 else round(state["spell_shield_until"], 3)
             ),
+            **(
+                {"spell_shield": _public_spell_shield_row(state)}
+                if state.get("spell_shield_eligibility") is not None
+                else {}
+            ),
+            "guardian": {
+                "cooldown_until": round(state["guardian_cooldown_until"], 3),
+                "trigger_events": list(state["guardian_trigger_events"]),
+            },
+            "aftershock": {
+                "until": round(state["aftershock_until"], 3),
+                "bonus_armor": round(float(state["aftershock_bonus_armor"]), 3),
+                "bonus_magic_resistance": round(
+                    float(state["aftershock_bonus_magic_resistance"]), 3
+                ),
+                "trigger_events": list(state["aftershock_trigger_events"]),
+            },
             "force_of_nature": {
                 "stacks": int(state["force_stacks"]),
                 "stacks_until": round(state["force_stacks_until"], 3),
@@ -509,7 +735,188 @@ def assemble_survival_rows(
             ),
             "defy_heal_received": round(state["defy_heal_received"], 1),
         }
+        physical_damage_reduction = state.get("physical_damage_reduction")
+        if physical_damage_reduction is not None:
+            row["physical_damage_reduction"] = public_physical_damage_reduction(
+                physical_damage_reduction
+            )
+        result[participant_id] = row
     return result
+
+
+def _public_cleanse_receipt(state: dict[str, Any]) -> dict[str, Any]:
+    """One recipient survival row's public cleanse receipt.
+
+    The decision fields (removed/rejected controls, downtime before) are
+    frozen at activation; ``intervals_after`` and ``downtime_after`` are
+    re-derived from the FINAL interval ledger at assembly time, so a
+    control landing after the activation (untouched — a cleanse creates no
+    immunity) is visible in the receipt (the matrix's R11 parity pin).
+    """
+    receipt = dict(state["cleanse"])
+    # The walk-level intervals mirror the survival row's interval shape
+    # (kind/start/end/source + recipient) — the assembly-time refresh keeps
+    # them identical to ``crowd_control_intervals`` by construction.
+    receipt["intervals_after"] = [
+        {"recipient": state.get("participant_id", ""), **event}
+        for event in state["crowd_control_intervals"]
+    ]
+    receipt["downtime_after"] = round(
+        _merged_interval_duration(state["crowd_control_intervals"]), 6
+    )
+    return receipt
+
+
+def _public_crowd_control_immunity_row(
+    state: dict[str, Any], participant_id: str
+) -> dict[str, Any]:
+    """One recipient survival row's public crowd-control immunity receipt.
+
+    Shows the selected recipient, the holder source, the shield source
+    atoms, the shield lifetime window (start inclusive, end exclusive),
+    the active-until time, the reason immunity ended ("expired" /
+    "drained" / "fight_end"), the eligibility declaration, every
+    blocked control (with shield amounts before/after), and every
+    per-packet decision — the named fail-closed record for denied
+    controls (outside window / holder gone / unknown kind).
+    """
+    grants = state.get("crowd_control_immunity_grants", ())
+    if not grants:
+        return {
+            "recipient": participant_id,
+            "shield_source": "",
+            "source_atoms": [],
+            "window": None,
+            "active_until": 0.0,
+            "reason_immunity_ended": None,
+            "eligibility": None,
+            "blocked": [],
+            "decisions": [],
+        }
+    latest = grants[-1]
+    eligibility = state.get("crowd_control_immunity_eligibility")
+    return {
+        "recipient": participant_id,
+        "shield_source": latest["source"],
+        "source_atoms": [dict(atom) for atom in latest.get("source_atoms", ())],
+        "window": (
+            eligibility.window.public_receipt() if eligibility is not None else None
+        ),
+        "active_until": round(float(latest["expires_at"]), 3),
+        "reason_immunity_ended": latest.get("ended_reason"),
+        "eligibility": (
+            eligibility.public_receipt() if eligibility is not None else None
+        ),
+        "blocked": [
+            dict(entry) for entry in state.get("crowd_control_immunity_blocked", [])
+        ],
+        "decisions": [
+            dict(entry) for entry in state.get("crowd_control_immunity_decisions", [])
+        ],
+    }
+
+
+def _public_spell_shield_row(state: dict[str, Any]) -> dict[str, Any] | None:
+    """One survival row's public spell-shield receipt.
+
+    Extends the kernel declaration with the walk-observed lifecycle:
+    the sourced window (an infinite Annul window maps ``until`` to
+    None), the acceptance and block rule, the selected cast identity,
+    the one-use budget before/after, the blocked packets (stable event
+    keys), every eligibility decision, the triggered heal, the declared
+    categorical rules, and the receipted cooldown.  The legacy flat
+    fields (``spell_shield_used`` / ``source`` / ``heal_triggered`` /
+    ``until``) stay untouched above.
+    """
+    eligibility = state.get("spell_shield_eligibility")
+    if eligibility is None:
+        return None
+    window = eligibility.window.public_receipt()
+    if window["until"] == float("inf"):
+        window["until"] = None
+    blocked_cast = state["spell_shield_blocked_cast"]
+    row: dict[str, Any] = {
+        "source": state["spell_shield_source"],
+        "window": window,
+        "acceptance": eligibility.acceptance.public_receipt(),
+        "block_rule": eligibility.block_rule,
+        "rules": spell_shield_rules_receipt(),
+        "uses_before": 1,
+        "uses_after": state.get("spell_shield_uses_remaining"),
+        "selected_cast_identity": (str(blocked_cast[-1]) if blocked_cast else None),
+        "blocked_packets": [
+            dict(entry) for entry in state.get("spell_shield_blocked_packets", [])
+        ],
+        "decisions": [dict(entry) for entry in state.get("spell_shield_decisions", [])],
+        "triggered_heal": (
+            {
+                "time": round(float(state["spell_shield_heal_time"]), 3),
+                "amount": round(float(state["spell_shield_heal_amount"]), 6),
+                "delay": round(float(state["spell_shield_heal_delay"]), 6),
+                "source": state["spell_shield_heal_source"],
+            }
+            if state.get("spell_shield_heal_time") is not None
+            else None
+        ),
+        "cooldown_seconds": state.get("spell_shield_cooldown_seconds"),
+        "cooldown_atom": (
+            dict(state["spell_shield_cooldown_atom"])
+            if state.get("spell_shield_cooldown_atom") is not None
+            else None
+        ),
+    }
+    return row
+
+
+def _public_defense_row(state: dict[str, Any]) -> dict[str, Any] | None:
+    """One survival row's public projectile-defense receipt.
+
+    Extends the static declaration (:func:`public_defense`) with the
+    walk-observed state: the remaining full-block uses, the six typed
+    delivery declarations, and (for event-id selections) the selected
+    event ids that never matched an incoming event — the named
+    fail-closed receipt for a positional selection that cannot be
+    validated at option-parse time.
+    """
+    base = public_defense(state["projectile_defense"])
+    if base is None:
+        return None
+    base["remaining_uses"] = state.get("projectile_defense_uses_remaining")
+    base["delivery_declarations"] = delivery_declarations_receipt()
+    eligibility = state.get("projectile_defense_eligibility")
+    if eligibility is not None and eligibility.selection.blocked_event_ids:
+        matched = state.get("projectile_defense_event_id_matches", set())
+        base["blocked_event_ids_unmatched"] = [
+            event_id
+            for event_id in eligibility.selection.blocked_event_ids
+            if event_id not in matched
+        ]
+    return base
+
+
+def _merged_interval_duration(intervals: list[Mapping[str, Any]]) -> float:
+    """Return the union length of authored inactive intervals."""
+    ordered: list[tuple[float, float]] = []
+    for interval in intervals:
+        try:
+            start = float(interval.get("start", 0.0))
+            end = float(interval.get("end", 0.0))
+        except (TypeError, ValueError):
+            continue
+        if end > start:
+            ordered.append((start, end))
+    ordered.sort()
+    total = 0.0
+    current_start = current_end = 0.0
+    for start, end in ordered:
+        if start > current_end:
+            total += current_end - current_start
+            current_start, current_end = start, end
+        else:
+            current_end = max(current_end, end)
+    if ordered:
+        total += current_end - current_start
+    return max(0.0, total)
 
 
 __all__ = [

@@ -505,6 +505,48 @@ def _ticked_wiki_attribute_parser(spec: dict[str, Any], fix: dict[str, Any]):
     return parse
 
 
+def _rank_gated_no_damage(
+    slot: str, *, reason: str = "No enemy damage is listed for this ability."
+):
+    """A no-damage slot that is ABSENT while unlearned (rank 0).
+
+    P2 Slice 7 (Milio R): an unlearned R must not book a cast — the
+    engine rotates every SLOT at every rank, which previously scheduled
+    e.g. Milio R at rank 0 and let the heal rule fire with the clamped
+    last row.  Only slots that opt in via ``slot_parsers`` get this gate
+    (the generic no_damage behavior is unchanged).
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        if ctx.rank_for() < 1:
+            return None
+        return _no_formula_parser(slot, reason=reason)(ctx)
+
+    parse.phase = "damage"
+    return parse
+
+
+def _no_formula_parser(
+    slot: str, *, reason: str = "No enemy damage is listed for this ability."
+):
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability = ctx.ability()
+        if ability is None:
+            return None
+        return {
+            "name": ability.get("name", f"Ability {slot}"),
+            "rank": ctx.rank_for(),
+            "cooldown": 0.0,
+            "damage_type": "magic",
+            "total_raw": 0.0,
+            "parts": (),
+            "detail": reason,
+        }
+
+    parse.phase = "damage"
+    return parse
+
+
 def build_packet_module(
     champion_name: str,
     packet_sha256: str,
@@ -641,11 +683,18 @@ def build_packet_module(
                 )
             )
         elif spec.get("kind") == "no_damage":
-            slots[slot] = no_damage_parser(
-                slot,
-                reason=str(
-                    spec.get("reason", "No enemy damage is listed for this ability.")
-                ),
+            custom = slot_parsers.get(slot)
+            slots[slot] = (
+                custom
+                if custom is not None
+                else _no_formula_parser(
+                    slot,
+                    reason=str(
+                        spec.get(
+                            "reason", "No enemy damage is listed for this ability."
+                        )
+                    ),
+                )
             )
         else:
             slots[slot] = no_damage_parser(slot)

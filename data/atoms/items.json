@@ -1,7 +1,7 @@
 {
  "domain": "items",
- "generated_at": 1786121772.207755,
- "source_ref": null,
+ "generated_at": 1786460564.1183941,
+ "source_ref": "data/items.json@sha256:6f6cd65950efbbf3",
  "objects": {
   "1001": [
    {
@@ -8691,6 +8691,22 @@
      "stats.mana.flat"
     ],
     "hash": "6062045d8b2981d1"
+   },
+   {
+    "atom_id": "timing.same_target_cast_lockout",
+    "behavior": "timing",
+    "source": "Muramana.passives[1].branches[1]",
+    "name": "Shock",
+    "values": [
+     6.5
+    ],
+    "units": [
+     "seconds"
+    ],
+    "evidence": [
+     "passive:Shock@kw:ability damage"
+    ],
+    "hash": "5a5263cc7e165ee4"
    }
   ],
   "3044": [

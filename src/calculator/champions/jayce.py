@@ -63,6 +63,7 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
 from ..stats import ATTACK_SPEED_CAP
 from .engine import SlotCtx, build_parser
@@ -288,9 +289,51 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+def _w_mana_restore(ctx: SlotCtx) -> dict[str, Any] | None:
+    """The W-slot passive's per-basic-attack mana restore (15-25 by W rank).
+
+    Sourced from the cached "Mana Restored" leveling row — the atom
+    ``ability.mana _restored`` (hash bfeb0d88945a263e) — and corroborated
+    by the game binary's ManaGain ranks 1-6 (index 0 is the unleveled
+    placeholder 13, never a fight value).  The passive text lives only on
+    the hammer-form entry (Lightning Field), but the W slot is shared and
+    Jayce keeps the passive in BOTH stances — an explicit module
+    interpretation (neither the cache nor the binary states stance gating
+    either way; see ASSUMPTIONS).
+    """
+    rank = ctx.rank_for("W")
+    if rank < 1:
+        return None
+    amount, atom = required_ranked_attribute_atom(
+        "Jayce",
+        {"name": ctx.champion_name, "abilities": ctx.abilities},
+        "W",
+        "Mana Restored",
+        rank,
+        entry_index=0,
+        occurrence=0,
+        modifier_index=0,
+    )
+    return {
+        "amount": amount,
+        "source": "Jayce W passive (Mana Restored)",
+        "atoms": ((atom["atom_id"], atom["hash"]),),
+    }
+
+
 def _w(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: Lightning Field (Hammer) or Hyper Charge (Cannon) by stance."""
-    return _w_hammer(ctx) if _is_hammer(ctx) else _hyper_charge(ctx)
+    """W: Lightning Field (Hammer) or Hyper Charge (Cannon) by stance.
+
+    Both forms carry the slot's per-auto mana-restore passive
+    (``resource_restore_per_auto``) so the shared resource walk schedules
+    one ledger gain per modeled basic attack at the ranked amount.
+    """
+    entry = _w_hammer(ctx) if _is_hammer(ctx) else _hyper_charge(ctx)
+    if entry is not None:
+        restore = _w_mana_restore(ctx)
+        if restore is not None:
+            entry["resource_restore_per_auto"] = restore
+    return entry
 
 
 # ---------------------------------------------------------------------------
@@ -417,6 +460,20 @@ ASSUMPTIONS = [
     "see each form. The cross-stance burst combo (gate -> supercharged "
     "Shock Blast -> Transform -> empowered Hammer auto -> Thundering Blow "
     "-> To the Skies!) is not modeled as a single rotation",
+    "FORM TRANSITION RECEIPT: the R cast IS the Transform, and the "
+    "engine schedules it exactly once at t=0 (R is first in CAST_ORDER; "
+    "the engine's single-cast rule).  The fight therefore plays entirely "
+    "in the DESTINATION stance that hammer_stance selects.  A fight that "
+    "opens in one stance and flips at a provable later time is NOT "
+    "representable — the entries are consumed fight-wide (one packet per "
+    "slot, one cooldown per slot, fight-wide stat_buffs, single-cast R), "
+    "so no transform_at/transform_sequence input is declared and the "
+    "API rejects any such key by name (the fail-closed gate).  Model a "
+    "cross-stance sequence as TWO one-stance fights (one per stance) to "
+    "bound the transition; the in-game transform is instant, costs "
+    "nothing, and its 6s cooldown is sourced but never recast in the "
+    "engine (R casts once).  The P passive (30 MS + ghosting for 0.75s "
+    "on every swap) is utility-only and not modeled.",
     "R (Transform) values are module constants from the live game files: "
     "both JSON entries have empty leveling arrays. They step with "
     "CHAMPION LEVEL at 1/6/11/16, not with rank — R starts at rank 1 and "
@@ -447,8 +504,20 @@ ASSUMPTIONS = [
     "plus the cooldown. Those 3 attacks therefore cannot Navori-refund "
     "W's own cooldown — it is not running yet — though they do refund "
     "Jayce's other basic abilities",
-    "Q's bonus damage against monsters, E's monster damage cap and W's "
-    "mana restore are not modeled (the target is a champion)",
+    "Q's bonus damage against monsters and E's monster damage cap are "
+    "not modeled (the target is a champion)",
+    "W's passive mana restore is modeled on the shared mana ledger: every "
+    "modeled basic attack restores 15-25 mana (by W rank) at its swing "
+    "time, capped at maximum mana. The passive text lives on the "
+    "hammer-form entry, but the W slot is shared and Jayce keeps the "
+    "restore in BOTH stances — an explicit interpretation (neither the "
+    "wiki cache nor the game binary states stance gating either way). "
+    "With no auto stream the restore has nothing to ride; Hyper Charge's "
+    "forced ability-row swings (one-rotation mode) are not basic-attack "
+    "stream autos and do not restore. The restore's per-swing timing is "
+    "the modeled auto schedule; Hail of Blades/Lethal Tempo and Lich "
+    "Bane-adjusted schedules resolve after the resource walk, so their "
+    "per-swing restore timing is not mirrored (count is)",
     "Cannon E (Acceleration Gate) emits nothing: its movement speed is "
     "utility and its Shock Blast supercharge is the accelerated_q option",
     "Cannon R raises attack range from 125 to 500; Jayce's JSON attackType "

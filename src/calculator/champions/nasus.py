@@ -35,6 +35,11 @@ from .source_receipts import load_champion_sources
 # ability descriptions): Spirit Fire's zone ticks every 0.5s over 5s
 # (first tick 0.5s after the initial hit's 0.264s delay); Fury of the
 # Sands ticks every 0.5s over 15s.
+#
+# HARDCODED: verify on patch updates — wiki prose, not a leveling row:
+# the cached R description states "Siphoning Strike's cooldown is
+# halved" while Fury of the Sands is active (eff[1] prose).
+_R_Q_COOLDOWN_MULTIPLIER = 0.5
 _E_INITIAL_DELAY = 0.264
 _E_TICKS = 10
 _E_TICK_INTERVAL = 0.5
@@ -65,10 +70,18 @@ def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         bonus,
         "physical",
     )
+    # Fury of the Sands halves Siphoning Strike's cooldown while active
+    # (cached R prose).  The module prices all 30 sourced R ticks, i.e.
+    # the fight sits inside R's 15s window, so the halving applies to
+    # the whole fight's Q schedule; the option turns it off to price an
+    # un-empowered rotation.
+    if ctx.rank_for("R") >= 1 and ctx.options.get("r_q_cooldown_halved", True):
+        entry["cooldown"] *= _R_Q_COOLDOWN_MULTIPLIER
     entry["parts"] = (DamagePart("physical", bonus),)
     entry["empowers_next_auto"] = True
     entry["detail"] = (
-        f"flat {bonus - stacks:.2f} + {stacks} permanent Siphoning Strike " "stack(s)"
+        f"flat {bonus - stacks:.2f} + {stacks} permanent Siphoning Strike "
+        f"stack(s); Q cooldown halved during Fury of the Sands"
     )
     return entry
 
@@ -188,6 +201,16 @@ def _wither(ctx: SlotCtx) -> dict[str, Any] | None:
 
 OPTIONS: list[dict[str, Any]] = [
     {
+        "key": "r_q_cooldown_halved",
+        "type": "bool",
+        "default": True,
+        "label": (
+            "Fury of the Sands halves Siphoning Strike's cooldown "
+            "(effective while R is ranked)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "Q"},
+    },
+    {
         "key": "q_stacks",
         "type": "int",
         "default": 0,
@@ -212,8 +235,12 @@ ASSUMPTIONS = [
     "E (Spirit Fire) prices the initial hit + 10 sourced 0.5s zone "
     "ticks (E2 fix, unchanged from the reviewed packet)",
     "R (Fury of the Sands) prices all 30 sourced 0.5s ticks (E2 fix, "
-    "unchanged); its bonus health/resistances are self-stats and the "
-    "Q-cooldown halving is not modeled",
+    "unchanged); its bonus health/resistances are self-stats.  While "
+    "R is active (ranked and r_q_cooldown_halved on, the default) "
+    "Siphoning Strike's cooldown is halved — the cached R prose "
+    "('Siphoning Strike's cooldown is halved') — and the module prices "
+    "the whole fight inside R's 15s window, consistent with pricing "
+    "all 30 ticks",
     "P (Soul Eater) lifesteal is a self-heal rule (HEALING_RULE_CHAMPIONS): "
     "12% / 18% / 24% (based on level; game-file breakpoints at 7/13) of the "
     "post-mitigation physical basic-attack/on-hit damage dealt; W (Wither) "

@@ -35,6 +35,21 @@ def _harrier(ctx: SlotCtx):
 
 _harrier.phase = ONHIT
 
+# P4: the Harrier CRIT boundary — the bonus is priced NON-crit because
+# no pinned source states it crits: the pinned cache (rev 4009372) and
+# the live wiki carry no crit sentence for the bonus (the wiki's general
+# rule: on-hit damage does not crit unless stated); the historical
+# "can critically strike" note was REMOVED 2020-08-30 (rev 3109549); the
+# binary has no crit coefficient for the passive.  The degraded P
+# cooldown row (values [0,0,0], units "7 : 2.56 (based on critical
+# strike chance)") is the mark-interval scaling (7s at 0% crit ->
+# 2.56s at 100%), a mark-COOLDOWN mechanic, not a damage term — pinned
+# so a future fixed row forces re-review (the fail-closed staleness
+# gate).  If a pinned source ever states the empowered attack crits,
+# the engine's on_hit crit_effectiveness wiring is the pre-specified
+# flip-switch.
+_HARRIER_CRIT_BOUNDARY = "non_crit"
+
 SLOTS = dict(SLOTS)
 SLOTS["P"] = _harrier
 parse_abilities = build_parser(SLOTS, "Quinn")
@@ -46,6 +61,25 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Damage'), modeled like Nautilus and Poppy on-hit passives.",
     "The Harrier mark requires Quinn's Q/E/R or Valor's periodic marking "
     "first; the on-hit is priced per auto against the marked target.",
+    "P4 CRIT BOUNDARY (named fail-closed): the Harrier bonus is priced "
+    "NON-crit — no pinned source states it crits (the pinned cache rev "
+    "4009372 and the live wiki carry no crit sentence; the wiki's "
+    "general rule is on-hit damage does not crit unless stated; the "
+    "historical 'can critically strike' note was removed 2020-08-30; "
+    "the binary has no crit coefficient).  _HARRIER_CRIT_BOUNDARY = "
+    "'non_crit' pins it; a future sourced statement flips the engine's "
+    "pre-specified on_hit crit_effectiveness wiring.",
+    "The degraded P cooldown row (values [0,0,0], units '7 : 2.56 "
+    "(based on critical strike chance)') is the mark-interval scaling "
+    "(7s at 0% crit -> 2.56s at 100%), a mark-COOLDOWN mechanic not "
+    "priced as damage; the row's degraded shape is pinned so a future "
+    "fixed row forces re-review.",
+    "Harrier deals 75 bonus physical damage against monsters (the "
+    "cached effects[2] + the binary BonusMonsterDmg 75.0) — not priced "
+    "(no monster-target kind in the 1v1 model; named boundary).",
+    "Behind Enemy Lines (R-active) disables Harrier and removes all "
+    "marks (cached effects[3]) — not gated in the model (named "
+    "boundary; the on-hit is unconditional).",
 ]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")

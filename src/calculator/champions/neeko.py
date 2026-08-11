@@ -27,6 +27,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    with_control,
 )
 
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
@@ -127,6 +128,11 @@ def _pop_blossom(ctx: SlotCtx):
 
 SLOTS = dict(SLOTS)
 SLOTS["Q"] = _blooming_burst
+SLOTS["E"] = with_control(
+    SLOTS["E"],
+    kind="root",
+    duration_attr="Root Duration",
+)
 SLOTS["R"] = _pop_blossom
 parse_abilities = build_parser(SLOTS, "Neeko")
 

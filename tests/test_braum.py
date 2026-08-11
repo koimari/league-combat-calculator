@@ -5,7 +5,8 @@ Hand-validated against https://wiki.leagueoflegends.com/en-us/Braum
   magic, cooldown 8/7.5/7/6.5/6s.
 - W (Stand Behind Me): zero damage; SELF 20/25/30/35/40 (+36% bonus)
   armor and magic resistance.
-- E (Unbreakable): pure damage mitigation — deliberately absent.
+- E (Unbreakable): selected directional projectile defense with a sourced
+  duration and rank reduction.
 - R (Glacial Fissure): 150/250/350 (+60% AP) magic.
 - P (Concussive Blows): 4 applications (autos + Q) proc 16 + 10 x level
   magic; then 8/6/4s stack immunity during which each AUTO deals 40% of
@@ -128,12 +129,30 @@ class TestStandBehindMe:
 
 
 class TestUnbreakable:
-    """E: pure damage mitigation — deliberately absent from the map."""
+    """E: selected directional projectile defense."""
 
-    def test_absent_at_all_levels(self, braum_data):
-        """E never emits an entry, at any level."""
-        for level in (3, 13, 18):
-            assert "E" not in _parse(braum_data, level)
+    def test_emits_typed_defense_atom(self, braum_data):
+        """E emits a zero-damage defense row with sourced rank values."""
+        abilities = _parse(
+            braum_data,
+            18,
+            options={
+                "e_active": True,
+                "e_active_seconds": 2.5,
+                "e_blocked_skillshots": ["Ezreal:Q"],
+            },
+        )
+        e = abilities["E"]
+        assert e["total_raw"] == 0.0
+        assert e["parts"] == ()
+        assert e["defensive_interaction"] == {
+            "kind": "braum_unbreakable",
+            "active": True,
+            "duration": pytest.approx(2.5),
+            "damage_reduction": pytest.approx(0.55),
+            "full_block_first": True,
+            "blocked_sources": ["Ezreal:Q"],
+        }
 
 
 class TestGlacialFissure:

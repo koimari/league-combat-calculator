@@ -16,6 +16,12 @@ import math
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
+from .state_lifecycle import (
+    SourceReceipt,
+    StackRule,
+    WindowGateRule,
+    WindowStackGate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +150,21 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         },
         "source_url": "https://wiki.leagueoflegends.com/en-us/Immortal_Path",
         "source_revision_id": 4042850,
+    },
+    "Gluttonous Greaves": {
+        "options": {
+            "slay_stacks": {
+                "type": "int",
+                "label": "Slay takedown stacks",
+                "default": 0,
+                "min": 0,
+                "max": 10,
+                "step": 1,
+                "bonus_omnivamp_per_unit": 0.6,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Gluttonous_Greaves",
+        "source_revision_id": 4030444,
     },
     "Hubris": {
         "options": {
@@ -302,6 +323,62 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Tear_of_the_Goddess",
         "source_revision_id": 4026380,
     },
+    "Doran's Helm": {
+        # Helping Hand: "Basic attacks deal 5 bonus physical damage on-hit
+        # against minions" (cached Wiki branch; client binary Items/1120
+        # BonusDamageToMinions=5.0).  The 1v1 champion model has no minion
+        # targets, so the passive carries no scenario control — the source
+        # receipt is the whole contract (wiki revision 4034679, page
+        # 1726898, status ready).
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Doran's_Helm",
+        "source_revision_id": 4034679,
+    },
+    "Ionian Boots of Lucidity": {
+        # Ionian Insight: "Gain 10 summoner spell haste" (cached Wiki
+        # branch; riotDescription "Gain 10 Summoner Spell Haste."; client
+        # binary Items/3158 SummonerHaste=10.0).  The 1v1 champion model
+        # has no summoner-spell action state, so the passive carries no
+        # scenario control — the source receipt is the whole contract
+        # (wiki revision 4022246, page 41221, status ready).
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Ionian_Boots_of_Lucidity",
+        "source_revision_id": 4022246,
+    },
+    "Gunmetal Greaves": {
+        # Noxian Gait is Riot-only: the Wiki cache has no passive branch
+        # (rev 4013706 records effect_count 0), so the passive carries no
+        # scenario control — the source receipt plus the typed boundary
+        # keys (item_state_receipts noxian_gait_boundary) are the whole
+        # contract (wiki revision 4013706, page 1675881, status ready).
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Gunmetal_Greaves",
+        "source_revision_id": 4013706,
+    },
+    "Guardian Angel": {
+        # Rebirth carries no scenario control: the survival ledger owns
+        # the lethal trigger and the anchored resurrection window.  The
+        # source receipt (wiki revision 4046863, page 3591) rides the
+        # typed registry so a parser refresh cannot overwrite it; the
+        # rebirth_ready row is the receipt-layer carrier.
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Guardian_Angel",
+        "source_revision_id": 4046863,
+    },
+    # Lost Chapter's Enlighten restores 20% max mana over 3 seconds on
+    # level-up.  The fight model has a fixed level, so the level-up moment
+    # is authored state: the smallest explicit choice is ONE timing (seconds
+    # into the fight).  A missing/zero choice creates NO trigger (P3 slice 1).
+    "Lost Chapter": {
+        "options": {
+            "enlighten_level_up_seconds": {
+                "type": "float",
+                "label": "Level-up at (seconds)",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 30.0,
+                "step": 1.0,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Lost_Chapter",
+        "source_revision_id": 3989340,
+    },
     "Umbral Glaive": {
         "options": {
             "nightstalker_ready": {
@@ -439,6 +516,34 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Mikael%27s_Blessing",
         "source_revision_id": 3984364,
     },
+    "Quicksilver Sash": {
+        "options": {
+            "active_seconds": {
+                "type": "float",
+                "label": "Quicksilver active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 30.0,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Quicksilver_Sash",
+        "source_revision_id": 3729899,
+    },
+    "Mercurial Scimitar": {
+        "options": {
+            "active_seconds": {
+                "type": "float",
+                "label": "Quicksilver active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 30.0,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Mercurial_Scimitar",
+        "source_revision_id": 3984461,
+    },
     "Redemption": {
         "options": {
             "active_seconds": {
@@ -486,8 +591,12 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
             "worthy_target_index": {
                 "type": "int",
                 "label": "Worthy ally index",
-                "default": 0,
-                "min": 0,
+                # Pledge is unit-targeted: the default -1 is the
+                # no-selection sentinel — a missing authored index fails
+                # closed with no tether instead of inventing the first
+                # teammate as Worthy (P3 package 3S).
+                "default": -1,
+                "min": -1,
                 "max": 4,
                 "step": 1,
             },
@@ -641,9 +750,13 @@ ALLY_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "heal_max": 350.0,
         "enemy_max_health_true_damage_ratio": 0.10,
         "target_area_range_units": 5500.0,
-        "target_area_reveal_duration": 3.0,
         "beam_delay": 2.5,
-        "cooldown": 120.0,
+        # Binary-only cooldown (Items/3107 mDataValues Cooldown=90.0); the
+        # cached wiki entry records null for this active.  Receipted, never
+        # enforced — the model is one cast per fight from the single
+        # active_seconds input (P3 package 3H).  (The earlier 120.0 matched
+        # Mikael's binary and was a copy-paste contamination.)
+        "cooldown": 90.0,
         "source_url": "https://wiki.leagueoflegends.com/en-us/Redemption",
         "source_revision_id": 4015392,
     },
@@ -818,6 +931,7 @@ def stat_conversion_metadata(item_name: str) -> dict[str, float]:
         "support_quest_threshold",
         "ward_charges",
         "helping_hand_minion_damage",
+        "summoner_spell_haste",
     )
     if item_name in {"Bandlepipes", "Experimental Hexplate"}:
         keys += ("bonus_attack_speed_melee", "bonus_attack_speed_ranged")
@@ -887,6 +1001,20 @@ def validate_item_input_options(value: object) -> dict[str, dict[str, int | floa
                     f"item_options.{item_name}.{option_name} must be between "
                     f"{option['min']} and {option['max']}"
                 )
+            # Float options carry an explicit step (active-seconds inputs,
+            # level-up timings): a supplied value must be a step multiple,
+            # not silently rounded (P3 package 3F).  Integer options keep
+            # their existing lenient behavior (their step is a UI hint).
+            if option["type"] != "int":
+                step = float(option.get("step", 0.0) or 0.0)
+                if step > 0.0:
+                    span = float(supplied) - float(option["min"])
+                    quotient = span / step
+                    if abs(quotient - round(quotient)) > 1e-9:
+                        raise ValueError(
+                            f"item_options.{item_name}.{option_name} must be "
+                            f"a multiple of {step:g}"
+                        )
             parsed[item_name][option_name] = supplied
     return parsed
 
@@ -994,6 +1122,15 @@ def input_option_float_value(
             f"item_options.{item_name}.{option_name} must be between "
             f"{schema['min']} and {schema['max']}"
         )
+    step = float(schema.get("step", 0.0) or 0.0)
+    if step > 0.0:
+        span = parsed - float(schema["min"])
+        quotient = span / step
+        if abs(quotient - round(quotient)) > 1e-9:
+            raise ValueError(
+                f"item_options.{item_name}.{option_name} must be a "
+                f"multiple of {step:g}"
+            )
     return parsed
 
 
@@ -1055,6 +1192,33 @@ def immortal_path_input_omnivamp(
     return stacks * required_effect_value("Immortal Path", "slay_omnivamp_per_stack")
 
 
+def gluttonous_greaves_slay_omnivamp(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+) -> float:
+    """Return Gluttonous Greaves' explicit Slay takedown omnivamp.
+
+    Mirrors the Immortal Path contract with the 3L key names: the authored
+    ``slay_stacks`` scenario option (the valid champion-takedown admission;
+    bounds 0..10 enforced at the request layer) projects to
+    ``stacks * slay_omnivamp_per_takedown``, capped at the typed
+    ``slay_max_stacks``.  No literal fallback: a missing key raises naming
+    the item and key.
+    """
+    if "Gluttonous Greaves" not in _item_names(items):
+        return 0.0
+    stacks = input_option_value(
+        items, item_options, "Gluttonous Greaves", "slay_stacks"
+    )
+    capped = min(
+        stacks,
+        int(required_effect_value("Gluttonous Greaves", "slay_max_stacks")),
+    )
+    return capped * sustain_effect_value(
+        "Gluttonous Greaves", "slay_omnivamp_per_takedown"
+    )
+
+
 def swiftmarch_adaptive_force(
     items: list[dict[str, Any]],
     *,
@@ -1109,6 +1273,7 @@ def item_state_receipts(
     *,
     fight_duration_seconds: float,
     is_melee: bool,
+    base_health: float = 0.0,
     bonus_health: float = 0.0,
     bonus_mana: float = 0.0,
     max_mana: float = 0.0,
@@ -1273,11 +1438,288 @@ def item_state_receipts(
             "manaflow_complete" if option_value >= cap else "manaflow_progress",
             manaflow_bonus_mana=min(option_value, cap),
             manaflow_cap=cap,
+            manaflow_charge_interval=required_effect_value(
+                "Tear of the Goddess", "manaflow_charge_interval"
+            ),
+            manaflow_max_charges=required_effect_value(
+                "Tear of the Goddess", "manaflow_max_charges"
+            ),
+            manaflow_bonus_mana_per_trigger=required_effect_value(
+                "Tear of the Goddess", "manaflow_bonus_mana_per_trigger"
+            ),
+            manaflow_bonus_mana_per_champion=required_effect_value(
+                "Tear of the Goddess", "manaflow_bonus_mana_per_champion"
+            ),
             transformed=False,
             helping_hand_minion_damage=required_effect_value(
                 "Tear of the Goddess", "helping_hand_minion_damage"
             ),
+            helping_hand_minion_only=True,
+            helping_hand_boundary=(
+                "Helping Hand's sourced bonus damage applies to minions only; "
+                "the champion fighter model has no minion targets, so the "
+                "branch is a named boundary, never an on-champion packet."
+            ),
             total_mana=max_mana,
+        )
+
+    if "Doran's Helm" in names:
+        add(
+            "Doran's Helm",
+            "helping_hand_minion_only",
+            helping_hand_minion_damage=dorans_helm_helping_hand_minion_damage(),
+            helping_hand_minion_only=True,
+            helping_hand_boundary=(
+                "Helping Hand's sourced bonus damage applies to minions only; "
+                "the champion fighter model has no minion targets, so the "
+                "branch is a named boundary, never an on-champion packet."
+            ),
+        )
+
+    if "Ionian Boots of Lucidity" in names:
+        add(
+            "Ionian Boots of Lucidity",
+            "ionian_insight_summoner_spell_haste",
+            summoner_spell_haste=ionian_insight_summoner_spell_haste(),
+            summoner_spell_haste_only=True,
+            summoner_spell_haste_boundary=(
+                "Ionian Insight's 10 summoner spell haste is receipt-only: the "
+                "champion fighter model has no summoner-spell action state, so "
+                "the branch is a named boundary — never an ability-haste "
+                "packet and never a champion cooldown reduction."
+            ),
+        )
+
+    if "Gunmetal Greaves" in names:
+        add(
+            "Gunmetal Greaves",
+            "noxian_gait_boundary",
+            noxian_gait_decay_seconds=required_effect_value(
+                "Gunmetal Greaves", "noxian_gait_decay_seconds"
+            ),
+            noxian_gait_champions_only=required_effect_value(
+                "Gunmetal Greaves", "noxian_gait_champions_only"
+            ),
+            noxian_gait_magnitude_unsourced=required_effect_value(
+                "Gunmetal Greaves", "noxian_gait_magnitude_unsourced"
+            ),
+            noxian_gait_boundary=(
+                "Noxian Gait is Riot-only: its movement-speed magnitude is "
+                "unsourced (the Wiki cache has no passive branch and the "
+                "riotDescription carries no number; only the client binary "
+                "encodes MeleeMS/RangedMSMultiplier) and the fight model has "
+                "no decaying-movement model — the sourced 2.0s decay and "
+                "champions-only target are a named boundary receipt, never a "
+                "movement packet and never an invented magnitude."
+            ),
+        )
+
+    if "Guardian Angel" in names:
+        declaration = guardian_angel_rebirth_declaration()
+        add(
+            "Guardian Angel",
+            "rebirth",
+            revived=True,
+            revive_health_restored=(
+                float(required_effect_value("Guardian Angel", "revive_health_ratio"))
+                * base_health
+            ),
+            revive_delay=declaration["revive_delay"],
+            revive_cooldown=declaration["revive_cooldown"],
+            one_use=bool(required_effect_value("Guardian Angel", "one_use")),
+            revive_mana_ratio=declaration["revive_mana_ratio"],
+            mana_restore_boundary=(
+                "Rebirth's 100% maximum-mana restore is typed but not applied "
+                "by the survival kernel: the ledger has no mana pool, so the "
+                "restore is a named boundary, never an invented mana gain."
+            ),
+            cooldown_boundary=(
+                "Rebirth's 300s cooldown starts after the resurrection ends; "
+                "modeled fights are <=30s and the one-use revive_used gate is "
+                "the operative rule, so the cooldown is typed metadata, never "
+                "a re-arm within a fight."
+            ),
+            stasis_boundary=(
+                "Rebirth's 4s resurrection stasis (invulnerable, untargetable, "
+                "unable to act) is modeled as the dead state anchored to the "
+                "lethal hit: incoming damage in the window is skipped as "
+                "overkill and the holder authors no outgoing actions until the "
+                "revive applies."
+            ),
+            atom=("heal.flat", "83706c231e0d8fee"),
+        )
+
+    if "Force of Nature" in names:
+        add(
+            "Force of Nature",
+            "steadfast",
+            max_stacks=int(
+                required_effect_value("Force of Nature", "steadfast_max_stacks")
+            ),
+            duration_seconds=float(
+                required_effect_value("Force of Nature", "steadfast_stack_duration")
+            ),
+            interval_seconds=float(
+                required_effect_value("Force of Nature", "steadfast_stack_interval")
+            ),
+            immobilize_stacks=int(
+                required_effect_value("Force of Nature", "steadfast_immobilize_stacks")
+            ),
+            bonus_magic_resistance=float(
+                required_effect_value(
+                    "Force of Nature", "steadfast_bonus_magic_resistance"
+                )
+            ),
+            bonus_move_speed_percent=float(
+                required_effect_value(
+                    "Force of Nature", "steadfast_bonus_move_speed_percent"
+                )
+            ),
+            movement_boundary=(
+                "Steadfast's 6% bonus move speed at maximum stacks is declared "
+                "metadata only: neither survival walk authors a movement event "
+                "or applies a move-speed delta, so the movement grant is a "
+                "named boundary, never an invented speed change."
+            ),
+            refresh_boundary=(
+                "Steadfast's duration refresh on dealing damage to the stacker "
+                "is not modeled: only incoming champion magic damage refreshes "
+                "the window (conservative under-grant, named boundary)."
+            ),
+            source_url="https://wiki.leagueoflegends.com/en-us/Force_of_Nature",
+            source_revision_id=4016272,
+        )
+
+    if "Jak'Sho, The Protean" in names:
+        add(
+            "Jak'Sho, The Protean",
+            "voidborn",
+            max_stacks=int(
+                required_effect_value("Jak'Sho, The Protean", "voidborn_max_stacks")
+            ),
+            stack_interval=float(
+                required_effect_value("Jak'Sho, The Protean", "voidborn_stack_interval")
+            ),
+            bonus_resistance_multiplier=float(
+                required_effect_value(
+                    "Jak'Sho, The Protean", "voidborn_bonus_resistance_multiplier"
+                )
+            ),
+            combat_time_boundary=(
+                "Voidborn stacks derive from qualifying incoming packet "
+                "timestamps (one per second of combat, floor of the combat "
+                "time); the reaching packet is itself repriced prospectively, "
+                "and the fight window is the combat window (no expiry inside "
+                "a fight — 'until the end of combat')."
+            ),
+            dealing_damage_boundary=(
+                "The holder's own outgoing damage does not advance its "
+                "Voidborn stacks: only incoming champion damage to the holder "
+                "tracks combat time (conservative under-grant, named "
+                "boundary)."
+            ),
+            source_url="https://wiki.leagueoflegends.com/en-us/Jak'Sho,_The_Protean",
+            source_revision_id=3984950,
+        )
+
+    if "Knight's Vow" in names:
+        options = item_options or {}
+        kv_options = options.get("Knight's Vow", {})
+        add(
+            "Knight's Vow",
+            "sacrifice",
+            worthy_target_index=int(kv_options.get("worthy_target_index", -1)),
+            worthy_within_range=float(kv_options.get("worthy_within_range", 1.0)),
+            holder_above_30_percent=float(
+                kv_options.get("holder_above_30_percent", 1.0)
+            ),
+            redirect_fraction=ally_item_effect_value(
+                "Knight's Vow", "redirect_fraction"
+            ),
+            holder_heal_fraction=ally_item_effect_value(
+                "Knight's Vow", "holder_heal_fraction"
+            ),
+            worthy_range_units=ally_item_effect_value(
+                "Knight's Vow", "worthy_range_units"
+            ),
+            holder_health_threshold_ratio=ally_item_effect_value(
+                "Knight's Vow", "holder_health_threshold_ratio"
+            ),
+            target_boundary=(
+                "Pledge is unit-targeted: the authored worthy_target_index "
+                "is the whole designation (the -1 sentinel means no Worthy "
+                "ally — no redirect and no heal, never an invented first "
+                "teammate); the roster has no spatial coordinates, so the "
+                "authored worthy_within_range gate is the tether assumption "
+                "and the survival walk re-checks the holder-health gate on "
+                "every packet."
+            ),
+            source_url="https://wiki.leagueoflegends.com/en-us/Knight%27s_Vow",
+            source_revision_id=4023793,
+        )
+
+    if "Maw of Malmortius" in names:
+        add(
+            "Maw of Malmortius",
+            "lifeline",
+            health_threshold=float(
+                required_effect_value("Maw of Malmortius", "health_threshold")
+            ),
+            shield_melee_base=float(
+                required_effect_value("Maw of Malmortius", "shield_melee_base")
+            ),
+            shield_melee_bonus_ad_ratio=float(
+                required_effect_value(
+                    "Maw of Malmortius", "shield_melee_bonus_ad_ratio"
+                )
+            ),
+            shield_ranged_base=float(
+                required_effect_value("Maw of Malmortius", "shield_ranged_base")
+            ),
+            shield_ranged_bonus_ad_ratio=float(
+                required_effect_value(
+                    "Maw of Malmortius", "shield_ranged_bonus_ad_ratio"
+                )
+            ),
+            duration_seconds=float(
+                required_effect_value("Maw of Malmortius", "duration")
+            ),
+            damage_type=str(required_effect_value("Maw of Malmortius", "damage_type")),
+            lifeline_omnivamp_percent=float(
+                required_effect_value("Maw of Malmortius", "lifeline_omnivamp_percent")
+            ),
+            cooldown_boundary=(
+                "Lifeline's cached 90-second cooldown is a named boundary: the "
+                "fight model triggers at most once per fight (one-trigger, no "
+                "re-arm), so the cooldown is never enforced."
+            ),
+            combat_end_boundary=(
+                "The 10% omnivamp lasts until the end of combat: the flag arms "
+                "on the triggering packet and is never cleared mid-walk — the "
+                "fight window IS the combat window."
+            ),
+            source_url="https://wiki.leagueoflegends.com/en-us/Maw_of_Malmortius",
+            source_revision_id=3984424,
+        )
+
+    if "Verdant Barrier" in names:
+        add(
+            "Verdant Barrier",
+            "annul",
+            spell_shield_ready=bool(
+                required_effect_value("Verdant Barrier", "spell_shield_ready")
+            ),
+            spell_shield_cooldown=spell_shield_cooldown_seconds("Verdant Barrier"),
+            cooldown_atom=annul_spell_shield_cooldown_atom("Verdant Barrier"),
+            rearm_boundary=(
+                "Annul's 60s cooldown and the 'timer restarts upon taking "
+                "damage from champions' rule are receipted named boundaries: "
+                "the shield is ready at the opening, consumes the first "
+                "authored hostile ability (one use), and is NOT rearmed "
+                "inside one modeled fight."
+            ),
+            source_url="https://wiki.leagueoflegends.com/en-us/Verdant_Barrier",
+            source_revision_id=3957920,
         )
 
     if "Cull" in names:
@@ -1314,6 +1756,16 @@ def item_state_receipts(
             ),
             trigger_window_seconds=required_effect_value(
                 "Umbral Glaive", "nightstalker_trigger_window"
+            ),
+            blackout_duration=required_effect_value(
+                "Umbral Glaive", "blackout_duration"
+            ),
+            blackout_boundary=(
+                "Blackout disables and reveals enemy wards and traps within "
+                "the sourced aura; the champion fighter model has no ward "
+                "targets, so the denial is a vision-dimension receipt while "
+                "Nightstalker's sourced true damage stays on the typed "
+                "first-auto packet."
             ),
         )
 
@@ -1430,6 +1882,23 @@ def item_state_receipts(
             ),
         )
 
+    if "Gluttonous Greaves" in names:
+        options = item_options or {}
+        stacks = input_option_value(items, options, "Gluttonous Greaves", "slay_stacks")
+        add(
+            "Gluttonous Greaves",
+            "slay_stacks",
+            slay_stacks=max(0, stacks),
+            max_stacks=int(
+                required_effect_value("Gluttonous Greaves", "slay_max_stacks")
+            ),
+            omnivamp=gluttonous_greaves_slay_omnivamp(list(items), options),
+            source_url=str(required_effect_value("Gluttonous Greaves", "source_url")),
+            source_revision_id=int(
+                required_effect_value("Gluttonous Greaves", "source_revision_id")
+            ),
+        )
+
     if "Catalyst of Aeons" in names:
         add(
             "Catalyst of Aeons",
@@ -1450,6 +1919,8 @@ def item_state_receipts(
         )
 
     if "Fimbulwinter" in names:
+        mana_gate = fimbulwinter_mana_gate_authority()
+        range_authority = fimbulwinter_nearby_enemy_range_authority()
         add(
             "Fimbulwinter",
             "everlasting_event_driven",
@@ -1459,12 +1930,19 @@ def item_state_receipts(
             current_mana_ratio=required_effect_value(
                 "Fimbulwinter", "everlasting_current_mana_ratio"
             ),
-            mana_threshold_ratio=required_effect_value(
-                "Fimbulwinter", "everlasting_mana_threshold_ratio"
-            ),
-            multi_target_multiplier=required_effect_value(
-                "Fimbulwinter", "everlasting_multi_target_multiplier"
-            ),
+            mana_gate_status=mana_gate["status"],
+            mana_threshold_ratio=mana_gate["threshold_ratio"],
+            mana_comparison=mana_gate["comparison"],
+            mana_current_term=mana_gate["current_mana_term"],
+            mana_maximum_term=mana_gate["maximum_mana_term"],
+            manaless_behavior=mana_gate["manaless_behavior"],
+            nearby_enemy_range_units=range_authority["range_units"],
+            multi_target_minimum_enemy_count=range_authority["minimum_enemy_count"],
+            range_center=range_authority["range_center"],
+            range_target_kind=range_authority["target_kind"],
+            range_boundary_status=range_authority["boundary_status"],
+            range_input_status=range_authority["spatial_input_status"],
+            multi_target_multiplier=range_authority["multiplier"],
             duration=required_effect_value("Fimbulwinter", "everlasting_duration"),
             cooldown=required_effect_value("Fimbulwinter", "everlasting_cooldown"),
             trigger_kind=str(
@@ -1564,6 +2042,22 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Gunmetal Greaves": {
         "type": "sustain",
         "lifesteal_percent": 5.0,
+        # Noxian Gait (Riot-only branch): the cached Wiki cache has NO
+        # passive branch (passives=[], noEffects=true; audit rev 4013706
+        # records effect_count 0 — the Wiki page removed the effect in
+        # V26.01), and the riotDescription ("Attacks against Champions
+        # grant Move Speed On-Hit decaying over 2 seconds.") carries NO
+        # magnitude.  The client binary (Items/3172, gitignored) encodes
+        # MeleeMS 0.15 / RangedMSMultiplier 0.667 / Duration 2.0, but no
+        # wiki atom can exist and the fight model has no decaying-
+        # movement kernel — so the magnitude stays UNSOURCED and
+        # untyped.  Only the sourced 2.0s decay and the champions-only
+        # target ride the named-boundary receipt
+        # (item_state_receipts noxian_gait_boundary); the branch is
+        # NEVER a movement packet and never changes fight numbers.
+        "noxian_gait_decay_seconds": 2.0,
+        "noxian_gait_champions_only": True,
+        "noxian_gait_magnitude_unsourced": True,
         "source_url": "https://wiki.leagueoflegends.com/en-us/Gunmetal_Greaves",
         "source_revision_id": 4013706,
     },
@@ -1598,14 +2092,43 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "enduring_focus_duration": 8.0,
         "health_regen_tick_interval": 0.5,
     },
+    "Doran's Helm": {
+        "type": "stat_conversion",
+        # Helping Hand: "Basic attacks deal 5 bonus physical damage on-hit
+        # against minions" (cached Wiki branch + riotDescription; client
+        # binary Items/1120 BonusDamageToMinions=5.0; atom receipts
+        # damage.basic_attack f991d9ce51cb971b / damage.on_hit
+        # 0d448c6a3c15051e / damage.physical 9780d84ddfec7afe).  The 1v1
+        # champion model has no minion targets, so the value rides the
+        # named-boundary receipt only (item_state_receipts
+        # helping_hand_minion_only) — never an on-champion packet.
+        "helping_hand_minion_damage": 5.0,
+    },
+    "Ionian Boots of Lucidity": {
+        "type": "stat_conversion",
+        # Ionian Insight: "Gain 10 summoner spell haste" (cached Wiki
+        # branch + riotDescription; client binary Items/3158
+        # SummonerHaste=10.0; atom receipt stat.haste 1e775793fa61a40e).
+        # The 1v1 champion model has no summoner-spell action state, so
+        # the value rides the named-boundary receipt only
+        # (item_state_receipts ionian_insight_summoner_spell_haste) —
+        # NEVER an ability-haste packet (the item's own 10 ability haste
+        # is the separate stats.abilityHaste.flat stat, applied by
+        # stats.py; the passive must not reduce champion cooldowns).
+        "summoner_spell_haste": 10.0,
+    },
     "Catalyst of Aeons": {
         "type": "sustain",
         # Eternity converts champion damage taken into mana and heals for a
-        # quarter of mana spent, capped at 20 per accepted cast/second.
+        # quarter of mana spent, capped at 20 per accepted cast/second.  The
+        # wiki revision receipt (page 2964, rev 3960416) is code-owned so a
+        # parser refresh cannot overwrite it (docs/wiki-full-entry-audit.json).
         "damage_taken_to_mana_ratio": 0.10,
         "mana_spent_heal_ratio": 0.25,
         "mana_spent_heal_cap_per_cast": 20.0,
         "mana_spent_heal_cap_per_second": 20.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Catalyst_of_Aeons",
+        "source_revision_id": 3960416,
     },
     "Immortal Path": {
         "type": "damage_amp",
@@ -1613,6 +2136,21 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "health_state_healing_multiplier_below_half": 0.12,
         "slay_omnivamp_per_stack": 0.6,
         "slay_max_stacks": 10,
+    },
+    "Gluttonous Greaves": {
+        "type": "sustain",
+        # Slay (identical contract to Immortal Path): 0.6% omnivamp per
+        # champion takedown, 10-stack cap, 6% maximum.  Wiki rev 4030444
+        # (page 1661999) + binary Items/3008 OmnivampOnTakedown 0.006 /
+        # MaxStacks 10; the resolved bonus rides the typed accessor and the
+        # item_state_receipts row — takedown-driven stats are not
+        # pre-fight-projectable (the scenario slay_stacks option is the
+        # authored admission, the Immortal Path precedent).
+        "slay_omnivamp_per_takedown": 0.6,
+        "slay_max_stacks": 10,
+        "slay_max_omnivamp": 6.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Gluttonous_Greaves",
+        "source_revision_id": 4030444,
     },
     # ── On-Hit (per auto attack) ──────────────────────────────────────────
     "Cull": {
@@ -1644,10 +2182,29 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Tear of the Goddess": {
         "type": "stat_conversion",
         "manaflow_charge_interval": 8.0,
+        # Manaflow banks a sourced charge every 8 seconds, up to 4 charges
+        # (cached Wiki branch: "Grants a charge every 8 seconds, up to 4
+        # charges").  Each authored ability cast that affects a champion
+        # consumes one charge for the champion amount; the minion-target
+        # floor stays the 3-mana trigger amount.
+        "manaflow_max_charges": 4.0,
         "manaflow_bonus_mana_per_trigger": 3.0,
         "manaflow_bonus_mana_per_champion": 6.0,
         "manaflow_bonus_mana_max": 360.0,
         "helping_hand_minion_damage": 5.0,
+    },
+    "Lost Chapter": {
+        "type": "stat_conversion",
+        # Enlighten: "Upon leveling up, restores 20% of maximum mana over 3
+        # seconds" (cached Wiki branch; client binary Items/3802 carries
+        # ManaRestorePercent=0.2 and RestorationDuration=3.0 — the per-tick
+        # schedule is a typed rule declaration in resource_ledger.py).  The
+        # modifier parser has no Enlighten branch, so these values are
+        # intentionally code-owned and consumed only through the typed
+        # accessors; a parser refresh can never overwrite them.
+        "enlighten_restore_percent": 20.0,
+        "enlighten_duration_seconds": 3.0,
+        "enlighten_ticks": 3,
     },
     "World Atlas": {
         "type": "stat_conversion",
@@ -1665,6 +2222,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "lethality_ratio": 1.5,
         "nightstalker_unseen_seconds": 1.0,
         "nightstalker_trigger_window": 4.0,
+        # Blackout's sourced aura duration (cached Wiki branch: "When
+        # spotted by enemy stealthed wards or traps, gain Blackout for 8
+        # seconds").  The aura denies/reveals wards only, so it rides the
+        # vision-dimension receipt; Nightstalker's true damage stays on the
+        # typed first-auto packet.
+        "blackout_duration": 8.0,
         "damage_type": "true",
         "breakdown_key": "on_hit_once_Umbral Glaive",
         "display_name": "Umbral Glaive (Nightstalker)",
@@ -1762,8 +2325,14 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "max_mana_ratio_on_hit": 0.012,
         "max_mana_ratio_ability_melee": 0.04,
         "max_mana_ratio_ability_ranged": 0.03,
+        "same_target_cast_lockout_seconds": 6.5,
         # Awe passive: 2% max mana as bonus AD (stat conversion)
         "max_mana_to_ad_ratio": 0.02,
+        # Wiki revision receipt (page 747852, rev 4005926 — see
+        # docs/wiki-full-entry-audit.json); code-owned so a parser refresh
+        # cannot overwrite it (P3 package 3E).
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Muramana",
+        "source_revision_id": 4005926,
     },
     "Endless Hunger": {
         "type": "stat_conversion",
@@ -2227,6 +2796,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "lethality_ratio_melee": 1.5,
         "lethality_ratio_ranged": 0.75,
         "cooldown": 20.0,
+        # Wiki revision receipt (page 1714197, rev 4046567 — see
+        # docs/wiki-full-entry-audit.json); code-owned so a parser refresh
+        # cannot overwrite it (P3 package 3D).
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Bastionbreaker",
+        "source_revision_id": 4046567,
     },
     # ── Reactive strike-back (consumed by the coupled timeline) ───────────
     "Bramble Vest": {
@@ -2395,7 +2969,18 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # metadata; it never infers a slow or immobilize from an ability name.
         "everlasting_base_shield": 100.0,
         "everlasting_current_mana_ratio": 0.045,
-        "everlasting_mana_threshold_ratio": 0.20,
+        # Current sources do not expose Everlasting's historical mana gate.
+        # Keep the supported shield formula while the gate itself stays
+        # unavailable and cannot authorize a runtime shield.
+        "everlasting_mana_gate_status": "source_unavailable",
+        # The Wiki and client binary both place the multi-enemy branch at
+        # 1200 units around the shield holder.  The exact boundary operator
+        # and a runtime spatial-input contract remain unavailable.
+        "everlasting_nearby_enemy_range": 1200.0,
+        "everlasting_multi_target_minimum_enemy_count": 2,
+        "everlasting_range_center": "holder",
+        "everlasting_range_target_kind": "enemy_champion",
+        "everlasting_range_boundary_status": "source_unavailable",
         "everlasting_multi_target_multiplier": 1.80,
         "everlasting_duration": 3.0,
         "everlasting_cooldown": 8.0,
@@ -2544,6 +3129,15 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "basic_damage_flat_reduction": 15.0,
         "basic_damage_flat_reduction_cap": 0.20,
     },
+    "Guardian's Horn": {
+        "type": "target_mitigation",
+        # Undaunted blocks 15 damage from champion attacks and abilities.
+        # Damage-over-time abilities use the authored 25% effectiveness.
+        "champion_damage_flat_reduction": 15.0,
+        "champion_dot_damage_flat_reduction": 3.75,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Guardian%27s_Horn",
+        "source_revision_id": 0,
+    },
     "Frozen Heart": {
         "type": "target_attack_speed_aura",
         # Winter's Caress cripples nearby champions' total attack speed by 20%.
@@ -2558,12 +3152,27 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Guardian Angel": {
         "type": "defensive_start",
-        # Rebirth: after lethal damage, resurrect after four seconds with
-        # 50% of base health.  The timeline owns the trigger because the
-        # lethal packet is target-state dependent.
+        # Rebirth: upon taking lethal damage, enter resurrection for 4
+        # seconds (invulnerable, untargetable, unable to act), then heal
+        # for 50% of BASE health and restore 100% of MAXIMUM mana; 300
+        # second cooldown starting after the resurrection ends; one use
+        # per fight.  The timeline owns the trigger because the lethal
+        # packet is target-state dependent; the window is anchored to the
+        # lethal hit (P3 package 3P).  The 100% max-mana restore is typed
+        # but not yet applied by the survival kernel (no mana pool there
+        # — named boundary on the rebirth receipt); the 300s cooldown is
+        # typed metadata (fights are <=30s, the one-use revive_used gate
+        # is the operative rule).  Values: wiki branch + riotDescription +
+        # binary Items/3026 mEffectAmount [0.5, 4.0, 300.0, 1.0]; source
+        # revision 4046863 (2026-07-28) is newer than the audit JSON row
+        # 4001358 (stale — recorded as a follow-up).
         "revive_health_ratio": 0.50,
         "revive_delay": 4.0,
         "revive_cooldown": 300.0,
+        "revive_mana_ratio": 1.0,
+        "one_use": True,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Guardian_Angel",
+        "source_revision_id": 4046863,
     },
     "Force of Nature": {
         "type": "target_state",
@@ -2583,10 +3192,20 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Zhonya's Hourglass": {
         "type": "defensive_start",
         "stasis_duration": 2.5,
+        # Wiki revision receipt (page 43052, rev 3902922 — see
+        # docs/wiki-full-entry-audit.json); code-owned so a parser refresh
+        # cannot overwrite it (P3 package 3F).
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass",
+        "source_revision_id": 3902922,
     },
     "Seeker's Armguard": {
         "type": "defensive_start",
         "stasis_duration": 2.5,
+        # Shares Zhonya's Time Stop evidence (page 43052, rev 3902922);
+        # Seeker's own audit revision is 3837259 (page 860703) — both
+        # carry the identical 2.5s value.
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass",
+        "source_revision_id": 3902922,
     },
     "Death's Dance": {
         "type": "defensive_start",
@@ -2865,12 +3484,24 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "health_regen_tick_interval",
         }
     ),
+    "Doran's Helm": frozenset(
+        {
+            "helping_hand_minion_damage",
+        }
+    ),
+    "Ionian Boots of Lucidity": frozenset(
+        {
+            "summoner_spell_haste",
+        }
+    ),
     "Catalyst of Aeons": frozenset(
         {
             "damage_taken_to_mana_ratio",
             "mana_spent_heal_ratio",
             "mana_spent_heal_cap_per_cast",
             "mana_spent_heal_cap_per_second",
+            "source_url",
+            "source_revision_id",
         }
     ),
     "Immortal Path": frozenset(
@@ -2879,6 +3510,15 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "health_state_healing_multiplier_below_half",
             "slay_omnivamp_per_stack",
             "slay_max_stacks",
+        }
+    ),
+    "Gluttonous Greaves": frozenset(
+        {
+            "slay_omnivamp_per_takedown",
+            "slay_max_stacks",
+            "slay_max_omnivamp",
+            "source_url",
+            "source_revision_id",
         }
     ),
     "Warmog's Armor": frozenset(
@@ -2895,7 +3535,12 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "bonus_mana_to_health_ratio",
             "everlasting_base_shield",
             "everlasting_current_mana_ratio",
-            "everlasting_mana_threshold_ratio",
+            "everlasting_mana_gate_status",
+            "everlasting_nearby_enemy_range",
+            "everlasting_multi_target_minimum_enemy_count",
+            "everlasting_range_center",
+            "everlasting_range_target_kind",
+            "everlasting_range_boundary_status",
             "everlasting_multi_target_multiplier",
             "everlasting_duration",
             "everlasting_cooldown",
@@ -2930,6 +3575,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Tear of the Goddess": frozenset(
         {
             "manaflow_charge_interval",
+            "manaflow_max_charges",
             "manaflow_bonus_mana_per_trigger",
             "manaflow_bonus_mana_per_champion",
             "manaflow_bonus_mana_max",
@@ -2952,11 +3598,20 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "lethality_ratio",
             "nightstalker_unseen_seconds",
             "nightstalker_trigger_window",
+            "blackout_duration",
         }
     ),
     "Banshee's Veil": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
     "Edge of Night": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
     "Verdant Barrier": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
+    "Guardian's Horn": frozenset(
+        {
+            "champion_damage_flat_reduction",
+            "champion_dot_damage_flat_reduction",
+            "source_url",
+            "source_revision_id",
+        }
+    ),
     "Blade of the Ruined King": frozenset(
         {"min_damage", "lifesteal_percent", "source_url", "source_revision_id"}
     ),
@@ -2980,7 +3635,15 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Frozen Heart": frozenset({"attack_speed_reduction", "range_units"}),
     "Unending Despair": frozenset({"range_units"}),
     "Guardian Angel": frozenset(
-        {"revive_health_ratio", "revive_delay", "revive_cooldown"}
+        {
+            "revive_health_ratio",
+            "revive_delay",
+            "revive_cooldown",
+            "revive_mana_ratio",
+            "one_use",
+            "source_url",
+            "source_revision_id",
+        }
     ),
     "Force of Nature": frozenset(
         {
@@ -2999,8 +3662,12 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "voidborn_bonus_resistance_multiplier",
         }
     ),
-    "Zhonya's Hourglass": frozenset({"stasis_duration"}),
-    "Seeker's Armguard": frozenset({"stasis_duration"}),
+    "Zhonya's Hourglass": frozenset(
+        {"stasis_duration", "source_url", "source_revision_id"}
+    ),
+    "Seeker's Armguard": frozenset(
+        {"stasis_duration", "source_url", "source_revision_id"}
+    ),
     "Malignance": frozenset({"base", "ap_ratio", "duration"}),
     "Liandry's Torment": frozenset({"tick_interval"}),
     "Hollow Radiance": frozenset({"event_interval"}),
@@ -3046,6 +3713,23 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     ),
     "Stormsurge": frozenset({"damage_threshold_ratio", "damage_threshold_window"}),
     "Eclipse": frozenset({"stack_required", "stack_window"}),
+    "Bastionbreaker": frozenset(
+        {
+            # The five Shaped Charge numbers stay parser-owned (auto-update
+            # on patch pulls); only the wiki revision receipt is code-owned.
+            "source_url",
+            "source_revision_id",
+        }
+    ),
+    "Muramana": frozenset(
+        {
+            # Shock/Awe numbers stay parser-owned (auto-update on patch
+            # pulls); only the wiki revision receipt is code-owned (P3
+            # package 3E).
+            "source_url",
+            "source_revision_id",
+        }
+    ),
     "Death's Dance": frozenset({"damage_deferral_ticks", "defy_heal_ticks"}),
     "Stridebreaker": frozenset(
         {
@@ -3095,6 +3779,14 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     # The cached item packet does not carry Actualizer's active cooldown;
     # the full Wiki entry is the source receipt for this code-owned value.
     "Actualizer": frozenset({"mana_made_real_cooldown"}),
+    # Enlighten's restore schedule has no parser branch (see the offline
+    # entry); the values are code-owned so a parser refresh cannot overwrite
+    # them.  The ledger's typed declarations read them through
+    # required_effect_value, which raises (naming the item and key) if a
+    # future refresh ever drops the entry.
+    "Lost Chapter": frozenset(
+        {"enlighten_restore_percent", "enlighten_duration_seconds", "enlighten_ticks"}
+    ),
     "Riftmaker": frozenset({"max_stack_omnivamp_ranged"}),
     # Typed lifesteal stats: the percent and its item-page source receipt are
     # code-owned so a parser refresh cannot overwrite them.  Bloodthirster,
@@ -3107,7 +3799,14 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         {"lifesteal_percent", "source_url", "source_revision_id"}
     ),
     "Gunmetal Greaves": frozenset(
-        {"lifesteal_percent", "source_url", "source_revision_id"}
+        {
+            "lifesteal_percent",
+            "noxian_gait_decay_seconds",
+            "noxian_gait_champions_only",
+            "noxian_gait_magnitude_unsourced",
+            "source_url",
+            "source_revision_id",
+        }
     ),
     "Guardian's Hammer": frozenset(
         {"lifesteal_percent", "source_url", "source_revision_id"}
@@ -3226,6 +3925,89 @@ def required_effect_value(item_name: str, key: str) -> Any:
     return effect[key]
 
 
+def fimbulwinter_mana_gate_authority() -> dict[str, Any]:
+    """Return the typed authority state for Everlasting's mana gate.
+
+    The current Wiki entry, item cache, client binary, extracted scripts,
+    and atoms contain no gate value or comparison contract.  The historical
+    release note cannot authorize current gameplay.  Every semantic field is
+    therefore unavailable until a direct current source supplies it.
+    """
+    status = str(required_effect_value("Fimbulwinter", "everlasting_mana_gate_status"))
+    if status != "source_unavailable":
+        raise ValueError(
+            "Fimbulwinter Everlasting mana-gate authority status must be "
+            f"'source_unavailable', got {status!r}"
+        )
+    source = ITEM_INPUT_OPTIONS["Fimbulwinter"]
+    return {
+        "status": status,
+        "threshold_ratio": None,
+        "comparison": None,
+        "current_mana_term": None,
+        "maximum_mana_term": None,
+        "manaless_behavior": None,
+        "source_url": source["source_url"],
+        "source_revision_id": source["source_revision_id"],
+    }
+
+
+def fimbulwinter_nearby_enemy_range_authority() -> dict[str, Any]:
+    """Return the sourced Everlasting multi-enemy range declaration.
+
+    The source set certifies a holder-centered 1200-unit range, enemy
+    champions as the counted class, a minimum count of two, and the 1.8
+    multiplier.  It does not certify the exact boundary operator.  The
+    combatant model also has no typed position or distance snapshot, so the
+    runtime must withhold the multiplier until that input exists.
+    """
+    range_units = float(
+        required_effect_value("Fimbulwinter", "everlasting_nearby_enemy_range")
+    )
+    minimum_count = int(
+        required_effect_value(
+            "Fimbulwinter", "everlasting_multi_target_minimum_enemy_count"
+        )
+    )
+    multiplier = float(
+        required_effect_value("Fimbulwinter", "everlasting_multi_target_multiplier")
+    )
+    if not math.isfinite(range_units) or range_units <= 0.0:
+        raise ValueError("Fimbulwinter Everlasting range must be positive and finite")
+    if minimum_count < 2:
+        raise ValueError(
+            "Fimbulwinter Everlasting multi-enemy count must be at least 2"
+        )
+    if not math.isfinite(multiplier) or multiplier < 1.0:
+        raise ValueError("Fimbulwinter Everlasting multiplier must be finite and >= 1")
+    boundary_status = str(
+        required_effect_value("Fimbulwinter", "everlasting_range_boundary_status")
+    )
+    if boundary_status != "source_unavailable":
+        raise ValueError(
+            "Fimbulwinter Everlasting range boundary status must be "
+            f"'source_unavailable', got {boundary_status!r}"
+        )
+    source = ITEM_INPUT_OPTIONS["Fimbulwinter"]
+    return {
+        "status": "source_authorized",
+        "range_units": range_units,
+        "minimum_enemy_count": minimum_count,
+        "multiplier": multiplier,
+        "range_center": str(
+            required_effect_value("Fimbulwinter", "everlasting_range_center")
+        ),
+        "target_kind": str(
+            required_effect_value("Fimbulwinter", "everlasting_range_target_kind")
+        ),
+        "boundary_status": boundary_status,
+        "boundary_operator": None,
+        "spatial_input_status": "spatial_input_unavailable",
+        "source_url": source["source_url"],
+        "source_revision_id": source["source_revision_id"],
+    }
+
+
 def sustain_effect_value(item_name: str, key: str) -> float:
     """Read one sourced sustain value from an item's typed effect record."""
     value = required_effect_value(item_name, key)
@@ -3234,6 +4016,278 @@ def sustain_effect_value(item_name: str, key: str) -> float:
             f"ITEM_EFFECTS[{item_name!r}][{key!r}] must be numeric for sustain"
         )
     return float(value)
+
+
+def catalyst_eternity_declaration() -> dict[str, Any]:
+    """Catalyst of Aeons' Eternity rule declaration (typed and sourced).
+
+    Eternity restores 10% of PRE-MITIGATION champion damage taken as mana
+    and heals for 25% of mana spent per ACCEPTED cast, capped at 20 per
+    cast and 20 per second.  All four numbers are code-owned statics (the
+    modifier parser has no Eternity branch) backed by the wiki branch, the
+    client binary (EternityManaRestore=0.1, EternityHealthRestore=0.25,
+    EternityMaxHealPerCast=20 in data/bin/items.bin.json 16.15.8024387) and
+    the heal.flat atom 37693854f1ef7bb0; the per-second cap is wiki-only
+    (binary-implied by EternityCDPerCast=1.0).  The wiki revision receipt
+    rides the code-owned source keys so a parser refresh cannot overwrite
+    them.  The atom hashes are the verified catalog hashes for the item's
+    mana and health stats (data/atoms/items.json).
+    """
+    return {
+        "damage_taken_to_mana_ratio": sustain_effect_value(
+            "Catalyst of Aeons", "damage_taken_to_mana_ratio"
+        ),
+        "mana_spent_heal_ratio": sustain_effect_value(
+            "Catalyst of Aeons", "mana_spent_heal_ratio"
+        ),
+        "mana_spent_heal_cap_per_cast": sustain_effect_value(
+            "Catalyst of Aeons", "mana_spent_heal_cap_per_cast"
+        ),
+        "mana_spent_heal_cap_per_second": sustain_effect_value(
+            "Catalyst of Aeons", "mana_spent_heal_cap_per_second"
+        ),
+        "source_url": str(required_effect_value("Catalyst of Aeons", "source_url")),
+        "source_revision_id": int(
+            required_effect_value("Catalyst of Aeons", "source_revision_id")
+        ),
+        "atoms": (
+            ("stat.mana", "cc42451dcf4dfd78"),
+            ("stat.health", "a30899d6cbe13bf7"),
+        ),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Annul spell shields (Banshee's Veil, Edge of Night, Verdant Barrier)
+# ---------------------------------------------------------------------------
+
+# The three Annul items' exact cooldown atom receipts from the unified item
+# catalog (data/atoms/items.json, written by scripts/atomize.py items).  Each
+# cached passive branch ("Grants a spell shield that blocks the next hostile
+# ability (NN second cooldown, timer restarts upon taking damage from
+# champions)") atomizes to a ``timing.cooldown`` record; the atomizer's
+# keyword detector also emits a MISLABELED ``shield.flat`` record holding the
+# same number in seconds that callers must never consume as a shield amount.
+# The runtime values stay in the registry above; the accessors validate them
+# against the catalog atoms so a stale static literal can never ride silently
+# (AGENTS.md rule 5 — no literal fallbacks at call sites).
+_ANNUL_SPELL_SHIELD_COOLDOWN_ATOMS: dict[str, dict[str, Any]] = {
+    "Banshee's Veil": {
+        "atom_id": "timing.cooldown",
+        "behavior": "timing",
+        "source": "Banshee's Veil.passives[0].branches[0]",
+        "name": "Annul",
+        "values": [40.0],
+        "units": ["s"],
+        "evidence": ["passive:Annul@kw:cooldown"],
+        "hash": "c020562aebacbe01",
+    },
+    "Edge of Night": {
+        "atom_id": "timing.cooldown",
+        "behavior": "timing",
+        "source": "Edge of Night.passives[0].branches[0]",
+        "name": "Annul",
+        "values": [40.0],
+        "units": ["s"],
+        "evidence": ["passive:Annul@kw:cooldown"],
+        "hash": "30d03573d07ed0a5",
+    },
+    "Verdant Barrier": {
+        "atom_id": "timing.cooldown",
+        "behavior": "timing",
+        "source": "Verdant Barrier.passives[0].branches[0]",
+        "name": "Annul",
+        "values": [60.0],
+        "units": ["s"],
+        "evidence": ["passive:Annul@kw:cooldown"],
+        "hash": "2a40799f92fb6749",
+    },
+}
+
+
+def annul_spell_shield_cooldown_atom(item_name: str) -> dict[str, Any]:
+    """One Annul item's exact cooldown atom receipt, fail-closed."""
+    atom = _ANNUL_SPELL_SHIELD_COOLDOWN_ATOMS.get(item_name)
+    if atom is None:
+        raise KeyError(f"no Annul spell-shield cooldown atom for {item_name!r}")
+    return dict(atom)
+
+
+def spell_shield_ready(item_name: str) -> bool:
+    """Whether one item's Annul spell shield is ready at fight start."""
+    effect = ITEM_EFFECTS.get(item_name, {})
+    if "spell_shield_ready" not in effect:
+        raise KeyError(
+            f"ITEM_EFFECTS[{item_name!r}] is missing 'spell_shield_ready' — "
+            "parser/schema bug"
+        )
+    return bool(effect["spell_shield_ready"])
+
+
+def spell_shield_cooldown_seconds(item_name: str) -> float:
+    """One Annul item's sourced spell-shield cooldown (seconds).
+
+    The registry value is validated against the catalog atom so a stale
+    static literal fails closed instead of riding silently.
+    """
+    value = sustain_effect_value(item_name, "spell_shield_cooldown")
+    atom = annul_spell_shield_cooldown_atom(item_name)
+    atom_values = atom.get("values", ())
+    if not atom_values or float(atom_values[0]) != value:
+        raise ValueError(
+            f"ITEM_EFFECTS[{item_name!r}] spell_shield_cooldown={value!r} "
+            f"diverges from catalog atom {atom.get('hash')!r} "
+            f"({atom_values!r})"
+        )
+    return value
+
+
+# Doran's Helm "Helping Hand": "Basic attacks deal 5 bonus physical damage
+# on-hit against minions" — the exact catalog atom receipts (atomizer run
+# against data/items.json 1120 passives[0].branches[0]; hashes recomputed
+# from the canonical atom records).
+_DORANS_HELM_HELPING_HAND_ATOMS: dict[str, dict[str, Any]] = {
+    "damage.basic_attack": {
+        "behavior": "damage",
+        "source": "Doran's Helm.passives[0].branches[0]",
+        "name": "Helping Hand",
+        "values": [5.0],
+        "units": ["flat"],
+        "evidence": ["passive:Helping Hand@kw:basic attack"],
+        "hash": "f991d9ce51cb971b",
+    },
+    "damage.on_hit": {
+        "behavior": "damage",
+        "source": "Doran's Helm.passives[0].branches[0]",
+        "name": "Helping Hand",
+        "values": [5.0],
+        "units": ["flat"],
+        "evidence": ["passive:Helping Hand@kw:on-hit"],
+        "hash": "0d448c6a3c15051e",
+    },
+    "damage.physical": {
+        "behavior": "damage",
+        "source": "Doran's Helm.passives[0].branches[0]",
+        "name": "Helping Hand",
+        "values": [5.0],
+        "units": ["flat"],
+        "evidence": ["passive:Helping Hand@kw:physical damage"],
+        "hash": "9780d84ddfec7afe",
+    },
+}
+
+
+def dorans_helm_helping_hand_minion_damage() -> float:
+    """Doran's Helm's sourced 5 bonus physical damage vs minions.
+
+    The registry value is validated against the catalog atoms so a stale
+    static literal fails closed instead of riding silently.  The branch is
+    receipt-only: the 1v1 champion model has no minion targets, so the
+    bonus can never be an on-champion packet.
+    """
+    value = sustain_effect_value("Doran's Helm", "helping_hand_minion_damage")
+    for atom in _DORANS_HELM_HELPING_HAND_ATOMS.values():
+        atom_values = atom.get("values", ())
+        if not atom_values or float(atom_values[0]) != value:
+            raise ValueError(
+                f"ITEM_EFFECTS['Doran's Helm'] helping_hand_minion_damage="
+                f"{value!r} diverges from catalog atom {atom.get('hash')!r} "
+                f"({atom_values!r})"
+            )
+    return value
+
+
+# Ionian Boots of Lucidity "Ionian Insight": "Gain 10 summoner spell
+# haste" — the exact catalog atom receipt (atomizer run against
+# data/items.json 3158 passives[0].branches[0]; the atomizer maps the
+# summoner-spell-haste keyword to the shared stat.haste atom, so the
+# receipt pins the specific record via its hash).
+_IONIAN_BOOTS_INSIGHT_ATOMS: dict[str, dict[str, Any]] = {
+    "stat.haste": {
+        "behavior": "stat",
+        "source": "Ionian Boots of Lucidity.passives[0].branches[0]",
+        "name": "Ionian Insight",
+        "values": [10.0],
+        "units": ["flat"],
+        "evidence": ["passive:Ionian Insight@kw:summoner spell haste"],
+        "hash": "1e775793fa61a40e",
+    },
+}
+
+
+def ionian_insight_summoner_spell_haste() -> float:
+    """Ionian Boots of Lucidity's sourced 10 summoner spell haste.
+
+    The registry value is validated against the catalog atom so a stale
+    static literal fails closed instead of riding silently.  The branch
+    is receipt-only: the champion fighter model has no summoner-spell
+    action state, so the haste is never an ability-haste packet and never
+    reduces champion cooldowns.
+    """
+    value = sustain_effect_value("Ionian Boots of Lucidity", "summoner_spell_haste")
+    for atom in _IONIAN_BOOTS_INSIGHT_ATOMS.values():
+        atom_values = atom.get("values", ())
+        if not atom_values or float(atom_values[0]) != value:
+            raise ValueError(
+                f"ITEM_EFFECTS['Ionian Boots of Lucidity'] summoner_spell_haste="
+                f"{value!r} diverges from catalog atom {atom.get('hash')!r} "
+                f"({atom_values!r})"
+            )
+    return value
+
+
+# Guardian Angel "Rebirth": the catalog atom receipts for the crammed
+# half-parsed multi-value atoms.  The parser crammed the four sourced
+# numbers into every keyword-matched atom (heal/health/mana/cooldown all
+# [4.0, 50.0, 100.0, 300.0] with units [s, percent, percent, s]) — no
+# atom backs a single value, so the declaration validates the TYPED
+# values against the shared crammed record (hash-pinned) instead.
+_GUARDIAN_ANGEL_REBIRTH_ATOM: dict[str, Any] = {
+    "atom_id": "heal.flat",
+    "behavior": "heal",
+    "source": "Guardian Angel.passives[0].branches[0]",
+    "name": "Rebirth",
+    "values": [4.0, 50.0, 100.0, 300.0],
+    "units": ["s", "percent", "percent", "s"],
+    "evidence": ["passive:Rebirth@kw:heal"],
+    "hash": "83706c231e0d8fee",
+}
+
+
+def guardian_angel_rebirth_declaration() -> dict[str, float]:
+    """Guardian Angel's typed Rebirth declaration (delay, health ratio,
+    mana ratio, cooldown), validated against the catalog atom so stale
+    statics fail closed instead of riding silently.
+
+    The crammed atom holds [delay_s, health_percent, mana_percent,
+    cooldown_s]; the registry stores the ratios (0.50 / 1.0) in decimal
+    form, so the validation maps ratio*100 back to the atom's percent
+    values.
+    """
+    atom_values = _GUARDIAN_ANGEL_REBIRTH_ATOM.get("values", ())
+    declaration = {
+        "revive_delay": sustain_effect_value("Guardian Angel", "revive_delay"),
+        "revive_health_ratio": sustain_effect_value(
+            "Guardian Angel", "revive_health_ratio"
+        ),
+        "revive_mana_ratio": sustain_effect_value(
+            "Guardian Angel", "revive_mana_ratio"
+        ),
+        "revive_cooldown": sustain_effect_value("Guardian Angel", "revive_cooldown"),
+    }
+    mapped = [
+        declaration["revive_delay"],
+        declaration["revive_health_ratio"] * 100.0,
+        declaration["revive_mana_ratio"] * 100.0,
+        declaration["revive_cooldown"],
+    ]
+    if list(atom_values) != mapped:
+        raise ValueError(
+            f"ITEM_EFFECTS['Guardian Angel'] Rebirth values {mapped!r} diverge "
+            f"from catalog atom {_GUARDIAN_ANGEL_REBIRTH_ATOM.get('hash')!r} "
+            f"({list(atom_values)!r})"
+        )
+    return declaration
 
 
 def override_item_stat(item_name: str, stat_key: str, value: float) -> float:
@@ -3362,6 +4416,130 @@ def requires_authored_control_event(items: Sequence[Mapping[str, Any]]) -> bool:
     )
 
 
+def death_dance_deferral_fraction(
+    items: list[dict[str, Any]], *, is_melee: bool
+) -> float:
+    """Return Death's Dance's sourced Ignore Pain fraction for this holder."""
+    if not has_item(items, "Death's Dance"):
+        return 0.0
+    key = "damage_deferral_melee" if is_melee else "damage_deferral_ranged"
+    return float(required_effect_value("Death's Dance", key))
+
+
+def death_dance_defy_heal_amount(
+    items: list[dict[str, Any]], *, bonus_attack_damage: float
+) -> float:
+    """Return Death's Dance's sourced Defy heal for the holder's bonus AD."""
+    if not has_item(items, "Death's Dance"):
+        return 0.0
+    ratio = float(required_effect_value("Death's Dance", "defy_heal_bonus_ad_ratio"))
+    return max(0.0, float(bonus_attack_damage)) * ratio
+
+
+# Reviewed provenance for Eclipse's stack-gated trigger.  The values
+# themselves are registry-owned (``stack_required``/``stack_window`` static,
+# ``cooldown``/``shield_*`` parser-owned from the cached item JSON); the
+# receipt below names the reviewed Wiki page the numbers came from.
+# ``ITEM_INPUT_OPTIONS`` has no Eclipse entry, so the receipt carries the
+# full-entry audit's pinned revision (docs/wiki-full-entry-audit.json:
+# page 740131, revision 4015408, status ready) instead of the cache-backed
+# zero-revision convention.
+_ECLIPSE_TRIGGER_SOURCE = SourceReceipt(
+    label="League Wiki — Eclipse (Ever Rising Moon)",
+    url="https://wiki.leagueoflegends.com/en-us/Eclipse",
+    revision_id=4015408,
+    revision_timestamp="2026-05-04T14:02:12Z",
+)
+
+
+def eclipse_trigger_source_receipt() -> SourceReceipt:
+    """Return Eclipse's reviewed trigger-source receipt."""
+    return _ECLIPSE_TRIGGER_SOURCE
+
+
+def eclipse_trigger_gate(effect: "CooldownProcEffect") -> WindowStackGate:
+    """Build the kernel stack gate for Eclipse's two-hit passive.
+
+    Ever Rising Moon arms on two separate champion hits inside the sourced
+    window; the completed pair fires the proc, starts the per-target
+    cooldown, and clears the window.  The compiled effect is the typed
+    accessor path for every number (``stack_required``/``stack_window`` are
+    registry-owned, ``cooldown`` parser-owned).  The damage formula stays
+    with the fight engine; this gate owns only the trigger/stack timing.
+    """
+    gate = WindowStackGate(
+        WindowGateRule(
+            name="Eclipse (Ever Rising Moon) — stack pair gate",
+            stacks_required=int(effect.stack_required),
+            window_seconds=float(effect.stack_window),
+            cooldown_seconds=float(effect.cooldown),
+            per_target=True,
+            source=_ECLIPSE_TRIGGER_SOURCE,
+        )
+    )
+    return gate
+
+
+def force_of_nature_steadfast_rule(
+    *,
+    source: SourceReceipt | None = None,
+) -> StackRule:
+    """Build the kernel-typed Steadfast stack declaration for Force of Nature.
+
+    Every number is read through ``required_effect_value`` (registry-owned
+    statics); ``source`` names the reviewed Wiki page.  The survival kernel
+    consumes the declaration through ``ChampionDefenses`` (see
+    ``defensive_effects``); the timed stack machine itself lives in the
+    survival walk.
+    """
+    return StackRule(
+        name="Force of Nature — Steadfast",
+        max_stacks=int(
+            required_effect_value("Force of Nature", "steadfast_max_stacks")
+        ),
+        gain_per_application=1,
+        duration_seconds=float(
+            required_effect_value("Force of Nature", "steadfast_stack_duration")
+        ),
+        refresh="refresh",
+        expiry="all_at_once",
+        interval_seconds=float(
+            required_effect_value("Force of Nature", "steadfast_stack_interval")
+        ),
+        interval_key="ability_instance",
+        gain_by_kind={
+            "immobilize": int(
+                required_effect_value("Force of Nature", "steadfast_immobilize_stacks")
+            )
+        },
+        payload={
+            "bonus_magic_resistance": float(
+                required_effect_value(
+                    "Force of Nature", "steadfast_bonus_magic_resistance"
+                )
+            ),
+            "bonus_move_speed_percent": float(
+                required_effect_value(
+                    "Force of Nature", "steadfast_bonus_move_speed_percent"
+                )
+            ),
+        },
+        source=source,
+    )
+
+
+def eclipse_shield_amount(
+    items: list[dict[str, Any]], *, bonus_attack_damage: float, is_melee: bool
+) -> float:
+    """Return Eclipse's sourced shield amount for a completed pair."""
+    if not has_item(items, "Eclipse"):
+        return 0.0
+    suffix = "melee" if is_melee else "ranged"
+    base = float(required_effect_value("Eclipse", f"shield_{suffix}_base"))
+    ratio = float(required_effect_value("Eclipse", f"shield_{suffix}_bonus_ad_ratio"))
+    return max(0.0, base + ratio * float(bonus_attack_damage))
+
+
 # ---------------------------------------------------------------------------
 # Compiled fight-engine boundary
 # ---------------------------------------------------------------------------
@@ -3432,6 +4610,9 @@ class DamageSource:
     # Sourced cadence for continuous item damage (for example Immolate).
     # ``None`` means the aggregate row must remain untimed.
     event_interval: float | None = None
+    # Muramana Shock uses one same-target clock for each sourced cast ID.
+    # Zero means this source has no per-cast target lockout.
+    same_target_cast_lockout_seconds: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -3800,6 +4981,7 @@ def _damage_source(
     breakdown_key: str | None = None,
     lifesteal_effectiveness: float = 0.0,
     event_interval: float | None = None,
+    same_target_cast_lockout_seconds: float = 0.0,
 ) -> DamageSource:
     """Build shared source metadata without leaking registry records."""
     return DamageSource(
@@ -3810,6 +4992,7 @@ def _damage_source(
         raw_damage=raw_damage,
         lifesteal_effectiveness=lifesteal_effectiveness,
         event_interval=event_interval,
+        same_target_cast_lockout_seconds=same_target_cast_lockout_seconds,
     )
 
 
@@ -3926,6 +5109,11 @@ def _compile_per_ability_hit(
     required = _RequiredValues(item_name, values)
     melee_ratio = required.number("max_mana_ratio_ability_melee")
     ranged_ratio = required.number("max_mana_ratio_ability_ranged")
+    lockout_seconds = required.number("same_target_cast_lockout_seconds")
+    if not math.isfinite(lockout_seconds) or lockout_seconds <= 0.0:
+        raise ValueError(
+            f"{item_name!r} same-target cast lockout must be finite and positive"
+        )
 
     def raw(inputs: DamageInputs) -> float:
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
@@ -3937,6 +5125,7 @@ def _compile_per_ability_hit(
         raw,
         suffix="Shock - abilities",
         breakdown_key="muramana_ability",
+        same_target_cast_lockout_seconds=lockout_seconds,
     )
 
 
@@ -5967,7 +7156,11 @@ def resolve_stat_effects(
         basic_ability_haste=basic_ability_haste(items),
         ability_haste=famine_ability_haste,
         ultimate_haste=ultimate_haste,
-        bonus_omnivamp=feast_omnivamp + immortal_path_omnivamp,
+        bonus_omnivamp=(
+            feast_omnivamp
+            + immortal_path_omnivamp
+            + gluttonous_greaves_slay_omnivamp(items, item_options)
+        ),
         bonus_heal_shield_power=harmony_power,
         bonus_move_speed_percent=input_move_speed,
         item_bonus_health_multiplier=health_multiplier,

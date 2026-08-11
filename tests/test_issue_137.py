@@ -162,24 +162,25 @@ def test_compiler_carries_vamp_healing_category():
     assert heal.healing_category == "vamp"
 
 
-def test_compiler_fails_closed_on_timed_support_shield():
+def test_compiler_carries_timed_support_shield():
     compiler = _WalkCompiler()
-    with pytest.raises(UncompilableActionError) as exc:
-        compiler.add_support_templates(
-            [
-                {
-                    "time": 1.0,
-                    "kind": "shield",
-                    "amount": 100.0,
-                    "duration": 2.5,
-                    "source": "Locket of the Iron Solari",
-                    "target": "ally:X",
-                }
-            ],
-            0,
-            {"ally:X": 1},
-        )
-    assert exc.value.receipt == "support_duration=2.5"
+    compiler.add_support_templates(
+        [
+            {
+                "time": 1.0,
+                "kind": "shield",
+                "amount": 100.0,
+                "duration": 2.5,
+                "source": "Locket of the Iron Solari",
+                "target": "ally:X",
+            }
+        ],
+        0,
+        {"ally:X": 1},
+    )
+    shield = compiler.actions[0]
+    assert shield.kind.name == "SHIELD"
+    assert shield.duration == pytest.approx(2.5)
 
 
 def test_compiler_fails_closed_on_stat_buff_template():

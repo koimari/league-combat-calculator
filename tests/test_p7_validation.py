@@ -496,11 +496,17 @@ def test_certainty_ahri_levels(sqlite_database):
 
 
 def test_certainty_aurora_boundaries_and_options(sqlite_database):
-    """Aurora: utility W and multi-target Q parts are documented boundaries."""
+    """Aurora: utility W is a documented boundary; Q multi-target is an option.
+
+    Q's subsequent bolts are modeled behind the ``q_marked_enemies``
+    player-controlled option, so the slot is an estimate; W remains a
+    documented non-computed utility boundary.
+    """
     client = _client()
     slots = client.get("/api/certainty?champion=Aurora").get_json()["slots"]
     assert slots["W"]["certainty"] == "boundary"
-    assert slots["Q"]["certainty"] == "boundary"
+    assert slots["Q"]["certainty"] == "estimate"
+    assert "q_marked_enemies" in slots["Q"]["reason"]
     assert slots["E"]["certainty"] == "exact"
     assert slots["R"]["certainty"] == "exact"
 

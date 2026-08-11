@@ -176,12 +176,49 @@ OPTIONS = [
         "max": 3,
         "label": "Needlework casts",
     },
+    {
+        "key": "w_active",
+        "type": "bool",
+        "default": False,
+        "label": "W (Hallowed Mist) active against selected skillshots",
+    },
+    {
+        "key": "w_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "W active start time in seconds",
+    },
+    {
+        "key": "w_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 4.0,
+        "label": "W active seconds; zero uses the sourced four-second duration",
+    },
+    {
+        "key": "w_blocked_skillshots",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Skillshot slots to destroy; an empty list destroys all marked skillshots"
+        ),
+    },
 ]
 
 ASSUMPTIONS = [
-    "A Thousand Cuts is an explicit max-health magic on-hit; its champion heal and minion/monster caps are not applied to champion TDD.",
-    "Q exposes Snippy stack count and center true-damage conversion instead of treating the six-snip maximum as universal.",
-    "R's first, second and third casts remain separate ordered events, each carrying the sourced passive rider.",
+    "A Thousand Cuts is an explicit max-health magic on-hit; its champion "
+    "heal and minion/monster caps are not applied to champion TDD.",
+    "Q exposes Snippy stack count and center true-damage conversion instead "
+    "of treating the six-snip maximum as universal.",
+    "R's first, second and third casts remain separate ordered events, each "
+    "carrying the sourced passive rider.",
+    "Hallowed Mist destroys selected champion projectiles during its sourced "
+    "four-second window; the single-target model exposes the source selection "
+    "as the outside-mist contract.",
 ]
 
 SOURCES = [

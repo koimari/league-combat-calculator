@@ -4,9 +4,44 @@
   "items": {
    "domain": "items",
    "object_count": 324,
-   "atom_count": 1663,
-   "sha256": "da4867a44433ec85",
-   "source_ref": null
+   "atom_count": 1664,
+   "sha256": "18f2fe352b3efc6e",
+   "source_ref": "data/items.json@sha256:6f6cd65950efbbf3"
+  },
+  "abilities": {
+   "domain": "abilities",
+   "object_count": 173,
+   "atom_count": 5093,
+   "sha256": "56c47afaf5f0b20b",
+   "source_ref": "data/champions.json@sha256:afea81a9976904c1"
+  },
+  "runes": {
+   "domain": "runes",
+   "object_count": 17,
+   "atom_count": 127,
+   "sha256": "038b303a3910125e",
+   "source_ref": "data/runes.json@sha256:7b5d67ec6c519e36"
+  },
+  "economics": {
+   "domain": "economics",
+   "object_count": 323,
+   "atom_count": 817,
+   "sha256": "ba198b2020edeb20",
+   "source_ref": "data/economics-sourced.json@sha256:edb05d1b0acf8cc2"
+  },
+  "stats": {
+   "domain": "stats",
+   "object_count": 173,
+   "atom_count": 6779,
+   "sha256": "2917a0f457713533",
+   "source_ref": "data/champions.json@sha256:afea81a9976904c1"
+  },
+  "champions": {
+   "domain": "champions",
+   "object_count": 173,
+   "atom_count": 5372,
+   "sha256": "49e1c1ddcb91244a",
+   "source_ref": "data/champions.json@sha256:afea81a9976904c1;data/bin/characters"
   }
  }
 }

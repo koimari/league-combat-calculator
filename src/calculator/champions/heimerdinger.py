@@ -70,6 +70,131 @@ def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# W/E timing + upgraded-E constants (P3 package 3Z).  0.25 is the cached
+# W/E castTime ("0.25"); 0.35 / 0.08 / 0.6 have NO JSON home — they are
+# module-authored timing pins (the wiki's rocket cadence), declared with
+# provenance in the typed rule receipts and flagged uncertified.
+_W_FIRST_TIME_OFFSET = 0.25
+_W_LATER_TIME_OFFSET = 0.35
+_W_HIT_INTERVAL = 0.08
+_E_TIME_OFFSET = 0.6
+_E_UPGRADED_VALUES = (100.0, 200.0, 300.0)
+_E_UPGRADED_AP_RATIO = 0.60
+
+
+class _MicroRocketsRule:
+    """The typed Hextech Micro-Rockets declaration (P3 package 3Z).
+
+    W prices one first rocket from the "Initial Rocket Magic Damage"
+    row + (n-1) subsequent rockets from the "Subsequent Rocket Magic
+    Damage" row (the per-rocket champion reduction).  The cached
+    leveling rows are degraded (units arrays empty) — the module names
+    the explicit rows, which resolve flat.  The rocket count (1..5,
+    default 5) and the timing pins (first 0.25 = the cached castTime;
+    subsequent 0.35 start @ 0.08 interval = module-authored) ride the
+    ``w_rockets`` option's state receipt.
+    """
+
+    def __init__(self) -> None:
+        self.first_row_attribute = "Initial Rocket Magic Damage"
+        self.subsequent_row_attribute = "Subsequent Rocket Magic Damage"
+        self.first_time_offset = _W_FIRST_TIME_OFFSET
+        self.subsequent_time_offset = _W_LATER_TIME_OFFSET
+        self.hit_interval = _W_HIT_INTERVAL
+        self.default = 5
+        self.min = 1
+        self.max = 5
+        self.source = {
+            "label": "Local League Wiki cache — Heimerdinger W template",
+            "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/W",
+            "revision_id": 2864243,
+            "revision_timestamp": "2019-11-03T20:09:52Z",
+            "parent_revision_id": 4025016,
+            "note": "first_time_offset is the cached W castTime; "
+            "subsequent_time_offset/hit_interval are module-authored "
+            "(no JSON home) — flagged uncertified.",
+        }
+
+    def public_receipt(self) -> dict[str, Any]:
+        return {
+            "name": "Heimerdinger — Hextech Micro-Rockets (W)",
+            "first_row_attribute": self.first_row_attribute,
+            "subsequent_row_attribute": self.subsequent_row_attribute,
+            "first_time_offset": self.first_time_offset,
+            "subsequent_time_offset": self.subsequent_time_offset,
+            "hit_interval": self.hit_interval,
+            "default": self.default,
+            "min": self.min,
+            "max": self.max,
+            "source": dict(self.source),
+        }
+
+
+HEIMER_W_ROCKETS_RULE = _MicroRocketsRule()
+
+
+class _GrenadeRule:
+    """The typed Electron Storm Grenade declaration (P3 package 3Z).
+
+    E prices ONE champion damage instance per cast.  The base variant
+    reads the cached "Magic Damage" row (degraded units — resolved
+    flat); the R-upgraded variant prices the module tuple
+    100/200/300 (+60% AP) — the cached E[1] row is HALF-PARSED
+    (modifiers:[] — the numbers survive only in the attribute string),
+    so the tuple is a declared module constant with provenance.  The
+    0.6 impact offset is module-authored (uncertified).  Bounces,
+    stun and slow are control state, not damage.
+    """
+
+    def __init__(self) -> None:
+        self.base_row_attribute = "Magic Damage"
+        self.upgraded_values = _E_UPGRADED_VALUES
+        self.upgraded_ap_ratio = _E_UPGRADED_AP_RATIO
+        self.time_offset = _E_TIME_OFFSET
+        self.one_instance = True
+        self.source = {
+            "label": "Local League Wiki cache — Heimerdinger E template",
+            "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/E",
+            "revision_id": 2864389,
+            "revision_timestamp": "2019-11-03T20:12:23Z",
+            "parent_revision_id": 4025016,
+            "note": "upgraded_values/upgraded_ap_ratio come from the "
+            "half-parsed E[1] attribute string (no modifiers/atoms); "
+            "time_offset is module-authored (no JSON home) — flagged "
+            "uncertified.",
+        }
+
+    def public_receipt(self) -> dict[str, Any]:
+        return {
+            "name": "Heimerdinger — CH-2/CH-3X Electron Storm Grenade (E)",
+            "base_row_attribute": self.base_row_attribute,
+            "upgraded_values": list(self.upgraded_values),
+            "upgraded_ap_ratio": self.upgraded_ap_ratio,
+            "time_offset": self.time_offset,
+            "one_instance": self.one_instance,
+            "source": dict(self.source),
+        }
+
+
+HEIMER_E_GRENADE_RULE = _GrenadeRule()
+
+
+def _require_row(ability: dict[str, Any], attribute: str) -> None:
+    """Fail loud when the named leveling row is absent (cache corruption).
+
+    The degraded W/E rows must never price a silent zero: a missing row
+    raises naming the champion, ability and attribute (the repo's
+    fail-closed convention for missing keys).
+    """
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") == attribute:
+                return
+    raise KeyError(
+        f"Heimerdinger {ability.get('name', '?')} has no {attribute!r} " "leveling row"
+    )
+
+
 def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("W", 0)
     if ability is None:
@@ -78,17 +203,23 @@ def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     rockets = min(max(int(ctx.options.get("w_rockets", 5)), 1), 5)
+    _require_row(ability, "Initial Rocket Magic Damage")
+    _require_row(ability, "Subsequent Rocket Magic Damage")
     first = extract_named(
         ability, "Initial Rocket Magic Damage", rank, ctx.stats, ctx.target
     )
     later = extract_named(
         ability, "Subsequent Rocket Magic Damage", rank, ctx.stats, ctx.target
     )
-    parts = [DamagePart("magic", first, time_offset=0.25)]
+    parts = [DamagePart("magic", first, time_offset=_W_FIRST_TIME_OFFSET)]
     if rockets > 1:
         parts.append(
             DamagePart(
-                "magic", later, count=rockets - 1, time_offset=0.35, hit_interval=0.08
+                "magic",
+                later,
+                count=rockets - 1,
+                time_offset=_W_LATER_TIME_OFFSET,
+                hit_interval=_W_HIT_INTERVAL,
             )
         )
     entry = damage_entry(
@@ -114,10 +245,11 @@ def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     if variant == 0:
+        _require_row(ability, "Magic Damage")
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     else:
         r_rank = min(max(ctx.rank_for("R"), 1), 3)
-        value = (100.0, 200.0, 300.0)[r_rank - 1] + 0.60 * ctx.stats.get(
+        value = _E_UPGRADED_VALUES[r_rank - 1] + _E_UPGRADED_AP_RATIO * ctx.stats.get(
             "ability_power", 0.0
         )
     entry = damage_entry(
@@ -127,7 +259,7 @@ def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
         value,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.6),)
+    entry["parts"] = (DamagePart("magic", value, time_offset=_E_TIME_OFFSET),)
     entry["detail"] = (
         "One champion damage instance; bounces, stun and slow are sourced control state."
     )
@@ -194,6 +326,7 @@ OPTIONS = [
         "min": 1,
         "max": 5,
         "label": "Rockets hitting the target",
+        "state": HEIMER_W_ROCKETS_RULE.public_receipt(),
     },
     {
         "key": "e_upgrade",
@@ -202,6 +335,7 @@ OPTIONS = [
         "min": 0,
         "max": 1,
         "label": "Grenade variant",
+        "state": HEIMER_E_GRENADE_RULE.public_receipt(),
     },
 ]
 ASSUMPTIONS = [

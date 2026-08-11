@@ -127,12 +127,48 @@ OPTIONS = [
         "max": 2,
         "label": "Bladework attacks",
     },
+    {
+        "key": "w_active",
+        "type": "bool",
+        "default": False,
+        "label": "W (Riposte) active against selected incoming events",
+    },
+    {
+        "key": "w_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "W active start time in seconds",
+    },
+    {
+        "key": "w_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 0.75,
+        "label": "W active seconds; zero uses the sourced 0.75 second duration",
+    },
+    {
+        "key": "w_blocked_sources",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Incoming sources to negate; an empty list negates all matching events"
+        ),
+    },
 ]
 
 ASSUMPTIONS = [
-    "Vitals are explicit true-damage procs; the user supplies how many directional hits actually occur.",
-    "Lunge is a real attack for item on-hit purposes, while Bladework's first/second crit distinction remains visible in its option detail.",
+    "Vitals are explicit true-damage procs; the user supplies how many "
+    "directional hits actually occur.",
+    "Lunge is a real attack for item on-hit purposes, while Bladework's "
+    "first/second crit distinction remains visible in its option detail.",
     "Grand Challenge's Victory Zone heals are not TDD and are not converted into damage.",
+    "Riposte negates selected incoming damage and crowd control during the "
+    "sourced 0.75 second stance; an empty source list means every incoming "
+    "event in the window.",
 ]
 
 SOURCES = [

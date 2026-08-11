@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage, source_row
-from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    proc_damage,
+)
 
 
 def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -158,6 +165,14 @@ def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["parts"] = (
         DamagePart("magic", value, time_offset=0.6 if variant == 2 else 0.3),
     )
+    if variant in {0, 1}:
+        kind, duration_attr = (
+            ("fear", "Disable Duration") if variant == 0 else ("root", "Root Duration")
+        )
+        duration = extract_value(ability, duration_attr, rank)
+        entry["parts"] = (
+            replace(entry["parts"][0], cc_kind=kind, cc_duration=duration),
+        )
     entry["detail"] = ("Grim Visage", "Gaze of the Abyss", "Crushing Maw")[
         variant
     ] + "; fear/root/pull are explicit control state."

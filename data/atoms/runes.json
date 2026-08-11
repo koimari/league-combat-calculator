@@ -1,0 +1,2996 @@
+{
+ "domain": "runes",
+ "generated_at": 1786460564.2128582,
+ "source_ref": "data/runes.json@sha256:7b5d67ec6c519e36",
+ "objects": {
+  "Press the Attack": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Press the Attack.cooldown",
+    "name": "Press the Attack",
+    "values": [
+     6.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "cooldown=6.0"
+    ],
+    "hash": "46d0e3577185b571"
+   },
+   {
+    "atom_id": "rune.effects.damage_amp_ratio",
+    "behavior": "rune",
+    "source": "Press the Attack.effects.damage_amp_ratio",
+    "name": "Press the Attack",
+    "values": [
+     0.08
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.damage_amp_ratio=0.08"
+    ],
+    "hash": "f57323d915b191d9"
+   },
+   {
+    "atom_id": "rune.effects.leveling",
+    "behavior": "rune",
+    "source": "Press the Attack.effects.leveling",
+    "name": "Press the Attack",
+    "values": [
+     40.0,
+     47.05882352941177,
+     54.11764705882353,
+     61.17647058823529,
+     68.23529411764706,
+     75.29411764705883,
+     82.35294117647058,
+     89.41176470588235,
+     96.47058823529412,
+     103.52941176470588,
+     110.58823529411765,
+     117.6470588235294,
+     124.70588235294117,
+     131.76470588235293,
+     138.8235294117647,
+     145.88235294117646,
+     152.94117647058823,
+     160.0,
+     167.05882352941177,
+     174.11764705882354
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.leveling=[[40.0, 47.05882352941177, 54.11764705882353, 61.17647058823529, 68.23529411764706, 75.29411764705883, 82.35294117647058, 89.41176470588235, 96.47058823529412, 103.52941176470588, 110.58823529411765, 117.6470588235294, 124.70588235294117, 131.76470588235293, 138.8235294117647, 145.88235294117646, 152.94117647058823, 160.0, 167.05882352941177, 174.11764705882354]]"
+    ],
+    "hash": "4b5e02fdf8beb40a"
+   },
+   {
+    "atom_id": "rune.effects.max_stacks",
+    "behavior": "rune",
+    "source": "Press the Attack.effects.max_stacks",
+    "name": "Press the Attack",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.max_stacks=3"
+    ],
+    "hash": "515ac8fff68d106b"
+   },
+   {
+    "atom_id": "rune.effects.stack_duration_seconds",
+    "behavior": "rune",
+    "source": "Press the Attack.effects.stack_duration_seconds",
+    "name": "Press the Attack",
+    "values": [
+     4.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.stack_duration_seconds=4.0"
+    ],
+    "hash": "8723a38899b5f4e1"
+   }
+  ],
+  "Lethal Tempo": [
+   {
+    "atom_id": "rune.effects.deathfire_tick_interval_seconds",
+    "behavior": "rune",
+    "source": "Lethal Tempo.effects.deathfire_tick_interval_seconds",
+    "name": "Lethal Tempo",
+    "values": [
+     0.5
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_tick_interval_seconds=0.5"
+    ],
+    "hash": "a73e5937524110cb"
+   },
+   {
+    "atom_id": "rune.effects.lethal_tempo_attack_speed_percent_melee_ranged",
+    "behavior": "rune",
+    "source": "Lethal Tempo.effects.lethal_tempo_attack_speed_percent_melee_ranged",
+    "name": "Lethal Tempo",
+    "values": [
+     6.0,
+     4.800000000000001
+    ],
+    "units": [
+     "percent",
+     "percent"
+    ],
+    "evidence": [
+     "effects.lethal_tempo_attack_speed_percent_melee_ranged=[6.0, 4.800000000000001]"
+    ],
+    "hash": "085ea0684921c0cc"
+   },
+   {
+    "atom_id": "rune.effects.lethal_tempo_bolt_damage_increase_ratio_melee_ranged",
+    "behavior": "rune",
+    "source": "Lethal Tempo.effects.lethal_tempo_bolt_damage_increase_ratio_melee_ranged",
+    "name": "Lethal Tempo",
+    "values": [
+     0.01,
+     0.006666666666666666
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.lethal_tempo_bolt_damage_increase_ratio_melee_ranged=[0.01, 0.006666666666666666]"
+    ],
+    "hash": "a5caccbf1d72c38f"
+   },
+   {
+    "atom_id": "rune.effects.lethal_tempo_bolt_damage_melee_by_level",
+    "behavior": "rune",
+    "source": "Lethal Tempo.effects.lethal_tempo_bolt_damage_melee_by_level",
+    "name": "Lethal Tempo",
+    "values": [
+     9.0,
+     10.235294117647058,
+     11.470588235294118,
+     12.705882352941178,
+     13.941176470588236,
+     15.176470588235293,
+     16.411764705882355,
+     17.647058823529413,
+     18.88235294117647,
+     20.11764705882353,
+     21.352941176470587,
+     22.58823529411765,
+     23.823529411764707,
+     25.058823529411764,
+     26.294117647058826,
+     27.529411764705884,
+     28.764705882352942,
+     30.0,
+     31.235294117647058,
+     32.470588235294116
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.lethal_tempo_bolt_damage_melee_by_level=[9.0, 10.235294117647058, 11.470588235294118, 12.705882352941178, 13.941176470588236, 15.176470588235293, 16.411764705882355, 17.647058823529413, 18.88235294117647, 20.11764705882353, 21.352941176470587, 22.58823529411765, 23.823529411764707, 25.058823529411764, 26.294117647058826, 27.529411764705884, 28.764705882352942, 30.0, 31.235294117647058, 32.470588235294116]"
+    ],
+    "hash": "16b147729414bea7"
+   },
+   {
+    "atom_id": "rune.effects.lethal_tempo_bolt_damage_ranged_by_level",
+    "behavior": "rune",
+    "source": "Lethal Tempo.effects.lethal_tempo_bolt_damage_ranged_by_level",
+    "name": "Lethal Tempo",
+    "values": [
+     6.0,
+     7.0588235294117645,
+     8.117647058823529,
+     9.176470588235293,
+     10.235294117647058,
+     11.294117647058822,
+     12.352941176470589,
+     13.411764705882353,
+     14.470588235294118,
+     15.529411764705882,
+     16.588235294117645,
+     17.647058823529413,
+     18.705882352941178,
+     19.764705882352942,
+     20.823529411764707,
+     21.88235294117647,
+     22.941176470588236,
+     24.0,
+     25.058823529411764,
+     26.11764705882353
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.lethal_tempo_bolt_damage_ranged_by_level=[6.0, 7.0588235294117645, 8.117647058823529, 9.176470588235293, 10.235294117647058, 11.294117647058822, 12.352941176470589, 13.411764705882353, 14.470588235294118, 15.529411764705882, 16.588235294117645, 17.647058823529413, 18.705882352941178, 19.764705882352942, 20.823529411764707, 21.88235294117647, 22.941176470588236, 24.0, 25.058823529411764, 26.11764705882353]"
+    ],
+    "hash": "3ad97adb635e02ae"
+   },
+   {
+    "atom_id": "rune.effects.lethal_tempo_expiry_step_seconds",
+    "behavior": "rune",
+    "source": "Lethal Tempo.effects.lethal_tempo_expiry_step_seconds",
+    "name": "Lethal Tempo",
+    "values": [
+     0.5
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.lethal_tempo_expiry_step_seconds=0.5"
+    ],
+    "hash": "c6cd0093d0f03fb9"
+   },
+   {
+    "atom_id": "rune.effects.lethal_tempo_stack_duration_seconds",
+    "behavior": "rune",
+    "source": "Lethal Tempo.effects.lethal_tempo_stack_duration_seconds",
+    "name": "Lethal Tempo",
+    "values": [
+     6.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.lethal_tempo_stack_duration_seconds=6.0"
+    ],
+    "hash": "cac8f3fe704a7674"
+   },
+   {
+    "atom_id": "rune.effects.max_stacks",
+    "behavior": "rune",
+    "source": "Lethal Tempo.effects.max_stacks",
+    "name": "Lethal Tempo",
+    "values": [
+     6.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.max_stacks=6"
+    ],
+    "hash": "873d2fae7985b876"
+   }
+  ],
+  "Fleet Footwork": [
+   {
+    "atom_id": "rune.effects.fleet_ap_ratio_melee_ranged",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.fleet_ap_ratio_melee_ranged",
+    "name": "Fleet Footwork",
+    "values": [
+     0.05,
+     0.03
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.fleet_ap_ratio_melee_ranged=[0.05, 0.03]"
+    ],
+    "hash": "16e945e687a63088"
+   },
+   {
+    "atom_id": "rune.effects.fleet_bonus_ad_ratio_melee_ranged",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.fleet_bonus_ad_ratio_melee_ranged",
+    "name": "Fleet Footwork",
+    "values": [
+     0.1,
+     0.06
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.fleet_bonus_ad_ratio_melee_ranged=[0.1, 0.06]"
+    ],
+    "hash": "ecb6b048c49c686c"
+   },
+   {
+    "atom_id": "rune.effects.fleet_bonus_move_speed_melee_ranged",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.fleet_bonus_move_speed_melee_ranged",
+    "name": "Fleet Footwork",
+    "values": [
+     20.0,
+     15.0
+    ],
+    "units": [
+     "percent",
+     "percent"
+    ],
+    "evidence": [
+     "effects.fleet_bonus_move_speed_melee_ranged=[20.0, 15.0]"
+    ],
+    "hash": "806a6db8b1f33686"
+   },
+   {
+    "atom_id": "rune.effects.fleet_charge_cap",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.fleet_charge_cap",
+    "name": "Fleet Footwork",
+    "values": [
+     100.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.fleet_charge_cap=100.0"
+    ],
+    "hash": "d38711d76a9074ea"
+   },
+   {
+    "atom_id": "rune.effects.fleet_heal_melee_by_level",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.fleet_heal_melee_by_level",
+    "name": "Fleet Footwork",
+    "values": [
+     10.0,
+     15.08235294117647,
+     20.411764705882355,
+     25.988235294117647,
+     31.81176470588235,
+     37.88235294117648,
+     44.199999999999996,
+     50.76470588235294,
+     57.576470588235296,
+     64.63529411764706,
+     71.94117647058825,
+     79.49411764705881,
+     87.29411764705883,
+     95.34117647058824,
+     103.63529411764705,
+     112.17647058823529,
+     120.96470588235294,
+     130.0,
+     139.28235294117647,
+     148.81176470588238
+    ],
+    "units": [
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health"
+    ],
+    "evidence": [
+     "effects.fleet_heal_melee_by_level=[10.0, 15.08235294117647, 20.411764705882355, 25.988235294117647, 31.81176470588235, 37.88235294117648, 44.199999999999996, 50.76470588235294, 57.576470588235296, 64.63529411764706, 71.94117647058825, 79.49411764705881, 87.29411764705883, 95.34117647058824, 103.63529411764705, 112.17647058823529, 120.96470588235294, 130.0, 139.28235294117647, 148.81176470588238]"
+    ],
+    "hash": "fa910afac028761d"
+   },
+   {
+    "atom_id": "rune.effects.fleet_heal_ranged_by_level",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.fleet_heal_ranged_by_level",
+    "name": "Fleet Footwork",
+    "values": [
+     6.0,
+     9.049411764705882,
+     12.24705882352941,
+     15.592941176470589,
+     19.08705882352941,
+     22.729411764705883,
+     26.520000000000003,
+     30.458823529411767,
+     34.54588235294118,
+     38.781176470588235,
+     43.16470588235294,
+     47.69647058823529,
+     52.3764705882353,
+     57.20470588235295,
+     62.18117647058824,
+     67.30588235294118,
+     72.57882352941176,
+     78.0,
+     83.56941176470589,
+     89.28705882352942
+    ],
+    "units": [
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health",
+     "health"
+    ],
+    "evidence": [
+     "effects.fleet_heal_ranged_by_level=[6.0, 9.049411764705882, 12.24705882352941, 15.592941176470589, 19.08705882352941, 22.729411764705883, 26.520000000000003, 30.458823529411767, 34.54588235294118, 38.781176470588235, 43.16470588235294, 47.69647058823529, 52.3764705882353, 57.20470588235295, 62.18117647058824, 67.30588235294118, 72.57882352941176, 78.0, 83.56941176470589, 89.28705882352942]"
+    ],
+    "hash": "d587ed0958a5f95e"
+   },
+   {
+    "atom_id": "rune.effects.fleet_minion_heal_effectiveness",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.fleet_minion_heal_effectiveness",
+    "name": "Fleet Footwork",
+    "values": [
+     0.15
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.fleet_minion_heal_effectiveness=0.15"
+    ],
+    "hash": "ade2b2f31762f9d3"
+   },
+   {
+    "atom_id": "rune.effects.fleet_move_speed_duration_seconds",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.fleet_move_speed_duration_seconds",
+    "name": "Fleet Footwork",
+    "values": [
+     1.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.fleet_move_speed_duration_seconds=1.0"
+    ],
+    "hash": "96ed8ceec80b7dc2"
+   },
+   {
+    "atom_id": "rune.effects.melee_ranged_ratios",
+    "behavior": "rune",
+    "source": "Fleet Footwork.effects.melee_ranged_ratios",
+    "name": "Fleet Footwork",
+    "values": [
+     0.2,
+     0.15
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.melee_ranged_ratios=[0.2, 0.15]"
+    ],
+    "hash": "54d73eea240f1f68"
+   }
+  ],
+  "Conqueror": [
+   {
+    "atom_id": "rune.effects.conqueror_adaptive_force_by_level",
+    "behavior": "rune",
+    "source": "Conqueror.effects.conqueror_adaptive_force_by_level",
+    "name": "Conqueror",
+    "values": [
+     1.8,
+     1.9294117647058824,
+     2.058823529411765,
+     2.1882352941176473,
+     2.3176470588235296,
+     2.447058823529412,
+     2.5764705882352943,
+     2.7058823529411766,
+     2.835294117647059,
+     2.9647058823529413,
+     3.0941176470588236,
+     3.223529411764706,
+     3.3529411764705888,
+     3.4823529411764707,
+     3.6117647058823534,
+     3.7411764705882353,
+     3.870588235294118,
+     4.0,
+     4.129411764705883,
+     4.258823529411765
+    ],
+    "units": [
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force"
+    ],
+    "evidence": [
+     "effects.conqueror_adaptive_force_by_level=[1.8, 1.9294117647058824, 2.058823529411765, 2.1882352941176473, 2.3176470588235296, 2.447058823529412, 2.5764705882352943, 2.7058823529411766, 2.835294117647059, 2.9647058823529413, 3.0941176470588236, 3.223529411764706, 3.3529411764705888, 3.4823529411764707, 3.6117647058823534, 3.7411764705882353, 3.870588235294118, 4.0, 4.129411764705883, 4.258823529411765]"
+    ],
+    "hash": "f5338f7b0ccd022d"
+   },
+   {
+    "atom_id": "rune.effects.conqueror_adaptive_force_max_by_level",
+    "behavior": "rune",
+    "source": "Conqueror.effects.conqueror_adaptive_force_max_by_level",
+    "name": "Conqueror",
+    "values": [
+     21.6,
+     23.15294117647059,
+     24.705882352941178,
+     26.258823529411764,
+     27.811764705882354,
+     29.364705882352943,
+     30.91764705882353,
+     32.470588235294116,
+     34.023529411764706,
+     35.576470588235296,
+     37.12941176470588,
+     38.68235294117647,
+     40.23529411764706,
+     41.78823529411765,
+     43.34117647058824,
+     44.89411764705882,
+     46.44705882352941,
+     48.0,
+     49.55294117647058,
+     51.10588235294117
+    ],
+    "units": [
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force",
+     "adaptive_force"
+    ],
+    "evidence": [
+     "effects.conqueror_adaptive_force_max_by_level=[21.6, 23.15294117647059, 24.705882352941178, 26.258823529411764, 27.811764705882354, 29.364705882352943, 30.91764705882353, 32.470588235294116, 34.023529411764706, 35.576470588235296, 37.12941176470588, 38.68235294117647, 40.23529411764706, 41.78823529411765, 43.34117647058824, 44.89411764705882, 46.44705882352941, 48.0, 49.55294117647058, 51.10588235294117]"
+    ],
+    "hash": "37fc06f948ef38de"
+   },
+   {
+    "atom_id": "rune.effects.conqueror_cast_instance_interval_seconds",
+    "behavior": "rune",
+    "source": "Conqueror.effects.conqueror_cast_instance_interval_seconds",
+    "name": "Conqueror",
+    "values": [
+     4.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.conqueror_cast_instance_interval_seconds=4.0"
+    ],
+    "hash": "1a5909b79c4285bc"
+   },
+   {
+    "atom_id": "rune.effects.conqueror_heal_melee_ranged_ratios",
+    "behavior": "rune",
+    "source": "Conqueror.effects.conqueror_heal_melee_ranged_ratios",
+    "name": "Conqueror",
+    "values": [
+     0.08,
+     0.05
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.conqueror_heal_melee_ranged_ratios=[0.08, 0.05]"
+    ],
+    "hash": "d11afae19b068a3f"
+   },
+   {
+    "atom_id": "rune.effects.conqueror_stack_duration_seconds",
+    "behavior": "rune",
+    "source": "Conqueror.effects.conqueror_stack_duration_seconds",
+    "name": "Conqueror",
+    "values": [
+     5.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.conqueror_stack_duration_seconds=5.0"
+    ],
+    "hash": "cdbb37eb728cb818"
+   },
+   {
+    "atom_id": "rune.effects.conqueror_stacks_per_application",
+    "behavior": "rune",
+    "source": "Conqueror.effects.conqueror_stacks_per_application",
+    "name": "Conqueror",
+    "values": [
+     2.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.conqueror_stacks_per_application=2"
+    ],
+    "hash": "13cccb4859c6e780"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_tick_interval_seconds",
+    "behavior": "rune",
+    "source": "Conqueror.effects.deathfire_tick_interval_seconds",
+    "name": "Conqueror",
+    "values": [
+     4.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_tick_interval_seconds=4.0"
+    ],
+    "hash": "9b320188e13c2097"
+   },
+   {
+    "atom_id": "rune.effects.max_stacks",
+    "behavior": "rune",
+    "source": "Conqueror.effects.max_stacks",
+    "name": "Conqueror",
+    "values": [
+     12.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.max_stacks=12"
+    ],
+    "hash": "d8d4ca771426b115"
+   },
+   {
+    "atom_id": "rune.effects.melee_ranged_ratios",
+    "behavior": "rune",
+    "source": "Conqueror.effects.melee_ranged_ratios",
+    "name": "Conqueror",
+    "values": [
+     0.08,
+     0.05
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.melee_ranged_ratios=[0.08, 0.05]"
+    ],
+    "hash": "9552c2877cce24b0"
+   }
+  ],
+  "Electrocute": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Electrocute.cooldown",
+    "name": "Electrocute",
+    "values": [
+     20.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "cooldown=20.0"
+    ],
+    "hash": "31fec23a55d6f009"
+   },
+   {
+    "atom_id": "rune.effects.ap_ratio",
+    "behavior": "rune",
+    "source": "Electrocute.effects.ap_ratio",
+    "name": "Electrocute",
+    "values": [
+     0.05
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.ap_ratio=0.05"
+    ],
+    "hash": "05f26015d2324ab8"
+   },
+   {
+    "atom_id": "rune.effects.bonus_ad_ratio",
+    "behavior": "rune",
+    "source": "Electrocute.effects.bonus_ad_ratio",
+    "name": "Electrocute",
+    "values": [
+     0.1
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_ad_ratio=0.1"
+    ],
+    "hash": "8e0322d164779756"
+   },
+   {
+    "atom_id": "rune.effects.leveling",
+    "behavior": "rune",
+    "source": "Electrocute.effects.leveling",
+    "name": "Electrocute",
+    "values": [
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0,
+     120.0,
+     130.0,
+     140.0,
+     150.0,
+     160.0,
+     170.0,
+     180.0,
+     190.0,
+     200.0,
+     210.0,
+     220.0,
+     230.0,
+     240.0,
+     250.0,
+     260.0
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.leveling=[[70.0, 80.0, 90.0, 100.0, 110.0, 120.0, 130.0, 140.0, 150.0, 160.0, 170.0, 180.0, 190.0, 200.0, 210.0, 220.0, 230.0, 240.0, 250.0, 260.0]]"
+    ],
+    "hash": "7384beace0b4ca6a"
+   },
+   {
+    "atom_id": "rune.effects.proc_delay_seconds",
+    "behavior": "rune",
+    "source": "Electrocute.effects.proc_delay_seconds",
+    "name": "Electrocute",
+    "values": [
+     0.25
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.proc_delay_seconds=0.25"
+    ],
+    "hash": "1bfe7cf303a5f8d3"
+   },
+   {
+    "atom_id": "rune.effects.stack_window_seconds",
+    "behavior": "rune",
+    "source": "Electrocute.effects.stack_window_seconds",
+    "name": "Electrocute",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.stack_window_seconds=3.0"
+    ],
+    "hash": "c1798106bfc2bd81"
+   },
+   {
+    "atom_id": "rune.effects.stacks_required",
+    "behavior": "rune",
+    "source": "Electrocute.effects.stacks_required",
+    "name": "Electrocute",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.stacks_required=3"
+    ],
+    "hash": "c10b9f01c896f5a1"
+   }
+  ],
+  "Dark Harvest": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Dark Harvest.cooldown",
+    "name": "Dark Harvest",
+    "values": [
+     35.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "cooldown=35.0"
+    ],
+    "hash": "b1deacbf92080adc"
+   },
+   {
+    "atom_id": "rune.effects.ap_ratio",
+    "behavior": "rune",
+    "source": "Dark Harvest.effects.ap_ratio",
+    "name": "Dark Harvest",
+    "values": [
+     0.05
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.ap_ratio=0.05"
+    ],
+    "hash": "ea3faaf0036e869a"
+   },
+   {
+    "atom_id": "rune.effects.base_damage",
+    "behavior": "rune",
+    "source": "Dark Harvest.effects.base_damage",
+    "name": "Dark Harvest",
+    "values": [
+     30.0
+    ],
+    "units": [
+     "flat"
+    ],
+    "evidence": [
+     "effects.base_damage=30.0"
+    ],
+    "hash": "c42f69bb742e0fb5"
+   },
+   {
+    "atom_id": "rune.effects.bonus_ad_ratio",
+    "behavior": "rune",
+    "source": "Dark Harvest.effects.bonus_ad_ratio",
+    "name": "Dark Harvest",
+    "values": [
+     0.1
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_ad_ratio=0.1"
+    ],
+    "hash": "f9c8731317d93f27"
+   },
+   {
+    "atom_id": "rune.effects.health_threshold_ratio",
+    "behavior": "rune",
+    "source": "Dark Harvest.effects.health_threshold_ratio",
+    "name": "Dark Harvest",
+    "values": [
+     0.5
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.health_threshold_ratio=0.5"
+    ],
+    "hash": "ff6faff542c6fe7a"
+   },
+   {
+    "atom_id": "rune.effects.proc_delay_seconds",
+    "behavior": "rune",
+    "source": "Dark Harvest.effects.proc_delay_seconds",
+    "name": "Dark Harvest",
+    "values": [
+     1.75
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.proc_delay_seconds=1.75"
+    ],
+    "hash": "c9cfa5de29dce242"
+   },
+   {
+    "atom_id": "rune.effects.soul_damage",
+    "behavior": "rune",
+    "source": "Dark Harvest.effects.soul_damage",
+    "name": "Dark Harvest",
+    "values": [
+     11.0
+    ],
+    "units": [
+     "flat"
+    ],
+    "evidence": [
+     "effects.soul_damage=11.0"
+    ],
+    "hash": "92b6a6deaa88f41d"
+   },
+   {
+    "atom_id": "rune.effects.takedown_reset_seconds",
+    "behavior": "rune",
+    "source": "Dark Harvest.effects.takedown_reset_seconds",
+    "name": "Dark Harvest",
+    "values": [
+     1.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.takedown_reset_seconds=1.0"
+    ],
+    "hash": "2df40355906595c3"
+   }
+  ],
+  "Hail of Blades": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Hail of Blades.cooldown",
+    "name": "Hail of Blades",
+    "values": [
+     10.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "cooldown=10.0"
+    ],
+    "hash": "1906520069507ae0"
+   },
+   {
+    "atom_id": "rune.effects.ap_ratio",
+    "behavior": "rune",
+    "source": "Hail of Blades.effects.ap_ratio",
+    "name": "Hail of Blades",
+    "values": [
+     0.06
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.ap_ratio=0.06"
+    ],
+    "hash": "4595a3fc5c17d492"
+   },
+   {
+    "atom_id": "rune.effects.bonus_ad_ratio",
+    "behavior": "rune",
+    "source": "Hail of Blades.effects.bonus_ad_ratio",
+    "name": "Hail of Blades",
+    "values": [
+     0.08
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_ad_ratio=0.08"
+    ],
+    "hash": "fa297695af5646fc"
+   },
+   {
+    "atom_id": "rune.effects.hail_bonus_attack_speed_melee_ranged",
+    "behavior": "rune",
+    "source": "Hail of Blades.effects.hail_bonus_attack_speed_melee_ranged",
+    "name": "Hail of Blades",
+    "values": [
+     120.0,
+     60.0
+    ],
+    "units": [
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.hail_bonus_attack_speed_melee_ranged=[120.0, 60.0]"
+    ],
+    "hash": "1685962fb25b389b"
+   },
+   {
+    "atom_id": "rune.effects.hail_initial_stacks",
+    "behavior": "rune",
+    "source": "Hail of Blades.effects.hail_initial_stacks",
+    "name": "Hail of Blades",
+    "values": [
+     2.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.hail_initial_stacks=2"
+    ],
+    "hash": "6e363df232b93b2a"
+   },
+   {
+    "atom_id": "rune.effects.hail_reset_stack_limit",
+    "behavior": "rune",
+    "source": "Hail of Blades.effects.hail_reset_stack_limit",
+    "name": "Hail of Blades",
+    "values": [
+     2.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.hail_reset_stack_limit=2"
+    ],
+    "hash": "c684a06b8e735617"
+   },
+   {
+    "atom_id": "rune.effects.hail_stack_duration_seconds",
+    "behavior": "rune",
+    "source": "Hail of Blades.effects.hail_stack_duration_seconds",
+    "name": "Hail of Blades",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.hail_stack_duration_seconds=3.0"
+    ],
+    "hash": "ed4d8c9eef7540d6"
+   },
+   {
+    "atom_id": "rune.effects.leveling",
+    "behavior": "rune",
+    "source": "Hail of Blades.effects.leveling",
+    "name": "Hail of Blades",
+    "values": [
+     4.0,
+     4.9411764705882355,
+     5.882352941176471,
+     6.823529411764706,
+     7.764705882352941,
+     8.705882352941178,
+     9.647058823529411,
+     10.588235294117647,
+     11.529411764705882,
+     12.470588235294118,
+     13.411764705882353,
+     14.352941176470589,
+     15.294117647058822,
+     16.235294117647058,
+     17.176470588235293,
+     18.11764705882353,
+     19.058823529411764,
+     20.0,
+     20.941176470588236,
+     21.88235294117647
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.leveling=[[4.0, 4.9411764705882355, 5.882352941176471, 6.823529411764706, 7.764705882352941, 8.705882352941178, 9.647058823529411, 10.588235294117647, 11.529411764705882, 12.470588235294118, 13.411764705882353, 14.352941176470589, 15.294117647058822, 16.235294117647058, 17.176470588235293, 18.11764705882353, 19.058823529411764, 20.0, 20.941176470588236, 21.88235294117647]]"
+    ],
+    "hash": "28e909bc172cea4d"
+   },
+   {
+    "atom_id": "rune.effects.melee_ranged_ratios",
+    "behavior": "rune",
+    "source": "Hail of Blades.effects.melee_ranged_ratios",
+    "name": "Hail of Blades",
+    "values": [
+     1.2,
+     0.6
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.melee_ranged_ratios=[1.2, 0.6]"
+    ],
+    "hash": "eeef47559fa222a4"
+   }
+  ],
+  "Summon Aery": [
+   {
+    "atom_id": "rune.effects.ap_ratio",
+    "behavior": "rune",
+    "source": "Summon Aery.effects.ap_ratio",
+    "name": "Summon Aery",
+    "values": [
+     0.05
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.ap_ratio=0.05"
+    ],
+    "hash": "b0bcd26589415056"
+   },
+   {
+    "atom_id": "rune.effects.bonus_ad_ratio",
+    "behavior": "rune",
+    "source": "Summon Aery.effects.bonus_ad_ratio",
+    "name": "Summon Aery",
+    "values": [
+     0.1
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_ad_ratio=0.1"
+    ],
+    "hash": "e1324318a901a960"
+   },
+   {
+    "atom_id": "rune.effects.damage_flight_seconds",
+    "behavior": "rune",
+    "source": "Summon Aery.effects.damage_flight_seconds",
+    "name": "Summon Aery",
+    "values": [
+     0.45
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.damage_flight_seconds=0.45"
+    ],
+    "hash": "22ef20e203642183"
+   },
+   {
+    "atom_id": "rune.effects.leveling",
+    "behavior": "rune",
+    "source": "Summon Aery.effects.leveling",
+    "name": "Summon Aery",
+    "values": [
+     10.0,
+     12.352941176470589,
+     14.705882352941178,
+     17.058823529411764,
+     19.411764705882355,
+     21.764705882352942,
+     24.11764705882353,
+     26.47058823529412,
+     28.823529411764707,
+     31.176470588235293,
+     33.529411764705884,
+     35.88235294117647,
+     38.23529411764706,
+     40.58823529411765,
+     42.94117647058824,
+     45.294117647058826,
+     47.64705882352941,
+     50.0,
+     52.35294117647059,
+     54.70588235294118,
+     20.0,
+     24.705882352941178,
+     29.411764705882355,
+     34.11764705882353,
+     38.82352941176471,
+     43.529411764705884,
+     48.23529411764706,
+     52.94117647058824,
+     57.64705882352941,
+     62.35294117647059,
+     67.05882352941177,
+     71.76470588235294,
+     76.47058823529412,
+     81.1764705882353,
+     85.88235294117648,
+     90.58823529411765,
+     95.29411764705883,
+     100.0,
+     104.70588235294117,
+     109.41176470588236
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.leveling=[[10.0, 12.352941176470589, 14.705882352941178, 17.058823529411764, 19.411764705882355, 21.764705882352942, 24.11764705882353, 26.47058823529412, 28.823529411764707, 31.176470588235293, 33.529411764705884, 35.88235294117647, 38.23529411764706, 40.58823529411765, 42.94117647058824, 45.294117647058826, 47.64705882352941, 50.0, 52.35294117647059, 54.70588235294118], [20.0, 24.705882352941178, 29.411764705882355, 34.11764705882353, 38.82352941176471, 43.529411764705884, 48.23529411764706, 52.94117647058824, 57.64705882352941, 62.35294117647059, 67.05882352941177, 71.76470588235294, 76.47058823529412, 81.1764705882353, 85.88235294117648, 90.58823529411765, 95.29411764705883, 100.0, 104.70588235294117, 109.41176470588236]]"
+    ],
+    "hash": "0245bed6e55176cd"
+   },
+   {
+    "atom_id": "rune.effects.linger_seconds",
+    "behavior": "rune",
+    "source": "Summon Aery.effects.linger_seconds",
+    "name": "Summon Aery",
+    "values": [
+     2.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.linger_seconds=2.0"
+    ],
+    "hash": "da5a9dd2a8e7e0d1"
+   },
+   {
+    "atom_id": "rune.effects.shield_duration_seconds",
+    "behavior": "rune",
+    "source": "Summon Aery.effects.shield_duration_seconds",
+    "name": "Summon Aery",
+    "values": [
+     2.0
+    ],
+    "units": [
+     "health"
+    ],
+    "evidence": [
+     "effects.shield_duration_seconds=2.0"
+    ],
+    "hash": "0e3594bf85611ed8"
+   },
+   {
+    "atom_id": "rune.effects.shield_flight_seconds",
+    "behavior": "rune",
+    "source": "Summon Aery.effects.shield_flight_seconds",
+    "name": "Summon Aery",
+    "values": [
+     0.35
+    ],
+    "units": [
+     "health"
+    ],
+    "evidence": [
+     "effects.shield_flight_seconds=0.35"
+    ],
+    "hash": "d84d9094859ee532"
+   }
+  ],
+  "Arcane Comet": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Arcane Comet.cooldown",
+    "name": "Arcane Comet",
+    "values": [
+     20.0,
+     19.294117647058822,
+     18.58823529411765,
+     17.88235294117647,
+     17.176470588235293,
+     16.470588235294116,
+     15.764705882352942,
+     15.058823529411764,
+     14.352941176470587,
+     13.647058823529411,
+     12.941176470588236,
+     12.235294117647058,
+     11.529411764705882,
+     10.823529411764705,
+     10.117647058823529,
+     9.411764705882351,
+     8.705882352941176,
+     8.0,
+     7.2941176470588225,
+     6.588235294117647
+    ],
+    "units": [
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s"
+    ],
+    "evidence": [
+     "cooldown=[20.0, 19.294117647058822, 18.58823529411765, 17.88235294117647, 17.176470588235293, 16.470588235294116, 15.764705882352942, 15.058823529411764, 14.352941176470587, 13.647058823529411, 12.941176470588236, 12.235294117647058, 11.529411764705882, 10.823529411764705, 10.117647058823529, 9.411764705882351, 8.705882352941176, 8.0, 7.2941176470588225, 6.588235294117647]"
+    ],
+    "hash": "4f540d4fd88d28da"
+   },
+   {
+    "atom_id": "rune.effects.ap_ratio",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.ap_ratio",
+    "name": "Arcane Comet",
+    "values": [
+     0.05
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.ap_ratio=0.05"
+    ],
+    "hash": "793dc1c24e7672a7"
+   },
+   {
+    "atom_id": "rune.effects.bonus_ad_ratio",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.bonus_ad_ratio",
+    "name": "Arcane Comet",
+    "values": [
+     0.1
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_ad_ratio=0.1"
+    ],
+    "hash": "e248c32514934ce0"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_ap_ratios_by_state",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.deathfire_ap_ratios_by_state",
+    "name": "Arcane Comet",
+    "values": [
+     0.1
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.deathfire_ap_ratios_by_state=[0.1]"
+    ],
+    "hash": "73516a59cd89478e"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_bonus_ad_ratios_by_state",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.deathfire_bonus_ad_ratios_by_state",
+    "name": "Arcane Comet",
+    "values": [
+     0.2
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.deathfire_bonus_ad_ratios_by_state=[0.2]"
+    ],
+    "hash": "cff4acee98e28175"
+   },
+   {
+    "atom_id": "rune.effects.distance_scaling.distance_range",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.distance_scaling.distance_range",
+    "name": "Arcane Comet",
+    "values": [
+     0.0,
+     750.0
+    ],
+    "units": [
+     "units",
+     "units"
+    ],
+    "evidence": [
+     "effects.distance_scaling.distance_range=[0.0, 750.0]"
+    ],
+    "hash": "0edbffaa474b4ba7"
+   },
+   {
+    "atom_id": "rune.effects.distance_scaling.values",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.distance_scaling.values",
+    "name": "Arcane Comet",
+    "values": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0
+    ],
+    "units": [
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units",
+     "units"
+    ],
+    "evidence": [
+     "effects.distance_scaling.values=[0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0]"
+    ],
+    "hash": "7eae22399f252c7a"
+   },
+   {
+    "atom_id": "rune.effects.leveling",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.leveling",
+    "name": "Arcane Comet",
+    "values": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0,
+     110.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0,
+     120.0,
+     130.0,
+     140.0,
+     150.0,
+     160.0,
+     170.0,
+     180.0,
+     190.0,
+     200.0,
+     210.0,
+     220.0
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.leveling=[[15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, 105.0, 110.0], [30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0, 130.0, 140.0, 150.0, 160.0, 170.0, 180.0, 190.0, 200.0, 210.0, 220.0]]"
+    ],
+    "hash": "34ebfc065c27db1c"
+   },
+   {
+    "atom_id": "rune.effects.proc_delay_seconds",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.proc_delay_seconds",
+    "name": "Arcane Comet",
+    "values": [
+     0.8
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.proc_delay_seconds=0.8"
+    ],
+    "hash": "59b83c83447293de"
+   },
+   {
+    "atom_id": "rune.effects.shockwave_radius",
+    "behavior": "rune",
+    "source": "Arcane Comet.effects.shockwave_radius",
+    "name": "Arcane Comet",
+    "values": [
+     140.0
+    ],
+    "units": [
+     "units"
+    ],
+    "evidence": [
+     "effects.shockwave_radius=140.0"
+    ],
+    "hash": "130b096660cdc2eb"
+   }
+  ],
+  "Stormraider's Surge": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Stormraider's Surge.cooldown",
+    "name": "Stormraider's Surge",
+    "values": [
+     20.0,
+     19.41176470588235,
+     18.823529411764707,
+     18.235294117647058,
+     17.647058823529413,
+     17.058823529411764,
+     16.470588235294116,
+     15.882352941176471,
+     15.294117647058822,
+     14.705882352941178,
+     14.117647058823529,
+     13.529411764705882,
+     12.941176470588236,
+     12.352941176470587,
+     11.76470588235294,
+     11.176470588235293,
+     10.588235294117647,
+     10.0,
+     9.411764705882353,
+     8.823529411764705
+    ],
+    "units": [
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s"
+    ],
+    "evidence": [
+     "cooldown=[20.0, 19.41176470588235, 18.823529411764707, 18.235294117647058, 17.647058823529413, 17.058823529411764, 16.470588235294116, 15.882352941176471, 15.294117647058822, 14.705882352941178, 14.117647058823529, 13.529411764705882, 12.941176470588236, 12.352941176470587, 11.76470588235294, 11.176470588235293, 10.588235294117647, 10.0, 9.411764705882353, 8.823529411764705]"
+    ],
+    "hash": "9b55c77030411834"
+   },
+   {
+    "atom_id": "rune.effects.melee_ranged_ratios",
+    "behavior": "rune",
+    "source": "Stormraider's Surge.effects.melee_ranged_ratios",
+    "name": "Stormraider's Surge",
+    "values": [
+     0.48,
+     0.36
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.melee_ranged_ratios=[0.48, 0.36]"
+    ],
+    "hash": "6248a04dc7f557ca"
+   },
+   {
+    "atom_id": "rune.effects.stormraider_bonus_move_speed_melee_ranged",
+    "behavior": "rune",
+    "source": "Stormraider's Surge.effects.stormraider_bonus_move_speed_melee_ranged",
+    "name": "Stormraider's Surge",
+    "values": [
+     48.0,
+     36.0
+    ],
+    "units": [
+     "percent",
+     "percent"
+    ],
+    "evidence": [
+     "effects.stormraider_bonus_move_speed_melee_ranged=[48.0, 36.0]"
+    ],
+    "hash": "55f0cd5a88893a32"
+   },
+   {
+    "atom_id": "rune.effects.stormraider_damage_threshold_ratio",
+    "behavior": "rune",
+    "source": "Stormraider's Surge.effects.stormraider_damage_threshold_ratio",
+    "name": "Stormraider's Surge",
+    "values": [
+     0.25
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.stormraider_damage_threshold_ratio=0.25"
+    ],
+    "hash": "771c0cb4a0abae47"
+   },
+   {
+    "atom_id": "rune.effects.stormraider_damage_window_seconds",
+    "behavior": "rune",
+    "source": "Stormraider's Surge.effects.stormraider_damage_window_seconds",
+    "name": "Stormraider's Surge",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.stormraider_damage_window_seconds=3.0"
+    ],
+    "hash": "957e571461d1df65"
+   },
+   {
+    "atom_id": "rune.effects.stormraider_duration_seconds",
+    "behavior": "rune",
+    "source": "Stormraider's Surge.effects.stormraider_duration_seconds",
+    "name": "Stormraider's Surge",
+    "values": [
+     4.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.stormraider_duration_seconds=4.0"
+    ],
+    "hash": "693285d1c6d86dbe"
+   },
+   {
+    "atom_id": "rune.effects.stormraider_slow_resist_ratio",
+    "behavior": "rune",
+    "source": "Stormraider's Surge.effects.stormraider_slow_resist_ratio",
+    "name": "Stormraider's Surge",
+    "values": [
+     0.5
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.stormraider_slow_resist_ratio=0.5"
+    ],
+    "hash": "48f599509adca06c"
+   }
+  ],
+  "Deathfire Touch": [
+   {
+    "atom_id": "rune.effects.deathfire_amp_delay_seconds",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_amp_delay_seconds",
+    "name": "Deathfire Touch",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_amp_delay_seconds=3.0"
+    ],
+    "hash": "a6c1cb712b7e7295"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_amp_ratio",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_amp_ratio",
+    "name": "Deathfire Touch",
+    "values": [
+     0.75
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.deathfire_amp_ratio=0.75"
+    ],
+    "hash": "66b89d36a820d608"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_ap_ratios_by_state",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_ap_ratios_by_state",
+    "name": "Deathfire Touch",
+    "values": [
+     0.0125,
+     0.021875
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.deathfire_ap_ratios_by_state=[0.0125, 0.021875]"
+    ],
+    "hash": "54c053c7df9b0265"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_bonus_ad_ratios_by_state",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_bonus_ad_ratios_by_state",
+    "name": "Deathfire Touch",
+    "values": [
+     0.035,
+     0.06125
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.deathfire_bonus_ad_ratios_by_state=[0.035, 0.06125]"
+    ],
+    "hash": "dc0105180d5784de"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_duration_seconds.area_damage",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_duration_seconds.area_damage",
+    "name": "Deathfire Touch",
+    "values": [
+     2.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_duration_seconds.area_damage=2.0"
+    ],
+    "hash": "c7ba6daae63e5497"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_duration_seconds.persistent_area_damage",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_duration_seconds.persistent_area_damage",
+    "name": "Deathfire Touch",
+    "values": [
+     1.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_duration_seconds.persistent_area_damage=1.0"
+    ],
+    "hash": "c56e2ac8789208fa"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_duration_seconds.persistent_damage",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_duration_seconds.persistent_damage",
+    "name": "Deathfire Touch",
+    "values": [
+     1.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_duration_seconds.persistent_damage=1.0"
+    ],
+    "hash": "97b5d7fcf4b7b702"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_duration_seconds.pet_damage",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_duration_seconds.pet_damage",
+    "name": "Deathfire Touch",
+    "values": [
+     1.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_duration_seconds.pet_damage=1.0"
+    ],
+    "hash": "f15003b64fa7293a"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_duration_seconds.spell_damage",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_duration_seconds.spell_damage",
+    "name": "Deathfire Touch",
+    "values": [
+     4.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_duration_seconds.spell_damage=4.0"
+    ],
+    "hash": "e61f3a26ffefdd26"
+   },
+   {
+    "atom_id": "rune.effects.deathfire_tick_interval_seconds",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.deathfire_tick_interval_seconds",
+    "name": "Deathfire Touch",
+    "values": [
+     0.5
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.deathfire_tick_interval_seconds=0.5"
+    ],
+    "hash": "14352ec6282a64a3"
+   },
+   {
+    "atom_id": "rune.effects.leveling",
+    "behavior": "rune",
+    "source": "Deathfire Touch.effects.leveling",
+    "name": "Deathfire Touch",
+    "values": [
+     1.5,
+     1.7647058823529411,
+     2.0294117647058822,
+     2.2941176470588234,
+     2.5588235294117645,
+     2.8235294117647056,
+     3.088235294117647,
+     3.3529411764705883,
+     3.6176470588235294,
+     3.8823529411764706,
+     4.147058823529411,
+     4.411764705882353,
+     4.676470588235294,
+     4.9411764705882355,
+     5.205882352941177,
+     5.470588235294118,
+     5.735294117647059,
+     6.0,
+     6.264705882352941,
+     6.529411764705882,
+     2.625,
+     3.088235294117647,
+     3.5514705882352944,
+     4.014705882352941,
+     4.477941176470589,
+     4.9411764705882355,
+     5.404411764705882,
+     5.867647058823529,
+     6.330882352941177,
+     6.794117647058823,
+     7.257352941176471,
+     7.720588235294118,
+     8.183823529411764,
+     8.647058823529413,
+     9.110294117647058,
+     9.573529411764707,
+     10.036764705882353,
+     10.5,
+     10.963235294117647,
+     11.426470588235295
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.leveling=[[1.5, 1.7647058823529411, 2.0294117647058822, 2.2941176470588234, 2.5588235294117645, 2.8235294117647056, 3.088235294117647, 3.3529411764705883, 3.6176470588235294, 3.8823529411764706, 4.147058823529411, 4.411764705882353, 4.676470588235294, 4.9411764705882355, 5.205882352941177, 5.470588235294118, 5.735294117647059, 6.0, 6.264705882352941, 6.529411764705882], [2.625, 3.088235294117647, 3.5514705882352944, 4.014705882352941, 4.477941176470589, 4.9411764705882355, 5.404411764705882, 5.867647058823529, 6.330882352941177, 6.794117647058823, 7.257352941176471, 7.720588235294118, 8.183823529411764, 8.647058823529413, 9.110294117647058, 9.573529411764707, 10.036764705882353, 10.5, 10.963235294117647, 11.426470588235295]]"
+    ],
+    "hash": "a36387b1aaba416e"
+   }
+  ],
+  "Grasp of the Undying": [
+   {
+    "atom_id": "rune.effects.combat_stack_cadence_seconds",
+    "behavior": "rune",
+    "source": "Grasp of the Undying.effects.combat_stack_cadence_seconds",
+    "name": "Grasp of the Undying",
+    "values": [
+     1.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.combat_stack_cadence_seconds=1.0"
+    ],
+    "hash": "b7ce3ccb8f1d46d4"
+   },
+   {
+    "atom_id": "rune.effects.combat_stack_generation_seconds",
+    "behavior": "rune",
+    "source": "Grasp of the Undying.effects.combat_stack_generation_seconds",
+    "name": "Grasp of the Undying",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.combat_stack_generation_seconds=3.0"
+    ],
+    "hash": "ec963d8fc1a08863"
+   },
+   {
+    "atom_id": "rune.effects.grasp_bonus_health_melee_ranged",
+    "behavior": "rune",
+    "source": "Grasp of the Undying.effects.grasp_bonus_health_melee_ranged",
+    "name": "Grasp of the Undying",
+    "values": [
+     5.0,
+     2.0
+    ],
+    "units": [
+     "health",
+     "health"
+    ],
+    "evidence": [
+     "effects.grasp_bonus_health_melee_ranged=[5.0, 2.0]"
+    ],
+    "hash": "07f7ab8a6a49da60"
+   },
+   {
+    "atom_id": "rune.effects.grasp_damage_melee_ranged_ratios",
+    "behavior": "rune",
+    "source": "Grasp of the Undying.effects.grasp_damage_melee_ranged_ratios",
+    "name": "Grasp of the Undying",
+    "values": [
+     0.035,
+     0.013999999999999999
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.grasp_damage_melee_ranged_ratios=[0.035, 0.013999999999999999]"
+    ],
+    "hash": "85aa87509180b58d"
+   },
+   {
+    "atom_id": "rune.effects.grasp_heal_melee_ranged_ratios",
+    "behavior": "rune",
+    "source": "Grasp of the Undying.effects.grasp_heal_melee_ranged_ratios",
+    "name": "Grasp of the Undying",
+    "values": [
+     0.013000000000000001,
+     0.0052
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.grasp_heal_melee_ranged_ratios=[0.013000000000000001, 0.0052]"
+    ],
+    "hash": "7772365883abe798"
+   },
+   {
+    "atom_id": "rune.effects.max_stacks",
+    "behavior": "rune",
+    "source": "Grasp of the Undying.effects.max_stacks",
+    "name": "Grasp of the Undying",
+    "values": [
+     4.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.max_stacks=4"
+    ],
+    "hash": "da96d176dc4beda8"
+   },
+   {
+    "atom_id": "rune.effects.ready_window_seconds",
+    "behavior": "rune",
+    "source": "Grasp of the Undying.effects.ready_window_seconds",
+    "name": "Grasp of the Undying",
+    "values": [
+     5.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.ready_window_seconds=5.0"
+    ],
+    "hash": "fa2238904e39a551"
+   }
+  ],
+  "Aftershock": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Aftershock.cooldown",
+    "name": "Aftershock",
+    "values": [
+     20.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "cooldown=20.0"
+    ],
+    "hash": "cb6c52e8bfddbd97"
+   },
+   {
+    "atom_id": "rune.effects.bonus_armor_ratio",
+    "behavior": "rune",
+    "source": "Aftershock.effects.bonus_armor_ratio",
+    "name": "Aftershock",
+    "values": [
+     0.75
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_armor_ratio=0.75"
+    ],
+    "hash": "203d61ee2816261c"
+   },
+   {
+    "atom_id": "rune.effects.bonus_health_ratio",
+    "behavior": "rune",
+    "source": "Aftershock.effects.bonus_health_ratio",
+    "name": "Aftershock",
+    "values": [
+     0.08
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_health_ratio=0.08"
+    ],
+    "hash": "0d6450270eb5ad75"
+   },
+   {
+    "atom_id": "rune.effects.bonus_magic_resistance_ratio",
+    "behavior": "rune",
+    "source": "Aftershock.effects.bonus_magic_resistance_ratio",
+    "name": "Aftershock",
+    "values": [
+     0.75
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_magic_resistance_ratio=0.75"
+    ],
+    "hash": "c725bb5166747c65"
+   },
+   {
+    "atom_id": "rune.effects.flat_armor",
+    "behavior": "rune",
+    "source": "Aftershock.effects.flat_armor",
+    "name": "Aftershock",
+    "values": [
+     45.0
+    ],
+    "units": [
+     "flat"
+    ],
+    "evidence": [
+     "effects.flat_armor=45.0"
+    ],
+    "hash": "31fe6f65b038a1f5"
+   },
+   {
+    "atom_id": "rune.effects.flat_magic_resistance",
+    "behavior": "rune",
+    "source": "Aftershock.effects.flat_magic_resistance",
+    "name": "Aftershock",
+    "values": [
+     45.0
+    ],
+    "units": [
+     "flat"
+    ],
+    "evidence": [
+     "effects.flat_magic_resistance=45.0"
+    ],
+    "hash": "841a09837e93ff84"
+   },
+   {
+    "atom_id": "rune.effects.leveling",
+    "behavior": "rune",
+    "source": "Aftershock.effects.leveling",
+    "name": "Aftershock",
+    "values": [
+     80.0,
+     84.11764705882354,
+     88.23529411764706,
+     92.3529411764706,
+     96.47058823529412,
+     100.58823529411765,
+     104.70588235294117,
+     108.82352941176471,
+     112.94117647058823,
+     117.05882352941177,
+     121.1764705882353,
+     125.29411764705883,
+     129.41176470588235,
+     133.52941176470588,
+     137.64705882352942,
+     141.76470588235293,
+     145.88235294117646,
+     150.0,
+     154.11764705882354,
+     158.23529411764707,
+     25.0,
+     30.588235294117645,
+     36.17647058823529,
+     41.76470588235294,
+     47.35294117647059,
+     52.94117647058823,
+     58.529411764705884,
+     64.11764705882354,
+     69.70588235294117,
+     75.29411764705883,
+     80.88235294117646,
+     86.47058823529412,
+     92.05882352941177,
+     97.6470588235294,
+     103.23529411764706,
+     108.82352941176471,
+     114.41176470588235,
+     120.0,
+     125.58823529411765,
+     131.1764705882353
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.leveling=[[80.0, 84.11764705882354, 88.23529411764706, 92.3529411764706, 96.47058823529412, 100.58823529411765, 104.70588235294117, 108.82352941176471, 112.94117647058823, 117.05882352941177, 121.1764705882353, 125.29411764705883, 129.41176470588235, 133.52941176470588, 137.64705882352942, 141.76470588235293, 145.88235294117646, 150.0, 154.11764705882354, 158.23529411764707], [25.0, 30.588235294117645, 36.17647058823529, 41.76470588235294, 47.35294117647059, 52.94117647058823, 58.529411764705884, 64.11764705882354, 69.70588235294117, 75.29411764705883, 80.88235294117646, 86.47058823529412, 92.05882352941177, 97.6470588235294, 103.23529411764706, 108.82352941176471, 114.41176470588235, 120.0, 125.58823529411765, 131.1764705882353]]"
+    ],
+    "hash": "8e786bf7ebcd0895"
+   },
+   {
+    "atom_id": "rune.effects.resistance_duration_seconds",
+    "behavior": "rune",
+    "source": "Aftershock.effects.resistance_duration_seconds",
+    "name": "Aftershock",
+    "values": [
+     2.5
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.resistance_duration_seconds=2.5"
+    ],
+    "hash": "a4684aa40fd5296d"
+   },
+   {
+    "atom_id": "rune.effects.shockwave_radius",
+    "behavior": "rune",
+    "source": "Aftershock.effects.shockwave_radius",
+    "name": "Aftershock",
+    "values": [
+     350.0
+    ],
+    "units": [
+     "units"
+    ],
+    "evidence": [
+     "effects.shockwave_radius=350.0"
+    ],
+    "hash": "d4310f015e750aa5"
+   }
+  ],
+  "Guardian": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Guardian.cooldown",
+    "name": "Guardian",
+    "values": [
+     75.0,
+     72.94117647058823,
+     70.88235294117646,
+     68.82352941176471,
+     66.76470588235294,
+     64.70588235294117,
+     62.64705882352941,
+     60.58823529411765,
+     58.529411764705884,
+     56.470588235294116,
+     54.411764705882355,
+     52.352941176470594,
+     50.294117647058826,
+     48.23529411764706,
+     46.1764705882353,
+     44.117647058823536,
+     42.05882352941177,
+     40.0,
+     37.94117647058824,
+     35.88235294117648
+    ],
+    "units": [
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s",
+     "s"
+    ],
+    "evidence": [
+     "cooldown=[75.0, 72.94117647058823, 70.88235294117646, 68.82352941176471, 66.76470588235294, 64.70588235294117, 62.64705882352941, 60.58823529411765, 58.529411764705884, 56.470588235294116, 54.411764705882355, 52.352941176470594, 50.294117647058826, 48.23529411764706, 46.1764705882353, 44.117647058823536, 42.05882352941177, 40.0, 37.94117647058824, 35.88235294117648]"
+    ],
+    "hash": "75018c8c13c3baa8"
+   },
+   {
+    "atom_id": "rune.effects.ap_ratio",
+    "behavior": "rune",
+    "source": "Guardian.effects.ap_ratio",
+    "name": "Guardian",
+    "values": [
+     0.2
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.ap_ratio=0.2"
+    ],
+    "hash": "c986e3d76165e8ca"
+   },
+   {
+    "atom_id": "rune.effects.bonus_health_ratio",
+    "behavior": "rune",
+    "source": "Guardian.effects.bonus_health_ratio",
+    "name": "Guardian",
+    "values": [
+     0.06
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_health_ratio=0.06"
+    ],
+    "hash": "0eb03c184ca478fe"
+   },
+   {
+    "atom_id": "rune.effects.leveling",
+    "behavior": "rune",
+    "source": "Guardian.effects.leveling",
+    "name": "Guardian",
+    "values": [
+     50.0,
+     56.76470588235294,
+     63.529411764705884,
+     70.29411764705883,
+     77.05882352941177,
+     83.8235294117647,
+     90.58823529411765,
+     97.35294117647058,
+     104.11764705882354,
+     110.88235294117646,
+     117.6470588235294,
+     124.41176470588235,
+     131.1764705882353,
+     137.94117647058823,
+     144.70588235294116,
+     151.47058823529412,
+     158.23529411764707,
+     165.0,
+     171.76470588235293,
+     178.52941176470588,
+     40.0,
+     46.470588235294116,
+     52.94117647058823,
+     59.411764705882355,
+     65.88235294117646,
+     72.35294117647058,
+     78.82352941176471,
+     85.29411764705883,
+     91.76470588235294,
+     98.23529411764706,
+     104.70588235294117,
+     111.17647058823529,
+     117.64705882352942,
+     124.11764705882354,
+     130.58823529411765,
+     137.05882352941177,
+     143.52941176470588,
+     150.0,
+     156.47058823529412,
+     162.94117647058823
+    ],
+    "units": [
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "effects.leveling=[[50.0, 56.76470588235294, 63.529411764705884, 70.29411764705883, 77.05882352941177, 83.8235294117647, 90.58823529411765, 97.35294117647058, 104.11764705882354, 110.88235294117646, 117.6470588235294, 124.41176470588235, 131.1764705882353, 137.94117647058823, 144.70588235294116, 151.47058823529412, 158.23529411764707, 165.0, 171.76470588235293, 178.52941176470588], [40.0, 46.470588235294116, 52.94117647058823, 59.411764705882355, 65.88235294117646, 72.35294117647058, 78.82352941176471, 85.29411764705883, 91.76470588235294, 98.23529411764706, 104.70588235294117, 111.17647058823529, 117.64705882352942, 124.11764705882354, 130.58823529411765, 137.05882352941177, 143.52941176470588, 150.0, 156.47058823529412, 162.94117647058823]]"
+    ],
+    "hash": "15b6d146ca03b9d2"
+   },
+   {
+    "atom_id": "rune.effects.shield_duration_seconds",
+    "behavior": "rune",
+    "source": "Guardian.effects.shield_duration_seconds",
+    "name": "Guardian",
+    "values": [
+     2.0
+    ],
+    "units": [
+     "health"
+    ],
+    "evidence": [
+     "effects.shield_duration_seconds=2.0"
+    ],
+    "hash": "27495132560900ab"
+   },
+   {
+    "atom_id": "rune.effects.trigger_window_seconds",
+    "behavior": "rune",
+    "source": "Guardian.effects.trigger_window_seconds",
+    "name": "Guardian",
+    "values": [
+     2.5
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.trigger_window_seconds=2.5"
+    ],
+    "hash": "a8fad9f9e6c85014"
+   }
+  ],
+  "Glacial Augment": [
+   {
+    "atom_id": "rune.cooldown",
+    "behavior": "rune",
+    "source": "Glacial Augment.cooldown",
+    "name": "Glacial Augment",
+    "values": [
+     25.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "cooldown=25.0"
+    ],
+    "hash": "74ff947167ec7b11"
+   },
+   {
+    "atom_id": "rune.effects.glacial_damage_reduction_ratio",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_damage_reduction_ratio",
+    "name": "Glacial Augment",
+    "values": [
+     0.15
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.glacial_damage_reduction_ratio=0.15"
+    ],
+    "hash": "da1679660d589e31"
+   },
+   {
+    "atom_id": "rune.effects.glacial_ray_count",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_ray_count",
+    "name": "Glacial Augment",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "count"
+    ],
+    "evidence": [
+     "effects.glacial_ray_count=3"
+    ],
+    "hash": "432dfa74c3a6f141"
+   },
+   {
+    "atom_id": "rune.effects.glacial_slow_ap_ratio_per_100",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_slow_ap_ratio_per_100",
+    "name": "Glacial Augment",
+    "values": [
+     0.06
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.glacial_slow_ap_ratio_per_100=0.06"
+    ],
+    "hash": "3e7c0fe8d610ee95"
+   },
+   {
+    "atom_id": "rune.effects.glacial_slow_base_ratio",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_slow_base_ratio",
+    "name": "Glacial Augment",
+    "values": [
+     0.2
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.glacial_slow_base_ratio=0.2"
+    ],
+    "hash": "fe542238b1ad3bca"
+   },
+   {
+    "atom_id": "rune.effects.glacial_slow_bonus_ad_ratio_per_100",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_slow_bonus_ad_ratio_per_100",
+    "name": "Glacial Augment",
+    "values": [
+     0.07
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.glacial_slow_bonus_ad_ratio_per_100=0.07"
+    ],
+    "hash": "0f527871c253ce58"
+   },
+   {
+    "atom_id": "rune.effects.glacial_slow_heal_shield_ratio_per_10",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_slow_heal_shield_ratio_per_10",
+    "name": "Glacial Augment",
+    "values": [
+     0.09
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.glacial_slow_heal_shield_ratio_per_10=0.09"
+    ],
+    "hash": "5af739ee855dbe3c"
+   },
+   {
+    "atom_id": "rune.effects.glacial_zone_base_duration_seconds",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_zone_base_duration_seconds",
+    "name": "Glacial Augment",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.glacial_zone_base_duration_seconds=3.0"
+    ],
+    "hash": "0082bdbf4db8637a"
+   },
+   {
+    "atom_id": "rune.effects.glacial_zone_duration_cc_ratio",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_zone_duration_cc_ratio",
+    "name": "Glacial Augment",
+    "values": [
+     1.0
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.glacial_zone_duration_cc_ratio=1.0"
+    ],
+    "hash": "1d2298efc9249771"
+   },
+   {
+    "atom_id": "rune.effects.glacial_zone_radius_units",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_zone_radius_units",
+    "name": "Glacial Augment",
+    "values": [
+     700.0
+    ],
+    "units": [
+     "units"
+    ],
+    "evidence": [
+     "effects.glacial_zone_radius_units=700.0"
+    ],
+    "hash": "43751d9284b37b73"
+   },
+   {
+    "atom_id": "rune.effects.glacial_zone_width_units",
+    "behavior": "rune",
+    "source": "Glacial Augment.effects.glacial_zone_width_units",
+    "name": "Glacial Augment",
+    "values": [
+     80.0
+    ],
+    "units": [
+     "units"
+    ],
+    "evidence": [
+     "effects.glacial_zone_width_units=80.0"
+    ],
+    "hash": "796af959bc11ace4"
+   }
+  ],
+  "Unsealed Spellbook": [],
+  "First Strike": [
+   {
+    "atom_id": "rune.effects.bonus_true_damage_ratio",
+    "behavior": "rune",
+    "source": "First Strike.effects.bonus_true_damage_ratio",
+    "name": "First Strike",
+    "values": [
+     0.07
+    ],
+    "units": [
+     "ratio"
+    ],
+    "evidence": [
+     "effects.bonus_true_damage_ratio=0.07"
+    ],
+    "hash": "fe7036909d6afdcb"
+   },
+   {
+    "atom_id": "rune.effects.buff_duration_seconds",
+    "behavior": "rune",
+    "source": "First Strike.effects.buff_duration_seconds",
+    "name": "First Strike",
+    "values": [
+     3.0
+    ],
+    "units": [
+     "s"
+    ],
+    "evidence": [
+     "effects.buff_duration_seconds=3.0"
+    ],
+    "hash": "2b7be750716c66a7"
+   },
+   {
+    "atom_id": "rune.effects.flat_gold",
+    "behavior": "rune",
+    "source": "First Strike.effects.flat_gold",
+    "name": "First Strike",
+    "values": [
+     10.0
+    ],
+    "units": [
+     "flat"
+    ],
+    "evidence": [
+     "effects.flat_gold=10.0"
+    ],
+    "hash": "63a2cdd0330d775d"
+   },
+   {
+    "atom_id": "rune.effects.melee_ranged_ratios",
+    "behavior": "rune",
+    "source": "First Strike.effects.melee_ranged_ratios",
+    "name": "First Strike",
+    "values": [
+     0.5,
+     0.35
+    ],
+    "units": [
+     "ratio",
+     "ratio"
+    ],
+    "evidence": [
+     "effects.melee_ranged_ratios=[0.5, 0.35]"
+    ],
+    "hash": "d9d7264ab633c2ea"
+   }
+  ]
+ }
+}

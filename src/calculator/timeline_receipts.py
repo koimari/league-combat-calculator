@@ -40,10 +40,57 @@ def _utility_outcome_receipt(
         if float(event.get("applied_amount", event.get("amount", 0.0)) or 0.0) > 0.0
     ]
     movement = [event for event in support if event.get("kind") == "movement"]
-    cleanse = [event for event in support if event.get("kind") == "cleanse"]
+    # A Purify cast rides a heal packet carrying the ``cleanse`` marker
+    # (kind "heal", cleanse=True); the utility panel must count it as a
+    # cleanse action alongside the dedicated kind=="cleanse" packets (P3
+    # package 3G).
+    cleanse_packets = [
+        event
+        for event in support
+        if event.get("kind") == "cleanse" or bool(event.get("cleanse"))
+    ]
+    cleanse = list(
+        {
+            str(
+                event.get("cleanse_group")
+                or event.get("_event_id")
+                or event.get("event_id")
+                or id(event)
+            ): event
+            for event in cleanse_packets
+        }.values()
+    )
     slow = [event for event in support if event.get("kind") == "slow"]
+    slow_resistance = [
+        event
+        for event in support
+        if event.get("kind") == "movement"
+        and event.get("slow_resist_percent") is not None
+    ]
+    # Damage modifiers ride the unfiltered stream: a multiplier-based
+    # window (Briar E charge, e.g.) carries amount=0 so the applied_amount
+    # filter above would hide it; the flat-amount reduction list below
+    # keeps the legacy ratio_seconds semantics.
+    damage_modifiers = [
+        event for event in support_events if event.get("kind") == "damage_modifier"
+    ]
+    damage_reduction = [
+        event
+        for event in damage_modifiers
+        if float(event.get("amount", 0.0) or 0.0) > 0.0
+    ]
     economy = [event for event in support if event.get("kind") == "economy"]
     vision = [event for event in support if event.get("kind") == "vision"]
+    # Manaflow-style resource packets are receipt-only progression events in
+    # native mana units (including the zero-amount Helping Hand boundary,
+    # which is read from the unfiltered stream so the named boundary stays
+    # visible even though it never applies to a champion target).
+    resource = [event for event in support_events if event.get("kind") == "resource"]
+    blackout = [
+        event
+        for event in support_events
+        if event.get("kind") == "vision" and bool(event.get("ward_only"))
+    ]
     movement_speed_percent_seconds = sum(
         abs(
             float(
@@ -92,11 +139,19 @@ def _utility_outcome_receipt(
         applied_dimensions.add("cleanse")
     if slow:
         applied_dimensions.add("slow")
+    if slow_resistance:
+        applied_dimensions.add("slow_resistance")
+    if damage_modifiers:
+        applied_dimensions.add("damage_reduction")
     if secondary:
         applied_dimensions.add("multi_target")
     if economy:
         applied_dimensions.add("economy")
     if vision:
+        applied_dimensions.add("vision")
+    if resource:
+        applied_dimensions.add("resource")
+    if blackout:
         applied_dimensions.add("vision")
     return {
         "contract": "utility_outcomes_v1",
@@ -110,6 +165,44 @@ def _utility_outcome_receipt(
         "slow": {
             "event_count": len(slow),
             "percent_seconds": round(slow_percent_seconds, 6),
+        },
+        "slow_resistance": {
+            "event_count": len(slow_resistance),
+            "percent_seconds": round(
+                sum(
+                    abs(float(event.get("slow_resist_percent", 0.0) or 0.0))
+                    * max(0.0, float(event.get("duration", 0.0) or 0.0))
+                    for event in slow_resistance
+                ),
+                6,
+            ),
+        },
+        "damage_reduction": {
+            "event_count": len(damage_modifiers),
+            "ratio_seconds": round(
+                sum(
+                    max(0.0, float(event.get("amount", 0.0) or 0.0))
+                    * max(0.0, float(event.get("duration", 0.0) or 0.0))
+                    for event in damage_reduction
+                ),
+                6,
+            ),
+            "multiplier_windows": [
+                {
+                    "source": str(event.get("source", "")),
+                    "multiplier": round(float(event.get("multiplier", 1.0) or 1.0), 6),
+                    "duration": round(
+                        max(0.0, float(event.get("duration", 0.0) or 0.0)), 6
+                    ),
+                    "expires_at": round(
+                        float(event.get("time", 0.0))
+                        + max(0.0, float(event.get("duration", 0.0) or 0.0)),
+                        6,
+                    ),
+                }
+                for event in damage_modifiers
+                if float(event.get("multiplier", 1.0) or 1.0) < 1.0
+            ],
         },
         "economy": {
             "event_count": len(economy),
@@ -130,6 +223,23 @@ def _utility_outcome_receipt(
                 ),
                 6,
             ),
+            "blackout": {
+                "event_count": len(blackout),
+                "trigger_windows": round(
+                    sum(
+                        float(event.get("blackout_trigger_windows", 0.0) or 0.0)
+                        for event in blackout
+                    ),
+                    6,
+                ),
+            },
+        },
+        "resource": {
+            "event_count": len(resource),
+            "bonus_mana": round(
+                sum(float(event.get("amount", 0.0) or 0.0) for event in resource),
+                6,
+            ),
         },
         "multi_target": {
             "packet_count": len(secondary),
@@ -141,7 +251,7 @@ def _utility_outcome_receipt(
             sum(
                 float(event.get("applied_amount", 0.0) or 0.0)
                 for event in support
-                if event.get("kind") not in {"economy", "vision"}
+                if event.get("kind") not in {"economy", "vision", "resource"}
             ),
             6,
         ),
@@ -156,9 +266,9 @@ def _utility_outcome_receipt(
             if entry.get("outcome_dimensions")
         ],
         "metric_note": (
-            "Movement, cleanse, economy, and vision remain separate units; no "
-            "cross-unit utility score is inferred. Healing, shielding, and "
-            "applied support amounts remain event-derived values."
+            "Movement, cleanse, economy, vision, and resource remain separate "
+            "units; no cross-unit utility score is inferred. Healing, shielding, "
+            "and applied support amounts remain event-derived values."
         ),
     }
 
@@ -231,6 +341,7 @@ def assemble_public_receipt(
     include_receipt: bool,
     public_breakdown: list[dict[str, Any]],
     support_by_attacker: Mapping[str, float],
+    item_denial_receipts: Iterable[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
     """Build the score-only or full public timeline receipt."""
 
@@ -401,6 +512,28 @@ def assemble_public_receipt(
                 "overkill": round(float(event.get("overkill", 0.0)), 1),
                 "event_precision": event.get("event_precision", "exact"),
                 **(
+                    {"cc_kind": str(event["cc_kind"])}
+                    if event.get("cc_kind") is not None
+                    else {}
+                ),
+                **(
+                    {"cc_duration": round(float(event["cc_duration"]), 3)}
+                    if event.get("cc_duration") is not None
+                    else {}
+                ),
+                **(
+                    {
+                        "control_source_atoms": [
+                            dict(atom) for atom in event.get("control_source_atoms", [])
+                        ]
+                    }
+                    if event.get("control_source_atoms")
+                    else {}
+                ),
+                **({"damage_over_time": True} if event.get("damage_over_time") else {}),
+                **({"skillshot": True} if event.get("skillshot") else {}),
+                **({"area_damage": True} if event.get("area_damage") else {}),
+                **(
                     {"event_id": str(event["_event_id"])}
                     if event.get("_event_id") is not None
                     else {}
@@ -559,6 +692,21 @@ def assemble_public_receipt(
                     else {}
                 ),
                 **(
+                    {"crowd_control": dict(event["crowd_control"])}
+                    if event.get("crowd_control")
+                    else {}
+                ),
+                **(
+                    {"crowd_control_blocked": dict(event["crowd_control_blocked"])}
+                    if event.get("crowd_control_blocked")
+                    else {}
+                ),
+                **(
+                    {"projectile_defense": dict(event["projectile_defense"])}
+                    if event.get("projectile_defense")
+                    else {}
+                ),
+                **(
                     {"targeting": dict(event["targeting"])}
                     if isinstance(event.get("targeting"), Mapping)
                     else {}
@@ -684,6 +832,11 @@ def assemble_public_receipt(
                 ),
                 **({"grey_health": True} if event.get("_grey_health") else {}),
                 **(
+                    {"spell_shield_triggered": True}
+                    if event.get("spell_shield_triggered")
+                    else {}
+                ),
+                **(
                     {"charges": int(event["charges"])}
                     if event.get("charges") is not None
                     else {}
@@ -705,6 +858,64 @@ def assemble_public_receipt(
             }
             for event in public_healing_events
         ],
+        "item_denial_receipts": sorted(
+            (
+                {
+                    "time": round(float(event.get("time", 0.0) or 0.0), 3),
+                    "source": str(event.get("source", "")),
+                    "reason": str(event.get("reason", "")),
+                    "attacker": event.get("attacker"),
+                    "target": event.get("target"),
+                    **(
+                        {"cc_kind": str(event["cc_kind"])}
+                        if event.get("cc_kind")
+                        else {}
+                    ),
+                    **(
+                        {"event_id": str(event["event_id"])}
+                        if event.get("event_id") is not None
+                        else {}
+                    ),
+                    **(
+                        {"mana_gate_status": str(event["mana_gate_status"])}
+                        if event.get("mana_gate_status")
+                        else {}
+                    ),
+                    **(
+                        {"source_url": str(event["source_url"])}
+                        if event.get("source_url")
+                        else {}
+                    ),
+                    **(
+                        {"source_revision_id": event["source_revision_id"]}
+                        if event.get("source_revision_id") is not None
+                        else {}
+                    ),
+                    **(
+                        {"nearby_enemy_range_units": event["nearby_enemy_range_units"]}
+                        if event.get("nearby_enemy_range_units") is not None
+                        else {}
+                    ),
+                    **(
+                        {"range_center": event["range_center"]}
+                        if event.get("range_center") is not None
+                        else {}
+                    ),
+                    **(
+                        {"range_input_status": str(event["range_input_status"])}
+                        if event.get("range_input_status")
+                        else {}
+                    ),
+                    **(
+                        {"denied_component": str(event["denied_component"])}
+                        if event.get("denied_component")
+                        else {}
+                    ),
+                }
+                for event in item_denial_receipts
+            ),
+            key=lambda row: (float(row.get("time", 0.0)), str(row.get("reason", ""))),
+        ),
         "support_events": [
             {
                 "time": round(float(event.get("time", 0.0)), 3),
@@ -729,38 +940,149 @@ def assemble_public_receipt(
                 "source": event.get("source", ""),
                 "kind": event.get("kind", ""),
                 "amount": round(float(event.get("amount", 0.0)), 6),
+                "raw_amount": round(
+                    float(event.get("raw_amount", event.get("amount", 0.0))), 6
+                ),
                 "applied_amount": round(
                     float(event.get("applied_amount", event.get("amount", 0.0))), 6
                 ),
+                "reduced_amount": round(
+                    float(event.get("reduced_amount", event.get("amount", 0.0))), 6
+                ),
+                "overheal": round(
+                    float(
+                        event.get(
+                            "overheal",
+                            max(
+                                0.0,
+                                float(
+                                    event.get(
+                                        "reduced_amount", event.get("amount", 0.0)
+                                    )
+                                )
+                                - float(
+                                    event.get(
+                                        "applied_amount", event.get("amount", 0.0)
+                                    )
+                                ),
+                            ),
+                        )
+                    ),
+                    6,
+                ),
+                "healing_reduction_factor": round(
+                    float(event.get("healing_reduction_factor", 1.0)), 6
+                ),
                 "target_scope": event.get("target_scope", ""),
                 "target_policy": event.get("target_policy", ""),
+                "target_selection_key": event.get("target_selection_key", ""),
+                **(
+                    {"shield_pool": str(event["shield_pool"])}
+                    if event.get("shield_pool")
+                    else {}
+                ),
+                **(
+                    {
+                        "crowd_control_immunity_while_shield": True,
+                        "crowd_control_immunity_source": str(
+                            event.get(
+                                "crowd_control_immunity_source",
+                                event.get("source", ""),
+                            )
+                        ),
+                    }
+                    if event.get("crowd_control_immunity_while_shield")
+                    else {}
+                ),
+                **(
+                    {"source_atom": dict(event["source_atom"])}
+                    if event.get("source_atom") is not None
+                    else {}
+                ),
+                **(
+                    {"duration_atom": dict(event["duration_atom"])}
+                    if event.get("duration_atom") is not None
+                    else {}
+                ),
+                **(
+                    {"activation_delay_atom": dict(event["activation_delay_atom"])}
+                    if event.get("activation_delay_atom") is not None
+                    else {}
+                ),
+                **(
+                    {"amount_formula_atom": dict(event["amount_formula_atom"])}
+                    if event.get("amount_formula_atom") is not None
+                    else {}
+                ),
+                **(
+                    {
+                        "source_atoms": [
+                            dict(atom) for atom in event.get("source_atoms", [])
+                        ]
+                    }
+                    if event.get("source_atoms")
+                    else {}
+                ),
                 **(
                     {
                         key: round(float(event[key]), 6)
                         for key in (
                             "bonus_attack_speed_percent",
+                            "bonus_armor",
+                            "bonus_magic_resistance",
+                            "bonus_health",
+                            "permanent_bonus_health",
                             "on_hit_magic_damage",
                             "ability_power",
                             "ability_haste",
                             "bonus_move_speed_percent",
+                            "slow_resist_percent",
                             "slow_percent",
                             "chain_fraction",
                             "multiplier",
                             "cooldown",
                             "charges_consumed",
                             "beam_delay",
+                            "reveal_duration",
                             "armor_reduction_percent",
                             "mr_reduction_percent",
                             "stack_count",
                             "current_mana",
                             "mana_threshold",
                             "nearby_enemy_count",
+                            "nearby_enemy_range_units",
+                            "requested_multi_target_multiplier",
                             "multi_target_multiplier",
                             "cooldown_until",
+                            "aftershock_duration",
+                            "aftershock_cooldown",
+                            "glacial_ray_count",
+                            "glacial_zone_radius_units",
+                            "glacial_zone_width_units",
+                            "glacial_zone_duration",
+                            "glacial_slow_percent",
+                            "glacial_damage_reduction_ratio",
+                            "stormraider_damage_threshold_ratio",
+                            "stormraider_damage_window_seconds",
+                            "stormraider_trigger_damage",
+                            "stormraider_target_max_health",
+                            "stormraider_cooldown_seconds",
+                            "fleet_starting_charges",
+                            "fleet_charge_cap",
+                            "fleet_move_speed_duration_seconds",
+                            "stacks_before",
+                            "stacks_after",
+                            "stacks_gained",
+                            "max_stacks",
+                            "adaptive_force",
                             "gold_amount",
                             "ward_uses",
                             "quest_threshold",
                             "minion_kills",
+                            "shield_gate_time",
+                            "activation_delay",
+                            "on_block_heal_amount",
+                            "on_block_heal_delay",
                         )
                         if event.get(key) is not None
                     }
@@ -775,9 +1097,19 @@ def assemble_public_receipt(
                             "cleanse",
                             "persistent",
                             "completion_granted",
+                            "requires_existing_shield",
+                            "shield_gate_assumed",
                         )
                         if event.get(key) is not None
                     }
+                ),
+                # The same-time action phase the packet rides (damage 0.0,
+                # shields 0.5, heals 1.0): explicit so public receipts prove
+                # ordering (P3 package 3C).
+                **(
+                    {"priority": round(float(event["_priority"]), 6)}
+                    if event.get("_priority") is not None
+                    else {}
                 ),
                 **(
                     {"trigger": str(event["trigger"])}
@@ -790,9 +1122,18 @@ def assemble_public_receipt(
                         for key in (
                             "resistance_type",
                             "owner",
+                            "aftershock_trigger_kind",
+                            "source_participant",
+                            "shield_gate_target",
                             "range_assumption",
                             "trigger_kind",
+                            "packet",
+                            "trigger_source",
                             "source_url",
+                            "on_block_heal_source",
+                            "range_center",
+                            "range_input_status",
+                            "range_boundary_status",
                         )
                         if event.get(key) is not None
                     }
@@ -810,6 +1151,21 @@ def assemble_public_receipt(
                 **(
                     {"venom": dict(event["venom"])}
                     if event.get("venom") is not None
+                    else {}
+                ),
+                **(
+                    {"guardian_triggered": dict(event["guardian_triggered"])}
+                    if event.get("guardian_triggered") is not None
+                    else {}
+                ),
+                **(
+                    {"aftershock": dict(event["aftershock"])}
+                    if event.get("aftershock") is not None
+                    else {}
+                ),
+                **(
+                    {"crowd_control_blocked": dict(event["crowd_control_blocked"])}
+                    if event.get("crowd_control_blocked") is not None
                     else {}
                 ),
                 **(

@@ -22,7 +22,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    with_control,
+)
 
 # Sourced storm cadence (wiki W): "take magic damage on-cast and every
 # 0.5 seconds thereafter" over the 5-second desecrated area -> 10 ticks
@@ -90,9 +96,21 @@ def _soul_shackles(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (
-        DamagePart("magic", initial, time_offset=0.0),
-        DamagePart("magic", initial, time_offset=_R_TETHER_SECONDS),
+        DamagePart(
+            "magic",
+            initial,
+            time_offset=0.0,
+            cc_kind="slow",
+        ),
+        DamagePart(
+            "magic",
+            initial,
+            time_offset=_R_TETHER_SECONDS,
+            cc_kind="stun",
+            cc_duration=extract_value(ability, "Stun Duration", rank),
+        ),
     )
+    entry["cc_reviewed"] = True
     entry["dot_duration"] = _R_TETHER_SECONDS
     entry["detail"] = (
         f"initial hit + the same {initial:.6g} magic damage at the "
@@ -129,6 +147,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Morgana", PACKET_SHA256
 )
 PACKET_SPEC = SLOTS.packet_spec
+SLOTS["Q"] = with_control(
+    SLOTS["Q"],
+    kind="root",
+    duration_attr="Root Duration",
+)
 SLOTS["W"] = _tormented_shadow
 SLOTS["R"] = _soul_shackles
 SLOTS["P"] = _soul_siphon
@@ -146,9 +169,13 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "damage dealt by her abilities against champions (healing.py "
     "HEALING_RULE_CHAMPIONS); the passive deals no enemy damage "
     "itself.",
+    "E (Black Shield) emits the selected recipient's magic shield from the "
+    "typed Magic Shield Strength atom. Its typed active-duration atom keeps "
+    "crowd control from adding action downtime while the shield holds.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
 

@@ -6,9 +6,12 @@ from typing import Any, Mapping, Sequence
 from .champions.skill_orders import get_ability_rank
 from .item_effects import (
     ITEM_EFFECTS,
+    force_of_nature_steadfast_rule,
     input_option_float_value,
     required_effect_value,
+    spell_shield_ready as item_spell_shield_ready,
 )
+from .state_lifecycle import SourceReceipt
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +49,9 @@ class StartingDefenses:
     incoming_damage_linger: float = 0.0
     incoming_damage_cooldown: float = 0.0
     incoming_damage_source: str = ""
+    champion_damage_flat_reduction: float = 0.0
+    champion_dot_damage_flat_reduction: float = 0.0
+    champion_damage_flat_source: str = ""
     basic_damage_flat_reduction: float = 0.0
     basic_damage_flat_reduction_cap: float = 0.0
     critical_strike_damage_multiplier: float = 1.0
@@ -118,6 +124,22 @@ class StartingDefenses:
                     "incoming_damage_linger": round(self.incoming_damage_linger, 1),
                     "incoming_damage_cooldown": round(self.incoming_damage_cooldown, 1),
                     "source": self.incoming_damage_source,
+                }
+            )
+        if (
+            self.champion_damage_flat_reduction > 0.0
+            or self.champion_dot_damage_flat_reduction > 0.0
+            or self.champion_damage_flat_source
+        ):
+            incoming_damage.update(
+                {
+                    "champion_damage_flat_reduction": round(
+                        self.champion_damage_flat_reduction, 2
+                    ),
+                    "champion_dot_damage_flat_reduction": round(
+                        self.champion_dot_damage_flat_reduction, 2
+                    ),
+                    "champion_damage_flat_source": self.champion_damage_flat_source,
                 }
             )
         return {
@@ -244,6 +266,15 @@ _WARDENS_MAIL_SOURCE = DefenseSource(
     source_url="https://wiki.leagueoflegends.com/en-us/Warden%27s_Mail",
     revision_id=3987228,
     revision_timestamp="2026-01-25T05:28:19Z",
+)
+
+_GUARDIANS_HORN_SOURCE = DefenseSource(
+    label="Guardian's Horn — Undaunted",
+    source_url="https://wiki.leagueoflegends.com/en-us/Guardian%27s_Horn",
+    # The tracked item cache has no MediaWiki revision id. Zero marks the
+    # cache-backed receipt without inventing one.
+    revision_id=0,
+    revision_timestamp="cached data/items.json (patch 16.15)",
 )
 
 _RANDUINS_OMEN_SOURCE = DefenseSource(
@@ -446,8 +477,8 @@ def _lifeline_defense(
         source = _HEXDRINKER_SOURCE
     elif name == "Maw of Malmortius":
         prefix = "melee" if is_melee else "ranged"
-        amount = float(effect[f"shield_{prefix}_base"]) + float(
-            effect[f"shield_{prefix}_bonus_ad_ratio"]
+        amount = float(required_effect_value(name, f"shield_{prefix}_base")) + float(
+            required_effect_value(name, f"shield_{prefix}_bonus_ad_ratio")
         ) * float(stats.get("bonus_attack_damage", 0.0))
         source = _MAW_SOURCE
     elif name == "Seraph's Embrace":
@@ -470,8 +501,8 @@ def _lifeline_defense(
     )
     return (
         amount,
-        float(effect["health_threshold"]),
-        float(effect["duration"]),
+        float(required_effect_value(name, "health_threshold")),
+        float(required_effect_value(name, "duration")),
         damage_type,
         assumption,
         source,
@@ -566,6 +597,11 @@ def resolve_starting_defenses(
     incoming_damage_linger = champion_defenses.incoming_damage_linger
     incoming_damage_cooldown = champion_defenses.incoming_damage_cooldown
     incoming_damage_source = champion_defenses.incoming_damage_source
+    champion_damage_flat_reduction = champion_defenses.champion_damage_flat_reduction
+    champion_dot_damage_flat_reduction = (
+        champion_defenses.champion_dot_damage_flat_reduction
+    )
+    champion_damage_flat_source = champion_defenses.champion_damage_flat_source
     basic_damage_flat_reduction = champion_defenses.basic_damage_flat_reduction
     basic_damage_flat_reduction_cap = champion_defenses.basic_damage_flat_reduction_cap
     critical_strike_damage_multiplier = (
@@ -689,8 +725,7 @@ def resolve_starting_defenses(
         (
             name
             for name in ("Banshee's Veil", "Edge of Night", "Verdant Barrier")
-            if name in names
-            and bool(ITEM_EFFECTS.get(name, {}).get("spell_shield_ready", False))
+            if name in names and item_spell_shield_ready(name)
         ),
         None,
     )
@@ -822,30 +857,35 @@ def resolve_starting_defenses(
         sources.append(_DEATHS_DANCE_SOURCE)
 
     if "Force of Nature" in names:
-        force_stack_duration = float(
-            required_effect_value("Force of Nature", "steadfast_stack_duration")
+        # Steadfast's stack declaration is kernel-owned (state_lifecycle):
+        # one typed rule built from the registry statics, with the wiki
+        # page receipt attached.  The survival walk consumes the fields
+        # through ChampionDefenses and owns the timed state machine.
+        steadfast = force_of_nature_steadfast_rule(
+            source=SourceReceipt(
+                label=_FORCE_OF_NATURE_SOURCE.label,
+                url=_FORCE_OF_NATURE_SOURCE.source_url,
+                revision_id=_FORCE_OF_NATURE_SOURCE.revision_id,
+                revision_timestamp=_FORCE_OF_NATURE_SOURCE.revision_timestamp,
+            )
         )
-        force_max_stacks = int(
-            required_effect_value("Force of Nature", "steadfast_max_stacks")
-        )
-        force_stack_interval = float(
-            required_effect_value("Force of Nature", "steadfast_stack_interval")
-        )
-        force_immobilize_stacks = int(
-            required_effect_value("Force of Nature", "steadfast_immobilize_stacks")
-        )
+        force_stack_duration = steadfast.duration_seconds
+        force_max_stacks = steadfast.max_stacks
+        force_stack_interval = steadfast.interval_seconds
+        force_immobilize_stacks = int(steadfast.gain_by_kind.get("immobilize", 1))
         force_bonus_magic_resistance = float(
-            required_effect_value("Force of Nature", "steadfast_bonus_magic_resistance")
+            steadfast.payload["bonus_magic_resistance"]
         )
         force_bonus_move_speed_percent = float(
-            required_effect_value(
-                "Force of Nature", "steadfast_bonus_move_speed_percent"
-            )
+            steadfast.payload["bonus_move_speed_percent"]
         )
         assumptions.append(
             "Force of Nature Steadfast starts at zero stacks; the ordered ledger "
             "arms one stack per eligible magic-damage cast instance per second "
-            "and grants the sourced maximum-stack resistance bonus."
+            "(per-instance 1s cadence, P3 package 3Q) and grants the sourced "
+            "maximum-stack resistance bonus; the 6% bonus move speed at maximum "
+            "stacks is declared metadata only and the dealing-damage refresh is "
+            "a named boundary."
         )
         sources.append(_FORCE_OF_NATURE_SOURCE)
 
@@ -958,6 +998,22 @@ def resolve_starting_defenses(
         )
         sources.append(_WARDENS_MAIL_SOURCE)
 
+    if "Guardian's Horn" in names:
+        champion_damage_flat_reduction = float(
+            required_effect_value("Guardian's Horn", "champion_damage_flat_reduction")
+        )
+        champion_dot_damage_flat_reduction = float(
+            required_effect_value(
+                "Guardian's Horn", "champion_dot_damage_flat_reduction"
+            )
+        )
+        champion_damage_flat_source = "Guardian's Horn — Undaunted"
+        assumptions.append(
+            "Guardian's Horn blocks 15 post-mitigation damage from champion "
+            "attacks and abilities, or 3.75 against damage-over-time abilities."
+        )
+        sources.append(_GUARDIANS_HORN_SOURCE)
+
     if "Randuin's Omen" in names:
         critical_strike_damage_multiplier *= float(
             ITEM_EFFECTS["Randuin's Omen"]["critical_strike_damage_multiplier"]
@@ -996,6 +1052,9 @@ def resolve_starting_defenses(
         incoming_damage_linger=incoming_damage_linger,
         incoming_damage_cooldown=incoming_damage_cooldown,
         incoming_damage_source=incoming_damage_source,
+        champion_damage_flat_reduction=champion_damage_flat_reduction,
+        champion_dot_damage_flat_reduction=champion_dot_damage_flat_reduction,
+        champion_damage_flat_source=champion_damage_flat_source,
         basic_damage_flat_reduction=basic_damage_flat_reduction,
         basic_damage_flat_reduction_cap=basic_damage_flat_reduction_cap,
         critical_strike_damage_multiplier=critical_strike_damage_multiplier,

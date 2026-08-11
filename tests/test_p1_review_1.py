@@ -403,7 +403,13 @@ def test_seraphine_api_q_always_at_least_the_flat_base():
     # missing-health ratio, so the API total is >= the flat base mitigated
     # against the defender's own magic resistance (the fight's own stats)
     # and <= the Maximum Enhanced Damage row mitigated the same way.
-    combat = _fight("Seraphine")
+    # The assertion covers High Note's missing-health amplifier. Disable
+    # other damaging and control casts so their state does not change the
+    # target before Q lands.
+    combat = _fight(
+        "Seraphine",
+        ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+    )
     enemy_stats = _enemy_stats(combat)
     base_mitigated = 160.0 * 100.0 / (100.0 + enemy_stats["magic_resistance"])
     max_mitigated = 280.0 * 100.0 / (100.0 + enemy_stats["magic_resistance"])

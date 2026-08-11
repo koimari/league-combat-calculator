@@ -112,6 +112,19 @@ def _leveling_flat_at_level(
     return 0.0
 
 
+def _level_breakpoint_value(values: list[Any], level: int) -> float:
+    """Read a six-value Wiki row at levels 1, 6, 11, 16, 17, and 18."""
+    if not values:
+        return 0.0
+    if len(values) == 6:
+        breakpoints = (1, 6, 11, 16, 17, 18)
+        for index in range(len(breakpoints) - 1, -1, -1):
+            if level >= breakpoints[index]:
+                return float(values[index])
+        return float(values[0])
+    return float(values[min(max(level, 1) - 1, len(values) - 1)])
+
+
 def _event_source(event: dict[str, Any]) -> str:
     return str(event.get("source_key", ""))
 

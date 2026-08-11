@@ -46,7 +46,7 @@ PACKET_SPEC = _BATCH_SLOTS.packet_spec
 # details").  Sourced from the Community Dragon game files (current
 # patch; the wiki pet infobox on the fandom mirror is stale — it still
 # lists the Maiden at 0/10/40 + 50% AD while the game file says
-# 50/100/150 + 30% AD):
+# 50/75/100 + 30% bonus AD; the 13.21 patch moved the rank bases):
 #   https://raw.communitydragon.org/latest/game/data/characters/
 #     yorick/yorick.bin.json  (YorickPassive / YorickR spell calcs)
 #     yorickghoulmelee/yorickghoulmelee.bin.json  (Mist Walker unit)
@@ -202,8 +202,9 @@ ASSUMPTIONS = [
     "remain sourced from the local reviewed-packet asset.",
     "Non-damaging shields, buffs, movement, and utility branches remain "
     "explicit state/out-of-scope rows rather than invented damage.",
-    "Mist Walker attack damage (15 : 100 by level x stat progression + 20% AD, ",
-    "physical) and Maiden attack damage (50/100/150 by R rank + 30% AD, magic) ",
+    "Mist Walker attack damage (15 : 100 by level x stat progression + 20% ",
+    "bonus AD, physical) and Maiden attack damage (50/75/100 by R rank + 30% ",
+    "bonus AD, magic — 13.21 rank bases)",
     "are game-file constants — the wiki pet infobox is stale; verify on patch ",
     "updates against Community Dragon",
     "Mist Walkers attack at 0.5 : 1.18 attack speed (based on level): the ",

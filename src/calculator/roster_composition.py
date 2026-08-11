@@ -126,6 +126,7 @@ def main_combatant(  # pylint: disable=too-many-arguments,too-many-positional-ar
                 "role_quest_complete": params.role_quest_complete,
                 "ability_ranks": params.ability_ranks,
                 "champion_options": params.champion_options,
+                "support_target_selections": params.support_target_selections,
                 "cast_order": params.cast_order,
                 "item_options": params.item_options,
             },
@@ -142,9 +143,14 @@ def actor_params(base: FightParams, actor: Combatant) -> FightParams:
         role_quest_complete=bool(getattr(request, "role_quest_complete", False)),
         ability_ranks=getattr(request, "ability_ranks", None) or None,
         champion_options=getattr(request, "champion_options", None),
+        support_target_selections=getattr(request, "support_target_selections", None),
         cast_order=getattr(request, "cast_order", None),
         item_options=getattr(request, "item_options", None),
         ally_stat_bonuses=None,
+        keystone=base.keystone if actor.participant_id == "main" else "",
+        keystone_options=(
+            base.keystone_options if actor.participant_id == "main" else {}
+        ),
     )
 
 
@@ -254,9 +260,12 @@ def actor_params_with_resource_restores(
 ) -> FightParams:
     """Attach one actor's typed external resource ledger to its fight params."""
     params = actor_params(base, actor)
-    if resource_restores is None:
-        return params
     return replace(
         params,
-        resource_restore_events=tuple(resource_restores.get(actor.participant_id, ())),
+        resource_restore_events=(
+            tuple(resource_restores.get(actor.participant_id, ()))
+            if resource_restores is not None
+            else ()
+        ),
+        resource_ledger_owner=actor.participant_id,
     )

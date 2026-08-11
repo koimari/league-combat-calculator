@@ -25,7 +25,13 @@ from typing import Any
 
 from .engine import BUFF, SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits, attach_self_shield, extract_named, extract_value
+from .slotlib import (
+    attach_self_shield,
+    extract_named,
+    extract_value,
+    with_control,
+    with_item_on_hits,
+)
 
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
@@ -43,6 +49,95 @@ _MIST_STACKS_PER_THRESHOLD = 20
 _MIST_RANGE_PER_THRESHOLD = 20.0  # bonus attack range
 _MIST_CRIT_PER_THRESHOLD = 10.0  # % crit chance
 _MARK_STACKS = 2  # apply on hit 1, consume on hit 2
+
+
+class _MistRule:
+    """The typed Mist (Absolution) counter declaration (P3 package 3W).
+
+    Mist is a PERMANENT counter: each soul grants 0.75 bonus AD and every
+    20 souls grant 20 bonus attack range + 10% critical strike chance.
+    The four numbers are wiki prose in the cached P entry (leveling
+    empty — no atom exists); the source receipt pins the P template
+    revision.  ``public_receipt()`` rides the option's ``state`` and the
+    resource-ledger souls declaration.
+    """
+
+    def __init__(self) -> None:
+        self.per_stack_bonus_ad = _MIST_AD_PER_STACK
+        self.stacks_per_threshold = _MIST_STACKS_PER_THRESHOLD
+        self.range_per_threshold = _MIST_RANGE_PER_THRESHOLD
+        self.crit_per_threshold = _MIST_CRIT_PER_THRESHOLD
+        self.permanent = True
+        self.source = {
+            "label": "Local League Wiki cache — Senna P (Absolution) Mist prose",
+            "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Senna/I",
+            "revision_id": 2864157,
+            "revision_timestamp": "2019-11-03T20:06:33Z",
+        }
+
+    def public_receipt(self) -> dict[str, Any]:
+        return {
+            "name": "Senna — Absolution (Mist souls)",
+            "per_stack_bonus_ad": self.per_stack_bonus_ad,
+            "stacks_per_threshold": self.stacks_per_threshold,
+            "range_per_threshold": self.range_per_threshold,
+            "crit_per_threshold": self.crit_per_threshold,
+            "permanent": self.permanent,
+            "source": dict(self.source),
+        }
+
+
+SENNA_MIST_RULE = _MistRule()
+
+# HARDCODED: verify on patch updates — Relic Cannon's per-auto bonus
+# physical damage is 20% of TOTAL AD (wiki prose, P effects[3], leveling
+# empty — no atom).  The binary carries the same value: data/bin/
+# characters/senna.bin.json Characters/Senna/Spells/SennaPassiveAbility/
+# SennaPassive mSpellCalculations.BonusOnHitDamage = StatByCoefficient
+# (mStat 2 = attack damage, NO mStatFormula => total AD — the repo-pinned
+# convention; Senna Q's mStatFormula 2 is the bonus-AD shape), mCoefficient
+# 0.2.  The prose's "20% AD" unqualified matches the total-AD reading
+# (the cache writes "60% bonus AD" for Q when bonus-only).
+_RELIC_CANNON_AD_RATIO = 0.2
+_RELIC_CANNON_DAMAGE_TYPE = "physical"
+
+
+class _RelicCannonRule:
+    """Relic Cannon's per-auto on-hit receipt (wiki + binary)."""
+
+    def public_receipt(self) -> dict[str, Any]:
+        return {
+            "name": "Relic Cannon (on-hit)",
+            "ad_ratio": _RELIC_CANNON_AD_RATIO,
+            "damage_type": _RELIC_CANNON_DAMAGE_TYPE,
+            "source": {
+                "wiki": {
+                    "url": "https://wiki.leagueoflegends.com/en-us/Senna",
+                    "revision_id": 2864157,  # Template:Data_Senna/I
+                    "prose": (
+                        "Senna's basic attacks on-hit deal 20% AD bonus "
+                        "physical damage ... for 0.5 seconds"
+                    ),
+                },
+                "binary": {
+                    "path": (
+                        "data/bin/characters/senna.bin.json "
+                        "SennaPassive mSpellCalculations.BonusOnHitDamage"
+                    ),
+                    "formula": "StatByCoefficient(mStat 2, no mStatFormula, "
+                    "coefficient 0.2) = 20% of TOTAL AD",
+                },
+                "notes": (
+                    "applied only if the attack deals more than 0 damage; "
+                    "not applied against structures; applies an additional "
+                    "Black Cleaver Carve stack; the MS-steal (10/15/20% for "
+                    "0.5s) is utility and not modeled"
+                ),
+            },
+        }
+
+
+SENNA_RELIC_CANNON_RULE = _RelicCannonRule()
 # HARDCODED: verify on patch updates — Dawning Shadow's shield duration
 # (3s) and the 150% Mist scaling are cached leveling/prose (R "Shield
 # Strength": 120/160/200 + 50% AP + 150% Mist; description: "grants a
@@ -112,6 +207,41 @@ def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
 _absolution.phase = BUFF
 
 
+def _relic_cannon(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P2: Relic Cannon — 20% total AD bonus physical damage per auto.
+
+    The engine's ability-on-hit loop prices ANY entry's ``on_hit``
+    payload, including a slot key outside P/Q/W/E/R — the smallest safe
+    contract for the second per-auto rider (the P slot already owns the
+    Weakened Soul payload).  ``stacks_required``/``count_ability_hits``
+    are absent: the rider fires on every basic-attack on-hit (autos +
+    phantom hits + double shots), never on ability hits, one breakdown
+    row ``on_hit_ability_P2``.  The per-hit value reads the parse-time
+    attack damage — the Mist-buffed total (P runs first in the BUFF
+    phase; item AD included by the pipeline).
+    """
+    per_hit = _RELIC_CANNON_AD_RATIO * float(ctx.stats.get("attack_damage", 0.0))
+    return {
+        "name": "Absolution",
+        "rank": ctx.level,
+        "damage_type": _RELIC_CANNON_DAMAGE_TYPE,
+        "total_raw": 0.0,
+        "parts": (),
+        "on_hit": {
+            "name": "Relic Cannon (on-hit)",
+            "damage_per_hit": per_hit,
+            "damage_type": _RELIC_CANNON_DAMAGE_TYPE,
+        },
+        "detail": (
+            "Relic Cannon: 20% of total AD bonus physical damage per basic "
+            "attack on-hit (source receipt: SENNA_RELIC_CANNON_RULE)"
+        ),
+    }
+
+
+_relic_cannon.phase = BUFF
+
+
 def _dawning_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the reviewed physical hit plus Senna's own shield payload.
 
@@ -146,8 +276,17 @@ def _dawning_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = dict(_packet_slots)
 SLOTS["P"] = _absolution
+# P4: the Relic Cannon rider rides a SECOND BUFF-phase slot (P2) so the
+# engine's existing ability-on-hit loop prices it with its own row —
+# zero engine changes, other champions untouched.
+SLOTS["P2"] = _relic_cannon
 _packet_r = SLOTS["R"]
 SLOTS["R"] = _dawning_shadow
+SLOTS["W"] = with_control(
+    SLOTS["W"],
+    kind="root",
+    duration_attr="Root Duration",
+)
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
 )
@@ -161,6 +300,7 @@ OPTIONS = list(_packet_options) + [
         "min": 0,
         "max": 300,
         "label": "Mist (soul) stacks",
+        "state": SENNA_MIST_RULE.public_receipt(),
     },
 ]
 
@@ -178,8 +318,17 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "target's MAX health (the engine on-hit convention) — the real "
     "term decays with the target's current health, so the model "
     "overstates late-fight consumes",
-    "Relic Cannon's on-hit 20% AD bonus physical damage is not modeled "
-    "(the packet has no leveling row for it)",
+    "Relic Cannon's per-auto on-hit is MODELED as 20% of TOTAL AD bonus "
+    "physical damage (the wiki prose, P effects[3] — leveling empty, no "
+    "atom; the binary SennaPassive BonusOnHitDamage 0.2 x mStat 2 with no "
+    "mStatFormula = total AD — see SENNA_RELIC_CANNON_RULE).  It rides "
+    "the P2 slot's own on_hit payload: every basic-attack on-hit (autos, "
+    "phantom hits, double shots — never ability hits), its own breakdown "
+    "row on_hit_ability_P2, the Mist-buffed parse-time AD.  The engine "
+    "has no structure or invulnerability concept: the wiki's exclusions "
+    "(not vs structures; only when the attack deals >0 damage) are "
+    "named boundaries; the MS-steal (10/15/20% for 0.5s) is utility and "
+    "not modeled.",
     "R (Dawning Shadow) also shields Senna herself for flat + 50% AP + "
     "150% of the selected Mist stacks for 3s at the cast; the ally "
     "half of the light wave is emitted by the ally-support scanner "

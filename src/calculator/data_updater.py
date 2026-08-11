@@ -97,7 +97,11 @@ from lolstaticdata.champions.__main__ import get_ability_filenames
 from .data_fetcher import DEFAULT_DATA_DIR, _read_cache
 from .data_registry import write_runtime_cache
 from .item_source import merge_item_sources
-from .rune_parser import parse_effects, rune_payload
+from .rune_parser import (
+    AFTERSHOCK_IMPLICIT_LEVEL_RANGE,
+    parse_effects,
+    rune_payload,
+)
 
 # Only one update can run at a time
 _update_lock = threading.Lock()
@@ -437,11 +441,16 @@ def reparse_cached_rune_effects(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, 
     runes = {
         name: dict(entry) for name, entry in _read_cache(data_dir, "runes.json").items()
     }
-    for entry in runes.values():
+    for name, entry in runes.items():
         description = entry.get("description")
         if not description:
             continue
-        effects, warnings = parse_effects(description)
+        effects, warnings = parse_effects(
+            description,
+            implicit_level_range=(
+                AFTERSHOCK_IMPLICIT_LEVEL_RANGE if name == "Aftershock" else None
+            ),
+        )
         entry["effects"] = effects
         entry.pop("parse_warnings", None)
         if warnings:

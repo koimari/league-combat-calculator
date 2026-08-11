@@ -146,6 +146,14 @@ def write_atoms(
     return manifest
 
 
+def write_manifest(path: Path, payload: dict[str, Any]) -> None:
+    """Atomically publish the domain manifest."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=1, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def split_effect_fragments(
     effect: dict[str, Any], *, prefix: str, index: int
 ) -> list[tuple[str, str]]:

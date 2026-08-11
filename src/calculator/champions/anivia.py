@@ -20,7 +20,7 @@ hardcoded.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .slotlib import damage_entry, extract_named, simple_damage
+from .slotlib import damage_entry, extract_named, simple_damage, with_control
 
 
 def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -98,7 +98,11 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
+    "Q": with_control(
+        simple_damage(attr="Total Magic Damage", dmg_type="magic"),
+        kind="stun",
+        duration_attr="Stun Duration",
+    ),
     "E": simple_damage(attr="Enhanced Damage", dmg_type="magic"),
     "R": _glacial_storm,
 }

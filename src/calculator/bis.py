@@ -244,7 +244,9 @@ BIS_OBJECTIVES: dict[str, dict[str, str]] = {
 BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
     "Eclipse": (
         "Ever Rising Moon's two-hit trigger creates a timestamped self shield "
-        "with its sourced melee/ranged amount and two-second expiry."
+        "with its sourced melee/ranged amount and two-second expiry; the "
+        "survival model stacks same-time shields additively (the in-game "
+        "strongest-shield rule is not modeled)."
     ),
     "Death's Dance": (
         "Ignore Pain splits post-mitigation physical/magic damage into sourced "

@@ -9,7 +9,7 @@ champion death; the selected fight does not invent one.
 from typing import Any
 
 from .engine import build_parser
-from .slotlib import simple_damage
+from .slotlib import simple_damage, with_control
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -48,7 +48,11 @@ SOURCES = [
 
 SLOTS = {
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": with_control(
+        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        kind="root",
+        duration_attr="Root Duration",
+    ),
     "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
 }

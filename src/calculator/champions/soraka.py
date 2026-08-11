@@ -15,9 +15,9 @@ so the module documents it and does not author a mana resource cost.
 
 from typing import Any
 
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
-from .slotlib import extract_cooldown, extract_named, simple_damage
+from .slotlib import extract_cooldown, extract_named, extract_value, simple_damage
 
 
 def _astral_infusion(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -82,6 +82,13 @@ def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
     if second_hit:
         # The eruption refreshes ability-triggered item burns 1.5s later.
         entry["dot_duration"] = 1.5
+        entry["control_events"] = (
+            ControlEvent(
+                "root",
+                extract_value(ability, "Root Duration", rank),
+                time_offset=1.5,
+            ),
+        )
     return entry
 
 

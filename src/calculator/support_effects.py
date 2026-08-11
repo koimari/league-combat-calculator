@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, Mapping
 
+from .ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ranked_attribute_atom,
+    required_ability_atom,
+)
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .champions.slotlib import extract_named
 from .champions.skill_orders import get_ability_rank
@@ -34,6 +40,7 @@ _SUPPORT_ATTRIBUTES = frozenset(
     {
         "Shield Strength",
         "Shield",
+        "Magic Shield Strength",
         "Total Heal",
         "Heal",
         "Heal Per Tick",
@@ -75,7 +82,15 @@ _CHAMPION_SHIELD_ATTR: dict[tuple[str, str], str] = {
 # the attached ally, not Yuumi herself, while attached — the deterministic
 # roster model targets one selected teammate (the anchor).
 _SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
+    # These abilities have a self-or-ally cast in their source description.
+    # The deterministic roster model exposes the ally choice when a roster
+    # exists and falls back to the caster in a solo fight.
+    ("Ekko", "W"): "self",
+    ("K'Sante", "E"): "one_teammate",
+    ("Kassadin", "Q"): "self",
+    ("Lee Sin", "W"): "self_and_one_teammate",
     ("Yuumi", "E"): "one_teammate",
+    ("Rumble", "W"): "self",
     # P1-3: Lux W (Prismatic Barrier) shields Lux herself on the throw and
     # the return ("Lux gains the shield upon throwing and upon retrieving
     # the wand"); the allied half needs a teammate roster the 1v1 lacks,
@@ -90,7 +105,19 @@ _SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
     # packet targets ALLIES ONLY.  In a 1v1 (no selected teammate) the
     # packet resolves to nothing and the self heal pays exactly once.
     ("Rakan", "Q"): "all_teammates",
+    ("Taric", "R"): "self_and_all_teammates",
+    # E8d follow-up: Renata's E (Loyalty Program) rockets "grant a shield
+    # to Renata and allies struck" — every selected teammate the rockets
+    # pass through, not one.  The SELF half is module-authored on the E
+    # damage entry (E8c payload), so the scanner's ally branch resolves
+    # all_teammates and never double-grants the caster.
+    ("Renata Glasc", "E"): "all_teammates",
 }
+
+# Some ally-facing abilities create a shared combat state instead of a heal or
+# shield packet.  They still use the same target-selection and support ledger
+# path so each protected participant receives one typed state action.
+_SUPPORT_STATE_SLOTS = frozenset({("Taric", "R")})
 
 # E8c: slots whose shield the champion module authors itself (via the
 # ``self_shield_events`` payload on its damage entry) instead of this
@@ -177,6 +204,194 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
     }
 )
 
+# State-transition modules can own a conditional recovery packet without
+# joining the self-heal registry. Sivir E creates its heal only after a
+# spell-shield block, so the generic scanner must omit its cached Heal row.
+_STATE_AUTHORED_HEAL_SLOTS = frozenset({("Sivir", "E")})
+
+# These cached descriptions state a shield lifetime. The typed duration atom
+# points at the sentence that names the shield, so a preceding slow, channel,
+# or attack-speed duration cannot become the shield lifetime.
+_SHIELD_DURATION_ATOM_QUERIES: dict[tuple[str, str], AbilityAtomQuery] = {
+    ("Annie", "E"): AbilityAtomQuery(
+        source="Annie.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="active duration@",
+    ),
+    ("Morgana", "E"): AbilityAtomQuery(
+        source="Morgana.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="active duration@",
+    ),
+    ("Azir", "E"): AbilityAtomQuery(
+        source="Azir.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Diana", "W"): AbilityAtomQuery(
+        source="Diana.W[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Ekko", "W"): AbilityAtomQuery(
+        source="Ekko.W[0].effects[2].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Ivern", "E"): AbilityAtomQuery(
+        source="Ivern.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Janna", "E"): AbilityAtomQuery(
+        source="Janna.E[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Jarvan IV", "W"): AbilityAtomQuery(
+        source="Jarvan IV.W[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("K'Sante", "E"): AbilityAtomQuery(
+        source="K'Sante.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Kai'Sa", "R"): AbilityAtomQuery(
+        source="Kai'Sa.R[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Karma", "E"): AbilityAtomQuery(
+        source="Karma.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Kassadin", "Q"): AbilityAtomQuery(
+        source="Kassadin.Q[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Lee Sin", "W"): AbilityAtomQuery(
+        source="Lee Sin.W[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Lulu", "E"): AbilityAtomQuery(
+        source="Lulu.E[0].effects[2].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Lux", "W"): AbilityAtomQuery(
+        source="Lux.W[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Milio", "E"): AbilityAtomQuery(
+        source="Milio.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Olaf", "W"): AbilityAtomQuery(
+        source="Olaf.W[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Nautilus", "W"): AbilityAtomQuery(
+        source="Nautilus.W[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Orianna", "E"): AbilityAtomQuery(
+        source="Orianna.E[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Rakan", "E"): AbilityAtomQuery(
+        source="Rakan.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Riven", "E"): AbilityAtomQuery(
+        source="Riven.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Rumble", "W"): AbilityAtomQuery(
+        source="Rumble.W[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Renata Glasc", "E"): AbilityAtomQuery(
+        source="Renata Glasc.E[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Senna", "R"): AbilityAtomQuery(
+        source="Senna.R[0].effects[2].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Seraphine", "W"): AbilityAtomQuery(
+        source="Seraphine.W[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Sona", "W"): AbilityAtomQuery(
+        source="Sona.W[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Taric", "W"): AbilityAtomQuery(
+        source="Taric.W[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Thresh", "W"): AbilityAtomQuery(
+        source="Thresh.W[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Udyr", "W"): AbilityAtomQuery(
+        source="Udyr.W[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Urgot", "E"): AbilityAtomQuery(
+        source="Urgot.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Yuumi", "E"): AbilityAtomQuery(
+        source="Yuumi.E[0].effects[0].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+    ("Yone", "W"): AbilityAtomQuery(
+        source="Yone.W[0].effects[1].description",
+        behavior="timing",
+        evidence_prefix="shield duration@",
+    ),
+}
+
+_INVULNERABILITY_ATOM_QUERIES: dict[
+    tuple[str, str], tuple[AbilityAtomQuery, AbilityAtomQuery]
+] = {
+    ("Taric", "R"): (
+        AbilityAtomQuery(
+            source="Taric.R[0].effects[0].description",
+            behavior="timing",
+            evidence_prefix="invulnerability delay@",
+        ),
+        AbilityAtomQuery(
+            source="Taric.R[0].effects[0].description",
+            behavior="timing",
+            evidence_prefix="invulnerability duration@",
+        ),
+    ),
+}
+
 
 def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
     memo = _SUPPORT_ATTRS_MEMO.get(id(champion_data))
@@ -220,7 +435,9 @@ def _support_profile(
     memo = _SUPPORT_PROFILE_MEMO.get(id(ability))
     if memo is not None and memo[0] is ability:
         return memo[1]
-    shield_attr = _first_attribute(ability, ("Shield Strength", "Shield"))
+    shield_attr = _first_attribute(
+        ability, ("Magic Shield Strength", "Shield Strength", "Shield")
+    )
     heal_attr = _first_attribute(
         ability,
         ("Total Heal", "Heal", "Heal Per Tick", "Minimum Heal", "Maximum Heal"),
@@ -306,12 +523,440 @@ def _support_profile(
     return profile
 
 
+def _atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep the provenance fields that identify one runtime atom."""
+    return {
+        key: atom[key]
+        for key in (
+            "atom_id",
+            "behavior",
+            "source",
+            "values",
+            "units",
+            "evidence",
+            "hash",
+        )
+    }
+
+
+def _shield_duration_metadata(
+    champion_data: dict[str, Any], slot: str
+) -> dict[str, Any]:
+    """Return a reviewed shield lifetime from its typed duration atom."""
+    champion_name = str(champion_data.get("name", ""))
+    query = _SHIELD_DURATION_ATOM_QUERIES.get((champion_name, slot))
+    if query is None:
+        return {}
+    atom = required_ability_atom(
+        champion_name,
+        champion_data,
+        slot,
+        query=query,
+    )
+    duration = ranked_ability_atom_value(atom, 1, source=query.source)
+    if atom.get("units") != ["s"]:
+        raise ValueError(
+            f"{champion_name} {slot} shield duration atom must use seconds"
+        )
+    return {"duration": duration, "duration_atom": _atom_receipt(atom)}
+
+
+def _invulnerability_timing_metadata(
+    champion_data: dict[str, Any], slot: str
+) -> dict[str, Any]:
+    """Return a typed descent delay and invulnerability window."""
+    champion_name = str(champion_data.get("name", ""))
+    queries = _INVULNERABILITY_ATOM_QUERIES.get((champion_name, slot))
+    if queries is None:
+        raise ValueError(f"{champion_name} {slot} has no invulnerability timing atoms")
+    delay_query, duration_query = queries
+    delay_atom = required_ability_atom(
+        champion_name,
+        champion_data,
+        slot,
+        query=delay_query,
+    )
+    duration_atom = required_ability_atom(
+        champion_name,
+        champion_data,
+        slot,
+        query=duration_query,
+    )
+    for label, atom in (("delay", delay_atom), ("duration", duration_atom)):
+        if atom.get("units") != ["s"]:
+            raise ValueError(
+                f"{champion_name} {slot} invulnerability {label} atom "
+                "must use seconds"
+            )
+    return {
+        "activation_delay": ranked_ability_atom_value(
+            delay_atom, 1, source=delay_query.source
+        ),
+        "duration": ranked_ability_atom_value(
+            duration_atom, 1, source=duration_query.source
+        ),
+        "activation_delay_atom": _atom_receipt(delay_atom),
+        "duration_atom": _atom_receipt(duration_atom),
+    }
+
+
+def _morgana_black_shield_metadata(
+    champion_data: dict[str, Any],
+    ability: dict[str, Any],
+    rank: int,
+    stats: Mapping[str, float],
+) -> dict[str, Any]:
+    """Return Black Shield's typed pool, duration, and source receipts."""
+    champion_name = str(champion_data.get("name", ""))
+    strength_source = "Morgana.E[0].effects[0].leveling[0].modifiers[0]"
+    strength_atom = required_ability_atom(
+        champion_name,
+        champion_data,
+        "E",
+        query=AbilityAtomQuery(
+            source=strength_source,
+            behavior="ability",
+            evidence_prefix="Magic Shield Strength@",
+        ),
+    )
+    strength_base = ranked_ability_atom_value(
+        strength_atom, rank, source=strength_source
+    )
+    base_stats = dict(stats)
+    base_stats["ability_power"] = 0.0
+    parsed_base = extract_named(ability, "Magic Shield Strength", rank, base_stats, {})
+    if abs(parsed_base - strength_base) > 1e-9:
+        raise ValueError(
+            "Morgana E Magic Shield Strength atom disagrees with cached ability data"
+        )
+
+    duration_metadata = _shield_duration_metadata(champion_data, "E")
+    return {
+        **duration_metadata,
+        "shield_pool": "magic",
+        "crowd_control_immunity_while_shield": True,
+        "crowd_control_immunity_source": str(ability.get("name", "Black Shield")),
+        "source_atom": _atom_receipt(strength_atom),
+    }
+
+
+def _target_max_health_shield_metadata(
+    champion_data: dict[str, Any],
+    ability: dict[str, Any],
+    slot: str,
+    attribute: str,
+    rank: int,
+) -> dict[str, Any]:
+    """Return a typed target-health formula when the source names one."""
+    champion_name = str(champion_data.get("name", ""))
+    for effect_index, effect in enumerate(ability.get("effects", [])):
+        for leveling_index, leveling in enumerate(effect.get("leveling", [])):
+            if leveling.get("attribute") != attribute:
+                continue
+            for modifier_index, modifier in enumerate(leveling.get("modifiers", [])):
+                units = [
+                    str(unit).strip().lower() for unit in modifier.get("units", [])
+                ]
+                if not units or any(
+                    unit != "% of target's maximum health" for unit in units
+                ):
+                    continue
+                source = (
+                    f"{champion_name}.{slot}[0].effects[{effect_index}]"
+                    f".leveling[{leveling_index}].modifiers[{modifier_index}]"
+                )
+                atom = required_ability_atom(
+                    champion_name,
+                    champion_data,
+                    slot,
+                    query=AbilityAtomQuery(
+                        source=source,
+                        behavior="ability",
+                        evidence_prefix=f"{attribute}@",
+                    ),
+                )
+                ratio = ranked_ability_atom_value(atom, rank, source=source) / 100.0
+
+                def amount_formula(
+                    _current_health: float,
+                    maximum_health: float,
+                    ratio: float = ratio,
+                ) -> float:
+                    return max(0.0, maximum_health) * ratio
+
+                return {
+                    "amount": 0.0,
+                    "amount_formula": amount_formula,
+                    "amount_formula_atom": _atom_receipt(atom),
+                }
+    return {}
+
+
+def _target_missing_health_heal_metadata(
+    champion_data: dict[str, Any],
+    slot: str,
+    attribute: str,
+    rank: int,
+) -> dict[str, Any]:
+    """Return a typed live missing-health formula when the source names it."""
+    champion_name = str(champion_data.get("name", ""))
+    value, atom = required_ranked_attribute_atom(
+        champion_name,
+        champion_data,
+        slot,
+        attribute,
+        rank,
+    )
+    units = [str(unit).strip().lower() for unit in atom.get("units", [])]
+    if not units or any(unit != "% of target's missing health" for unit in units):
+        raise ValueError(
+            f"{champion_name} {slot} {attribute} atom must use target missing health"
+        )
+    ratio = value / 100.0
+
+    def amount_formula(
+        current_health: float,
+        maximum_health: float,
+        ratio: float = ratio,
+    ) -> float:
+        return max(0.0, maximum_health - current_health) * ratio
+
+    return {
+        "amount": 0.0,
+        "amount_formula": amount_formula,
+        "amount_formula_atom": _atom_receipt(atom),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Wave-2 champion follow-up packets (HANDOVER 8.5): sourced bounce and
+# best-friend riders that ride the base scanner packet of the same cast.
+# Every number comes from the cached leveling rows / typed atoms below; the
+# two prose coefficients are quoted from the cached descriptions with the
+# same documentation style as healing.py's E1 rules and renata_glasc.py.
+# ---------------------------------------------------------------------------
+
+# Nami W (Ebb and Flow) bounce prose — cached
+# ``Nami.W[0].effects[1].description``: "each bounce modifying the
+# effectiveness of the next by -20% (+ 15% per 100 AP)".  The reduction is
+# per-bounce off the ORIGINAL first-target value: the sourced "Minimum
+# Heal" row is exactly 60% of the "Heal" row at every rank (93 = 0.6 x 155
+# at rank 5), so the second bounce keeps 1 - 2 x 0.20 = 60% at 0 AP — the
+# sourced Minimum Heal row is the documented floor, exactly as the E1 rule
+# floors the first bounce.
+_NAMI_BOUNCE_REDUCTION_PER_BOUNCE = 0.20
+_NAMI_BOUNCE_AP_RELIEF_PER_100 = 0.15
+
+# Yuumi R (Final Chapter) Best Friend bonus — cached
+# ``Yuumi.R[0].effects[4].description``: "Final Chapter's heal to the Best
+# Friend is increased by 30% : 60% (based on level)" with the sourced
+# per-level row (30 / 35 / 40 / 45 / 50 / 55 / 60%).  The deterministic
+# roster model treats the selected teammate as the anchor and Best Friend
+# (the same teammate Yuumi E already targets), so the bonus rides the
+# base heal packet of the same cast.
+_YUUMI_R_TOTAL_HEAL_QUERY = AbilityAtomQuery(
+    source="Yuumi.R[0].effects[1].leveling[1].modifiers[0]",
+    behavior="ability",
+    evidence_prefix="Total Heal@",
+)
+_YUUMI_R_BEST_FRIEND_QUERY = AbilityAtomQuery(
+    source="Yuumi.R[0].effects[4].leveling[0].modifiers[0]",
+    behavior="ability",
+    evidence_prefix="Per-Level Scaling@",
+)
+# The conversion shield lifetime is "1.5 seconds plus the remaining
+# channel duration" (cached ``Yuumi.R[0].effects[1].description``); the
+# scanner lumps the sourced Total Heal at the cast, so the remaining
+# channel is the full sourced 3.5s channel (``effects[0]``).
+_YUUMI_R_SHIELD_DURATION_QUERY = AbilityAtomQuery(
+    source="Yuumi.R[0].effects[1].description",
+    behavior="timing",
+    evidence_prefix="shield duration@",
+)
+_YUUMI_R_CHANNEL_QUERY = AbilityAtomQuery(
+    source="Yuumi.R[0].effects[0].description",
+    behavior="timing",
+    evidence_prefix="active duration@",
+)
+
+
+def _clamped_per_level_fraction(atom: Mapping[str, Any], level: int) -> float:
+    """Read a per-level atom row at the repo's clamped level index.
+
+    Rows with one value per level index directly (20 values); shorter
+    per-level rows (Yuumi R's 7-value Best Friend row) clamp at the last
+    value — the same convention ``slotlib._modifier_value`` and the
+    Renata P Leverage rule use.  The wiki bracket levels are not present
+    in the cache, so the endpoints (30% at level 1, 60% at level 18) are
+    exact and intermediate levels follow the established clamp.
+    """
+    values = atom.get("values", ())
+    if not values:
+        raise ValueError(f"per-level atom {atom.get('source', '')!r} has no values")
+    index = min(max(level, 1) - 1, len(values) - 1)
+    value = values[index]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(
+            f"per-level atom {atom.get('source', '')!r} "
+            f"level {level} is not numeric"
+        )
+    return float(value) / 100.0
+
+
+def _nami_return_bounce_packet(
+    champion_data: dict[str, Any],
+    ability: dict[str, Any],
+    slot: str,
+    rank: int,
+    stats: Mapping[str, float],
+    base_amount: float,
+    cast_time: float,
+    cast_index: int,
+) -> dict[str, Any]:
+    """Ebb and Flow's return bounce heals the selected teammate again.
+
+    Cast on the selected teammate, the stream bounces to the enemy and
+    back; the second bounce keeps 60% + 30% per 100 AP of the original
+    heal, never below the sourced "Minimum Heal" row (which is exactly the
+    60% floor at every rank).  The packet has its own selection key so the
+    roster UI can choose the return-bounce recipient explicitly.
+    """
+    _, heal_atom = required_ranked_attribute_atom(
+        "Nami", champion_data, slot, "Heal", rank
+    )
+    _, floor_atom = required_ranked_attribute_atom(
+        "Nami", champion_data, slot, "Minimum Heal", rank
+    )
+    floor = extract_named(ability, "Minimum Heal", rank, stats, {})
+    ap = float(stats.get("ability_power", 0.0) or 0.0)
+    factor = 1.0 - 2.0 * (
+        _NAMI_BOUNCE_REDUCTION_PER_BOUNCE - _NAMI_BOUNCE_AP_RELIEF_PER_100 * ap / 100.0
+    )
+    amount = max(floor, base_amount * factor)
+    return {
+        "time": cast_time,
+        "kind": "heal",
+        "amount": amount,
+        "source": "Ebb and Flow · Return Bounce",
+        "slot": slot,
+        "target_self": False,
+        "target_scope": "one_teammate",
+        "rank": rank,
+        "target_selection_key": f"heal:{slot}:{cast_index}:bounce",
+        "source_atoms": [_atom_receipt(heal_atom), _atom_receipt(floor_atom)],
+    }
+
+
+def _yuumi_best_friend_packet(
+    champion_data: dict[str, Any],
+    slot: str,
+    level: int,
+    rank: int,
+    base_amount: float,
+    cast_time: float,
+    cast_index: int,
+) -> dict[str, Any]:
+    """Final Chapter's Best Friend bonus heal on the selected teammate.
+
+    The anchor (the selected teammate) is healed for the sourced per-level
+    bonus (30% : 60% based on level) of the sourced Total Heal, emitted as
+    its own packet with an explicit selection key so the base and bonus
+    heals stay independently targetable.
+    """
+    _, total_atom = required_ranked_attribute_atom(
+        "Yuumi", champion_data, slot, "Total Heal", rank
+    )
+    bonus_atom = required_ability_atom(
+        "Yuumi",
+        champion_data,
+        slot,
+        query=_YUUMI_R_BEST_FRIEND_QUERY,
+    )
+    fraction = _clamped_per_level_fraction(bonus_atom, level)
+    return {
+        "time": cast_time,
+        "kind": "heal",
+        "amount": base_amount * fraction,
+        "source": "Final Chapter · Best Friend Bonus",
+        "slot": slot,
+        "target_self": False,
+        "target_scope": "one_teammate",
+        "rank": rank,
+        "target_selection_key": f"heal:{slot}:{cast_index}:best_friend",
+        "source_atoms": [_atom_receipt(total_atom), _atom_receipt(bonus_atom)],
+    }
+
+
+def _yuumi_conversion_shield_packet(
+    champion_data: dict[str, Any],
+    heal_event: Mapping[str, Any],
+    slot: str,
+) -> dict[str, Any]:
+    """Final Chapter's overheal-to-shield conversion for one heal packet.
+
+    Cached ``Yuumi.R[0].effects[1].description``: "each heal instance
+    beyond maximum health being converted into a shield that lasts for
+    1.5 seconds plus the remaining channel duration instead".  The live
+    excess ``max(0, heal - missing)`` is a shield formula the survival
+    kernel evaluates against the target's current health at the packet's
+    timestamp (same amount_formula path as Taric W), so the shield pool
+    and expiry follow the shared shield ledger.
+    """
+    shield_duration_atom = required_ability_atom(
+        "Yuumi",
+        champion_data,
+        slot,
+        query=_YUUMI_R_SHIELD_DURATION_QUERY,
+    )
+    channel_atom = required_ability_atom(
+        "Yuumi",
+        champion_data,
+        slot,
+        query=_YUUMI_R_CHANNEL_QUERY,
+    )
+    duration = float(shield_duration_atom["values"][0]) + float(
+        channel_atom["values"][0]
+    )
+    heal_amount = float(heal_event.get("amount", 0.0))
+
+    def amount_formula(
+        current_health: float,
+        maximum_health: float,
+        heal: float = heal_amount,
+    ) -> float:
+        return max(0.0, heal - max(0.0, maximum_health - current_health))
+
+    return {
+        "time": float(heal_event.get("time", 0.0)),
+        "kind": "shield",
+        "amount": 0.0,
+        "amount_formula": amount_formula,
+        "source": "Final Chapter · Overheal Conversion",
+        "slot": slot,
+        "target_self": False,
+        "target_scope": "one_teammate",
+        "rank": int(heal_event.get("rank", 0)),
+        # The conversion rides the heal it converts: it shares the parent
+        # heal's selection key so the roster's chosen recipient for that
+        # heal packet also receives its shield (in-game the conversion
+        # lands on the ally who was healed, not an independent target).
+        "target_selection_key": str(heal_event.get("target_selection_key", "")),
+        "duration": duration,
+        "duration_atom": _atom_receipt(shield_duration_atom),
+        "source_atoms": [
+            _atom_receipt(shield_duration_atom),
+            _atom_receipt(channel_atom),
+        ],
+    }
+
+
 def derive_ally_effects(
     champion_data: dict[str, Any],
     level: int,
     stats: dict[str, float],
     cast_timeline: list[dict[str, Any]],
     ability_ranks: dict[str, int] | None = None,
+    champion_options: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Return explicit shield/heal packets and their sourced cast times.
 
@@ -320,10 +965,14 @@ def derive_ally_effects(
     ``self``, one selected teammate, or all selected teammates.  A missing
     scope is never silently treated as an area effect.
     """
-    if not _has_support_attributes(champion_data):
+    champion_name = str(champion_data.get("name", ""))
+    if not _has_support_attributes(champion_data) and not any(
+        (champion_name, slot) in _SUPPORT_STATE_SLOTS for slot in ("Q", "W", "E", "R")
+    ):
         return []
     effects: list[dict[str, Any]] = []
     requested_ranks = ability_ranks or {}
+    options = champion_options or {}
     for slot in ("Q", "W", "E", "R"):
         ability = _ability(champion_data, slot)
         if not ability:
@@ -344,7 +993,7 @@ def derive_ally_effects(
         if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_SHIELD_SLOTS:
             continue
         shield_attr, heal_attr, target_self, target_scope = _support_profile(ability)
-        champion_key = (champion_data.get("name", ""), slot)
+        champion_key = (champion_name, slot)
         # E8d follow-up: a sourced per-champion attribute override wins over
         # the generic lookup (Bard W fully-charged shrine).
         heal_attr = _CHAMPION_HEAL_ATTR.get(champion_key, heal_attr)
@@ -360,7 +1009,7 @@ def derive_ally_effects(
         # see).  Only the HEAL branch defers: shield packets on the same
         # slot stay scanner-owned unless the shield registry claims the
         # whole slot (Sona W's Melody shield has no module author).
-        if champion_key in _MODULE_AUTHORED_HEAL_SLOTS:
+        if champion_key in _MODULE_AUTHORED_HEAL_SLOTS | _STATE_AUTHORED_HEAL_SLOTS:
             heal_attr = None
         # Issue #142: fail closed at the emitter.  A typo or novel scope must
         # name the champion+slot at the source instead of silently redirecting
@@ -372,53 +1021,322 @@ def derive_ally_effects(
                 f"from source {ability.get('name', slot)!r}; supported scopes: "
                 f"{sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)}"
             )
+        if champion_key in _SUPPORT_STATE_SLOTS:
+            timing_metadata = _invulnerability_timing_metadata(champion_data, slot)
+            casts = [event for event in cast_timeline if event.get("slot") == slot]
+            for cast_index, cast in enumerate(casts):
+                cast_time = _sourced_cast_time(cast, slot=slot)
+                effects.append(
+                    {
+                        "time": cast_time + timing_metadata["activation_delay"],
+                        "kind": "invulnerability",
+                        "duration": timing_metadata["duration"],
+                        "activation_delay": timing_metadata["activation_delay"],
+                        "source": (f"{ability.get('name', slot)} · Invulnerability"),
+                        "slot": slot,
+                        "target_self": True,
+                        "target_scope": target_scope,
+                        "rank": rank,
+                        "target_selection_key": f"state:{slot}:{cast_index}",
+                        **timing_metadata,
+                    }
+                )
+            continue
         if shield_attr is None and heal_attr is None:
             continue
         casts = [event for event in cast_timeline if event.get("slot") == slot]
-        for cast in casts:
+        for cast_index, cast in enumerate(casts):
             # Validate every authored support cast, even when its resolved
             # packet is zero or intentionally omitted (for example, a
             # per-tick heal without a complete cadence).
             _sourced_cast_time(cast, slot=slot)
             if shield_attr is not None:
-                amount = extract_named(ability, shield_attr, rank, stats, {})
-                if amount > 0:
-                    effects.append(
-                        {
-                            "time": _sourced_cast_time(cast, slot=slot),
-                            "kind": "shield",
-                            "amount": float(amount),
-                            "source": f"{ability.get('name', slot)} · {shield_attr}",
-                            "slot": slot,
-                            "target_self": target_self,
-                            "target_scope": target_scope,
-                            "rank": rank,
-                        }
-                    )
+                amount_metadata = _target_max_health_shield_metadata(
+                    champion_data, ability, slot, shield_attr, rank
+                )
+                amount = (
+                    float(amount_metadata.get("amount", 0.0))
+                    if amount_metadata
+                    else extract_named(ability, shield_attr, rank, stats, {})
+                )
+                if amount > 0 or amount_metadata.get("amount_formula") is not None:
+                    event = {
+                        "time": _sourced_cast_time(cast, slot=slot),
+                        "kind": "shield",
+                        "amount": float(amount),
+                        "source": f"{ability.get('name', slot)} · {shield_attr}",
+                        "slot": slot,
+                        "target_self": target_self,
+                        "target_scope": target_scope,
+                        "rank": rank,
+                        "target_selection_key": f"shield:{slot}:{cast_index}",
+                        **amount_metadata,
+                    }
+                    if shield_attr == "Magic Shield Strength":
+                        event["shield_pool"] = "magic"
+                    if champion_key == ("Morgana", "E"):
+                        event.update(
+                            _morgana_black_shield_metadata(
+                                champion_data, ability, rank, stats
+                            )
+                        )
+                    else:
+                        event.update(_shield_duration_metadata(champion_data, slot))
+                    effects.append(event)
             # Issue #143: a module/healing-rule-authored heal slot is the
             # exact receipt (level-indexed bases, missing-health terms, and a
             # dragon-form gate the scanner cannot see).  Registry members
             # reach this branch with ``heal_attr`` already nulled above (the
             # E9-2-era per-slot null-out guard lives there now).
             if heal_attr is not None:
-                amount = extract_named(ability, heal_attr, rank, stats, {})
+                cast_time = _sourced_cast_time(cast, slot=slot)
+                amount_metadata: dict[str, Any] = {}
+                heal_time = cast_time
+                requires_existing_shield = False
+                shield_gate_time: float | None = None
+                shield_gate_assumed = False
+                if champion_key == ("Seraphine", "W"):
+                    amount_metadata = _target_missing_health_heal_metadata(
+                        champion_data, slot, heal_attr, rank
+                    )
+                    duration_metadata = _shield_duration_metadata(champion_data, slot)
+                    duration = float(duration_metadata["duration"])
+                    heal_time = cast_time + duration
+                    shield_gate_assumed = (
+                        bool(options.get("w_already_shielded", False))
+                        and cast_index == 0
+                    )
+                    requires_existing_shield = not shield_gate_assumed
+                    shield_gate_time = cast_time
+                amount = float(
+                    amount_metadata.get(
+                        "amount",
+                        extract_named(ability, heal_attr, rank, stats, {}),
+                    )
+                )
                 source_label = f"{ability.get('name', slot)} · {heal_attr}"
                 # A per-tick entry is not a complete heal packet without its
                 # authored duration/tick cadence; fail closed here rather than
                 # multiplying a guessed number.
                 if heal_attr == "Heal Per Tick":
                     continue
-                if amount > 0:
-                    effects.append(
-                        {
-                            "time": _sourced_cast_time(cast, slot=slot),
-                            "kind": "heal",
-                            "amount": float(amount),
-                            "source": source_label,
-                            "slot": slot,
-                            "target_self": False,
-                            "target_scope": target_scope,
-                            "rank": rank,
-                        }
-                    )
+                if amount > 0 or amount_metadata.get("amount_formula") is not None:
+                    event = {
+                        "time": heal_time,
+                        "kind": "heal",
+                        "amount": amount,
+                        "source": source_label,
+                        "slot": slot,
+                        "target_self": False,
+                        "target_scope": target_scope,
+                        "rank": rank,
+                        "target_selection_key": f"heal:{slot}:{cast_index}",
+                        **amount_metadata,
+                    }
+                    if champion_key == ("Seraphine", "W"):
+                        event.update(
+                            {
+                                "requires_existing_shield": requires_existing_shield,
+                                "shield_gate_target": "attacker",
+                                "shield_gate_time": shield_gate_time,
+                                "shield_gate_assumed": shield_gate_assumed,
+                            }
+                        )
+                    effects.append(event)
+                    # Wave-2 follow-up packets (HANDOVER 8.5): sourced
+                    # riders on the same cast keep the base packet's amount
+                    # intact (the E8d pins read the first matching packet),
+                    # carry their own target-selection keys, and attach the
+                    # atom receipts that prove every number.
+                    if champion_key == ("Nami", "W"):
+                        effects.append(
+                            _nami_return_bounce_packet(
+                                champion_data,
+                                ability,
+                                slot,
+                                rank,
+                                stats,
+                                amount,
+                                heal_time,
+                                cast_index,
+                            )
+                        )
+                    elif champion_key == ("Yuumi", "R"):
+                        best_friend = _yuumi_best_friend_packet(
+                            champion_data,
+                            slot,
+                            level,
+                            rank,
+                            amount,
+                            heal_time,
+                            cast_index,
+                        )
+                        effects.append(best_friend)
+                        effects.append(
+                            _yuumi_conversion_shield_packet(
+                                champion_data,
+                                event,
+                                slot,
+                            )
+                        )
+                        effects.append(
+                            _yuumi_conversion_shield_packet(
+                                champion_data,
+                                best_friend,
+                                slot,
+                            )
+                        )
     return sorted(effects, key=lambda event: (event["time"], event["kind"]))
+
+
+_SELF_STATE_EVENT_KINDS = frozenset(
+    {
+        "spell_shield",
+        "stasis",
+        "invulnerability",
+        "untargetable",
+        "crowd_control",
+        # A timed self damage-reduction window (Briar E charge).  The typed
+        # fields the survival kernel reads ride the emitted event verbatim.
+        "damage_modifier",
+    }
+)
+
+
+def derive_self_state_effects(
+    ability_damages: Mapping[str, Any],
+    cast_timeline: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Expand module-authored self state atoms over accepted cast times.
+
+    A state packet is authored by a named champion module.  The cast
+    timeline supplies the only valid time for that packet.  Unknown kinds,
+    invalid durations, and missing sources fail closed at the atom boundary.
+    """
+    effects: list[dict[str, Any]] = []
+    for slot, entry in ability_damages.items():
+        if not isinstance(entry, Mapping):
+            continue
+        raw_events = entry.get("self_state_events")
+        if raw_events is None:
+            continue
+        if not isinstance(raw_events, list):
+            raise ValueError(f"{slot} self_state_events must be a list")
+        casts = [
+            cast
+            for cast in cast_timeline
+            if isinstance(cast, Mapping) and str(cast.get("slot", "")) == str(slot)
+        ]
+        for cast_index, cast in enumerate(casts):
+            cast_time = _sourced_cast_time(cast, slot=str(slot))
+            for state_index, raw_event in enumerate(raw_events):
+                if not isinstance(raw_event, Mapping):
+                    raise ValueError(
+                        f"{slot} self_state_events[{state_index}] must be an object"
+                    )
+                kind = str(raw_event.get("kind", ""))
+                if kind not in _SELF_STATE_EVENT_KINDS:
+                    raise ValueError(
+                        f"{slot} self state kind {kind!r} is not supported"
+                    )
+                try:
+                    duration = float(raw_event["duration"])
+                    time_offset = float(raw_event.get("time_offset", 0.0) or 0.0)
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"{slot} self state event needs numeric duration and offset"
+                    ) from exc
+                if not math.isfinite(duration) or duration <= 0.0:
+                    raise ValueError(f"{slot} self state duration must be positive")
+                if not math.isfinite(time_offset):
+                    raise ValueError(f"{slot} self state time_offset must be finite")
+                source = str(raw_event.get("source", ""))
+                if not source:
+                    raise ValueError(f"{slot} self state source is required")
+                event = {
+                    "time": cast_time + time_offset,
+                    "kind": kind,
+                    "duration": duration,
+                    "source": source,
+                    "source_key": str(slot),
+                    "slot": str(slot),
+                    "target_self": True,
+                    "target_scope": "self",
+                    "rank": entry.get("rank", 0),
+                    "_event_id": f"self_state:{slot}:{cast_index}:{state_index}",
+                }
+                for field in (
+                    "on_block_heal_amount",
+                    "on_block_heal_delay",
+                    "on_block_heal_source",
+                ):
+                    if field in raw_event:
+                        event[field] = raw_event[field]
+                # Atom receipts authored by the champion module (Sivir E:
+                # duration + Heal atoms) ride the arm packet so the kernel
+                # contract and the public receipt can prove the source.
+                if "source_atoms" in raw_event:
+                    atoms = raw_event["source_atoms"]
+                    if not isinstance(atoms, list) or not all(
+                        isinstance(atom, Mapping) for atom in atoms
+                    ):
+                        raise ValueError(
+                            f"{slot} self state source_atoms must be a list "
+                            "of atom objects"
+                        )
+                    event["source_atoms"] = [dict(atom) for atom in atoms]
+                # Timed damage modifiers carry their typed kernel fields
+                # (multiplier, all_sources, damage_reduction, persistent,
+                # next_event_only, owner/source routing, resistance
+                # reduction) plus the source-atom receipts so the public
+                # support receipt can prove where each number came from.
+                # Invalid numeric payloads fail closed at the atom boundary
+                # exactly like a missing duration or source.
+                for field in (
+                    "multiplier",
+                    "amount",
+                    "armor_reduction_percent",
+                    "mr_reduction_percent",
+                    "_priority",
+                ):
+                    if field in raw_event:
+                        try:
+                            number = float(raw_event[field])
+                        except (TypeError, ValueError) as exc:
+                            raise ValueError(
+                                f"{slot} self state {field} must be numeric"
+                            ) from exc
+                        if not math.isfinite(number):
+                            raise ValueError(
+                                f"{slot} self state {field} must be finite"
+                            )
+                        event[field] = number
+                for field in (
+                    "all_sources",
+                    "damage_reduction",
+                    "persistent",
+                    "next_event_only",
+                    "owner",
+                    "source_participant",
+                    "resistance_type",
+                ):
+                    if field in raw_event:
+                        event[field] = raw_event[field]
+                if "source_atoms" in raw_event:
+                    atoms = raw_event["source_atoms"]
+                    if not isinstance(atoms, list) or not all(
+                        isinstance(atom, Mapping) for atom in atoms
+                    ):
+                        raise ValueError(
+                            f"{slot} self state source_atoms must be a list of atoms"
+                        )
+                    event["source_atoms"] = [dict(atom) for atom in atoms]
+                effects.append(event)
+    return sorted(
+        effects,
+        key=lambda event: (
+            float(event["time"]),
+            str(event["source_key"]),
+            str(event["_event_id"]),
+        ),
+    )

@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage, source_row
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
 
 
 def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -130,7 +130,11 @@ def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = {
     "P": _scarecrow,
-    "Q": _terrify,
+    "Q": with_control(
+        _terrify,
+        kind="fear",
+        duration_attr="Fear Duration",
+    ),
     "W": _bountiful_harvest,
     "E": _reap,
     "R": _crowstorm,

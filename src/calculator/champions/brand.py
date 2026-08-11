@@ -31,6 +31,7 @@ from .slotlib import (
     extract_named,
     pct_health_per_hit,
     simple_damage,
+    with_control,
 )
 
 # HARDCODED: verify on patch updates — the Ablaze DoT is prose-only in
@@ -166,12 +167,17 @@ ASSUMPTIONS = [
     "Ablaze ticks count as ability damage, keeping item burns "
     "(Liandry's Torment, Blackfire Torch) refreshed for the full 4s "
     "after Brand's last cast",
-    "Q's stun, E's spread doubling, and R's slow are utility-only and "
-    "excluded from damage",
+    "Q's sourced 1.75-second stun counts as target action downtime; E's "
+    "spread doubling and R's slow remain utility-only",
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": with_control(
+        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        kind="stun",
+        duration_attr="Stun Duration",
+        effect_index=1,
+    ),
     "W": simple_damage(attr="Increased Damage", dmg_type="magic"),
     "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "R": _pyroclasm,

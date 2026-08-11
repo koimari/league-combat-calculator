@@ -6,7 +6,12 @@ from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage, source_row
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    with_control_event,
+)
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)
 _SPIDER_BONUS_DAMAGE = (12.0, 22.0, 32.0, 42.0)
@@ -118,7 +123,11 @@ SLOTS = {
     "P": _spider_queen,
     "Q": _neurotoxin_or_bite,
     "W": _volatile_spiderling,
-    "E": _cocoon,
+    "E": with_control_event(
+        _cocoon,
+        kind="stun",
+        duration_attr="Stun Duration",
+    ),
     "R": _form_toggle,
 }
 parse_abilities = build_parser(SLOTS, "Elise")
