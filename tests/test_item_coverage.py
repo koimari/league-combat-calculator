@@ -7,6 +7,7 @@ from src.calculator.item_coverage import (
     _TARGET_BLOCKED_REASONS,
     UTILITY_OUTCOMES,
     PRECEDENCE,
+    gated_state_reason,
     item_model_coverage,
     optimizer_candidate_coverage,
     require_calculation_item_coverage,
@@ -629,6 +630,79 @@ def test_defensive_state_coverage_names_the_authored_scenario_boundary(
     assert coverage["status"] == expected_status
     assert coverage["calculation_eligible"] is True
     assert reason_fragment in coverage["reason"]
+
+
+# ── rung 2's gated-state receipt ──────────────────────────────────────────
+#
+# The oracle pass over 3.8's coupled diffs returned ``old_value_correct`` on
+# every Zhonya's Hourglass leaf: the flip had replaced a receipt naming the
+# scenario input that arms Time Stop with a family census claiming the
+# mechanic "changes durability, not outgoing TDD" — which is false of an
+# active that suppresses its own holder's attacks and casts for its duration.
+# These four tests pin the corrected rung from both sides, so neither the
+# specific receipt nor the census can quietly swallow the other again.
+
+
+@pytest.mark.parametrize("item_name", ["Zhonya's Hourglass", "Seeker's Armguard"])
+def test_a_defence_gated_by_a_bounded_option_publishes_that_gate(item_name):
+    """The receipt names the input that arms the state, not the family census."""
+    coverage = item_model_coverage(item_name, ATTACKER_LANES)
+    assert coverage.status == "stats_only"
+    assert coverage.reason == (
+        "Time Stop is priced only from the explicit bounded active-seconds "
+        "scenario input; item presence alone never assumes stasis."
+    )
+
+
+@pytest.mark.parametrize(
+    ("item_name", "why_the_gate_does_not_apply"),
+    [
+        ("Banshee's Veil", "declares no bounded option at all"),
+        ("Bloodthirster", "declares an option but no exclusive state"),
+    ],
+)
+def test_a_defence_without_both_halves_of_the_gate_keeps_the_family_census(
+    item_name, why_the_gate_does_not_apply
+):
+    """Both ways the sub-question declines, so the discriminator is pinned."""
+    coverage = item_model_coverage(item_name, ATTACKER_LANES)
+    assert coverage.status == "stats_only", why_the_gate_does_not_apply
+    assert coverage.reason == (
+        "Every declared family on this item is a defence: the represented "
+        "mechanic changes durability, not outgoing TDD."
+    )
+
+
+def test_the_gated_receipt_population_is_exactly_the_two_stasis_items():
+    """The population, pinned as a set: a third entrant is a real event.
+
+    Enumerated over every cached item rather than asserted of the two, so an
+    item that starts declaring an option-armed exclusive state changes this
+    set rather than changing a published reason unnoticed.
+    """
+    gated = {
+        name
+        for name in {
+            str(record.get("name", ""))
+            for record in fetch_item_data().values()
+            if isinstance(record, dict) and record.get("name")
+        }
+        if gated_state_reason(name) is not None
+    }
+    assert gated == {"Zhonya's Hourglass", "Seeker's Armguard"}
+
+
+def test_the_family_census_is_not_claimed_of_an_item_whose_active_stops_it():
+    """Why the census had to lose: it is the false sentence for this item.
+
+    The declaration's own zero policy says the state is never assumed by item
+    presence.  An item coverage answer that instead asserts the mechanic
+    cannot touch outgoing damage contradicts a rule the catalog declares, and
+    that contradiction is what the oracle pass caught.
+    """
+    coverage = item_model_coverage("Zhonya's Hourglass", ATTACKER_LANES)
+    assert "changes durability, not outgoing TDD" not in coverage.reason
+    assert "item presence alone never assumes" in coverage.reason
 
 
 @pytest.mark.parametrize(

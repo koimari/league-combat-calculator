@@ -41,7 +41,12 @@ from .coverage_evidence import (
 )
 from .data_fetcher import get_item_by_name
 from .interpreters import INTERPRETERS, lanes_for
-from .item_behavior import EngineLane, RuleFamily, UtilityDimension
+from .item_behavior import (
+    DefenseExclusivity,
+    EngineLane,
+    RuleFamily,
+    UtilityDimension,
+)
 from .item_behavior_catalog import behavior_rules, registry_entries
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 
@@ -648,6 +653,41 @@ def declares_behaviour(name: str) -> bool:
     return bool(_declared_families(name))
 
 
+def gated_state_reason(name: str) -> str | None:
+    """Rung 2's own sub-question: is this defence *armed* by a scenario input?
+
+    A defence-only item is ``stats_only`` either way, so this decides only what
+    the receipt beside that label says.  When a declared rule describes an
+    exclusive state (``exclusivity``) that an explicit bounded option arms
+    (``option``), the load-bearing fact is that gate — holding the item is not
+    holding the state — and the family census, which says only that nothing
+    declared here is offensive, is the weaker sentence.  It is also the false
+    one for an item like this: an item whose active suppresses its own holder
+    for the duration does touch outgoing damage, so "the mechanic changes
+    durability, not outgoing TDD" is a claim the declaration does not support.
+
+    Every part of the sentence is read off the declared rule — the mechanic
+    names itself, the exclusivity names the state, and what is left of the
+    option key after the state's own prefix names the control — so the rung
+    stays a derivation and no item name enters this file.  ``None`` means the
+    declaration carries no such gate and the family census stands.
+    """
+    for rule in behavior_rules(name):
+        payload = rule.payload
+        exclusivity = getattr(payload, "exclusivity", None)
+        option = getattr(payload, "option", None)
+        if option is None or exclusivity in (None, DefenseExclusivity.NONE):
+            continue
+        state = exclusivity.value
+        control = option.value.removeprefix(f"{state}_").replace("_", "-")
+        mechanic = payload.mechanic.value.replace("_", " ").title()
+        return (
+            f"{mechanic} is priced only from the explicit bounded {control} "
+            f"scenario input; item presence alone never assumes {state}."
+        )
+    return None
+
+
 def _state_reason(name: str, families: frozenset[RuleFamily]) -> str:
     """Why a declared item's damage-relevant state is supplied rather than run."""
     if name in ITEM_INPUT_OPTIONS:
@@ -673,6 +713,9 @@ def _declared_status(
     mirror are the same code, so they cannot drift into disagreeing.
     """
     if declares_only_defence(name):
+        gated = gated_state_reason(name)
+        if gated is not None:
+            return "stats_only", gated
         return (
             "stats_only",
             "Every declared family on this item is a defence: the represented "
@@ -698,7 +741,9 @@ def item_model_coverage(name: str, needed: frozenset[EngineLane]) -> ItemCoverag
        answer is ``withheld`` with the missing pair named — never a number.
     2. Is anything declared at all?  Then the families decide: all-defence is
        ``stats_only``, a state or ally family is ``modeled_state``, and the
-       rest is ``modeled_effect``.
+       rest is ``modeled_effect``.  An all-defence item whose declaration
+       gates an exclusive state behind a bounded option publishes that gate
+       as its receipt rather than the family census.
     3. Does the item expose bounded state as a scenario control, or has a
        review found it has no runtime behaviour?  Then ``modeled_state`` and
        ``stats_only`` respectively — the second being the one reviewed registry
