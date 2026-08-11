@@ -33,6 +33,7 @@ from pathlib import Path
 
 import pytest
 
+from scripts import capture_coverage_classification
 from src.calculator.coverage_evidence import (
     EVIDENCE_TYPES,
     UTILITY_DIMENSIONS,
@@ -1426,6 +1427,79 @@ def test_the_three_empty_containers_are_empty_rather_than_claim_covered() -> Non
     assert not item_coverage._PARTIAL_BLOCKED_REASONS
     assert not item_coverage._CALCULATION_ALLOWED_BLOCKED
     assert isinstance(item_coverage._CALCULATION_ALLOWED_BLOCKED, frozenset)
+
+
+# ── the numeric gate ──────────────────────────────────────────────────────
+#
+# Golden is near-vacuous for coverage: ``pipeline.py`` does not import
+# ``item_coverage``, so per D-93 this phase has to name a non-golden numeric
+# gate, and the committed classification receipt is it.  These two tests are
+# that gate's live half — the receipt's shape, and a fresh capture against
+# it — which is what turns "evidence added, nothing moved" from a sentence in
+# a commit body into something a run either reproduces or does not.
+
+
+def test_the_classification_receipt_holds_one_record_per_item_and_lane() -> None:
+    """Criterion 1: the record count is read from the receipt's own metadata.
+
+    ``item_count`` x ``len(lanes)``, out of **this** receipt.
+    ``golden_baseline.json`` carries a field of the same name with the same
+    value today, and reading it there would tie a coverage figure to the pair
+    engine's data pull; the count has one home and this is the assertion that
+    keeps it there.  It is a coverage-record count and not a golden leaf or
+    entry count, so umbrella criterion 4 does not reach it.
+    """
+    receipt = json.loads(CLASSIFICATION_RECEIPT.read_text(encoding="utf-8"))
+    metadata = receipt["metadata"]
+    assert sorted(receipt["records"]) == metadata["lanes"]
+    assert sum(len(lane) for lane in receipt["records"].values()) == (
+        capture_coverage_classification.record_count(receipt)
+    )
+    for lane in receipt["records"].values():
+        assert set(lane) == set(CACHE)
+
+
+def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
+    """Criterion 1's other half: the phase moved no coverage record.
+
+    The capture runs both classifiers over every cached item exactly as the
+    instrument does, so a reason string, an eligibility flag, a dimension or
+    an issue ref that moved anywhere in the corpus lands here as a named leaf.
+    Provenance is excluded through the instrument's own constant — ``git_head``
+    moves every commit and the fetch stamp moves on every data pull — and
+    ``item_count`` is deliberately not in that set, because it is the gate.
+    """
+    baseline = json.loads(CLASSIFICATION_RECEIPT.read_text(encoding="utf-8"))
+    fresh = capture_coverage_classification.capture()
+    excluded = capture_coverage_classification.COMPARE_EXCLUDED_PROVENANCE
+    assert "item_count" not in excluded
+    for snapshot in (baseline, fresh):
+        for key in excluded:
+            snapshot["metadata"].pop(key, None)
+    assert capture_coverage_classification.differing_leaves(baseline, fresh) == ()
+
+
+def test_the_capture_gate_names_the_record_that_moved() -> None:
+    """The red this gate can reproduce on demand (R-05), as a permanent test.
+
+    A comparison's negative is a comparison, so the fixture is the committed
+    receipt with one published reason perturbed in memory — nothing is
+    written and the receipt on disk is not touched.  A gate whose red was
+    demonstrated once during development is the unverifiable claim about the
+    past this campaign outlaws.
+    """
+    text = CLASSIFICATION_RECEIPT.read_text(encoding="utf-8")
+    baseline = json.loads(text)
+    perturbed = json.loads(text)
+    item = sorted(perturbed["records"]["attacker"])[0]
+    perturbed["records"]["attacker"][item]["reason"] = "a reason nobody published"
+    assert capture_coverage_classification.differing_leaves(baseline, perturbed) == (
+        (
+            f"records.attacker.{item}.reason",
+            baseline["records"]["attacker"][item]["reason"],
+            "a reason nobody published",
+        ),
+    )
 
 
 # ── the corpus, item by item ──────────────────────────────────────────────
