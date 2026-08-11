@@ -49,21 +49,14 @@ ItemCoverageStatus = Literal[
 ]
 
 
-# These mechanics can change TDD, casts, resources, or target durability.  The
-# optimiser withholds them until the named mechanic has an explicit model.
-_BLOCKED_REASONS: dict[str, str] = {}
-
-# A calculation may expose a fully sourced combat sub-effect even while the
-# optimiser must withhold the item because a separate progression/economy
-# state is not simulated.  Keep this list narrow and explicit: the API should
-# never silently turn an incomplete combat mechanic into a partial result.
-_CALCULATION_ALLOWED_BLOCKED = frozenset()
-
-# Items can have a registered damage packet while still carrying an
-# unrepresented sibling passive or state transition.  Keep those items
-# fail-closed until every fight-relevant child effect is covered; a name in
-# ``ITEM_EFFECTS`` is not proof that the whole item is modelled.
-_PARTIAL_BLOCKED_REASONS: dict[str, str] = {}
+# Three containers stood here — ``_BLOCKED_REASONS``,
+# ``_CALCULATION_ALLOWED_BLOCKED`` and ``_PARTIAL_BLOCKED_REASONS``.  All three
+# were empty, and the commit before this one asserted that emptiness and pinned
+# the two ``PRECEDENCE`` rungs they gated.  An empty container makes ``name in``
+# false for every name that exists and every name that could, so those rungs
+# decided nothing and the eligibility term added nothing: deleting them moves no
+# answer.  A withheld item now has one producer — a cached record whose passive
+# is unreviewed — instead of three that could disagree with each other.
 
 # These items have explicit scenario state and a single shared receipt ledger
 # for their timed/progression branches.  They remain separate from ordinary
@@ -518,9 +511,6 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     elif name in _STATEFUL_MODELED_ITEMS:
         status = "modeled_state"
         reason = _STATEFUL_MODELED_ITEMS[name]
-    elif name in _PARTIAL_BLOCKED_REASONS:
-        status = "blocked"
-        reason = _PARTIAL_BLOCKED_REASONS[name]
     elif name == "Heartsteel" and name in ITEM_INPUT_OPTIONS:
         status = "modeled_state"
         reason = (
@@ -539,9 +529,6 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
             "Tyranny is modeled and Retribution uses the explicit bounded "
             "starting missing-health scenario control."
         )
-    elif name in _BLOCKED_REASONS:
-        status = "blocked"
-        reason = _BLOCKED_REASONS[name]
     elif name == "Gunmetal Greaves":
         # The boot's life steal is now pinned by the typed sustain receipt,
         # but Noxian Gait's Riot-only movement branch stays out of scope.
@@ -582,10 +569,7 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
         "status": status,
         "optimizer_eligible": status
         in {"modeled_effect", "modeled_state", "stats_only"},
-        "calculation_eligible": (
-            status != "review_pending"
-            and (status != "blocked" or name in _CALCULATION_ALLOWED_BLOCKED)
-        ),
+        "calculation_eligible": status not in {"blocked", "review_pending"},
         "outcome_dimensions": list(_UTILITY_DIMENSIONS.get(name, ())),
         "review_issue_refs": (
             review_issue_refs(name) if status in {"blocked", "review_pending"} else []
@@ -953,16 +937,6 @@ _SHADOWED_CLAIM_REASONS: Mapping[str, str] = {
         "attacker.defensive_effect_types decides this item before the "
         "container is reached, so the container never speaks for it and no "
         "request can reach this claim."
-    ),
-    "attacker.blocked_reasons@attacker": (
-        "_BLOCKED_REASONS is empty, so no cached item can reach this rung; "
-        "the branch is proved on an empty registry and by a synthetic fixture "
-        "rather than by any real build."
-    ),
-    "attacker.partial_blocked_reasons@attacker": (
-        "_PARTIAL_BLOCKED_REASONS is empty, so no cached item can reach this "
-        "rung; the branch is proved on an empty registry and by a synthetic "
-        "fixture rather than by any real build."
     ),
     "attacker.unreviewed_fixture@attacker": (
         "review_pending is reserved for synthetic and unknown fixtures: every "
@@ -1842,7 +1816,6 @@ _RULE_CLAIMS: tuple[Claim, ...] = (
             _rung_ref("attacker.stateful_modeled_items"),
         ),
     ),
-    _unreachable_rung_claim("attacker.partial_blocked_reasons", "attacker", "blocked"),
     _rule_claim(
         "attacker.heartsteel_state_option",
         "attacker",
@@ -1873,7 +1846,6 @@ _RULE_CLAIMS: tuple[Claim, ...] = (
             _rung_ref("attacker.overlords_bloodmail_state_option"),
         ),
     ),
-    _unreachable_rung_claim("attacker.blocked_reasons", "attacker", "blocked"),
     _rule_claim(
         "attacker.gunmetal_greaves_movement_gap",
         "attacker",
@@ -2133,16 +2105,6 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
         status="modeled_state",
     ),
     PrecedenceRule(
-        rule_id="attacker.partial_blocked_reasons",
-        lane="attacker",
-        kind="container",
-        keys_on=("item_coverage._PARTIAL_BLOCKED_REASONS",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="blocked",
-    ),
-    PrecedenceRule(
         rule_id="attacker.heartsteel_state_option",
         lane="attacker",
         kind="option_state",
@@ -2171,16 +2133,6 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
         effect_types=(),
         negated=False,
         status="modeled_state",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.blocked_reasons",
-        lane="attacker",
-        kind="container",
-        keys_on=("item_coverage._BLOCKED_REASONS",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="blocked",
     ),
     PrecedenceRule(
         rule_id="attacker.gunmetal_greaves_movement_gap",

@@ -1304,8 +1304,6 @@ CLASSIFICATION_RECEIPT = (
 _REASON_CONTAINERS: dict[str, str] = {
     "attacker.stateful_modeled_items": "_STATEFUL_MODELED_ITEMS",
     "attacker.reviewed_stats_only": "_REVIEWED_STATS_ONLY",
-    "attacker.partial_blocked_reasons": "_PARTIAL_BLOCKED_REASONS",
-    "attacker.blocked_reasons": "_BLOCKED_REASONS",
     "target.modeled_reasons": "_TARGET_MODELED_REASONS",
     "target.event_certified_reasons": "_TARGET_EVENT_CERTIFIED_REASONS",
     "target.blocked_reasons": "_TARGET_BLOCKED_REASONS",
@@ -1356,8 +1354,6 @@ SHADOWED_CLAIMS: frozenset[str] = frozenset(
         "item:Spirit Visage@attacker",
         "item:Verdant Barrier@attacker",
         "item:Zhonya's Hourglass@attacker",
-        "rule:attacker.blocked_reasons@attacker",
-        "rule:attacker.partial_blocked_reasons@attacker",
         "rule:attacker.unreviewed_fixture@attacker",
         "rule:target.attacker_review_pending_passthrough@target",
     }
@@ -1484,19 +1480,30 @@ def test_a_shadowed_item_is_shadowed_for_a_reason_that_names_both_rungs() -> Non
     assert "before" in veil.reason
 
 
-def test_the_three_empty_containers_are_empty_rather_than_claim_covered() -> None:
-    """Two dicts and a frozenset, all empty — asserted, never claimed.
+def test_the_three_empty_containers_have_no_occurrences_left() -> None:
+    """The three empties are gone, and gone is asserted rather than assumed.
 
-    ``_CALCULATION_ALLOWED_BLOCKED`` is a ``frozenset``, so the assertion is
-    emptiness rather than ``== {}``; the same expression would be true of a
-    dict and vacuously true of nothing else.  Phase 3's step 3.8 deletes all
-    three, which is why "ten registries collapse to two" is seven real ones
-    plus these.
+    They were asserted empty on the commit before their deletion; this is the
+    other half — a source scan proving no reference survived anywhere in
+    ``src/``, so "ten registries collapse to two" cannot be true of the
+    imports and false of the ladder.  The match is on whole identifiers:
+    ``_TARGET_BLOCKED_REASONS`` survives 3.8's first half and ends with one of
+    the retired names.
     """
-    assert not item_coverage._BLOCKED_REASONS
-    assert not item_coverage._PARTIAL_BLOCKED_REASONS
-    assert not item_coverage._CALCULATION_ALLOWED_BLOCKED
-    assert isinstance(item_coverage._CALCULATION_ALLOWED_BLOCKED, frozenset)
+    retired = {
+        "_BLOCKED_REASONS",
+        "_CALCULATION_ALLOWED_BLOCKED",
+        "_PARTIAL_BLOCKED_REASONS",
+    }
+    found = [
+        f"{path.relative_to(ROOT).as_posix()}: {name}"
+        for path in sorted((ROOT / "src").rglob("*.py"))
+        for name in sorted(
+            retired & set(re.findall(r"\w+", path.read_text(encoding="utf-8")))
+        )
+    ]
+
+    assert found == []
 
 
 # ── the numeric gate ──────────────────────────────────────────────────────

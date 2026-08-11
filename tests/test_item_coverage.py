@@ -4,9 +4,6 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
-    _BLOCKED_REASONS,
-    _CALCULATION_ALLOWED_BLOCKED,
-    _PARTIAL_BLOCKED_REASONS,
     _TARGET_BLOCKED_REASONS,
     _UTILITY_DIMENSIONS,
     PRECEDENCE,
@@ -217,52 +214,28 @@ def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():
     assert "out of scope" in coverage["reason"]
 
 
-# The three containers 3.8 deletes, and the ``PRECEDENCE`` rungs that key on
-# them.  Written here rather than in the module so the pairing survives the
-# deletion as a record of what was checked before it.
-_COLLAPSED_EMPTY_REGISTRIES = {
-    "item_coverage._BLOCKED_REASONS": "attacker.blocked_reasons",
-    "item_coverage._PARTIAL_BLOCKED_REASONS": "attacker.partial_blocked_reasons",
-}
+# The two ``PRECEDENCE`` rungs 3.8 deleted with the empty containers they kept
+# on the ladder.  The pairing is kept here as the record of what was checked
+# before the deletion: each rung's population was its container's keys, and
+# each container was empty.
+_COLLAPSED_EMPTY_RUNGS = (
+    "attacker.blocked_reasons",
+    "attacker.partial_blocked_reasons",
+)
 
 
-def test_the_three_collapsed_registries_are_empty_before_deletion():
-    """Emptiness is what makes 3.8's deletion of these three behaviour-free.
+def test_the_collapsed_rungs_are_gone_from_the_chain():
+    """The chain no longer declares a rung whose population was empty.
 
-    Two dicts and one ``frozenset()`` — they do not share a type, so the
-    assertion is emptiness and never ``== {}``.  It is a proof rather than a
-    sample: ``name in <empty container>`` is false for every name, so the
-    rungs keying on the two dicts decide nothing and the eligibility term
-    reading the frozenset adds nothing, for every item that exists and every
-    item that ever could.
+    The commit before this one asserted the three containers empty and pinned
+    the two rungs keying on them; this is the other side of that pair.  A rung
+    left declared against a deleted container would be a claim about a symbol
+    that no longer exists — the prose-outruns-code shape, inside the ladder
+    that exists to close it.
     """
-    assert not _BLOCKED_REASONS
-    assert not _PARTIAL_BLOCKED_REASONS
-    assert not _CALCULATION_ALLOWED_BLOCKED
+    declared = {rule.rule_id for rule in PRECEDENCE}
 
-
-def test_the_collapsed_rungs_are_declared_and_decide_nothing():
-    """The chain still declares the two rungs, and no cached item reaches them.
-
-    The rungs are the reachable half of the claim: a container can be empty
-    while some other branch quietly carries its status.  These two are the
-    only producers of ``blocked`` on the attacker ladder besides the
-    cached-record rung, so naming them here pins that the 3.8 deletion
-    removes two rungs whose population is the empty set.
-    """
-    rungs = {rule.rule_id: rule for rule in PRECEDENCE}
-    for path, rule_id in _COLLAPSED_EMPTY_REGISTRIES.items():
-        assert rule_id in rungs, f"{rule_id} is no longer declared"
-        assert rungs[rule_id].keys_on == (path,)
-
-    cached = [item for item in fetch_item_data().values() if item.get("name")]
-    assert cached
-    reached = {
-        name
-        for name in (str(item.get("name", "")) for item in cached)
-        if name in _BLOCKED_REASONS or name in _PARTIAL_BLOCKED_REASONS
-    }
-    assert reached == set()
+    assert declared.isdisjoint(_COLLAPSED_EMPTY_RUNGS)
 
 
 def test_multitool_is_not_a_summoners_rift_optimizer_candidate():
@@ -550,11 +523,6 @@ def test_every_utility_dimension_item_has_explicit_non_pending_coverage():
         coverage = item_model_coverage(get_item_by_name(item_name))
         assert coverage["status"] != "review_pending", item_name
         assert coverage["outcome_dimensions"] == list(dimensions), item_name
-
-
-def test_no_stale_partial_state_items_remain_after_shared_ledger_reconciliation():
-    """All registered partial-state items are reconciled before ranking."""
-    assert _PARTIAL_BLOCKED_REASONS == {}
 
 
 def test_sustain_dimension_never_claims_outgoing_model_support():
