@@ -74,7 +74,7 @@ class RuleFamily(Enum):
 
     Closed at eighteen, and closure is a test rather than a convention: a new
     ``item_effects._KNOWN_EFFECT_TYPES`` member, a new ``ActionKind`` or a new
-    ``DefenseSource`` construction fails collection until it is mapped
+    :class:`DefenseMechanic` fails collection until it is mapped
     (``item_behavior_catalog.validate_catalog``).  The four groups below are
     the reason the union is closable at all — every mechanic in the registry
     is a strike, a pricing rule, a defence, or one of the three that are
@@ -1135,10 +1135,10 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
 class DefenseMechanic(Enum):
     """Every defence the resolver may cite, in the order it applies them.
 
-    The successor to ``defensive_effects.DefenseSource``: a member is the
-    identity of one defensive mechanic and its citation is a
-    ``SourceReceipt`` the catalog resolves, so a defence's provenance is the
-    same kind of object as every other declaration's.
+    A member is the identity of one defensive mechanic, and its citation is
+    a ``SourceReceipt`` the catalog resolves — so a defence's provenance is
+    the same kind of object as every other declaration's, rather than the
+    hand-written record beside the behaviour that it replaced.
 
     **The declaration order below is the resolution order**, and that is
     arithmetic rather than presentation.  A later mechanic sees what an

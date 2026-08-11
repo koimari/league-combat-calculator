@@ -15,14 +15,12 @@ rather than inventing a second idiom for the same job.
 
 **Closure is enforced at import.**  :func:`validate_catalog` runs when this
 module loads, so a new ``item_effects._KNOWN_EFFECT_TYPES`` member, a new
-``ActionKind`` or a new ``DefenseSource`` construction in
-``defensive_effects.py`` fails *collection* until somebody decides which
-family it belongs to.  That is the whole point of a closed union: the cost of
-a new mechanic is one decision, taken deliberately, instead of a silent
-default nobody notices.  The defensive-source set is read from
-``defensive_effects.py``'s own source with ``ast`` rather than by importing
-it, so the count is derived from the module's constructions and never typed
-here, and this stays a light import.
+``ActionKind`` or a new ``DefenseMechanic`` fails *collection* until somebody
+decides which family it belongs to.  That is the whole point of a closed
+union: the cost of a new mechanic is one decision, taken deliberately,
+instead of a silent default nobody notices.  All three populations are closed
+enumerations this package can read directly, so no closure depends on parsing
+another module's source text and this stays a light import.
 """
 
 from __future__ import annotations
@@ -299,11 +297,10 @@ ACTION_KIND_FAMILY: Mapping[ActionKind, RuleFamily] = {
 
 # ── defence mechanic → family, total over the closed mechanic set ─────────
 #
-# The successor to the ``DefenseSource`` labels this table used to be keyed
-# by: the population is now ``DefenseMechanic``, a closed enum, so the
-# closure below fails *collection* on an unmapped mechanic instead of
-# depending on a scrape of another module's source text.  The rulings are
-# unchanged, mechanic for mechanic — two of them deliberately point outside
+# The population is ``DefenseMechanic``, a closed enum, so the closure below
+# fails *collection* on an unmapped mechanic instead of depending on a scrape
+# of the resolver's source text for the hand-written provenance records this
+# replaced.  The rulings are unchanged, mechanic for mechanic — two of them deliberately point outside
 # the four defence families, because Ignore Pain reroutes damage over time
 # and Boundless Vitality is sustain, and both ride their own family's slice.
 
@@ -4259,9 +4256,9 @@ def _validate_defense_source_closure(
 
     The population is :class:`~.item_behavior.DefenseMechanic` itself, so a
     new defence fails *collection* until somebody decides which family models
-    it — the same closure this used to get by scraping ``defensive_effects``
-    for ``DefenseSource`` constructions, now over a closed enum rather than
-    over another module's source text.
+    it.  The same closure used to be got by scraping the resolver's source
+    for its hand-written provenance records; it is now over a closed enum
+    rather than over another module's text.
     """
     declared = frozenset(DefenseMechanic) if mechanics is None else mechanics
     mapped = frozenset(DEFENSE_SOURCE_FAMILY)

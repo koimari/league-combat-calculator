@@ -80,8 +80,8 @@ DEFENSE_SOURCE_LABEL: Mapping[DefenseMechanic, str] = {
 class DefenseCitation:
     """One published defensive source: which mechanic, whose, and from where.
 
-    The successor to the hand-written ``DefenseSource`` records this module
-    used to carry.  Nothing here is authored beside the behaviour any more:
+    The successor to the hand-written provenance records this module used to
+    carry.  Nothing here is authored beside the behaviour any more:
     the receipt comes from the rule that granted the defence — resolved from
     the registry entry's own citation or from the family constant, in
     ``receipt_for``'s ruled order — and the label is derived from the
