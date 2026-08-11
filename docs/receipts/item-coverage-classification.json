@@ -4,7 +4,7 @@
       "attacker": "src.calculator.item_coverage.item_model_coverage",
       "target": "src.calculator.item_coverage.target_item_model_coverage"
     },
-    "git_head": "dd794efcf71cabb75187e360541433da427f2308",
+    "git_head": "f85a2f45c21be778b4fb1032975348b23c571acc",
     "item_count": 324,
     "items_fetched_at": 1786113359.0537379,
     "lanes": [
@@ -21,16 +21,16 @@
         "name": "Abyssal Mask",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Actualizer": {
         "calculation_eligible": true,
         "name": "Actualizer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Mana Made Real is represented by its bounded active window, resource multiplier, and cooldown-progress receipt.",
+        "reason": "Actualizer's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -57,40 +57,40 @@
         "name": "Anathema's Chains",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Anti-Tower Socks": {
         "calculation_eligible": false,
         "name": "Anti-Tower Socks",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Arcane Sweeper (Trinket)": {
         "calculation_eligible": false,
         "name": "Arcane Sweeper (Trinket)",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Archangel's Staff": {
         "calculation_eligible": true,
         "name": "Archangel's Staff",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+        "reason": "Archangel's Staff's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -99,7 +99,7 @@
         "name": "Ardent Censer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Sanctify is represented by the shared participant support ledger: an explicit heal or shield trigger schedules the sourced holder/ally attack-speed and on-hit-magic packets.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -108,7 +108,7 @@
         "name": "Armored Advance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -117,11 +117,11 @@
         "name": "Atma's Reckoning",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Axiom Arc": {
         "calculation_eligible": true,
@@ -131,7 +131,7 @@
           "progression",
           "resource"
         ],
-        "reason": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -149,7 +149,7 @@
         "name": "Bami's Cinder",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -170,7 +170,7 @@
           "ally_support",
           "stat_buff"
         ],
-        "reason": "Fanfare is represented by the shared participant support ledger: an authored immobilize or slow schedules the sourced movement and holder/ally attack-speed packets.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet, stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -181,7 +181,7 @@
         "outcome_dimensions": [
           "spell_protection"
         ],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -190,18 +190,18 @@
         "name": "Base Turret Reinforced Armor (Turret Item)",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Bastionbreaker": {
         "calculation_eligible": true,
         "name": "Bastionbreaker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -219,38 +219,38 @@
         "name": "Black Cleaver",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Black Hole Gauntlet": {
         "calculation_eligible": false,
         "name": "Black Hole Gauntlet",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Black Spear": {
         "calculation_eligible": false,
         "name": "Black Spear",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Blackfire Torch": {
         "calculation_eligible": true,
         "name": "Blackfire Torch",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -259,7 +259,7 @@
         "name": "Blade of the Ruined King",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -286,25 +286,25 @@
         "name": "Bloodletter's Curse",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Bloodsong": {
         "calculation_eligible": true,
         "name": "Bloodsong",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Bloodthirster": {
         "calculation_eligible": true,
         "name": "Bloodthirster",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -334,20 +334,20 @@
         "name": "Bounty of Worlds",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Bramble Vest": {
         "calculation_eligible": true,
         "name": "Bramble Vest",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "stats_only"
       },
       "Cappa Juice": {
         "calculation_eligible": true,
@@ -363,9 +363,9 @@
         "name": "Catalyst of Aeons",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Eternity's pre-mitigation champion-damage mana restoration and capped per-cast healing are represented by the ordered resource and participant ledgers.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
-        "status": "modeled_state"
+        "status": "modeled_effect"
       },
       "Caulfield's Warhammer": {
         "calculation_eligible": true,
@@ -381,7 +381,7 @@
         "name": "Celestial Opposition",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -399,7 +399,7 @@
         "name": "Chainlaced Crushers",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -426,11 +426,11 @@
         "name": "Cloak of Starry Night",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Cloth Armor": {
         "calculation_eligible": true,
@@ -475,31 +475,31 @@
         "name": "Crown of the Shattered Queen",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Cruelty": {
         "calculation_eligible": false,
         "name": "Cruelty",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Cryptbloom": {
         "calculation_eligible": true,
         "name": "Cryptbloom",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Life From Death is a post-takedown heal.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Crystalline Bracer": {
         "calculation_eligible": true,
@@ -515,11 +515,11 @@
         "name": "Crystalline Overgrowth",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Cull": {
         "calculation_eligible": true,
@@ -530,7 +530,7 @@
           "progression",
           "on_hit"
         ],
-        "reason": "Reap's authored minion-kill progression, completion payout, and on-hit health receipt share one explicit state/economy ledger.",
+        "reason": "Cull's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -557,27 +557,27 @@
         "name": "Darksteel Talons",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Dawncore": {
         "calculation_eligible": true,
         "name": "Dawncore",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Dead Man's Plate": {
         "calculation_eligible": true,
         "name": "Dead Man's Plate",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -586,7 +586,7 @@
         "name": "Death's Dance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Ignore Pain's post-mitigation deferral ticks and Defy's takedown clear/heal are represented in the ordered participant timeline.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -595,93 +595,93 @@
         "name": "Death's Daughter",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Decapitator": {
         "calculation_eligible": false,
         "name": "Decapitator",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Demon King's Crown": {
         "calculation_eligible": false,
         "name": "Demon King's Crown",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Demonic Embrace": {
         "calculation_eligible": false,
         "name": "Demonic Embrace",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Detonation Orb": {
         "calculation_eligible": false,
         "name": "Detonation Orb",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Diadem of Songs": {
         "calculation_eligible": true,
         "name": "Diadem of Songs",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Harmony and Consonance change healing, not outgoing damage.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Diamond-Tipped Spear": {
         "calculation_eligible": false,
         "name": "Diamond-Tipped Spear",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Divine Sunderer": {
         "calculation_eligible": false,
         "name": "Divine Sunderer",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Doran's Blade": {
         "calculation_eligible": true,
         "name": "Doran's Blade",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -708,7 +708,7 @@
         "name": "Doran's Ring",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -717,7 +717,7 @@
         "name": "Doran's Shield",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -726,27 +726,27 @@
         "name": "Dragonheart",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Dream Maker": {
         "calculation_eligible": true,
         "name": "Dream Maker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Dream Maker affects an ally, not the item holder's TDD.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Dusk and Dawn": {
         "calculation_eligible": true,
         "name": "Dusk and Dawn",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -755,27 +755,27 @@
         "name": "Duskblade of Draktharr",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Echoes of Helia": {
         "calculation_eligible": true,
         "name": "Echoes of Helia",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Soul Siphon stores damage only to heal an ally.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Eclipse": {
         "calculation_eligible": true,
         "name": "Eclipse",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -786,7 +786,7 @@
         "outcome_dimensions": [
           "spell_protection"
         ],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -795,11 +795,11 @@
         "name": "Eleisa's Miracle",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Elixir of Avarice": {
         "calculation_eligible": true,
@@ -860,18 +860,18 @@
         "name": "Empyrean Promise",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Endless Hunger": {
         "calculation_eligible": true,
         "name": "Endless Hunger",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
+        "reason": "Endless Hunger's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -889,7 +889,7 @@
         "name": "Essence Reaver",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -898,11 +898,11 @@
         "name": "Everfrost",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Executioner's Calling": {
         "calculation_eligible": true,
@@ -918,9 +918,9 @@
         "name": "Experimental Hexplate",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Eye of the Herald": {
         "calculation_eligible": true,
@@ -945,18 +945,18 @@
         "name": "Farsight Alteration",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Fated Ashes": {
         "calculation_eligible": true,
         "name": "Fated Ashes",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -965,7 +965,7 @@
         "name": "Fiendhunter Bolts",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -983,7 +983,7 @@
         "name": "Fimbulwinter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe's bonus-mana-to-health conversion and Everlasting's sourced post-control shield are represented by the ordered participant ledger; unreviewed crowd-control packets remain fail-closed.",
+        "reason": "Fimbulwinter's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -992,22 +992,22 @@
         "name": "Fire at Will",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Flesheater": {
         "calculation_eligible": false,
         "name": "Flesheater",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Forbidden Idol": {
         "calculation_eligible": true,
@@ -1023,11 +1023,11 @@
         "name": "Force of Entropy",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Force of Nature": {
         "calculation_eligible": true,
@@ -1037,9 +1037,9 @@
           "movement",
           "defense"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "stats_only"
       },
       "Frozen Heart": {
         "calculation_eligible": true,
@@ -1048,64 +1048,64 @@
         "outcome_dimensions": [
           "attack_speed_reduction"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Fulmination": {
         "calculation_eligible": false,
         "name": "Fulmination",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Galeforce": {
         "calculation_eligible": false,
         "name": "Galeforce",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Gambler's Blade": {
         "calculation_eligible": false,
         "name": "Gambler's Blade",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Gargoyle Stoneplate": {
         "calculation_eligible": false,
         "name": "Gargoyle Stoneplate",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Ghostcrawlers": {
         "calculation_eligible": false,
         "name": "Ghostcrawlers",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Giant's Belt": {
         "calculation_eligible": true,
@@ -1148,11 +1148,11 @@
         "name": "Goredrinker",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Guardian Angel": {
         "calculation_eligible": true,
@@ -1161,7 +1161,7 @@
         "outcome_dimensions": [
           "revive"
         ],
-        "reason": "Guardian Angel's Rebirth is modeled in the target survival ledger; it changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1170,11 +1170,11 @@
         "name": "Guardian's Amulet",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Guardian's Blade": {
         "calculation_eligible": true,
@@ -1190,18 +1190,18 @@
         "name": "Guardian's Dirk",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Guardian's Hammer": {
         "calculation_eligible": true,
         "name": "Guardian's Hammer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1210,22 +1210,22 @@
         "name": "Guardian's Horn",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Guardian's Orb": {
         "calculation_eligible": false,
         "name": "Guardian's Orb",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Guardian's Shroud": {
         "calculation_eligible": true,
@@ -1241,7 +1241,7 @@
         "name": "Guinsoo's Rageblade",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1252,7 +1252,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "Noxian Gait's Riot-only movement branch remains explicitly out of scope because its magnitude and spacing input are not sourced; the boot's attack-speed and life-steal stats are still applied.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1261,11 +1261,11 @@
         "name": "Gusto",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Gustwalker Hatchling": {
         "calculation_eligible": true,
@@ -1281,18 +1281,18 @@
         "name": "Hamstringer",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Haunting Guise": {
         "calculation_eligible": true,
         "name": "Haunting Guise",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1322,7 +1322,7 @@
           "progression",
           "health_state"
         ],
-        "reason": "Colossal Consumption's permanent bonus-health state is supplied through the explicit bounded scenario control.",
+        "reason": "Heartsteel's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1331,40 +1331,40 @@
         "name": "Hellfire Hatchet",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Hemomancer's Helm": {
         "calculation_eligible": false,
         "name": "Hemomancer's Helm",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Hexbolt Companion": {
         "calculation_eligible": false,
         "name": "Hexbolt Companion",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Hexdrinker": {
         "calculation_eligible": true,
         "name": "Hexdrinker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1373,7 +1373,7 @@
         "name": "Hexoptics C44",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1382,7 +1382,7 @@
         "name": "Hextech Alternator",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1391,7 +1391,7 @@
         "name": "Hextech Gunblade",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1400,7 +1400,7 @@
         "name": "Hextech Rocketbelt",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1409,7 +1409,7 @@
         "name": "Hollow Radiance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1421,7 +1421,7 @@
           "vision",
           "damage_amplification"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1433,7 +1433,7 @@
           "progression",
           "stat_conversion"
         ],
-        "reason": "Eminence's bounded starting stacks and timed window are represented by a sourced state receipt.",
+        "reason": "Hubris's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1442,7 +1442,7 @@
         "name": "Hullbreaker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1451,7 +1451,7 @@
         "name": "Iceborn Gauntlet",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1460,7 +1460,7 @@
         "name": "Immortal Path",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
+        "reason": "Immortal Path's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1469,7 +1469,7 @@
         "name": "Immortal Shieldbow",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1478,7 +1478,7 @@
         "name": "Imperial Mandate",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Command is represented on both sides of one authored immobilize event (a slow is not enough): the holder's pair engine prices its own post-immobilize amplifier, and the shared participant support ledger schedules the all-source amplifier for every other participant.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1487,7 +1487,7 @@
         "name": "Infinity Edge",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1496,11 +1496,11 @@
         "name": "Innervating Locket",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Ionian Boots of Lucidity": {
         "calculation_eligible": true,
@@ -1516,20 +1516,20 @@
         "name": "Jak'Sho, The Protean",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "stats_only"
       },
       "Jarvan I's": {
         "calculation_eligible": false,
         "name": "Jarvan I's",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Juice of Haste": {
         "calculation_eligible": true,
@@ -1563,7 +1563,7 @@
         "name": "Kaenic Rookern",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1581,18 +1581,18 @@
         "name": "Kinkou Jitte",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Knight's Vow": {
         "calculation_eligible": true,
         "name": "Knight's Vow",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Knight's Vow's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1601,7 +1601,7 @@
         "name": "Kraken Slayer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1673,7 +1673,7 @@
         "name": "Liandry's Torment",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1682,7 +1682,7 @@
         "name": "Lich Bane",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1691,22 +1691,22 @@
         "name": "Lifeline",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Lightning Rod": {
         "calculation_eligible": false,
         "name": "Lightning Rod",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Locket of the Iron Solari": {
         "calculation_eligible": true,
@@ -1716,7 +1716,7 @@
           "ally_support",
           "shield"
         ],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Locket of the Iron Solari's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1734,7 +1734,7 @@
         "name": "Lord Dominik's Regards",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1761,7 +1761,7 @@
         "name": "Luden's Echo",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1770,7 +1770,7 @@
         "name": "Malignance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1779,7 +1779,7 @@
         "name": "Manamune",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+        "reason": "Manamune's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1788,9 +1788,9 @@
         "name": "Maw of Malmortius",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Mejai's Soulstealer": {
         "calculation_eligible": true,
@@ -1812,7 +1812,7 @@
           "cleanse",
           "movement"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1834,7 +1834,7 @@
           "cleanse",
           "sustain"
         ],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Mikael's Blessing's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1843,31 +1843,31 @@
         "name": "Mirage Blade",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Moonflair Spellblade": {
         "calculation_eligible": false,
         "name": "Moonflair Spellblade",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Moonstone Renewer": {
         "calculation_eligible": true,
         "name": "Moonstone Renewer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Starlit Grace chains healing or shielding.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Morellonomicon": {
         "calculation_eligible": true,
@@ -1901,18 +1901,18 @@
         "name": "Multitool",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Muramana": {
         "calculation_eligible": true,
         "name": "Muramana",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1921,7 +1921,7 @@
         "name": "Nashor's Tooth",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1930,7 +1930,7 @@
         "name": "Navori Flickerblade",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1957,11 +1957,11 @@
         "name": "Night Harvester",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Noonquiver": {
         "calculation_eligible": true,
@@ -1995,40 +1995,40 @@
         "name": "Ohmwrecker (Turret Item)",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Oracle Lens": {
         "calculation_eligible": false,
         "name": "Oracle Lens",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Overcharged": {
         "calculation_eligible": false,
         "name": "Overcharged",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Overlord's Bloodmail": {
         "calculation_eligible": true,
         "name": "Overlord's Bloodmail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Tyranny is modeled and Retribution uses the explicit bounded starting missing-health scenario control.",
+        "reason": "Overlord's Bloodmail's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2037,11 +2037,11 @@
         "name": "Perplexity",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Phage": {
         "calculation_eligible": true,
@@ -2050,7 +2050,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "Rage is emitted once per authored basic attack with the sourced melee or ranged movement-speed window.",
+        "reason": "Phage's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2070,11 +2070,11 @@
         "name": "Phreakish Gusto",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Pickaxe": {
         "calculation_eligible": true,
@@ -2090,7 +2090,7 @@
         "name": "Plated Steelcaps",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2119,7 +2119,7 @@
         "outcome_dimensions": [
           "multi_target"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2128,7 +2128,7 @@
         "name": "Protoplasm Harness",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2137,33 +2137,33 @@
         "name": "Prowler's Claw",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Puppeteer": {
         "calculation_eligible": false,
         "name": "Puppeteer",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Pyromancer's Cloak": {
         "calculation_eligible": false,
         "name": "Pyromancer's Cloak",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Quicksilver Sash": {
         "calculation_eligible": true,
@@ -2179,31 +2179,31 @@
         "name": "Rabadon's Deathcap",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Radiant Virtue": {
         "calculation_eligible": false,
         "name": "Radiant Virtue",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Raise Morale": {
         "calculation_eligible": false,
         "name": "Raise Morale",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Randuin's Omen": {
         "calculation_eligible": true,
@@ -2213,7 +2213,7 @@
           "slow",
           "critical_mitigation"
         ],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2225,7 +2225,7 @@
           "energized",
           "range"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2237,7 +2237,7 @@
           "multi_target",
           "sustain"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2246,22 +2246,22 @@
         "name": "Reality Fracture",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Reaper's Toll": {
         "calculation_eligible": false,
         "name": "Reaper's Toll",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Rectrix": {
         "calculation_eligible": true,
@@ -2277,7 +2277,7 @@
         "name": "Recurve Bow",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2289,7 +2289,7 @@
           "ally_support",
           "sustain"
         ],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Redemption's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2307,22 +2307,22 @@
         "name": "Regicide",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Reinforced Armor (Turret Item)": {
         "calculation_eligible": false,
         "name": "Reinforced Armor (Turret Item)",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Rejuvenation Bead": {
         "calculation_eligible": true,
@@ -2338,31 +2338,31 @@
         "name": "Reverberation",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Riftmaker": {
         "calculation_eligible": true,
         "name": "Riftmaker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Riftmaker's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Rite of Ruin": {
         "calculation_eligible": false,
         "name": "Rite of Ruin",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Rod of Ages": {
         "calculation_eligible": true,
@@ -2373,7 +2373,7 @@
           "health_state",
           "resource"
         ],
-        "reason": "Timeless stacks and their sourced health, mana, and ability-power conversions are supplied through the explicit bounded scenario control.",
+        "reason": "Rod of Ages's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2394,7 +2394,7 @@
           "multi_target",
           "copied_on_hit"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2403,11 +2403,11 @@
         "name": "Runecarver",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Runic Compass": {
         "calculation_eligible": true,
@@ -2419,7 +2419,7 @@
           "ally_support",
           "vision"
         ],
-        "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+        "reason": "Runic Compass's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2439,11 +2439,11 @@
         "name": "Sanguine Gift",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Sapphire Crystal": {
         "calculation_eligible": true,
@@ -2459,11 +2459,11 @@
         "name": "Scarecrow Effigy",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Scorchclaw Pup": {
         "calculation_eligible": true,
@@ -2479,7 +2479,7 @@
         "name": "Scout's Slingshot",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2488,7 +2488,7 @@
         "name": "Seeker's Armguard",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2497,16 +2497,16 @@
         "name": "Seraph's Embrace",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Serpent's Fang": {
         "calculation_eligible": true,
         "name": "Serpent's Fang",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2535,7 +2535,7 @@
         "name": "Shadowflame",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2553,7 +2553,7 @@
         "name": "Sheen",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2562,11 +2562,11 @@
         "name": "Shield of Molten Stone",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Shurelya's Battlesong": {
         "calculation_eligible": true,
@@ -2576,7 +2576,7 @@
           "movement",
           "ally_support"
         ],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Shurelya's Battlesong's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2585,11 +2585,11 @@
         "name": "Slightly Magical Boots",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Solstice Sleigh": {
         "calculation_eligible": true,
@@ -2600,9 +2600,9 @@
           "movement",
           "sustain"
         ],
-        "reason": "Going Sledding heals and grants movement speed.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Sorcerer's Shoes": {
         "calculation_eligible": true,
@@ -2618,7 +2618,7 @@
         "name": "Spear of Shojin",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2627,11 +2627,11 @@
         "name": "Spectral Cutlass",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Spectre's Cowl": {
         "calculation_eligible": true,
@@ -2656,18 +2656,18 @@
         "name": "Spirit Visage",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_effect"
       },
       "Staff of Flowing Water": {
         "calculation_eligible": true,
         "name": "Staff of Flowing Water",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet, stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Stat Bonus (ARAM: Mayhem)": {
         "calculation_eligible": true,
@@ -2686,7 +2686,7 @@
           "multi_target",
           "energized"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2695,11 +2695,11 @@
         "name": "Stealth Ward",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Steel Sigil": {
         "calculation_eligible": true,
@@ -2715,9 +2715,9 @@
         "name": "Sterak's Gage",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Stormrazor": {
         "calculation_eligible": true,
@@ -2727,7 +2727,7 @@
           "energized",
           "movement"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2736,7 +2736,7 @@
         "name": "Stormsurge",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2749,16 +2749,16 @@
           "slow",
           "movement"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Stridebreaker's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Sundered Sky": {
         "calculation_eligible": true,
         "name": "Sundered Sky",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2767,7 +2767,7 @@
         "name": "Sunfire Aegis",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2776,22 +2776,22 @@
         "name": "Super Mech Armor",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Super Mech Power Field": {
         "calculation_eligible": false,
         "name": "Super Mech Power Field",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Swiftmarch": {
         "calculation_eligible": true,
@@ -2801,42 +2801,42 @@
           "movement",
           "stat_conversion"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Sword of Blossoming Dawn": {
         "calculation_eligible": false,
         "name": "Sword of Blossoming Dawn",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Sword of the Divine": {
         "calculation_eligible": false,
         "name": "Sword of the Divine",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Talisman of Ascension": {
         "calculation_eligible": false,
         "name": "Talisman of Ascension",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Tear of the Goddess": {
         "calculation_eligible": true,
@@ -2846,7 +2846,7 @@
           "progression",
           "resource"
         ],
-        "reason": "Manaflow's bounded bonus-mana progression and minion-only Helping Hand boundary are explicit state receipts.",
+        "reason": "Tear of the Goddess's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2855,7 +2855,7 @@
         "name": "Terminus",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2876,7 +2876,7 @@
           "execute",
           "takedown_state"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2885,27 +2885,27 @@
         "name": "The Golden Spatula",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Thornmail": {
         "calculation_eligible": true,
         "name": "Thornmail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "stats_only"
       },
       "Tiamat": {
         "calculation_eligible": true,
         "name": "Tiamat",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2916,7 +2916,7 @@
         "outcome_dimensions": [
           "multi_target"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2934,7 +2934,7 @@
         "name": "Trinity Force",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2952,44 +2952,44 @@
         "name": "Turbo Chemtank",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Turret Plating": {
         "calculation_eligible": false,
         "name": "Turret Plating",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Twilight's Edge": {
         "calculation_eligible": false,
         "name": "Twilight's Edge",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Twin Mask": {
         "calculation_eligible": false,
         "name": "Twin Mask",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Umbral Glaive": {
         "calculation_eligible": true,
@@ -2998,7 +2998,7 @@
         "outcome_dimensions": [
           "vision"
         ],
-        "reason": "Nightstalker's unseen-ready state gates a typed first-auto true-damage packet; Blackout remains a separate vision dimension.",
+        "reason": "Umbral Glaive's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3007,7 +3007,7 @@
         "name": "Unending Despair",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3016,7 +3016,7 @@
         "name": "Vampiric Scepter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3025,7 +3025,7 @@
         "name": "Verdant Barrier",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3034,11 +3034,11 @@
         "name": "Void Immolation",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Void Staff": {
         "calculation_eligible": true,
@@ -3054,7 +3054,7 @@
         "name": "Voltaic Cyclosword",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3063,18 +3063,18 @@
         "name": "Warden's Eye",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Warden's Mail": {
         "calculation_eligible": true,
         "name": "Warden's Mail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3083,16 +3083,16 @@
         "name": "Warmog's Armor",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Whispering Circlet": {
         "calculation_eligible": true,
         "name": "Whispering Circlet",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Harmony, Manaflow, and Diadem state are represented by the bounded bonus-mana control and transformation receipt.",
+        "reason": "Whispering Circlet's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3110,7 +3110,7 @@
         "name": "Winter's Approach",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe, Manaflow, and Fimbulwinter transformation state are represented by the bounded bonus-mana control and transformation receipt.",
+        "reason": "Winter's Approach's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3119,7 +3119,7 @@
         "name": "Wit's End",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3128,22 +3128,22 @@
         "name": "Wooglet's Witchcap",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Wordless Promise": {
         "calculation_eligible": false,
         "name": "Wordless Promise",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "World Atlas": {
         "calculation_eligible": true,
@@ -3155,7 +3155,7 @@
           "ally_support",
           "vision"
         ],
-        "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+        "reason": "World Atlas's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3184,16 +3184,16 @@
         "name": "Yun Tal Wildarrows",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Yun Tal Wildarrows's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Zaz'Zak's Realmspike": {
         "calculation_eligible": true,
         "name": "Zaz'Zak's Realmspike",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3211,7 +3211,7 @@
         "name": "Zeke's Convergence",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3220,11 +3220,11 @@
         "name": "Zephyr",
         "optimizer_eligible": false,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Zhonya's Hourglass": {
         "calculation_eligible": true,
@@ -3233,7 +3233,7 @@
         "outcome_dimensions": [
           "stasis"
         ],
-        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       }
@@ -4241,7 +4241,7 @@
         "review_issue_refs": [
           40
         ],
-        "status": "blocked"
+        "status": "withheld"
       },
       "Guardian's Orb": {
         "calculation_eligible": true,

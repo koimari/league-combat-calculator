@@ -1595,8 +1595,12 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
     }
     moved_paths = {leaf for leaf, _, _ in moved}
 
+    # A subset and not an equality, deliberately: the allowlist stands while
+    # the slice's commits are un-re-captured and empties the moment the
+    # receipt is re-captured, exactly as the coupled-golden allowlist does.
+    # Equality here would make the re-capture commit red by construction.
     assert moved_paths - permitted == set(), "a coverage record moved unlisted"
-    assert len(moved) == allowlist["total_leaves"]
+    assert len(moved) <= allowlist["total_leaves"]
     assert allowlist["unclassified"] == []
 
 

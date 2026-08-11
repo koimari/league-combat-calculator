@@ -23,9 +23,9 @@
         "name": "Abyssal Mask",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Abyssal Mask",
@@ -45,7 +45,7 @@
         "name": "Actualizer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Mana Made Real is represented by its bounded active window, resource multiplier, and cooldown-progress receipt.",
+        "reason": "Actualizer's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -111,7 +111,7 @@
         "name": "Archangel's Staff",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+        "reason": "Archangel's Staff's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -133,7 +133,7 @@
         "name": "Ardent Censer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Sanctify is represented by the shared participant support ledger: an explicit heal or shield trigger schedules the sourced holder/ally attack-speed and on-hit-magic packets.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -155,7 +155,7 @@
         "name": "Armored Advance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -180,7 +180,7 @@
           "progression",
           "resource"
         ],
-        "reason": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -227,7 +227,7 @@
         "name": "Bami's Cinder",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -274,7 +274,7 @@
           "ally_support",
           "stat_buff"
         ],
-        "reason": "Fanfare is represented by the shared participant support ledger: an authored immobilize or slow schedules the sourced movement and holder/ally attack-speed packets.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet, stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -301,7 +301,7 @@
         "outcome_dimensions": [
           "spell_protection"
         ],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -325,7 +325,7 @@
         "name": "Bastionbreaker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -369,9 +369,9 @@
         "name": "Black Cleaver",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Black Cleaver",
@@ -391,7 +391,7 @@
         "name": "Blackfire Torch",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -413,7 +413,7 @@
         "name": "Blade of the Ruined King",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -479,9 +479,9 @@
         "name": "Bloodletter's Curse",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Bloodletter's Curse",
@@ -501,9 +501,9 @@
         "name": "Bloodsong",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Bloodsong",
@@ -523,7 +523,7 @@
         "name": "Bloodthirster",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -595,9 +595,9 @@
         "name": "Bramble Vest",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "stats_only"
       },
       "manual": true,
       "name": "Bramble Vest",
@@ -617,9 +617,9 @@
         "name": "Catalyst of Aeons",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Eternity's pre-mitigation champion-damage mana restoration and capped per-cast healing are represented by the ordered resource and participant ledgers.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
-        "status": "modeled_state"
+        "status": "modeled_effect"
       },
       "manual": true,
       "name": "Catalyst of Aeons",
@@ -661,7 +661,7 @@
         "name": "Celestial Opposition",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -705,7 +705,7 @@
         "name": "Chainlaced Crushers",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -863,9 +863,9 @@
         "name": "Cryptbloom",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Life From Death is a post-takedown heal.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Cryptbloom",
@@ -911,7 +911,7 @@
           "progression",
           "on_hit"
         ],
-        "reason": "Reap's authored minion-kill progression, completion payout, and on-hit health receipt share one explicit state/economy ledger.",
+        "reason": "Cull's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -981,9 +981,9 @@
         "name": "Dawncore",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Dawncore",
@@ -1003,7 +1003,7 @@
         "name": "Dead Man's Plate",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1025,7 +1025,7 @@
         "name": "Death's Dance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Ignore Pain's post-mitigation deferral ticks and Defy's takedown clear/heal are represented in the ordered participant timeline.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1047,9 +1047,9 @@
         "name": "Diadem of Songs",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Harmony and Consonance change healing, not outgoing damage.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Diadem of Songs",
@@ -1069,7 +1069,7 @@
         "name": "Doran's Blade",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1135,7 +1135,7 @@
         "name": "Doran's Ring",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1157,7 +1157,7 @@
         "name": "Doran's Shield",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1179,9 +1179,9 @@
         "name": "Dream Maker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Dream Maker affects an ally, not the item holder's TDD.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Dream Maker",
@@ -1201,7 +1201,7 @@
         "name": "Dusk and Dawn",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1223,9 +1223,9 @@
         "name": "Echoes of Helia",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Soul Siphon stores damage only to heal an ally.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Echoes of Helia",
@@ -1245,7 +1245,7 @@
         "name": "Eclipse",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1269,7 +1269,7 @@
         "outcome_dimensions": [
           "spell_protection"
         ],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1359,7 +1359,7 @@
         "name": "Endless Hunger",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
+        "reason": "Endless Hunger's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1381,7 +1381,7 @@
         "name": "Essence Reaver",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1425,9 +1425,9 @@
         "name": "Experimental Hexplate",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Experimental Hexplate",
@@ -1469,7 +1469,7 @@
         "name": "Fated Ashes",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1491,7 +1491,7 @@
         "name": "Fiendhunter Bolts",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1535,7 +1535,7 @@
         "name": "Fimbulwinter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe's bonus-mana-to-health conversion and Everlasting's sourced post-control shield are represented by the ordered participant ledger; unreviewed crowd-control packets remain fail-closed.",
+        "reason": "Fimbulwinter's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1582,9 +1582,9 @@
           "movement",
           "defense"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "stats_only"
       },
       "manual": true,
       "name": "Force of Nature",
@@ -1609,9 +1609,9 @@
         "outcome_dimensions": [
           "attack_speed_reduction"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Frozen Heart",
@@ -1723,7 +1723,7 @@
         "outcome_dimensions": [
           "revive"
         ],
-        "reason": "Guardian Angel's Rebirth is modeled in the target survival ledger; it changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1747,7 +1747,7 @@
         "name": "Guinsoo's Rageblade",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1771,7 +1771,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "Noxian Gait's Riot-only movement branch remains explicitly out of scope because its magnitude and spacing input are not sourced; the boot's attack-speed and life-steal stats are still applied.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1817,7 +1817,7 @@
         "name": "Haunting Guise",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1886,7 +1886,7 @@
           "progression",
           "health_state"
         ],
-        "reason": "Colossal Consumption's permanent bonus-health state is supplied through the explicit bounded scenario control.",
+        "reason": "Heartsteel's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1911,7 +1911,7 @@
         "name": "Hexdrinker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1933,7 +1933,7 @@
         "name": "Hexoptics C44",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1955,7 +1955,7 @@
         "name": "Hextech Alternator",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1977,7 +1977,7 @@
         "name": "Hextech Gunblade",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -1999,7 +1999,7 @@
         "name": "Hextech Rocketbelt",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2021,7 +2021,7 @@
         "name": "Hollow Radiance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2046,7 +2046,7 @@
           "vision",
           "damage_amplification"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2074,7 +2074,7 @@
           "progression",
           "stat_conversion"
         ],
-        "reason": "Eminence's bounded starting stacks and timed window are represented by a sourced state receipt.",
+        "reason": "Hubris's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2099,7 +2099,7 @@
         "name": "Hullbreaker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2121,7 +2121,7 @@
         "name": "Iceborn Gauntlet",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2143,7 +2143,7 @@
         "name": "Immortal Path",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
+        "reason": "Immortal Path's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2165,7 +2165,7 @@
         "name": "Immortal Shieldbow",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2187,7 +2187,7 @@
         "name": "Imperial Mandate",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Command is represented by the shared participant support ledger: an authored crowd-control event schedules its all-source damage amplifier for the selected target and duration.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2209,7 +2209,7 @@
         "name": "Infinity Edge",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2253,9 +2253,9 @@
         "name": "Jak'Sho, The Protean",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "stats_only"
       },
       "manual": true,
       "name": "Jak'Sho, The Protean",
@@ -2275,7 +2275,7 @@
         "name": "Kaenic Rookern",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2319,7 +2319,7 @@
         "name": "Knight's Vow",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Knight's Vow's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2341,7 +2341,7 @@
         "name": "Kraken Slayer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2385,7 +2385,7 @@
         "name": "Liandry's Torment",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2407,7 +2407,7 @@
         "name": "Lich Bane",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2432,7 +2432,7 @@
           "ally_support",
           "shield"
         ],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Locket of the Iron Solari's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2479,7 +2479,7 @@
         "name": "Lord Dominik's Regards",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2523,7 +2523,7 @@
         "name": "Luden's Echo",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2545,7 +2545,7 @@
         "name": "Malignance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2567,7 +2567,7 @@
         "name": "Manamune",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+        "reason": "Manamune's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2589,9 +2589,9 @@
         "name": "Maw of Malmortius",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Maw of Malmortius",
@@ -2642,7 +2642,7 @@
           "cleanse",
           "movement"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2693,7 +2693,7 @@
           "cleanse",
           "sustain"
         ],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Mikael's Blessing's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2719,9 +2719,9 @@
         "name": "Moonstone Renewer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Starlit Grace chains healing or shielding.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Moonstone Renewer",
@@ -2807,7 +2807,7 @@
         "name": "Muramana",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2829,7 +2829,7 @@
         "name": "Nashor's Tooth",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2851,7 +2851,7 @@
         "name": "Navori Flickerblade",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -2983,7 +2983,7 @@
         "name": "Overlord's Bloodmail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Tyranny is modeled and Retribution uses the explicit bounded starting missing-health scenario control.",
+        "reason": "Overlord's Bloodmail's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3007,7 +3007,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "Rage is emitted once per authored basic attack with the sourced melee or ranged movement-speed window.",
+        "reason": "Phage's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3079,7 +3079,7 @@
         "name": "Plated Steelcaps",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3103,7 +3103,7 @@
         "outcome_dimensions": [
           "multi_target"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3127,7 +3127,7 @@
         "name": "Protoplasm Harness",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3171,9 +3171,9 @@
         "name": "Rabadon's Deathcap",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Rabadon's Deathcap",
@@ -3196,7 +3196,7 @@
           "slow",
           "critical_mitigation"
         ],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3224,7 +3224,7 @@
           "energized",
           "range"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3252,7 +3252,7 @@
           "multi_target",
           "sustain"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3299,7 +3299,7 @@
         "name": "Recurve Bow",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3324,7 +3324,7 @@
           "ally_support",
           "sustain"
         ],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Redemption's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3393,9 +3393,9 @@
         "name": "Riftmaker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Riftmaker's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Riftmaker",
@@ -3419,7 +3419,7 @@
           "health_state",
           "resource"
         ],
-        "reason": "Timeless stacks and their sourced health, mana, and ability-power conversions are supplied through the explicit bounded scenario control.",
+        "reason": "Rod of Ages's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3470,7 +3470,7 @@
           "multi_target",
           "copied_on_hit"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3500,7 +3500,7 @@
           "ally_support",
           "vision"
         ],
-        "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+        "reason": "Runic Compass's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3597,7 +3597,7 @@
         "name": "Scout's Slingshot",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3619,7 +3619,7 @@
         "name": "Seeker's Armguard",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3641,9 +3641,9 @@
         "name": "Seraph's Embrace",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Seraph's Embrace",
@@ -3663,7 +3663,7 @@
         "name": "Serpent's Fang",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3733,7 +3733,7 @@
         "name": "Shadowflame",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3777,7 +3777,7 @@
         "name": "Sheen",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3802,7 +3802,7 @@
           "movement",
           "ally_support"
         ],
-        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "reason": "Shurelya's Battlesong's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3831,9 +3831,9 @@
           "movement",
           "sustain"
         ],
-        "reason": "Going Sledding heals and grants movement speed.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Solstice Sleigh",
@@ -3879,7 +3879,7 @@
         "name": "Spear of Shojin",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -3945,9 +3945,9 @@
         "name": "Spirit Visage",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_effect"
       },
       "manual": true,
       "name": "Spirit Visage",
@@ -3967,9 +3967,9 @@
         "name": "Staff of Flowing Water",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet, stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Staff of Flowing Water",
@@ -3992,7 +3992,7 @@
           "multi_target",
           "energized"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4039,9 +4039,9 @@
         "name": "Sterak's Gage",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Sterak's Gage",
@@ -4064,7 +4064,7 @@
           "energized",
           "movement"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4089,7 +4089,7 @@
         "name": "Stormsurge",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4115,9 +4115,9 @@
           "slow",
           "movement"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Stridebreaker's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Stridebreaker",
@@ -4141,7 +4141,7 @@
         "name": "Sundered Sky",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4163,7 +4163,7 @@
         "name": "Sunfire Aegis",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4188,9 +4188,9 @@
           "movement",
           "stat_conversion"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Swiftmarch",
@@ -4216,7 +4216,7 @@
           "progression",
           "resource"
         ],
-        "reason": "Manaflow's bounded bonus-mana progression and minion-only Helping Hand boundary are explicit state receipts.",
+        "reason": "Tear of the Goddess's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -4241,7 +4241,7 @@
         "name": "Terminus",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4288,7 +4288,7 @@
           "execute",
           "takedown_state"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4313,9 +4313,9 @@
         "name": "Thornmail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "stats_only"
       },
       "manual": true,
       "name": "Thornmail",
@@ -4335,7 +4335,7 @@
         "name": "Tiamat",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4359,7 +4359,7 @@
         "outcome_dimensions": [
           "multi_target"
         ],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4383,7 +4383,7 @@
         "name": "Trinity Force",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4429,7 +4429,7 @@
         "outcome_dimensions": [
           "vision"
         ],
-        "reason": "Nightstalker's unseen-ready state gates a typed first-auto true-damage packet; Blackout remains a separate vision dimension.",
+        "reason": "Umbral Glaive's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -4453,7 +4453,7 @@
         "name": "Unending Despair",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4475,7 +4475,7 @@
         "name": "Vampiric Scepter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4497,7 +4497,7 @@
         "name": "Verdant Barrier",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -4541,7 +4541,7 @@
         "name": "Voltaic Cyclosword",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4563,7 +4563,7 @@
         "name": "Warden's Mail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -4585,9 +4585,9 @@
         "name": "Warmog's Armor",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Warmog's Armor",
@@ -4607,7 +4607,7 @@
         "name": "Whispering Circlet",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Harmony, Manaflow, and Diadem state are represented by the bounded bonus-mana control and transformation receipt.",
+        "reason": "Whispering Circlet's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -4651,7 +4651,7 @@
         "name": "Winter's Approach",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe, Manaflow, and Fimbulwinter transformation state are represented by the bounded bonus-mana control and transformation receipt.",
+        "reason": "Winter's Approach's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -4673,7 +4673,7 @@
         "name": "Wit's End",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4700,7 +4700,7 @@
           "ally_support",
           "vision"
         ],
-        "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+        "reason": "World Atlas's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -4753,9 +4753,9 @@
         "name": "Yun Tal Wildarrows",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Yun Tal Wildarrows's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Yun Tal Wildarrows",
@@ -4775,7 +4775,7 @@
         "name": "Zaz'Zak's Realmspike",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4819,7 +4819,7 @@
         "name": "Zeke's Convergence",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are represented by the fight model.",
+        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
         "review_issue_refs": [],
         "status": "modeled_effect"
       },
@@ -4843,7 +4843,7 @@
         "outcome_dimensions": [
           "stasis"
         ],
-        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
