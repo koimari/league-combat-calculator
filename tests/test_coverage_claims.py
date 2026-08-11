@@ -23,6 +23,7 @@ honest about the shape of a real one.
 import ast
 import dataclasses
 import fnmatch
+import hashlib
 import importlib
 import json
 import re
@@ -951,42 +952,6 @@ def test_a_paired_sides_member_that_does_not_hold_is_unresolved(
     """Each half of the handshake fails on its own, named separately."""
     with pytest.raises(EvidenceUnresolved, match=message):
         _resolve_live(sides)
-
-
-def test_M5_clearing_a_pair_of_leaves_the_dual_sided_claim_unresolved() -> None:
-    """The mutation is a context, not an edit: a registry with one half gone.
-
-    ``pair_of`` is the only field that says the two engines are pricing one
-    mechanic.  Clearing it is exactly the incident — a coverage claim naming
-    both sides while only one exists — and it has to fail without any source
-    file being touched.
-    """
-    live = _live()
-    real = live.importer("src.calculator.trigger_stream")
-    unpaired = dict(CAPABILITIES)
-    unpaired["imperial_mandate.command"] = dataclasses.replace(
-        CAPABILITIES["imperial_mandate.command"], pair_of=None
-    )
-
-    class _Registry:
-        """``trigger_stream`` with one capability's pair link cleared."""
-
-        CAPABILITIES = unpaired
-
-    def importer(name: str) -> object:
-        return _Registry if name.endswith("trigger_stream") else real
-
-    ctx = ResolverContext(
-        importer=importer, read_source=live.read_source, nodes=live.nodes
-    )
-    with pytest.raises(EvidenceUnresolved, match="declares no pair_of"):
-        coverage_resolver.resolve(
-            PairedSides(
-                mechanic="imperial_mandate.command", owner_policy="owner_skips_holder"
-            ),
-            MANDATE_SUPPORT_CLAIM,
-            ctx,
-        )
 
 
 # ── EffectKey, EffectTag, OptionSchema ────────────────────────────────────
@@ -1937,3 +1902,317 @@ def test_every_rule_claim_names_a_live_rung_whose_predicate_resolves() -> None:
         assert rule.status == claim.status
         for path in rule.keys_on:
             coverage_resolver.import_symbol(path, ctx)
+
+
+# ── M1–M9: nine mutations, none of which is an edit ───────────────────────
+#
+# Every one of the nine describes a tree this repository does not have and
+# hands it to the resolver through a seam, so the suite that proves a broken
+# claim is noticed never writes a byte.  Each case runs twice over: the
+# member resolves against the **live** tree first, which is what makes the
+# real mutation — renaming the accessor in ``src/`` — turn this suite red,
+# and then against the mutated one, which is what proves the tier is the
+# thing that noticed.  A case asserting only the failure would pass just as
+# happily if the member had never resolved at all.
+
+MANDATE_SPLIT_CLAIM = COVERAGE_EVIDENCE[("item", "Imperial Mandate", "support_packet")]
+COMMAND_PACKET = "Imperial Mandate — Command"
+COMMAND_ACCESSOR = "item_effects.command_amp_effect"
+SUPPORT_MODULE = "src/calculator/item_support_effects.py"
+EFFECTS_MODULE = "src/calculator/item_effects.py"
+
+# The files the nine mutations describe.  They are hashed either side of the
+# suite, because "driven through the seams" is a claim about these bytes.
+MUTATED_FILES: tuple[str, ...] = (
+    EFFECTS_MODULE,
+    "src/calculator/damage.py",
+    SUPPORT_MODULE,
+    "src/calculator/trigger_stream.py",
+    "tests/test_f0_frontend.py",
+)
+
+
+def _plus(claim: Claim, member) -> Claim:
+    """The live claim, plus the one member a mutation is about."""
+    return dataclasses.replace(claim, evidence=(*claim.evidence, member))
+
+
+def _only(claim: Claim, kind: type):
+    """The claim's single member of one evidence kind."""
+    return next(member for member in claim.evidence if isinstance(member, kind))
+
+
+def _importer_without(module: str, attribute: str):
+    """An importer for which *module* no longer defines *attribute*.
+
+    A rename is indistinguishable from a deletion as far as a claim naming
+    the old name is concerned, so one shim serves M1 and M2 both.
+    """
+    real = importlib.import_module(f"{coverage_resolver.PACKAGE}.{module}")
+
+    class _Renamed:
+        """The module as it would be after the rename."""
+
+        def __getattr__(self, name: str) -> object:
+            if name == attribute:
+                raise AttributeError(name)
+            return getattr(real, name)
+
+    shim = _Renamed()
+
+    def importer(name: str) -> object:
+        if name == f"{coverage_resolver.PACKAGE}.{module}":
+            return shim
+        return importlib.import_module(name)
+
+    return importer
+
+
+def _read_source_with(path: str, text: str):
+    """The live tree with one module's text replaced by *text*."""
+
+    def read_source(wanted: str) -> str:
+        return text if wanted == path else coverage_resolver.read_repo_file(wanted)
+
+    return read_source
+
+
+def _packet_call_without_owner(text: str, source: str) -> str:
+    """One packet's ``owner=`` keyword deleted, and nobody else's.
+
+    Line-precise rather than a textual sweep: five packets declare ``owner=``
+    and the claim under test is about one of them, so a global replace would
+    prove the tier notices *some* missing owner rather than this one's.
+    """
+    for node in ast.walk(ast.parse(text)):
+        if not isinstance(node, ast.Call):
+            continue
+        keywords = {keyword.arg: keyword for keyword in node.keywords if keyword.arg}
+        if "source" not in keywords:
+            continue
+        if coverage_resolver.render_source_argument(keywords["source"].value) != source:
+            continue
+        owner = keywords["owner"]
+        lines = text.splitlines(keepends=True)
+        del lines[owner.lineno - 1 : owner.end_lineno]
+        return "".join(lines)
+    raise AssertionError(f"no packet call carries source={source!r}")
+
+
+def test_M1_renaming_the_pair_engine_effect_accessor_is_noticed() -> None:
+    """M1: the accessor Command's pair-engine half reads its number through.
+
+    The incident's first layer.  ``damage._apply_command_amp`` prices the
+    holder's own amp by asking ``item_effects.command_amp_effect`` for the
+    sourced fraction, and a rename there leaves every sentence about Command
+    looking true and the number gone.
+    """
+    accessor = Symbol(path=COMMAND_ACCESSOR, role="value_accessor")
+    claim = _plus(MANDATE_SPLIT_CLAIM, accessor)
+    coverage_resolver.resolve(accessor, claim, _live())
+
+    renamed = dataclasses.replace(
+        _live(), importer=_importer_without("item_effects", "command_amp_effect")
+    )
+    with pytest.raises(EvidenceUnresolved, match="names no 'command_amp_effect'"):
+        coverage_resolver.resolve(accessor, claim, renamed)
+
+
+def test_M2_deleting_the_pair_side_pricer_is_noticed() -> None:
+    """M2: the pair half's ``impl`` is gone and the walk half is intact.
+
+    Nothing on the claim spells ``damage._apply_command_amp``; the capability
+    registry does, and ``PairedSides`` resolves both halves through it.  That
+    is the point — a hand list agreeing with the surviving half is what the
+    incident shipped.
+    """
+    sides = _only(MANDATE_SPLIT_CLAIM, PairedSides)
+    coverage_resolver.resolve(sides, MANDATE_SPLIT_CLAIM, _live())
+
+    deleted = dataclasses.replace(
+        _live(), importer=_importer_without("damage", "_apply_command_amp")
+    )
+    with pytest.raises(
+        EvidenceUnresolved,
+        match=re.escape("imperial_mandate.command_preview implements"),
+    ):
+        coverage_resolver.resolve(sides, MANDATE_SPLIT_CLAIM, deleted)
+
+
+def test_M3_removing_the_command_packet_literal_is_noticed() -> None:
+    """M3: the walk half stops emitting the receipt the claim quotes."""
+    packet = _only(MANDATE_SPLIT_CLAIM, PacketSource)
+    assert packet.source == COMMAND_PACKET
+    coverage_resolver.resolve(packet, MANDATE_SPLIT_CLAIM, _live())
+
+    text = coverage_resolver.read_repo_file(SUPPORT_MODULE)
+    without = text.replace(f'source="{COMMAND_PACKET}"', 'source="Imperial Mandate"')
+    assert without != text
+    removed = dataclasses.replace(
+        _live(), read_source=_read_source_with(SUPPORT_MODULE, without)
+    )
+    with pytest.raises(EvidenceUnresolved, match="is not a source= argument"):
+        coverage_resolver.resolve(packet, MANDATE_SPLIT_CLAIM, removed)
+
+
+def test_M4_dropping_owner_from_a_dual_sided_packet_is_noticed() -> None:
+    """M4: the packet still exists and the handshake it declared is gone.
+
+    ``owner=`` is the whole of the walk's promise to skip the holder because
+    the holder's own engine prices that half.  Dropping it makes two engines
+    price one participant with nothing in the payload changed — which is why
+    the claim declares the policy and the tier reads the call site.
+    """
+    sides = _only(MANDATE_SPLIT_CLAIM, PairedSides)
+    assert sides.owner_policy == "owner_skips_holder"
+
+    text = coverage_resolver.read_repo_file(SUPPORT_MODULE)
+    unowned = _packet_call_without_owner(text, COMMAND_PACKET)
+    assert unowned != text
+    dropped = dataclasses.replace(
+        _live(), read_source=_read_source_with(SUPPORT_MODULE, unowned)
+    )
+    with pytest.raises(EvidenceUnresolved, match=re.escape("to declare owner=")):
+        coverage_resolver.resolve(sides, MANDATE_SPLIT_CLAIM, dropped)
+
+
+def test_M5_clearing_a_pair_of_leaves_the_dual_sided_claim_unresolved() -> None:
+    """M5: a registry with one half's link to the other cleared.
+
+    ``pair_of`` is the only field that says the two engines are pricing one
+    mechanic.  Clearing it is exactly the incident — a coverage claim naming
+    both sides while only one exists — and it has to fail without any source
+    file being touched.
+    """
+    sides = _only(MANDATE_SPLIT_CLAIM, PairedSides)
+    live = _live()
+    real = live.importer(f"{coverage_resolver.PACKAGE}.trigger_stream")
+    unpaired = dict(CAPABILITIES)
+    unpaired["imperial_mandate.command"] = dataclasses.replace(
+        CAPABILITIES["imperial_mandate.command"], pair_of=None
+    )
+
+    class _Registry:
+        """``trigger_stream`` with one capability's pair link cleared."""
+
+        CAPABILITIES = unpaired
+
+    def importer(name: str) -> object:
+        return _Registry if name.endswith("trigger_stream") else real
+
+    cleared = dataclasses.replace(live, importer=importer)
+    with pytest.raises(EvidenceUnresolved, match="declares no pair_of"):
+        coverage_resolver.resolve(sides, MANDATE_SPLIT_CLAIM, cleared)
+
+
+def test_M6_renaming_an_effect_tag_is_noticed() -> None:
+    """M6: the tag survives in the data and the handler stops branching on it.
+
+    A renamed tag reclassifies every item carrying it with no other signal —
+    the registry still declares the name, so only the dispatch says whether
+    anything reads it.
+    """
+    tag = EffectTag(tag="thorns", handler="item_effects.thorns_effects")
+    coverage_resolver.resolve(tag, MANDATE_SPLIT_CLAIM, _live())
+
+    text = coverage_resolver.read_repo_file(EFFECTS_MODULE)
+    renamed = text.replace('"thorns"', '"thorns_bonus"')
+    assert renamed != text
+    mutated = dataclasses.replace(
+        _live(), read_source=_read_source_with(EFFECTS_MODULE, renamed)
+    )
+    with pytest.raises(EvidenceUnresolved, match="does not branch on 'thorns'"):
+        coverage_resolver.resolve(tag, MANDATE_SPLIT_CLAIM, mutated)
+
+
+def test_M7_a_dangling_test_ref_is_noticed_in_both_tiers() -> None:
+    """M7: the node the claim names is not in this tree at all.
+
+    Both tiers answer, and they answer differently on purpose: the full
+    session knows what was collected, and a filtered one falls back to the
+    source, which a ``-k`` expression cannot change.
+    """
+    ref = _only(MANDATE_SPLIT_CLAIM, TestRef)
+    ctx = live_context()
+    resolve_test_ref(
+        ref, MANDATE_SPLIT_CLAIM, ctx, full_session=coverage_resolver.full_session()
+    )
+
+    dangling = TestRef(node_id=f"{ref.node_id}_no_such_node")
+    with pytest.raises(EvidenceUnresolved, match="names no collected node"):
+        resolve_test_ref(dangling, MANDATE_SPLIT_CLAIM, ctx, full_session=True)
+    with pytest.raises(EvidenceUnresolved, match="does not define"):
+        resolve_test_ref(dangling, MANDATE_SPLIT_CLAIM, ctx, full_session=False)
+
+
+def test_M8_a_skip_guarded_test_ref_is_noticed() -> None:
+    """M8: the node exists, carries no skip marker, and skips itself.
+
+    ``pytest.skip`` inside the body is the shape rule 4 exists for: the node
+    reports green on a machine where its assertions never ran.
+    """
+    guarded = TestRef(
+        node_id="tests/test_f0_frontend.py::test_node_check_passes_for_app_js"
+    )
+    with pytest.raises(EvidenceUnresolved, match=re.escape("its body calls")):
+        resolve_test_ref(
+            guarded,
+            MANDATE_SPLIT_CLAIM,
+            live_context(),
+            full_session=coverage_resolver.full_session(),
+        )
+
+
+def test_M9_an_irrelevant_test_ref_is_noticed() -> None:
+    """M9: a node that resolves, cannot be skipped, and is about nothing.
+
+    Rule 5, and the reason it exists: without it one collected, unskipped
+    node backs every claim in the table.
+    """
+    unrelated = TestRef(
+        node_id="tests/test_resistance.py::TestApplyResistance::test_zero_resistance"
+    )
+    with pytest.raises(
+        EvidenceUnresolved, match="mentions none of the claim's strings"
+    ):
+        resolve_test_ref(
+            unrelated,
+            MANDATE_SPLIT_CLAIM,
+            live_context(),
+            full_session=coverage_resolver.full_session(),
+        )
+
+
+M_SUITE = (
+    test_M1_renaming_the_pair_engine_effect_accessor_is_noticed,
+    test_M2_deleting_the_pair_side_pricer_is_noticed,
+    test_M3_removing_the_command_packet_literal_is_noticed,
+    test_M4_dropping_owner_from_a_dual_sided_packet_is_noticed,
+    test_M5_clearing_a_pair_of_leaves_the_dual_sided_claim_unresolved,
+    test_M6_renaming_an_effect_tag_is_noticed,
+    test_M7_a_dangling_test_ref_is_noticed_in_both_tiers,
+    test_M8_a_skip_guarded_test_ref_is_noticed,
+    test_M9_an_irrelevant_test_ref_is_noticed,
+)
+
+
+def test_the_mutation_suite_is_nine_mutations_that_write_nothing() -> None:
+    """Criterion 10: nine of them, and the tree they describe is untouched.
+
+    The digests are the whole assertion.  "Driven through the seams" is a
+    claim about bytes on disk, and a suite that edited a file and put it back
+    would satisfy every other test in this module.
+    """
+    assert [case.__name__.split("_")[1] for case in M_SUITE] == [
+        f"M{index}" for index in range(1, 10)
+    ]
+    before = {
+        path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+        for path in MUTATED_FILES
+    }
+    for case in M_SUITE:
+        case()
+    assert {
+        path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+        for path in MUTATED_FILES
+    } == before
