@@ -37,13 +37,7 @@ from .trigger_stream import (
     streams_for,
     tuple_incapable_items,
 )
-from .item_effects import (
-    ALLY_ITEM_EFFECTS,
-    ITEM_INPUT_OPTIONS,
-    ally_item_effect_value,
-    ally_item_level_value,
-    required_effect_value,
-)
+from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 
 # Phase 3's declarations, and the interpreter that resolves them.  A producer
 # is reached through the rule its registry entry declares — "does this holder
@@ -120,6 +114,21 @@ def _producer(
             "combine"
         )
     return found[0] if found else None
+
+
+def _active_seconds(attacker: Any, slot: AllyPacketSlot | None) -> float:
+    """When the scenario cast *slot*'s active, or ``0.0`` if it never did.
+
+    An explicit non-zero timestamp is the whole trigger contract for an
+    item-active: the packet is never emitted at ``t = 0`` by default.  The
+    option is read under the declaration's owner, so a build that declares no
+    active reads nothing — the option's own type checking lives at the request
+    boundary (``scenario.py`` -> ``item_effects.validate_item_input_options``)
+    and covers every named item whether the build holds it or not.
+    """
+    if slot is None:
+        return 0.0
+    return _option(attacker, slot.owner, "active_seconds")
 
 
 def _event_time(event: Mapping[str, Any]) -> float:
@@ -1113,8 +1122,10 @@ def derive_item_support_effects(
 
     # Explicit item-actives.  A non-zero timestamp is the complete trigger
     # contract; the packet is not emitted at t=0 by default.
-    active_time = _option(attacker, "Locket of the Iron Solari", "active_seconds")
-    if "Locket of the Iron Solari" in names and active_time > 0.0:
+    devotion = _producer(slots, AllyProducer.DEVOTION)
+    active_time = _active_seconds(attacker, devotion)
+    if devotion is not None and active_time > 0.0:
+        devotion.declared(PacketKind.SHIELD)
         for target in (attacker, *teammates):
             packets.append(
                 _packet(
@@ -1123,20 +1134,15 @@ def derive_item_support_effects(
                     time=active_time,
                     kind="shield",
                     source="Locket of the Iron Solari — Devotion",
-                    amount=ally_item_level_value(
-                        "Locket of the Iron Solari",
-                        "shield_min",
-                        "shield_max",
-                        target.level,
-                    ),
-                    duration=ally_item_effect_value(
-                        "Locket of the Iron Solari", "shield_duration"
-                    ),
+                    amount=devotion.level_value("shield_min", target.level),
+                    duration=devotion.value("shield_duration"),
                     target_scope="all_selected_teammates",
                 )
             )
-    active_time = _option(attacker, "Mikael's Blessing", "active_seconds")
-    if "Mikael's Blessing" in names and active_time > 0.0 and teammates:
+    purify = _producer(slots, AllyProducer.PURIFY)
+    active_time = _active_seconds(attacker, purify)
+    if purify is not None and active_time > 0.0 and teammates:
+        purify.declared(PacketKind.HEAL)
         target = teammates[0]
         packets.append(
             _packet(
@@ -1145,17 +1151,17 @@ def derive_item_support_effects(
                 time=active_time,
                 kind="heal",
                 source="Mikael's Blessing — Purify",
-                amount=ally_item_level_value(
-                    "Mikael's Blessing", "heal_min", "heal_max", target.level
-                ),
+                amount=purify.level_value("heal_min", target.level),
                 target_scope="explicit_selected_ally",
                 cleanse=True,
             )
         )
-    active_time = _option(attacker, "Redemption", "active_seconds")
-    if "Redemption" in names and active_time > 0.0:
-        beam_delay = ally_item_effect_value("Redemption", "beam_delay")
-        range_units = ally_item_effect_value("Redemption", "target_area_range_units")
+    intervention = _producer(slots, AllyProducer.INTERVENTION)
+    active_time = _active_seconds(attacker, intervention)
+    if intervention is not None and active_time > 0.0:
+        intervention.declared(PacketKind.HEAL)
+        beam_delay = intervention.value("beam_delay")
+        range_units = intervention.value("target_area_range_units")
         for target in (attacker, *teammates):
             packets.append(
                 _packet(
@@ -1164,9 +1170,7 @@ def derive_item_support_effects(
                     time=active_time + beam_delay,
                     kind="heal",
                     source="Redemption — Intervention",
-                    amount=ally_item_level_value(
-                        "Redemption", "heal_min", "heal_max", target.level
-                    ),
+                    amount=intervention.level_value("heal_min", target.level),
                     target_scope="redemption_allies_in_radius",
                     beam_delay=beam_delay,
                     range_assumption=f"within_{range_units:g}_units",
@@ -1178,9 +1182,13 @@ def derive_item_support_effects(
         # is invented.  The packet enters the normal phase-0 damage walk so
         # shields, death cutoffs, and attribution remain shared with all other
         # damage events.
-        true_damage_ratio = ally_item_effect_value(
-            "Redemption", "enemy_max_health_true_damage_ratio"
-        )
+        #
+        # D-50: one active, one ``source=`` literal, two packets landing on two
+        # different roster classes.  ``secondary_target`` is what says the
+        # second half exists — a reader of the declaration alone could
+        # otherwise not tell that Intervention damages anybody.
+        intervention.declared(PacketKind.DAMAGE)
+        true_damage_ratio = intervention.value("enemy_max_health_true_damage_ratio")
         for target in (
             actor for actor in all_actors if not _same_side(attacker, actor)
         ):
@@ -1205,8 +1213,10 @@ def derive_item_support_effects(
                     sequence=0,
                 )
             )
-    active_time = _option(attacker, "Shurelya's Battlesong", "active_seconds")
-    if "Shurelya's Battlesong" in names and active_time > 0.0:
+    inspiring_speech = _producer(slots, AllyProducer.INSPIRING_SPEECH)
+    active_time = _active_seconds(attacker, inspiring_speech)
+    if inspiring_speech is not None and active_time > 0.0:
+        inspiring_speech.declared(PacketKind.MOVEMENT)
         for target in (attacker, *teammates):
             packets.append(
                 _packet(
@@ -1215,30 +1225,25 @@ def derive_item_support_effects(
                     time=active_time,
                     kind="movement",
                     source="Shurelya's Battlesong — Inspiring Speech",
-                    amount=ally_item_effect_value(
-                        "Shurelya's Battlesong", "bonus_move_speed_percent"
-                    ),
-                    duration=ally_item_effect_value(
-                        "Shurelya's Battlesong", "duration"
-                    ),
-                    bonus_move_speed_percent=ally_item_effect_value(
-                        "Shurelya's Battlesong", "bonus_move_speed_percent"
+                    amount=inspiring_speech.value("bonus_move_speed_percent"),
+                    duration=inspiring_speech.value("duration"),
+                    bonus_move_speed_percent=inspiring_speech.value(
+                        "bonus_move_speed_percent"
                     ),
                     target_scope="all_selected_teammates",
                 )
             )
-    active_time = _option(attacker, "Stridebreaker", "active_seconds")
-    if "Stridebreaker" in names and active_time > 0.0:
-        slow_percent = float(required_effect_value("Stridebreaker", "slow_percent"))
-        slow_duration = float(required_effect_value("Stridebreaker", "slow_duration"))
-        move_speed_percent = float(
-            required_effect_value("Stridebreaker", "bonus_move_speed_percent")
-        )
-        move_speed_duration = float(
-            required_effect_value("Stridebreaker", "bonus_move_speed_duration")
-        )
-        area_radius = float(required_effect_value("Stridebreaker", "area_radius"))
-        front_offset = float(required_effect_value("Stridebreaker", "front_offset"))
+    shockwave = _producer(slots, AllyProducer.BREAKING_SHOCKWAVE)
+    active_time = _active_seconds(attacker, shockwave)
+    if shockwave is not None and active_time > 0.0:
+        shockwave.declared(PacketKind.SLOW)
+        shockwave.declared(PacketKind.MOVEMENT)
+        slow_percent = shockwave.value("slow_percent")
+        slow_duration = shockwave.value("slow_duration")
+        move_speed_percent = shockwave.value("bonus_move_speed_percent")
+        move_speed_duration = shockwave.value("bonus_move_speed_duration")
+        area_radius = shockwave.value("area_radius")
+        front_offset = shockwave.value("front_offset")
         for target in (
             actor for actor in all_actors if not _same_side(attacker, actor)
         ):

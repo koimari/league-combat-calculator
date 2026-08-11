@@ -430,6 +430,7 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         "reap_gold_per_minion": RuleFamily.ALLY_PACKET,
         "rage_duration": RuleFamily.ALLY_PACKET,
         "support_quest_threshold": RuleFamily.ALLY_PACKET,
+        "front_offset": RuleFamily.ALLY_PACKET,
     },
     "ALLY_ITEM_EFFECTS": {
         key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)
@@ -1407,12 +1408,6 @@ _DREAM_KEYS: tuple[str, ...] = (
 
 _QUEST_KEYS: tuple[str, ...] = ("support_quest_threshold", "ward_charges")
 
-# Which commit of 3.6 retires each remaining producer's stub.  Named once so
-# the groups cannot drift into several spellings.
-_UTILITY_SLICE = "3.6 — utility and quest outcomes"
-_ACTIVES_SLICE = "3.6 — explicit item actives"
-
-
 # Every producer's entry shape, including the ones whose emitter has not
 # migrated yet: the closure below asserts that every ``ALLY_ITEM_EFFECTS``
 # record is claimed by one, and a shape table missing the unmigrated half
@@ -1846,6 +1841,90 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
             "own level; a zero means the holder healed or shielded nobody"
         ),
     ),
+    AllyProducer.DEVOTION: AllyPacketDeclaration(
+        trigger=PacketTrigger.ITEM_ACTIVE,
+        packets=(PacketSpec(PacketKind.SHIELD, Recipients.HOLDER_AND_ALLIES),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=("shield_duration",),
+        ramps=(("shield_min", "shield_max"),),
+        zero_reason=(
+            "the shield is a sourced level ramp read at each recipient's own "
+            "level; a zero means the scenario cast no active, and no packet is "
+            "emitted at all rather than one carrying nothing"
+        ),
+    ),
+    AllyProducer.PURIFY: AllyPacketDeclaration(
+        trigger=PacketTrigger.ITEM_ACTIVE,
+        packets=(PacketSpec(PacketKind.HEAL, Recipients.SELECTED_ALLY),),
+        secondary_target=None,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=False,
+        reads=(),
+        ramps=(("heal_min", "heal_max"),),
+        zero_reason=(
+            "the heal is a sourced level ramp read at the tethered ally's own "
+            "level; a zero means the scenario cast no active"
+        ),
+    ),
+    AllyProducer.INTERVENTION: AllyPacketDeclaration(
+        trigger=PacketTrigger.ITEM_ACTIVE,
+        packets=(
+            PacketSpec(PacketKind.HEAL, Recipients.HOLDER_AND_ALLIES),
+            PacketSpec(PacketKind.DAMAGE, Recipients.ENEMIES),
+        ),
+        secondary_target=Recipients.ENEMIES,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=False,
+        reads=(
+            "beam_delay",
+            "target_area_range_units",
+            "enemy_max_health_true_damage_ratio",
+        ),
+        ramps=(("heal_min", "heal_max"),),
+        zero_reason=(
+            "the heal is a sourced level ramp and the beam a sourced share of "
+            "each enemy's maximum health; a zero means the scenario cast no "
+            "active"
+        ),
+    ),
+    AllyProducer.INSPIRING_SPEECH: AllyPacketDeclaration(
+        trigger=PacketTrigger.ITEM_ACTIVE,
+        packets=(PacketSpec(PacketKind.MOVEMENT, Recipients.HOLDER_AND_ALLIES),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=("bonus_move_speed_percent", "duration"),
+        ramps=(),
+        zero_reason=(
+            "the bonus is a sourced ratio for a sourced duration; a zero means "
+            "the scenario cast no active"
+        ),
+    ),
+    AllyProducer.BREAKING_SHOCKWAVE: AllyPacketDeclaration(
+        trigger=PacketTrigger.ITEM_ACTIVE,
+        packets=(
+            PacketSpec(PacketKind.SLOW, Recipients.ENEMIES),
+            PacketSpec(PacketKind.MOVEMENT, Recipients.SELF),
+        ),
+        secondary_target=Recipients.SELF,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "front_offset",
+            "area_radius",
+            "slow_percent",
+            "slow_duration",
+            "bonus_move_speed_percent",
+            "bonus_move_speed_duration",
+        ),
+        ramps=(),
+        zero_reason=(
+            "both halves are sourced ratios and durations under the sourced "
+            "area radius; a zero means the scenario cast no active"
+        ),
+    ),
     AllyProducer.REAP: AllyPacketDeclaration(
         trigger=PacketTrigger.FIGHT_START,
         packets=(PacketSpec(PacketKind.ECONOMY, Recipients.SELF),),
@@ -1927,13 +2006,7 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
 # a family whose compiler is real no longer appears in
 # :data:`UNMIGRATED_FAMILIES`, so without this the promises would disappear
 # with the stub rather than being kept.
-ALLY_PACKET_UNMIGRATED_PRODUCERS: Mapping[AllyProducer, str] = {
-    AllyProducer.DEVOTION: _ACTIVES_SLICE,
-    AllyProducer.PURIFY: _ACTIVES_SLICE,
-    AllyProducer.INTERVENTION: _ACTIVES_SLICE,
-    AllyProducer.INSPIRING_SPEECH: _ACTIVES_SLICE,
-    AllyProducer.BREAKING_SHOCKWAVE: _ACTIVES_SLICE,
-}
+ALLY_PACKET_UNMIGRATED_PRODUCERS: Mapping[AllyProducer, str] = {}
 
 
 def _ally_compilability(declaration: AllyPacketDeclaration) -> Compilability:
