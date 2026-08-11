@@ -40,12 +40,15 @@ from .item_behavior import (
     AfterTrigger,
     Always,
     AmpChainSlot,
+    AtLeast,
     Attribution,
+    Basis,
     Compilable,
     Comparison,
     BonusTyping,
     BehaviorRule,
     BuildContext,
+    DamageFormula,
     DeltaAmpRule,
     ExcludeTrigger,
     Fixed,
@@ -53,6 +56,8 @@ from .item_behavior import (
     LivePredicate,
     Magnitude,
     MeleeRangedSplit,
+    NoFloor,
+    OnHitStrikeRule,
     Persist,
     Pool,
     Probe,
@@ -64,8 +69,10 @@ from .item_behavior import (
     Resistance,
     ResistanceShredRule,
     RuleFamily,
+    SecondaryTargetRule,
     StackRamp,
     Subject,
+    Term,
     TargetBonusHealthScaled,
     TriggerEvent,
     TriggerWindow,
@@ -420,6 +427,43 @@ KEYSTONE_AMPS: Mapping[str, AmpChainSlot] = {
     "First Strike": AmpChainSlot.OPENING_WINDOW,
     "Press the Attack": AmpChainSlot.LASTING_PROC_AMP,
 }
+
+# ── registry formula schemas: which shares each formula name is made of ───
+#
+# The registry names a shape (``"flat_bonus_ad_ap"``) and these tables say
+# what that name means, term by term, in the order the registry's own
+# compiler summed them.  A schema entry is ``(basis, key)`` for a single
+# sourced rate or ``(basis, (melee_key, ranged_key))`` where the registry pays
+# a melee holder differently.  They live here, with the shapes, because a
+# formula name is a *schema* of the registry and not policy of a rule.
+TermSchema = tuple[Basis, "str | tuple[str, str]"]
+
+ON_HIT_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
+    "flat": ((Basis.FLAT, "base"),),
+    "flat_ap": ((Basis.FLAT, "base"), (Basis.ABILITY_POWER, "ap_ratio")),
+    "flat_bonus_ad_ap": (
+        (Basis.FLAT, "base"),
+        (Basis.BONUS_ATTACK_DAMAGE, "bonus_ad_ratio"),
+        (Basis.ABILITY_POWER, "ap_ratio"),
+    ),
+    "current_hp": (
+        (
+            Basis.TARGET_CURRENT_HEALTH,
+            ("current_hp_ratio_melee", "current_hp_ratio_ranged"),
+        ),
+    ),
+    "max_hp": (
+        (Basis.HOLDER_MAX_HEALTH, ("max_hp_ratio_melee", "max_hp_ratio_ranged")),
+    ),
+    "max_mana": ((Basis.HOLDER_MAX_MANA, "max_mana_ratio_on_hit"),),
+}
+
+# Which on-hit schemas carry a sourced minimum, and the key holding it.
+ON_HIT_FORMULA_FLOORS: Mapping[str, str] = {"current_hp": "min_damage"}
+
+# The registry's spelling for "this item also pays per ability hit".  Named
+# once so the declaration and the build projection read one string.
+PER_ABILITY_HIT_BEHAVIOR = "per_ability_hit"
 
 # The fight's own ``t = 0``.  A coordinate the model measures from, not a
 # quantity anybody patches, which is what ``origin`` says and ``count`` would
@@ -976,6 +1020,150 @@ def _compile_delta_amp(
     return tuple(rules)
 
 
+def _formula_terms(
+    owner: str, registry: ValueRegistry, schema: tuple[TermSchema, ...]
+) -> tuple[Term, ...]:
+    """One registry schema's terms, in the order the schema names them.
+
+    Order is load-bearing: the registry's own compilers summed their shares in
+    the order their formula name spelled them, and floating-point addition is
+    not associative.  A schema that lists them in that order is what makes the
+    migration reproduce the same float.
+    """
+    terms: list[Term] = []
+    for basis, keys in schema:
+        if isinstance(keys, tuple):
+            melee_key, ranged_key = keys
+            coefficient = MeleeRangedSplit(
+                melee=ValueRef(registry, owner, melee_key),
+                ranged=ValueRef(registry, owner, ranged_key),
+            )
+        else:
+            coefficient = ValueRef(registry, owner, keys)
+        terms.append(Term(coefficient=coefficient, basis=basis))
+    return tuple(terms)
+
+
+def _damage_formula(
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+    schemas: Mapping[str, tuple[TermSchema, ...]],
+    floors: Mapping[str, str],
+) -> DamageFormula:
+    """The declared formula one entry's ``formula`` name describes.
+
+    The registry names a shape and this resolves that name into the shares it
+    is made of.  A name the table does not carry is a stop, never a strike
+    that quietly deals nothing: the whole point of the closed vocabulary is
+    that a new schema costs one deliberate decision.
+    """
+    name = str(entry.get("formula"))
+    schema = schemas.get(name)
+    if schema is None:
+        raise BehaviorCatalogError(
+            f"{registry}[{owner!r}] declares formula {name!r}, which no term "
+            "schema describes; a new registry schema is a new entry in the "
+            "table, never a silent zero"
+        )
+    floor_key = floors.get(name)
+    return DamageFormula(
+        terms=_formula_terms(owner, registry, schema),
+        floor=(
+            AtLeast(ValueRef(registry, owner, floor_key))
+            if floor_key is not None
+            else NoFloor()
+        ),
+        damage_class=DamageClass(str(entry.get("damage_type"))),
+    )
+
+
+def _on_hit_strike_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """One item's on-hit strike: the damage every basic attack carries.
+
+    ``superseded_by_ability_proc`` is the Wiki's no-double-dip rule, declared
+    rather than inferred at the point of use: an item that also pays per
+    ability hit pays the ability number instead of this one when an ability
+    carries the on-hit application, and that is a property of the mechanic
+    rather than of whichever loop happens to be reading it.
+    """
+    return BehaviorRule(
+        family=RuleFamily.ON_HIT_STRIKE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.on_hit",
+        payload=OnHitStrikeRule(
+            formula=_damage_formula(
+                owner, registry, entry, ON_HIT_FORMULA_TERMS, ON_HIT_FORMULA_FLOORS
+            ),
+            superseded_by_ability_proc=(
+                entry.get("secondary_behavior") == PER_ABILITY_HIT_BEHAVIOR
+            ),
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the strike is a sum of sourced shares of the holder's stats and "
+            "the target's pools; a zero means every share resolved to zero, "
+            "which the formula measured",
+        ),
+    )
+
+
+def _compile_on_hit_strike(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the on-hit strike one registry entry declares."""
+    del family
+    rule = _on_hit_strike_rule(owner, registry, entry)
+    validate_rule(rule)
+    return (rule,)
+
+
+def _compile_secondary_target(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the secondary-target strike one registry entry declares.
+
+    The bolts carry a *share of the attack that fired them* rather than a
+    formula of their own, which is why this family declares a count and a
+    share instead of a :class:`~.item_behavior.DamageFormula`.
+    """
+    del family
+    rule = BehaviorRule(
+        family=RuleFamily.SECONDARY_TARGET,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.secondary_target",
+        payload=SecondaryTargetRule(
+            max_targets=ValueRef(registry, owner, "max_secondary_targets"),
+            damage_share=ValueRef(registry, owner, "secondary_ad_ratio"),
+            applies_on_hit=bool(entry.get("applies_on_hit", False)),
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the bolts are a sourced share of the attack that fired them, "
+            "priced over the roster's own event ledger; a zero means no extra "
+            "target was in range, which the ledger measured",
+        ),
+    )
+    validate_rule(rule)
+    return (rule,)
+
+
 def _carve_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """Black Cleaver's Carve — the pair engine's averaged reading of it.
 
@@ -1122,13 +1310,13 @@ def _unmigrated(
 # entry points at ``_unmigrated`` today; each migration slice replaces
 # exactly one, which is what keeps a slice's diff a one-symbol change.
 _COMPILERS: Mapping[RuleFamily, Compiler] = {
-    RuleFamily.ON_HIT_STRIKE: _unmigrated,
+    RuleFamily.ON_HIT_STRIKE: _compile_on_hit_strike,
     RuleFamily.CHARGED_STRIKE: _unmigrated,
     RuleFamily.SPELLBLADE: _unmigrated,
     RuleFamily.CAST_PROC: _unmigrated,
     RuleFamily.PERIODIC: _unmigrated,
     RuleFamily.ACTIVE_CAST: _unmigrated,
-    RuleFamily.SECONDARY_TARGET: _unmigrated,
+    RuleFamily.SECONDARY_TARGET: _compile_secondary_target,
     RuleFamily.DELTA_AMP: _compile_delta_amp,
     RuleFamily.RESISTANCE_SHRED: _compile_resistance_shred,
     RuleFamily.CRIT_PROFILE: _unmigrated,
@@ -1144,13 +1332,11 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.ON_HIT_STRIKE: "3.4",
     RuleFamily.CHARGED_STRIKE: "3.4",
     RuleFamily.SPELLBLADE: "3.4",
     RuleFamily.CAST_PROC: "3.4",
     RuleFamily.PERIODIC: "3.4",
     RuleFamily.ACTIVE_CAST: "3.4",
-    RuleFamily.SECONDARY_TARGET: "3.4",
     RuleFamily.OPENING_DEFENSE: "3.5",
     RuleFamily.THRESHOLD_DEFENSE: "3.5",
     RuleFamily.COMBAT_STATE: "3.5",
@@ -1481,8 +1667,12 @@ __all__ = [
     "KEYSTONE_AMPS",
     "MIGRATED_DELTA_AMP_TAGS",
     "MULTIPLIER_ORIGIN",
+    "ON_HIT_FORMULA_FLOORS",
+    "ON_HIT_FORMULA_TERMS",
     "NO_LEADING_STACKS",
+    "PER_ABILITY_HIT_BEHAVIOR",
     "TAG_FAMILY",
+    "TermSchema",
     "UNMIGRATED_FAMILIES",
     "behavior_rules",
     "build_context",

@@ -11,6 +11,7 @@ Hand-validated against revision-backed patch 26.15 wiki data:
 import pytest
 
 from src.calculator import item_effects
+from src.calculator.interpreters import on_hit_strike
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
@@ -384,11 +385,24 @@ class TestFightEngineIntegration:
         assert "passive" not in result["breakdown"]
 
 
+def _declared_per_hits(*owners: str, level: int = 18):
+    """The on-hit strikes a build declares, through their own rules."""
+    return on_hit_strike.per_hit_effects(
+        owners,
+        level=level,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+
+
 def _per_hit_raw(item, stats, target_health, current_health=None):
     """One item on-hit application's raw damage, from the item source
     of truth (the same compiled spec the fight engine reads)."""
-    effects = item_effects.resolve_damage_effects([item])
-    assert effects.per_hits, "expected an on-hit item"
+    effects = _declared_per_hits(
+        str(item.get("name", "")), level=int(stats.get("level", 18))
+    )
+    assert effects, "expected an on-hit item"
     inputs = item_effects.DamageInputs(
         champion_stats=stats,
         level=int(stats.get("level", 18)),
@@ -398,7 +412,7 @@ def _per_hit_raw(item, stats, target_health, current_health=None):
             target_health if current_health is None else current_health
         ),
     )
-    return sum(effect.source.raw_damage(inputs) for effect in effects.per_hits)
+    return sum(effect.source.raw_damage(inputs) for effect in effects)
 
 
 class TestAbilityItemOnHits:

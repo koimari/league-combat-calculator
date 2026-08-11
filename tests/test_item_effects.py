@@ -11,6 +11,7 @@ import copy
 import pytest
 
 from src.calculator import item_effects
+from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
@@ -39,8 +40,6 @@ from src.calculator.item_effects import (
     muramana_bonus_ad,
     passive_attack_speed_bonus,
     permanent_ap_multiplier,
-    runaan_secondary_target_count,
-    runaan_secondary_target_damage,
     riftmaker_bonus_ap,
     riftmaker_max_stack_omnivamp,
     hubris_eminence_bonus_ad,
@@ -81,7 +80,7 @@ def test_frozen_heart_registers_typed_attack_speed_aura() -> None:
     assert required_effect_value("Frozen Heart", "range_units") == pytest.approx(700.0)
     # Target-only effects are still valid registry entries when an item is
     # present in an ordinary attacker build; they simply contribute no damage.
-    assert resolve_damage_effects(_build("Frozen Heart")).per_hits == ()
+    assert _declared_per_hits("Frozen Heart") == ()
 
 
 def test_redemption_area_damage_receipt_values_are_typed() -> None:
@@ -313,6 +312,17 @@ def test_bloodmail_starting_missing_health_reads_registry_state() -> None:
     ) == pytest.approx(70.0)
 
 
+def _declared_per_hits(*owners: str, level: int = 18):
+    """The on-hit strikes a build declares, through their own rules."""
+    return on_hit_strike.per_hit_effects(
+        owners,
+        level=level,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+
+
 class TestResolveDamageEffects:
     """Compile registry data into the fight engine's typed build projection."""
 
@@ -330,7 +340,8 @@ class TestResolveDamageEffects:
             target_current_health=1000.0,
         )
 
-        assert effects.per_hits[0].source.raw_damage(inputs) == 200.0
+        strikes = _declared_per_hits("Nashor's Tooth")
+        assert strikes[0].source.raw_damage(inputs) == 200.0
 
     def test_missing_required_key_names_item_and_key(
         self, monkeypatch: pytest.MonkeyPatch
@@ -340,7 +351,7 @@ class TestResolveDamageEffects:
         monkeypatch.setitem(ITEM_EFFECTS, "Nashor's Tooth", broken)
 
         with pytest.raises(KeyError) as exc_info:
-            resolve_damage_effects(_build("Nashor's Tooth"))
+            _declared_per_hits("Nashor's Tooth")
         message = exc_info.value.args[0]
         assert "Nashor's Tooth" in message
         assert "base" in message
@@ -368,7 +379,8 @@ class TestResolveDamageEffects:
     def test_one_item_can_emit_multiple_behaviors(self) -> None:
         effects = resolve_damage_effects(_build("Titanic Hydra", "Muramana"))
 
-        assert {effect.source.item_name for effect in effects.per_hits} == {
+        strikes = _declared_per_hits("Titanic Hydra", "Muramana")
+        assert {effect.source.item_name for effect in strikes} == {
             "Titanic Hydra",
             "Muramana",
         }
@@ -656,26 +668,6 @@ class TestResolveDamageEffects:
         ):
             resolve_damage_effects(_build("Voltaic Cyclosword"))
 
-    def test_runaan_bolt_cardinality_excludes_main_target(self) -> None:
-        assert runaan_secondary_target_count(roster_target_count=1) == 0
-        assert runaan_secondary_target_count(roster_target_count=2) == 1
-        assert runaan_secondary_target_count(roster_target_count=4) == 2
-
-    def test_runaan_bolt_damage_uses_parser_owned_ad_ratio(self) -> None:
-        assert runaan_secondary_target_damage(total_attack_damage=200) == pytest.approx(
-            110
-        )
-
-    def test_runaan_bolt_damage_fails_closed_when_ratio_is_missing(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        broken = dict(ITEM_EFFECTS["Runaan's Hurricane"])
-        broken.pop("secondary_ad_ratio")
-        monkeypatch.setitem(ITEM_EFFECTS, "Runaan's Hurricane", broken)
-
-        with pytest.raises(KeyError, match="secondary_ad_ratio"):
-            runaan_secondary_target_damage(total_attack_damage=200)
-
     def test_titanic_secondary_packet_uses_melee_and_empowered_ratios(self) -> None:
         assert hydra_secondary_target_damage(
             max_health=3000, is_melee=True
@@ -873,7 +865,7 @@ class TestResolveDamageEffects:
         assert effect.source.raw_damage(inputs) == 80.0
 
     def test_terminus_shadow_scales_with_bonus_ad_and_ap(self) -> None:
-        effect = resolve_damage_effects(_build("Terminus")).per_hits[0]
+        effect = _declared_per_hits("Terminus")[0]
         inputs = DamageInputs(
             champion_stats={"bonus_attack_damage": 100.0, "ability_power": 200.0},
             level=18,

@@ -42,7 +42,7 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, registry_entries, rule_owners
 from ..trigger_stream import CAPABILITIES
-from . import delta_amp, resistance_shred
+from . import delta_amp, on_hit_strike, resistance_shred, secondary_target
 
 
 class InterpreterRegistryError(RuntimeError):
@@ -210,9 +210,17 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
 INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
     (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
     (
+        RuleFamily.ON_HIT_STRIKE,
+        EngineLane.PAIR_ENGINE,
+    ): on_hit_strike.PAIR_INTERPRETER,
+    (
         RuleFamily.RESISTANCE_SHRED,
         EngineLane.PAIR_ENGINE,
     ): resistance_shred.PAIR_INTERPRETER,
+    (
+        RuleFamily.SECONDARY_TARGET,
+        EngineLane.PAIR_ENGINE,
+    ): secondary_target.PAIR_INTERPRETER,
 }
 
 

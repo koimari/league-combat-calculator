@@ -601,6 +601,126 @@ def _validate_amp_chain() -> None:
 _validate_amp_chain()
 
 
+class Basis(Enum):
+    """What one term of a damage formula is a share *of*.
+
+    A strike's number is always a sum of shares: so much flat, so much of the
+    holder's ability power, so much of the target's current health.  The
+    registry has always said which by naming a formula — ``"flat_bonus_ad_ap"``
+    — a string whose meaning lived in one ladder inside the number registry
+    and nowhere else.  Naming the *bases* instead makes the vocabulary a
+    dozen closed members rather than twenty-odd formula names, and makes a
+    new schema a new combination instead of a new branch.
+
+    The holder/target split is in the member names deliberately: a share of
+    "max health" is a completely different mechanic depending on whose, and
+    the registry's own key names could not say which.
+    """
+
+    FLAT = "flat"
+    ABILITY_POWER = "ability_power"
+    BASE_ATTACK_DAMAGE = "base_attack_damage"
+    BONUS_ATTACK_DAMAGE = "bonus_attack_damage"
+    TOTAL_ATTACK_DAMAGE = "total_attack_damage"
+    LETHALITY = "lethality"
+    HOLDER_MAX_HEALTH = "holder_max_health"
+    HOLDER_MAX_MANA = "holder_max_mana"
+    HOLDER_CRIT_FRACTION = "holder_crit_fraction"
+    HOLDER_BONUS_HEALTH = "holder_bonus_health"
+    TARGET_MAX_HEALTH = "target_max_health"
+    TARGET_CURRENT_HEALTH = "target_current_health"
+    TARGET_MISSING_HEALTH = "target_missing_health"
+    PER_LEVEL = "per_level"
+
+
+@dataclass(frozen=True, slots=True)
+class Term:
+    """One share of one basis: ``coefficient × basis``.
+
+    ``coefficient`` is a sourced reference, or a :class:`MeleeRangedSplit`
+    where the registry pays a melee holder differently — the same shape the
+    amp chain uses, and for the same reason: the choice is made once per
+    build from a stat, before any event exists.
+    """
+
+    coefficient: Union[AnyValueRef, MeleeRangedSplit]
+    basis: Basis
+
+
+@dataclass(frozen=True, slots=True)
+class NoFloor:
+    """The formula's sum stands as computed."""
+
+
+@dataclass(frozen=True, slots=True)
+class AtLeast:
+    """The formula never pays less than a sourced minimum."""
+
+    value: AnyValueRef
+
+
+Floor = Union[NoFloor, AtLeast]
+
+FLOOR_TYPES: tuple[type, ...] = (NoFloor, AtLeast)
+
+
+@dataclass(frozen=True, slots=True)
+class DamageFormula:
+    """A sum of sourced shares, floored, landing as one damage class.
+
+    Every strike family's number is one of these.  The union of *terms* is
+    what replaces the registry's formula-name ladder, and ``floor`` is its own
+    axis because "at least this much" is a mechanic (Blade of the Ruined
+    King's minimum) rather than a term.
+    """
+
+    terms: tuple[Term, ...]
+    floor: Floor
+    damage_class: DamageClass
+
+    def __post_init__(self) -> None:
+        """A formula with no terms is a number nobody declared."""
+        if not self.terms:
+            raise BehaviorRuleError(
+                "a DamageFormula names at least one term; a formula with no "
+                "shares is an item that quietly deals nothing"
+            )
+        if not isinstance(self.floor, FLOOR_TYPES):
+            raise BehaviorRuleError("a DamageFormula declares its floor")
+        if not isinstance(self.damage_class, DamageClass):
+            raise BehaviorRuleError("a DamageFormula declares what mitigates it")
+
+
+@dataclass(frozen=True, slots=True)
+class OnHitStrikeRule:
+    """Damage added to every on-hit application of a basic attack.
+
+    ``superseded_by_ability_proc`` is the Wiki's no-double-dip rule for items
+    that *also* pay per ability hit: an ability that applies on-hit effects
+    deals the ability-hit number instead of the on-hit one, never both.  It is
+    a policy of the mechanic, so it is declared rather than inferred from the
+    presence of a sibling key.
+    """
+
+    formula: DamageFormula
+    superseded_by_ability_proc: bool
+
+
+@dataclass(frozen=True, slots=True)
+class SecondaryTargetRule:
+    """A strike that also lands on targets the attack was not aimed at.
+
+    The bolts are declared as a count and a share, not as a damage formula of
+    their own: the number they carry is a share of *the attack that fired
+    them*, which is why this family is separate from the strike families that
+    own a formula.
+    """
+
+    max_targets: AnyValueRef
+    damage_share: AnyValueRef
+    applies_on_hit: bool
+
+
 class Resistance(Enum):
     """Which of the target's two resistances a shred reduces.
 
@@ -684,14 +804,21 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     lane_chain_rank: int
 
 
-RulePayload = Union[DeltaAmpRule, ResistanceShredRule]
+RulePayload = Union[
+    DeltaAmpRule,
+    OnHitStrikeRule,
+    ResistanceShredRule,
+    SecondaryTargetRule,
+]
 
 # Which family each payload type belongs to.  One entry per payload; each
 # migration slice adds its family's payload here, so a rule can never carry
 # a payload its family does not name.
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     DeltaAmpRule: RuleFamily.DELTA_AMP,
+    OnHitStrikeRule: RuleFamily.ON_HIT_STRIKE,
     ResistanceShredRule: RuleFamily.RESISTANCE_SHRED,
+    SecondaryTargetRule: RuleFamily.SECONDARY_TARGET,
 }
 
 
@@ -753,6 +880,12 @@ def validate_rule(rule: BehaviorRule) -> None:
 def _validate_payload(rule: BehaviorRule) -> None:
     """Per-payload structure, kept out of :func:`validate_rule`'s ladder."""
     payload = rule.payload
+    if isinstance(payload, OnHitStrikeRule):
+        _validate_formula(rule, payload.formula)
+        return
+    if isinstance(payload, SecondaryTargetRule):
+        _validate_secondary_target(rule, payload)
+        return
     if isinstance(payload, ResistanceShredRule):
         _validate_shred_payload(rule, payload)
         return
@@ -778,6 +911,40 @@ def _validate_payload(rule: BehaviorRule) -> None:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: lane_chain_rank {payload.lane_chain_rank} names no "
             "slot in AMP_CHAIN_ORDER"
+        )
+
+
+def _validate_formula(rule: BehaviorRule, formula: DamageFormula) -> None:
+    """A formula's terms are sourced shares of declared bases."""
+    if not isinstance(formula, DamageFormula):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: payload declares no formula")
+    for term in formula.terms:
+        if not isinstance(term, Term):
+            raise BehaviorRuleError(f"{rule.mechanic_id}: a formula holds Terms")
+        if not isinstance(term.basis, Basis):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a term says what it is a share of"
+            )
+        if not isinstance(term.coefficient, (*VALUE_REF_TYPES, MeleeRangedSplit)):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a term's coefficient is a sourced "
+                "reference, never a number in the declaration"
+            )
+
+
+def _validate_secondary_target(
+    rule: BehaviorRule, payload: SecondaryTargetRule
+) -> None:
+    """A secondary-target rule names a count and a share, both sourced."""
+    for field_name in ("max_targets", "damage_share"):
+        if not isinstance(getattr(payload, field_name), VALUE_REF_TYPES):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: {field_name} is a sourced reference"
+            )
+    if not isinstance(payload.applies_on_hit, bool):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a secondary target says whether it carries "
+            "on-hit effects; there is no default answer"
         )
 
 
@@ -905,10 +1072,12 @@ __all__ = [
     "AfterTrigger",
     "Always",
     "AmpChainSlot",
+    "AtLeast",
     "Attribution",
-    "BonusTyping",
+    "Basis",
     "BehaviorRule",
     "BehaviorRuleError",
+    "BonusTyping",
     "BuildContext",
     "COMPILABILITY_TYPES",
     "CONSUMPTION_TYPES",
@@ -916,10 +1085,13 @@ __all__ = [
     "Compilability",
     "Compilable",
     "Consumption",
+    "DamageFormula",
     "DeltaAmpRule",
     "EngineLane",
     "ExcludeTrigger",
+    "FLOOR_TYPES",
     "Fixed",
+    "Floor",
     "Isolation",
     "KernelField",
     "LivePredicate",
@@ -928,6 +1100,8 @@ __all__ = [
     "MeleeRangedSplit",
     "NEvents",
     "NextEventOnly",
+    "NoFloor",
+    "OnHitStrikeRule",
     "PAYLOAD_FAMILY",
     "POLICY_IDENTIFIER_FIELDS",
     "Persist",
@@ -943,10 +1117,12 @@ __all__ = [
     "RuleFamily",
     "RulePayload",
     "SUBJECT_AUTHORITY",
+    "SecondaryTargetRule",
     "StackRamp",
     "Subject",
     "TRIGGER_STREAM",
     "TargetBonusHealthScaled",
+    "Term",
     "TriggerEvent",
     "TriggerWindow",
     "Typing",

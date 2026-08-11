@@ -3679,7 +3679,6 @@ class BasicAmplifierEffect:
 class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
-    per_hits: tuple[PerHitEffect, ...] = ()
     on_hit_heals: tuple[OnHitHealEffect, ...] = ()
     spellblade: SpellbladeEffect | None = None
     burns: tuple[BurnEffect, ...] = ()
@@ -3729,7 +3728,7 @@ class _RequiredValues:
         return float(self.value(key))
 
 
-def _damage_source(
+def damage_source(
     item_name: str,
     damage_type: DamageType,
     raw_damage: RawDamageFormula,
@@ -3739,7 +3738,12 @@ def _damage_source(
     lifesteal_effectiveness: float = 0.0,
     event_interval: float | None = None,
 ) -> DamageSource:
-    """Build shared source metadata without leaking registry records."""
+    """Build shared source metadata without leaking registry records.
+
+    Public because a strike's row is now built by the interpreter that reads
+    the declaration, and one home for the row's shape is what keeps a
+    migrated family's breakdown key identical to the one it replaces.
+    """
     return DamageSource(
         item_name=item_name,
         breakdown_key=breakdown_key or f"on_hit_{item_name}",
@@ -3748,76 +3752,6 @@ def _damage_source(
         raw_damage=raw_damage,
         lifesteal_effectiveness=lifesteal_effectiveness,
         event_interval=event_interval,
-    )
-
-
-def _compile_on_hit(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> PerHitEffect:
-    """Compile one declarative on-hit formula from validated values."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    damage_type = required.value("damage_type")
-
-    if formula == "flat_ap":
-        base = required.number("base")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    elif formula == "flat_bonus_ad_ap":
-        base = required.number("base")
-        bonus_ad_ratio = required.number("bonus_ad_ratio")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            stats = inputs.champion_stats
-            return (
-                base
-                + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-                + ap_ratio * stats.get("ability_power", 0.0)
-            )
-
-    elif formula == "current_hp":
-        melee_ratio = required.number("current_hp_ratio_melee")
-        ranged_ratio = required.number("current_hp_ratio_ranged")
-        minimum = required.number("min_damage")
-
-        def raw(inputs: DamageInputs) -> float:
-            ratio = melee_ratio if inputs.is_melee else ranged_ratio
-            return max(minimum, ratio * inputs.target_current_health)
-
-    elif formula == "flat":
-        base = required.number("base")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    elif formula == "max_hp":
-        melee_ratio = required.number("max_hp_ratio_melee")
-        ranged_ratio = required.number("max_hp_ratio_ranged")
-
-        def raw(inputs: DamageInputs) -> float:
-            ratio = melee_ratio if inputs.is_melee else ranged_ratio
-            return ratio * inputs.champion_stats.get("health", 0.0)
-
-    elif formula == "max_mana":
-        ratio = required.number("max_mana_ratio_on_hit")
-
-        def raw(inputs: DamageInputs) -> float:
-            return ratio * inputs.champion_stats.get("max_mana", 0.0)
-
-    else:
-        raise ValueError(f"Unsupported on-hit formula {formula!r} for {item_name!r}")
-
-    source = _damage_source(item_name, damage_type, raw)
-    return PerHitEffect(
-        source,
-        tracks_current_health=formula == "current_hp",
-        superseded_by_ability_proc=values.get("secondary_behavior")
-        == "per_ability_hit",
     )
 
 
@@ -3846,7 +3780,7 @@ def _compile_auto_cooldown(
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
         return ratio * inputs.champion_stats.get("health", 0.0)
 
-    source = _damage_source(
+    source = damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -3869,7 +3803,7 @@ def _compile_per_ability_hit(
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
         return ratio * inputs.champion_stats.get("max_mana", 0.0)
 
-    return _damage_source(
+    return damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -3917,7 +3851,7 @@ def _compile_spellblade(
             f"Unsupported spellblade formula {formula!r} for {item_name!r}"
         )
 
-    source = _damage_source(
+    source = damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -3992,7 +3926,7 @@ def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
 
     else:
         raise ValueError(f"Unsupported burn formula {formula!r} for {item_name!r}")
-    source = _damage_source(
+    source = damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -4028,7 +3962,7 @@ def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource
     else:
         raise ValueError(f"Unsupported Immolate formula for {item_name!r}")
 
-    return _damage_source(
+    return damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -4048,7 +3982,7 @@ def _compile_periodic(item_name: str, values: Mapping[str, Any]) -> PeriodicEffe
     def raw(inputs: DamageInputs) -> float:
         return bonus_hp_ratio * inputs.champion_stats.get("bonus_health", 0.0)
 
-    source = _damage_source(
+    source = damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -4157,7 +4091,7 @@ def _compile_ultimate_proc(
     def raw(inputs: DamageInputs) -> float:
         return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
 
-    source = _damage_source(
+    source = damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -4214,7 +4148,7 @@ def _compile_active(item_name: str, values: Mapping[str, Any]) -> DamageSource:
         and not isinstance(raw_lifesteal_effectiveness, bool)
         else 0.0
     )
-    return _damage_source(
+    return damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -4556,7 +4490,6 @@ def _resolve_damage_effects_uncached(
     items: Sequence[Mapping[str, Any]],
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
-    per_hits: list[PerHitEffect] = []
     on_hit_heals: list[OnHitHealEffect] = []
     spellblade: SpellbladeEffect | None = None
     burns: list[BurnEffect] = []
@@ -4594,9 +4527,7 @@ def _resolve_damage_effects_uncached(
             raise ValueError(
                 f"ITEM_EFFECTS[{item_name!r}] has unknown effect type {effect_type!r}"
             )
-        if effect_type == "on_hit":
-            per_hits.append(_compile_on_hit(item_name, values))
-        elif effect_type == "on_hit_heal":
+        if effect_type == "on_hit_heal":
             on_hit_heals.append(_compile_on_hit_heal(item_name, values))
         elif effect_type == "spellblade" and spellblade is None:
             spellblade = _compile_spellblade(item_name, values)
@@ -4738,7 +4669,6 @@ def _resolve_damage_effects_uncached(
             )
 
     return BuildDamageEffects(
-        per_hits=tuple(per_hits),
         on_hit_heals=tuple(on_hit_heals),
         spellblade=spellblade,
         burns=tuple(burns),
@@ -5147,35 +5077,6 @@ def energized_schedule_receipt(item_name: str) -> dict[str, Any]:
         "distance_units_per_stack": distance,
         "movement_schedule": "explicit_per_attack; omitted_means_zero_distance",
     }
-
-
-def runaan_secondary_target_count(
-    *,
-    roster_target_count: int,
-    item_name: str = "Runaan's Hurricane",
-) -> int:
-    """Return Wind's Fury's bounded secondary-target count.
-
-    The main target is excluded; the ordered roster allocator decides which
-    nearby enemies receive these bolts. This helper only supplies the sourced
-    cardinality and fails closed if parser data is incomplete.
-    """
-    if roster_target_count <= 1:
-        return 0
-    max_targets = int(required_effect_value(item_name, "max_secondary_targets"))
-    return min(max_targets, roster_target_count - 1)
-
-
-def runaan_secondary_target_damage(
-    *, total_attack_damage: float, item_name: str = "Runaan's Hurricane"
-) -> float:
-    """Return one Wind's Fury bolt's AD-scaled physical packet.
-
-    Target allocation and copied on-hit effects remain owned by the shared
-    roster ledger; this accessor only exposes the parser-owned per-bolt value.
-    """
-    ratio = required_effect_value(item_name, "secondary_ad_ratio")
-    return float(total_attack_damage) * ratio
 
 
 def statikk_chain_target_bounds(*, item_name: str = "Statikk Shiv") -> tuple[int, int]:

@@ -25,7 +25,7 @@ from src.calculator.damage import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _calculate_stacking_procs,
 )
-from src.calculator.interpreters import resistance_shred
+from src.calculator.interpreters import on_hit_strike, resistance_shred
 from src.calculator.item_behavior import Resistance
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
 
@@ -99,9 +99,15 @@ def _simulate_bork_damage(
     double_hit_all=False,
 ):
     """Readable test adapter around the generic current-health simulation."""
-    effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
+    strikes = on_hit_strike.per_hit_effects(
+        ["Blade of the Ruined King"],
+        level=1,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
     total, hits, _per_hit_damages = _simulate_current_health_on_hit(
-        effect.per_hits[0],
+        strikes[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
         num_auto_attacks,

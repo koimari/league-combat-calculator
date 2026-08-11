@@ -132,7 +132,12 @@ from . import item_effects
 from . import rune_effects
 from . import shield_ledger
 from .ability_spec import DamagePart
-from .interpreters import delta_amp, resistance_shred
+from .interpreters import (
+    delta_amp,
+    on_hit_strike,
+    resistance_shred,
+    secondary_target,
+)
 from .item_behavior import AmpChainSlot, Isolation, Probe, Resistance
 from .trigger_stream import (
     Stream,
@@ -447,6 +452,12 @@ class FightState:
     ability_damages: dict[str, dict[str, Any]]
     items: list[dict[str, Any]]
     damage_effects: item_effects.BuildDamageEffects
+    # The declared strikes this build brings, resolved through their rules.
+    # They are not part of the registry's build projection: a projection that
+    # defaulted them to an empty tuple would price a whole family at zero with
+    # nothing saying so.
+    per_hit_strikes: tuple[item_effects.PerHitEffect, ...]
+    secondary_target_bolts: "secondary_target.SecondaryTargetSlot | None"
     cast_order: list[str]
     target_health: float
     target_bonus_health: float
@@ -792,7 +803,7 @@ def _ability_applied_on_hit_damage(
     Champions whose abilities apply item on-hit effects (Bel'Veth Q/E)
     declare ``applies_item_on_hits`` on the ability entry; the rotation
     calls this once per hit. It reads the SAME compiled per-hit specs
-    the auto stream applies (``state.damage_effects.per_hits``) —
+    the auto stream applies (``state.per_hit_strikes``) —
     including BoRK's current-health formula, evaluated at the rotation's
     modeled target HP. Counter-gated procs (Kraken/Hullbreaker) are NOT
     summed here — the application is recorded on the fight's shared hit
@@ -807,7 +818,7 @@ def _ability_applied_on_hit_damage(
     """
     inputs = _damage_inputs(state, target_current_health)
     by_type: dict[str, float] = {}
-    for effect in state.damage_effects.per_hits:
+    for effect in state.per_hit_strikes:
         if effect.superseded_by_ability_proc:
             # Muramana: Shock's ability damage already procs once per
             # cast (``per_ability_hits``); the on-hit component never
@@ -2267,11 +2278,26 @@ def _resolve_combat_state(
     resists.resolve_magic()
     resists.resolve_armor()
 
+    owners = [str(item.get("name", "")) for item in items]
     return FightState(
         champion_stats=champion_stats,
         ability_damages=ability_damages,
         items=items,
         damage_effects=damage_effects,
+        per_hit_strikes=on_hit_strike.per_hit_effects(
+            owners,
+            level=level,
+            fight_duration_seconds=fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=bool(is_melee),
+        ),
+        secondary_target_bolts=secondary_target.resolve_slot(
+            owners,
+            level=level,
+            fight_duration_seconds=fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=bool(is_melee),
+        ),
         cast_order=(
             config.cast_order
             if config.cast_order is not None
@@ -5789,11 +5815,7 @@ def _layer_on_hit_effects(
 
     on_hit_total = 0.0
     current_health_effect = next(
-        (
-            effect
-            for effect in state.damage_effects.per_hits
-            if effect.tracks_current_health
-        ),
+        (effect for effect in state.per_hit_strikes if effect.tracks_current_health),
         None,
     )
     result = OnHitResult(has_current_health_on_hit=current_health_effect is not None)
@@ -5893,7 +5915,7 @@ def _layer_on_hit_effects(
     # Process fixed-formula per-hit effects. Current-health effects are
     # simulated below because each application changes the next one's input.
     damage_inputs = _damage_inputs(state)
-    for effect in state.damage_effects.per_hits:
+    for effect in state.per_hit_strikes:
         if effect.tracks_current_health:
             continue
 
@@ -8118,7 +8140,7 @@ def _copied_on_hit_packet(
         for damage_type, amount in on_hits.static_on_hit_by_type.items()
         if amount > 0.0
     }
-    for effect in state.damage_effects.per_hits:
+    for effect in state.per_hit_strikes:
         if not effect.tracks_current_health:
             continue
         raw = (
@@ -8312,15 +8334,12 @@ def _add_single_proc_on_hits(
 
     if num_auto_attacks > 0:
         inputs = _damage_inputs(state)
-        if item_effects.has_item(state.items, "Runaan's Hurricane"):
-            secondary_target_count = item_effects.runaan_secondary_target_count(
-                roster_target_count=state.roster_target_count
-            )
+        bolts = state.secondary_target_bolts
+        if bolts is not None:
+            secondary_target_count = bolts.bolt_count(state.roster_target_count)
             if 1 <= state.roster_target_index <= secondary_target_count:
                 raw_bolt = (
-                    item_effects.runaan_secondary_target_damage(
-                        total_attack_damage=state.champion_stats["attack_damage"]
-                    )
+                    bolts.bolt_damage(state.champion_stats["attack_damage"])
                     * effectiveness
                 )
                 if raw_bolt > 0.0:
@@ -8700,7 +8719,7 @@ def _add_single_proc_on_hits(
             base_effect = next(
                 (
                     per_hit
-                    for per_hit in state.damage_effects.per_hits
+                    for per_hit in state.per_hit_strikes
                     if per_hit.source.item_name == source.item_name
                 ),
                 None,
