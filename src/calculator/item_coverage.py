@@ -3,11 +3,41 @@
 Raw item stats are always sourced by :mod:`stats`.  This module answers the
 separate question the optimiser needs: is every outgoing-damage mechanic on
 this item represented by the current fight model?
+
+Three declarations sit beside the classifiers and nothing in ``src`` reads
+them: ``COVERAGE_EVIDENCE``, the typed claim behind every answer this module
+gives; ``PRECEDENCE``, the classifier chain mirrored as data; and
+``FRONTIER``, the claims that are not backed yet and the issues that track
+them.  They live here rather than in a module of their own because a claim is
+*about* the container two hundred lines above it, and a reader checking
+whether the two agree should not have to hold two files open — pylint's line
+ceiling is a proxy for "more than one responsibility", and this is one.
 """
 
+# pylint: disable=too-many-lines
+
+from collections.abc import Mapping
 from typing import Any, Literal
 
-from .coverage_evidence import PrecedenceRule, validate_precedence
+from .coverage_evidence import (
+    Absence,
+    Claim,
+    ClaimLane,
+    ClaimStatus,
+    EffectKey,
+    Evidence,
+    OptionSchema,
+    PacketSource,
+    PairedSides,
+    PrecedenceRule,
+    SourceRef,
+    SubjectKind,
+    Symbol,
+    SymbolRole,
+    TestRef,
+    validate_claim_table,
+    validate_precedence,
+)
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 
 ItemCoverageStatus = Literal[
@@ -727,6 +757,1320 @@ def require_calculation_item_coverage(
         )
 
 
+# ── the claim corpus ──────────────────────────────────────────────────────
+
+# Every answer this module gives used to be backed by a sentence.  One of them
+# went on describing both halves of Imperial Mandate's Command long after only
+# one half existed, and nothing checked the sentence against the code.  These
+# are the claims that replace the sentences: one per ``(item, lane)`` for every
+# entry in the seven non-empty containers above, one per rung of ``PRECEDENCE``,
+# and one per item that emits a walk packet — each carrying typed evidence the
+# resolution tier resolves against this tree on every ``pytest`` run.
+#
+# The *evidence* is authored and the assembly is mechanical, in that order and
+# never the other way round.  A table that read its own evidence out of the
+# registries it describes would agree with them by construction, which is the
+# failure mode this module exists to catch; so every symbol path, packet
+# source, option control, registry key, wiki revision and node id below is
+# written down, and only the loop that turns them into ``Claim`` records is
+# code.  ``Claim.status`` is a **pinned expectation, never an authority**: the
+# classifier above stays the only answer to "what is this item's coverage",
+# the resolution tier asserts the two agree for every cached item, and no
+# ``src`` module reads the corpus at all.
+
+# The umbrella issue every unrouted review gap falls back to.
+_UMBRELLA_ISSUE = 40
+
+# The two H4 reasons, written once.  Ten of the thirty-eight declared effect
+# tags have no live handler branch, and which four are dead and which six are
+# read only by this module's own claim is umbrella decision H4's to settle —
+# so they sit on the frontier naming it rather than carrying an ``EffectTag``
+# member that would have to name a handler that does not exist.
+_H4_DEAD_TAG = (
+    "Read nowhere in src/: blocked on umbrella decision H4, which owns whether "
+    "the tag is deleted or given a handler. Tracked by #40."
+)
+_H4_SELF_REFERENTIAL_TAG = (
+    "Read only by this module's own coverage claim while the behaviour is "
+    "reached by item name: blocked on umbrella decision H4. Tracked by #40."
+)
+
+# Two items appear in ``_REVIEW_ISSUE_REFS`` and in no other container.  Their
+# refs still need exactly one claim to carry them, so they get the claim their
+# rung implies — ``ITEM_EFFECTS`` membership — rather than a home invented for
+# the purpose.
+_ISSUE_REF_ONLY_ITEMS: tuple[str, ...] = ("Voltaic Cyclosword", "Zeke's Convergence")
+
+# Why an earlier rung means no cached item can reach a claim, keyed
+# ``<subject>@<lane>``.  Twenty-nine container entries are decided above their
+# own container, and four rungs are live code only a synthetic fixture enters;
+# ``tests/coverage_resolver.shadow_report`` derives the same set from
+# ``PRECEDENCE`` and the cached shop, and the suite asserts the two agree both
+# ways.  A claim that is dead prose in a live-looking home is what this field
+# exists to make visible, so no entry may be blank.
+_SHADOWED_CLAIM_REASONS: Mapping[str, str] = {
+    "Armored Advance@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Banshee's Veil@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Bloodthirster@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Celestial Opposition@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Chainlaced Crushers@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Death's Dance@attacker": (
+        "attacker.deaths_dance_defensive_start decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Doran's Ring@attacker": (
+        "attacker.item_effects_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Doran's Shield@attacker": (
+        "attacker.item_effects_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Edge of Night@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Force of Nature@attacker": (
+        "attacker.item_effects_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Frozen Heart@attacker": (
+        "attacker.item_effects_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Guardian Angel@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Gunmetal Greaves@attacker": (
+        "attacker.gunmetal_greaves_movement_gap decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Immortal Shieldbow@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Jak'Sho, The Protean@attacker": (
+        "attacker.item_effects_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Kaenic Rookern@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Knight's Vow@attacker": (
+        "attacker.item_input_options_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Locket of the Iron Solari@attacker": (
+        "attacker.item_input_options_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Maw of Malmortius@attacker": (
+        "attacker.item_effects_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Mercurial Scimitar@attacker": (
+        "attacker.item_effects_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Mikael's Blessing@attacker": (
+        "attacker.item_input_options_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Plated Steelcaps@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Protoplasm Harness@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Randuin's Omen@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Seeker's Armguard@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Shurelya's Battlesong@attacker": (
+        "attacker.item_input_options_membership decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Spirit Visage@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Verdant Barrier@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "Zhonya's Hourglass@attacker": (
+        "attacker.defensive_effect_types decides this item before the "
+        "container is reached, so the container never speaks for it and no "
+        "request can reach this claim."
+    ),
+    "attacker.blocked_reasons@attacker": (
+        "_BLOCKED_REASONS is empty, so no cached item can reach this rung; "
+        "the branch is proved on an empty registry and by a synthetic fixture "
+        "rather than by any real build."
+    ),
+    "attacker.partial_blocked_reasons@attacker": (
+        "_PARTIAL_BLOCKED_REASONS is empty, so no cached item can reach this "
+        "rung; the branch is proved on an empty registry and by a synthetic "
+        "fixture rather than by any real build."
+    ),
+    "attacker.unreviewed_fixture@attacker": (
+        "review_pending is reserved for synthetic and unknown fixtures: every "
+        "cached shop record carries an id or an icon and is blocked by the "
+        "rung above, so no cached item reaches this one."
+    ),
+    "target.attacker_review_pending_passthrough@target": (
+        "The passthrough fires only for an item the attacker lane calls "
+        "review_pending, and no cached item is; it exists so a synthetic "
+        "fixture cannot be target-relevant while being attacker-unreviewed."
+    ),
+}
+_SOURCE_REFS: Mapping[str, tuple[str, int]] = {
+    "Abyssal Mask": ("https://wiki.leagueoflegends.com/en-us/Abyssal_Mask", 3984960),
+    "Armored Advance": (
+        "https://wiki.leagueoflegends.com/en-us/Armored_Advance",
+        4013702,
+    ),
+    "Banshee's Veil": (
+        "https://wiki.leagueoflegends.com/en-us/Banshee's_Veil",
+        3957919,
+    ),
+    "Blasting Wand": ("https://wiki.leagueoflegends.com/en-us/Blasting_Wand", 4022947),
+    "Bloodthirster": ("https://wiki.leagueoflegends.com/en-us/Bloodthirster", 4025103),
+    "Boots of Swiftness": (
+        "https://wiki.leagueoflegends.com/en-us/Boots_of_Swiftness",
+        4022244,
+    ),
+    "Celestial Opposition": (
+        "https://wiki.leagueoflegends.com/en-us/Celestial_Opposition",
+        4028004,
+    ),
+    "Chainlaced Crushers": (
+        "https://wiki.leagueoflegends.com/en-us/Chainlaced_Crushers",
+        4013705,
+    ),
+    "Chempunk Chainsword": (
+        "https://wiki.leagueoflegends.com/en-us/Chempunk_Chainsword",
+        4000212,
+    ),
+    "Cosmic Drive": ("https://wiki.leagueoflegends.com/en-us/Cosmic_Drive", 4005389),
+    "Crimson Lucidity": (
+        "https://wiki.leagueoflegends.com/en-us/Crimson_Lucidity",
+        4030440,
+    ),
+    "Cryptbloom": ("https://wiki.leagueoflegends.com/en-us/Cryptbloom", 3989109),
+    "Death's Dance": ("https://wiki.leagueoflegends.com/en-us/Death's_Dance", 4015383),
+    "Diadem of Songs": (
+        "https://wiki.leagueoflegends.com/en-us/Diadem_of_Songs",
+        3993317,
+    ),
+    "Doran's Helm": ("https://wiki.leagueoflegends.com/en-us/Doran's_Helm", 4034679),
+    "Doran's Ring": ("https://wiki.leagueoflegends.com/en-us/Doran's_Ring", 4026377),
+    "Doran's Shield": (
+        "https://wiki.leagueoflegends.com/en-us/Doran's_Shield",
+        4026378,
+    ),
+    "Dream Maker": ("https://wiki.leagueoflegends.com/en-us/Dream_Maker", 4030400),
+    "Echoes of Helia": (
+        "https://wiki.leagueoflegends.com/en-us/Echoes_of_Helia",
+        4046489,
+    ),
+    "Edge of Night": ("https://wiki.leagueoflegends.com/en-us/Edge_of_Night", 4013389),
+    "Executioner's Calling": (
+        "https://wiki.leagueoflegends.com/en-us/Executioner's_Calling",
+        3985491,
+    ),
+    "Force of Nature": (
+        "https://wiki.leagueoflegends.com/en-us/Force_of_Nature",
+        4016272,
+    ),
+    "Frozen Heart": ("https://wiki.leagueoflegends.com/en-us/Frozen_Heart", 4025104),
+    "Gluttonous Greaves": (
+        "https://wiki.leagueoflegends.com/en-us/Gluttonous_Greaves",
+        4030444,
+    ),
+    "Guardian Angel": (
+        "https://wiki.leagueoflegends.com/en-us/Guardian_Angel",
+        4001358,
+    ),
+    "Gunmetal Greaves": (
+        "https://wiki.leagueoflegends.com/en-us/Gunmetal_Greaves",
+        4013706,
+    ),
+    "Gustwalker Hatchling": (
+        "https://wiki.leagueoflegends.com/en-us/Gustwalker_Hatchling",
+        4041864,
+    ),
+    "Immortal Shieldbow": (
+        "https://wiki.leagueoflegends.com/en-us/Immortal_Shieldbow",
+        4030401,
+    ),
+    "Ionian Boots of Lucidity": (
+        "https://wiki.leagueoflegends.com/en-us/Ionian_Boots_of_Lucidity",
+        4022246,
+    ),
+    "Jak'Sho, The Protean": (
+        "https://wiki.leagueoflegends.com/en-us/Jak'Sho,_The_Protean",
+        3984950,
+    ),
+    "Kaenic Rookern": (
+        "https://wiki.leagueoflegends.com/en-us/Kaenic_Rookern",
+        3984971,
+    ),
+    "Knight's Vow": ("https://wiki.leagueoflegends.com/en-us/Knight's_Vow", 4023793),
+    "Locket of the Iron Solari": (
+        "https://wiki.leagueoflegends.com/en-us/Locket_of_the_Iron_Solari",
+        4022957,
+    ),
+    "Lost Chapter": ("https://wiki.leagueoflegends.com/en-us/Lost_Chapter", 3989340),
+    "Maw of Malmortius": (
+        "https://wiki.leagueoflegends.com/en-us/Maw_of_Malmortius",
+        3984424,
+    ),
+    "Mercurial Scimitar": (
+        "https://wiki.leagueoflegends.com/en-us/Mercurial_Scimitar",
+        3984461,
+    ),
+    "Mikael's Blessing": (
+        "https://wiki.leagueoflegends.com/en-us/Mikael's_Blessing",
+        3984364,
+    ),
+    "Moonstone Renewer": (
+        "https://wiki.leagueoflegends.com/en-us/Moonstone_Renewer",
+        4022988,
+    ),
+    "Morellonomicon": (
+        "https://wiki.leagueoflegends.com/en-us/Morellonomicon",
+        3985490,
+    ),
+    "Mortal Reminder": (
+        "https://wiki.leagueoflegends.com/en-us/Mortal_Reminder",
+        4023637,
+    ),
+    "Mosstomper Seedling": (
+        "https://wiki.leagueoflegends.com/en-us/Mosstomper_Seedling",
+        4041862,
+    ),
+    "Oblivion Orb": ("https://wiki.leagueoflegends.com/en-us/Oblivion_Orb", 3985489),
+    "Phantom Dancer": (
+        "https://wiki.leagueoflegends.com/en-us/Phantom_Dancer",
+        4047301,
+    ),
+    "Plated Steelcaps": (
+        "https://wiki.leagueoflegends.com/en-us/Plated_Steelcaps",
+        4022248,
+    ),
+    "Protoplasm Harness": (
+        "https://wiki.leagueoflegends.com/en-us/Protoplasm_Harness",
+        4045616,
+    ),
+    "Quicksilver Sash": (
+        "https://wiki.leagueoflegends.com/en-us/Quicksilver_Sash",
+        3729899,
+    ),
+    "Randuin's Omen": (
+        "https://wiki.leagueoflegends.com/en-us/Randuin's_Omen",
+        4021798,
+    ),
+    "Refillable Potion": (
+        "https://wiki.leagueoflegends.com/en-us/Refillable_Potion",
+        3971312,
+    ),
+    "Rylai's Crystal Scepter": (
+        "https://wiki.leagueoflegends.com/en-us/Rylai's_Crystal_Scepter",
+        3984377,
+    ),
+    "Scorchclaw Pup": (
+        "https://wiki.leagueoflegends.com/en-us/Scorchclaw_Pup",
+        4041863,
+    ),
+    "Seeker's Armguard": (
+        "https://wiki.leagueoflegends.com/en-us/Seeker's_Armguard",
+        3837259,
+    ),
+    "Serylda's Grudge": (
+        "https://wiki.leagueoflegends.com/en-us/Serylda's_Grudge",
+        3984392,
+    ),
+    "Shurelya's Battlesong": (
+        "https://wiki.leagueoflegends.com/en-us/Shurelya's_Battlesong",
+        3984368,
+    ),
+    "Solstice Sleigh": (
+        "https://wiki.leagueoflegends.com/en-us/Solstice_Sleigh",
+        4028003,
+    ),
+    "Spirit Visage": ("https://wiki.leagueoflegends.com/en-us/Spirit_Visage", 4016166),
+    "Umbral Glaive": ("https://wiki.leagueoflegends.com/en-us/Umbral_Glaive", 4013390),
+    "Verdant Barrier": (
+        "https://wiki.leagueoflegends.com/en-us/Verdant_Barrier",
+        3957920,
+    ),
+    "Youmuu's Ghostblade": (
+        "https://wiki.leagueoflegends.com/en-us/Youmuu's_Ghostblade",
+        4013388,
+    ),
+    "Zhonya's Hourglass": (
+        "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass",
+        3902922,
+    ),
+}
+
+_ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
+    "Actualizer": (
+        "item_effects.item_state_receipts",
+        "option:mana_made_real_active_seconds",
+    ),
+    "Archangel's Staff": (
+        "item_effects.item_state_receipts",
+        "option:manaflow_bonus_mana",
+    ),
+    "Ardent Censer": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Ardent Censer — Sanctify",
+    ),
+    "Axiom Arc": (
+        "item_effects.axiom_arc_ultimate_refund_fraction",
+        "key:ultimate_refund_base_ratio",
+    ),
+    "Bandlepipes": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Bandlepipes — Fanfare",
+    ),
+    "Catalyst of Aeons": (
+        "item_effects.item_state_receipts",
+        "key:mana_spent_heal_ratio",
+    ),
+    "Cull": ("item_effects.item_state_receipts", "option:reap_minion_kills"),
+    "Endless Hunger": (
+        "item_effects.item_state_receipts",
+        "option:feast_active_seconds",
+    ),
+    "Fimbulwinter": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Fimbulwinter — Everlasting",
+    ),
+    "Hubris": ("item_effects.item_state_receipts", "option:eminence_stacks"),
+    "Immortal Path": ("item_effects.item_state_receipts", "option:slay_stacks"),
+    "Imperial Mandate": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Imperial Mandate — Command",
+    ),
+    "Manamune": ("item_effects.item_state_receipts", "option:manaflow_bonus_mana"),
+    "Phage": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Phage — Rage",
+    ),
+    "Runic Compass": ("item_effects.item_state_receipts", "option:shared_riches_gold"),
+    "Tear of the Goddess": (
+        "item_effects.item_state_receipts",
+        "option:manaflow_bonus_mana",
+    ),
+    "Umbral Glaive": ("item_effects.item_state_receipts", "option:nightstalker_ready"),
+    "Whispering Circlet": (
+        "item_effects.item_state_receipts",
+        "option:manaflow_bonus_mana",
+    ),
+    "Winter's Approach": (
+        "item_effects.item_state_receipts",
+        "option:manaflow_bonus_mana",
+    ),
+    "World Atlas": ("item_effects.item_state_receipts", "option:shared_riches_gold"),
+}
+
+_TARGET_MODELED_IMPLS: Mapping[str, str] = {
+    "Armored Advance": "defensive_effects.resolve_starting_defenses",
+    "Banshee's Veil": "defensive_effects.resolve_starting_defenses",
+    "Bloodthirster": "defensive_effects.resolve_starting_defenses",
+    "Bramble Vest": "item_effects.thorns_effects",
+    "Celestial Opposition": "defensive_effects.resolve_starting_defenses",
+    "Chainlaced Crushers": "defensive_effects.resolve_starting_defenses",
+    "Cull": "item_support_effects.derive_item_support_effects",
+    "Doran's Shield": "survival.transitions.schedule_doran_shield_recovery",
+    "Dusk and Dawn": "damage._add_spellblade_damage",
+    "Edge of Night": "defensive_effects.resolve_starting_defenses",
+    "Frozen Heart": "roster_composition.target_overrides",
+    "Guardian Angel": "defensive_effects.resolve_starting_defenses",
+    "Kaenic Rookern": "defensive_effects.resolve_starting_defenses",
+    "Knight's Vow": "item_support_effects.schedule_knights_vow",
+    "Locket of the Iron Solari": "item_support_effects.derive_item_support_effects",
+    "Mikael's Blessing": "item_support_effects.derive_item_support_effects",
+    "Plated Steelcaps": "defensive_effects.resolve_starting_defenses",
+    "Randuin's Omen": "defensive_effects.resolve_starting_defenses",
+    "Redemption": "item_support_effects.derive_item_support_effects",
+    "Seeker's Armguard": "defensive_effects.resolve_starting_defenses",
+    "Spectre's Cowl": "stats.get_item_stats",
+    "Spirit Visage": "defensive_effects.resolve_starting_defenses",
+    "Sundered Sky": "damage._add_first_auto_healing",
+    "Thornmail": "item_effects.thorns_effects",
+    "Unending Despair": "damage._add_burn_damage",
+    "Verdant Barrier": "defensive_effects.resolve_starting_defenses",
+    "Warden's Mail": "defensive_effects.resolve_starting_defenses",
+    "Warmog's Armor": "participant_timeline._warmog_heart_tick_events",
+    "Zhonya's Hourglass": "defensive_effects.resolve_starting_defenses",
+}
+
+_TARGET_CERTIFIED_IMPLS: Mapping[str, str] = {
+    "Fimbulwinter": "item_support_effects.derive_item_support_effects",
+    "Force of Nature": "survival.transitions.update_combat_state",
+    "Hexdrinker": "defensive_effects._lifeline_defense",
+    "Immortal Shieldbow": "defensive_effects._lifeline_defense",
+    "Jak'Sho, The Protean": "survival.transitions.update_combat_state",
+    "Maw of Malmortius": "defensive_effects._lifeline_defense",
+    "Protoplasm Harness": "defensive_effects._lifeline_defense",
+    "Seraph's Embrace": "defensive_effects._lifeline_defense",
+    "Sterak's Gage": "defensive_effects._lifeline_defense",
+}
+
+_UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
+    "Axiom Arc": (
+        "item_effects.axiom_arc_ultimate_refund_fraction",
+        "key:ultimate_refund_base_ratio",
+    ),
+    "Bandlepipes": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Bandlepipes — Fanfare",
+    ),
+    "Banshee's Veil": ("defensive_effects.resolve_starting_defenses", "effects"),
+    "Boots of Swiftness": ("", "source"),
+    "Cosmic Drive": ("", "source"),
+    "Cull": ("item_support_effects.derive_item_support_effects", "packet:Cull — Reap"),
+    "Edge of Night": ("defensive_effects.resolve_starting_defenses", "effects"),
+    "Force of Nature": ("survival.transitions.update_combat_state", "effects"),
+    "Frozen Heart": ("roster_composition.target_overrides", "effects"),
+    "Guardian Angel": ("defensive_effects.resolve_starting_defenses", "effects"),
+    "Gunmetal Greaves": ("", "source"),
+    "Heartsteel": ("item_effects.item_state_receipts", "option:bonus_health"),
+    "Horizon Focus": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Hubris": ("item_effects.item_state_receipts", "option:eminence_stacks"),
+    "Locket of the Iron Solari": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Locket of the Iron Solari — Devotion",
+    ),
+    "Mejai's Soulstealer": ("item_effects.item_state_receipts", "option:glory_stacks"),
+    "Mercurial Scimitar": ("", "source"),
+    "Mikael's Blessing": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Mikael's Blessing — Purify",
+    ),
+    "Phage": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Phage — Rage",
+    ),
+    "Phantom Dancer": ("", "source"),
+    "Profane Hydra": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Randuin's Omen": ("defensive_effects.resolve_starting_defenses", "effects"),
+    "Rapid Firecannon": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Ravenous Hydra": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Redemption": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Redemption — Intervention",
+    ),
+    "Rod of Ages": ("item_effects.item_state_receipts", "option:timeless_stacks"),
+    "Runaan's Hurricane": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Runic Compass": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:{} — Shared Riches",
+    ),
+    "Rylai's Crystal Scepter": ("", "source"),
+    "Serylda's Grudge": ("", "source"),
+    "Shurelya's Battlesong": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Shurelya's Battlesong — Inspiring Speech",
+    ),
+    "Solstice Sleigh": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Solstice Sleigh — Going Sledding",
+    ),
+    "Statikk Shiv": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Stormrazor": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Stridebreaker": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:Stridebreaker — Breaking Shockwave",
+    ),
+    "Swiftmarch": ("item_effects.swiftmarch_adaptive_force", "effects"),
+    "Tear of the Goddess": (
+        "item_effects.item_state_receipts",
+        "option:manaflow_bonus_mana",
+    ),
+    "The Collector": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Titanic Hydra": ("item_effects._resolve_damage_effects_uncached", "effects"),
+    "Umbral Glaive": ("", "source"),
+    "World Atlas": (
+        "item_support_effects.derive_item_support_effects",
+        "packet:{} — Shared Riches",
+    ),
+    "Youmuu's Ghostblade": ("", "source"),
+    "Zhonya's Hourglass": ("defensive_effects.resolve_starting_defenses", "effects"),
+}
+# Which lane's claim carries an item's tracked review issues.  ``review_issue_refs``
+# publishes one list per item and a claim's ``issue_refs`` has to be that list, so
+# exactly one claim per item may carry it; this names which.  A negative claim
+# carries its refs on its ``Absence`` instead, which is why no lane below is one.
+_ISSUE_REF_LANES: Mapping[str, ClaimLane] = {
+    "Actualizer": "attacker",
+    "Archangel's Staff": "attacker",
+    "Ardent Censer": "attacker",
+    "Axiom Arc": "attacker",
+    "Bandlepipes": "attacker",
+    "Catalyst of Aeons": "attacker",
+    "Doran's Helm": "attacker",
+    "Endless Hunger": "attacker",
+    "Fimbulwinter": "attacker",
+    "Hubris": "attacker",
+    "Immortal Path": "attacker",
+    "Imperial Mandate": "attacker",
+    "Locket of the Iron Solari": "target",
+    "Manamune": "attacker",
+    "Mikael's Blessing": "target",
+    "Redemption": "target",
+    "Runaan's Hurricane": "utility",
+    "Stridebreaker": "utility",
+    "Voltaic Cyclosword": "attacker",
+    "Whispering Circlet": "attacker",
+    "Winter's Approach": "attacker",
+    "Zeke's Convergence": "attacker",
+}
+
+# The walk packets an item emits, the builder that emits them, and one focused
+# test that exercises the behaviour.  A packet whose source the builder composes
+# with an f-string is written the way the builder renders it -- ``{} — Ward``,
+# not ``World Atlas — Ward`` -- because the interpolated part is not in the
+# source at all and a member spelling the item name there could never resolve.  Seven more items own a walk packet and have
+# no such test; they are on ``FRONTIER`` rather than here, because a claim backed
+# by "some test file mentions this string" is the prose this corpus replaces.
+_SUPPORT_PACKET_CLAIMS: Mapping[str, tuple[str, tuple[str, ...], str]] = {
+    "Abyssal Mask": (
+        "item_support_effects.derive_item_support_effects",
+        ("Abyssal Mask — Unmake",),
+        "tests/test_item_support_effects.py::TestAbyssalMaskOwnerHandshake"
+        "::test_unmake_declares_split",
+    ),
+    "Ardent Censer": (
+        "item_support_effects.derive_item_support_effects",
+        ("Ardent Censer — Sanctify",),
+        "tests/test_item_support_effects.py"
+        "::test_ardent_and_moonstone_use_the_authored_heal_or_shield_target",
+    ),
+    "Bandlepipes": (
+        "item_support_effects.derive_item_support_effects",
+        ("Bandlepipes — Fanfare",),
+        "tests/test_item_support_effects.py"
+        "::test_cc_only_packets_require_an_authored_immobilize_marker",
+    ),
+    "Black Cleaver": (
+        "item_support_effects.derive_item_support_effects",
+        ("Black Cleaver — Carve",),
+        "tests/test_item_support_effects.py"
+        "::test_cross_participant_debuffs_are_typed_and_triggered_by_holder_packets",
+    ),
+    "Bloodletter's Curse": (
+        "item_support_effects.derive_item_support_effects",
+        ("Bloodletter's Curse — Vile Decay",),
+        "tests/test_item_support_effects.py"
+        "::test_cross_participant_debuffs_are_typed_and_triggered_by_holder_packets",
+    ),
+    "Bloodsong": (
+        "item_support_effects.derive_item_support_effects",
+        ("Bloodsong — Expose Weakness",),
+        "tests/test_item_support_effects.py"
+        "::test_cross_participant_debuffs_are_typed_and_triggered_by_holder_packets",
+    ),
+    "Cryptbloom": (
+        "item_support_effects.derive_item_support_effects",
+        ("Cryptbloom — Life From Death",),
+        "tests/test_item_support_effects.py"
+        "::test_cryptbloom_requires_an_explicit_takedown_receipt",
+    ),
+    "Cull": (
+        "item_support_effects.derive_item_support_effects",
+        ("Cull — Reap",),
+        "tests/test_item_support_effects.py"
+        "::test_cp20_progression_items_emit_typed_economy_vision_and_movement_receipts",
+    ),
+    "Dream Maker": (
+        "item_support_effects.derive_item_support_effects",
+        ("Dream Maker — Blue Dream Bubble",),
+        "tests/test_item_support_effects.py::TestCrossParticipantAuthorities"
+        "::test_dream_maker_is_a_producer",
+    ),
+    "Fimbulwinter": (
+        "item_support_effects.derive_item_support_effects",
+        ("Fimbulwinter — Everlasting",),
+        "tests/test_item_support_effects.py"
+        "::test_fimbulwinter_everlasting_uses_current_mana_and_nearby_enemy_multiplier",
+    ),
+    "Imperial Mandate": (
+        "item_support_effects.derive_item_support_effects",
+        ("Imperial Mandate — Command",),
+        "tests/test_item_support_effects.py"
+        "::test_command_requires_an_immobilize_not_a_slow",
+    ),
+    "Knight's Vow": (
+        "item_support_effects.schedule_knights_vow",
+        ("Knight's Vow — Sacrifice",),
+        "tests/test_item_support_effects.py"
+        "::test_knights_vow_attaches_typed_redirect_and_holder_heal_receipts",
+    ),
+    "Moonstone Renewer": (
+        "item_support_effects.derive_item_support_effects",
+        ("Moonstone Renewer — Starlit Grace",),
+        "tests/test_item_support_effects.py"
+        "::test_ardent_and_moonstone_use_the_authored_heal_or_shield_target",
+    ),
+    "Phage": (
+        "item_support_effects.derive_item_support_effects",
+        ("Phage — Rage",),
+        "tests/test_item_support_effects.py"
+        "::test_cp20_progression_items_emit_typed_economy_vision_and_movement_receipts",
+    ),
+    "Redemption": (
+        "item_support_effects.derive_item_support_effects",
+        ("Redemption — Intervention",),
+        "tests/test_participant_timeline.py"
+        "::test_redemption_active_emits_sourced_area_true_damage_and_heal_packets",
+    ),
+    "Solstice Sleigh": (
+        "item_support_effects.derive_item_support_effects",
+        ("Solstice Sleigh — Going Sledding",),
+        "tests/test_item_support_effects.py"
+        "::test_sourced_cc_packets_include_holder_movement_and_solstice_both_recipients",
+    ),
+    "Staff of Flowing Water": (
+        "item_support_effects.derive_item_support_effects",
+        ("Staff of Flowing Water — Rapids",),
+        "tests/test_app.py"
+        "::test_enabled_ally_staff_buff_changes_attacker_stats_and_damage",
+    ),
+    "World Atlas": (
+        "item_support_effects.derive_item_support_effects",
+        ("{} — Shared Riches", "{} — Ward"),
+        "tests/test_item_support_effects.py"
+        "::test_cp20_progression_items_emit_typed_economy_vision_and_movement_receipts",
+    ),
+}
+
+# The five mechanics Phase 2 declares ``SPLIT``, by holder.  The claim names the
+# mechanic and the handshake; the registry is what says both halves exist and
+# pair back, which is the check the incident's hand list could not perform.
+_SPLIT_MECHANICS: Mapping[str, str] = {
+    "Abyssal Mask": "abyssal_mask.unmake",
+    "Black Cleaver": "black_cleaver.carve",
+    "Bloodletter's Curse": "bloodletters_curse.vile_decay",
+    "Bloodsong": "bloodsong.expose_weakness",
+    "Imperial Mandate": "imperial_mandate.command",
+}
+
+
+def _test_ref(function: str, subject: str) -> TestRef:
+    """The parametrized node in the claim suite that exercises *subject*.
+
+    The node id is composed rather than written out once per claim: the
+    parametrization id is the subject verbatim, so composing it keeps two
+    hundred claims from carrying two hundred near-identical strings, and the
+    resolver still has to find the node in what pytest actually collected.
+    """
+    return TestRef(node_id=f"tests/test_coverage_claims.py::{function}[{subject}]")
+
+
+def _source_ref(item: str) -> SourceRef:
+    """The wiki revision the item's full-entry review was read from."""
+    url, revision_id = _SOURCE_REFS[item]
+    return SourceRef(url=url, revision_id=revision_id)
+
+
+def _state_home(item: str, home: str) -> Evidence:
+    """The member naming where a ``modeled_state`` claim's state comes from.
+
+    Three spellings, one per route the classifier reaches that status by: an
+    ``option:`` control, a ``packet:`` the ledger schedules, or a ``key:`` the
+    engine reads out of the registry.
+    """
+    kind, _, value = home.partition(":")
+    if kind == "option":
+        return OptionSchema(item=item, option=value)
+    if kind == "packet":
+        return PacketSource(source=value)
+    return EffectKey(registry="ITEM_EFFECTS", item=item, key=value)
+
+
+def _issue_refs(item: str, lane: ClaimLane) -> tuple[int, ...]:
+    """The tracked review issues, on the one lane declared to carry them."""
+    if _ISSUE_REF_LANES.get(item) != lane:
+        return ()
+    return tuple(_REVIEW_ISSUE_REFS[item])
+
+
+def _unreachable_reason(item: str, lane: ClaimLane) -> str:
+    """Why an earlier rung means no cached item reaches this claim."""
+    return _SHADOWED_CLAIM_REASONS.get(f"{item}@{lane}", "")
+
+
+def _attacker_state_claim(item: str) -> Claim:
+    """One ``_STATEFUL_MODELED_ITEMS`` entry: state, and where it comes from."""
+    path, home = _ATTACKER_STATE_HOMES[item]
+    role: SymbolRole = (
+        "walk_packet_builder" if home.startswith("packet:") else "value_accessor"
+    )
+    return Claim(
+        subject_kind="item",
+        subject=item,
+        lane="attacker",
+        status="modeled_state",
+        evidence=(
+            Symbol(path=path, role=role),
+            _state_home(item, home),
+            _test_ref(
+                "test_a_stateful_item_supplies_its_state_from_a_named_home", item
+            ),
+        ),
+        dimensions=(),
+        issue_refs=_issue_refs(item, "attacker"),
+        unreachable_reason=_unreachable_reason(item, "attacker"),
+    )
+
+
+def _stats_only_claim(item: str) -> Claim:
+    """One ``_REVIEWED_STATS_ONLY`` entry: a review, and the revision it read."""
+    return Claim(
+        subject_kind="item",
+        subject=item,
+        lane="attacker",
+        status="stats_only",
+        evidence=(
+            _source_ref(item),
+            _test_ref("test_a_reviewed_stats_only_item_adds_no_outgoing_damage", item),
+        ),
+        dimensions=(),
+        issue_refs=_issue_refs(item, "attacker"),
+        unreachable_reason=_unreachable_reason(item, "attacker"),
+    )
+
+
+def _item_effects_claim(item: str) -> Claim:
+    """An ``ITEM_EFFECTS`` member whose refs need a home of their own."""
+    return Claim(
+        subject_kind="item",
+        subject=item,
+        lane="attacker",
+        status="modeled_effect",
+        evidence=(
+            Symbol(
+                path="item_effects._resolve_damage_effects_uncached", role="tag_handler"
+            ),
+            _test_ref(
+                "test_an_item_effects_member_names_a_dispatched_or_frontiered_tag", item
+            ),
+        ),
+        dimensions=(),
+        issue_refs=_issue_refs(item, "attacker"),
+        unreachable_reason=_unreachable_reason(item, "attacker"),
+    )
+
+
+def _target_modeled_claim(item: str) -> Claim:
+    """One ``_TARGET_MODELED_REASONS`` entry and the code that admits it."""
+    return Claim(
+        subject_kind="item",
+        subject=item,
+        lane="target",
+        status="modeled",
+        evidence=(
+            Symbol(path=_TARGET_MODELED_IMPLS[item], role="walk_packet_builder"),
+            _test_ref(
+                "test_a_target_modeled_item_is_admitted_by_the_target_model", item
+            ),
+        ),
+        dimensions=(),
+        issue_refs=_issue_refs(item, "target"),
+        unreachable_reason=_unreachable_reason(item, "target"),
+    )
+
+
+def _target_certified_claim(item: str) -> Claim:
+    """One conditional defense, plus the guard that withholds an uncertified fight."""
+    return Claim(
+        subject_kind="item",
+        subject=item,
+        lane="target",
+        status="modeled_event_certified",
+        evidence=(
+            Symbol(path=_TARGET_CERTIFIED_IMPLS[item], role="walk_packet_builder"),
+            Symbol(
+                path="item_coverage.require_certified_target_timeline",
+                role="certification_guard",
+            ),
+            _test_ref(
+                "test_a_target_event_certified_item_needs_a_certified_timeline", item
+            ),
+        ),
+        dimensions=(),
+        issue_refs=_issue_refs(item, "target"),
+        unreachable_reason=_unreachable_reason(item, "target"),
+    )
+
+
+def _target_blocked_claim(item: str) -> Claim:
+    """The one withheld target mechanic: a reason and the issue tracking it."""
+    return Claim(
+        subject_kind="item",
+        subject=item,
+        lane="target",
+        status="blocked",
+        evidence=(
+            Absence(
+                reason=_TARGET_BLOCKED_REASONS[item],
+                issue_refs=tuple(review_issue_refs(item)),
+            ),
+        ),
+        dimensions=(),
+        issue_refs=(),
+        unreachable_reason=_unreachable_reason(item, "target"),
+    )
+
+
+def _utility_claim(item: str) -> Claim:
+    """One ``_UTILITY_DIMENSIONS`` entry and the home of what the model prices.
+
+    A utility claim is about outcome *dimensions*, and the model prices some
+    of them and none of others.  ``modeled_effect`` and ``modeled_state`` name
+    the home of the dimension it does price; ``stats_only`` is the honest
+    answer where it prices none of them, and then the claim cites the review
+    that says so rather than pointing at code that is about something else.
+    """
+    path, home = _UTILITY_HOMES[item]
+    dimensions = tuple(_UTILITY_DIMENSIONS[item])
+    node = _test_ref("test_a_utility_item_publishes_its_declared_dimensions", item)
+    refs = _issue_refs(item, "utility")
+    if home == "source":
+        return Claim(
+            subject_kind="item",
+            subject=item,
+            lane="utility",
+            status="stats_only",
+            evidence=(_source_ref(item), node),
+            dimensions=dimensions,
+            issue_refs=refs,
+            unreachable_reason="",
+        )
+    if home == "effects":
+        return Claim(
+            subject_kind="item",
+            subject=item,
+            lane="utility",
+            status="modeled_effect",
+            evidence=(Symbol(path=path, role="tag_handler"), node),
+            dimensions=dimensions,
+            issue_refs=refs,
+            unreachable_reason="",
+        )
+    role: SymbolRole = (
+        "walk_packet_builder" if home.startswith("packet:") else "value_accessor"
+    )
+    return Claim(
+        subject_kind="item",
+        subject=item,
+        lane="utility",
+        status="modeled_state",
+        evidence=(
+            Symbol(path=path, role=role),
+            _state_home(item, home),
+            node,
+        ),
+        dimensions=dimensions,
+        issue_refs=refs,
+        unreachable_reason="",
+    )
+
+
+def _support_packet_claim(item: str) -> Claim:
+    """One holder's walk packets, its builder, and its dual-sided handshake."""
+    impl, packets, node_id = _SUPPORT_PACKET_CLAIMS[item]
+    mechanic = _SPLIT_MECHANICS.get(item)
+    sides = (
+        (PairedSides(mechanic=mechanic, owner_policy="owner_skips_holder"),)
+        if mechanic
+        else ()
+    )
+    return Claim(
+        subject_kind="item",
+        subject=item,
+        lane="support_packet",
+        status="modeled_effect",
+        evidence=(
+            Symbol(path=impl, role="walk_packet_builder"),
+            *(PacketSource(source=packet) for packet in packets),
+            *sides,
+            TestRef(node_id=node_id),
+        ),
+        dimensions=(),
+        issue_refs=(),
+        unreachable_reason="",
+    )
+
+
+def _rung_ref(rule_id: str) -> TestRef:
+    """The node that runs one rung against the live classifier."""
+    return _test_ref("test_a_precedence_rung_yields_its_declared_status", rule_id)
+
+
+def _rule_claim(
+    rule_id: str,
+    lane: ClaimLane,
+    status: ClaimStatus,
+    evidence: tuple[Evidence, ...],
+) -> Claim:
+    """One claim about one rung of the chain."""
+    return Claim(
+        subject_kind="rule",
+        subject=rule_id,
+        lane=lane,
+        status=status,
+        evidence=evidence,
+        dimensions=(),
+        issue_refs=(),
+        unreachable_reason=_unreachable_reason(rule_id, lane),
+    )
+
+
+def _unreachable_rung_claim(
+    rule_id: str, lane: ClaimLane, status: ClaimStatus
+) -> Claim:
+    """A rung no cached item enters: a refusal, its reason and its issue.
+
+    ``blocked`` and ``review_pending`` take exactly one ``Absence`` and no
+    positive evidence, which is why these four carry no ``TestRef`` — the
+    rung's own parametrized node still runs, and still asserts that nothing
+    reaches it (D-26's emptiness half).
+    """
+    return _rule_claim(
+        rule_id,
+        lane,
+        status,
+        (
+            Absence(
+                reason=_unreachable_reason(rule_id, lane),
+                issue_refs=(_UMBRELLA_ISSUE,),
+            ),
+        ),
+    )
+
+
+# One claim per rung of ``PRECEDENCE``, in its order.  A rung is where a status
+# comes from, so its claim is about the *mechanism* the rung routes to — and the
+# five rungs whose membership is recomputed from ``data/`` on every call carry
+# their population's backing instead of a per-item claim each, which is the
+# whole reason a claim's subject may be a rule.
+_RULE_CLAIMS: tuple[Claim, ...] = (
+    _rule_claim(
+        "attacker.deaths_dance_defensive_start",
+        "attacker",
+        "modeled_effect",
+        (
+            Symbol(
+                path="survival.transitions.trigger_defy", role="walk_packet_builder"
+            ),
+            _rung_ref("attacker.deaths_dance_defensive_start"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.defensive_effect_types",
+        "attacker",
+        "stats_only",
+        (
+            _source_ref("Guardian Angel"),
+            _rung_ref("attacker.defensive_effect_types"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.stateful_modeled_items",
+        "attacker",
+        "modeled_state",
+        (
+            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
+            OptionSchema(item="Hubris", option="eminence_stacks"),
+            _rung_ref("attacker.stateful_modeled_items"),
+        ),
+    ),
+    _unreachable_rung_claim("attacker.partial_blocked_reasons", "attacker", "blocked"),
+    _rule_claim(
+        "attacker.heartsteel_state_option",
+        "attacker",
+        "modeled_state",
+        (
+            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
+            OptionSchema(item="Heartsteel", option="bonus_health"),
+            _rung_ref("attacker.heartsteel_state_option"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.rod_of_ages_state_option",
+        "attacker",
+        "modeled_state",
+        (
+            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
+            OptionSchema(item="Rod of Ages", option="timeless_stacks"),
+            _rung_ref("attacker.rod_of_ages_state_option"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.overlords_bloodmail_state_option",
+        "attacker",
+        "modeled_state",
+        (
+            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
+            OptionSchema(item="Overlord's Bloodmail", option="missing_health_percent"),
+            _rung_ref("attacker.overlords_bloodmail_state_option"),
+        ),
+    ),
+    _unreachable_rung_claim("attacker.blocked_reasons", "attacker", "blocked"),
+    _rule_claim(
+        "attacker.gunmetal_greaves_movement_gap",
+        "attacker",
+        "modeled_effect",
+        (
+            Symbol(path="stats.get_item_stats", role="value_accessor"),
+            _rung_ref("attacker.gunmetal_greaves_movement_gap"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.item_effects_membership",
+        "attacker",
+        "modeled_effect",
+        (
+            Symbol(
+                path="item_effects._resolve_damage_effects_uncached", role="tag_handler"
+            ),
+            _rung_ref("attacker.item_effects_membership"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.item_input_options_membership",
+        "attacker",
+        "modeled_state",
+        (
+            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
+            OptionSchema(item="Dark Seal", option="glory_stacks"),
+            _rung_ref("attacker.item_input_options_membership"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.reviewed_stats_only",
+        "attacker",
+        "stats_only",
+        (
+            _source_ref("Banshee's Veil"),
+            _rung_ref("attacker.reviewed_stats_only"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.no_described_effect",
+        "attacker",
+        "stats_only",
+        (
+            _source_ref("Blasting Wand"),
+            _rung_ref("attacker.no_described_effect"),
+        ),
+    ),
+    _rule_claim(
+        "attacker.cached_shop_record",
+        "attacker",
+        "blocked",
+        (
+            Absence(
+                reason=(
+                    "A cached shop record whose passive or active has not been "
+                    "reviewed for outgoing damage is withheld rather than scored; "
+                    "the umbrella issue tracks the review queue."
+                ),
+                issue_refs=(_UMBRELLA_ISSUE,),
+            ),
+        ),
+    ),
+    _unreachable_rung_claim(
+        "attacker.unreviewed_fixture", "attacker", "review_pending"
+    ),
+    _rule_claim(
+        "target.modeled_reasons",
+        "target",
+        "modeled",
+        (
+            Symbol(
+                path="defensive_effects.resolve_starting_defenses",
+                role="walk_packet_builder",
+            ),
+            _rung_ref("target.modeled_reasons"),
+        ),
+    ),
+    _rule_claim(
+        "target.event_certified_reasons",
+        "target",
+        "modeled_event_certified",
+        (
+            Symbol(
+                path="defensive_effects._lifeline_defense", role="walk_packet_builder"
+            ),
+            Symbol(
+                path="item_coverage.require_certified_target_timeline",
+                role="certification_guard",
+            ),
+            _rung_ref("target.event_certified_reasons"),
+        ),
+    ),
+    _rule_claim(
+        "target.blocked_reasons",
+        "target",
+        "blocked",
+        (
+            Absence(
+                reason=(
+                    "The one withheld target mechanic stops the run by name; the "
+                    "container holds its reason and the umbrella issue tracks it."
+                ),
+                issue_refs=(_UMBRELLA_ISSUE,),
+            ),
+        ),
+    ),
+    _unreachable_rung_claim(
+        "target.attacker_review_pending_passthrough", "target", "review_pending"
+    ),
+    _rule_claim(
+        "target.not_target_relevant",
+        "target",
+        "not_target_relevant",
+        (
+            _source_ref("Abyssal Mask"),
+            _rung_ref("target.not_target_relevant"),
+        ),
+    ),
+)
+
+
+def _corpus() -> dict[tuple[SubjectKind, str, ClaimLane], Claim]:
+    """Every claim, keyed the way the load gate reads it.
+
+    Built once at import from the tables above.  The *evidence* is authored --
+    a table that derived its own evidence from the registries it describes
+    would agree with them by construction, which is the failure this module
+    exists to catch -- and only the assembly is mechanical.
+    """
+    claims = [
+        *(_attacker_state_claim(item) for item in _STATEFUL_MODELED_ITEMS),
+        *(_stats_only_claim(item) for item in _REVIEWED_STATS_ONLY),
+        *(_item_effects_claim(item) for item in _ISSUE_REF_ONLY_ITEMS),
+        *(_target_modeled_claim(item) for item in _TARGET_MODELED_REASONS),
+        *(_target_certified_claim(item) for item in _TARGET_EVENT_CERTIFIED_REASONS),
+        *(_target_blocked_claim(item) for item in _TARGET_BLOCKED_REASONS),
+        *(_utility_claim(item) for item in _UTILITY_DIMENSIONS),
+        *(_support_packet_claim(item) for item in _SUPPORT_PACKET_CLAIMS),
+        *_RULE_CLAIMS,
+    ]
+    return {(claim.subject_kind, claim.subject, claim.lane): claim for claim in claims}
+
+
+COVERAGE_EVIDENCE: Mapping[tuple[SubjectKind, str, ClaimLane], Claim] = _corpus()
+
+# Claim key -> why it is not backed yet.  It shrinks by edit and never grows:
+# a new member arrives only with the reason it cannot be a claim, and every
+# reason carries the issue that tracks it.
+#
+# No attacker or target key may appear here at all.  The rule is that a
+# frontier which can absorb a damage or durability claim is the escape hatch
+# this campaign closes, and "no such lane, ever" is the version of that rule a
+# test can check without deciding what "prices damage" means.
+FRONTIER: Mapping[str, str] = {
+    "item:Diadem of Songs@support_packet": (
+        "Consonance emits a walk packet no focused test exercises; #48 tracks "
+        "the support-item authoring debt."
+    ),
+    "item:Echoes of Helia@support_packet": (
+        "Soul Siphon emits a walk packet no focused test exercises; #48 tracks "
+        "the support-item authoring debt."
+    ),
+    "item:Locket of the Iron Solari@support_packet": (
+        "Devotion emits a walk packet no focused test exercises; #46 and #48 "
+        "track the shield and the support-item authoring debt."
+    ),
+    "item:Mikael's Blessing@support_packet": (
+        "Purify emits a walk packet no focused test exercises; #48 tracks the "
+        "support-item authoring debt."
+    ),
+    "item:Runic Compass@support_packet": (
+        "Shared Riches and Ward emit walk packets no focused test exercises; "
+        "#40 tracks the review."
+    ),
+    "item:Shurelya's Battlesong@support_packet": (
+        "Inspiring Speech emits a walk packet no focused test exercises; #40 "
+        "tracks the review."
+    ),
+    "item:Stridebreaker@support_packet": (
+        "Breaking Shockwave emits a walk packet no focused test exercises; #43 "
+        "tracks the multi-target authoring debt."
+    ),
+    "tag:conditional_attack_speed": _H4_DEAD_TAG,
+    "tag:shield_reduction": _H4_DEAD_TAG,
+    "tag:target_state": _H4_DEAD_TAG,
+    "tag:target_attack_speed_aura": _H4_DEAD_TAG,
+    "tag:defensive_start": _H4_SELF_REFERENTIAL_TAG,
+    "tag:stat_conversion": _H4_SELF_REFERENTIAL_TAG,
+    "tag:sustain": _H4_SELF_REFERENTIAL_TAG,
+    "tag:target_mitigation": _H4_SELF_REFERENTIAL_TAG,
+    "tag:target_threshold_health": _H4_SELF_REFERENTIAL_TAG,
+    "tag:target_threshold_shield": _H4_SELF_REFERENTIAL_TAG,
+}
+
+validate_claim_table(COVERAGE_EVIDENCE)
+
 # ── the chain, mirrored as data ───────────────────────────────────────────
 
 # The two classifiers above are ``if``/``elif`` ladders, and the *order* of
@@ -954,6 +2298,8 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
 validate_precedence(PRECEDENCE)
 
 __all__ = [
+    "COVERAGE_EVIDENCE",
+    "FRONTIER",
     "PRECEDENCE",
     "item_model_coverage",
     "optimizer_candidate_coverage",

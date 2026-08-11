@@ -168,7 +168,7 @@ is part of the contract. Expected qualifying occurrences (R-20) are stated per c
   Bloodletter's Curse by construction — three of the six never set it.*
 - **Dream Maker is `COUPLED_ONLY` and declares no `owner`, settled — not "verify at
   implementation".** Verified: no pair-engine pricer for Blue Dream Bubble exists in `src/`, and
-  `item_coverage.py:144` already records "Dream Maker affects an ally, not the item holder's TDD." It
+  `item_coverage.py:175` already records "Dream Maker affects an ally, not the item holder's TDD." It
   rides C2. *Why: `SPLIT` would demand an owner skip for a half that does not exist, and C2's
   owner-iff-`SPLIT` check would reject the declaration on the same commit that made it.*
 - **Abyssal Mask is three commits, in order — C2, C3, C4:** `owner` first (the pair engine keeps

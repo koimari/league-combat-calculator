@@ -323,7 +323,7 @@ def _is_full_session(config) -> bool:
    is unique; unclaimed hand entries number zero. The three empty containers
    (`_BLOCKED_REASONS`, `_CALCULATION_ALLOWED_BLOCKED`, `_PARTIAL_BLOCKED_REASONS` — all empty at
    HEAD, but as two dicts and one frozenset: `_CALCULATION_ALLOWED_BLOCKED` is `frozenset()` at
-   `item_coverage.py:29`, so the assertion is emptiness, never `== {}`) are asserted **empty**
+   `item_coverage.py:60`, so the assertion is emptiness, never `== {}`) are asserted **empty**
    rather than claim-covered, and Phase 3's step 3.8 deletes
    them — so "ten registries collapse to two" is seven real ones plus three already-empty.
 5. `first_matching_rule` reproduces the live classifier's status for every cached item on both

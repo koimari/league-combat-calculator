@@ -25,6 +25,7 @@ import dataclasses
 import fnmatch
 import importlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -33,6 +34,7 @@ import pytest
 
 from src.calculator.coverage_evidence import (
     EVIDENCE_TYPES,
+    UTILITY_DIMENSIONS,
     Absence,
     Claim,
     EffectKey,
@@ -48,9 +50,16 @@ from src.calculator.coverage_evidence import (
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator import item_coverage
 from src.calculator.item_coverage import (
+    COVERAGE_EVIDENCE,
+    FRONTIER,
     PRECEDENCE,
     item_model_coverage,
     target_item_model_coverage,
+)
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    ITEM_INPUT_OPTIONS,
+    _KNOWN_EFFECT_TYPES,
 )
 from src.calculator.trigger_stream import CAPABILITIES
 
@@ -1374,3 +1383,530 @@ def test_the_three_empty_containers_are_empty_rather_than_claim_covered() -> Non
     assert not item_coverage._PARTIAL_BLOCKED_REASONS
     assert not item_coverage._CALCULATION_ALLOWED_BLOCKED
     assert isinstance(item_coverage._CALCULATION_ALLOWED_BLOCKED, frozenset)
+
+
+# ── the corpus, item by item ──────────────────────────────────────────────
+
+CACHE = cached_items()
+
+# The effect tags a live handler branches on, read off the two dispatch sites
+# rather than listed.  Their complement is what the frontier has to name.
+DISPATCHED_TAGS: frozenset[str] = (
+    frozenset(
+        tag
+        for handler in (
+            "item_effects._resolve_damage_effects_uncached",
+            "item_effects.thorns_effects",
+        )
+        for tag in coverage_resolver.tag_dispatch_branches(
+            coverage_resolver.read_repo_file("src/calculator/item_effects.py"), handler
+        )
+    )
+    & _KNOWN_EFFECT_TYPES
+)
+
+FRONTIER_TAGS: frozenset[str] = frozenset(
+    key.removeprefix("tag:") for key in FRONTIER if key.startswith("tag:")
+)
+
+
+def _static_context() -> ResolverContext:
+    """The two seams that answer without a collected node set.
+
+    Parametrization happens at import, before any session exists, and the
+    populations below are parametrized over — so the walk that enumerates them
+    reads the package and the tree and nothing pytest knows.  Node ids are the
+    full-session tier's, and it uses ``live_context`` like everything else.
+    """
+    return ResolverContext(
+        importer=importlib.import_module,
+        read_source=coverage_resolver.read_repo_file,
+        nodes={},
+    )
+
+
+def _audit_entry(item: str) -> dict:
+    """One item's committed full-entry audit record."""
+    return next(
+        entry
+        for entry in coverage_resolver.audit_entries(_static_context())
+        if entry.get("name") == item
+    )
+
+
+# The five rungs whose membership is recomputed from ``data/`` on every call.
+# They are the reason a claim's subject may be a rule at all: nobody can
+# enumerate them at authoring time, so the claim declares the predicate and the
+# resolver enumerates the population and demands every member be backed.
+_DYNAMIC_RULES: frozenset[str] = frozenset(
+    {
+        "attacker.item_effects_membership",
+        "attacker.item_input_options_membership",
+        "attacker.no_described_effect",
+        "attacker.cached_shop_record",
+        "target.attacker_review_pending_passthrough",
+    }
+)
+
+
+def _reaching(rule_id: str, lane: str) -> tuple[str, ...]:
+    """The cached items the mirror routes to one rung."""
+    ctx = _static_context()
+    return tuple(
+        name
+        for name, record in CACHE.items()
+        if coverage_resolver.first_matching_rule(
+            PRECEDENCE, record, lane, ctx=ctx
+        ).rule_id
+        == rule_id
+    )
+
+
+def dynamic_population(rule) -> tuple[str, ...]:
+    """The membership predicate's population, enumerated.
+
+    A registry rung's population is the registry; the other three are
+    predicates over a cached record, so theirs is every cached item the ladder
+    routes to them.  Empty is a legal and meaningful answer — the target
+    lane's passthrough has no member today, and D-26's third proof is that the
+    emptiness itself is pinned.
+    """
+    if rule.kind == "container":
+        _, registry = coverage_resolver.import_symbol(
+            rule.keys_on[0], _static_context()
+        )
+        return tuple(registry)
+    return _reaching(rule.rule_id, rule.lane)
+
+
+# ── one parametrized node per hand-listed entry ───────────────────────────
+
+
+@pytest.mark.parametrize("item", sorted(item_coverage._STATEFUL_MODELED_ITEMS))
+def test_a_stateful_item_supplies_its_state_from_a_named_home(item: str) -> None:
+    """The state a ``modeled_state`` claim asserts is supplied has a home.
+
+    Three routes, and the claim names which: a bounded scenario control, a
+    packet the participant ledger schedules, or a sourced registry value.  An
+    item that reached ``modeled_state`` with no home would be state the model
+    *assumed*, which is the disposition this campaign refuses to let look like
+    a computed one.
+    """
+    record = CACHE[item]
+    assert item_coverage.item_model_coverage(record)["optimizer_eligible"]
+    path, home = item_coverage._ATTACKER_STATE_HOMES[item]
+    kind, _, value = home.partition(":")
+    if kind == "option":
+        control = ITEM_INPUT_OPTIONS[item]["options"][value]
+        assert control["min"] <= control["default"] <= control["max"]
+    elif kind == "packet":
+        assert value in {
+            capability.packet_source for capability in CAPABILITIES.values()
+        }
+    else:
+        assert value in ITEM_EFFECTS[item]
+    assert path
+
+
+@pytest.mark.parametrize("item", sorted(item_coverage._REVIEWED_STATS_ONLY))
+def test_a_reviewed_stats_only_item_adds_no_outgoing_damage(item: str) -> None:
+    """The review concluded the item is safe to score, and it still is.
+
+    ``stats_only`` is a claim about a *review*, so what is checked is that the
+    review's conclusion survives: the item is a ready full-entry audit record,
+    and the optimiser may score it rather than withholding it.  A regression
+    that starts blocking one of these fails here with the item's name.
+    """
+    record = CACHE[item]
+    coverage = item_coverage.item_model_coverage(record)
+    assert coverage["optimizer_eligible"] and coverage["calculation_eligible"]
+    entry = _audit_entry(item)
+    assert entry["status"] == "ready"
+
+
+@pytest.mark.parametrize("item", sorted(ITEM_EFFECTS))
+def test_an_item_effects_member_names_a_dispatched_or_frontiered_tag(item: str) -> None:
+    """Every registry member's effect tag has a named disposition.
+
+    This is the population backing for the ``ITEM_EFFECTS`` membership
+    rule-claim — 123 members, one node each — and the property it pins is the
+    one criterion 11 is about: a tag either reaches a live handler branch or
+    sits on the frontier naming H4.  A new item carrying a tag that is neither
+    fails here on the commit that adds it.
+    """
+    effect_type = ITEM_EFFECTS[item].get("type")
+    assert effect_type in _KNOWN_EFFECT_TYPES
+    assert effect_type in DISPATCHED_TAGS | FRONTIER_TAGS
+    assert item in CACHE
+
+
+@pytest.mark.parametrize("item", sorted(ITEM_INPUT_OPTIONS))
+def test_an_item_input_options_member_declares_bounded_controls(item: str) -> None:
+    """Every scenario control is bounded at both ends, or it is an assumption.
+
+    The population backing for the ``ITEM_INPUT_OPTIONS`` membership
+    rule-claim.  Two members declare no control at all — their state is an
+    authored event rather than an input — and that is asserted rather than
+    skipped over.
+    """
+    controls = ITEM_INPUT_OPTIONS[item].get("options", {})
+    for name, control in controls.items():
+        assert set(control) >= {"type", "default", "min", "max"}, name
+        assert control["min"] <= control["default"] <= control["max"], name
+    assert item in CACHE
+
+
+@pytest.mark.parametrize(
+    "item", sorted(_reaching("attacker.no_described_effect", "attacker"))
+)
+def test_an_item_with_no_described_effect_is_stats_only(item: str) -> None:
+    """The cached entry describes no passive or active, so there is none to model.
+
+    The population backing for the ``_has_described_effect`` rule-claim.  The
+    predicate and the published status are checked together: an item that
+    grew a passive and stayed ``stats_only`` would be a mechanic nothing
+    prices, reported as a reviewed absence.
+    """
+    record = CACHE[item]
+    assert not item_coverage._has_described_effect(record)
+    assert item_coverage.item_model_coverage(record)["status"] == "stats_only"
+
+
+@pytest.mark.parametrize(
+    "item", sorted(_reaching("attacker.cached_shop_record", "attacker"))
+)
+def test_an_unreviewed_cached_record_is_blocked_with_issue_refs(item: str) -> None:
+    """A cached record with an unreviewed effect is withheld, not scored as zero.
+
+    The population backing for the cached-record rule-claim, and the campaign's
+    own invariant at item scale: the answer is a named refusal carrying the
+    issue that tracks it, never a number.
+    """
+    record = CACHE[item]
+    coverage = item_coverage.item_model_coverage(record)
+    assert record.get("id") is not None or record.get("icon")
+    assert item_coverage._has_described_effect(record)
+    assert coverage["status"] == "blocked"
+    assert not coverage["optimizer_eligible"]
+    assert coverage["review_issue_refs"]
+
+
+@pytest.mark.parametrize("item", sorted(item_coverage._TARGET_MODELED_REASONS))
+def test_a_target_modeled_item_is_admitted_by_the_target_model(item: str) -> None:
+    """The passive-target model prices this item rather than withholding it."""
+    record = CACHE[item]
+    assert item_coverage.target_item_model_coverage(record)["status"] == "modeled"
+    assert item_coverage.target_build_coverage([record])["complete"]
+
+
+@pytest.mark.parametrize("item", sorted(item_coverage._TARGET_EVENT_CERTIFIED_REASONS))
+def test_a_target_event_certified_item_needs_a_certified_timeline(item: str) -> None:
+    """The conditional defense withholds rather than mis-timing its trigger.
+
+    This is the mechanism the claim's ``certification_guard`` Symbol names,
+    exercised per item: an uncertified timeline is refused by name, and a
+    certified one is admitted.
+    """
+    record = CACHE[item]
+    assert (
+        item_coverage.target_item_model_coverage(record)["status"]
+        == "modeled_event_certified"
+    )
+    with pytest.raises(ValueError, match=re.escape(item)):
+        item_coverage.require_certified_target_timeline(
+            [record], {"complete": False, "coarse_sources": ["authored rotation"]}
+        )
+    item_coverage.require_certified_target_timeline([record], {"complete": True})
+
+
+@pytest.mark.parametrize("item", sorted(item_coverage._TARGET_BLOCKED_REASONS))
+def test_a_target_blocked_item_stops_the_run(item: str) -> None:
+    """A withheld target mechanic refuses the calculation by name."""
+    record = CACHE[item]
+    assert item_coverage.target_item_model_coverage(record)["status"] == "blocked"
+    with pytest.raises(ValueError, match=re.escape(item)):
+        item_coverage.require_target_item_coverage([record])
+
+
+@pytest.mark.parametrize("item", sorted(item_coverage._UTILITY_DIMENSIONS))
+def test_a_utility_item_publishes_its_declared_dimensions(item: str) -> None:
+    """The product-facing dimensions reach both public payloads, unchanged."""
+    record = CACHE[item]
+    declared = list(item_coverage._UTILITY_DIMENSIONS[item])
+    assert item_coverage.item_model_coverage(record)["outcome_dimensions"] == declared
+    assert (
+        item_coverage.target_item_model_coverage(record)["outcome_dimensions"]
+        == declared
+    )
+    assert set(declared) <= UTILITY_DIMENSIONS
+
+
+@pytest.mark.parametrize("item", sorted(item_coverage._REVIEW_ISSUE_REFS))
+def test_an_item_with_review_issues_publishes_them(item: str) -> None:
+    """The tracker the declaration names is the tracker the payload publishes."""
+    declared = list(item_coverage._REVIEW_ISSUE_REFS[item])
+    assert item_coverage.review_issue_refs(item) == declared
+    assert all(isinstance(ref, int) and ref > 0 for ref in declared)
+
+
+@pytest.mark.parametrize("rule_id", sorted(rule.rule_id for rule in PRECEDENCE))
+def test_a_precedence_rung_yields_its_declared_status(rule_id: str) -> None:
+    """One rung, against the live classifier, for every item that reaches it.
+
+    A rung nothing reaches is not skipped over: it is asserted empty and named
+    in the shadowed set, which is D-26's third proof — emptiness itself is
+    pinned rather than passing for coverage.
+    """
+    rule = next(rule for rule in PRECEDENCE if rule.rule_id == rule_id)
+    classifier = {
+        "attacker": item_coverage.item_model_coverage,
+        "target": item_coverage.target_item_model_coverage,
+    }[rule.lane]
+    reached = _reaching(rule_id, rule.lane)
+    for name in reached:
+        assert classifier(CACHE[name])["status"] == rule.status, name
+    if not reached:
+        assert f"rule:{rule_id}@{rule.lane}" in SHADOWED_CLAIMS
+
+
+# ── the corpus as a whole ─────────────────────────────────────────────────
+
+
+def test_resolve_table_over_the_live_context_returns_no_failures() -> None:
+    """Criterion 3: every evidence member of every claim resolves against this tree.
+
+    This is the tier that makes the drift window one commit wide.  It runs on
+    every ``pytest`` invocation, filtered or not, and it is the check that
+    would have caught the incident: a claim describing two engine halves while
+    one of them exists resolves to a failure here, by name.
+    """
+    assert coverage_resolver.resolve_table(COVERAGE_EVIDENCE, live_context()) == []
+
+
+@pytest.mark.full_session
+def test_resolve_table_passes_the_full_session_tier_too() -> None:
+    """The same table with exact node ids, marker facts and duplicate detection."""
+    failures = coverage_resolver.resolve_table(
+        COVERAGE_EVIDENCE, live_context(), full_session=True
+    )
+    assert [str(failure) for failure in failures] == []
+
+
+@pytest.mark.full_session
+def test_every_rule_claims_population_is_fully_backed() -> None:
+    """Criterion 3's second half: no rule-claim stands for an unbacked registry.
+
+    A rule-claim is one ``Symbol`` and one ``TestRef`` speaking for a whole
+    registry unless every member of its population is separately backed — the
+    "one sentence covers everything" shape this phase exists to kill,
+    reproduced inside its own evidence union.  So each member has to resolve
+    to its own claim, to a collected parametrized node naming it, or to a
+    frontier entry.
+    """
+    nodes = coverage_resolver.collected_nodes()
+    parametrized = [node for node in nodes if "[" in node]
+    unbacked: list[str] = []
+    for rule in PRECEDENCE:
+        if rule.rule_id not in _DYNAMIC_RULES:
+            continue
+        for member in dynamic_population(rule):
+            if (
+                any(key[1] == member for key in COVERAGE_EVIDENCE)
+                or f"item:{member}@{rule.lane}" in FRONTIER
+            ):
+                continue
+            if any(member in node[node.index("[") :] for node in parametrized):
+                continue
+            unbacked.append(f"{rule.rule_id}:{member}")
+    assert unbacked == []
+
+
+def test_the_declared_populations_are_the_measured_ones() -> None:
+    """Emptiness is a pinned fact, not an absence nobody looked at (D-26)."""
+    sizes = {
+        rule.rule_id: len(dynamic_population(rule))
+        for rule in PRECEDENCE
+        if rule.rule_id in _DYNAMIC_RULES
+    }
+    assert sizes["target.attacker_review_pending_passthrough"] == 0
+    assert all(
+        size > 0
+        for rule_id, size in sizes.items()
+        if rule_id != "target.attacker_review_pending_passthrough"
+    )
+    assert set(sizes) == _DYNAMIC_RULES
+
+
+def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None:
+    """Criterion 4: unclaimed hand entries number zero, in seven containers.
+
+    The seventh container is ``_REVIEW_ISSUE_REFS``, whose entries are covered
+    by the ``issue_refs`` of exactly one claim about that item rather than by a
+    claim of their own — the refs have one home per item, which is the same
+    rule the load gate applies to a negative claim's ``Absence``.
+    """
+    lanes = {
+        "_STATEFUL_MODELED_ITEMS": "attacker",
+        "_REVIEWED_STATS_ONLY": "attacker",
+        "_TARGET_MODELED_REASONS": "target",
+        "_TARGET_EVENT_CERTIFIED_REASONS": "target",
+        "_TARGET_BLOCKED_REASONS": "target",
+        "_UTILITY_DIMENSIONS": "utility",
+    }
+    unclaimed: list[str] = []
+    for container_name, lane in lanes.items():
+        for item in getattr(item_coverage, container_name):
+            if ("item", item, lane) not in COVERAGE_EVIDENCE:
+                unclaimed.append(f"{container_name}:{item}")
+    for item, refs in item_coverage._REVIEW_ISSUE_REFS.items():
+        carriers = [
+            key
+            for key, claim in COVERAGE_EVIDENCE.items()
+            if key[1] == item and claim.issue_refs == tuple(refs)
+        ]
+        if len(carriers) != 1:
+            unclaimed.append(f"_REVIEW_ISSUE_REFS:{item} carried by {carriers}")
+    for rule in PRECEDENCE:
+        if ("rule", rule.rule_id, rule.lane) not in COVERAGE_EVIDENCE:
+            unclaimed.append(f"PRECEDENCE:{rule.rule_id}")
+    assert unclaimed == []
+    assert len(COVERAGE_EVIDENCE) == len(
+        {
+            (claim.subject_kind, claim.subject, claim.lane)
+            for claim in COVERAGE_EVIDENCE.values()
+        }
+    )
+
+
+def test_claim_status_is_a_pinned_expectation_the_classifier_agrees_with() -> None:
+    """The classifier stays the only authority; the claim is checked against it.
+
+    A shadowed claim is the one exception and it is not a loophole: shadowing
+    *means* the chain never reaches the rung the claim was filed against, so
+    its status is what that container would have said.  Each of those carries
+    a written ``unreachable_reason``, and the set is pinned.
+    """
+    classifier = {
+        "attacker": item_coverage.item_model_coverage,
+        "target": item_coverage.target_item_model_coverage,
+    }
+    disagreements: list[str] = []
+    for (kind, subject, lane), claim in COVERAGE_EVIDENCE.items():
+        if kind != "item" or lane not in classifier:
+            continue
+        if claim.unreachable_reason:
+            assert f"item:{subject}@{lane}" in SHADOWED_CLAIMS
+            continue
+        if classifier[lane](CACHE[subject])["status"] != claim.status:
+            disagreements.append(f"{subject}@{lane}")
+    assert disagreements == []
+
+
+def test_no_src_module_reads_the_corpus_or_a_claims_status() -> None:
+    """The load gate is the only reader; nothing in ``src`` consumes a claim.
+
+    ``Claim.status`` is a pinned expectation and never an authority, and the
+    way that is kept true is that no production code can see it: the corpus is
+    read by its own import-time ``validate_claim_table`` guard and by nothing
+    else in ``src``.
+    """
+    guarded = {
+        node.args[0].lineno
+        for path in sorted((ROOT / "src").rglob("*.py"))
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "validate_claim_table"
+        and node.args
+        and isinstance(node.args[0], ast.Name)
+        and node.args[0].id == "COVERAGE_EVIDENCE"
+    }
+    readers = []
+    for path in sorted((ROOT / "src").rglob("*.py")):
+        text = path.read_text(encoding="utf-8")
+        if "COVERAGE_EVIDENCE" not in text:
+            continue
+        for node in ast.walk(ast.parse(text)):
+            if not isinstance(node, ast.Name) or node.id != "COVERAGE_EVIDENCE":
+                continue
+            if isinstance(node.ctx, ast.Store) or node.lineno in guarded:
+                continue
+            readers.append(f"{path.name}:{node.lineno}")
+    assert readers == []
+
+
+def test_every_shadowed_claim_carries_its_written_reason() -> None:
+    """Criterion 6: a claim no cached item reaches says so, in words."""
+    report = coverage_resolver.shadow_report(PRECEDENCE, CACHE, ctx=live_context())
+    for shadowed in report:
+        kind, _, rest = shadowed.claim_key.partition(":")
+        subject, _, lane = rest.rpartition("@")
+        claim = COVERAGE_EVIDENCE[(kind, subject, lane)]
+        assert claim.unreachable_reason.strip(), shadowed.claim_key
+    unreachable = {
+        f"{kind}:{subject}@{lane}"
+        for (kind, subject, lane), claim in COVERAGE_EVIDENCE.items()
+        if claim.unreachable_reason
+    }
+    assert unreachable == {shadowed.claim_key for shadowed in report}
+
+
+def test_every_split_mechanic_is_claimed_with_both_sides() -> None:
+    """Criterion 9: dual-sided evidence resolves against Phase 2, not a name list.
+
+    The pairing-exception set is asserted **empty** (D-92): the next divergence
+    has to be a typed entry pointing at a receipt, never a silent omission.
+    """
+    split_owners = {
+        capability.owner.name
+        for capability in CAPABILITIES.values()
+        if capability.authority.name == "SPLIT" and capability.pair_of
+    }
+    assert split_owners
+    for item in sorted(split_owners):
+        claim = COVERAGE_EVIDENCE[("item", item, "support_packet")]
+        assert any(isinstance(member, PairedSides) for member in claim.evidence), item
+    assert [
+        capability.mechanic
+        for capability in CAPABILITIES.values()
+        if capability.pairing.name == "UNPAIRED_KNOWN_DEFECT"
+    ] == []
+
+
+def test_the_effect_tag_union_is_total() -> None:
+    """Criterion 11: every declared tag has a handler branch or names H4."""
+    assert DISPATCHED_TAGS | FRONTIER_TAGS == _KNOWN_EFFECT_TYPES
+    assert not DISPATCHED_TAGS & FRONTIER_TAGS
+    assert all("H4" in FRONTIER[f"tag:{tag}"] for tag in FRONTIER_TAGS)
+
+
+def test_every_declared_dimension_is_a_member_of_the_closed_set() -> None:
+    """Criterion 12: set equality, and every claim's dimensions inside it."""
+    measured = {
+        dimension
+        for dimensions in item_coverage._UTILITY_DIMENSIONS.values()
+        for dimension in dimensions
+    }
+    assert UTILITY_DIMENSIONS == measured
+    for claim in COVERAGE_EVIDENCE.values():
+        assert set(claim.dimensions) <= UTILITY_DIMENSIONS
+    for item, dimensions in item_coverage._UTILITY_DIMENSIONS.items():
+        claim = COVERAGE_EVIDENCE[("item", item, "utility")]
+        assert claim.dimensions == tuple(dimensions)
+
+
+def test_the_frontier_holds_no_damage_or_durability_lane_and_every_entry_is_tracked() -> (
+    None
+):
+    """Criterion 14: the escape hatch cannot absorb an attacker or target claim.
+
+    "No such lane at all" is the version of that rule a test can check without
+    deciding what "prices damage" means, and it is strictly stronger than the
+    criterion asks for.  Every reason carries the issue that tracks it.
+    """
+    for key, reason in FRONTIER.items():
+        assert not key.endswith("@attacker") and not key.endswith("@target"), key
+        assert re.search(r"#\d+", reason), key
+    assert not set(FRONTIER) & {
+        f"{kind}:{subject}@{lane}" for kind, subject, lane in COVERAGE_EVIDENCE
+    }
