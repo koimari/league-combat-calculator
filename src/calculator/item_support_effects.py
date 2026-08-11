@@ -479,6 +479,14 @@ def derive_item_support_effects(
     soul_siphon = _producer(slots, AllyProducer.SOUL_SIPHON)
     consonance = _producer(slots, AllyProducer.CONSONANCE)
     going_sledding = _producer(slots, AllyProducer.GOING_SLEDDING)
+    sanctify = _producer(slots, AllyProducer.SANCTIFY)
+    rapids = _producer(slots, AllyProducer.RAPIDS)
+    fanfare = _producer(slots, AllyProducer.FANFARE)
+    command = _producer(slots, AllyProducer.COMMAND)
+    carve = _producer(slots, AllyProducer.CARVE)
+    vile_decay = _producer(slots, AllyProducer.VILE_DECAY)
+    blue_bubble = _producer(slots, AllyProducer.BLUE_BUBBLE)
+    purple_bubble = _producer(slots, AllyProducer.PURPLE_BUBBLE)
 
     # Reap is a progression/economy branch, not a guessed combat bonus.  The
     # authored minion-kill count is bounded by its sourced 100-kill quest and
@@ -638,7 +646,10 @@ def derive_item_support_effects(
     # Bloodletter, Bloodsong, and Abyssal branches; the ordered participant
     # walk consumes these packets for every other eligible source without
     # double-counting the originating holder.
-    if "Abyssal Mask" in names:
+    unmake = _producer(slots, AllyProducer.UNMAKE)
+    if unmake is not None:
+        unmake.declared(PacketKind.DAMAGE_MODIFIER)
+        curse = unmake.value("magic_damage_amp")
         for target in (
             actor for actor in all_actors if not _same_side(attacker, actor)
         ):
@@ -649,9 +660,8 @@ def derive_item_support_effects(
                     time=0.0,
                     kind="damage_modifier",
                     source="Abyssal Mask — Unmake",
-                    amount=ally_item_effect_value("Abyssal Mask", "magic_damage_amp"),
-                    multiplier=1.0
-                    + ally_item_effect_value("Abyssal Mask", "magic_damage_amp"),
+                    amount=curse,
+                    multiplier=1.0 + curse,
                     all_sources=True,
                     persistent=True,
                     # Unmake is an aura, not a triggered debuff: an enemy
@@ -679,19 +689,25 @@ def derive_item_support_effects(
                 )
             )
 
-    if "Bloodsong" in names:
+    expose_weakness = _producer(slots, AllyProducer.EXPOSE_WEAKNESS)
+    if expose_weakness is not None:
+        expose_weakness.declared(PacketKind.DAMAGE_MODIFIER)
         expose_key = (
             "expose_weakness_melee"
             if bool(attacker.stats.get("is_melee", False))
             else "expose_weakness_ranged"
         )
+        # The spellblade breakdown key is built from the item's own name
+        # (``item_effects``), so the row this producer answers to is derived
+        # from the declaration's owner rather than spelled a second time.
+        spellblade_key = f"spellblade_{expose_weakness.owner}"
         for event in _stack_triggers(damage_events):
-            if event.source_key != "spellblade_Bloodsong":
+            if event.source_key != spellblade_key:
                 continue
             target = _target_by_id(all_actors, event.target_id)
             if target is None:
                 continue
-            rate = ally_item_effect_value("Bloodsong", expose_key)
+            rate = expose_weakness.value(expose_key)
             packets.append(
                 _packet(
                     attacker=attacker,
@@ -700,14 +716,10 @@ def derive_item_support_effects(
                     kind="damage_modifier",
                     source="Bloodsong — Expose Weakness",
                     amount=rate,
-                    duration=ally_item_effect_value(
-                        "Bloodsong", "expose_weakness_duration"
-                    ),
+                    duration=expose_weakness.value("expose_weakness_duration"),
                     multiplier=1.0 + rate,
                     all_sources=True,
-                    cooldown=ally_item_effect_value(
-                        "Bloodsong", "expose_weakness_cooldown"
-                    ),
+                    cooldown=expose_weakness.value("expose_weakness_cooldown"),
                     # "take 8% increased damage from all sources" — no class
                     # is named, so every member of both vocabularies is
                     # declared explicitly rather than left to an empty set.
@@ -728,27 +740,21 @@ def derive_item_support_effects(
     # Both ledgers walk one stream; the guard is hoisted so a holder of
     # neither never walks it at all, which is what the hand-maintained
     # damage-trigger name set bought before the registry existed.
-    if "Black Cleaver" in names or "Bloodletter's Curse" in names:
+    if carve is not None or vile_decay is not None:
         for event in _stack_triggers(damage_events):
             target = _target_by_id(all_actors, event.target_id)
             if target is None:
                 continue
             damage_type = event.damage_type
             source_id = event.event_id
-            if "Black Cleaver" in names and damage_type == "physical":
+            if carve is not None and damage_type == "physical":
                 key = (target.participant_id, "armor")
                 stacks = min(
-                    int(
-                        ally_item_effect_value(
-                            "Black Cleaver", "armor_reduction_max_stacks"
-                        )
-                    ),
+                    int(carve.value("armor_reduction_max_stacks")),
                     reduction_stacks.get(key, 0) + 1,
                 )
                 reduction_stacks[key] = stacks
-                percent = stacks * ally_item_effect_value(
-                    "Black Cleaver", "armor_reduction_per_stack"
-                )
+                percent = stacks * carve.value("armor_reduction_per_stack")
                 packets.append(
                     _packet(
                         attacker=attacker,
@@ -757,9 +763,7 @@ def derive_item_support_effects(
                         kind="damage_modifier",
                         source="Black Cleaver — Carve",
                         amount=percent,
-                        duration=ally_item_effect_value(
-                            "Black Cleaver", "armor_reduction_duration"
-                        ),
+                        duration=carve.value("armor_reduction_duration"),
                         armor_reduction_percent=percent,
                         resistance_type="armor",
                         # "6% armor reduction": armour mitigates physical
@@ -776,24 +780,14 @@ def derive_item_support_effects(
                         stack_count=stacks,
                     )
                 )
-            if (
-                "Bloodletter's Curse" in names
-                and damage_type == "magic"
-                and event.is_ability
-            ):
+            if vile_decay is not None and damage_type == "magic" and event.is_ability:
                 key = (target.participant_id, "mr")
                 stacks = min(
-                    int(
-                        ally_item_effect_value(
-                            "Bloodletter's Curse", "mr_reduction_max_stacks"
-                        )
-                    ),
+                    int(vile_decay.value("mr_reduction_max_stacks")),
                     reduction_stacks.get(key, 0) + 1,
                 )
                 reduction_stacks[key] = stacks
-                percent = stacks * ally_item_effect_value(
-                    "Bloodletter's Curse", "mr_reduction_per_stack"
-                )
+                percent = stacks * vile_decay.value("mr_reduction_per_stack")
                 packets.append(
                     _packet(
                         attacker=attacker,
@@ -802,9 +796,7 @@ def derive_item_support_effects(
                         kind="damage_modifier",
                         source="Bloodletter's Curse — Vile Decay",
                         amount=percent,
-                        duration=ally_item_effect_value(
-                            "Bloodletter's Curse", "mr_reduction_duration"
-                        ),
+                        duration=vile_decay.value("mr_reduction_duration"),
                         mr_reduction_percent=percent,
                         resistance_type="magic_resistance",
                         # "magic resistance reduction": the mirror of Carve.
@@ -853,7 +845,7 @@ def derive_item_support_effects(
         if target is None:
             continue
         time = _event_time(trigger)
-        if "Ardent Censer" in names:
+        if sanctify is not None:
             packets.extend(
                 (
                     _packet(
@@ -862,24 +854,18 @@ def derive_item_support_effects(
                         time=time,
                         kind="stat_buff",
                         source="Ardent Censer — Sanctify",
-                        amount=ally_item_effect_value(
-                            "Ardent Censer", "sanctify_bonus_attack_speed"
+                        amount=sanctify.value("sanctify_bonus_attack_speed"),
+                        duration=sanctify.value("sanctify_duration"),
+                        bonus_attack_speed_percent=sanctify.value(
+                            "sanctify_bonus_attack_speed"
                         ),
-                        duration=ally_item_effect_value(
-                            "Ardent Censer", "sanctify_duration"
-                        ),
-                        bonus_attack_speed_percent=ally_item_effect_value(
-                            "Ardent Censer", "sanctify_bonus_attack_speed"
-                        ),
-                        on_hit_magic_damage=ally_item_effect_value(
-                            "Ardent Censer", "sanctify_on_hit_magic"
-                        ),
+                        on_hit_magic_damage=sanctify.value("sanctify_on_hit_magic"),
                         recipient_role="holder_and_healed_ally",
                     )
                     for recipient in (attacker, target)
                 )
             )
-        if "Staff of Flowing Water" in names:
+        if rapids is not None:
             packets.extend(
                 (
                     _packet(
@@ -888,18 +874,10 @@ def derive_item_support_effects(
                         time=time,
                         kind="stat_buff",
                         source="Staff of Flowing Water — Rapids",
-                        amount=ally_item_effect_value(
-                            "Staff of Flowing Water", "bonus_ability_power"
-                        ),
-                        duration=ally_item_effect_value(
-                            "Staff of Flowing Water", "duration"
-                        ),
-                        ability_power=ally_item_effect_value(
-                            "Staff of Flowing Water", "bonus_ability_power"
-                        ),
-                        ability_haste=ally_item_effect_value(
-                            "Staff of Flowing Water", "bonus_ability_haste"
-                        ),
+                        amount=rapids.value("bonus_ability_power"),
+                        duration=rapids.value("duration"),
+                        ability_power=rapids.value("bonus_ability_power"),
+                        ability_haste=rapids.value("bonus_ability_haste"),
                         recipient_role="holder_and_healed_ally",
                     )
                     for recipient in (attacker, target)
@@ -935,7 +913,7 @@ def derive_item_support_effects(
                     chain_fraction=fraction,
                 )
             )
-        if "Dream Maker" in names:
+        if blue_bubble is not None and purple_bubble is not None:
             packets.extend(
                 (
                     _packet(
@@ -944,15 +922,10 @@ def derive_item_support_effects(
                         time=time,
                         kind="damage_modifier",
                         source="Dream Maker — Blue Dream Bubble",
-                        amount=ally_item_level_value(
-                            "Dream Maker",
-                            "blue_reduction_min",
-                            "blue_reduction_max",
-                            target.level,
+                        amount=blue_bubble.level_value(
+                            "blue_reduction_min", target.level
                         ),
-                        duration=ally_item_effect_value(
-                            "Dream Maker", "dream_duration"
-                        ),
+                        duration=blue_bubble.value("dream_duration"),
                         damage_reduction=True,
                         next_event_only=True,
                         # "reduces the damage of the next *attack or spell*
@@ -979,15 +952,10 @@ def derive_item_support_effects(
                         time=time,
                         kind="on_hit_magic",
                         source="Dream Maker — Purple Dream Bubble",
-                        amount=ally_item_level_value(
-                            "Dream Maker",
-                            "purple_magic_min",
-                            "purple_magic_max",
-                            target.level,
+                        amount=purple_bubble.level_value(
+                            "purple_magic_min", target.level
                         ),
-                        duration=ally_item_effect_value(
-                            "Dream Maker", "dream_duration"
-                        ),
+                        duration=purple_bubble.value("dream_duration"),
                         next_event_only=True,
                     ),
                 )
@@ -1044,7 +1012,7 @@ def derive_item_support_effects(
     # callers must not turn an arbitrary cast boundary into a slow/root.
     for cc in cc_events:
         time = cc.time
-        if "Bandlepipes" in names:
+        if fanfare is not None:
             is_melee = bool(attacker.stats.get("is_melee", False))
             duration_key = (
                 "fanfare_duration_melee" if is_melee else "fanfare_duration_ranged"
@@ -1061,13 +1029,9 @@ def derive_item_support_effects(
                     time=time,
                     kind="movement",
                     source="Bandlepipes — Fanfare",
-                    amount=ally_item_effect_value(
-                        "Bandlepipes", "fanfare_bonus_move_speed"
-                    ),
-                    duration=ally_item_effect_value("Bandlepipes", duration_key),
-                    bonus_move_speed_percent=ally_item_effect_value(
-                        "Bandlepipes", "fanfare_bonus_move_speed"
-                    ),
+                    amount=fanfare.value("fanfare_bonus_move_speed"),
+                    duration=fanfare.value(duration_key),
+                    bonus_move_speed_percent=fanfare.value("fanfare_bonus_move_speed"),
                     target_scope="self",
                     trigger="authored_immobilize_or_slow",
                 )
@@ -1080,11 +1044,9 @@ def derive_item_support_effects(
                         time=time,
                         kind="stat_buff",
                         source="Bandlepipes — Fanfare",
-                        amount=ally_item_effect_value("Bandlepipes", as_key),
-                        duration=ally_item_effect_value("Bandlepipes", duration_key),
-                        bonus_attack_speed_percent=ally_item_effect_value(
-                            "Bandlepipes", as_key
-                        ),
+                        amount=fanfare.value(as_key),
+                        duration=fanfare.value(duration_key),
+                        bonus_attack_speed_percent=fanfare.value(as_key),
                         trigger="authored_immobilize_or_slow",
                     )
                 )
@@ -1112,9 +1074,10 @@ def derive_item_support_effects(
                         ),
                     )
                 )
-        if "Imperial Mandate" in names and cc.cc is CcClass.IMMOBILIZE:
+        if command is not None and cc.cc is CcClass.IMMOBILIZE:
             target = _target_by_id(all_actors, cc.target_id)
             if target is not None:
+                amp = command.value("command_damage_amp")
                 packets.append(
                     _packet(
                         attacker=attacker,
@@ -1122,16 +1085,9 @@ def derive_item_support_effects(
                         time=time,
                         kind="damage_modifier",
                         source="Imperial Mandate — Command",
-                        amount=ally_item_effect_value(
-                            "Imperial Mandate", "command_damage_amp"
-                        ),
-                        duration=ally_item_effect_value(
-                            "Imperial Mandate", "command_duration"
-                        ),
-                        multiplier=1.0
-                        + ally_item_effect_value(
-                            "Imperial Mandate", "command_damage_amp"
-                        ),
+                        amount=amp,
+                        duration=command.value("command_duration"),
+                        multiplier=1.0 + amp,
                         all_sources=True,
                         # "increasing the damage they take from all sources
                         # by 7%": every class on both axes.

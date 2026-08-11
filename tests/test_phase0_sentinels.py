@@ -49,7 +49,7 @@ from src.calculator.survival.transitions import (
 
 from tests.test_item_support_effects import (
     declared_classes_by_producer,
-    declared_packet_keywords,
+    timed_cross_participant_producers,
 )
 
 # Every producer whose declaration admits AttackClass.OTHER — the packets for
@@ -387,12 +387,7 @@ class TestCommandExpiryBoundaryDiverges:
 
     def test_the_population_is_five_timed_producers_and_is_not_empty(self):
         """D-26: only a producer with a closing instant can disagree."""
-        declared = declared_packet_keywords("persistent", "duration")
-        timed = {
-            source
-            for source, fields in declared.items()
-            if not fields["persistent"] and fields["duration"]
-        }
+        timed = timed_cross_participant_producers()
         assert timed, "D-13: no cross-participant producer carries an expiry"
         assert len(timed) == TIMED_CROSS_PARTICIPANT_PRODUCERS, (
             "D-13: the timed-producer population moved to "

@@ -1405,8 +1405,7 @@ _DREAM_KEYS: tuple[str, ...] = (
 _QUEST_KEYS: tuple[str, ...] = ("support_quest_threshold", "ward_charges")
 
 # Which commit of 3.6 retires each remaining producer's stub.  Named once so
-# the three groups cannot drift into three spellings.
-_STAT_BUFF_SLICE = "3.6 — stat buffs and cross-participant modifiers"
+# the groups cannot drift into several spellings.
 _UTILITY_SLICE = "3.6 — utility and quest outcomes"
 _ACTIVES_SLICE = "3.6 — explicit item actives"
 
@@ -1693,6 +1692,171 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
             "outgoing ledger measured"
         ),
     ),
+    AllyProducer.SANCTIFY: AllyPacketDeclaration(
+        trigger=PacketTrigger.ALLY_HEAL_OR_SHIELD,
+        packets=(
+            PacketSpec(PacketKind.STAT_BUFF, Recipients.HOLDER_AND_TRIGGERING_ALLY),
+        ),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "sanctify_bonus_attack_speed",
+            "sanctify_duration",
+            "sanctify_on_hit_magic",
+        ),
+        ramps=(),
+        zero_reason=(
+            "the buff is a sourced attack-speed ratio and a sourced on-hit "
+            "number; a zero means the holder healed or shielded nobody, which "
+            "the authored trigger stream measured"
+        ),
+    ),
+    AllyProducer.RAPIDS: AllyPacketDeclaration(
+        trigger=PacketTrigger.ALLY_HEAL_OR_SHIELD,
+        packets=(
+            PacketSpec(PacketKind.STAT_BUFF, Recipients.HOLDER_AND_TRIGGERING_ALLY),
+        ),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=("bonus_ability_power", "duration", "bonus_ability_haste"),
+        ramps=(),
+        zero_reason=(
+            "the buff is a sourced ability-power and ability-haste grant; a "
+            "zero means the holder healed or shielded nobody"
+        ),
+    ),
+    AllyProducer.FANFARE: AllyPacketDeclaration(
+        trigger=PacketTrigger.CROWD_CONTROL,
+        packets=(
+            PacketSpec(PacketKind.MOVEMENT, Recipients.SELF),
+            PacketSpec(PacketKind.STAT_BUFF, Recipients.HOLDER_AND_ALLIES),
+        ),
+        secondary_target=Recipients.HOLDER_AND_ALLIES,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "fanfare_bonus_move_speed",
+            "fanfare_duration_melee",
+            "fanfare_duration_ranged",
+            "fanfare_ally_attack_speed_melee",
+            "fanfare_ally_attack_speed_ranged",
+        ),
+        ramps=(),
+        zero_reason=(
+            "both halves are sourced ratios chosen by the holder's own range "
+            "class; a zero means no authored control landed, which the bus's "
+            "CC stream measured"
+        ),
+    ),
+    AllyProducer.UNMAKE: AllyPacketDeclaration(
+        trigger=PacketTrigger.FIGHT_START,
+        packets=(PacketSpec(PacketKind.DAMAGE_MODIFIER, Recipients.ENEMIES),),
+        secondary_target=None,
+        persistence=Persistence.PERSISTENT_AURA,
+        redirects_incoming_damage=False,
+        reads=("magic_damage_amp",),
+        ramps=(),
+        zero_reason=(
+            "the curse is a sourced magic-damage ratio in force from the first "
+            "frame; a zero would mean the registry holds zero, which is a "
+            "measurement"
+        ),
+    ),
+    AllyProducer.EXPOSE_WEAKNESS: AllyPacketDeclaration(
+        trigger=PacketTrigger.DAMAGE_DEALT,
+        packets=(PacketSpec(PacketKind.DAMAGE_MODIFIER, Recipients.TRIGGERING_ENEMY),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "expose_weakness_melee",
+            "expose_weakness_ranged",
+            "expose_weakness_duration",
+            "expose_weakness_cooldown",
+        ),
+        ramps=(),
+        zero_reason=(
+            "the modifier is a sourced ratio chosen by the holder's range "
+            "class; a zero means the spellblade never procced, which the "
+            "authored damage stream measured"
+        ),
+    ),
+    AllyProducer.CARVE: AllyPacketDeclaration(
+        trigger=PacketTrigger.DAMAGE_DEALT,
+        packets=(PacketSpec(PacketKind.DAMAGE_MODIFIER, Recipients.TRIGGERING_ENEMY),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "armor_reduction_max_stacks",
+            "armor_reduction_per_stack",
+            "armor_reduction_duration",
+        ),
+        ramps=(),
+        zero_reason=(
+            "the reduction is a sourced per-stack ratio at the stack count the "
+            "authored physical stream applied; a zero means it applied none"
+        ),
+    ),
+    AllyProducer.VILE_DECAY: AllyPacketDeclaration(
+        trigger=PacketTrigger.DAMAGE_DEALT,
+        packets=(PacketSpec(PacketKind.DAMAGE_MODIFIER, Recipients.TRIGGERING_ENEMY),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "mr_reduction_max_stacks",
+            "mr_reduction_per_stack",
+            "mr_reduction_duration",
+        ),
+        ramps=(),
+        zero_reason=(
+            "Carve's shape, magic- and ability-gated: a zero means no magic "
+            "ability hit landed, which the authored stream measured"
+        ),
+    ),
+    AllyProducer.BLUE_BUBBLE: AllyPacketDeclaration(
+        trigger=PacketTrigger.ALLY_HEAL_OR_SHIELD,
+        packets=(PacketSpec(PacketKind.DAMAGE_MODIFIER, Recipients.TRIGGERING_ALLY),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=("dream_duration",),
+        ramps=(("blue_reduction_min", "blue_reduction_max"),),
+        zero_reason=(
+            "the reduction is a sourced level ramp read at the shielded ally's "
+            "own level; a zero means the holder healed or shielded nobody"
+        ),
+    ),
+    AllyProducer.PURPLE_BUBBLE: AllyPacketDeclaration(
+        trigger=PacketTrigger.ALLY_HEAL_OR_SHIELD,
+        packets=(PacketSpec(PacketKind.ON_HIT_MAGIC, Recipients.TRIGGERING_ALLY),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=("dream_duration",),
+        ramps=(("purple_magic_min", "purple_magic_max"),),
+        zero_reason=(
+            "the on-hit bonus is a sourced level ramp read at the buffed ally's "
+            "own level; a zero means the holder healed or shielded nobody"
+        ),
+    ),
+    AllyProducer.COMMAND: AllyPacketDeclaration(
+        trigger=PacketTrigger.CROWD_CONTROL,
+        packets=(PacketSpec(PacketKind.DAMAGE_MODIFIER, Recipients.TRIGGERING_ENEMY),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=("command_damage_amp", "command_duration"),
+        ramps=(),
+        zero_reason=(
+            "the amp is a sourced ratio on a target an authored immobilize "
+            "marked; a zero means no immobilize was authored, which the bus's "
+            "CC stream measured"
+        ),
+    ),
 }
 
 
@@ -1702,16 +1866,6 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
 # :data:`UNMIGRATED_FAMILIES`, so without this the promises would disappear
 # with the stub rather than being kept.
 ALLY_PACKET_UNMIGRATED_PRODUCERS: Mapping[AllyProducer, str] = {
-    AllyProducer.SANCTIFY: _STAT_BUFF_SLICE,
-    AllyProducer.RAPIDS: _STAT_BUFF_SLICE,
-    AllyProducer.FANFARE: _STAT_BUFF_SLICE,
-    AllyProducer.UNMAKE: _STAT_BUFF_SLICE,
-    AllyProducer.EXPOSE_WEAKNESS: _STAT_BUFF_SLICE,
-    AllyProducer.CARVE: _STAT_BUFF_SLICE,
-    AllyProducer.VILE_DECAY: _STAT_BUFF_SLICE,
-    AllyProducer.BLUE_BUBBLE: _STAT_BUFF_SLICE,
-    AllyProducer.PURPLE_BUBBLE: _STAT_BUFF_SLICE,
-    AllyProducer.COMMAND: _STAT_BUFF_SLICE,
     AllyProducer.REAP: _UTILITY_SLICE,
     AllyProducer.RAGE: _UTILITY_SLICE,
     AllyProducer.SHARED_RICHES: _UTILITY_SLICE,

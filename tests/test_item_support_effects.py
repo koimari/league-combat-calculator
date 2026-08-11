@@ -11,7 +11,9 @@ from typing import get_args, get_type_hints
 import pytest
 
 from src.app import app
+from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_support_effects, pipeline
+from src.calculator.item_behavior import PacketKind, Persistence
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.item_source import effect_entries, effect_text
@@ -819,6 +821,33 @@ def _evaluate_declaration(expression):
 def declared_classes_by_producer():
     """Each ``damage_modifier`` call site's declared class sets, by source."""
     return declared_packet_keywords("damage_classes", "attack_classes")
+
+
+def timed_cross_participant_producers():
+    """Every ``damage_modifier`` producer whose declaration carries an expiry.
+
+    Read from the Phase 3 declarations rather than from the ``duration=``
+    expression at the call site: 3.6 moved the number behind the producer's
+    own reference, so "does this modifier close" is now a declared axis
+    (``Persistence``) instead of something a reader infers from whether one
+    keyword happens to be passed.  The source literal comes back through the
+    mechanic's capability, which is the one home for "which packet does this
+    producer emit".
+    """
+    sources = set()
+    for producer, declaration in catalog.ALLY_PACKET_DECLARATIONS.items():
+        if declaration.persistence is not Persistence.TIMED_WINDOW:
+            continue
+        if not any(
+            spec.kind is PacketKind.DAMAGE_MODIFIER for spec in declaration.packets
+        ):
+            continue
+        for owner in catalog.owners_for(producer):
+            mechanic = (
+                f"{catalog._mechanic_slug(owner)}.{producer.value}"  # noqa: SLF001
+            )
+            sources.add(trigger_stream.CAPABILITIES[mechanic].packet_source)
+    return sources
 
 
 class TestDeclaredDamageAndAttackClasses:
