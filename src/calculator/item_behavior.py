@@ -31,7 +31,7 @@ live meanings of that word already.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from enum import Enum
 from typing import NamedTuple, Union
 
@@ -576,20 +576,43 @@ def _validate_payload(rule: BehaviorRule) -> None:
         raise BehaviorRuleError(f"{rule.mechanic_id}: lane_chain_rank must be an int")
 
 
+# The ``str``-typed fields that are identifiers and citations rather than
+# policy.  Criterion 6 requires them **named**, not waived on contact, so
+# they are a constant the assertion reads and not a judgement it makes.
+POLICY_IDENTIFIER_FIELDS: frozenset[str] = frozenset(
+    {"owner", "mechanic_id", "reason", "url", "revision_id", "revision_timestamp"}
+)
+
+
+def _flatten_policy(value: object, out: list[object]) -> None:
+    """Append *value* and, unless it is a reference, everything inside it."""
+    out.append(value)
+    if is_value_reference(value) or not is_dataclass(value) or isinstance(value, type):
+        return
+    for spec in dataclass_fields(value):
+        if spec.name in POLICY_IDENTIFIER_FIELDS:
+            continue
+        _flatten_policy(getattr(value, spec.name), out)
+
+
 def policy_values(rule: BehaviorRule) -> tuple[object, ...]:
     """Every policy value the rule carries, flattened for reflective checks.
 
     Criterion 6 is asserted over this: no policy field may be a callable, a
-    ``dict``, ``Any`` or an open string.  Identifiers and citations —
-    ``owner``, ``mechanic_id``, the receipt's three fields and the reason
-    strings on ``ReceiptOnly`` and ``zero_policy`` — are policy's opposite
-    and are deliberately excluded here rather than waived at the assertion,
-    so the criterion never has to be argued about.
+    ``dict``, ``Any`` or an open string.  It reaches *every* field of the
+    rule, recursing through the frozen policy records and stopping at a
+    value reference — whose own fields are the registry, owner and key that
+    name a number rather than describing one.  The identifiers and citations
+    are skipped by :data:`POLICY_IDENTIFIER_FIELDS`, which is what "named in
+    the assertion" means: the exception is a list somebody can read, not a
+    waiver somebody makes when the criterion first bites.
     """
-    values: list[object] = [rule.family, type(rule.compilability)]
-    payload = rule.payload
-    for field_name in getattr(payload, "__slots__", ()):
-        values.append(getattr(payload, field_name))
+    values: list[object] = []
+    _flatten_policy(rule.family, values)
+    _flatten_policy(rule.compilability, values)
+    _flatten_policy(rule.payload, values)
+    _flatten_policy(rule.receipt, values)
+    _flatten_policy(rule.zero_policy, values)
     return tuple(values)
 
 
@@ -659,6 +682,7 @@ __all__ = [
     "NEvents",
     "NextEventOnly",
     "PAYLOAD_FAMILY",
+    "POLICY_IDENTIFIER_FIELDS",
     "Persist",
     "Pool",
     "Probe",

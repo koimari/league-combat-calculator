@@ -27,6 +27,7 @@ from src.calculator.item_behavior import (
     EngineLane,
     Fixed,
     KernelField,
+    POLICY_IDENTIFIER_FIELDS,
     Persist,
     Pool,
     RULE_FAMILY_COUNT,
@@ -172,11 +173,20 @@ def test_a_receipt_only_rule_states_its_cause() -> None:
 
 
 def test_no_policy_field_is_a_callable_dict_or_open_string() -> None:
-    """Criterion 6, over the one payload that exists at the skeleton."""
-    for value in policy_values(_rule()):
-        assert not callable(value) or isinstance(value, type)
+    """Criterion 6, reaching every field of the rule rather than its surface."""
+    values = policy_values(_rule(compilability=ReceiptOnly("the kernel cannot amp")))
+    assert len(values) > 10
+    for value in values:
+        assert not callable(value)
         assert not isinstance(value, dict)
         assert not isinstance(value, str)
+
+
+def test_the_criterion_six_exceptions_are_named_not_judged() -> None:
+    """The identifiers and citations are a list a reader can check."""
+    assert POLICY_IDENTIFIER_FIELDS == frozenset(
+        {"owner", "mechanic_id", "reason", "url", "revision_id", "revision_timestamp"}
+    )
 
 
 def test_every_magnitude_in_a_declaration_is_a_reference() -> None:
