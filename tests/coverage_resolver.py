@@ -1625,3 +1625,95 @@ def shadow_report(
                 )
             )
     return tuple(found)
+
+
+# ── front doors ───────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class MissingFrontDoor:
+    """A production module that no test module imports.
+
+    Attributes:
+        module: the package-relative dotted name, ``survival.score_state``.
+        path: the repository-relative posix path of that module.
+    """
+
+    module: str
+    path: str
+
+
+def imported_package_modules(module_text: str) -> frozenset[str]:
+    """Every package-relative module name one file's imports name.
+
+    The two rules :func:`front_door_report` is judged on are applied here:
+    only ``Import`` and ``ImportFrom`` nodes contribute, and a package import
+    contributes the package plus each name it binds — never the package's
+    other submodules.  A bound name that is a symbol rather than a submodule
+    is contributed too and is harmless, because the only names ever looked up
+    in this set are modules the tree actually holds.
+    """
+    found: set[str] = set()
+    for node in ast.walk(ast.parse(module_text)):
+        if isinstance(node, ast.Import):
+            found.update(
+                alias.name[len(PACKAGE) + 1 :]
+                for alias in node.names
+                if alias.name.startswith(f"{PACKAGE}.")
+            )
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if node.level or module != PACKAGE and not module.startswith(f"{PACKAGE}."):
+                continue
+            if module == PACKAGE:
+                found.update(alias.name for alias in node.names)
+                continue
+            submodule = module[len(PACKAGE) + 1 :]
+            found.add(submodule)
+            found.update(f"{submodule}.{alias.name}" for alias in node.names)
+    return frozenset(found)
+
+
+def front_door_report(src_root: Path, test_root: Path) -> tuple[MissingFrontDoor, ...]:
+    """Modules outside ``champions/`` that no test module imports (D-95).
+
+    A front door is *a test module importing the production module's dotted
+    path*.  Two rules decide the answer, and they live here rather than in a
+    document because an earlier reading of this same frontier produced a
+    different set with them unstated — a pin taken from that reading would
+    have been wrong on its first run.
+
+    **Import, not mention.**  Only an ``Import`` or ``ImportFrom`` node
+    counts.  A module named in a string, a comment, a docstring or an
+    ``importlib.import_module`` call is a mention: it tells a maintainer
+    nothing about where the module's tests are, which is the whole content of
+    the claim a front door makes.
+
+    **Package, not submodule.**  ``from src.calculator.survival import X``
+    imports the **package** ``survival`` and binds ``X`` out of it; it is a
+    front door for ``survival.X`` only when ``X`` is that package's submodule,
+    and never for ``survival``'s other submodules.  ``survival/__init__.py``
+    is not in the denominator at all, so a package-only import backs nothing.
+
+    The denominator is every ``*.py`` under *src_root* except ``__init__.py``.
+    ``champions/`` is excluded by declaration: its front door is the
+    per-champion module convention plus ``champions/module_contract``
+    validation, and one test module per champion is a different contract from
+    this one.
+
+    The roots are parameters rather than seams: this is a survey of two trees,
+    not the resolution of an evidence member, and a temporary directory is the
+    injection a survey needs.
+    """
+    imported: set[str] = set()
+    for path in sorted(test_root.rglob("*.py")):
+        imported |= imported_package_modules(path.read_text(encoding="utf-8"))
+    missing: list[MissingFrontDoor] = []
+    for path in sorted(src_root.rglob("*.py")):
+        if path.name == "__init__.py":
+            continue
+        module = ".".join(path.relative_to(src_root).with_suffix("").parts)
+        if module.startswith("champions.") or module in imported:
+            continue
+        missing.append(MissingFrontDoor(module=module, path=module_path_of(module)))
+    return tuple(missing)

@@ -242,15 +242,24 @@ def test_the_resolver_memoizes_nothing() -> None:
     assert "_SESSION_CONFIG: pytest.Config | None = None" in text
 
 
+# The two doors that touch a real file, and why each is not a seam.
+# ``read_repo_file`` *is* the seam's live implementation.  ``front_door_report``
+# surveys two trees rather than resolving an evidence member, and it takes both
+# roots as parameters — a temporary directory is the injection a survey needs,
+# and a survey routed through ``read_source`` would still have to list the
+# files, which is the half a seam cannot supply.
+_TREE_READERS: frozenset[str] = frozenset({"read_repo_file", "front_door_report"})
+
+
 def test_every_filesystem_read_lives_behind_the_read_source_seam() -> None:
-    """Only ``read_repo_file`` touches a real file; everything else asks the seam."""
+    """Only the two declared tree readers touch a real file; the rest ask the seam."""
     tree = ast.parse(RESOLVER_PATH.read_text(encoding="utf-8"))
     filesystem = {"read_text", "open", "is_file", "exists", "iterdir", "glob", "rglob"}
     offenders: list[str] = []
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
-        if node.name == "read_repo_file":
+        if node.name in _TREE_READERS:
             continue
         used = {
             inner.attr for inner in ast.walk(node) if isinstance(inner, ast.Attribute)
@@ -1140,6 +1149,75 @@ def test_resolve_table_reports_every_broken_member_not_the_first() -> None:
     assert all(
         failure.claim == "item:Imperial Mandate@attacker" for failure in failures
     )
+
+
+# ── the front-door survey ─────────────────────────────────────────────────
+
+_FRONT_DOOR_TREE: dict[str, str] = {
+    "src/calculator/named.py": "",
+    "src/calculator/bound.py": "",
+    "src/calculator/mentioned.py": "",
+    "src/calculator/survival/__init__.py": "",
+    "src/calculator/survival/sibling.py": "",
+    "src/calculator/champions/gnar.py": "",
+    "tests/test_tree.py": (
+        "import src.calculator.named\n"
+        "from src.calculator import bound\n"
+        "from src.calculator.survival import Combatant\n"
+        'MENTION = "src.calculator.mentioned"\n'
+    ),
+}
+
+
+def _write_tree(root: Path, tree: dict[str, str]) -> None:
+    """One fabricated repository on disk — the survey's injection point."""
+    for path, text in tree.items():
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+
+
+def test_the_front_door_survey_reads_imports_and_not_mentions(tmp_path: Path) -> None:
+    """Both rules in ``front_door_report``'s docstring, on a tree built for them.
+
+    ``named`` is imported by dotted path and ``bound`` is bound out of the
+    package: both are front doors.  ``mentioned`` appears only inside a string
+    — the shape an ``importlib.import_module`` call or a comment takes — and
+    ``survival.sibling`` is the package-versus-submodule rule: importing a
+    name out of ``survival`` is a front door for the package, whose
+    ``__init__`` is not in the denominator, and for no submodule of it.
+    ``champions/`` is excluded by declaration and never appears.
+    """
+    _write_tree(tmp_path, _FRONT_DOOR_TREE)
+    report = coverage_resolver.front_door_report(
+        tmp_path / "src" / "calculator", tmp_path / "tests"
+    )
+    assert {missing.module for missing in report} == {"mentioned", "survival.sibling"}
+    assert {missing.path for missing in report} == {
+        "src/calculator/mentioned.py",
+        "src/calculator/survival/sibling.py",
+    }
+
+
+def test_the_survey_reproduces_the_pre_campaign_reading_of_this_tree() -> None:
+    """The rule is stable: it finds every live module's importer, or names it.
+
+    The report is a survey of two real trees rather than a fabricated one
+    here, so the assertion is the property the frontier depends on — every
+    module it reports is real, and every module it does not report is named
+    by an import somewhere in ``tests/``.
+    """
+    report = coverage_resolver.front_door_report(
+        ROOT / "src" / "calculator", ROOT / "tests"
+    )
+    imported: set[str] = set()
+    for path in sorted((ROOT / "tests").rglob("*.py")):
+        imported |= coverage_resolver.imported_package_modules(
+            path.read_text(encoding="utf-8")
+        )
+    for missing in report:
+        assert (ROOT / missing.path).is_file()
+        assert missing.module not in imported
 
 
 # ── the chain, mirrored ───────────────────────────────────────────────────
