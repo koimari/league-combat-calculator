@@ -35,7 +35,11 @@ from ..item_behavior import (
     Fixed,
     KernelField,
     Magnitude,
+    RampModel,
+    RampPerSecond,
+    RampPerStack,
     RuleFamily,
+    TargetBonusHealthScaled,
     chain_rank,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
@@ -61,10 +65,74 @@ def magnitude_fraction(magnitude: Magnitude, ctx: BuildContext) -> float:
     """
     if isinstance(magnitude, Fixed):
         return resolve(magnitude.value, ctx.level)
+    if isinstance(magnitude, RampPerSecond):
+        return _ramp_per_second(magnitude, ctx)
+    if isinstance(magnitude, TargetBonusHealthScaled):
+        return _target_bonus_health_scaled(magnitude, ctx)
+    if isinstance(magnitude, RampPerStack):
+        return _ramp_per_stack(magnitude, ctx)
     raise DeltaAmpInterpretationError(
         f"{type(magnitude).__name__} has no delta-amp arithmetic yet; the "
         "slice that declares a rule with it owns the branch"
     )
+
+
+def _ramp_per_second(magnitude: RampPerSecond, ctx: BuildContext) -> float:
+    """A time ramp's average value over the fight, capped by its maximum.
+
+    The ramp climbs ``per_second`` until it reaches ``maximum``, so it has
+    been at half its final height on average — hence the ``/ 2``.  The
+    fight is assumed to last long enough for the whole climb only when
+    ``duration`` allows it, which is what the ``min`` is for.
+    """
+    per_second = resolve(magnitude.per_second, ctx.level)
+    maximum = resolve(magnitude.maximum, ctx.level)
+    stacks = min(ctx.fight_duration_seconds, maximum / per_second)
+    return per_second * stacks / 2.0
+
+
+def _target_bonus_health_scaled(
+    magnitude: TargetBonusHealthScaled, ctx: BuildContext
+) -> float:
+    """A ratio that reaches ``maximum`` when the target hits the cap.
+
+    The scaling reads the *target's* bonus health and never compares it with
+    the holder's — the reading the registry's own accessor documented, kept
+    here because this is now the only place it is implemented.
+    """
+    maximum = resolve(magnitude.maximum, ctx.level)
+    cap = resolve(magnitude.bonus_health_cap, ctx.level)
+    if cap <= 0.0:
+        raise DeltaAmpInterpretationError(
+            f"{ctx.owner}: a target-bonus-health cap must be positive; a "
+            "non-positive one is a registry defect, not a full-strength amp"
+        )
+    return max(0.0, maximum) * min(max(0.0, ctx.target_bonus_health) / cap, 1.0)
+
+
+def _ramp_per_stack(magnitude: RampPerStack, ctx: BuildContext) -> float:
+    """A per-stack ramp at the stack count the fight's length implies.
+
+    The stack count is the declared cadence applied to the fight duration,
+    floored at one — the holder is assumed to have opened with the mechanic —
+    and capped by the declared maximum.  ``model`` says how the stacks are
+    summed, and only ``EXACT`` has an implementation here: no delta-amp rule
+    declares ``CESARO_APPROX``, and writing arithmetic for a shape nothing
+    reaches would be exactly the orphan branch D-51 forbids.
+    """
+    if magnitude.model is not RampModel.EXACT:
+        raise DeltaAmpInterpretationError(
+            f"{ctx.owner}: no delta-amp rule declares the "
+            f"{magnitude.model.value} ramp model, so this interpreter has no "
+            "arithmetic for it; the slice that declares one owns the branch"
+        )
+    per_stack = resolve(magnitude.per_stack, ctx.level)
+    max_stacks = int(resolve(magnitude.max_stacks, ctx.level))
+    seconds_per_stack = resolve(magnitude.seconds_per_stack, ctx.level)
+    stacks = min(
+        max_stacks, max(1, int(ctx.fight_duration_seconds / seconds_per_stack))
+    )
+    return per_stack * stacks
 
 
 class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods

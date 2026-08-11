@@ -36,6 +36,7 @@ from urllib.parse import quote
 from . import data_registry, item_effects
 from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
+    Always,
     AmpChainSlot,
     Attribution,
     BehaviorRule,
@@ -44,12 +45,17 @@ from .item_behavior import (
     ExcludeTrigger,
     Fixed,
     Isolation,
+    Magnitude,
     Persist,
     Pool,
     RULE_FAMILY_COUNT,
+    RampModel,
+    RampPerSecond,
+    RampPerStack,
     ReceiptOnly,
     RuleFamily,
     Subject,
+    TargetBonusHealthScaled,
     TriggerEvent,
     Typing,
     ZeroPolicy,
@@ -57,7 +63,7 @@ from .item_behavior import (
     validate_rule,
 )
 from .survival.actions import ActionKind
-from .value_ref import SourceReceipt, ValueRef, ValueRegistry, receipt_for
+from .value_ref import Const, SourceReceipt, ValueRef, ValueRegistry, receipt_for
 
 
 class BehaviorCatalogError(RuntimeError):
@@ -323,10 +329,9 @@ Compiler = Callable[
 # carries that promise for a whole family; a *partly* migrated family needs
 # it per tag, or the family's disappearance from UNMIGRATED_FAMILIES would
 # quietly retire promises nobody kept.
-MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset({"hypershot_amp"})
+MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset({"damage_amp", "hypershot_amp"})
 
 DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
-    "damage_amp": "3.2 — the WHOLE_TOTAL chain slot",
     "magic_true_crit": "3.2 — Shadowflame's Cinderbloom, last of the seven",
     "ability_damage_amp": (
         "3.7 — Actualizer's ability amp is applied per ability and per proc "
@@ -341,6 +346,50 @@ DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
         "defender's side, so it occupies no chain slot"
     ),
 }
+
+
+# A registry entry's ``type`` names its *primary* mechanic, but a few entries
+# carry a second one in their value keys — Liandry's Torment is a burn that
+# also amplifies the whole total.  Declared here and closed, so a second
+# mechanic hiding in a value key is a table entry rather than an if-statement
+# somebody has to notice.  Counter 3's population is unchanged: it counts
+# entries with no rule at all, and this only changes which compilers an entry
+# is offered to.
+SECONDARY_KEY_FAMILY: Mapping[str, RuleFamily] = {
+    "damage_amp_per_second": RuleFamily.DELTA_AMP,
+}
+
+# How long the engine assumes one whole-total amp stack takes to accrue.  A
+# modelling assumption, not a wiki number — Spear of Shojin stacks per
+# ability cast and the compact damage model does not simulate casts for this
+# purpose — so it is declared where a reader can see and challenge it rather
+# than living as a `duration / 2` inside the arithmetic.
+ASSUMED_SECONDS_PER_AMP_STACK = Const(2.0, "unit_scale")
+
+
+def _declares_secondary(entry: Mapping[str, Any], family: RuleFamily) -> bool:
+    """Whether *entry*'s value keys declare a second mechanic in *family*."""
+    return any(
+        key in entry
+        for key, declared in SECONDARY_KEY_FAMILY.items()
+        if declared is family
+    )
+
+
+def _mechanic_slug(owner: str) -> str:
+    """An owner's identifier spelling, matching Phase 2's mechanic ids.
+
+    Lower case, apostrophes dropped rather than transliterated, every other
+    run of non-alphanumerics collapsed to one underscore — which is how
+    ``trigger_stream`` already spells ``bloodletters_curse`` and
+    ``deaths_dance``.  One spelling rule, so a mechanic id and a capability
+    key cannot drift into two names for one mechanic.
+    """
+    stripped = owner.replace("'", "").replace("’", "")
+    slug = "".join(char if char.isalnum() else "_" for char in stripped.lower())
+    while "__" in slug:
+        slug = slug.replace("__", "_")
+    return slug.strip("_")
 
 
 def _all_damage_typing() -> Typing:
@@ -392,6 +441,85 @@ def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
+def _whole_total_magnitude(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> Magnitude:
+    """Which magnitude shape one whole-total amp's value keys describe.
+
+    The ladder is the registry's own schema ladder, in its order, because an
+    entry carrying two of these keys must keep resolving to the same shape it
+    resolved to before.  An entry the ladder does not recognise is a stop:
+    the alternative is an item that quietly amplifies nothing.
+    """
+    if "health_state_damage_amp_above_half" in entry:
+        # The public scenario starts at full health; the below-half branch is
+        # a healing rule the ordered survival ledger owns, so the amp's
+        # above-half starting state is declared rather than guessed.
+        return Fixed(ValueRef(registry, owner, "health_state_damage_amp_above_half"))
+    for per_second, maximum in (
+        ("damage_amp_per_second", "damage_amp_max"),
+        ("amp_per_second", "amp_max"),
+    ):
+        if per_second in entry:
+            return RampPerSecond(
+                per_second=ValueRef(registry, owner, per_second),
+                maximum=ValueRef(registry, owner, maximum),
+            )
+    if "bonus_hp_cap" in entry:
+        return TargetBonusHealthScaled(
+            maximum=ValueRef(registry, owner, "max_amp"),
+            bonus_health_cap=ValueRef(registry, owner, "bonus_hp_cap"),
+        )
+    if "amp_per_stack" in entry:
+        return RampPerStack(
+            per_stack=ValueRef(registry, owner, "amp_per_stack"),
+            max_stacks=ValueRef(registry, owner, "max_stacks"),
+            seconds_per_stack=ASSUMED_SECONDS_PER_AMP_STACK,
+            model=RampModel.EXACT,
+        )
+    raise BehaviorCatalogError(
+        f"{registry}[{owner!r}] declares a whole-total amp in no shape the "
+        "magnitude union names; a new schema is a new member and a new "
+        "interpreter branch, never a silent zero"
+    )
+
+
+def _whole_total_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """One general amplifier: the whole running total, for the whole fight.
+
+    The occupants of this slot are additive among themselves and multiply
+    everything the earlier slots already moved, which is why they share one
+    chain rank rather than each having their own.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.whole_total_amp",
+        payload=DeltaAmpRule(
+            pool=Pool.ALL_EVENTS,
+            activation=Always(),
+            consumption=Persist(),
+            magnitude=_whole_total_magnitude(owner, registry, entry),
+            attribution=Attribution.HOLDER,
+            typing=_all_damage_typing(),
+            subject=Subject.HOLDER,
+            lane_chain_rank=chain_rank(AmpChainSlot.WHOLE_TOTAL),
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the amp is a sourced ratio scaled by declared fight facts; a "
+            "zero means the ramp had no time or the target no bonus health, "
+            "both of which the rule measured",
+        ),
+    )
+
+
 def _compile_delta_amp(
     family: RuleFamily,
     owner: str,
@@ -400,16 +528,19 @@ def _compile_delta_amp(
 ) -> tuple[BehaviorRule, ...]:
     """Compile the amp-chain slots one registry entry declares.
 
-    Dispatch is on the entry's **tag**, never on the owner's name: the shape
-    comes from the tag, the numbers from a :class:`~.value_ref.ValueRef` into
-    the entry, and the owner from whichever item the registry hung it on — so
-    no item name is a literal here and none needs to be.
+    Dispatch is on the entry's **tag** and value keys, never on the owner's
+    name: the shape comes from the tag, the numbers from a
+    :class:`~.value_ref.ValueRef` into the entry, and the owner from whichever
+    item the registry hung it on — so no item name is a literal here and none
+    needs to be.
     """
     del family
     tag = str(entry.get("type"))
     rules: list[BehaviorRule] = []
     if tag == "hypershot_amp":
         rules.append(_hypershot_rule(owner, registry))
+    if tag == "damage_amp" or _declares_secondary(entry, RuleFamily.DELTA_AMP):
+        rules.append(_whole_total_rule(owner, registry, entry))
     for rule in rules:
         validate_rule(rule)
     return tuple(rules)
@@ -522,8 +653,28 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     """
     rules: list[BehaviorRule] = []
     for registry, family, entry in registry_entries(owner):
-        rules.extend(_COMPILERS[family](family, owner, registry, entry))
+        for claimed in entry_families(family, entry):
+            rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
     return tuple(rules)
+
+
+def entry_families(
+    family: RuleFamily, entry: Mapping[str, Any]
+) -> tuple[RuleFamily, ...]:
+    """Every family one entry declares: its tag's, plus any a value key adds.
+
+    The primary family always comes first, so a compiler ladder's order is
+    the entry's order.  A secondary family is not a second *entry* — counter
+    3's population is unchanged — it is a second mechanic hung on one entry,
+    which is a thing the registry really does and a thing a tag alone cannot
+    express.
+    """
+    extra = tuple(
+        declared
+        for key, declared in SECONDARY_KEY_FAMILY.items()
+        if key in entry and declared is not family
+    )
+    return (family, *dict.fromkeys(extra))
 
 
 def declared_tags() -> frozenset[str]:

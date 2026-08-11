@@ -3,8 +3,9 @@
 Three things are checked here that nothing else can check.  The chain order
 is pinned against a frozen literal, because it is the one property of
 amplification that no individual amp's test can see and that every mixed
-build's number depends on.  The fold is pinned as a fold — `1.0 += f` per
-holder, not `1.0 + sum(f)` — because the two disagree in the last bits and
+build's number depends on.  The fold is pinned as one spelling —
+``1.0 + sum(f)``, the engine's own — because a running ``+=`` and
+``math.fsum`` land on different floats once a slot has two occupants, and
 this migration's whole claim is that no number moved.  And a magnitude shape
 with no arithmetic raises instead of quietly contributing zero.
 """
@@ -16,10 +17,15 @@ from src.calculator.item_behavior import (
     AMP_CHAIN_ORDER,
     AmpChainSlot,
     Fixed,
+    RampModel,
     RampPerSecond,
+    RampPerStack,
+    RuleFamily,
+    TargetBonusHealthScaled,
     chain_rank,
 )
 from src.calculator.item_behavior_catalog import behavior_rules, build_context
+from src.calculator.item_effects import ITEM_EFFECTS
 from src.calculator.value_ref import Const
 
 
@@ -112,13 +118,99 @@ def test_the_pair_interpreter_emits_one_value_typed_field() -> None:
     assert isinstance(field.value, float)
 
 
+def _ctx(duration: float = 5.0, bonus_health: float = 0.0):
+    """A build context for magnitude arithmetic, with the two fight facts."""
+    return build_context(
+        "Horizon Focus",
+        18,
+        fight_duration_seconds=duration,
+        target_bonus_health=bonus_health,
+    )
+
+
+def test_every_magnitude_shape_has_arithmetic() -> None:
+    """Four shapes, four branches, each reproducing the schema it models."""
+    assert (
+        delta_amp.magnitude_fraction(Fixed(Const(0.25, "unit_scale")), _ctx()) == 0.25
+    )
+    ramp = RampPerSecond(Const(0.02, "unit_scale"), Const(0.06, "unit_scale"))
+    assert delta_amp.magnitude_fraction(ramp, _ctx(2.0)) == pytest.approx(0.02)
+    assert delta_amp.magnitude_fraction(ramp, _ctx(5.0)) == pytest.approx(0.03)
+    scaled = TargetBonusHealthScaled(Const(0.15, "unit_scale"), Const(1500.0, "cap"))
+    assert delta_amp.magnitude_fraction(
+        scaled, _ctx(bonus_health=750.0)
+    ) == pytest.approx(0.075)
+    assert delta_amp.magnitude_fraction(
+        scaled, _ctx(bonus_health=9000.0)
+    ) == pytest.approx(0.15)
+    stacked = RampPerStack(
+        Const(0.03, "unit_scale"),
+        Const(4.0, "count"),
+        Const(2.0, "unit_scale"),
+        RampModel.EXACT,
+    )
+    assert delta_amp.magnitude_fraction(stacked, _ctx(1.0)) == pytest.approx(0.03)
+    assert delta_amp.magnitude_fraction(stacked, _ctx(100.0)) == pytest.approx(0.12)
+
+
 def test_a_magnitude_with_no_arithmetic_raises_rather_than_pricing_zero() -> None:
     """A new magnitude shape is a stop, not a slot that quietly contributes 0."""
-    ctx = build_context(
-        "Horizon Focus", 18, fight_duration_seconds=5.0, target_bonus_health=0.0
+
+    class _NotInTheUnion:  # pylint: disable=too-few-public-methods
+        """A magnitude shape somebody added and nobody interpreted."""
+
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="_NotInTheUnion"):
+        delta_amp.magnitude_fraction(_NotInTheUnion(), _ctx())
+
+
+def test_a_ramp_model_no_declaration_uses_has_no_branch() -> None:
+    """D-51: arithmetic for a shape nothing reaches would be an orphan branch."""
+    cesaro = RampPerStack(
+        Const(0.03, "unit_scale"),
+        Const(4.0, "count"),
+        Const(2.0, "unit_scale"),
+        RampModel.CESARO_APPROX,
     )
-    assert delta_amp.magnitude_fraction(Fixed(Const(0.25, "unit_scale")), ctx) == 0.25
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="RampPerSecond"):
-        delta_amp.magnitude_fraction(
-            RampPerSecond(Const(0.02, "unit_scale"), Const(0.06, "unit_scale")), ctx
-        )
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="cesaro_approx"):
+        delta_amp.magnitude_fraction(cesaro, _ctx())
+
+
+def test_a_non_positive_bonus_health_cap_is_a_registry_defect() -> None:
+    """A zero cap would divide, and a full-strength amp would be the silent answer."""
+    broken = TargetBonusHealthScaled(Const(0.15, "unit_scale"), Const(0.0, "cap"))
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="positive"):
+        delta_amp.magnitude_fraction(broken, _ctx(bonus_health=750.0))
+
+
+def test_the_whole_total_slot_holds_every_declared_general_amp() -> None:
+    """One slot, several mechanics, additive among themselves and in build order."""
+    build = [
+        "Liandry's Torment",
+        "Riftmaker",
+        "Lord Dominik's Regards",
+        "Spear of Shojin",
+    ]
+    slot = delta_amp.resolve_slot(
+        build,
+        AmpChainSlot.WHOLE_TOTAL,
+        level=18,
+        fight_duration_seconds=4.0,
+        target_bonus_health=750.0,
+    )
+    assert slot is not None
+    assert [owner for owner, _ in slot.sources()] == build
+    assert dict(slot.sources()) == pytest.approx(
+        {
+            "Liandry's Torment": 0.03,
+            "Riftmaker": 0.04,
+            "Lord Dominik's Regards": 0.075,
+            "Spear of Shojin": 0.06,
+        }
+    )
+
+
+def test_a_second_mechanic_on_one_entry_is_declared_rather_than_missed() -> None:
+    """Liandry's is a burn that also amplifies; a tag alone cannot say that."""
+    families = [rule.family for rule in behavior_rules("Liandry's Torment")]
+    assert families == [RuleFamily.DELTA_AMP]
+    assert "damage_amp_per_second" in ITEM_EFFECTS["Liandry's Torment"]

@@ -135,30 +135,34 @@ def test_cp13_item_state_controls_are_bounded_and_typed() -> None:
         )
 
 
-def test_lord_dominik_amp_receives_holder_context_and_uses_target_bonus_health() -> (
-    None
-):
-    """Giant Slayer receives its current holder and prices target bonus HP."""
-    amp = item_effects.lord_dominik_damage_amp_fraction(
-        attacker_stats={"bonus_health": 500.0},
-        target_bonus_health=750.0,
-        maximum=0.15,
-        bonus_hp_cap=1500.0,
+def test_giant_slayer_scales_on_the_targets_bonus_health_not_the_holders() -> None:
+    """The declaration reads the target's bonus health, and only the target's.
+
+    The formula moved to the delta-amp interpreter with the rest of the
+    whole-total chain slot; the reading it encodes is the same one the
+    registry accessor documented in its signature.
+    """
+    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        delta_amp,
     )
-    same_target_different_holder = item_effects.lord_dominik_damage_amp_fraction(
-        attacker_stats={"bonus_health": 1500.0},
-        target_bonus_health=750.0,
-        maximum=0.15,
-        bonus_hp_cap=1500.0,
+    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        AmpChainSlot,
     )
-    assert amp == pytest.approx(0.075)
-    assert same_target_different_holder == pytest.approx(amp)
-    assert item_effects.lord_dominik_damage_amp_fraction(
-        attacker_stats={},
-        target_bonus_health=2000.0,
-        maximum=0.15,
-        bonus_hp_cap=1500.0,
-    ) == pytest.approx(0.15)
+
+    def amp(target_bonus_health: float) -> float:
+        slot = delta_amp.resolve_slot(
+            ["Lord Dominik's Regards"],
+            AmpChainSlot.WHOLE_TOTAL,
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=target_bonus_health,
+        )
+        assert slot is not None
+        return slot.sources()[0][1]
+
+    assert amp(750.0) == pytest.approx(0.075)
+    assert amp(2000.0) == pytest.approx(0.15)
+    assert amp(0.0) == pytest.approx(0.0)
 
 
 def test_actualizer_active_window_is_explicit_and_boundary_clipped() -> None:
@@ -844,18 +848,6 @@ class TestResolveDamageEffects:
         ) == pytest.approx(1.165)
         assert effects.armor_reduction is not None
         assert effects.armor_reduction.average_reduction(10) == pytest.approx(0.24)
-        amp_by_item = {
-            effect.item_name: effect.amp_fraction(4.0, 750.0, {})
-            for effect in effects.damage_amplifiers
-        }
-        assert amp_by_item == pytest.approx(
-            {
-                "Liandry's Torment": 0.03,
-                "Riftmaker": 0.04,
-                "Lord Dominik's Regards": 0.075,
-                "Spear of Shojin": 0.06,
-            }
-        )
         assert effects.execute is not None
         assert effects.execute.threshold == pytest.approx(0.05)
         assert len(effects.conditional_notes) == 2

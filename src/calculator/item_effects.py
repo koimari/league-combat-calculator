@@ -3652,14 +3652,6 @@ class ExecuteEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class DamageAmplifierEffect:
-    """One fight-wide amplifier with registry values already captured."""
-
-    item_name: str
-    amp_fraction: Callable[[float, float, Mapping[str, float]], float]
-
-
-@dataclass(frozen=True, slots=True)
 class AbilityAmplifierEffect:
     """Ability-only amplifier derived from champion bonus mana."""
 
@@ -3757,7 +3749,6 @@ class BuildDamageEffects:
     crit_damage_bonus: float = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
     magic_true_crit: MagicTrueCritEffect | None = None
-    damage_amplifiers: tuple[DamageAmplifierEffect, ...] = ()
     magic_amp: float = 1.0
     basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
@@ -4532,112 +4523,6 @@ def _compile_shaped_charge(
     return CooldownProcEffect(source, required.number("cooldown"))
 
 
-def lord_dominik_damage_amp_fraction(
-    *,
-    attacker_stats: Mapping[str, float],
-    target_bonus_health: float,
-    maximum: float,
-    bonus_hp_cap: float,
-) -> float:
-    """Return Giant Slayer's current target-health damage multiplier.
-
-    The attacker mapping identifies the current holder of Lord Dominik's
-    Regards. The V26.01 passive scales from the target's bonus health only;
-    it does not compare that value with the holder's bonus health. Keeping the
-    holder in the function contract prevents a future caller from applying
-    an item's passive to an unrelated participant.
-    """
-    _ = attacker_stats
-    if bonus_hp_cap <= 0.0:
-        raise ValueError("Lord Dominik's Regards bonus-health cap must be positive")
-    return max(0.0, maximum) * min(
-        max(0.0, float(target_bonus_health)) / bonus_hp_cap,
-        1.0,
-    )
-
-
-def _compile_damage_amplifier(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> DamageAmplifierEffect:
-    """Compile one supported amplifier schema into a fight-time formula."""
-    required = _RequiredValues(item_name, values)
-
-    if "health_state_damage_amp_above_half" in values:
-        # The public scenario starts at full health.  The source also has a
-        # below-half healing branch, which is applied by the ordered survival
-        # ledger; this damage packet therefore records the explicit
-        # above-half starting-state assumption rather than guessing a live
-        # health transition in the compact damage engine.
-        fixed_amp = required.number("health_state_damage_amp_above_half")
-
-        def amp_fraction(
-            _duration: float,
-            _target_bonus_health: float,
-            _attacker_stats: Mapping[str, float],
-        ) -> float:
-            return fixed_amp
-
-    elif "damage_amp_per_second" in values:
-        per_second = required.number("damage_amp_per_second")
-        maximum = required.number("damage_amp_max")
-
-        def amp_fraction(
-            duration: float,
-            _target_bonus_health: float,
-            _attacker_stats: Mapping[str, float],
-        ) -> float:
-            stacks = min(duration, maximum / per_second)
-            return per_second * stacks / 2.0
-
-    elif "amp_per_second" in values:
-        per_second = required.number("amp_per_second")
-        maximum = required.number("amp_max")
-
-        def amp_fraction(
-            duration: float,
-            _target_bonus_health: float,
-            _attacker_stats: Mapping[str, float],
-        ) -> float:
-            stacks = min(duration, maximum / per_second)
-            return per_second * stacks / 2.0
-
-    elif "bonus_hp_cap" in values:
-        maximum = required.number("max_amp")
-        bonus_hp_cap = required.number("bonus_hp_cap")
-
-        def amp_fraction(
-            _duration: float,
-            target_bonus_health: float,
-            attacker_stats: Mapping[str, float],
-        ) -> float:
-            return lord_dominik_damage_amp_fraction(
-                attacker_stats=attacker_stats,
-                target_bonus_health=target_bonus_health,
-                maximum=maximum,
-                bonus_hp_cap=bonus_hp_cap,
-            )
-
-    elif "amp_per_stack" in values:
-        per_stack = required.number("amp_per_stack")
-        maximum_stacks = int(required.number("max_stacks"))
-
-        def amp_fraction(
-            duration: float,
-            _target_bonus_health: float,
-            _attacker_stats: Mapping[str, float],
-        ) -> float:
-            stacks = min(maximum_stacks, max(1, int(duration / 2)))
-            return per_stack * stacks
-
-    else:
-        raise KeyError(
-            f"ITEM_EFFECTS[{item_name!r}] has unsupported damage-amplifier schema"
-        )
-
-    return DamageAmplifierEffect(item_name, amp_fraction)
-
-
 _KNOWN_EFFECT_TYPES = frozenset(
     {
         "ability_damage_amp",
@@ -4751,7 +4636,6 @@ def _resolve_damage_effects_uncached(
     crit_damage_bonus = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
     magic_true_crit: MagicTrueCritEffect | None = None
-    damage_amplifiers: list[DamageAmplifierEffect] = []
     magic_amp = 1.0
     basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
@@ -4873,8 +4757,6 @@ def _resolve_damage_effects_uncached(
             # the typed effect in the build projection without adding a stale
             # conditional note that would contradict its targeting receipt.
             continue
-        if "damage_amp_per_second" in values or effect_type == "damage_amp":
-            damage_amplifiers.append(_compile_damage_amplifier(item_name, values))
         if effect_type == "magic_damage_amp":
             magic_amp += _RequiredValues(item_name, values).number("magic_amp")
         if effect_type == "armor_reduction":
@@ -4958,7 +4840,6 @@ def _resolve_damage_effects_uncached(
         crit_damage_bonus=crit_damage_bonus,
         first_auto_crit=first_auto_crit,
         magic_true_crit=magic_true_crit,
-        damage_amplifiers=tuple(damage_amplifiers),
         magic_amp=magic_amp,
         basic_amp=basic_amp,
         ability_amp=ability_amp,

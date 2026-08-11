@@ -9235,23 +9235,18 @@ def _amp_slot(state: FightState, slot: AmpChainSlot) -> "delta_amp.AmpSlot | Non
 
 
 def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> None:
-    """Apply whole-total amps (Lord Dominik's, Riftmaker, Liandry-class).
+    """Apply whole-total amps — the ``WHOLE_TOTAL`` chain slot.
 
-    Each source gets one ``damage_amp_<source>`` row whose delta events
-    ride the pre-amp ledger's timestamps.
+    Its occupants are additive among themselves, so the slot resolves to one
+    multiplier over the running total. Each source still gets its own
+    ``damage_amp_<source>`` row, whose delta events ride the pre-amp ledger's
+    timestamps.
     """
-    amp_sources = [
-        (
-            effect.item_name,
-            effect.amp_fraction(
-                state.fight_duration_seconds,
-                max(0, state.target_bonus_health),
-                state.champion_stats,
-            ),
-        )
-        for effect in state.damage_effects.damage_amplifiers
-    ]
-    amp = 1.0 + sum(source_amp for _, source_amp in amp_sources)
+    slot = _amp_slot(state, AmpChainSlot.WHOLE_TOTAL)
+    if slot is None:
+        return
+    amp_sources = slot.sources()
+    amp = slot.multiplier
     if amp <= 1.0:
         return
     amp_bonus = state.total_damage * (amp - 1.0)

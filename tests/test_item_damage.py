@@ -51,6 +51,26 @@ def _hypershot_slot(owners):
     )
 
 
+def _whole_total_fraction(owner: str, duration: float) -> float:
+    """One holder's contribution to the whole-total amp slot."""
+    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        delta_amp,
+    )
+    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        AmpChainSlot,
+    )
+
+    slot = delta_amp.resolve_slot(
+        [owner],
+        AmpChainSlot.WHOLE_TOTAL,
+        level=18,
+        fight_duration_seconds=duration,
+        target_bonus_health=0.0,
+    )
+    assert slot is not None
+    return slot.sources()[0][1]
+
+
 def _simulate_bork_damage(
     *,
     target_health,
@@ -5793,13 +5813,11 @@ class TestHauntingGuiseMadness(_FightHarness):
         assert parsed["amp_per_second"] == pytest.approx(0.02)
         assert parsed["amp_max"] == pytest.approx(0.06)
 
-    def test_amp_fraction_uses_the_riftmaker_ramp_model(self) -> None:
+    def test_the_ramp_magnitude_averages_over_its_capped_window(self) -> None:
         """Average ramp: half the per-second rate over the capped window."""
-        effects = resolve_damage_effects(_build("Haunting Guise"))
-        amp = {e.item_name: e for e in effects.damage_amplifiers}["Haunting Guise"]
-        assert amp.amp_fraction(2.0, 0.0, {}) == pytest.approx(0.02)
+        assert _whole_total_fraction("Haunting Guise", 2.0) == pytest.approx(0.02)
         # 6% cap is reached after 3 seconds; longer fights keep that average.
-        assert amp.amp_fraction(5.0, 0.0, {}) == pytest.approx(0.03)
+        assert _whole_total_fraction("Haunting Guise", 5.0) == pytest.approx(0.03)
 
     def test_fight_total_is_amplified_with_a_breakdown_row(self) -> None:
         """A 5s auto fight gains the 3% averaged Madness multiplier."""

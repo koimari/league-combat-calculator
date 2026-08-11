@@ -336,7 +336,13 @@ class Fixed:
 
 @dataclass(frozen=True, slots=True)
 class RampPerSecond:
-    """A magnitude that grows with time in the window, up to a cap."""
+    """A magnitude that grows with time in the window, up to a cap.
+
+    The value a fight sees is the ramp's *average* over the time it was
+    building, not its end point — the closed form the pair engine has always
+    used for this schema.  Both numbers are references, so a patch that
+    re-tunes either moves the fight without touching a declaration.
+    """
 
     per_second: AnyValueRef
     maximum: AnyValueRef
@@ -344,19 +350,32 @@ class RampPerSecond:
 
 @dataclass(frozen=True, slots=True)
 class TargetBonusHealthScaled:
-    """A magnitude scaled by the target's bonus health."""
+    """A magnitude that reaches ``maximum`` at ``bonus_health_cap``.
 
-    base: AnyValueRef
-    per_bonus_health: AnyValueRef
+    Two fields, not three: the live schema has no additive base, and a
+    declared ``base`` of zero would be a number nobody sourced sitting in a
+    frozen declaration.  The scaling is on the *target's* bonus health, never
+    the holder's — the distinction the registry's own accessor carried in its
+    signature and this shape carries in its name.
+    """
+
     maximum: AnyValueRef
+    bonus_health_cap: AnyValueRef
 
 
 @dataclass(frozen=True, slots=True)
 class RampPerStack:
-    """A magnitude that grows per stack, summed by a declared model."""
+    """A magnitude that grows per stack, summed by a declared model.
+
+    ``seconds_per_stack`` is the engine's assumed cadence for a stack the
+    fight model does not simulate individually.  It is declared rather than
+    hidden inside the arithmetic because it is an *assumption*, and an
+    assumption a reader cannot see is the prose this phase replaces.
+    """
 
     per_stack: AnyValueRef
     max_stacks: AnyValueRef
+    seconds_per_stack: AnyValueRef
     model: RampModel
 
 
