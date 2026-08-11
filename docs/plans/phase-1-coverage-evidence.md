@@ -365,5 +365,30 @@ def _is_full_session(config) -> bool:
 15. `docs/item-umbrella-audit.json` and the full-entry audit receipt are byte-identical to
     their pre-phase state, and no `reason` string or status in `item_coverage.py` changed.
 16. All eleven gates in the [runbook](silent-failure-runbook.md) matrix are green on the
-    tip, including zero diffs on both golden baselines and identical bench counters,
-    residual, winners and scores — this phase changes no number.
+    tip: the pair baseline reports `OK: snapshot identical`, the coupled baseline meets what
+    R-01 row 3 states as its pass condition — *every diff explained* — and the bench
+    counters, the residual, the winners and the scores are identical. This phase changes no
+    number.
+
+    **Amended after the phase-1 sign-off, which found the clause as written not discharged
+    on the tip** — flagged the way [Phase 2](phase-2-trigger-bus.md) flags its own
+    in-criterion amendments, as a plan-text change by an implementation lane, so the next
+    verifier adjudicates the amendment instead of inheriting it silently. It read "zero
+    diffs on **both** golden baselines", and the coupled half is a claim no commit between
+    two phase boundaries can make true: R-17 lands a semantic slice against the *committed*
+    coupled baseline plus a committed allowlist of expected diff paths, and R-32/D-97 forbid
+    moving that baseline outside a boundary re-capture, so every earlier slice's allowlisted
+    differences are still standing **by design**. It was already false at this phase's entry
+    tip, and the check that it is not this phase's doing is the extract-and-diff Phase 2's
+    own criterion cites: extract the entry tip (`6459667`) and the phase tip with `git
+    archive` and run `compare scripts/golden_coupled_baseline.json` in each, and the two
+    reports are byte-identical.
+
+    So the coupled half demands what row 3 says, and it is machine-checked rather than
+    matched by hand: `tests/test_coupled_golden_allowlist.py` — Phase 2's mechanisation,
+    which rides row 1 through `pytest` rather than adding a twelfth gate — asserts every
+    leaf `compare` reports is claimed by a committed
+    `docs/receipts/expected-golden-diff-*.json`, and goes red the moment a slice moves a
+    leaf no receipt claims. Neither half is this phase's numeric evidence anyway (D-93):
+    what carries *this phase changes no number* is criterion 1's classification receipt,
+    which re-captures on the tip with no diff.
