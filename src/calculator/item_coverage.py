@@ -1232,7 +1232,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Armored Advance": "defensive_effects.resolve_starting_defenses",
     "Banshee's Veil": "defensive_effects.resolve_starting_defenses",
     "Bloodthirster": "defensive_effects.resolve_starting_defenses",
-    "Bramble Vest": "item_effects.thorns_effects",
+    "Bramble Vest": "interpreters.reactive.thorns_effects",
     "Celestial Opposition": "defensive_effects.resolve_starting_defenses",
     "Chainlaced Crushers": "defensive_effects.resolve_starting_defenses",
     "Cull": "item_support_effects.derive_item_support_effects",
@@ -1252,7 +1252,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Spectre's Cowl": "stats.get_item_stats",
     "Spirit Visage": "defensive_effects.resolve_starting_defenses",
     "Sundered Sky": "damage._add_first_auto_healing",
-    "Thornmail": "item_effects.thorns_effects",
+    "Thornmail": "interpreters.reactive.thorns_effects",
     "Unending Despair": "damage._add_burn_damage",
     "Verdant Barrier": "defensive_effects.resolve_starting_defenses",
     "Warden's Mail": "defensive_effects.resolve_starting_defenses",
@@ -1263,13 +1263,13 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
 _TARGET_CERTIFIED_IMPLS: Mapping[str, str] = {
     "Fimbulwinter": "item_support_effects.derive_item_support_effects",
     "Force of Nature": "survival.transitions.update_combat_state",
-    "Hexdrinker": "defensive_effects._lifeline_defense",
-    "Immortal Shieldbow": "defensive_effects._lifeline_defense",
+    "Hexdrinker": "interpreters.threshold_defense._lifeline_shield",
+    "Immortal Shieldbow": "interpreters.threshold_defense._lifeline_shield",
     "Jak'Sho, The Protean": "survival.transitions.update_combat_state",
-    "Maw of Malmortius": "defensive_effects._lifeline_defense",
-    "Protoplasm Harness": "defensive_effects._lifeline_defense",
-    "Seraph's Embrace": "defensive_effects._lifeline_defense",
-    "Sterak's Gage": "defensive_effects._lifeline_defense",
+    "Maw of Malmortius": "interpreters.threshold_defense._lifeline_shield",
+    "Protoplasm Harness": "interpreters.threshold_defense._protoplasm",
+    "Seraph's Embrace": "interpreters.threshold_defense._lifeline_shield",
+    "Sterak's Gage": "interpreters.threshold_defense._lifeline_shield",
 }
 
 _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
@@ -1958,7 +1958,8 @@ _RULE_CLAIMS: tuple[Claim, ...] = (
         "modeled_event_certified",
         (
             Symbol(
-                path="defensive_effects._lifeline_defense", role="walk_packet_builder"
+                path="interpreters.threshold_defense._lifeline_shield",
+                role="walk_packet_builder",
             ),
             Symbol(
                 path="item_coverage.require_certified_target_timeline",

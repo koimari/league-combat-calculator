@@ -1055,18 +1055,28 @@ def test_an_effect_key_the_registry_lacks_is_unresolved(key, message: str) -> No
 
 def test_a_live_effect_tag_resolves_to_a_handler_that_branches_on_it() -> None:
     """A tag with a handler; the ten without one are the frontier's."""
-    _resolve_live(EffectTag(tag="thorns", handler="item_effects.thorns_effects"))
+    _resolve_live(
+        EffectTag(
+            tag="execute", handler="item_effects._resolve_damage_effects_uncached"
+        )
+    )
 
 
 @pytest.mark.parametrize(
     ("tag", "message"),
     [
         (
-            EffectTag(tag="target_state", handler="item_effects.thorns_effects"),
+            EffectTag(
+                tag="target_state",
+                handler="item_effects._resolve_damage_effects_uncached",
+            ),
             "does not branch on",
         ),
         (
-            EffectTag(tag="not_a_tag", handler="item_effects.thorns_effects"),
+            EffectTag(
+                tag="not_a_tag",
+                handler="item_effects._resolve_damage_effects_uncached",
+            ),
             "not an item_effects._KNOWN_EFFECT_TYPES member",
         ),
     ],
@@ -1575,10 +1585,7 @@ CACHE = cached_items()
 DISPATCHED_TAGS: frozenset[str] = (
     frozenset(
         tag
-        for handler in (
-            "item_effects._resolve_damage_effects_uncached",
-            "item_effects.thorns_effects",
-        )
+        for handler in ("item_effects._resolve_damage_effects_uncached",)
         for tag in coverage_resolver.tag_dispatch_branches(
             coverage_resolver.read_repo_file("src/calculator/item_effects.py"), handler
         )
@@ -2335,16 +2342,18 @@ def test_M6_renaming_an_effect_tag_is_noticed() -> None:
     the registry still declares the name, so only the dispatch says whether
     anything reads it.
     """
-    tag = EffectTag(tag="thorns", handler="item_effects.thorns_effects")
+    tag = EffectTag(
+        tag="execute", handler="item_effects._resolve_damage_effects_uncached"
+    )
     coverage_resolver.resolve(tag, MANDATE_SPLIT_CLAIM, _live())
 
     text = coverage_resolver.read_repo_file(EFFECTS_MODULE)
-    renamed = text.replace('"thorns"', '"thorns_bonus"')
+    renamed = text.replace('"execute"', '"execute_bonus"')
     assert renamed != text
     mutated = dataclasses.replace(
         _live(), read_source=_read_source_with(EFFECTS_MODULE, renamed)
     )
-    with pytest.raises(EvidenceUnresolved, match="does not branch on 'thorns'"):
+    with pytest.raises(EvidenceUnresolved, match="does not branch on 'execute'"):
         coverage_resolver.resolve(tag, MANDATE_SPLIT_CLAIM, mutated)
 
 

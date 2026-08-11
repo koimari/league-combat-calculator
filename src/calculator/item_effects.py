@@ -4879,34 +4879,6 @@ class ThornsEffect:
     bonus_armor_ratio: float = 0.0
 
 
-def thorns_effects(items: Sequence[Mapping[str, Any]]) -> tuple[ThornsEffect, ...]:
-    """Compile the build's reactive Thorns packets (Bramble Vest).
-
-    Args:
-        items: The wearer's item data dicts.
-
-    Returns:
-        One packet per equipped thorns item; empty without one.
-    """
-    compiled: list[ThornsEffect] = []
-    for item in items:
-        item_name = str(item.get("name", ""))
-        values = ITEM_EFFECTS.get(item_name)
-        if not values or values.get("type") != "thorns":
-            continue
-        required = _RequiredValues(item_name, values)
-        compiled.append(
-            ThornsEffect(
-                item_name=item_name,
-                damage_type=required.value("damage_type"),
-                damage=required.number("base"),
-                bonus_armor_ratio=required.number("bonus_armor_ratio"),
-                grievous_duration=required.number("grievous_duration"),
-            )
-        )
-    return tuple(compiled)
-
-
 def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     """Return parser-backed Sterak's base-AD conversion.
 

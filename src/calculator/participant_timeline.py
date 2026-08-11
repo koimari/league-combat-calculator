@@ -47,11 +47,11 @@ from .healing_reduction import (
     champion_grievous_wound_sources,
     healing_reduction_profiles,
 )
+from .interpreters.reactive import thorns_effects
 from .item_effects import (
     ThornsEffect,
     serpents_fang_venom,
     sustain_effect_value,
-    thorns_effects,
 )
 from .resistance import (
     apply_armor_penetration,

@@ -19,7 +19,7 @@
       "counter_1": 14
     },
     "calculator/defensive_effects.py": {
-      "counter_1": 77
+      "counter_1": 2
     },
     "calculator/item_coverage.py": {
       "counter_2": 409
@@ -85,7 +85,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 149
+      "value": 74
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",

@@ -23,7 +23,7 @@ def test_loadout_resolves_level_items_and_health_components():
         loadout.stats["base_health"] + loadout.stats["bonus_health"]
     )
     assert loadout.defenses.magic_shield == pytest.approx(254.95, abs=0.1)
-    assert loadout.defenses.sources[0].revision_id == 3990299
+    assert loadout.defenses.sources[0].receipt.revision_id == 3990299
     assert loadout.defenses.coverage == "modeled_starting_defenses"
 
 
@@ -42,7 +42,7 @@ def test_kaenic_adds_ready_max_health_magic_shield():
         loadout.stats["health"] * 0.15
     )
     assert "previous 15 seconds" in loadout.defenses.assumptions[0]
-    assert loadout.defenses.sources[0].revision_id == 3984971
+    assert loadout.defenses.sources[0].receipt.revision_id == 3984971
 
 
 def test_spirit_visage_amplifies_champion_and_kaenic_shields():
@@ -63,7 +63,7 @@ def test_spirit_visage_amplifies_champion_and_kaenic_shields():
         expected_before_amp * 1.25
     )
     assert with_visage.defenses.magic_shield > without_visage.defenses.magic_shield
-    assert with_visage.defenses.sources[-1].revision_id == 4016166
+    assert with_visage.defenses.sources[-1].receipt.revision_id == 4016166
 
 
 def test_target_items_resolve_sourced_incoming_damage_modifiers():
@@ -78,7 +78,7 @@ def test_target_items_resolve_sourced_incoming_damage_modifiers():
     assert loadout.defenses.basic_damage_flat_reduction == 15
     assert loadout.defenses.basic_damage_flat_reduction_cap == pytest.approx(0.20)
     assert loadout.defenses.critical_strike_damage_multiplier == pytest.approx(0.70)
-    assert [source.revision_id for source in loadout.defenses.sources[-3:]] == [
+    assert [source.receipt.revision_id for source in loadout.defenses.sources[-3:]] == [
         4022248,
         3987228,
         4021798,
@@ -109,7 +109,7 @@ def test_shieldbow_resolves_level_scaled_threshold_shield():
     assert level_eighteen.defenses.threshold_shield_amount == 700
     assert level_eighteen.defenses.threshold_shield_health_ratio == pytest.approx(0.30)
     assert level_eighteen.defenses.threshold_shield_duration == 3
-    assert level_eighteen.defenses.sources[-1].revision_id == 4030401
+    assert level_eighteen.defenses.sources[-1].receipt.revision_id == 4030401
 
 
 def test_spirit_visage_amplifies_shieldbow_lifeline():
