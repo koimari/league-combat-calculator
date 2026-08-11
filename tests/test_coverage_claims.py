@@ -1910,3 +1910,30 @@ def test_the_frontier_holds_no_damage_or_durability_lane_and_every_entry_is_trac
     assert not set(FRONTIER) & {
         f"{kind}:{subject}@{lane}" for kind, subject, lane in COVERAGE_EVIDENCE
     }
+
+
+def test_every_rule_claim_names_a_live_rung_whose_predicate_resolves() -> None:
+    """A rule-claim's subject is a rung, and the rung's predicate resolves.
+
+    A claim's subject may be a rule precisely because some families are
+    recomputed from ``data/`` on every call and cannot be enumerated at
+    authoring time.  What makes that honest rather than convenient is that the
+    rule is a real rung of the live chain and its membership predicate is a
+    dotted path this tree resolves — a rule-claim naming a rung nobody
+    declares would be a claim about nothing at all, and one whose predicate
+    named nothing would enumerate an empty population and pass.
+
+    The pinned status is tied to the rung's here too, so the two spellings of
+    "what this rung yields" cannot drift apart in the same commit.
+    """
+    ctx = _static_context()
+    rungs = {rule.rule_id: rule for rule in PRECEDENCE}
+    for (kind, subject, lane), claim in COVERAGE_EVIDENCE.items():
+        if kind != "rule":
+            continue
+        assert subject in rungs, subject
+        rule = rungs[subject]
+        assert rule.lane == lane
+        assert rule.status == claim.status
+        for path in rule.keys_on:
+            coverage_resolver.import_symbol(path, ctx)
