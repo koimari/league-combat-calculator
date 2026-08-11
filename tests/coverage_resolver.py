@@ -1438,3 +1438,190 @@ def resolve_table(
             except EvidenceUnresolved as unresolved:
                 failures.append(unresolved)
     return failures
+
+
+# ── the classifier chain, walked ──────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class ShadowedClaim:
+    """A claim no cached item can reach, and what reaches instead.
+
+    Attributes:
+        claim_key: the claim this shadows, spelled the way ``claim_name``
+            spells it — ``item:Banshee's Veil@attacker``, or
+            ``rule:<rule_id>@<lane>`` for a rung nothing reaches at all.
+        rule_id: the rung the claim was filed against.
+        outranked_by: the rung that decides instead, or the empty string when
+            nothing decides because the rung's container is empty.
+        reason: why no cached item reaches it, in one sentence.  Never blank:
+            a shadowed claim with no reason is the prose this phase deletes,
+            wearing a machine-checked type.
+    """
+
+    claim_key: str
+    rule_id: str
+    outranked_by: str
+    reason: str
+
+
+def _rule_effect_type(item: Mapping[str, Any], ctx: ResolverContext) -> object:
+    """The ``ITEM_EFFECTS`` type an item's registry entry declares."""
+    registry = getattr(ctx.importer(f"{PACKAGE}.item_effects"), "ITEM_EFFECTS")
+    return registry.get(str(item.get("name", "")), {}).get("type")
+
+
+def _rule_container(path: str, ctx: ResolverContext) -> object:
+    """The container or predicate a rung keys on, through the importer seam."""
+    _, found = import_symbol(path, ctx)
+    return found
+
+
+def rule_matches(
+    rule: Any,
+    item: Mapping[str, Any],
+    ctx: ResolverContext,
+    *,
+    precedence: Sequence[Any] = (),
+) -> bool:
+    """Whether one rung fires for one cached item record.
+
+    Eight kinds, one branch each, and no rung may read anything but the
+    record and the paths it declares — that restriction is what makes the
+    mirror checkable against the original rather than merely similar to it.
+    ``precedence`` is needed only by ``status_passthrough``, the rung that
+    asks the other lane's ladder what it decided.
+    """
+    name = str(item.get("name", ""))
+    if rule.items and name not in rule.items:
+        return False
+    if rule.kind == "effect_type":
+        return _rule_effect_type(item, ctx) in rule.effect_types
+    if rule.kind in ("container", "option_state"):
+        return name in _rule_container(rule.keys_on[0], ctx)
+    if rule.kind == "named_item":
+        return True
+    if rule.kind == "predicate":
+        verdict = bool(_rule_container(rule.keys_on[0], ctx)(item))
+        return not verdict if rule.negated else verdict
+    if rule.kind == "cached_record":
+        return item.get("id") is not None or bool(item.get("icon"))
+    if rule.kind == "status_passthrough":
+        other = first_matching_rule(precedence, item, "attacker", ctx=ctx)
+        return other.status == rule.status
+    return True
+
+
+def first_matching_rule(
+    precedence: Sequence[Any],
+    item: Mapping[str, Any],
+    lane: str,
+    *,
+    ctx: ResolverContext,
+) -> Any:
+    """The chain as data — asserted equal to the live classifier for every cached item.
+
+    It takes the context because every rung reads a container, a registry or
+    a predicate out of the package, and the resolver reaches the package only
+    through its seams.
+    """
+    ladder = [rule for rule in precedence if rule.lane == lane]
+    for rule in ladder:
+        if rule_matches(rule, item, ctx, precedence=precedence):
+            return rule
+    raise LookupError(
+        f"the {lane!r} ladder fell off its end for {item.get('name')!r}; a "
+        "terminal rung is what makes that unreachable"
+    )
+
+
+def _rule_population(rule: Any, ctx: ResolverContext) -> tuple[str, ...]:
+    """The item names a rung's own declaration enumerates.
+
+    Two rungs enumerate: one that pins item names, and one that keys on a
+    **private** container.  Privacy is the line between a hand-listed family
+    and a dynamic one, and it is the real line rather than a convenient one:
+    ``item_coverage._REVIEWED_STATS_ONLY`` is a list its own module maintains
+    by hand, so every entry is claimable one by one, while
+    ``item_effects.ITEM_EFFECTS`` is another module's registry whose overlap
+    with the cached shop is recomputed on every call — which is exactly why
+    the second is claimed once per *rule* with an enumerated population and
+    the first once per item.
+
+    Everything else — the effect-type guard, the predicate, the cached-record
+    test and the two terminals — enumerates nothing at authoring time.
+    """
+    names = list(rule.items)
+    if rule.kind == "container" and rule.keys_on[0].rsplit(".", 1)[-1].startswith("_"):
+        names.extend(_rule_container(rule.keys_on[0], ctx))
+    return tuple(dict.fromkeys(names))
+
+
+def shadow_report(
+    precedence: Sequence[Any],
+    cached_items: Mapping[str, Mapping[str, Any]],
+    *,
+    ctx: ResolverContext,
+) -> tuple[ShadowedClaim, ...]:
+    """Every claim no cached item can reach, with the rule that outranks it.
+
+    Two shapes of unreachability, and both are real today.  An **item** claim
+    is shadowed when the item is listed in a container an earlier rung
+    already decided — twenty-nine ``_REVIEWED_STATS_ONLY`` entries are, and
+    the container never gets to speak for any of them.  A **rule** claim is
+    shadowed when no cached item reaches its rung at all, which is what an
+    empty container or a fixture-only branch looks like from here.
+
+    The set is derived and pinned as a set, never as a count: two independent
+    reproductions of it once disagreed by one.
+    """
+    found: list[ShadowedClaim] = []
+    reached: dict[str, set[str]] = {rule.rule_id: set() for rule in precedence}
+    for name, record in cached_items.items():
+        for lane in sorted({rule.lane for rule in precedence}):
+            reached[first_matching_rule(precedence, record, lane, ctx=ctx).rule_id].add(
+                name
+            )
+    for rule in precedence:
+        for name in _rule_population(rule, ctx):
+            record = cached_items.get(name)
+            if record is None:
+                found.append(
+                    ShadowedClaim(
+                        claim_key=f"item:{name}@{rule.lane}",
+                        rule_id=rule.rule_id,
+                        outranked_by="",
+                        reason=(
+                            f"{name!r} is listed by {rule.rule_id} and is not a "
+                            "cached item, so no request can reach the claim"
+                        ),
+                    )
+                )
+                continue
+            decided = first_matching_rule(precedence, record, rule.lane, ctx=ctx)
+            if decided.rule_id != rule.rule_id:
+                found.append(
+                    ShadowedClaim(
+                        claim_key=f"item:{name}@{rule.lane}",
+                        rule_id=rule.rule_id,
+                        outranked_by=decided.rule_id,
+                        reason=(
+                            f"{decided.rule_id} decides {name!r} before "
+                            f"{rule.rule_id} is reached, so the container never "
+                            "speaks for it"
+                        ),
+                    )
+                )
+        if not reached[rule.rule_id]:
+            found.append(
+                ShadowedClaim(
+                    claim_key=f"rule:{rule.rule_id}@{rule.lane}",
+                    rule_id=rule.rule_id,
+                    outranked_by="",
+                    reason=(
+                        f"no cached item reaches {rule.rule_id}; the rung is "
+                        "live code that only a synthetic fixture can enter"
+                    ),
+                )
+            )
+    return tuple(found)

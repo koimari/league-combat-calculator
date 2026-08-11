@@ -7,6 +7,7 @@ this item represented by the current fight model?
 
 from typing import Any, Literal
 
+from .coverage_evidence import PrecedenceRule, validate_precedence
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 
 ItemCoverageStatus = Literal[
@@ -726,7 +727,234 @@ def require_calculation_item_coverage(
         )
 
 
+# ── the chain, mirrored as data ───────────────────────────────────────────
+
+# The two classifiers above are ``if``/``elif`` ladders, and the *order* of
+# their rungs is part of the public contract: an item in
+# ``_REVIEWED_STATS_ONLY`` that also carries a defensive effect type never
+# reaches its own container, so a coverage claim filed against that container
+# is a claim no cached item can reach.  Nothing could say that until the
+# ladder was something a program could walk.
+#
+# This is that walk, landed **beside** the chain and never instead of it
+# (D-98).  It is read-only in this phase: no function in ``src/`` consumes
+# it, ``tests/coverage_resolver.first_matching_rule`` interprets it, and a
+# test reproduces the live status for every cached item on both lanes.
+# Phase 3's step 3.8 is the one-symbol commit that flips the classifier onto
+# it.  Every rung below is in the same order as the branch it mirrors, and
+# `keys_on` names the container, registry or predicate that branch reads.
+PRECEDENCE: tuple[PrecedenceRule, ...] = (
+    PrecedenceRule(
+        rule_id="attacker.deaths_dance_defensive_start",
+        lane="attacker",
+        kind="effect_type",
+        keys_on=("item_effects.ITEM_EFFECTS",),
+        items=("Death's Dance",),
+        effect_types=("defensive_start",),
+        negated=False,
+        status="modeled_effect",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.defensive_effect_types",
+        lane="attacker",
+        kind="effect_type",
+        keys_on=("item_effects.ITEM_EFFECTS",),
+        items=(),
+        effect_types=(
+            "defensive_start",
+            "target_mitigation",
+            "target_threshold_health",
+            "target_threshold_shield",
+        ),
+        negated=False,
+        status="stats_only",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.stateful_modeled_items",
+        lane="attacker",
+        kind="container",
+        keys_on=("item_coverage._STATEFUL_MODELED_ITEMS",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="modeled_state",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.partial_blocked_reasons",
+        lane="attacker",
+        kind="container",
+        keys_on=("item_coverage._PARTIAL_BLOCKED_REASONS",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="blocked",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.heartsteel_state_option",
+        lane="attacker",
+        kind="option_state",
+        keys_on=("item_effects.ITEM_INPUT_OPTIONS",),
+        items=("Heartsteel",),
+        effect_types=(),
+        negated=False,
+        status="modeled_state",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.rod_of_ages_state_option",
+        lane="attacker",
+        kind="option_state",
+        keys_on=("item_effects.ITEM_INPUT_OPTIONS",),
+        items=("Rod of Ages",),
+        effect_types=(),
+        negated=False,
+        status="modeled_state",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.overlords_bloodmail_state_option",
+        lane="attacker",
+        kind="option_state",
+        keys_on=("item_effects.ITEM_INPUT_OPTIONS",),
+        items=("Overlord's Bloodmail",),
+        effect_types=(),
+        negated=False,
+        status="modeled_state",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.blocked_reasons",
+        lane="attacker",
+        kind="container",
+        keys_on=("item_coverage._BLOCKED_REASONS",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="blocked",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.gunmetal_greaves_movement_gap",
+        lane="attacker",
+        kind="named_item",
+        keys_on=(),
+        items=("Gunmetal Greaves",),
+        effect_types=(),
+        negated=False,
+        status="modeled_effect",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.item_effects_membership",
+        lane="attacker",
+        kind="container",
+        keys_on=("item_effects.ITEM_EFFECTS",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="modeled_effect",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.item_input_options_membership",
+        lane="attacker",
+        kind="container",
+        keys_on=("item_effects.ITEM_INPUT_OPTIONS",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="modeled_state",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.reviewed_stats_only",
+        lane="attacker",
+        kind="container",
+        keys_on=("item_coverage._REVIEWED_STATS_ONLY",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="stats_only",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.no_described_effect",
+        lane="attacker",
+        kind="predicate",
+        keys_on=("item_coverage._has_described_effect",),
+        items=(),
+        effect_types=(),
+        negated=True,
+        status="stats_only",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.cached_shop_record",
+        lane="attacker",
+        kind="cached_record",
+        keys_on=(),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="blocked",
+    ),
+    PrecedenceRule(
+        rule_id="attacker.unreviewed_fixture",
+        lane="attacker",
+        kind="terminal",
+        keys_on=(),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="review_pending",
+    ),
+    PrecedenceRule(
+        rule_id="target.modeled_reasons",
+        lane="target",
+        kind="container",
+        keys_on=("item_coverage._TARGET_MODELED_REASONS",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="modeled",
+    ),
+    PrecedenceRule(
+        rule_id="target.event_certified_reasons",
+        lane="target",
+        kind="container",
+        keys_on=("item_coverage._TARGET_EVENT_CERTIFIED_REASONS",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="modeled_event_certified",
+    ),
+    PrecedenceRule(
+        rule_id="target.blocked_reasons",
+        lane="target",
+        kind="container",
+        keys_on=("item_coverage._TARGET_BLOCKED_REASONS",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="blocked",
+    ),
+    PrecedenceRule(
+        rule_id="target.attacker_review_pending_passthrough",
+        lane="target",
+        kind="status_passthrough",
+        keys_on=(),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="review_pending",
+    ),
+    PrecedenceRule(
+        rule_id="target.not_target_relevant",
+        lane="target",
+        kind="terminal",
+        keys_on=(),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="not_target_relevant",
+    ),
+)
+
+validate_precedence(PRECEDENCE)
+
 __all__ = [
+    "PRECEDENCE",
     "item_model_coverage",
     "optimizer_candidate_coverage",
     "optimizer_supported_items",

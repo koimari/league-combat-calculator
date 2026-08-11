@@ -39,6 +39,7 @@ from src.calculator.coverage_evidence import (
     OptionSchema,
     PacketSource,
     PairedSides,
+    PrecedenceRule,
     SourceRef,
     Symbol,
     TestRef,
@@ -46,8 +47,10 @@ from src.calculator.coverage_evidence import (
     validate_claim,
     validate_claim_table,
     validate_evidence,
+    validate_precedence,
+    validate_precedence_rule,
 )
-from src.calculator.item_coverage import _UTILITY_DIMENSIONS
+from src.calculator.item_coverage import PRECEDENCE, _UTILITY_DIMENSIONS
 
 MODULE_PATH = (
     Path(__file__).resolve().parents[1] / "src" / "calculator" / "coverage_evidence.py"
@@ -678,3 +681,98 @@ def test_claim_lane_is_exported_here_and_is_not_spelled_lane() -> None:
     """D-45: two lane vocabularies, never both spelled ``Lane``."""
     assert "ClaimLane" in coverage_evidence.__all__
     assert not hasattr(coverage_evidence, "Lane")
+
+
+# ---------------------------------------------------------------------------
+# The classifier chain as data
+# ---------------------------------------------------------------------------
+
+
+def rung(**overrides) -> PrecedenceRule:
+    """A valid attacker container rung, with fields overridden."""
+    fields = {
+        "rule_id": "attacker.reviewed_stats_only",
+        "lane": "attacker",
+        "kind": "container",
+        "keys_on": ("item_coverage._REVIEWED_STATS_ONLY",),
+        "items": (),
+        "effect_types": (),
+        "negated": False,
+        "status": "stats_only",
+    }
+    fields.update(overrides)
+    return PrecedenceRule(**fields)
+
+
+TERMINAL = rung(
+    rule_id="attacker.unreviewed_fixture",
+    kind="terminal",
+    keys_on=(),
+    status="review_pending",
+)
+
+
+def test_a_well_formed_ladder_validates() -> None:
+    """One rung per shape, terminal last — the case every negative deviates from."""
+    validate_precedence((rung(), TERMINAL))
+
+
+@pytest.mark.parametrize(
+    ("rule", "message"),
+    [
+        (rung(lane="jungle"), "lane 'jungle'"),
+        (rung(status="modeled"), "not claimable on the 'attacker' lane"),
+        (rung(kind="vibes"), "kind 'vibes'"),
+        (rung(keys_on=()), "reads 1 dotted path"),
+        (rung(kind="named_item", keys_on=()), "pins an item and names none"),
+        (rung(effect_types=("burn",)), "only an 'effect_type' rung"),
+        (
+            rung(kind="effect_type", keys_on=("item_effects.ITEM_EFFECTS",)),
+            "names no type",
+        ),
+        (rung(negated=True), "only a 'predicate' rung may be negated"),
+        (rung(rule_id="attacker reviewed"), "carries whitespace"),
+        (rung(keys_on=("REVIEWED",)), "is not a dotted path"),
+    ],
+    ids=[
+        "lane",
+        "status off its lane",
+        "kind",
+        "path count",
+        "pinned with no item",
+        "effect types on the wrong kind",
+        "effect type rung with no type",
+        "negated membership",
+        "rule id",
+        "bare path",
+    ],
+)
+def test_a_malformed_rung_is_rejected(rule: PrecedenceRule, message: str) -> None:
+    """Each rung rule fails on its own, named in the message."""
+    with pytest.raises(CoverageClaimError, match=message):
+        validate_precedence_rule(rule)
+
+
+def test_a_ladder_with_no_terminal_rung_is_rejected() -> None:
+    """A classifier that can fall off its end classifies nothing."""
+    with pytest.raises(CoverageClaimError, match="declares 0 terminal rungs"):
+        validate_precedence((rung(),))
+
+
+def test_a_ladder_whose_terminal_rung_is_not_last_is_rejected() -> None:
+    """Every rung after the terminal one is unreachable by construction."""
+    with pytest.raises(CoverageClaimError, match="ends on"):
+        validate_precedence((TERMINAL, rung()))
+
+
+def test_a_repeated_rule_id_is_rejected() -> None:
+    """The id is a claim key; two rungs sharing one is two claims in one."""
+    with pytest.raises(CoverageClaimError, match="is repeated"):
+        validate_precedence((rung(), rung(), TERMINAL))
+
+
+def test_the_live_ladder_validates_and_covers_both_classifier_lanes() -> None:
+    """The declaration in ``item_coverage`` is checked at import; this says so."""
+    validate_precedence(PRECEDENCE)
+    assert {rule.lane for rule in PRECEDENCE} == {"attacker", "target"}
+    assert len({rule.rule_id for rule in PRECEDENCE}) == len(PRECEDENCE)

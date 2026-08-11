@@ -34,6 +34,13 @@ absent, because it would resolve against name sets Phase 2 has deleted.
 must never both be spelled ``Lane``.
 """
 
+# One closed vocabulary, the requirement matrix that constrains it, and the
+# validators that read both.  pylint's line ceiling is a proxy for "more than
+# one responsibility", and splitting a claim's *shape* across two files is the
+# failure this module exists to prevent — a reader would have to hold two
+# files open to know what a claim may say.
+# pylint: disable=too-many-lines
+
 import keyword
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -879,6 +886,164 @@ def validate_claim_table(
             )
 
 
+# ── the classifier chain, as data ─────────────────────────────────────────
+
+# What a precedence rung tests before it yields its status.  The eight kinds
+# are the eight shapes the live ``if``/``elif`` ladder actually uses; they are
+# a closed vocabulary rather than a callable per rung because a rung that
+# carried its own predicate would be a second implementation of the chain
+# wearing a declaration's clothes, and the point of the mirror is that a test
+# can run it against the original for every cached item.
+RuleKind = Literal[
+    "effect_type",
+    "container",
+    "option_state",
+    "named_item",
+    "predicate",
+    "cached_record",
+    "status_passthrough",
+    "terminal",
+]
+
+RULE_KINDS: frozenset[str] = frozenset(
+    {
+        "effect_type",
+        "container",
+        "option_state",
+        "named_item",
+        "predicate",
+        "cached_record",
+        "status_passthrough",
+        "terminal",
+    }
+)
+
+# How many dotted paths each kind reads, and whether it pins item names.  A
+# rung that keys on nothing and names nothing is the terminal one, and a lane
+# has exactly one.
+_RULE_SHAPES: Mapping[str, tuple[int, bool]] = {
+    "effect_type": (1, False),
+    "container": (1, False),
+    "option_state": (1, True),
+    "named_item": (0, True),
+    "predicate": (1, False),
+    "cached_record": (0, False),
+    "status_passthrough": (0, False),
+    "terminal": (0, False),
+}
+
+
+# Seven fields, one over pylint's default, for the same reason ``Claim`` is:
+# every one of them is separately load-checked and splitting the record would
+# put a rung's shape in two places.
+@dataclass(frozen=True, slots=True)
+class PrecedenceRule:  # pylint: disable=too-many-instance-attributes
+    """One rung of the classifier chain as data — read-only in this phase.
+
+    ``item_coverage``'s two classifiers are ``if``/``elif`` ladders, and the
+    order of their rungs is a real part of the public contract: an item in
+    ``_REVIEWED_STATS_ONLY`` that also carries a defensive effect type never
+    reaches its container, so a coverage claim filed against that container is
+    a claim no cached item can reach.  Nothing could say that until the ladder
+    was something a program could walk.
+
+    This is that walk, landed **beside** the chain rather than instead of it
+    (D-98): a test reproduces the live status for every cached item on both
+    lanes, and no ``src`` module consumes it.  Phase 3's step 3.8 is what
+    flips the classifier onto it, in a one-symbol commit.
+
+    Attributes:
+        rule_id: ``<lane>.<rung>``, unique across the table.
+        lane: which classifier this rung belongs to.
+        kind: what the rung tests, from the closed set above.
+        keys_on: the dotted paths it reads — a container, a registry or a
+            predicate.  Package-relative, exactly as an evidence ``Symbol``
+            is.
+        items: the item names the rung pins, for the rungs that name one.
+        effect_types: the ``ITEM_EFFECTS`` type values it guards on.
+        negated: whether the rung fires when its predicate is **false** —
+            ``not _has_described_effect(item)`` is the one live case.
+        status: the status the rung yields.
+    """
+
+    rule_id: str
+    lane: ClaimLane
+    kind: RuleKind
+    keys_on: tuple[str, ...]
+    items: tuple[str, ...]
+    effect_types: tuple[str, ...]
+    negated: bool
+    status: ClaimStatus
+
+
+def validate_precedence_rule(rule: PrecedenceRule) -> None:
+    """One rung's vocabulary, dotted paths and per-kind shape."""
+    if not isinstance(rule, PrecedenceRule):
+        raise CoverageClaimError(f"{rule!r} is not a PrecedenceRule")
+    name = f"rule:{rule.rule_id}"
+    _require_text(rule.rule_id, claim=name, field="rule_id")
+    _require_no_whitespace(rule.rule_id, claim=name, field="rule_id")
+    _require_membership(rule.lane, LANES, claim=name, field="lane")
+    _require_membership(rule.kind, RULE_KINDS, claim=name, field="kind")
+    _require_membership(rule.status, CLAIM_STATUSES, claim=name, field="status")
+    if rule.status not in LANE_STATUSES[rule.lane]:
+        raise CoverageClaimError(
+            f"{name}: status {rule.status!r} is not claimable on the "
+            f"{rule.lane!r} lane"
+        )
+    for path in rule.keys_on:
+        _require_dotted_path(path, claim=name, field="keys_on")
+    paths, names_items = _RULE_SHAPES[rule.kind]
+    if len(rule.keys_on) != paths:
+        raise CoverageClaimError(
+            f"{name}: kind {rule.kind!r} reads {paths} dotted path(s), not "
+            f"{len(rule.keys_on)}"
+        )
+    if names_items and not rule.items:
+        raise CoverageClaimError(
+            f"{name}: kind {rule.kind!r} pins an item and names none"
+        )
+    if rule.effect_types and rule.kind != "effect_type":
+        raise CoverageClaimError(
+            f"{name}: only an 'effect_type' rung guards on effect types"
+        )
+    if rule.kind == "effect_type" and not rule.effect_types:
+        raise CoverageClaimError(f"{name}: an 'effect_type' rung names no type")
+    if rule.negated and rule.kind != "predicate":
+        raise CoverageClaimError(
+            f"{name}: only a 'predicate' rung may be negated; a negated "
+            "membership test is a rung nobody can read"
+        )
+
+
+def validate_precedence(rules: tuple[PrecedenceRule, ...]) -> None:
+    """The table: unique ids, and one terminal rung last on every lane.
+
+    A lane whose ladder can fall off the end classifies nothing, and a lane
+    with a terminal rung anywhere but last has rungs that cannot fire — both
+    are shape errors the mirror must not be able to express.
+    """
+    seen: set[str] = set()
+    for rule in rules:
+        validate_precedence_rule(rule)
+        if rule.rule_id in seen:
+            raise CoverageClaimError(f"precedence rule {rule.rule_id!r} is repeated")
+        seen.add(rule.rule_id)
+    for lane in sorted({rule.lane for rule in rules}):
+        ladder = [rule for rule in rules if rule.lane == lane]
+        terminal = [rule for rule in ladder if rule.kind == "terminal"]
+        if len(terminal) != 1:
+            raise CoverageClaimError(
+                f"the {lane!r} ladder declares {len(terminal)} terminal rungs; "
+                "a classifier answers exactly once"
+            )
+        if ladder[-1].kind != "terminal":
+            raise CoverageClaimError(
+                f"the {lane!r} ladder ends on {ladder[-1].rule_id!r}, not on its "
+                "terminal rung; every rung after it is unreachable"
+            )
+
+
 __all__ = [
     "Absence",
     "CLAIM_STATUSES",
@@ -902,6 +1067,9 @@ __all__ = [
     "OwnerPolicy",
     "PacketSource",
     "PairedSides",
+    "PrecedenceRule",
+    "RULE_KINDS",
+    "RuleKind",
     "STATE_HOME_KINDS",
     "SUBJECT_KINDS",
     "SYMBOL_ROLES",
@@ -916,4 +1084,6 @@ __all__ = [
     "validate_claim",
     "validate_claim_table",
     "validate_evidence",
+    "validate_precedence",
+    "validate_precedence_rule",
 ]

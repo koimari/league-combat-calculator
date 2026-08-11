@@ -24,6 +24,7 @@ import ast
 import dataclasses
 import fnmatch
 import importlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -43,6 +44,13 @@ from src.calculator.coverage_evidence import (
     Symbol,
     TestRef,
     validate_claim,
+)
+from src.calculator.data_fetcher import fetch_item_data
+from src.calculator import item_coverage
+from src.calculator.item_coverage import (
+    PRECEDENCE,
+    item_model_coverage,
+    target_item_model_coverage,
 )
 from src.calculator.trigger_stream import CAPABILITIES
 
@@ -1158,3 +1166,211 @@ def test_resolve_table_reports_every_broken_member_not_the_first() -> None:
     assert all(
         failure.claim == "item:Imperial Mandate@attacker" for failure in failures
     )
+
+
+# ── the chain, mirrored ───────────────────────────────────────────────────
+
+CLASSIFICATION_RECEIPT = (
+    ROOT / "docs" / "receipts" / "item-coverage-classification.json"
+)
+
+# The containers whose entries a rung reads verbatim as its reason text.  The
+# receipt records that text per item, which is what makes a *second*,
+# independent derivation of the shadow set possible: if the rung had fired,
+# the item's published reason would be its container's entry.
+_REASON_CONTAINERS: dict[str, str] = {
+    "attacker.stateful_modeled_items": "_STATEFUL_MODELED_ITEMS",
+    "attacker.reviewed_stats_only": "_REVIEWED_STATS_ONLY",
+    "attacker.partial_blocked_reasons": "_PARTIAL_BLOCKED_REASONS",
+    "attacker.blocked_reasons": "_BLOCKED_REASONS",
+    "target.modeled_reasons": "_TARGET_MODELED_REASONS",
+    "target.event_certified_reasons": "_TARGET_EVENT_CERTIFIED_REASONS",
+    "target.blocked_reasons": "_TARGET_BLOCKED_REASONS",
+}
+
+# Where the receipt derivation is blind, and why.  ``Gunmetal Greaves`` is
+# decided by its own named rung, whose inline reason is a **verbatim copy** of
+# its ``_REVIEWED_STATS_ONLY`` entry — so the published reason cannot say
+# which of the two rungs produced it, and only the ladder walk can.  This is
+# the shape that makes a pinned integer dangerous: a reader counting either
+# derivation gets a different answer, which is exactly the 28-versus-29
+# disagreement the phase saw, reproduced and named instead of guessed at.
+_REASON_COLLISIONS: frozenset[str] = frozenset({"item:Gunmetal Greaves@attacker"})
+
+# The shadowed set, pinned as a **set** and never as a count: two independent
+# reproductions of it once disagreed by one, and a wrong integer is a second
+# thing to maintain.  Twenty-nine claims are filed against a container an
+# earlier rung already decided; four rungs are live code no cached item
+# enters.  Shrinking it is a real event — it means the chain reordered.
+SHADOWED_CLAIMS: frozenset[str] = frozenset(
+    {
+        "item:Armored Advance@attacker",
+        "item:Banshee's Veil@attacker",
+        "item:Bloodthirster@attacker",
+        "item:Celestial Opposition@attacker",
+        "item:Chainlaced Crushers@attacker",
+        "item:Death's Dance@attacker",
+        "item:Doran's Ring@attacker",
+        "item:Doran's Shield@attacker",
+        "item:Edge of Night@attacker",
+        "item:Force of Nature@attacker",
+        "item:Frozen Heart@attacker",
+        "item:Guardian Angel@attacker",
+        "item:Gunmetal Greaves@attacker",
+        "item:Immortal Shieldbow@attacker",
+        "item:Jak'Sho, The Protean@attacker",
+        "item:Kaenic Rookern@attacker",
+        "item:Knight's Vow@attacker",
+        "item:Locket of the Iron Solari@attacker",
+        "item:Maw of Malmortius@attacker",
+        "item:Mercurial Scimitar@attacker",
+        "item:Mikael's Blessing@attacker",
+        "item:Plated Steelcaps@attacker",
+        "item:Protoplasm Harness@attacker",
+        "item:Randuin's Omen@attacker",
+        "item:Seeker's Armguard@attacker",
+        "item:Shurelya's Battlesong@attacker",
+        "item:Spirit Visage@attacker",
+        "item:Verdant Barrier@attacker",
+        "item:Zhonya's Hourglass@attacker",
+        "rule:attacker.blocked_reasons@attacker",
+        "rule:attacker.partial_blocked_reasons@attacker",
+        "rule:attacker.unreviewed_fixture@attacker",
+        "rule:target.attacker_review_pending_passthrough@target",
+    }
+)
+
+
+def cached_items() -> dict[str, dict]:
+    """Every cached item record, keyed by the name the classifiers read."""
+    return {
+        str(record.get("name", "")): record for record in fetch_item_data().values()
+    }
+
+
+def test_the_mirror_reproduces_the_live_classifier_on_both_lanes() -> None:
+    """Criterion 5, over every cached item — the whole point of the mirror.
+
+    ``PRECEDENCE`` is a second expression of an ``if``/``elif`` ladder, landed
+    beside it rather than instead of it (D-98).  A second expression that is
+    not checked against the first is drift with a type annotation, so this
+    walks both ladders for every cached record and compares the status.
+    """
+    ctx = live_context()
+    live = {"attacker": item_model_coverage, "target": target_item_model_coverage}
+    disagreements = []
+    for name, record in cached_items().items():
+        for lane, classifier in live.items():
+            rule = coverage_resolver.first_matching_rule(
+                PRECEDENCE, record, lane, ctx=ctx
+            )
+            if rule.status != classifier(record)["status"]:
+                disagreements.append((name, lane, rule.rule_id, rule.status))
+    assert disagreements == []
+
+
+def test_the_mirror_is_read_only_and_no_src_module_consumes_it() -> None:
+    """Criterion 5's other half: a derivation beside the legacy, not in it.
+
+    Phase 3's step 3.8 is the one-symbol commit that flips the classifier onto
+    ``PRECEDENCE``.  Until then a ``src`` reader would make this a second
+    live authority for coverage, which is the thing the claim corpus is
+    forbidden from becoming.
+
+    The one read the declaring module is allowed is its own load-time guard,
+    ``validate_precedence(PRECEDENCE)`` — a declaration that checks its own
+    shape is not a consumer of it, and every other read, in any module, is.
+    """
+    guarded = {
+        node.args[0].lineno
+        for path in sorted((ROOT / "src").rglob("*.py"))
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "validate_precedence"
+        and node.args
+        and isinstance(node.args[0], ast.Name)
+        and node.args[0].id == "PRECEDENCE"
+    }
+    readers = []
+    for path in sorted((ROOT / "src").rglob("*.py")):
+        text = path.read_text(encoding="utf-8")
+        if "PRECEDENCE" not in text:
+            continue
+        for node in ast.walk(ast.parse(text)):
+            if not isinstance(node, ast.Name) or node.id != "PRECEDENCE":
+                continue
+            if isinstance(node.ctx, ast.Store) or node.lineno in guarded:
+                continue
+            readers.append(f"{path.name}:{node.lineno}")
+    assert readers == []
+
+
+def test_every_rung_is_reachable_or_named_in_the_shadowed_set() -> None:
+    """A rung nothing reaches is either declared unreachable or a live bug."""
+    report = coverage_resolver.shadow_report(
+        PRECEDENCE, cached_items(), ctx=live_context()
+    )
+    assert {shadowed.claim_key for shadowed in report} == SHADOWED_CLAIMS
+    assert all(shadowed.reason.strip() for shadowed in report)
+
+
+def test_the_receipt_derives_the_same_shadowed_items_independently() -> None:
+    """The second derivation: what the committed classification receipt says.
+
+    A container rung hands its entry straight through as the published
+    ``reason``.  So for every hand-listed entry the receipt answers the
+    question without walking the ladder at all — if the published reason is
+    not the container's text, that container never spoke for the item — and
+    the two derivations have to agree item for item, less the one collision
+    :data:`_REASON_COLLISIONS` names.
+    """
+    receipt = json.loads(CLASSIFICATION_RECEIPT.read_text(encoding="utf-8"))
+    from_receipt: set[str] = set()
+    for rule in PRECEDENCE:
+        container_name = _REASON_CONTAINERS.get(rule.rule_id)
+        if container_name is None:
+            continue
+        container = getattr(item_coverage, container_name)
+        for name, reason in container.items():
+            record = receipt["records"][rule.lane].get(name)
+            if record is None or record["reason"] != reason:
+                from_receipt.add(f"item:{name}@{rule.lane}")
+    from_ladder = {key for key in SHADOWED_CLAIMS if key.startswith("item:")}
+    assert from_receipt == from_ladder - _REASON_COLLISIONS
+    for key in _REASON_COLLISIONS:
+        name, _, lane = key.removeprefix("item:").partition("@")
+        assert (
+            receipt["records"][lane][name]["reason"]
+            == item_coverage._REVIEWED_STATS_ONLY[name]
+        )
+
+
+def test_a_shadowed_item_is_shadowed_for_a_reason_that_names_both_rungs() -> None:
+    """The record is a receipt, not a flag: it says what decides instead."""
+    report = coverage_resolver.shadow_report(
+        PRECEDENCE, cached_items(), ctx=live_context()
+    )
+    veil = next(
+        shadowed
+        for shadowed in report
+        if shadowed.claim_key == "item:Banshee's Veil@attacker"
+    )
+    assert veil.rule_id == "attacker.reviewed_stats_only"
+    assert veil.outranked_by == "attacker.defensive_effect_types"
+    assert "before" in veil.reason
+
+
+def test_the_three_empty_containers_are_empty_rather_than_claim_covered() -> None:
+    """Two dicts and a frozenset, all empty — asserted, never claimed.
+
+    ``_CALCULATION_ALLOWED_BLOCKED`` is a ``frozenset``, so the assertion is
+    emptiness rather than ``== {}``; the same expression would be true of a
+    dict and vacuously true of nothing else.  Phase 3's step 3.8 deletes all
+    three, which is why "ten registries collapse to two" is seven real ones
+    plus these.
+    """
+    assert not item_coverage._BLOCKED_REASONS
+    assert not item_coverage._PARTIAL_BLOCKED_REASONS
+    assert not item_coverage._CALCULATION_ALLOWED_BLOCKED
+    assert isinstance(item_coverage._CALCULATION_ALLOWED_BLOCKED, frozenset)
