@@ -8,9 +8,6 @@
   <title>Scryglass — Item calculator</title>
   <link rel="icon" href="/static/img/summoners-rift-bg.png" type="image/png" />
   <link rel="preconnect" href="https://ddragon.leagueoflegends.com" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
   <style>
     /* P1a first-run onboarding overlay.
@@ -168,12 +165,12 @@
         <section class="builder-column" aria-label="Scenario builder">
           <section class="champion-section section-rule">
             <div class="section-heading"><span class="micro-label">Champion</span><span id="stateReadout" class="section-note">Theory state</span></div>
-            <div class="champion-card">
-              <div class="champion-identity">
+            <div class="champion-card is-empty">
+              <div class="champion-identity is-empty">
                 <button class="champion-portrait champion-portrait-button is-empty" id="championPicker" type="button" data-picker="champion" data-path="attacker.champion" aria-label="Choose champion"><img id="championImage" src="/static/img/rift-illustration-4k.webp" alt="" hidden /></button>
-                <div><div class="eyebrow">Main champion</div><h2 id="championName">Choose a champion</h2><p id="championTitle">Start with the champion you want to compare.</p><div class="identity-controls"><label class="role-control">Role <select id="roleSelect" aria-label="Role"><option value="top">Top</option><option value="jungle">Jungle</option><option value="mid" selected>Mid</option><option value="bottom">Bottom</option><option value="support">Support</option></select></label><div class="level-stepper"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1" aria-label="Decrease level">−</button><output id="levelOutput" aria-live="polite">1</output><button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button><input id="levelInput" type="number" min="1" max="18" value="1" aria-label="Level" /></div><button class="outline-button" id="questToggle" type="button" aria-pressed="false">Quest off</button><button class="outline-button active-outline" id="bootsToggle" type="button" aria-pressed="true">Boots on</button></div></div>
+                <div><div class="eyebrow">Main champion</div><h2 id="championName">Choose a champion</h2><p id="championTitle">Start with the champion you want to compare.</p><div class="identity-controls" id="identityControls" hidden aria-hidden="true"><label class="role-control">Role <select id="roleSelect" aria-label="Role"><option value="top">Top</option><option value="jungle">Jungle</option><option value="mid" selected>Mid</option><option value="bottom">Bottom</option><option value="support">Support</option></select></label><div class="level-stepper"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1" aria-label="Decrease level">−</button><output id="levelOutput" aria-live="polite">1</output><button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button><input id="levelInput" type="number" min="1" max="18" value="1" aria-label="Level" /></div><button class="outline-button" id="questToggle" type="button" aria-pressed="false">Quest off</button><button class="outline-button active-outline" id="bootsToggle" type="button" aria-pressed="true">Boots on</button></div></div>
               </div>
-              <div class="stats-grid" id="statsGrid"></div>
+              <div class="stats-grid" id="statsGrid" hidden aria-hidden="true"></div>
             </div>
           </section>
 
@@ -244,17 +241,17 @@
         <section class="onboarding-step is-active">
           <span class="onboarding-step-mark" aria-hidden="true">1</span>
           <h3>Pick your champion + role</h3>
-          <p>Quick mode is the landing page: search a champion, tap it, choose your role. Enemy and current items are optional — that's the whole setup for a recommendation.</p>
+          <p>Choose a champion. Set its role, level, quest, and boots in the identity card.</p>
         </section>
         <section class="onboarding-step" hidden>
           <span class="onboarding-step-mark" aria-hidden="true">2</span>
-          <h3>Press Best next item</h3>
-          <p>You get the top 3 picks with <em>why</em> — each card shows the damage (TDD) and survival (eHP) delta against your current build plus a plain-language reason.</p>
+          <h3>Set up Build A and Build B</h3>
+          <p>Fill the six item slots in each build. Add a roster and adjust the fight window when the scenario needs more context.</p>
         </section>
         <section class="onboarding-step" hidden>
           <span class="onboarding-step-mark" aria-hidden="true">3</span>
-          <h3>Dig deeper in Analyst</h3>
-          <p>Open a build in Analyst and every number carries a certainty chip:</p>
+          <h3>Read the result and proof</h3>
+          <p>The result column shows the current comparison and its event proof. Certainty chips mark the scope of each number:</p>
           <p class="onboarding-chip-row" aria-label="Certainty chips legend">
             <span class="certainty-chip certainty-exact">EXACT</span>
             <span class="certainty-chip certainty-estimate">ESTIMATE</span>

@@ -12,7 +12,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import damage_entry
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
 
@@ -146,20 +146,81 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# HARDCODED: verify on patch updates — the Moonlight Vigil follow-up
+# prose (cached R effect[1]): "attacks based on Aphelios' current main
+# weapon will launch from the sky against each locked-on target,
+# dealing 100% AD physical damage and applying on-hit effects. These
+# attacks can critically strike for 100% : 130% (+ 0% : 9%) (based on
+# critical strike chance)".  The follow-up crit DAMAGE ramps with crit
+# chance (100% at 0% crit to 130% at 100%, plus 0-9%), so the expected
+# multiplier is 1 + (0.30 + 0.09) x crit^2 — the attacks are basic
+# attacks, not spells, but their crits are far weaker than the 200%
+# normal attacks use.
+_R_FOLLOWUP_CRIT_EXTRA = 0.30  # 100% : 130% ramp by crit chance
+_R_FOLLOWUP_CRIT_CHANCE_BONUS = 0.09  # (+ 0% : 9%) by crit chance
+_R_FOLLOWUP_DELAY = 0.3  # "After 0.3 seconds of the illumination"
+
+
+def _r_followup_part(ctx: SlotCtx, followups: int) -> tuple[DamagePart, float]:
+    """One follow-up part: 100% AD per locked-on target, special crit.
+
+    Returns ``(part, total)`` for the selected follow-up count.  The
+    sourced crit ("100% : 130% (+ 0% : 9%) based on critical strike
+    chance") is baked into the per-attack amount as an expected value
+    (the Caitlyn Headshot convention): P(crit) = crit, crit damage =
+    1 + 0.39 x crit, so E = 1 + 0.39 x crit^2.
+    """
+    total_ad = float(ctx.stats.get("attack_damage", 0.0))
+    crit = min(
+        max(float(ctx.stats.get("critical_strike_chance", 0.0)) / 100.0, 0.0), 1.0
+    )
+    expected = 1.0 + (_R_FOLLOWUP_CRIT_EXTRA + _R_FOLLOWUP_CRIT_CHANCE_BONUS) * (
+        crit * crit
+    )
+    per_followup = total_ad * expected
+    return (
+        DamagePart(
+            "physical",
+            amount=per_followup,
+            count=followups,
+            time_offset=_R_FOLLOWUP_DELAY,
+            basic_damage=True,
+        ),
+        per_followup * followups,
+    )
+
+
 def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("R")
     if not ability:
         return None
-    rank = ctx.level if ctx.level in (6, 7, 8, 9, 10) else ctx.rank_for("R")
     r_rank = 1 if ctx.level < 11 else (2 if ctx.level < 16 else 3)
     base = (125.0, 175.0, 225.0)[r_rank - 1]
     ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
     ap = float(ctx.stats.get("ability_power", 0.0))
-    entry = damage_entry(
-        ability["name"], r_rank, 120.0, base + 0.20 * ad + ap, "physical"
-    )
-    entry["parts"] = (DamagePart("physical", amount=base + 0.20 * ad + ap),)
-    detail = f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]} follow-up is event-ordered separately"
+    initial = base + 0.20 * ad + ap
+    total = initial
+    parts = [DamagePart("physical", amount=initial)]
+    followups = min(max(int(ctx.options.get("r_followup_targets", 0)), 0), 5)
+    if followups:
+        followup_part, followup_total = _r_followup_part(ctx, followups)
+        parts.append(followup_part)
+        total += followup_total
+    entry = damage_entry(ability["name"], r_rank, 120.0, total, "physical")
+    entry["parts"] = tuple(parts)
+    detail = f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]}"
+    if followups:
+        detail += (
+            f" + {followups} locked-on target follow-up attack(s) at 100% AD "
+            f"(expected crit {_r_followup_expected_crit(ctx):.3f}x)"
+        )
+        entry["applies_item_on_hits"] = {
+            "effectiveness": 1.0,
+            "hits": followups,
+            "triggers": ("on_hit",),
+        }
+    else:
+        detail += " follow-up is event-ordered separately"
     # The healing rule reads this marker to gate Severum's overheal-to-
     # shield conversion (the Shyvana dragon-form convention).
     if _main_weapon(ctx) == "severum" and bool(
@@ -170,10 +231,32 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _r_followup_expected_crit(ctx: SlotCtx) -> float:
+    """Expected crit multiplier of one follow-up attack at this build."""
+    crit = min(
+        max(float(ctx.stats.get("critical_strike_chance", 0.0)) / 100.0, 0.0), 1.0
+    )
+    return 1.0 + (_R_FOLLOWUP_CRIT_EXTRA + _R_FOLLOWUP_CRIT_CHANCE_BONUS) * (
+        crit * crit
+    )
+
+
 SLOTS = {"P": _weapon_master, "W": _phase, "Q": _q, "R": _r}
 parse_abilities = build_parser(SLOTS, "Aphelios")
 
 OPTIONS = [
+    {
+        "key": "r_followup_targets",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Locked-on targets hit by Moonlight Vigil follow-up attacks "
+            "(each takes one 100% AD main-weapon attack with on-hits)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "R"},
+    },
     {
         "key": "aphelios_main_weapon",
         "type": "select",
@@ -217,8 +300,8 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs.",
-    "Onslaught applies wiki-sourced item on-hits at 25% per attack; Duskwave (calibrum Q) at 100%. Moonlight Vigil follow-ups remain unmodeled.",
-    "Moonlight Vigil models the sourced initial blast; weapon-specific follow-up attacks remain listed in the result as a separate coverage boundary.",
+    "Onslaught applies wiki-sourced item on-hits at 25% per attack; Duskwave (calibrum Q) at 100%.",
+    "Moonlight Vigil models the sourced initial blast; with r_followup_targets (default 0) selected, each locked-on champion also takes one follow-up attack from the sky: 100% AD physical basic damage applying on-hit effects at 100% (cached R prose), with the sourced special crit — 'critically strike for 100% : 130% (+ 0% : 9%) (based on critical strike chance)' — baked in as an expected-value multiplier 1 + 0.39 x crit^2 (the follow-up crits are far weaker than the 200% normal attacks use).",
     "Severum's excess healing converts into a shield capped at the sourced "
     "per-level 'Heal' row (10 : 160 by level + 6% maximum health) that "
     "lingers for up to 30 seconds (wiki P prose); with "

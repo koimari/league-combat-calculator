@@ -274,6 +274,14 @@ ASSUMPTIONS = [
     "expended Grit also grants Sett an equal shield for 3s "
     "(self_shield_events). The outer physical ring is state",
     "E/R damage keep the reviewed CP10.7 packet pricing",
+    "P (Pit Grit) always-on missing-health regeneration is authored by "
+    "the HEALING_RULE_CHAMPIONS rule in healing.py: the cached prose row "
+    "0.075 / 0.25 / 0.5 / 1 / 1.025 / 1.05 (based on level) health per "
+    "0.5 seconds per 5% of missing health, capped at the sourced 19x "
+    "maximum at 95% missing health (1.425 / 4.75 / 9.5 / 19 / 19.475 / "
+    "19.95); the 6-value rows use the standard 1/6/11/16/17/18 "
+    "breakpoints and the survival walk re-prices each tick from the "
+    "fighter's live health",
 ]
 
 SOURCES = load_champion_sources("Sett")

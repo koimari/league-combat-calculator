@@ -1,9 +1,15 @@
 """Dr. Mundo — slot map for the archetype engine.
 
 Why each slot is non-generic:
-- P (Goes Where He Pleases) is deliberately ABSENT: health regeneration,
-  an immobilize cleanse and a self-heal on the dropped canister. It deals
-  no damage to an enemy, so it gets no slot.
+- P (Goes Where He Pleases) has NO slot: the passive immunity arm
+  (the next hostile immobilizing control is RESISTED before it applies —
+  4% current-health cost + canister drop receipt) rides the coupled
+  survival walk via the participant timeline's t=0 arm packet; the
+  canister pickup (4% max-health heal + 15s refund) and the enemy
+  destruction are NAMED unsupported timings (no movement model, no
+  toggle); the innate health regeneration (0.4%..2.3% max HP per 5s /
+  0.04%..0.23% per 0.5s) stays self-sustain and out of scope (P2
+  Slice 8). It deals no damage to an enemy, so it gets no slot.
 - Q (Infected Bonesaw) is %CURRENT-health magic damage floored at a flat
   minimum, and both halves defeat the generic path. The unit
   ``"% of target's current health"`` resolves against a
@@ -207,7 +213,23 @@ def _blunt_force_trauma(ctx: SlotCtx) -> dict[str, Any] | None:
     total = bonus * _damage_amp(ctx)
     entry["total_raw"] = total
     entry["parts"] = (DamagePart("physical", total),)
-    entry["empowers_next_auto"] = True
+    # The attack reset's THROUGHPUT is opt-in (the Vayne-Q template):
+    # with the ``e_reset_throughput`` option the empower is stamped as a
+    # self-supplying burst at an infinite rate — "the auto fires
+    # immediately" (the cached reset prose + the binary Trait_AttackReset
+    # tag; the acceleration magnitude is script-side, so no finite number
+    # is invented) — and the engine's burst machinery buys one EXTRA
+    # swing per accepted cast with zero dead time.  The stat_buff (the
+    # passive steroid) rides the same entry untouched.  Default keeps the
+    # conservative ``True`` form (casts capped at the auto count).  The
+    # option is read STRICTLY so junk values fail closed to the default.
+    if ctx.options.get("e_reset_throughput") is True:
+        entry["empowers_next_auto"] = {
+            "hits": 1,
+            "attack_speed": float("inf"),
+        }
+    else:
+        entry["empowers_next_auto"] = True
     return entry
 
 
@@ -337,6 +359,21 @@ OPTIONS: list[dict[str, Any]] = [
         "max": R_MAX_NEARBY_CHAMPIONS,
         "label": "Enemy champions near R cast (rank 3 bonus)",
     },
+    {
+        "key": "e_reset_throughput",
+        "type": "bool",
+        "default": False,
+        "label": (
+            "Model Blunt Force Trauma's attack-reset throughput: each "
+            "accepted E cast buys one extra basic attack (the wiki: "
+            "'Blunt Force Trauma resets Dr. Mundo's basic attack timer'; "
+            "the binary Trait_AttackReset tag; the acceleration magnitude "
+            "is script-side)"
+        ),
+        # NO rotation metadata — a throughput assertion is not a rotation
+        # edge (centrally classified irrelevant, the q_tumble_reset
+        # precedent).
+    },
 ]
 
 ASSUMPTIONS = [
@@ -353,8 +390,17 @@ ASSUMPTIONS = [
     "Damage' still cached from W's pre-V12.23 four-second duration",
     "E's bonus damage reaches its maximum amp at 70% missing health, not "
     "100% (undocumented on the wiki; from the game files and V25.23)",
-    "E's empowered attack applies once per cast, not on every auto; it "
-    "resets the attack timer, which is not modeled as extra attacks",
+    "E's empowered attack applies once per cast, not on every auto.  The "
+    "reset's THROUGHPUT is opt-in via e_reset_throughput: with the "
+    "option on, each accepted E cast's empowered auto is an EXTRA swing "
+    "(the entry's empower becomes a self-supplying burst at an infinite "
+    "rate — 'fires immediately', the cached reset prose + the binary "
+    "Trait_AttackReset tag; the acceleration magnitude is script-side, "
+    "so no finite number is invented); casts lift to the cooldown grid "
+    "when the ambient auto cap binds, and the on-hit counters ride the "
+    "augmented stream.  Default keeps the conservative cap (the reset's "
+    "gain not modeled).  The passive AD steroid rides the same entry "
+    "untouched; the 4s empower window is prose-only (no atom exists).",
     "E's corpse knockback (100% AD to enemies the flung body passes "
     "through) is not modeled — it only triggers on a kill or a small "
     "monster, so it is not a repeatable source against a champion",
@@ -363,8 +409,12 @@ ASSUMPTIONS = [
     "Overlord's Bloodmail",
     "R's bonus movement speed, health regeneration and takedown duration "
     "extension are not modeled (no damage impact)",
-    "Mundo's passive, Q's health cost and refund, and W's grey-health "
-    "healing are self-sustain and are not modeled",
+    "Mundo's passive IMMUNITY (the next hostile immobilizing control is "
+    "resisted — 4% current-health cost + canister drop) is modeled in the "
+    "coupled survival walk; the canister pickup (4% max-health heal + "
+    "15s refund) and the enemy destruction are named unsupported timings; "
+    "the innate health regeneration, Q's health cost and refund, and W's "
+    "grey-health healing are self-sustain and are not modeled",
     "Dr. Mundo has no AP scaling anywhere in his kit",
 ]
 

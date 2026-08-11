@@ -31,6 +31,7 @@ from src.calculator.stats import calculate_total_stats
 
 _ENEMY_NAMES = ["Ahri", "Annie", "Orianna"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
+_ENEMY_RANKS = {"Q": 5, "W": 5, "E": 0, "R": 3}
 _RABADONS = "Rabadon's Deathcap"
 
 
@@ -56,7 +57,7 @@ def _fight(
                 "level": 18,
                 "items": [],
                 "role": "mid",
-                "ability_ranks": _RANKS,
+                "ability_ranks": _ENEMY_RANKS,
             }
             for index in range(enemies)
         ],

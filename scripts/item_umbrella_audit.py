@@ -31,6 +31,7 @@ except ImportError:  # imported as scripts.item_umbrella_audit in tests
 
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_coverage import (
+    _CALCULATION_ALLOWED_BLOCKED,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -91,6 +92,7 @@ def run_audit() -> dict[str, Any]:
             manual
             and optimizer
             and attacker["calculation_eligible"] != attacker["optimizer_eligible"]
+            and name not in _CALCULATION_ALLOWED_BLOCKED
         ):
             path_mismatches.append(
                 {

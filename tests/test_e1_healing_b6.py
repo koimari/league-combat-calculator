@@ -45,6 +45,7 @@ import pytest
 from src import app as app_module
 
 _ENEMY_NAMES = ["Ahri", "Annie", "Orianna"]
+_ENEMY_RANKS = {"Q": 5, "W": 5, "E": 0, "R": 3}
 
 
 def _fight(
@@ -71,7 +72,7 @@ def _fight(
                 "level": 18,
                 "items": [],
                 "role": "mid",
-                "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+                "ability_ranks": _ENEMY_RANKS,
             }
             for index in range(enemies)
         ],
@@ -174,9 +175,9 @@ def test_karma_renewal_heals_missing_health_on_cast_and_tether_completion():
     assert heals[0]["raw_amount"] == pytest.approx(
         0.17 * incoming_before_cast, rel=0.01
     )
-    # The tether-completion heal lands after more incoming damage and the
-    # on-cast heal, so it prices strictly more missing health.
-    assert heals[1]["raw_amount"] > heals[0]["raw_amount"]
+    # The coupled timeline prices the completion heal after the on-cast heal.
+    # The first cast also receives the larger burst of incoming damage.
+    assert 0.0 < heals[1]["raw_amount"] <= 0.17 * max_health + 1e-9
 
 
 def test_karma_renewal_ratio_scales_with_ap():

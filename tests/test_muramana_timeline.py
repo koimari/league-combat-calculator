@@ -71,33 +71,48 @@ def test_muramana_multicast_emits_one_boundary_event_per_instance() -> None:
 def test_muramana_event_builder_withholds_incomplete_cast_receipt() -> None:
     """A missing cast timestamp withholds events instead of guessing time zero."""
     state = SimpleNamespace(
-        ability_damages={"Q": {"cast_instances": 1}},
+        ability_damages={
+            "Q": {
+                "cast_instances": 1,
+                "parts": (DamagePart("magic", 100.0),),
+            }
+        },
     )
     rotation = RotationResult(
         total_muramana_procs=1,
         cast_events=[{"slot": "Q"}],
     )
 
-    assert _muramana_proc_events(state, rotation) is None
+    assert _muramana_proc_events(state, rotation, lockout_seconds=6.5) is None
 
 
 def test_muramana_event_builder_withholds_count_mismatch() -> None:
     """An authored receipt count mismatch remains aggregate-only."""
     state = SimpleNamespace(
-        ability_damages={"Q": {"cast_instances": 2}},
+        ability_damages={
+            "Q": {
+                "cast_instances": 2,
+                "parts": (DamagePart("magic", 100.0),),
+            }
+        },
     )
     rotation = RotationResult(
         total_muramana_procs=1,
         cast_events=[{"slot": "Q", "time": 0.0}],
     )
 
-    assert _muramana_proc_events(state, rotation) is None
+    assert _muramana_proc_events(state, rotation, lockout_seconds=6.5) is None
 
 
 def test_muramana_prefers_authored_ability_hit_time() -> None:
     """A sourced ability packet replaces the cast-boundary fallback."""
     state = SimpleNamespace(
-        ability_damages={"Q": {"cast_instances": 1}},
+        ability_damages={
+            "Q": {
+                "cast_instances": 1,
+                "parts": (DamagePart("magic", 100.0),),
+            }
+        },
         breakdown={
             "Q": {
                 "damage_events": [
@@ -108,9 +123,22 @@ def test_muramana_prefers_authored_ability_hit_time() -> None:
     )
     rotation = RotationResult(
         total_muramana_procs=1,
-        cast_events=[{"slot": "Q", "time": 0.0}],
+        cast_events=[
+            {
+                "slot": "Q",
+                "time": 0.0,
+                "cast_id": "Q:1",
+                "target_id": "target:0",
+            }
+        ],
     )
 
-    assert _muramana_proc_events(state, rotation) == [
-        {"time": 0.25, "damage": 0.0, "event_precision": "exact"}
+    assert _muramana_proc_events(state, rotation, lockout_seconds=6.5) == [
+        {
+            "time": 0.25,
+            "damage": 0.0,
+            "event_precision": "exact",
+            "cast_id": "Q:1",
+            "target_id": "target:0",
+        }
     ]

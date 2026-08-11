@@ -54,13 +54,27 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "resource_type",
         "resource_restore",
         "resource_restore_per_proc",
+        "resource_restore_per_auto",
+        "mark_refund",
+        # P4-14: Darius W's asserted kill rule (cooldown halved + flat
+        # mana refund) — emitted only when the w_kill_assertion option is
+        # on; validated by the resource walk's fail-closed declaration.
+        "kill_refund",
         "resource_maximum_bonus",
         "resource_maximum_bonus_duration",
         "damage_type",
         "parts",
+        # P3 package 3V: the Ferocity-empowered part set (Rengar Q/W/E) —
+        # the engine prices it for live empowered casts chosen by the
+        # post-rotation stack walk.
+        "ferocity_parts",
         "cast_instances",
         "recast_of",
         "empowers_next_auto",
+        # P4: documentary certification surfaces on state rows (Yasuo/
+        # Yone P crit-conversion constants — the Asol rule pattern).
+        "atom_ids",
+        "certified_constants",
         "stat_buff",
         "target_debuff",
         "post_hit_proc",
@@ -68,6 +82,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "proc_count",
         "dot_duration",
         "dot_tick_interval",
+        "deathfire_category",
         "stacking_dot",
         "stack_triggered_buff",
         "applies_dot_stack",
@@ -80,6 +95,8 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "double_shot",
         "target_max_health_sensitive",
         "requires_auto_timeline_coupling",
+        "execute_threshold_ratio",
+        "execute_source",
         "detail",  # display text copied onto the ability's breakdown row
         "unit",  # count label for a proc row ("cleaves"); default is "hits"
         # producer diagnostics / display metadata
@@ -92,6 +109,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # into the damage timeline by the fight engine; they are not inferred
         # from aggregate totals.
         "damage_events",
+        "control_events",
+        "control_source_atoms",
+        "cc_reviewed",
         "event_phase",
         # Explicit module-owned proof that a dynamic packet is one hit at
         # the cast boundary; this is never inferred from part count alone.
@@ -107,12 +127,22 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # participant ledger turns into a timed self-shield event at that
         # event's timestamp (the Eclipse item authors the same payload shape).
         "self_shield_events",
+        # Module-authored non-damage state packets.  The pipeline expands
+        # these once per accepted cast and sends them to the participant
+        # ledger as typed state transitions.
+        "self_state_events",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it
         # once in ``_apply_stat_buff_ultimates`` so ability crit scaling and
         # the auto-attack simulation share the converted values.
         "crit_modifier",
+        # A source-backed ability projectile marker used by the coupled
+        # target-defense ledger.  It is stamped from the cached ability row.
+        "skillshot",
+        # A source-backed area-ability marker used by Jax Counter Strike.
+        "area_damage",
+        "defensive_interaction",
     }
 )
 
@@ -332,9 +362,29 @@ def _result_key(slot: str) -> str:
     return "passive" if slot == "P" else slot
 
 
+def _stamp_reviewed_no_cc(
+    champion_name: str,
+    result_key: str,
+    entry: dict[str, Any],
+) -> None:
+    """Stamp one entry only when its module certifies that it has no CC."""
+    parts = tuple(entry.get("parts", ())) + tuple(entry.get("ferocity_parts", ()))
+    has_typed_control = bool(entry.get("control_events")) or any(
+        getattr(part, "cc_kind", None) is not None for part in parts
+    )
+    if has_typed_control:
+        raise ValueError(
+            f"{champion_name} entry {result_key!r} emits crowd control "
+            "under reviewed_no_cc"
+        )
+    entry["cc_reviewed"] = True
+
+
 def build_parser(
     slot_map: dict[str, SlotParser],
     champion_name: str,
+    *,
+    cc_review_status: str | None = None,
 ) -> Callable[..., dict[str, dict[str, Any]]]:
     """Build a ``parse_abilities``-signature function from a slot map.
 
@@ -344,6 +394,10 @@ def build_parser(
     Args:
         slot_map: Mapping of slot key (Q/W/E/R/P/...) to slot parser.
         champion_name: Display name, used for skill-order lookup.
+        cc_review_status: Explicit module-level crowd-control review status.
+            ``"reviewed_no_cc"`` certifies that every emitted entry has no
+            enemy crowd control. An absent value leaves every untyped entry
+            unreviewed.
 
     Returns:
         A function with the standard champion-module signature
@@ -351,6 +405,11 @@ def build_parser(
         champion_options=None, champion_stats=None, target_stats=None)
         -> results dict``.
     """
+    if cc_review_status not in {None, "reviewed_no_cc"}:
+        raise ValueError(
+            f"{champion_name}: unsupported cc_review_status " f"{cc_review_status!r}"
+        )
+
     ordered: list[tuple[str, SlotParser]] = []
     for phase in PHASE_ORDER:
         for slot, parser in slot_map.items():
@@ -398,6 +457,15 @@ def build_parser(
             if entry is not None:
                 ability_json = ctx.ability()
                 _stamp_cast_time(entry, ability_json)
+                if ability_json is not None and ability_json.get("projectile") not in (
+                    None,
+                    "",
+                ):
+                    entry.setdefault("skillshot", True)
+                if ability_json is not None:
+                    spell_effects = str(ability_json.get("spellEffects", "")).lower()
+                    if "aoe" in spell_effects or "area of effect" in spell_effects:
+                        entry.setdefault("area_damage", True)
                 _stamp_resource_cost(
                     entry,
                     ability_json,
@@ -410,8 +478,11 @@ def build_parser(
         # Validate AFTER all phases: AMP parsers mutate earlier entries,
         # and a mutated entry must obey the contract too.
         for result_key, entry in results.items():
+            if cc_review_status == "reviewed_no_cc":
+                _stamp_reviewed_no_cc(champion_name, result_key, entry)
             _validate_entry_keys(champion_name, result_key, entry)
 
         return results
 
+    setattr(parse_abilities, "cc_review_status", cc_review_status)
     return parse_abilities

@@ -373,8 +373,8 @@ def test_optimize_api_certifies_shyvana_form_packets():
     assert body["ranked_builds"]
 
 
-def test_optimize_api_labels_partial_candidate_search_without_claiming_certified_best():
-    """A complete winner cannot certify an exhaustive search with coarse candidates."""
+def test_optimize_api_labels_withheld_item_scope_without_certified_best():
+    """A sourced item gap withholds exhaustive candidate certification."""
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
@@ -390,13 +390,14 @@ def test_optimize_api_labels_partial_candidate_search_without_claiming_certified
     payload = response.get_json()
     assert payload["timeline_coverage"]["complete"] is True
     assert payload["is_certified_best"] is False
-    assert payload["selection_certification"] == "partial_or_unexhaustive"
-    assert payload["search_timeline_coverage"]["certification"] == (
-        "partial_candidate_event_order"
+    assert payload["selection_certification"] == "event_ordered_item_scope_gap"
+    assert (
+        payload["search_timeline_coverage"]["certification"]
+        == "candidate_event_order_certified"
     )
-    assert payload["search_timeline_coverage"]["partial_evaluations"] > 0
-    assert payload["candidate_coverage"]["complete"] is True
-    assert payload["candidate_coverage"]["excluded_count"] == 0
+    assert payload["search_timeline_coverage"]["partial_evaluations"] == 0
+    assert payload["candidate_coverage"]["complete"] is False
+    assert payload["candidate_coverage"]["excluded_count"] == 1
 
 
 def test_optimize_api_darius_returns_visible_event_certified_build():
@@ -419,7 +420,7 @@ def test_optimize_api_darius_returns_visible_event_certified_build():
     assert payload["timeline_coverage"]["certification"] == "event_order_certified"
     assert payload["timeline_coverage"]["coarse_sources"] == []
     assert payload["is_certified_best"] is False
-    assert payload["selection_certification"] == "partial_or_unexhaustive"
+    assert payload["selection_certification"] == "event_ordered_item_scope_gap"
 
 
 def test_optimize_api_certifies_ziggs_minefield_cadence():

@@ -57,7 +57,11 @@ from src.calculator.item_effects import (
     refresh_item_effects,
     stat_conversion_metadata,
 )
-from src.calculator.rune_effects import keystone_catalog, refresh_rune_effects
+from src.calculator.rune_effects import (
+    keystone_catalog,
+    keystone_input_options_meta,
+    refresh_rune_effects,
+)
 from src.calculator.item_coverage import (
     item_model_coverage,
     target_item_model_coverage,
@@ -1171,6 +1175,7 @@ def api_config():
             "input_limits": PUBLIC_INPUT_LIMITS,
             "champion_options": champion_options_meta_map(),
             "item_options": item_input_options_meta(),
+            "keystone_options": keystone_input_options_meta(),
             "role_quest": {
                 "support_item": support_quest_item_contract(),
                 "boot_upgrades": boot_upgrade_contract(),
@@ -1486,6 +1491,7 @@ def api_save_build():
 
     The request mirrors the /api/calculate payload.  Dedicated columns take
     champion/level/role/items/item_options/ability_ranks/champion_options/
+    keystone_options/
     enemies/allies; every remaining key (boots, fight_mode, target stats,
     rotations, ...) is preserved losslessly in ``fight_params`` so the saved
     build can be reconstructed into a full calculate request.
@@ -1502,7 +1508,12 @@ def api_save_build():
             raise ValueError("items must be a list of item names")
         if len(items) > 20:
             raise ValueError("items may contain at most 20 entries")
-        for key in ("item_options", "ability_ranks", "champion_options"):
+        for key in (
+            "item_options",
+            "ability_ranks",
+            "champion_options",
+            "keystone_options",
+        ):
             value = data.get(key, {})
             if not isinstance(value, dict):
                 raise ValueError(f"{key} must be a JSON object")

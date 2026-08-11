@@ -430,12 +430,15 @@ def test_timeline_labels_are_not_truncated_to_fragments(source: str):
     assert ".slice(0, 3)" not in block, "3-character source fragments are unreadable"
 
 
-def test_timeline_rows_are_keyed_to_the_ledger_table(source: str):
-    assert "data-event-index" in source
-    ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n")[0]
+def test_timeline_is_the_single_timestamped_damage_event_view(source: str):
     timeline = source.split("function renderEventTimeline(")[1].split("\nfunction ")[0]
     assert "data-event-index" in timeline
-    assert "data-event-index" in ledger or "eventRows" in ledger
+    ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n")[0]
+    breakdown = source.split("function renderExactBreakdown(")[1].split("\nfunction ")[
+        0
+    ]
+    assert "eventRows" not in ledger
+    assert "combat?.events" not in breakdown
 
 
 def test_timeline_label_size_meets_the_legibility_floor(css: str):

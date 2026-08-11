@@ -19,7 +19,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import damage_entry, extract_cooldown, with_control_event
 
 # HARDCODED: verify on patch updates — the thorns formula exists only in
 # the cached W description prose ("enemies that use a basic attack
@@ -74,6 +74,11 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = dict(SLOTS)
 SLOTS["W"] = _defensive_ball_curl
+SLOTS["E"] = with_control_event(
+    SLOTS["E"],
+    kind="taunt",
+    duration_attr="Taunt Duration",
+)
 parse_abilities = build_parser(SLOTS, "Rammus")
 
 OPTIONS = list(OPTIONS) + [

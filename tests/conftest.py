@@ -32,6 +32,45 @@ from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 
+
+@pytest.fixture
+def authorized_fimbulwinter_mana_gate(monkeypatch):
+    """Supply a complete hypothetical gate for tests of sibling mechanics.
+
+    Production remains source-unavailable. Tests that isolate the sourced
+    shield formula, trigger rule, cadence, or cooldown must opt into this
+    explicit declaration.
+    """
+    from src.calculator import item_effects, item_support_effects
+
+    declaration = {
+        "status": "script_authorized",
+        "threshold_ratio": 0.20,
+        "comparison": "current_mana > maximum_mana * ratio",
+        "current_mana_term": "post_cast_current_mana",
+        "maximum_mana_term": "holder_maximum_mana",
+        "manaless_behavior": "deny",
+        "source_url": "test://fimbulwinter-mana-gate",
+        "source_revision_id": "test-only",
+    }
+
+    monkeypatch.setitem(
+        item_effects.ITEM_EFFECTS["Fimbulwinter"],
+        "everlasting_mana_threshold_ratio",
+        0.20,
+    )
+    monkeypatch.setattr(
+        item_effects,
+        "fimbulwinter_mana_gate_authority",
+        lambda: dict(declaration),
+    )
+    monkeypatch.setattr(
+        item_support_effects,
+        "fimbulwinter_mana_gate_authority",
+        lambda: dict(declaration),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Champion data fixtures
 # ---------------------------------------------------------------------------

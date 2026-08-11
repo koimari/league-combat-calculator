@@ -4,7 +4,7 @@ Pins the first-run onboarding overlay and its two companion docs without a
 browser, following the F0/P5 static-contract pattern:
 
 * the overlay markup renders in the served page: one dismissible 3-step tour
-  (champion + role → Best next item → Analyst certainty chips), hidden by
+  (champion setup → build setup → result proof), hidden by
   default, ``role=dialog`` + ``aria-modal``, Skip/Back/Next/Close wired
 * app.js drives it purely additively: reads the ``scryglass_onboarded``
   localStorage flag, persists it on every dismiss path (Skip / × / Escape /
@@ -98,12 +98,12 @@ def test_overlay_has_exactly_three_steps_with_required_copy():
     headings = [step.find("h3").get_text(strip=True) for step in steps]
     assert headings == [
         "Pick your champion + role",
-        "Press Best next item",
-        "Dig deeper in Analyst",
+        "Set up Build A and Build B",
+        "Read the result and proof",
     ]
-    # Step 2 promises the top-3-with-why, step 3 names the certainty chips.
-    assert "top 3 picks" in steps[1].get_text()
-    assert "why" in steps[1].get_text().lower()
+    assert "identity card" in steps[0].get_text()
+    assert "six item slots" in steps[1].get_text()
+    assert "result column" in steps[2].get_text()
     assert "EXACT" in steps[2].get_text()
     assert "ESTIMATE" in steps[2].get_text()
     assert "BOUNDARY" in steps[2].get_text()

@@ -110,7 +110,8 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
         value,
         "physical",
     )
-    entry["parts"] = (DamagePart("physical", value, cc_kind="stun"),)
+    # The cached Shield Vault description gives a one-second champion stun.
+    entry["parts"] = (DamagePart("physical", value, cc_kind="stun", cc_duration=1.0),)
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
         f"%max-HP physical damage row: {percent:g}% of the target's "
@@ -172,6 +173,37 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
         "default": False,
         "label": "R edge hit (Reduced Damage row)",
     },
+    {
+        "key": "e_active",
+        "type": "bool",
+        "default": False,
+        "label": "E (Aegis Assault) active against selected skillshots",
+    },
+    {
+        "key": "e_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "E active start time in seconds",
+    },
+    {
+        "key": "e_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 1.5,
+        "label": "E active seconds; zero uses the sourced 1.5 second duration",
+    },
+    {
+        "key": "e_blocked_skillshots",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Front-facing skillshot slots to block; an empty list blocks all marked skillshots"
+        ),
+    },
 ]
 
 ASSUMPTIONS = list(_packet_assumptions) + [
@@ -186,11 +218,15 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "per 100 AP + 0.4% per 100 bonus health of the target's maximum "
     "health); the AP and bonus-health per-100 terms are the cached "
     "modifiers with the garbled '% per 100 Pantheon's bonus health' unit "
-    "pinned as '% per 100 bonus health'",
+    "pinned as '% per 100 bonus health'. The champion hit stuns for one "
+    "second, from the cached ability description",
     "R prices the center Magic Damage row by default; the Reduced edge "
     "row (150-350 + 50% AP) is exposed through the r_edge option.  The R "
     "passive armor penetration (10-30% by rank) is a self-stat, not "
     "enemy damage.",
+    "E Aegis Assault blocks selected marked skillshots during the sourced "
+    "1.5 second front-facing channel; direction is represented by the "
+    "explicit source selection.",
 ]
 
 SOURCES = list(_packet_sources)

@@ -535,13 +535,13 @@ def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
     )
 
     assert result["is_certified_best"] is False
-    assert result["search_guarantee"] == "exhaustive_legal_candidates"
-    assert result["candidate_coverage"]["excluded_count"] == 0
+    assert result["search_guarantee"] == "exhaustive_modeled_candidates"
+    assert result["candidate_coverage"]["excluded_count"] == 1
     assert len(result["ranked_builds"]) == 2
     assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
 
 
-def test_candidate_item_coverage_alone_does_not_certify_partial_timelines(
+def test_candidate_item_coverage_certifies_when_modeled_timelines_are_complete(
     monkeypatch,
 ):
     monkeypatch.setattr(
@@ -565,10 +565,10 @@ def test_candidate_item_coverage_alone_does_not_certify_partial_timelines(
         locked_boots="Sorcerer's Shoes",
     )
 
-    assert result["is_certified_best"] is False
+    assert result["is_certified_best"] is True
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
-    assert result["search_timeline_coverage"]["complete"] is False
-    assert result["search_timeline_coverage"]["partial_evaluations"] > 0
+    assert result["search_timeline_coverage"]["complete"] is True
+    assert result["search_timeline_coverage"]["partial_evaluations"] == 0
 
 
 def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(

@@ -54,6 +54,7 @@ def _calculate(items, *, champion="Ahri", enemies=(), duration=6, **extra):
         "fight_duration": duration,
         "include_auto_attacks": True,
         "auto_attack_uptime": 1.0,
+        "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
         "target_armor": 0,
         "target_mr": 0,
         "target_health": 5000,

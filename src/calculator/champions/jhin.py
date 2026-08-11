@@ -14,6 +14,7 @@ from .slotlib import (
     extract_named,
     extract_value,
     simple_damage,
+    with_control,
 )
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
@@ -268,7 +269,11 @@ SLOTS = {
     "P": _whisper,
     "final_round": _final_round,
     "Q": _dancing_grenade,
-    "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    "W": with_control(
+        simple_damage(attr="Physical Damage", dmg_type="physical"),
+        kind="root",
+        duration_attr="Root Duration",
+    ),
     "E": _captive_audience,
     "R": _curtain_call,
 }

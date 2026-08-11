@@ -42,9 +42,64 @@
     "slot": "Keystone",
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
-    "description": "{{sbc|Passive:}} Basic attacks {{tip|on-attack}} against enemy {{tip|champion|champions}} grant a {{tip|stack}} for 6 seconds, refreshing on subsequent attacks and stacking up to 6 times. Gain {{as|{{rd|6%|{{ap|6*0.8}}%}} '''bonus''' attack speed|as}} for each stack, up to {{as|{{rd|36%|{{ap|36*0.8}}%}}|as}} at maximum stacks.\nAt maximum stacks, basic attacks are empowered to fire a bolt at the target {{tip|on-attack}} that deals them {{rd|9 + (30-9)/17*(x-1) for 20|6 + (24-6)/17*(x-1) for 20|pp=true}} '''bonus''' {{tip|adaptive damage}} upon arrival, increased by {{rd|1%|{{fd|0.6{{recurring|6}}%}}}} per {{as|1% '''bonus''' attack speed}}.",
+    "description": "{{sbc|Passive:}} Basic attacks {{tip|on-attack}} against enemy {{tip|champion|champions}} grant a {{tip|stack}} for 6 seconds, refreshing on subsequent attacks and stacking up to 6 times. Gain {{as|{{rd|6%|{{ap|6*0.8}}%}} '''bonus''' attack speed|as}} for each stack, up to {{as|{{rd|36%|{{ap|36*0.8}}%}}|as}} at maximum stacks.\nAt maximum stacks, basic attacks are empowered to fire a bolt at the target {{tip|on-attack}} that deals them {{rd|9 + (30-9)/17*(x-1) for 20|6 + (24-6)/17*(x-1) for 20|pp=true}} '''bonus''' {{tip|adaptive damage}} upon arrival, increased by {{rd|1%|{{fd|0.6{{recurring|6}}%}}}} per {{as|1% '''bonus''' attack speed}}.\nStacks expire one by one every {{fd|0.5}} seconds when the duration ends.\n{{Tip data/Adaptive damage|pst2|description}}",
     "effects": {
-      "max_stacks": 6
+      "lethal_tempo_attack_speed_percent_melee_ranged": [
+        6.0,
+        4.800000000000001
+      ],
+      "lethal_tempo_bolt_damage_melee_by_level": [
+        9.0,
+        10.235294117647058,
+        11.470588235294118,
+        12.705882352941178,
+        13.941176470588236,
+        15.176470588235293,
+        16.411764705882355,
+        17.647058823529413,
+        18.88235294117647,
+        20.11764705882353,
+        21.352941176470587,
+        22.58823529411765,
+        23.823529411764707,
+        25.058823529411764,
+        26.294117647058826,
+        27.529411764705884,
+        28.764705882352942,
+        30.0,
+        31.235294117647058,
+        32.470588235294116
+      ],
+      "lethal_tempo_bolt_damage_ranged_by_level": [
+        6.0,
+        7.0588235294117645,
+        8.117647058823529,
+        9.176470588235293,
+        10.235294117647058,
+        11.294117647058822,
+        12.352941176470589,
+        13.411764705882353,
+        14.470588235294118,
+        15.529411764705882,
+        16.588235294117645,
+        17.647058823529413,
+        18.705882352941178,
+        19.764705882352942,
+        20.823529411764707,
+        21.88235294117647,
+        22.941176470588236,
+        24.0,
+        25.058823529411764,
+        26.11764705882353
+      ],
+      "lethal_tempo_bolt_damage_increase_ratio_melee_ranged": [
+        0.01,
+        0.006666666666666666
+      ],
+      "deathfire_tick_interval_seconds": 0.5,
+      "max_stacks": 6,
+      "lethal_tempo_stack_duration_seconds": 6.0,
+      "lethal_tempo_expiry_step_seconds": 0.5
     }
   },
   "Fleet Footwork": {
@@ -58,7 +113,66 @@
       "melee_ranged_ratios": [
         0.2,
         0.15
-      ]
+      ],
+      "fleet_heal_melee_by_level": [
+        10.0,
+        15.08235294117647,
+        20.411764705882355,
+        25.988235294117647,
+        31.81176470588235,
+        37.88235294117648,
+        44.199999999999996,
+        50.76470588235294,
+        57.576470588235296,
+        64.63529411764706,
+        71.94117647058825,
+        79.49411764705881,
+        87.29411764705883,
+        95.34117647058824,
+        103.63529411764705,
+        112.17647058823529,
+        120.96470588235294,
+        130.0,
+        139.28235294117647,
+        148.81176470588238
+      ],
+      "fleet_heal_ranged_by_level": [
+        6.0,
+        9.049411764705882,
+        12.24705882352941,
+        15.592941176470589,
+        19.08705882352941,
+        22.729411764705883,
+        26.520000000000003,
+        30.458823529411767,
+        34.54588235294118,
+        38.781176470588235,
+        43.16470588235294,
+        47.69647058823529,
+        52.3764705882353,
+        57.20470588235295,
+        62.18117647058824,
+        67.30588235294118,
+        72.57882352941176,
+        78.0,
+        83.56941176470589,
+        89.28705882352942
+      ],
+      "fleet_bonus_ad_ratio_melee_ranged": [
+        0.1,
+        0.06
+      ],
+      "fleet_ap_ratio_melee_ranged": [
+        0.05,
+        0.03
+      ],
+      "fleet_bonus_move_speed_melee_ranged": [
+        20.0,
+        15.0
+      ],
+      "fleet_move_speed_duration_seconds": 1.0,
+      "fleet_minion_heal_effectiveness": 0.15,
+      "fleet_charge_cap": 100.0
     },
     "parse_warnings": [
       "melee_ranged_ratios matched more than once: [0.1, 0.06], [0.05, 0.03]",
@@ -77,6 +191,58 @@
         0.08,
         0.05
       ],
+      "conqueror_adaptive_force_by_level": [
+        1.8,
+        1.9294117647058824,
+        2.058823529411765,
+        2.1882352941176473,
+        2.3176470588235296,
+        2.447058823529412,
+        2.5764705882352943,
+        2.7058823529411766,
+        2.835294117647059,
+        2.9647058823529413,
+        3.0941176470588236,
+        3.223529411764706,
+        3.3529411764705888,
+        3.4823529411764707,
+        3.6117647058823534,
+        3.7411764705882353,
+        3.870588235294118,
+        4.0,
+        4.129411764705883,
+        4.258823529411765
+      ],
+      "conqueror_adaptive_force_max_by_level": [
+        21.6,
+        23.15294117647059,
+        24.705882352941178,
+        26.258823529411764,
+        27.811764705882354,
+        29.364705882352943,
+        30.91764705882353,
+        32.470588235294116,
+        34.023529411764706,
+        35.576470588235296,
+        37.12941176470588,
+        38.68235294117647,
+        40.23529411764706,
+        41.78823529411765,
+        43.34117647058824,
+        44.89411764705882,
+        46.44705882352941,
+        48.0,
+        49.55294117647058,
+        51.10588235294117
+      ],
+      "conqueror_heal_melee_ranged_ratios": [
+        0.08,
+        0.05
+      ],
+      "conqueror_stack_duration_seconds": 5.0,
+      "conqueror_cast_instance_interval_seconds": 4.0,
+      "conqueror_stacks_per_application": 2,
+      "deathfire_tick_interval_seconds": 4.0,
       "max_stacks": 12
     }
   },
@@ -125,11 +291,15 @@
     "slot": "Keystone",
     "cooldown": 35.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
-    "description": "{{sbc|Passive:}} Dealing {{tip|pet damage|pet}} or non-{{tip|proc damage|proc}} damage against enemy {{tip|champions}} below {{as|50% of their '''maximum''' health}} deals 30 {{as|(+ 11 per Soul)}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} '''bonus''' {{tip|adaptive damage}} and, after a {{fd|1.75}}-second delay, reap {{as|1 Soul}}. This cannot occur again for 35 seconds, resetting to 1 second upon scoring a {{tip|takedown}} against an enemy champion.\nWhile not on cooldown, also reap {{as|1 Soul}} from receiving the kill credit of a champion killed by a {{tip|minion}}, {{tip|monster}}, or {{tip|turret}}.",
+    "description": "{{sbc|Passive:}} Dealing {{tip|pet damage|pet}} or non-{{tip|proc damage|proc}} damage against enemy {{tip|champions}} below {{as|50% of their '''maximum''' health}} deals 30 {{as|(+ 11 per Soul)}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} '''bonus''' {{tip|adaptive damage}} and, after a {{fd|1.75}}-second delay, reap {{as|1 Soul}}. This cannot occur again for 35 seconds, resetting to 1 second upon scoring a {{tip|takedown}} against an enemy champion.\nWhile not on cooldown, also reap {{as|1 Soul}} from receiving the kill credit of a champion killed by a {{tip|minion}}, {{tip|monster}}, or {{tip|turret}}.\n{{Tip data/Adaptive damage|pst2|description}}",
     "effects": {
       "bonus_ad_ratio": 0.1,
       "ap_ratio": 0.05,
-      "proc_delay_seconds": 1.75
+      "proc_delay_seconds": 1.75,
+      "base_damage": 30.0,
+      "soul_damage": 11.0,
+      "health_threshold_ratio": 0.5,
+      "takedown_reset_seconds": 1.0
     }
   },
   "Hail of Blades": {
@@ -140,16 +310,44 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
     "description": "{{sbc|Passive:}} Starting an {{tip|attack windup}} against an enemy {{tip|champion}} triggers ''Hail of Blades'', and if the windup completes, you gain 2 stacks of the effect for 3 seconds, with the duration refreshing on basic attacks {{tip|on-attack}} against enemy champions until all stacks are consumed. Stacks are consumed per basic attack on-attack and you generate an additional stack of the effect each time you activate an effect that has a {{tip|basic attack reset}}, up to 2 times.\nWhile ''Hail of Blades'' is active, you gain {{as|{{rd|120%|60%}} {{sti|'''bonus''' attack speed}}|as}}, are allowed to exceed the {{tt|attack speed cap|normally 3.003 attacks per second}}, and basic attacks deal {{pp|4 + (20-4)/17*(x-1) for 20|color=true damage}} {{as|(+ 8% '''bonus''' AD)}} {{as|(+ 6% AP)}} {{as|{{sti|'''bonus''' true damage}}}}.<br><br>''The triggering attack benefits from Hail of Blades.''",
     "effects": {
+      "leveling": [
+        [
+          4.0,
+          4.9411764705882355,
+          5.882352941176471,
+          6.823529411764706,
+          7.764705882352941,
+          8.705882352941178,
+          9.647058823529411,
+          10.588235294117647,
+          11.529411764705882,
+          12.470588235294118,
+          13.411764705882353,
+          14.352941176470589,
+          15.294117647058822,
+          16.235294117647058,
+          17.176470588235293,
+          18.11764705882353,
+          19.058823529411764,
+          20.0,
+          20.941176470588236,
+          21.88235294117647
+        ]
+      ],
       "bonus_ad_ratio": 0.08,
       "ap_ratio": 0.06,
       "melee_ranged_ratios": [
         1.2,
         0.6
-      ]
-    },
-    "parse_warnings": [
-      "pp formula '4 + (20-4)/17*(x-1) for 20' has no level range"
-    ]
+      ],
+      "hail_bonus_attack_speed_melee_ranged": [
+        120.0,
+        60.0
+      ],
+      "hail_initial_stacks": 2,
+      "hail_stack_duration_seconds": 3.0,
+      "hail_reset_stack_limit": 2
+    }
   },
   "Summon Aery": {
     "name": "Summon Aery",
@@ -157,7 +355,7 @@
     "slot": "Keystone",
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
-    "description": "{{sbc|Passive:}} Damaging {{tip|basic attacks}}, {{tip|abilities}}, and [[Named item effect|item effects]] against an enemy {{tip|champion}} signal ''Aery'' to pounce at them over {{fd|0.45}} seconds, dealing {{pp|10 + (40/17)*(x-1)|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} {{tip|adaptive damage}}. {{tip|Healing}}, {{tip|shield|shielding}}, or {{tip|buff|buffing}} an allied champion signals ''Aery'' to leap to their side over {{fd|0.35}} seconds, {{tip|shield|shielding}} them for {{pp|20 + (100-20)/17*(x-1)|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} for 2 seconds.\n''Aery'' applies her effects to the affected champion upon arrival. She then lingers on the target for {{tt|2 seconds|Slightly less than this duration}} before flying back to the user, and cannot be sent out again until she returns. While on her way back, she is {{tt|initially very slow|return speed's initial value is 200 at levels 1-5, 300 at levels 6-10 and 600 at level 11+}}, but {{tt|gradually accelerates|+10 speed per 51 units she travels}}, and {{tt|can be picked up by moving near her|+2000 speed per 51 units traveled after coming within 200 units of the user}}.",
+    "description": "{{sbc|Passive:}} Damaging {{tip|basic attacks}}, {{tip|abilities}}, and [[Named item effect|item effects]] against an enemy {{tip|champion}} signal ''Aery'' to pounce at them over {{fd|0.45}} seconds, dealing {{pp|10 + (40/17)*(x-1)|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} {{tip|adaptive damage}}. {{tip|Healing}}, {{tip|shield|shielding}}, or {{tip|buff|buffing}} an allied champion signals ''Aery'' to leap to their side over {{fd|0.35}} seconds, {{tip|shield|shielding}} them for {{pp|20 + (100-20)/17*(x-1)|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} for 2 seconds.\n''Aery'' applies her effects to the affected champion upon arrival. She then lingers on the target for {{tt|2 seconds|Slightly less than this duration}} before flying back to the user, and cannot be sent out again until she returns. While on her way back, she is {{tt|initially very slow|return speed's initial value is 200 at levels 1-5, 300 at levels 6-10 and 600 at level 11+}}, but {{tt|gradually accelerates|+10 speed per 51 units she travels}}, and {{tt|can be picked up by moving near her|+2000 speed per 51 units traveled after coming within 200 units of the user}}.\nDoes '''not''' trigger on {{tip|persistent damage|persistent}} {{tip|proc damage}}.\n{{Tip data/Adaptive damage|pst2|description}}",
     "effects": {
       "leveling": [
         [
@@ -206,7 +404,11 @@
         ]
       ],
       "bonus_ad_ratio": 0.1,
-      "ap_ratio": 0.05
+      "ap_ratio": 0.05,
+      "damage_flight_seconds": 0.45,
+      "shield_flight_seconds": 0.35,
+      "shield_duration_seconds": 2.0,
+      "linger_seconds": 2.0
     }
   },
   "Arcane Comet": {
@@ -315,7 +517,14 @@
       ],
       "bonus_ad_ratio": 0.1,
       "ap_ratio": 0.05,
-      "proc_delay_seconds": 0.8
+      "deathfire_bonus_ad_ratios_by_state": [
+        0.2
+      ],
+      "deathfire_ap_ratios_by_state": [
+        0.1
+      ],
+      "proc_delay_seconds": 0.8,
+      "shockwave_radius": 140.0
     }
   },
   "Stormraider's Surge": {
@@ -350,7 +559,15 @@
       "melee_ranged_ratios": [
         0.48,
         0.36
-      ]
+      ],
+      "stormraider_damage_threshold_ratio": 0.25,
+      "stormraider_damage_window_seconds": 3.0,
+      "stormraider_duration_seconds": 4.0,
+      "stormraider_bonus_move_speed_melee_ranged": [
+        48.0,
+        36.0
+      ],
+      "stormraider_slow_resist_ratio": 0.5
     }
   },
   "Deathfire Touch": {
@@ -360,11 +577,72 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
     "description": "Dealing {{tip|ability damage}} or {{tip|pet damage}} to enemy {{tip|champions}} inflicts a burn that deals {{pp|(3/2) + ((12/2)-(3/2))/17*(x-1) for 20|color=magic damage}} {{as|(+ {{ap|7/2}}% '''bonus''' AD)}} {{as|(+ {{ap|2.5/2}}% AP)}} {{as|magic damage}} every {{fd|0.5}} seconds over the duration. After the burn has lingered on a target for 3 seconds, its damage to them is increased{{ft|by 75%|to {{pp|(3*1.75/2) + ((12*1.75/2)-(3*1.75/2))/17*(x-1) for 20|color=magic damage}} {{as|(+ {{ap|7*1.75/2|round=3}}% '''bonus''' AD)}} {{as|(+ {{ap|2.5*1.75/2|round=3}}% AP)}} per tick}}while it lasts.\nThe burn's duration is based on the form of ability damage dealt to the target and is refreshed on subsequent applications:\n* {{tip|Spell damage}}: 4 seconds.\n* {{tip|Area damage}}: 2 seconds.\n* {{tip|Persistent damage}}: 1 second.\n* {{tip|Persistent area damage}}: 1 second.\n* {{tip|Pet damage}}: 1 second.",
-    "effects": {},
-    "parse_warnings": [
-      "pp formula '(3/2) + ((12/2)-(3/2))/17*(x-1) for 20' has no level range",
-      "pp formula '(3*1.75/2) + ((12*1.75/2)-(3*1.75/2))/17*(x-1) for 20' has no level range"
-    ]
+    "effects": {
+      "leveling": [
+        [
+          1.5,
+          1.7647058823529411,
+          2.0294117647058822,
+          2.2941176470588234,
+          2.5588235294117645,
+          2.8235294117647056,
+          3.088235294117647,
+          3.3529411764705883,
+          3.6176470588235294,
+          3.8823529411764706,
+          4.147058823529411,
+          4.411764705882353,
+          4.676470588235294,
+          4.9411764705882355,
+          5.205882352941177,
+          5.470588235294118,
+          5.735294117647059,
+          6.0,
+          6.264705882352941,
+          6.529411764705882
+        ],
+        [
+          2.625,
+          3.088235294117647,
+          3.5514705882352944,
+          4.014705882352941,
+          4.477941176470589,
+          4.9411764705882355,
+          5.404411764705882,
+          5.867647058823529,
+          6.330882352941177,
+          6.794117647058823,
+          7.257352941176471,
+          7.720588235294118,
+          8.183823529411764,
+          8.647058823529413,
+          9.110294117647058,
+          9.573529411764707,
+          10.036764705882353,
+          10.5,
+          10.963235294117647,
+          11.426470588235295
+        ]
+      ],
+      "deathfire_bonus_ad_ratios_by_state": [
+        0.035,
+        0.06125
+      ],
+      "deathfire_ap_ratios_by_state": [
+        0.0125,
+        0.021875
+      ],
+      "deathfire_tick_interval_seconds": 0.5,
+      "deathfire_amp_delay_seconds": 3.0,
+      "deathfire_amp_ratio": 0.75,
+      "deathfire_duration_seconds": {
+        "spell_damage": 4.0,
+        "area_damage": 2.0,
+        "persistent_damage": 1.0,
+        "persistent_area_damage": 1.0,
+        "pet_damage": 1.0
+      }
+    }
   },
   "Grasp of the Undying": {
     "name": "Grasp of the Undying",
@@ -373,7 +651,24 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
     "description": "{{sbc|Passive:}} Entering [[Combat status|combat]] generates 1 [[stack]] every second for the next 3 seconds, refreshing the duration with each instance of combat and stacking the effect up to 4 times. At maximum stacks, your next [[basic attack]] {{tip|on-hit}} within 5 seconds against an enemy {{tip|champion}} consumes all stacks to deal {{as|'''bonus''' magic damage}} equal to {{as|{{rd|{{fd|3.5}}%|{{fd|1.4}}%}} of your '''maximum''' health}}, {{tip|heal}} you for {{as|(+ {{rd|{{fd|1.3}}%|{{fd|0.52}}%}} of your '''maximum''' health)}}, and permanently grant you {{as|{{rd|5|2}} '''bonus''' health}}.",
-    "effects": {}
+    "effects": {
+      "grasp_damage_melee_ranged_ratios": [
+        0.035,
+        0.013999999999999999
+      ],
+      "grasp_heal_melee_ranged_ratios": [
+        0.013000000000000001,
+        0.0052
+      ],
+      "grasp_bonus_health_melee_ranged": [
+        5.0,
+        2.0
+      ],
+      "max_stacks": 4,
+      "combat_stack_cadence_seconds": 1.0,
+      "combat_stack_generation_seconds": 3.0,
+      "ready_window_seconds": 5.0
+    }
   },
   "Aftershock": {
     "name": "Aftershock",
@@ -382,24 +677,142 @@
     "cooldown": 20.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
     "description": "{{sbc|Passive:}} {{tip|Immobilize|Immobilizing}} an enemy {{tip|champion}} grants you a static {{as|45|armor}} {{as|(+ 75% '''bonus''' armor)}} {{as|'''bonus''' armor}} and {{as|45|mr}} {{as|(+ 75% '''bonus''' magic resistance)}} {{as|'''bonus''' magic resistance}} for {{fd|2.5}} seconds. The '''bonus''' resistances are each capped at {{pp|80 to 150}}.\nAfter the duration, you release a shockwave that deals {{as|{{pp|25 to 120}}|magic damage}} {{as|(+ 8% of your '''bonus''' health)}} {{as|magic damage}} to enemy champions and {{tip|monster|monsters}} within a {{tip|cr|icononly=true}} 350 radius.",
-    "effects": {},
-    "parse_warnings": [
-      "pp formula '80 to 150' has no level range",
-      "pp formula '25 to 120' has no level range"
-    ]
+    "effects": {
+      "leveling": [
+        [
+          80.0,
+          84.11764705882354,
+          88.23529411764706,
+          92.3529411764706,
+          96.47058823529412,
+          100.58823529411765,
+          104.70588235294117,
+          108.82352941176471,
+          112.94117647058823,
+          117.05882352941177,
+          121.1764705882353,
+          125.29411764705883,
+          129.41176470588235,
+          133.52941176470588,
+          137.64705882352942,
+          141.76470588235293,
+          145.88235294117646,
+          150.0,
+          154.11764705882354,
+          158.23529411764707
+        ],
+        [
+          25.0,
+          30.588235294117645,
+          36.17647058823529,
+          41.76470588235294,
+          47.35294117647059,
+          52.94117647058823,
+          58.529411764705884,
+          64.11764705882354,
+          69.70588235294117,
+          75.29411764705883,
+          80.88235294117646,
+          86.47058823529412,
+          92.05882352941177,
+          97.6470588235294,
+          103.23529411764706,
+          108.82352941176471,
+          114.41176470588235,
+          120.0,
+          125.58823529411765,
+          131.1764705882353
+        ]
+      ],
+      "bonus_health_ratio": 0.08,
+      "bonus_armor_ratio": 0.75,
+      "bonus_magic_resistance_ratio": 0.75,
+      "flat_armor": 45.0,
+      "flat_magic_resistance": 45.0,
+      "resistance_duration_seconds": 2.5,
+      "shockwave_radius": 350.0
+    }
   },
   "Guardian": {
     "name": "Guardian",
     "path": "Resolve",
     "slot": "Keystone",
-    "cooldown": null,
+    "cooldown": [
+      75.0,
+      72.94117647058823,
+      70.88235294117646,
+      68.82352941176471,
+      66.76470588235294,
+      64.70588235294117,
+      62.64705882352941,
+      60.58823529411765,
+      58.529411764705884,
+      56.470588235294116,
+      54.411764705882355,
+      52.352941176470594,
+      50.294117647058826,
+      48.23529411764706,
+      46.1764705882353,
+      44.117647058823536,
+      42.05882352941177,
+      40.0,
+      37.94117647058824,
+      35.88235294117648
+    ],
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Guardian/Guardian.png",
-    "description": "{{sbc|Passive:}} While within 350 units of an allied {{tip|champion}}, you raise your ''Guard''. Allied champions you affect with [[unit-targeted]] [[champion ability|abilities]] are also ''Guarded'' for 3 seconds, regardless of distance.\nIf you or a ''Guarded'' ally would take {{pp|50 + (165-50)/17*(x-1) for 20}} damage within {{fd|2.5}} seconds or lethal damage from an enemy champion, {{tip|monster}} or {{tip|turret}}, you both gain a {{tip|shield}} for {{pp|40 + (150-40)/17*(x-1) for 20}} {{as|(+ 20% of your AP)}} {{as|(+ 6% of your '''bonus''' health)}} for 2 seconds.",
-    "effects": {},
-    "parse_warnings": [
-      "pp formula '50 + (165-50)/17*(x-1) for 20' has no level range",
-      "pp formula '40 + (150-40)/17*(x-1) for 20' has no level range"
-    ]
+    "description": "{{sbc|Passive:}} While within 350 units of an allied {{tip|champion}}, you raise your ''Guard''. Allied champions you affect with [[unit-targeted]] [[champion ability|abilities]] are also ''Guarded'' for 3 seconds, regardless of distance.\nIf you or a ''Guarded'' ally would take {{pp|50 + (165-50)/17*(x-1) for 20}} damage within {{fd|2.5}} seconds or lethal damage from an enemy champion, {{tip|monster}} or {{tip|turret}}, you both gain a {{tip|shield}} for {{pp|40 + (150-40)/17*(x-1) for 20}} {{as|(+ 20% of your AP)}} {{as|(+ 6% of your '''bonus''' health)}} for 2 seconds.\n''Guardian'' only goes on {{sti|cooldown}} when the shield is triggered.",
+    "effects": {
+      "leveling": [
+        [
+          50.0,
+          56.76470588235294,
+          63.529411764705884,
+          70.29411764705883,
+          77.05882352941177,
+          83.8235294117647,
+          90.58823529411765,
+          97.35294117647058,
+          104.11764705882354,
+          110.88235294117646,
+          117.6470588235294,
+          124.41176470588235,
+          131.1764705882353,
+          137.94117647058823,
+          144.70588235294116,
+          151.47058823529412,
+          158.23529411764707,
+          165.0,
+          171.76470588235293,
+          178.52941176470588
+        ],
+        [
+          40.0,
+          46.470588235294116,
+          52.94117647058823,
+          59.411764705882355,
+          65.88235294117646,
+          72.35294117647058,
+          78.82352941176471,
+          85.29411764705883,
+          91.76470588235294,
+          98.23529411764706,
+          104.70588235294117,
+          111.17647058823529,
+          117.64705882352942,
+          124.11764705882354,
+          130.58823529411765,
+          137.05882352941177,
+          143.52941176470588,
+          150.0,
+          156.47058823529412,
+          162.94117647058823
+        ]
+      ],
+      "ap_ratio": 0.2,
+      "bonus_health_ratio": 0.06,
+      "trigger_window_seconds": 2.5,
+      "shield_duration_seconds": 2.0
+    }
   },
   "Glacial Augment": {
     "name": "Glacial Augment",
@@ -408,7 +821,18 @@
     "cooldown": 25.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png",
     "description": "{{sbc|Passive:}} {{tip|immobilize|Immobilizing}} an enemy {{tip|champion}} will cause 3 glacial rays to emanate from them towards you and other nearby enemy champions, creating icy zones with a 700 unit radius that last for 3 (+ 100% of the {{tt|immobilizing effect's duration|Duration after being modified by tenacity}}) seconds.\nEnemies within the icy zones, which have a width of 80 units, are {{tip|slow|slowed}} by 20% {{as|(+ 7% per 100 '''bonus''' AD)}} {{as|(+ 6% per 100 AP)}} {{as|(+ 9% per 10% heal and shield power)}} and have their damage reduced by 15% against your allies, excluding yourself.",
-    "effects": {}
+    "effects": {
+      "glacial_ray_count": 3,
+      "glacial_zone_width_units": 80.0,
+      "glacial_slow_base_ratio": 0.2,
+      "glacial_slow_bonus_ad_ratio_per_100": 0.07,
+      "glacial_slow_ap_ratio_per_100": 0.06,
+      "glacial_slow_heal_shield_ratio_per_10": 0.09,
+      "glacial_damage_reduction_ratio": 0.15,
+      "glacial_zone_radius_units": 700.0,
+      "glacial_zone_base_duration_seconds": 3.0,
+      "glacial_zone_duration_cc_ratio": 1.0
+    }
   },
   "Unsealed Spellbook": {
     "name": "Unsealed Spellbook",
@@ -416,7 +840,7 @@
     "slot": "Keystone",
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png",
-    "description": "{{sbc|Passive:}} While not channeling {{si|Teleport}} and being [[combat status|out-of-combat]] for 5 seconds, you can swap one of your equipped [[summoner spell]]s to a new, single use summoner spell. You cannot select a summoner spell you have already equipped.\nYour first swap becomes available at {{sbc|{{MinuteDisplay|{{#var:initialcd}}}}}}. Swaps have an initial cooldown of {{#var:cdb}} seconds; selecting a unique summoner spell reduces the swap cooldown by {{#var:cdm}} seconds. You must swap to 3 different summoner spells before returning to one you have already used.",
+    "description": "{{sbc|Passive:}} While not channeling {{si|Teleport}} and being [[combat status|out-of-combat]] for 5 seconds, you can swap one of your equipped [[summoner spell]]s to a new, single use summoner spell. You cannot select a summoner spell you have already equipped.\nYour first swap becomes available at {{sbc|{{MinuteDisplay|{{#var:initialcd}}}}}}. Swaps have an initial cooldown of {{#var:cdb}} seconds; selecting a unique summoner spell reduces the swap cooldown by {{#var:cdm}} seconds. You must swap to 3 different summoner spells before returning to one you have already used.\nSelecting a summoner spell places it on a 5-second cooldown. Using a selected summoner spell places the summoner spell in the same slot on a 10-second cooldown.",
     "effects": {}
   },
   "First Strike": {

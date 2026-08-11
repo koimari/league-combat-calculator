@@ -23,7 +23,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
 
 PACKET_SHA256 = "f3732d39aae761199c06bfc606515aee50fa1cc74ea65f28a15b0ef78d02f366"
 
@@ -122,12 +122,26 @@ ASSUMPTIONS = [
     "Attached Sapling Damage rows (E2 DoT tick-count convention)",
     "The sapling's 30-second sit duration, 2.5-second chase, 45% slow, "
     "reveal, and the 300 cap against non-champions are state, not modeled",
+    "P (Sap Magic) is authored by the HEALING_RULE_CHAMPIONS rule in "
+    "healing.py: the periodic empowered-attack heal (4% : 12.8% of "
+    "maximum health by level, the cached Max Health Damage row) fires on "
+    "the first basic attack after the P cooldown (30 : 20 seconds by "
+    "level, affectedByCdr false) completes; each Q/W/E/R cast counts one "
+    "trigger and each E cast an additional sapling champion hit, each "
+    "reducing the cooldown by 4 seconds.  Incoming enemy ability strikes "
+    "are not visible to the 1v1 outgoing ledger, so the counted triggers "
+    "undercount reality (the proc can only be delayed); the heal does "
+    "not trigger above 95% maximum health (live gate)",
 ]
 
 SLOTS = {
     "P": _BATCH_SLOTS["P"],
     "Q": _BATCH_SLOTS["Q"],
-    "W": _BATCH_SLOTS["W"],
+    "W": with_control(
+        _BATCH_SLOTS["W"],
+        kind="root",
+        duration_attr="Root Duration",
+    ),
     "E": _sapling_toss,
     "R": _BATCH_SLOTS["R"],
 }

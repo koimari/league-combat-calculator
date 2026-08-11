@@ -34,6 +34,7 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     sources: tuple[dict[str, Any], ...]
     coverage: dict[str, str]
     review_status: str
+    cc_review_status: str | None = None
     packet_spec: dict[str, Any] | None = None
     packet_sha256: str | None = None
 
@@ -45,6 +46,24 @@ def _require_list(module: ModuleType, field: str) -> list[Any]:
             f"{module.__name__} must declare {field} as a list"
         )
     return value
+
+
+def _validated_cc_review_status(
+    module: ModuleType,
+    parser: Callable[..., dict[str, dict[str, Any]]],
+) -> str | None:
+    """Return the explicit module CC review status after contract checks."""
+    cc_review_status = getattr(module, "CC_REVIEW_STATUS", None)
+    if cc_review_status not in {None, "reviewed_no_cc"}:
+        raise ChampionModuleContractError(
+            f"{module.__name__} CC_REVIEW_STATUS must be 'reviewed_no_cc' "
+            "when declared"
+        )
+    if getattr(parser, "cc_review_status", None) != cc_review_status:
+        raise ChampionModuleContractError(
+            f"{module.__name__} CC_REVIEW_STATUS must match its parser contract"
+        )
+    return cc_review_status
 
 
 def contract_from_module(
@@ -102,6 +121,8 @@ def contract_from_module(
             f"{module.__name__} REVIEW_STATUS must be 'reviewed_module'"
         )
 
+    cc_review_status = _validated_cc_review_status(module, parser)
+
     packet_spec = getattr(
         module,
         "PACKET_SPEC",
@@ -140,6 +161,7 @@ def contract_from_module(
         sources=tuple(sources),
         coverage=dict(coverage),
         review_status=review_status,
+        cc_review_status=cc_review_status,
         packet_spec=packet_spec,
         packet_sha256=packet_sha256,
     )

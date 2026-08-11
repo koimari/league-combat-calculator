@@ -213,6 +213,15 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
             conditional=True,
             availability="champion_declared",
         ),
+        "support_target_selections": _field(
+            payload_field="support_target_selections",
+            state_path=(
+                "attacker.supportTargetSelections"
+                if is_main
+                else loadout_path("supportTargetSelections")
+            ),
+            frontend_token="data-capability-field",
+        ),
         "cast_order": _field(
             payload_field="cast_order",
             state_path=("attacker.castOrder" if is_main else loadout_path("castOrder")),

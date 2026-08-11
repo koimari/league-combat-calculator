@@ -6,32 +6,58 @@
     {
       "name": "Cull",
       "revision_id": 4025119,
-      "branches": ["Reap on-hit healing", "100-minion progression", "350 gold completion payout"]
+      "branches": [
+        "Reap on-hit healing",
+        "100-minion progression",
+        "350 gold completion payout"
+      ]
     },
     {
       "name": "Phage",
       "revision_id": 3916202,
-      "branches": ["Rage melee movement speed", "Rage ranged movement speed", "2-second duration"]
+      "branches": [
+        "Rage melee movement speed",
+        "Rage ranged movement speed",
+        "2-second duration"
+      ]
     },
     {
       "name": "Runic Compass",
       "revision_id": 4028000,
-      "branches": ["800-gold Support Quest", "Shared Riches", "Ward active"]
+      "branches": [
+        "800-gold Support Quest",
+        "Shared Riches",
+        "Ward active"
+      ]
     },
     {
       "name": "Tear of the Goddess",
       "revision_id": 4026380,
-      "branches": ["Manaflow timing", "3/6 bonus-mana triggers", "360 bonus-mana cap", "minion-only Helping Hand"]
+      "branches": [
+        "Manaflow timing",
+        "3/6 bonus-mana triggers",
+        "360 bonus-mana cap",
+        "minion-only Helping Hand"
+      ]
     },
     {
       "name": "Umbral Glaive",
       "revision_id": 4013390,
-      "branches": ["Blackout vision state", "one-second unseen gate", "four-second trigger window", "50 + 1.5 lethality true damage"]
+      "branches": [
+        "Blackout vision state",
+        "one-second unseen gate",
+        "four-second trigger window",
+        "50 + 1.5 lethality true damage"
+      ]
     },
     {
       "name": "World Atlas",
       "revision_id": 4004090,
-      "branches": ["400-gold Support Quest", "Shared Riches", "Ward active"]
+      "branches": [
+        "400-gold Support Quest",
+        "Shared Riches",
+        "Ward active"
+      ]
     }
   ],
   "runtime_contract": {
@@ -52,5 +78,44 @@
     "path_mismatches": 0,
     "unresolved_source_conflicts": 0
   },
-  "status": "local_implementation_ready_preview_pending"
+  "status": "implemented",
+  "implementation_summary": "All six items are implemented end-to-end: typed values in item_effects.py (code-owned static keys with wiki source receipts; every missing key raises), ordered packets in item_support_effects.py, participant application through the shared support/utility ledger in participant_timeline.py, optimizer coverage classified modeled_state in item_coverage.py, and frontend receipts in static/js/app.js. This slice completed the remaining ordered-packet branches: Tear of the Goddess Manaflow timed resource packets (8 s cadence, 3/6 bonus-mana triggers, 360 cap, minion-only Helping Hand boundary) and Umbral Glaive Blackout vision receipt (1 s unseen gate, 4 s trigger window, 8 s aura, ward-only boundary; Nightstalker's 50 + 1.5 x lethality true damage stays on the typed first-auto packet). Quest packets now carry the sourced Shared Riches cadence and per-minion-type gold values. Covered by tests/test_cp20_items.py.",
+  "test_coverage": {
+    "test_file": "tests/test_cp20_items.py",
+    "asserted_branches": {
+      "Cull": [
+        "Reap on-hit heal (3.0)",
+        "100-minion progression",
+        "350-gold completion payout"
+      ],
+      "Phage": [
+        "Rage melee 20%",
+        "Rage ranged 10%",
+        "2-second duration",
+        "per-auto packets"
+      ],
+      "Runic Compass": [
+        "800-gold Support Quest",
+        "Shared Riches cadence/gold",
+        "Ward active"
+      ],
+      "Tear of the Goddess": [
+        "Manaflow 8s timing",
+        "3/6 triggers",
+        "360 cap",
+        "minion-only Helping Hand"
+      ],
+      "Umbral Glaive": [
+        "Blackout vision state",
+        "1s unseen gate",
+        "4s trigger window",
+        "50+1.5x lethality true damage"
+      ],
+      "World Atlas": [
+        "400-gold Support Quest",
+        "Shared Riches cadence/gold",
+        "Ward active"
+      ]
+    }
+  }
 }

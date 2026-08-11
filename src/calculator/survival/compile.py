@@ -13,10 +13,18 @@ the transition (Phase 1's contract, kept verbatim).
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
-from typing import Any
+from operator import itemgetter
+from collections.abc import Iterable, Mapping, MutableMapping
+from typing import Any, Sequence
 
+from ..ability_spec import ACTION_BLOCKING_CC_KINDS
+from ..resistance import (
+    apply_armor_penetration,
+    apply_magic_penetration,
+    apply_resistance,
+)
 from .actions import (
     ActionKind,
     SurvivalAction,
@@ -24,7 +32,9 @@ from .actions import (
     compiled_damage_action,
     event_sequence,
     participant_order,
+    survival_action_from_event,
 )
+from ..delivery_eligibility import support_packet_priority
 from ..item_effects import sustain_effect_value
 
 
@@ -56,33 +66,37 @@ class UncompilableActionError(ValueError):
 # Issue #137 Phase 2: with the defense-object dispatch gate gone, the
 # report also covers defense-armed mechanics the score ledger cannot
 # stage: walk-authored recovery/revive/redirect/deferral (Death's Dance,
-# Knight's Vow, Guardian Angel), and state transitions that need
-# per-packet metadata the light score ledger cannot carry (Annul spell
-# shields, Force of Nature / Jak'Sho dynamic-resistance repricing).  The
-# kernel implements all of them for the receipt adapter; the score
-# adapter fails closed until their storage is representable.
+# Knight's Vow), and state transitions that need per-packet metadata the
+# light score ledger cannot carry (Annul spell shields, Force of Nature /
+# Jak'Sho dynamic-resistance repricing).  The kernel implements all of
+# them for the receipt adapter; the score adapter fails closed until
+# their storage is representable.  Guardian Angel's Rebirth, Force of
+# Nature's Steadfast, Jak'Sho's Voidborn Resilience, and Knight's Vow's
+# Sacrifice are NOT listed (P3 packages 3P / 3Q / 3R / 3S): the compiled
+# kernel stages them exactly like the receipt — revive candidates beside
+# every damage action, the stack machines from per-event
+# ability_instance + baseline-resistance metadata stamped by the score
+# context, and the Worthy redirect split + holder heals staged per panel
+# (tuple-ledger rows fail closed via tuple_ledger_stack_metadata because
+# they omit that metadata).
+# (P3 package 3P): its candidates are authored by the compiled
+# ``revive_candidate_actions`` beside every incoming damage action and
+# staged by the score ledger exactly like the receipt, so the item rides
+# the compiled path like Zac's champion revive (test_survival_kernel.py).
 #
 # Warmog's Armor is not listed: its dedicated branch below owns the item
 # (issue #169 — a search-invariant roster holder's Heart ticks compile
 # into the base panel, so only the per-candidate scan still reports it).
 COMPILED_WALK_UNREPRESENTABLE_ITEMS = frozenset(
     {
-        "Banshee's Veil",  # Annul spell shield needs cast metadata
-        "Catalyst of Aeons",  # Eternity resource-restore second pass is legacy-only
+        "Catalyst of Aeons",  # Eternity restore->admission rerun is receipt-walk-only
         "Death's Dance",  # Ignore Pain ticks + Defy authored in the event walk
         "Doran's Blade",  # Life Draining trigger-gated sustain (conservative)
         "Doran's Ring",  # Drain tick cadence (conservative)
         "Doran's Shield",  # Enduring Focus authored in the event walk
         "Eclipse",  # stack self-shield attached only by the receipt path
-        "Edge of Night",  # Annul spell shield needs cast metadata
         "Fimbulwinter",  # Awe stat conversion (conservative)
-        "Force of Nature",  # Steadfast reprice needs baseline resistances
-        "Guardian Angel",  # Rebirth candidates authored in the event walk
         "Immortal Path",  # below-half received-healing multiplier state
-        "Jak'Sho, The Protean",  # Voidborn reprice needs baseline resistances
-        "Knight's Vow",  # Worthy redirect authored by the receipt scheduler
-        "Maw of Malmortius",  # Lifeline omnivamp state transition
-        "Verdant Barrier",  # Annul spell shield needs cast metadata
     }
 )
 
@@ -97,8 +111,11 @@ def uncompilable_item_receipt(
 
     Item mechanics the score kernel cannot stage either (a) are authored
     inside the authoritative event walk (Warmog's Heart, Doran's Shield
-    Enduring Focus) or (b) ride a legacy-only receipt pass (Catalyst's
-    Eternity resource restores).  Lifesteal/omnivamp builds are not
+    Enduring Focus) or (b) ride the receipt walk only — Catalyst's Eternity
+    changes mana admission from incoming damage, so the pair-fight rerun
+    and the ledger-projected heal packets never reach the compiled score
+    kernel (P3 package 3A keeps the named fail-closed receipt).  Lifesteal/
+    omnivamp builds are not
     reported here: compiled heal actions carry ``healing_category``, so
     the vamp carve-outs (received-healing multiplier exemption, ichor
     conversion) ride the shared kernel identically (issue #169).
@@ -140,11 +157,21 @@ def unrepresentable_heal_receipt(event: Mapping[str, Any]) -> str | None:
     ``healing_category`` is not a rejection: every compiled heal action
     carries the field, so the kernel's vamp carve-outs (received-healing
     multiplier exemption, ichor conversion) apply identically (issue #169).
+
+    P2 Slice 4: a heal packet carrying the cleanse marker (Mikael's Purify)
+    fails closed with ``support_cleanse`` — the compiled kernel cannot
+    reproduce the action-downtime truncation, so the caller falls back to
+    the authoritative receipt walk instead of silently dropping the
+    cleanse (score/receipt parity, HANDOVER section 9).
     """
+    if event.get("cleanse") or event.get("cleanse_item"):
+        return "support_cleanse"
     if event.get("overheal_to_shield"):
         return "overheal_to_shield"
-    if event.get("requires_holder_health_ratio"):
-        return "requires_holder_health_ratio"
+    # ``requires_holder_health_ratio`` (Knight's Vow Sacrifice heals,
+    # P3 package 3S) is enforced by the shared kernel's heal gate — the
+    # compiled walk applies the identical ordered check, so the template
+    # is representable.
     if event.get("requires_damage_free_seconds"):
         return "requires_damage_free_seconds"
     if event.get("_deferred"):
@@ -169,17 +196,79 @@ def unrepresentable_damage_receipt(event: Mapping[str, Any]) -> str | None:
 def unrepresentable_template_receipt(template: Mapping[str, Any]) -> str | None:
     """Return a named receipt when a resolved support template cannot ride
     the compiled score kernel, else None."""
+    if template.get("_guardian_reactive"):
+        return "guardian_reactive_shield"
     kind = str(template.get("kind", ""))
+    if kind == "damage_modifier":
+        # A timed damage modifier rides the shared kernel in both adapters
+        # (the score ledger arms the same canonical state dicts), so the
+        # representable surface is exactly what the kernel can apply:
+        # a positive window (unless persistent), and finite non-negative
+        # numeric payloads.  Anything else fails closed with a named
+        # receipt instead of mis-compiling or silently dropping the window.
+        if not bool(template.get("persistent")):
+            try:
+                duration = max(0.0, float(template.get("duration", 0.0) or 0.0))
+            except (TypeError, ValueError):
+                duration = 0.0
+            if duration <= 0.0:
+                return "support_duration=0"
+        if template.get("damage_reduction"):
+            try:
+                amount = float(template.get("amount", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                return "support_damage_modifier_amount=nonfinite"
+            if not math.isfinite(amount) or amount < 0.0:
+                return "support_damage_modifier_amount=nonfinite"
+        else:
+            try:
+                multiplier = float(template.get("multiplier", 1.0) or 1.0)
+            except (TypeError, ValueError):
+                return "support_damage_modifier_multiplier=nonfinite"
+            if not math.isfinite(multiplier) or multiplier < 0.0:
+                return "support_damage_modifier_multiplier=nonfinite"
+        for field in ("armor_reduction_percent", "mr_reduction_percent"):
+            try:
+                value = float(template.get(field, 0.0) or 0.0)
+            except (TypeError, ValueError):
+                return f"support_damage_modifier_{field}=nonfinite"
+            if not math.isfinite(value):
+                return f"support_damage_modifier_{field}=nonfinite"
+        return None
+    if kind == "spell_shield":
+        if template.get("on_block_heal_amount", 0.0):
+            return "support_spell_shield_on_block_heal"
+        try:
+            duration = max(0.0, float(template.get("duration", 0.0) or 0.0))
+        except (TypeError, ValueError):
+            duration = 0.0
+        return None if duration > 0.0 else "support_duration=0"
+    if kind in {"stasis", "invulnerability", "untargetable"}:
+        try:
+            duration = max(0.0, float(template.get("duration", 0.0) or 0.0))
+        except (TypeError, ValueError):
+            duration = 0.0
+        return None if duration > 0.0 else "support_duration=0"
     if kind not in {"shield", "heal"}:
+        # P2 Slice 8: the Dr. Mundo passive IMMUNITY arm is representable
+        # — it only sets the armed state, and the RESIST gate lives in the
+        # shared kernel (_apply_crowd_control), so both adapters apply it
+        # identically (the score ledger ignores the receipts).
+        if kind == "crowd_control_resist":
+            return None
         return f"support_kind={kind}"
     try:
         duration = max(0.0, float(template.get("duration", 0.0) or 0.0))
     except (TypeError, ValueError):
         duration = 0.0
-    if duration > 0.0:
-        return f"support_duration={template.get('duration')}"
-    if template.get("amount_formula") is not None:
-        return "support_amount_formula"
+    if kind == "shield":
+        # Timed shields are represented by the shared typed shield ledger.
+        # The support action carries its pool and any while-held CC immunity.
+        return unrepresentable_heal_receipt(template)
+    # Timed heals (Cryptbloom's Life From Death carries its sourced 1.75s
+    # nova window on the packet) apply FLAT in both walks — the shared
+    # kernel never reads action.duration for heals — so the duration is
+    # metadata, not a rejection (P3 package 3K).
     return unrepresentable_heal_receipt(template)
 
 
@@ -190,6 +279,310 @@ def heal_trigger_key(event: Mapping[str, Any]) -> tuple[str, float, int]:
         round(float(event.get("_trigger_time", 0.0)), 9),
         int(event.get("_trigger_sequence", 0) or 0),
     )
+
+
+def _knight_target_factor(
+    action: SurvivalAction,
+    source: Any,
+    target: Any,
+    raw_amount: float,
+) -> float | None:
+    """Port of the receipt expansion's per-target mitigation factor for one
+    Knight's Vow split (P3 package 3S).
+
+    The receipt walk computes the factor from the target's combatant stats
+    (dynamic bonuses are zero before the walk runs), the attacker's
+    penetration, and the target's basic-damage / flat-reduction defenses.
+    """
+    damage_type = str(action.damage_type)
+    if damage_type == "physical":
+        effective = apply_armor_penetration(
+            float(target.stats.get("armor", 0.0) or 0.0),
+            float(source.stats.get("flat_armor_penetration", 0.0) or 0.0),
+            float(source.stats.get("armor_penetration_percent", 0.0) or 0.0) / 100.0,
+            float(source.stats.get("armor_penetration_bonus_percent", 0.0) or 0.0)
+            / 100.0,
+            float(target.stats.get("bonus_armor", 0.0) or 0.0),
+        )
+    elif damage_type == "magic":
+        effective = apply_magic_penetration(
+            float(target.stats.get("magic_resistance", 0.0) or 0.0),
+            float(source.stats.get("magic_penetration_flat", 0.0) or 0.0),
+            float(source.stats.get("magic_penetration_percent", 0.0) or 0.0) / 100.0,
+        )
+    elif damage_type == "true":
+        return 1.0
+    else:
+        return None
+    factor = apply_resistance(1.0, effective)
+    if not math.isfinite(factor) or factor < 0.0:
+        return None
+    if action.basic_attack and damage_type != "true":
+        defenses = target.defenses
+        factor *= max(
+            0.0, float(getattr(defenses, "basic_damage_multiplier", 1.0) or 1.0)
+        )
+        flat = max(
+            0.0,
+            float(getattr(defenses, "basic_damage_flat_reduction", 0.0) or 0.0),
+        )
+        cap = max(
+            0.0,
+            float(getattr(defenses, "basic_damage_flat_reduction_cap", 0.0) or 0.0),
+        )
+        if flat > 0.0 and cap > 0.0:
+            mitigated = raw_amount * factor
+            factor = max(0.0, (mitigated - min(flat, mitigated * cap)) / raw_amount)
+    if damage_type != "true":
+        defenses = target.defenses
+        flat = max(
+            0.0,
+            float(
+                getattr(
+                    defenses,
+                    (
+                        "champion_dot_damage_flat_reduction"
+                        if action.damage_over_time
+                        else "champion_damage_flat_reduction"
+                    ),
+                    0.0,
+                )
+                or 0.0
+            ),
+        )
+        if flat > 0.0:
+            mitigated = raw_amount * factor
+            factor = max(0.0, (mitigated - min(flat, mitigated)) / raw_amount)
+    return factor
+
+
+def stage_knights_vow_redirect_actions(
+    compiler: "_WalkCompiler",
+    combatants: Sequence[Any],
+    tether: Mapping[str, Any],
+    redirect_children: MutableMapping[str, Any],
+    next_aidx: int,
+) -> int:
+    """Port the receipt walk's Knight's Vow pre-mitigation split onto one
+    compiled panel's typed damage actions (P3 package 3S).
+
+    For every incoming physical/magic damage action whose subject is the
+    Worthy ally and whose attacker is an enemy combatant, recover the raw
+    pre-mitigation amount (from ``raw_damage`` or the stamped baseline
+    resistance), compute each recipient's mitigation factor, replace the
+    parent action with the direct share, append the redirected child
+    (``ActionKind.REDIRECT``, trigger-linked to the parent, phase 0.5, CC
+    fields copied so immobilize windows stay byte-identical), and register
+    the child in ``redirect_children`` so the kernel's holder-health gate
+    can cancel it.  Unrecoverable packets stay untouched (the receipt walk
+    zeroes their fraction with a named reason; the compiled path simply
+    never stages them).
+    """
+    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+        return next_aidx
+    target = tether["target"]
+    holder = tether["holder"]
+    fraction = max(0.0, min(1.0, float(tether["redirect_fraction"])))
+    threshold = float(tether["threshold"])
+    target_id = str(target.participant_id)
+    holder_id = str(holder.participant_id)
+    target_i = next(
+        (
+            i
+            for i, combatant in enumerate(combatants)
+            if combatant.participant_id == target_id
+        ),
+        -1,
+    )
+    holder_i = next(
+        (
+            i
+            for i, combatant in enumerate(combatants)
+            if combatant.participant_id == holder_id
+        ),
+        -1,
+    )
+    if target_i < 0 or holder_i < 0:
+        return next_aidx
+    aidx = next_aidx
+    rebuilt: list[SurvivalAction] = []
+    for action in compiler.actions:
+        if (
+            action.subject != target_i
+            or action.kind not in _DAMAGE_ACTION_KINDS
+            or action.amount <= 0.0
+            or str(action.damage_type) not in {"physical", "magic"}
+            or action.deferred
+            or action.redirected
+        ):
+            rebuilt.append(action)
+            continue
+        source = (
+            combatants[action.attacker]
+            if 0 <= action.attacker < len(combatants)
+            else None
+        )
+        if source is None or str(source.participant_id) == target_id:
+            rebuilt.append(action)
+            continue
+        original_amount = max(0.0, float(action.amount))
+        raw_amount: float | None = None
+        try:
+            candidate = float(action.raw_damage or 0.0)
+        except (TypeError, ValueError):
+            candidate = 0.0
+        if candidate > 0.0 and math.isfinite(candidate):
+            raw_amount = candidate
+        else:
+            baseline = (
+                action.baseline_effective_armor
+                if str(action.damage_type) == "physical"
+                else action.baseline_effective_mr
+            )
+            if baseline is not None:
+                try:
+                    baseline_factor = apply_resistance(1.0, float(baseline))
+                    if baseline_factor > 0.0 and math.isfinite(baseline_factor):
+                        raw_amount = original_amount / baseline_factor
+                except (TypeError, ValueError, ZeroDivisionError):
+                    raw_amount = None
+        if raw_amount is None or not math.isfinite(raw_amount):
+            rebuilt.append(action)
+            continue
+        protected_factor = _knight_target_factor(action, source, target, raw_amount)
+        holder_factor = _knight_target_factor(action, source, holder, raw_amount)
+        if protected_factor is None or holder_factor is None:
+            rebuilt.append(action)
+            continue
+        direct_amount = max(0.0, raw_amount * (1.0 - fraction) * protected_factor)
+        redirected_amount = max(0.0, raw_amount * fraction * holder_factor)
+        parent = action._replace(
+            amount=direct_amount,
+            redirect_original_damage=original_amount,
+            redirect_holder_health_ratio=threshold,
+        )
+        child_id = f"{action.event_id or ''}:redirect"
+        child = SurvivalAction(
+            sort_key=action_key(
+                float(action.time),
+                0.5,
+                holder_id,
+                {"attacker": str(source.participant_id), "_event_id": child_id},
+            ),
+            time=float(action.time),
+            phase=0.5,
+            kind=ActionKind.REDIRECT,
+            subject=holder_i,
+            attacker=action.attacker,
+            aidx=aidx,
+            amount=redirected_amount,
+            damage_type=action.damage_type,
+            raw_damage=raw_amount * fraction,
+            source_key=action.source_key,
+            source=action.source,
+            event_id=child_id,
+            sequence=action.sequence,
+            trigger=action.aidx,
+            trigger_event_id=action.event_id,
+            redirected=True,
+            redirect_holder_health_ratio=threshold,
+            redirect_original_damage=original_amount,
+            cc_kind=action.cc_kind,
+            cc_duration=action.cc_duration,
+            immobilized=action.immobilized,
+            skillshot=action.skillshot,
+            damage_over_time=action.damage_over_time,
+            basic_attack=action.basic_attack,
+            baseline_effective_armor=action.baseline_effective_armor,
+            baseline_effective_mr=action.baseline_effective_mr,
+        )
+        aidx += 1
+        if action.event_id is not None:
+            redirect_children[action.event_id] = child
+        rebuilt.append(parent)
+        rebuilt.append(child)
+        # The child's applied amount belongs to the same attacker's
+        # outgoing total (the receipt mirrors it into the attacker's
+        # ledger); register it in the panel's damage order so the score
+        # breakdown attributes it identically.  The child shares the
+        # parent's timestamp: a child the walk never reaches (past the
+        # fight window) contributes a zero applied amount, so the
+        # unconditional entry is harmless.
+        compiler.damage_order[action.attacker].append((child.aidx, float(action.time)))
+    compiler.actions = rebuilt
+    return aidx
+
+
+def stage_knights_vow_heals(
+    compiler: "_WalkCompiler",
+    combatants: Sequence[Any],
+    tether: Mapping[str, Any],
+    next_aidx: int,
+) -> int:
+    """Port the receipt scheduler's Sacrifice holder-heal onto one compiled
+    panel: the Worthy ally's outgoing physical/magic/true damage packets
+    author a 12% holder heal (kind HEAL, subject = the KV holder, gated by
+    the typed holder-health ratio the kernel enforces)."""
+    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+        return next_aidx
+    holder = tether["holder"]
+    target = tether["target"]
+    heal_fraction = max(0.0, float(tether["heal_fraction"]))
+    threshold = float(tether["threshold"])
+    holder_id = str(holder.participant_id)
+    target_id = str(target.participant_id)
+    holder_i = next(
+        (i for i, c in enumerate(combatants) if c.participant_id == holder_id), -1
+    )
+    target_i = next(
+        (i for i, c in enumerate(combatants) if c.participant_id == target_id), -1
+    )
+    if holder_i < 0 or target_i < 0:
+        return next_aidx
+    aidx = next_aidx
+    appended: list[SurvivalAction] = []
+    for action in compiler.actions:
+        if (
+            action.attacker != target_i
+            or action.kind not in _DAMAGE_ACTION_KINDS
+            or action.amount <= 0.0
+            or str(action.damage_type) not in {"physical", "magic", "true"}
+        ):
+            continue
+        heal_amount = max(0.0, float(action.amount)) * heal_fraction
+        if heal_amount <= 0.0:
+            continue
+        event_id = f"{action.event_id or ''}:kv_heal"
+        appended.append(
+            SurvivalAction(
+                sort_key=action_key(
+                    float(action.time),
+                    1.0,
+                    holder_id,
+                    {"attacker": holder_id, "_event_id": event_id},
+                ),
+                time=float(action.time),
+                phase=1.0,
+                kind=ActionKind.HEAL,
+                subject=holder_i,
+                attacker=holder_i,
+                aidx=aidx,
+                amount=heal_amount,
+                healing_category="knights_vow",
+                source_key="Knight's Vow — Sacrifice",
+                source="Knight's Vow — Sacrifice",
+                event_id=event_id,
+                sequence=action.sequence,
+                requires_holder_health_ratio=threshold,
+            )
+        )
+        aidx += 1
+    if appended:
+        compiler.actions.extend(appended)
+        compiler.actions.sort(key=itemgetter(0))
+        for heal in appended:
+            compiler.support_entries.append((holder_id, holder_i, heal.aidx, True))
+    return aidx
 
 
 def champion_wound_tuple(
@@ -223,8 +616,6 @@ def thorns_return_damage(profile: Any, wearer: Any, striker: Any) -> float:
     the kernel) because both the receipt scheduler and the compiler price
     strike-backs before the walk runs.
     """
-    from ..resistance import apply_magic_penetration, apply_resistance
-
     if profile.damage_type != "magic":
         raise ValueError(
             f"{profile.item_name} thorns damage type "
@@ -325,6 +716,7 @@ def revive_candidate_actions(
                     source=revive_source,
                     source_key=revive_key,
                     sequence=int(action.sequence or 0),
+                    delay=revive_delay,
                 )
             )
             aidx += 1
@@ -445,6 +837,20 @@ class WalkCompiler:
         aidx_by_source_time: dict[tuple[str, float], list[int]] = defaultdict(list)
         aidx = self.next_aidx
         for event in packet["events"]:
+            if event.get("kind") == "crowd_control":
+                action = survival_action_from_event(
+                    event,
+                    float(event["_sk"][1]),
+                    defender_i,
+                    {str(event.get("attacker", "")): attacker_i},
+                    subject_id=str(event.get("target", "")),
+                    aidx=aidx,
+                )
+                actions_append(action)
+                if action.time <= duration:
+                    order_append((aidx, action.time))
+                aidx += 1
+                continue
             # Packet events are enriched engine-ledger rows: these fields
             # are written unconditionally, so index them directly.
             time_value = event["time"]
@@ -499,6 +905,31 @@ class WalkCompiler:
                     source=str(event.get("source", event.get("source_key", ""))),
                     event_id=str(event.get("_event_id", "")),
                     sequence=event.get("sequence"),
+                    immobilized=bool(
+                        event.get("immobilized")
+                        or event.get("crowd_control")
+                        or event.get("hard_cc")
+                        or str(event.get("cc_kind", "")).lower()
+                        in ACTION_BLOCKING_CC_KINDS
+                    ),
+                    cc_kind=str(event.get("cc_kind", "")),
+                    cc_duration=max(0.0, float(event.get("cc_duration", 0.0) or 0.0)),
+                    skillshot=bool(event.get("skillshot")),
+                    damage_over_time=bool(event.get("damage_over_time")),
+                    ability_instance=event.get("ability_instance"),
+                    baseline_effective_armor=(
+                        float(event["_baseline_effective_armor"])
+                        if "_baseline_effective_armor" in event
+                        else None
+                    ),
+                    baseline_effective_mr=(
+                        float(event["_baseline_effective_mr"])
+                        if "_baseline_effective_mr" in event
+                        else None
+                    ),
+                    is_ability=bool(event.get("is_ability")),
+                    basic_attack=bool(event.get("basic_attack")),
+                    area_damage=bool(event.get("area_damage")),
                 )
             )
             if time_value <= duration:
@@ -580,6 +1011,7 @@ class WalkCompiler:
                     amount=max(0.0, float(event.get("amount", 0.0))),
                     amount_formula=event.get("amount_formula"),
                     healing_category=str(event.get("healing_category", "")),
+                    cast_while_disabled=bool(event.get("cast_while_disabled")),
                     temporary_health_duration=(
                         max(
                             0.0,
@@ -612,6 +1044,8 @@ class WalkCompiler:
         id_strings: list[str],
         defender_index: int = 0,
         champion_wounds: Mapping[str, Any] | None = None,
+        defender_stack_armed: bool = False,
+        defender_spell_shield_armed: bool = False,
     ) -> None:
         """Compile a fresh one-pair fight straight from the engine rows.
 
@@ -642,6 +1076,23 @@ class WalkCompiler:
             # the pipeline's tuple-ledger predicate, so no trigger linkage
             # can exist.  Every field below reads the same engine value the
             # dict path would.
+            if defender_stack_armed:
+                # Tuple ledger rows intentionally omit per-event metadata
+                # (ability_instance, baseline resistances, delivery flags);
+                # a stack-armed or spell-shield-armed defender needs them
+                # to schedule its combat state, so the tuple surface fails
+                # closed instead of silently erasing the mechanic.  The
+                # spell-shield case (Annul family) gets its own named
+                # receipt (P3 package 3U).
+                receipt = (
+                    "tuple_ledger_spell_shield_metadata"
+                    if defender_spell_shield_armed
+                    else "tuple_ledger_stack_metadata"
+                )
+                raise UncompilableActionError(
+                    receipt=receipt,
+                    source=defender_id,
+                )
             for index, row in enumerate(result.get("damage_events", [])):
                 key = row[0]
                 time_value = key[0]
@@ -787,6 +1238,31 @@ class WalkCompiler:
                     source,
                     event_id,
                     sequence,
+                    bool(
+                        event.get("immobilized")
+                        or event.get("crowd_control")
+                        or event.get("hard_cc")
+                        or str(event.get("cc_kind", "")).lower()
+                        in ACTION_BLOCKING_CC_KINDS
+                    ),
+                    str(event.get("cc_kind", "")),
+                    max(0.0, float(event.get("cc_duration", 0.0) or 0.0)),
+                    bool(event.get("skillshot")),
+                    bool(event.get("damage_over_time")),
+                    event.get("ability_instance"),
+                    (
+                        float(event["_baseline_effective_armor"])
+                        if "_baseline_effective_armor" in event
+                        else None
+                    ),
+                    (
+                        float(event["_baseline_effective_mr"])
+                        if "_baseline_effective_mr" in event
+                        else None
+                    ),
+                    bool(event.get("is_ability")),
+                    bool(event.get("basic_attack")),
+                    bool(event.get("area_damage")),
                 )
             )
             if time_value <= duration:
@@ -797,6 +1273,38 @@ class WalkCompiler:
                 aidx_by_source_time[(source_key, time_key)].append(aidx)
             if source_key == "auto_attacks" or event.get("basic_attack"):
                 strikes_append((aidx, time_value, sequence, attacker_i))
+            aidx += 1
+        for control_index, raw_event in enumerate(result.get("control_events", ())):
+            event = {
+                **raw_event,
+                "attacker": attacker_id,
+                "target": defender_id,
+                "_event_id": (f"{attacker_id}:{defender_id}:control:{control_index}"),
+            }
+            time_value = float(event.get("time", 0.0))
+            sequence = int(event.get("sequence", 0) or 0)
+            source = str(event.get("source", event.get("source_key", "")))
+            event["_sk"] = (
+                time_value,
+                0.0,
+                sequence,
+                order_a,
+                order_b,
+                defender_id,
+                event["_event_id"],
+                source,
+            )
+            action = survival_action_from_event(
+                event,
+                0.0,
+                defender_i,
+                {attacker_id: attacker_i},
+                subject_id=defender_id,
+                aidx=aidx,
+            )
+            actions_append(action)
+            if time_value <= duration:
+                order_append((aidx, time_value))
             aidx += 1
         self.next_aidx = aidx
         for heal_index, event in enumerate(heals):
@@ -880,6 +1388,7 @@ class WalkCompiler:
                     amount=amount,
                     amount_formula=event.get("amount_formula"),
                     healing_category=str(event.get("healing_category", "")),
+                    cast_while_disabled=bool(event.get("cast_while_disabled")),
                     temporary_health_duration=(
                         max(
                             0.0,
@@ -910,13 +1419,33 @@ class WalkCompiler:
             target_id = str(template["target"])
             subject_i = index_of[target_id]
             kind = str(template.get("kind", ""))
-            priority = -1.0 if kind == "shield" else 1.0
+            priority = support_packet_priority(
+                kind,
+                explicit=(
+                    float(template["_priority"]) if "_priority" in template else None
+                ),
+            )
+            # The receipt walk honors an authored ``_priority`` when present
+            # (a damage modifier must arm before same-timestamp damage, so
+            # its template carries the shield priority); mirror it so both
+            # walks sort identically.
+            if "_priority" in template:
+                try:
+                    float(template["_priority"])
+                except (TypeError, ValueError) as exc:
+                    raise UncompilableActionError(
+                        receipt="support_priority=nonfinite",
+                        source=str(template.get("source", "")),
+                    ) from exc
             # Issue #137: fail closed on any resolved support template the
-            # score kernel cannot stage — non-heal/shield kinds (stat buffs,
-            # damage modifiers, on-hit magic, temporary health, ...), timed
-            # shields/heals (duration > 0), live gates, vamp source
-            # categories, live amount formulas, and trigger links — instead
-            # of mis-compiling it as a flat heal or silently dropping it.
+            # score kernel cannot stage — non-heal/shield/modifier kinds
+            # (stat buffs, on-hit magic, temporary health, ...), timed
+            # shields/heals (duration > 0), live holder gates, vamp source
+            # categories, and trigger links — instead of mis-compiling it
+            # as a flat heal or silently dropping it.  Damage modifiers are
+            # representable: ``unrepresentable_template_receipt`` accepts
+            # exactly the forms the shared kernel can apply and names the
+            # rest.
             template_receipt = unrepresentable_template_receipt(template)
             if template_receipt is not None:
                 raise UncompilableActionError(
@@ -935,21 +1464,102 @@ class WalkCompiler:
             aidx = self.next_aidx
             self.next_aidx += 1
             time_value = float(template.get("time", 0.0))
+            shield_gate_target = template.get("shield_gate_target")
+            if shield_gate_target == "attacker":
+                shield_gate_subject = attacker_i
+            elif shield_gate_target is None:
+                shield_gate_subject = -1
+            else:
+                shield_gate_subject = index_of.get(str(shield_gate_target), -1)
+            shield_gate_time = template.get("shield_gate_time")
+            if kind == "spell_shield":
+                action_kind = ActionKind.SPELL_SHIELD
+            elif kind == "crowd_control_resist":
+                # P2 Slice 8: the passive immunity arm — the shared
+                # kernel's _apply_crowd_control_resist arms the state and
+                # the resist gate runs in both adapters.
+                action_kind = ActionKind.CROWD_CONTROL_RESIST
+            elif kind == "shield":
+                action_kind = ActionKind.SHIELD
+            elif kind == "stasis":
+                action_kind = ActionKind.STASIS
+            elif kind == "invulnerability":
+                action_kind = ActionKind.INVULNERABLE
+            elif kind == "untargetable":
+                action_kind = ActionKind.UNTARGETABLE
+            elif kind == "damage_modifier":
+                action_kind = ActionKind.DAMAGE_MODIFIER
+            else:
+                action_kind = ActionKind.HEAL
             self.actions.append(
                 SurvivalAction(
                     sort_key=action_key(time_value, priority, target_id, template),
                     time=time_value,
                     phase=priority,
-                    kind=ActionKind.SHIELD if kind == "shield" else ActionKind.HEAL,
+                    kind=action_kind,
                     subject=subject_i,
                     attacker=attacker_i,
                     aidx=aidx,
                     amount=max(0.0, float(template.get("amount", 0.0))),
+                    amount_formula=template.get("amount_formula"),
+                    requires_existing_shield=bool(
+                        template.get("requires_existing_shield")
+                    ),
+                    shield_gate_subject=shield_gate_subject,
+                    shield_gate_time=(
+                        float(shield_gate_time)
+                        if shield_gate_time is not None
+                        else None
+                    ),
                     healing_category=str(template.get("healing_category", "")),
+                    cast_while_disabled=bool(template.get("cast_while_disabled")),
                     source_key=str(template.get("source_key", "")),
                     source=str(template.get("source", "")),
                     event_id=str(template.get("_event_id", "")),
                     sequence=template.get("sequence"),
+                    duration=max(0.0, float(template.get("duration", 0.0) or 0.0)),
+                    requires_holder_health_ratio=max(
+                        0.0,
+                        float(template.get("requires_holder_health_ratio", 0.0) or 0.0),
+                    ),
+                    on_block_heal_amount=max(
+                        0.0,
+                        float(template.get("on_block_heal_amount", 0.0) or 0.0),
+                    ),
+                    on_block_heal_delay=max(
+                        0.0,
+                        float(template.get("on_block_heal_delay", 0.0) or 0.0),
+                    ),
+                    on_block_heal_source=str(
+                        template.get("on_block_heal_source", "") or ""
+                    ),
+                    shield_pool=str(template.get("shield_pool", "") or ""),
+                    crowd_control_immunity_while_shield=bool(
+                        template.get("crowd_control_immunity_while_shield")
+                    ),
+                    crowd_control_immunity_source=str(
+                        template.get("crowd_control_immunity_source", "") or ""
+                    ),
+                    # Damage-modifier fields (issue #137 Phase 2 contract:
+                    # the compiled action carries every typed field the
+                    # kernel's ``_apply_damage_modifier`` reads, so score
+                    # mode applies the identical window).
+                    persistent=bool(template.get("persistent")),
+                    multiplier=float(template.get("multiplier", 1.0) or 1.0),
+                    damage_reduction=bool(template.get("damage_reduction")),
+                    next_event_only=bool(template.get("next_event_only")),
+                    all_sources=bool(template.get("all_sources")),
+                    armor_reduction_percent=float(
+                        template.get("armor_reduction_percent", 0.0) or 0.0
+                    ),
+                    mr_reduction_percent=float(
+                        template.get("mr_reduction_percent", 0.0) or 0.0
+                    ),
+                    resistance_type=str(template.get("resistance_type", "") or ""),
+                    owner=str(template.get("owner", "") or ""),
+                    source_participant=str(
+                        template.get("source_participant", "") or ""
+                    ),
                 )
             )
             self.support_entries.append((target_id, attacker_i, aidx, kind == "heal"))

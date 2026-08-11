@@ -9,7 +9,7 @@
   --white: #fffdf3;
   --black: #071a15;
   --radius: 2px;
-  --font: "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --shadow: 0 24px 60px rgba(7, 26, 21, .22);
 }
@@ -84,6 +84,13 @@ select { min-width: 132px; height: 34px; appearance: none; padding: 0 30px 0 12p
 .champion-options-head strong { font-size: 11px; font-weight: 800; }
 .champion-options-head span { color: var(--muted); font-size: 9px; }
 .champion-options-grid { display: flex; flex-wrap: wrap; align-items: end; gap: 9px 14px; }
+.support-target-panel { margin: 12px 0; padding: 12px; border: 1px solid var(--line); background: rgba(255,253,244,.48); }
+.support-target-panel header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.support-target-panel header h2 { margin: 0; font-size: 13px; }
+.support-target-panel header span { color: var(--muted); font-size: 9px; }
+.support-target-grid { display: flex; flex-wrap: wrap; gap: 9px 14px; }
+.support-target-control { display: grid; gap: 4px; min-width: 220px; color: var(--muted); font-size: 10px; }
+.support-target-control select { min-height: 30px; }
 .champion-option-field { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
 .champion-option-field input, .champion-option-field select { min-width: 72px; height: 30px; padding: 0 8px; font-size: 10px; }
 .champion-option-field select { min-width: 132px; }
@@ -624,7 +631,9 @@ select { font-size: 13px; }
 .objective-list { min-width: 0; }
 .state-button, .objective { font-size: 13px; }
 .champion-card { grid-template-columns: minmax(310px, .9fr) minmax(0, 1.5fr); min-height: 270px; background: rgba(255,253,244,.9); }
+.champion-card.is-empty { grid-template-columns: minmax(0, 1fr); min-height: 198px; }
 .champion-identity { gap: 20px; padding: 24px; }
+.champion-card.is-empty .champion-identity { border-right: 0; border-bottom: 0; }
 .champion-portrait-button { flex: 0 0 128px; width: 128px; height: 148px; border: 1px solid var(--line-dark); }
 .champion-portrait-button img[hidden] { display: none; }
 .champion-portrait-button:not(.is-empty) img { object-fit: cover; object-position: center; }

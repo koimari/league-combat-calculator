@@ -13,6 +13,7 @@ const engine = {
   availability: new Map(),
   itemOptions: {},
   championOptions: {},
+  keystoneOptions: {},
   keystones: [],
   defaultTarget: { health: 1000, bonus_health: 0, armor: 100, mr: 100 },
   fightDefaults: {},
@@ -58,6 +59,8 @@ const state = {
     includeBootsB: true,
     keystoneA: "",
     keystoneB: "",
+    keystoneOptionsA: {},
+    keystoneOptionsB: {},
     comparisonEnabled: false,
     baseDamage: 0,
     apRatio: 0,
@@ -65,6 +68,7 @@ const state = {
     adRatio: 0,
     abilityInputs: {},
     championOptions: {},
+    supportTargetSelections: {},
   },
   targets: [],
   allies: [],
@@ -526,6 +530,7 @@ function resetChampionOptions() {
   state.attacker.championOptions = Object.fromEntries(
     definitions.map((option) => [option.key, option.default]),
   );
+  state.attacker.supportTargetSelections = {};
 }
 
 function resetRosterChampionOptions(loadout) {
@@ -533,6 +538,7 @@ function resetRosterChampionOptions(loadout) {
   loadout.championOptions = Object.fromEntries(
     definitions.map((option) => [option.key, option.default]),
   );
+  loadout.supportTargetSelections = {};
 }
 
 function syncAbilityInputsToLevel() {
@@ -974,6 +980,16 @@ function abilityBindsChampionOption(key) {
   return false;
 }
 
+
+function stringListOptionValue(value) {
+  return Array.isArray(value) ? value.join(", ") : String(value || "");
+}
+
+
+function parseStringListOption(value) {
+  return [...new Set(String(value || "").split(",").map((item) => item.trim()).filter(Boolean))];
+}
+
 function renderChampionOptions() {
   const capability = championOptionCapability("main", state.attacker.champion);
   const optionAttributes = capabilityDescriptorAttributes("champion_options", capability);
@@ -989,6 +1005,9 @@ function renderChampionOptions() {
     if (option.type === "select") {
       const choices = (option.choices || []).map((choice) => `<option value="${escapeHtml(choice.value)}" ${String(value) === String(choice.value) ? "selected" : ""}>${escapeHtml(choice.label || choice.value)}</option>`).join("");
       return `<label class="champion-option-field"><span>${label}</span><select ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" data-option-type="select">${choices}</select></label>`;
+    }
+    if (option.type === "string_list") {
+      return `<label class="champion-option-field"><span>${label}</span><input type="text" ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" data-option-type="string_list" value="${escapeHtml(stringListOptionValue(value))}" placeholder="Q, W" /></label>`;
     }
     const step = option.step ?? (option.type === "int" ? 1 : "any");
     const min = option.min == null ? "" : ` min="${option.min}"`;
@@ -1015,6 +1034,9 @@ function renderRosterChampionOptions(loadout, path, kind) {
       const choices = (option.choices || []).map((choice) => `<option value="${escapeHtml(choice.value)}" ${String(value) === String(choice.value) ? "selected" : ""}>${escapeHtml(choice.label || choice.value)}</option>`).join("");
       return `<label class="champion-option-field"><span>${label}</span><select ${common} data-option-type="select">${choices}</select></label>`;
     }
+    if (option.type === "string_list") {
+      return `<label class="champion-option-field"><span>${label}</span><input type="text" ${common} data-option-type="string_list" value="${escapeHtml(stringListOptionValue(value))}" placeholder="Q, W" /></label>`;
+    }
     const step = option.step ?? (option.type === "int" ? 1 : "any");
     const min = option.min == null ? "" : ` min="${option.min}"`;
     const max = option.max == null ? "" : ` max="${option.max}"`;
@@ -1039,11 +1061,20 @@ function questBootPath(side) {
 function keystoneSlot(side) {
   const name = state.attacker[`keystone${side}`];
   const keystone = getKeystone(name);
+  const schemas = engine.keystoneOptions[name]?.options || {};
+  const values = state.attacker[`keystoneOptions${side}`] || {};
+  const controls = Object.entries(schemas).map(([key, option]) => {
+    const value = values[key] ?? option.default;
+    const min = option.min == null ? "" : ` min="${option.min}"`;
+    const max = option.max == null ? "" : ` max="${option.max}"`;
+    return `<label class="keystone-option"><span>${escapeHtml(option.label || key)}</span><input type="number" ${capabilityAttributes("main", "keystone")} data-keystone-option="${escapeHtml(side)}" data-keystone-option-key="${escapeHtml(key)}" value="${escapeHtml(value)}" step="1"${min}${max} /></label>`;
+  }).join("");
   return `<div class="quest-item keystone-item"><span>Keystone</span><div class="slot-wrap">
     <button class="item-slot keystone-slot" type="button" ${capabilityAttributes("main", "keystone")} data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add keystone"}">
       <span class="item-icon keystone-icon ${keystone ? "" : "empty"}">${keystone ? `<img src="${keystone.icon}" alt="" />` : `<span aria-hidden="true">+</span>`}</span>
       <small>${escapeHtml(keystone?.name || "Add keystone")}</small>
     </button>
+    ${controls ? `<div class="keystone-options">${controls}</div>` : ""}
   </div></div>`;
 }
 
@@ -1140,7 +1171,20 @@ function engineBuild(side) {
     items: itemIds.map((id) => itemName(id)).filter(Boolean),
     item_options: engineItemOptions(itemIds, itemStacks, itemOptionValues),
     keystone: state.attacker[`keystone${side}`] || "",
+    keystone_options: engineKeystoneOptions(side),
   };
+}
+
+function engineKeystoneOptions(side) {
+  const name = state.attacker[`keystone${side}`] || "";
+  const schemas = engine.keystoneOptions[name]?.options || {};
+  const provided = state.attacker[`keystoneOptions${side}`] || {};
+  return Object.fromEntries(Object.entries(schemas).map(([key, option]) => {
+    const parsed = Number.parseInt(provided[key] ?? option.default ?? 0, 10);
+    const fallback = Number(option.default ?? 0);
+    const value = Number.isFinite(parsed) ? parsed : fallback;
+    return [key, Math.min(Math.max(value, Number(option.min ?? value)), Number(option.max ?? value))];
+  }));
 }
 
 function engineChampionOptions() {
@@ -1207,6 +1251,7 @@ function engineTarget(target) {
     champion_options: Object.fromEntries(
       Object.entries(target.championOptions || {}).map(([key, value]) => [key, value]),
     ),
+    support_target_selections: { ...(target.supportTargetSelections || {}) },
     // Let the backend apply the champion's sourced level order for
     // transformation/stance kits; their generic rank controls are not a
     // legal manual allocation.
@@ -1240,6 +1285,7 @@ function engineFightPayload(side) {
     include_actives: true,
     include_crossover: state.attacker.comparisonEnabled || state.fight.rotations > 1,
     champion_options: engineChampionOptions(),
+    support_target_selections: { ...(state.attacker.supportTargetSelections || {}) },
     ability_ranks: engineAbilityRanks(),
     rotations: state.fight.rotations,
   };
@@ -1440,7 +1486,6 @@ function renderExactBreakdown(aResult, bResult) {
   }).join("");
   const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Participant survival</h2></div><span>Output · incoming · endpoint</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th><th>Applied incoming damage</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
   const labels = new Map((aResult?.combat?.participants || []).map((participant) => [participant.participant_id, `${participant.champion} · ${participant.team}`]));
-  const eventRows = (aResult?.combat?.events || []).filter((event) => Number(event.damage || 0) > 0 || event.skipped_reason).map((event) => `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(labels.get(event.target) || event.target || "Target")} · ${escapeHtml(event.source || "event")} · ${escapeHtml(event.event_precision || "exact")}${event.skipped_reason ? ` · ${escapeHtml(event.skipped_reason)}` : ""}</small></td><td>${fmt(event.damage || 0)}</td></tr>`).join("");
   const healingRows = healingEventsForResult(aResult).filter((event) => Number(event.raw_amount || event.amount || 0) > 0).map((event) => {
     const factor = Number(event.healing_reduction_factor || 1);
     const wound = factor < 1 ? ` · Grievous Wounds ${Math.round((1 - factor) * 100)}%` : "";
@@ -1461,17 +1506,78 @@ function renderExactBreakdown(aResult, bResult) {
       Number.isFinite(Number(event.multiplier)) && Number(event.multiplier) !== 1 ? `${Math.round((Number(event.multiplier) - 1) * 100)}% damage` : "",
       Number.isFinite(Number(event.gold_amount)) && Number(event.gold_amount) ? `${fmt(event.gold_amount)} gold` : "",
       Number.isFinite(Number(event.ward_uses)) && Number(event.ward_uses) ? `${fmt(event.ward_uses)} wards` : "",
+      Number.isFinite(Number(event.bonus_mana_total)) && Number(event.bonus_mana_total) ? `${fmt(event.bonus_mana_total)} bonus mana` : "",
+      Number.isFinite(Number(event.true_damage_on_ward_hit)) ? `${fmt(event.true_damage_on_ward_hit)} true dmg vs wards` : "",
+      event.ward_only ? "Blackout" : "",
       event.cleanse ? "cleanse" : "",
     ].filter(Boolean).join(" · ");
     return `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(event.source || "support")} · ${escapeHtml(event.kind || "support")} · to ${escapeHtml(target)}${details ? ` · ${escapeHtml(details)}` : ""}</small></td><td>${fmt(event.applied_amount || event.amount || 0)}<small>${escapeHtml(policy)}</small></td></tr>`;
   }).join("");
   const utility = aResult?.combat?.utility_outcomes?.focus || null;
   const targetAllocation = aResult?.combat?.target_allocation || null;
-  const utilitySummary = utility ? `<section class="utility-outcome-ledger" aria-label="Utility outcome dimensions"><header><div><p class="eyebrow">Utility objective</p><h2>Applied non-TDD outcomes</h2></div><span>Native units · no guessed conversion</span></header><p class="utility-outcome-note">${escapeHtml(utility.metric_note || "Movement, slows, cleanse, economy, and vision remain separate from TDD.")}</p><div class="utility-outcome-chips"><span>Movement ${fmt(utility.movement?.speed_percent_seconds || 0)} %·s</span><span>Slow ${fmt(utility.slow?.percent_seconds || 0)} %·s</span><span>Cleanse ${fmt(utility.cleanse?.event_count || 0)} events</span><span>Economy ${fmt(utility.economy?.gold || 0)} gold</span><span>Vision ${fmt(utility.vision?.ward_uses || 0)} wards</span><span>Secondary ${fmt(utility.multi_target?.allocated_packet_count || 0)}/${fmt(utility.multi_target?.packet_count || 0)} allocated</span></div></section>` : "";
+  const supportControls = supportTargetControls(aResult);
+  const utilitySummary = utility ? `<section class="utility-outcome-ledger" aria-label="Utility outcome dimensions"><header><div><p class="eyebrow">Utility objective</p><h2>Applied non-TDD outcomes</h2></div><span>Native units · no guessed conversion</span></header><p class="utility-outcome-note">${escapeHtml(utility.metric_note || "Movement, slows, cleanse, economy, and vision remain separate from TDD.")}</p><div class="utility-outcome-chips"><span>Movement ${fmt(utility.movement?.speed_percent_seconds || 0)} %·s</span><span>Slow ${fmt(utility.slow?.percent_seconds || 0)} %·s</span><span>Cleanse ${fmt(utility.cleanse?.event_count || 0)} events</span><span>Economy ${fmt(utility.economy?.gold || 0)} gold</span><span>Vision ${fmt(utility.vision?.ward_uses || 0)} wards</span><span>Resource ${fmt(utility.resource?.bonus_mana || 0)} bonus mana</span><span>Secondary ${fmt(utility.multi_target?.allocated_packet_count || 0)}/${fmt(utility.multi_target?.packet_count || 0)} allocated</span></div></section>` : "";
   const allocationNote = targetAllocation && targetAllocation.secondary_packet_count ? `<p class="utility-target-allocation" role="status">Target allocation: ${targetAllocation.complete ? "complete" : "withheld"} · ${fmt(targetAllocation.allocated_secondary_packet_count || 0)}/${fmt(targetAllocation.secondary_packet_count || 0)} secondary packets use the authored roster-index policy.</p>` : "";
-  const eventSection = eventRows || healingRows || supportRows || utilitySummary ? `<details class="breakdown-audit"><summary>Audit trail <span>Event order · timestamps</span></summary>${utilitySummary}${allocationNote}<section class="combat-event-ledger" aria-label="Event order audit"><header><div><p class="eyebrow">Event order</p><h2>Timestamped events</h2></div><span>Outgoing · incoming · recovery · support</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
+  const eventSection = healingRows || supportRows || utilitySummary ? `<details class="breakdown-audit"><summary>Recovery and support <span>Healing · protection · utility</span></summary>${utilitySummary}${allocationNote}<section class="combat-event-ledger" aria-label="Recovery and support audit"><header><div><p class="eyebrow">Recovery and support</p><h2>Applied effects</h2></div><span>Healing · protection · utility</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Effect</th><th>Applied value</th></tr></thead><tbody>${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
   const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aMainTotal, bResult ? bMainTotal : null))}</p>`;
-  $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
+  $("damageBreakdown").innerHTML = `${outcome}${combatSection}${supportControls}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
+}
+
+
+function supportSelectionOwner(attacker) {
+  if (attacker === "main") return state.attacker;
+  if (!String(attacker || "").startsWith("ally:")) return null;
+  return state.allies.find((ally) => `ally:${ally.champion}` === attacker) || null;
+}
+
+
+function supportSelectionTeammates(attacker) {
+  if (attacker === "main") return state.allies.filter((ally) => ally.champion);
+  const owner = supportSelectionOwner(attacker);
+  if (!owner) return [];
+  return [
+    ...(state.attacker.champion ? [state.attacker] : []),
+    ...state.allies.filter((ally) => ally.champion && ally !== owner),
+  ];
+}
+
+
+function supportTargetControls(result) {
+  const selectionScopes = new Set([
+    "one_teammate",
+    "self_and_one_teammate",
+    "explicit_selected_ally",
+    "healed_or_shielded_ally",
+    "most_wounded_ally",
+    "nearest_most_wounded_ally",
+    "other_nearest_wounded_ally",
+  ]);
+  const packets = new Map();
+  (result?.combat?.support_events || []).forEach((event) => {
+    const attacker = String(event.attacker || "");
+    const key = String(event.target_selection_key || "");
+    if (!attacker || !key || !selectionScopes.has(String(event.target_scope || ""))) return;
+    if (String(event.target || "") === attacker) return;
+    packets.set(attacker + ":" + key, event);
+  });
+  const controls = [...packets.values()].map((event) => {
+    const owner = supportSelectionOwner(event.attacker);
+    const teammates = supportSelectionTeammates(event.attacker);
+    if (!owner || !teammates.length) return "";
+    if (!owner.supportTargetSelections) owner.supportTargetSelections = {};
+    const selected = Math.min(
+      Math.max(0, Number(owner.supportTargetSelections[event.target_selection_key] ?? 0)),
+      teammates.length - 1,
+    );
+    const choices = teammates.map((teammate, index) => {
+      const name = teammate.champion || (teammate === state.attacker ? "Main champion" : "Teammate");
+      return "<option value=\"" + index + "\" " + (index === selected ? "selected" : "") + ">" + escapeHtml(name) + "</option>";
+    }).join("");
+    const label = String(event.source || event.kind || "Support packet") + " · " + String(event.kind || "effect");
+    return "<label class=\"support-target-control\"><span>" + escapeHtml(label) + "</span><select class=\"support-target-selection\" data-capability-field=\"support_target_selections\" data-option-key=\"" + escapeHtml(event.target_selection_key) + "\" data-value=\"" + escapeHtml(event.attacker) + "\" aria-label=\"Choose recipient for " + escapeHtml(label) + "\">" + choices + "</select></label>";
+  }).filter(Boolean).join("");
+  if (!controls) return "";
+  return "<section class=\"support-target-panel\" aria-label=\"Support recipients\"><header><div><p class=\"eyebrow\">Support recipients</p><h2>Choose who receives each single-target effect</h2></div><span>Area effects keep their sourced roster scope</span></header><div class=\"support-target-grid\">" + controls + "</div></section>";
 }
 
 
@@ -1904,6 +2010,12 @@ function renderPrototypeChampion() {
     portraitImage.alt = "";
   }
   document.querySelector(".champion-identity")?.classList.toggle("is-empty", !champion);
+  document.querySelector(".champion-card")?.classList.toggle("is-empty", !champion);
+  const identityControls = $("identityControls");
+  if (identityControls) {
+    identityControls.hidden = !champion;
+    identityControls.setAttribute("aria-hidden", String(!champion));
+  }
   const roleSelect = $("roleSelect");
   const roleCapability = capabilityFor("main", "role");
   if (roleSelect) {
@@ -1942,6 +2054,8 @@ function renderPrototypeChampion() {
   // a recalculation keeps the previous values on screen and marks the grid
   // pending, so the portrait, identity and controls never flash empty.
   const statsGrid = $("statsGrid");
+  statsGrid.hidden = !champion;
+  statsGrid.setAttribute("aria-hidden", String(!champion));
   const refreshing = Boolean(stats) && engine.loadoutStatsPending;
   statsGrid.innerHTML = stats ? prototypeStats(stats) : `<div class="matrix-placeholder">Patch-pinned stats appear once the backend resolves this loadout.</div>`;
   statsGrid.classList.toggle("is-pending", refreshing);
@@ -2072,7 +2186,7 @@ function renderEventTimeline(combatEvents, duration, eventLabel) {
   }).join("");
   const note = shown.length === combatEvents.length
     ? `${combatEvents.length} ordered ${plural(combatEvents.length, "event")}, oldest first`
-    : `First ${shown.length} of ${combatEvents.length} ordered events — the full sequence is in the ledger below`;
+    : `First ${shown.length} of ${combatEvents.length} ordered events`;
   return `<div class="timeline-axis"><span>0:00</span><span>${one(duration / 2)}s</span><span>${one(duration)}s</span></div>
     <ol class="timeline-events" aria-label="Ordered combat events">${lanes}</ol>
     <small class="timeline-note">${escapeHtml(note)}</small>`;
@@ -2191,16 +2305,6 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   const duration = Math.max(1, Number(aResult?.combat?.duration || state.fight.duration));
   const eventLabel = (participantId) => participantLabels.get(participantId) || participantId || "Participant";
   $("timeline").innerHTML = renderEventTimeline(combatEvents, duration, eventLabel);
-  // data-event-index matches the timeline lane above, so a row and its lane
-  // are traceably the same event (#155).
-  const eventRows = combatEvents.slice(0, 24).map((event, index) => {
-    const time = eventTime(event);
-    const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
-    const value = Number(event.damage || 0);
-    const precision = event.event_precision && event.event_precision !== "exact" ? ` · ${event.event_precision}` : "";
-    const source = `${eventLabel(event.attacker)} → ${eventLabel(event.target)} · ${event.source || "event"}${precision}`;
-    return `<div class="ledger-line" data-event-index="${index}"><span>${escapeHtml(timeLabel)} · ${escapeHtml(source)}</span><strong>${value > 0 ? `${fmt(value)} damage` : escapeHtml(event.skipped_reason || "No damage")}</strong></div>`;
-  });
   const healingRows = healingEvents.slice(0, 12).map((event) => {
     const time = eventTime(event);
     const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
@@ -2225,16 +2329,19 @@ function renderPrototypeResult(aResult = null, bResult = null) {
       Number.isFinite(Number(event.multiplier)) && Number(event.multiplier) !== 1 ? `${Math.round((Number(event.multiplier) - 1) * 100)}% damage` : "",
       Number.isFinite(Number(event.gold_amount)) && Number(event.gold_amount) ? `${fmt(event.gold_amount)} gold` : "",
       Number.isFinite(Number(event.ward_uses)) && Number(event.ward_uses) ? `${fmt(event.ward_uses)} wards` : "",
+      Number.isFinite(Number(event.bonus_mana_total)) && Number(event.bonus_mana_total) ? `${fmt(event.bonus_mana_total)} bonus mana` : "",
+      Number.isFinite(Number(event.true_damage_on_ward_hit)) ? `${fmt(event.true_damage_on_ward_hit)} true dmg vs wards` : "",
+      event.ward_only ? "Blackout" : "",
       event.cleanse ? "cleanse" : "",
     ].filter(Boolean).join(" · ");
     return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(event.source || "support")}${details ? ` · ${escapeHtml(details)}` : ""}</span><strong>${fmt(Number(event.applied_amount ?? event.amount ?? 0))} ${escapeHtml(event.kind || "support")} · ${escapeHtml(policy)}</strong></div>`;
   });
-  const overflow = combatEvents.length > 24 || healingEvents.length > 12 || supportEvents.length > 12
-    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${combatEvents.length > 24 ? combatEvents.length - 24 : 0} damage · ${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
+  const overflow = healingEvents.length > 12 || supportEvents.length > 12
+    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
     : "";
   const enemyEhp = enemyEffectiveHealth(aResult);
   const overkill = aTotal == null ? 0 : enemyOverkill(aResult, aTotal);
-  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${eventRows.join("")}${healingRows.join("")}${supportRows.join("")}${overflow}`;
+  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${healingRows.join("")}${supportRows.join("")}${overflow}`;
   // P4: the per-ability damage table carries a certainty chip next to every
   // sourced number. It re-renders on every result so chips track the loaded
   // /api/certainty contract (or its placeholder fallback).
@@ -2882,7 +2989,7 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("#addEnemy")) {
     if (state.targets.length >= 5) return;
     const index = state.targets.length;
-    state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
+    state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, supportTargetSelections: {} });
     render();
     return openPicker("champion", `targets.${index}.champion`);
   }
@@ -2890,14 +2997,14 @@ document.addEventListener("click", (event) => {
     if (state.targets.length >= 5) return;
     const present = new Set(state.targets.map((target) => target.champion));
     const practice = PRACTICE_TARGETS.find((candidate) => !present.has(candidate.champion)) || PRACTICE_TARGETS[0];
-    state.targets.push({ champion: practice.champion, level: practice.level, role: practice.role, roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
+    state.targets.push({ champion: practice.champion, level: practice.level, role: practice.role, roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, supportTargetSelections: {} });
     invalidateOptimization();
     return render();
   }
   if (event.target.closest("#addAlly")) {
     if (state.allies.length >= 4) return;
     const index = state.allies.length;
-    state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, allyEffectsEnabled: false });
+    state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, supportTargetSelections: {}, allyEffectsEnabled: false });
     render();
     return openPicker("champion", `allies.${index}.champion`);
   }
@@ -2954,6 +3061,7 @@ document.addEventListener("click", (event) => {
       state.attacker.buildBItemOptions = (state.attacker.buildAItemOptions || []).map((entry) => ({ ...entry }));
       state.attacker.questBootB = state.attacker.questBootA;
       state.attacker.keystoneB = state.attacker.keystoneA;
+      state.attacker.keystoneOptionsB = { ...(state.attacker.keystoneOptionsA || {}) };
     }
     return render();
   }
@@ -3096,7 +3204,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.targets.length < 5) {
       const index = state.targets.length;
-      state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
+      state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, supportTargetSelections: {} });
       render();
       return openPicker("champion", `targets.${index}.champion`);
     }
@@ -3112,7 +3220,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.allies.length < 4) {
       const index = state.allies.length;
-      state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, allyEffectsEnabled: false });
+      state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, supportTargetSelections: {}, allyEffectsEnabled: false });
       render();
       return openPicker("champion", `allies.${index}.champion`);
     }
@@ -3189,6 +3297,35 @@ document.addEventListener("change", (event) => {
     state.optimizer.availableGold = Number.isInteger(value) ? Math.max(0, Math.min(30_000, value)) : 0;
     return render();
   }
+  const supportSelection = event.target.closest(".support-target-selection");
+  if (supportSelection) {
+    const owner = supportSelectionOwner(supportSelection.dataset.value);
+    if (!owner) return;
+    if (!owner.supportTargetSelections) owner.supportTargetSelections = {};
+    owner.supportTargetSelections[supportSelection.dataset.optionKey] = Number(supportSelection.value) || 0;
+    invalidateOptimization();
+    return render();
+  }
+  const keystoneOption = event.target.closest("[data-keystone-option]");
+  if (keystoneOption) {
+    const side = keystoneOption.dataset.keystoneOption;
+    const key = keystoneOption.dataset.keystoneOptionKey;
+    const name = state.attacker[`keystone${side}`] || "";
+    const option = engine.keystoneOptions[name]?.options?.[key];
+    if (!option) return;
+    const parsed = Number.parseInt(keystoneOption.value, 10);
+    const fallback = Number(option.default ?? 0);
+    const value = Number.isFinite(parsed) ? parsed : fallback;
+    if (!state.attacker[`keystoneOptions${side}`]) {
+      state.attacker[`keystoneOptions${side}`] = {};
+    }
+    state.attacker[`keystoneOptions${side}`][key] = Math.min(
+      Math.max(value, Number(option.min ?? value)),
+      Number(option.max ?? value),
+    );
+    invalidateOptimization();
+    return render();
+  }
   const championOption = event.target.closest("[data-champion-option]");
   if (championOption) {
     const key = championOption.dataset.championOption;
@@ -3199,6 +3336,8 @@ document.addEventListener("change", (event) => {
       state.attacker.championOptions[key] = Boolean(championOption.checked);
     } else if (type === "select") {
       state.attacker.championOptions[key] = championOption.value;
+    } else if (type === "string_list") {
+      state.attacker.championOptions[key] = parseStringListOption(championOption.value);
     } else {
       const parsed = type === "int"
         ? Number.parseInt(championOption.value, 10)
@@ -3225,6 +3364,8 @@ document.addEventListener("change", (event) => {
       loadout.championOptions[key] = Boolean(rosterChampionOption.checked);
     } else if (type === "select") {
       loadout.championOptions[key] = rosterChampionOption.value;
+    } else if (type === "string_list") {
+      loadout.championOptions[key] = parseStringListOption(rosterChampionOption.value);
     } else {
       const parsed = type === "int"
         ? Number.parseInt(rosterChampionOption.value, 10)
@@ -3285,7 +3426,7 @@ for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) {
 Promise.all([
   fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
   fetch("/api/champions").then((response) => { if (!response.ok) throw new Error("Champion availability failed to load"); return response.json(); }),
-  fetch("/api/config").then((response) => response.ok ? response.json() : { item_options: {}, champion_options: {}, keystones: [], input_limits: {} }),
+  fetch("/api/config").then((response) => response.ok ? response.json() : { item_options: {}, champion_options: {}, keystone_options: {}, keystones: [], input_limits: {} }),
   fetch("/api/items").then((response) => response.ok ? response.json() : []),
   fetch("/api/boots").then((response) => response.ok ? response.json() : []),
   fetch("/static/ability-catalog.json").then((response) => { if (!response.ok) throw new Error("Ability catalogue failed to load"); return response.json(); }),
@@ -3307,6 +3448,7 @@ Promise.all([
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
+    engine.keystoneOptions = config.keystone_options || {};
     engine.capabilities = config.capabilities || { participants: {}, scenario: { fields: {} } };
     applyControlCapabilities();
     maybeInitConsentAnalytics();
@@ -3849,7 +3991,8 @@ function openQuickInAnalyst() {
   state.attacker.buildAItemOptions = [{}, {}, {}, {}, {}, {}];
   state.attacker.questBootA = 0;
   state.attacker.includeBootsA = true;
-  state.attacker.keystoneA = "";
+  state.attacker.keystoneA = request.keystone || "";
+  state.attacker.keystoneOptionsA = { ...(request.keystone_options || {}) };
   state.attacker.comparisonEnabled = false;
   (payload.items || []).forEach((name, index) => {
     if (index >= 6) return;
@@ -3868,6 +4011,7 @@ function openQuickInAnalyst() {
     includeBoots: true,
     abilityRanks: {},
     championOptions: {},
+    supportTargetSelections: {},
     allyEffectsEnabled: false,
   });
   state.targets = (payload.enemies || []).filter((enemy) => enemy.champion).map(loadoutFrom);
@@ -4078,8 +4222,10 @@ function loadSharedBuildIntoAnalyst(payload) {
   state.attacker.questBootA = bootId;
   state.attacker.includeBootsA = bootName ? Boolean(bootId) : true;
   state.attacker.keystoneA = "";
+  state.attacker.keystoneOptionsA = {};
   state.attacker.abilityInputs = {};
   state.attacker.championOptions = {};
+  state.attacker.supportTargetSelections = { ...(request.support_target_selections || {}) };
   // Restore the authored rank allocation so the analyst engine scores the
   // shared build identically.  An empty object (what the save endpoint stores
   // for level-derived kits) means "use level-derived defaults": seed them via
@@ -4117,6 +4263,7 @@ function loadSharedBuildIntoAnalyst(payload) {
         includeBoots: entry.include_boots !== false,
         abilityRanks: {},
         championOptions: {},
+        supportTargetSelections: entry.support_target_selections || {},
         allyEffectsEnabled: entry.ally_effects_enabled !== false,
       });
     });

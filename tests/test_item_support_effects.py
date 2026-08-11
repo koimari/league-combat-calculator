@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
+
 from src.calculator.item_effects import ally_item_effect_value
 from src.calculator.item_effects import ally_item_level_value
 from src.calculator.item_support_effects import (
@@ -262,7 +264,7 @@ def test_sourced_cc_packets_include_holder_movement_and_solstice_both_recipients
     ] == pytest.approx(50.0 + (230.0 - 50.0) * 5.0 / 11.0)
 
 
-def test_fimbulwinter_everlasting_uses_current_mana_and_nearby_enemy_multiplier():
+def test_fimbulwinter_everlasting_withholds_unspecified_nearby_enemy_multiplier():
     holder = _actor("main:Ahri", "main", ("Fimbulwinter",))
     holder.stats.update({"is_melee": True, "max_mana": 1000.0})
     enemy_one = _actor("enemy:Aatrox", "enemy", ())
@@ -298,14 +300,32 @@ def test_fimbulwinter_everlasting_uses_current_mana_and_nearby_enemy_multiplier(
         [holder, enemy_one, enemy_two],
     )
 
-    shields = [p for p in packets if p["source"] == "Fimbulwinter — Everlasting"]
+    shields = [
+        p
+        for p in packets
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "shield"
+    ]
     assert [p["time"] for p in shields] == [pytest.approx(1.0), pytest.approx(9.0)]
     assert shields[0]["current_mana"] == pytest.approx(900.0)
-    assert shields[0]["nearby_enemy_count"] == 2
-    assert shields[0]["multi_target_multiplier"] == pytest.approx(1.8)
-    assert shields[0]["amount"] == pytest.approx((100.0 + 0.045 * 900.0) * 1.8)
+    assert shields[0]["nearby_enemy_count"] is None
+    assert shields[0]["nearby_enemy_range_units"] == pytest.approx(1200.0)
+    assert shields[0]["range_input_status"] == "spatial_input_unavailable"
+    assert shields[0]["multi_target_multiplier"] == pytest.approx(1.0)
+    assert shields[0]["amount"] == pytest.approx(100.0 + 0.045 * 900.0)
     assert shields[0]["duration"] == pytest.approx(3.0)
     assert shields[0]["cooldown_until"] == pytest.approx(9.0)
+    # Accepted base shields report the unavailable spatial multiplier.  The
+    # in-flight t=5 trigger remains a named cooldown denial.
+    denials = [
+        p
+        for p in packets
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "item_denial"
+    ]
+    assert [(p["time"], p["reason"]) for p in denials] == [
+        (pytest.approx(1.0), "nearby_enemy_spatial_input_unavailable"),
+        (pytest.approx(5.0), "cooldown"),
+        (pytest.approx(9.0), "nearby_enemy_spatial_input_unavailable"),
+    ]
 
 
 def test_fimbulwinter_requires_the_correct_melee_or_immobilize_branch():
@@ -324,7 +344,20 @@ def test_fimbulwinter_requires_the_correct_melee_or_immobilize_branch():
         },
         [ranged, enemy],
     )
-    assert not [p for p in slow_only if p["source"] == "Fimbulwinter — Everlasting"]
+    # No shield for the ranged slow; the rejection is now a NAMED receipt.
+    assert not [
+        p
+        for p in slow_only
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "shield"
+    ]
+    denials = [
+        p
+        for p in slow_only
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "item_denial"
+    ]
+    assert [(p["reason"], p["time"]) for p in denials] == [
+        ("ranged_slow", pytest.approx(1.0))
+    ]
 
     immobilize = derive_item_support_effects(
         ranged,
@@ -333,13 +366,18 @@ def test_fimbulwinter_requires_the_correct_melee_or_immobilize_branch():
                 {
                     "time": 1.0,
                     "target": enemy.participant_id,
+                    "ability_instance": "Q:1",
                     "cc_kind": "immobilize",
                 }
             ]
         },
         [ranged, enemy],
     )
-    shield = next(p for p in immobilize if p["source"] == "Fimbulwinter — Everlasting")
+    shield = next(
+        p
+        for p in immobilize
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "shield"
+    )
     assert shield["trigger_kind"] == "immobilize"
 
 
@@ -361,7 +399,101 @@ def test_fimbulwinter_does_not_trigger_at_or_below_the_mana_gate():
         },
         [holder, enemy],
     )
-    assert not [p for p in packets if p["source"] == "Fimbulwinter — Everlasting"]
+    assert not [
+        p
+        for p in packets
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "shield"
+    ]
+    # The mana-gate rejection is now a NAMED receipt (exact 20% boundary).
+    denials = [
+        p
+        for p in packets
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "item_denial"
+    ]
+    assert [(p["reason"], p["time"]) for p in denials] == [
+        ("mana_gate", pytest.approx(1.0))
+    ]
+
+
+def test_fimbulwinter_control_only_packets_arm_the_shield():
+    """Control-ONLY CC events (Darius E / Elise E style) arm Everlasting.
+
+    The trigger scan reads both the damage stream and the ``control_events``
+    stream; the same control packet is never double-fired when the coupled
+    pair enrichment merged it into the per-event view.
+    """
+    holder = _actor("main:Ahri", "main", ("Fimbulwinter",))
+    holder.stats.update({"is_melee": True})
+    enemy = _actor("enemy:Aatrox", "enemy", ())
+    packets = derive_item_support_effects(
+        holder,
+        {
+            "cast_timeline": [{"time": 1.0, "resource_after": 900.0}],
+            "control_events": [
+                {
+                    "time": 1.0,
+                    "target": enemy.participant_id,
+                    "source_key": "E",
+                    "ability_instance": "E:1",
+                    "cc_kind": "airborne",
+                    "damage": 0.0,
+                }
+            ],
+        },
+        [holder, enemy],
+    )
+    shields = [
+        p
+        for p in packets
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "shield"
+    ]
+    assert len(shields) == 1
+    assert shields[0]["trigger_kind"] == "immobilize"
+    assert shields[0]["time"] == pytest.approx(1.0)
+
+
+def test_fimbulwinter_same_control_packet_in_both_streams_fires_once():
+    """The damage/control stream dedupe keeps exactly one copy per packet.
+
+    The coupled pair enrichment merges control-only rows into the per-event
+    view, so a control packet present in BOTH streams must arm the shield
+    once and produce exactly one denial-free shield (no spurious
+    duplicate_instance receipts).
+    """
+    holder = _actor("main:Ahri", "main", ("Fimbulwinter",))
+    holder.stats.update({"is_melee": True})
+    enemy = _actor("enemy:Aatrox", "enemy", ())
+    control = {
+        "time": 1.0,
+        "target": enemy.participant_id,
+        "source_key": "E",
+        "ability_instance": "E:1",
+        "cc_kind": "immobilize",
+        "damage": 0.0,
+    }
+    packets = derive_item_support_effects(
+        holder,
+        {
+            "cast_timeline": [{"time": 1.0, "resource_after": 900.0}],
+            "damage_events": [dict(control)],
+            "control_events": [dict(control)],
+        },
+        [holder, enemy],
+    )
+    shields = [
+        p
+        for p in packets
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "shield"
+    ]
+    assert len(shields) == 1
+    denials = [
+        p
+        for p in packets
+        if p["source"] == "Fimbulwinter — Everlasting" and p["kind"] == "item_denial"
+    ]
+    assert [row["reason"] for row in denials] == [
+        "nearby_enemy_spatial_input_unavailable"
+    ]
 
 
 def test_cross_participant_debuffs_are_typed_and_triggered_by_holder_packets():

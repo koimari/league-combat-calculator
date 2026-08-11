@@ -53,14 +53,20 @@ def _parse(champion, *, level=18, stats=None, options=None, ranks=None):
     )
 
 
-def _run_api_fight(champion, *, enemy="Aatrox", duration=6, allies=None):
+def _run_api_fight(champion, *, enemy="Aatrox", duration=6, allies=None, ranks=None):
     # TESTING is scoped to this request and restored afterwards: the flag
     # is session-global, and a module-level assignment would leak into
     # every later test file (the rate-limiter short-circuits on TESTING).
     previous_testing = app.config.get("TESTING")
     app.config["TESTING"] = True
     try:
-        return _post_fight(champion, enemy=enemy, duration=duration, allies=allies)
+        return _post_fight(
+            champion,
+            enemy=enemy,
+            duration=duration,
+            allies=allies,
+            ranks=ranks,
+        )
     finally:
         if previous_testing is None:
             app.config.pop("TESTING", None)
@@ -68,7 +74,7 @@ def _run_api_fight(champion, *, enemy="Aatrox", duration=6, allies=None):
             app.config["TESTING"] = previous_testing
 
 
-def _post_fight(champion, *, enemy="Aatrox", duration=6, allies=None):
+def _post_fight(champion, *, enemy="Aatrox", duration=6, allies=None, ranks=None):
     payload = {
         "champion": champion,
         "level": 18,
@@ -77,7 +83,7 @@ def _post_fight(champion, *, enemy="Aatrox", duration=6, allies=None):
         "fight_duration": duration,
         "include_auto_attacks": True,
         "auto_attack_uptime": 1.0,
-        "ability_ranks": dict(DEFAULT_RANKS),
+        "ability_ranks": dict(ranks or DEFAULT_RANKS),
         "enemies": [{"champion": enemy, "level": 18, "items": []}],
     }
     if allies:
@@ -122,6 +128,8 @@ def test_annie_api_molten_shield_row_absorbs_sourced_amount():
     rows = _shield_rows(combat, source_startswith="Molten Shield")
     assert len(rows) == 1
     assert rows[0]["amount"] == pytest.approx(200.0)  # rank 5 flat, 0 AP
+    assert rows[0]["duration"] == pytest.approx(3.0)
+    assert rows[0]["expires_at"] == pytest.approx(3.0)
     survival = _main_survival(combat)
     assert survival["support_shield_received"] == pytest.approx(200.0)
     assert survival["shield_absorbed"] == pytest.approx(200.0)
@@ -217,13 +225,17 @@ def test_blitzcrank_api_mana_barrier_absorbs_sourced_amount():
 
 
 def test_braum_unbreakable_is_documented_mitigation_not_a_flat_shield():
-    from src.calculator.champions.braum import (
-        _UNBREAKABLE_REDUCTION_MAX,
-        _UNBREAKABLE_REDUCTION_MIN,
+    _, abilities = _parse(
+        "Braum",
+        options={
+            "e_active": True,
+            "e_blocked_skillshots": ["Ezreal:Q"],
+        },
     )
-
-    assert _UNBREAKABLE_REDUCTION_MIN == pytest.approx(0.35)
-    assert _UNBREAKABLE_REDUCTION_MAX == pytest.approx(0.55)
+    defense = abilities["E"]["defensive_interaction"]
+    assert defense["kind"] == "braum_unbreakable"
+    assert defense["damage_reduction"] == pytest.approx(0.55)
+    assert defense["blocked_sources"] == ["Ezreal:Q"]
     combat = _run_api_fight("Braum")
     assert not [
         e for e in combat.get("support_events", []) if e.get("kind") == "shield"
@@ -234,7 +246,7 @@ def test_braum_unbreakable_is_documented_mitigation_not_a_flat_shield():
             "src.calculator.champions.braum", fromlist=["ASSUMPTIONS"]
         ).ASSUMPTIONS
     )
-    assert "Unbreakable" in assumptions and "35-55%" in assumptions
+    assert "Unbreakable" in assumptions and "Damage reduction" in assumptions
 
 
 # ---------------------------------------------------------------------------
@@ -251,7 +263,7 @@ def test_camille_adaptive_defenses_payload_is_sourced():
 
 
 def test_camille_api_adaptive_defenses_absorbs_known_incoming_hit():
-    combat = _run_api_fight("Camille")
+    combat = _run_api_fight("Camille", ranks={"Q": 5, "W": 5, "E": 0, "R": 3})
     rows = _shield_rows(combat, source_startswith="Adaptive Defenses")
     assert len(rows) == 1
     survival = _main_survival(combat)
@@ -346,6 +358,8 @@ def test_thresh_dark_passage_ally_shield_flows_to_selected_teammate():
     assert len(rows) == 1
     assert rows[0]["target"] == "ally:Jinx"
     assert rows[0]["amount"] == pytest.approx(130.0)  # rank 5 flat
+    assert rows[0]["duration"] == pytest.approx(4.0)
+    assert rows[0]["duration_atom"]["atom_id"] == "timing.shield_duration"
     jinx = next(
         row for row in combat["participants"] if row["participant_id"] == "ally:Jinx"
     )["survival"]

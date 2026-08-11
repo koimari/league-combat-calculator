@@ -1,5 +1,5 @@
 """Fight-engine tests for keystone runes (Electrocute, First Strike, PTA,
-Arcane Comet).
+Arcane Comet, Summon Aery, Dark Harvest, Aftershock, Grasp).
 
 Electrocute: the engine counts damage instances on the real fight
 timeline — one per accepted ability cast plus one per simulated auto
@@ -24,6 +24,23 @@ trigger it, and DoT ticks are not cast instances — damage over time
 neither triggers nor extends anything, unlike the Liandry's burn
 family. Damage is priced at the assumed 375-unit flight (+50%), landing
 0.8s after the cast.
+
+Summon Aery: damaging ability casts signal one adaptive damage packet after
+the sourced 0.45s flight. The sourced two-second linger gates the next
+signal.
+
+Dark Harvest: direct timestamped damage can trigger below 50% maximum health.
+The proc lands after 1.75s, and each completed reap adds one Soul to later
+procs.
+
+Aftershock: an authored immobilize schedules one delayed shockwave, then
+respects the sourced cooldown.
+
+Grasp: four timed combat stacks empower the next basic attack, while the
+same receipt carries its self-heal and permanent health gain.
+
+Hail of Blades: the first basic attack activates a two-stack attack-speed
+window, and the same shared swing schedule carries its true-damage rider.
 """
 
 import pytest
@@ -49,8 +66,76 @@ def _keystone_row(result):
     return result["breakdown"].get("keystone_Electrocute")
 
 
+def _aftershock_row(result):
+    return result["breakdown"].get("keystone_Aftershock")
+
+
+def _deathfire_row(result):
+    return result["breakdown"].get("keystone_Deathfire Touch")
+
+
 ELECTROCUTE_BASE_AT_18 = 240.0  # 60 + 10 × 18, from data/runes.json
 ELECTROCUTE_BASE_AT_20 = 260.0
+
+
+class TestDeathfireTouch:
+    def test_typed_burn_ticks_and_amplified_tail(self, fight, attacker_stats):
+        abilities = {
+            "Q": {
+                "name": "Deathfire test spell",
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 100.0,
+                "deathfire_category": "spell_damage",
+                "parts": (DamagePart("magic", 100.0),),
+            }
+        }
+        result = fight(
+            attacker_stats(bonus_attack_damage=100.0, ability_power=100.0),
+            abilities,
+            keystone="Deathfire Touch",
+            target_magic_resistance=0.0,
+        )
+
+        row = _deathfire_row(result)
+        assert row is not None
+        assert row["total_damage"] == pytest.approx(110.1875)
+        assert len(row["trigger_events"]) == 1
+        assert row["trigger_events"][0]["category"] == "spell_damage"
+        assert row["count"] == 8
+        assert row["amplified_tick_count"] == 3
+        assert all(event["damage_type"] == "magic" for event in row["damage_events"])
+
+    def test_persistent_damage_refreshes_each_authored_tick(
+        self, fight, attacker_stats
+    ):
+        abilities = {
+            "Q": {
+                "name": "Persistent test spell",
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "deathfire_category": "persistent_damage",
+                "parts": (
+                    DamagePart(
+                        "magic", 100.0, count=3, time_offset=0.0, hit_interval=0.5
+                    ),
+                ),
+            }
+        }
+        result = fight(
+            attacker_stats(),
+            abilities,
+            keystone="Deathfire Touch",
+            target_magic_resistance=0.0,
+        )
+
+        row = _deathfire_row(result)
+        assert row is not None
+        assert len(row["trigger_events"]) == 3
+        assert [event["time"] for event in row["trigger_events"]] == [0.0, 0.5, 1.0]
+        assert row["trigger_events"][1]["new_chain"] is False
+        assert row["damage_events"][-1]["time"] == pytest.approx(2.0)
 
 
 class TestElectrocuteProcs:
@@ -201,6 +286,174 @@ class TestElectrocuteProcs:
     def test_unknown_keystone_raises(self, fight, attacker_stats):
         with pytest.raises(ValueError, match="Fake Rune"):
             fight(attacker_stats(), _spell(), keystone="Fake Rune")
+
+
+class TestAftershock:
+    def test_immobilize_schedules_levelled_shockwave(self, fight, attacker_stats):
+        spell = {
+            "Q": {
+                "name": "Test stun",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0, cc_kind="stun", cc_duration=1.0),),
+            }
+        }
+        result = fight(
+            attacker_stats(level=18, bonus_health=500.0),
+            spell,
+            keystone="Aftershock",
+            target_magic_resistance=0.0,
+            fight_duration_seconds=3.0,
+        )
+        row = _aftershock_row(result)
+        assert row is not None
+        assert row["count"] == 1
+        assert row["damage_type"] == "magic"
+        assert row["damage_events"][0]["time"] == pytest.approx(2.5)
+        assert row["total_damage"] == pytest.approx(160.0)
+
+    def test_non_immobilizing_damage_does_not_proc(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            _spell(),
+            keystone="Aftershock",
+            target_magic_resistance=0.0,
+        )
+        assert _aftershock_row(result) is None
+
+
+class TestGrasp:
+    def test_four_combat_stacks_empower_basic_attacks(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="Grasp of the Undying",
+            target_magic_resistance=0.0,
+            one_rotation=False,
+            fight_duration_seconds=9.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        row = result["breakdown"]["keystone_Grasp of the Undying"]
+        assert row["count"] == 2
+        assert [event["time"] for event in row["damage_events"]] == [4.0, 8.0]
+        assert row["total_damage"] == pytest.approx(0.035 * 2000 + 0.035 * 2005)
+        heal = result["breakdown"]["heal_Grasp of the Undying"]
+        assert heal["total_amount"] == pytest.approx(0.013 * 2000 + 0.013 * 2005)
+        assert row["permanent_health_gained"] == pytest.approx(10.0)
+
+    def test_ranged_ratios_are_sourced_separately(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(is_melee=False),
+            {},
+            keystone="Grasp of the Undying",
+            target_magic_resistance=0.0,
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        row = result["breakdown"]["keystone_Grasp of the Undying"]
+        assert row["count"] == 1
+        assert row["total_damage"] == pytest.approx(0.014 * 2000)
+
+    def test_no_basic_attack_timeline_does_not_proc(self, fight, attacker_stats):
+        result = fight(attacker_stats(), {}, keystone="Grasp of the Undying")
+        assert "keystone_Grasp of the Undying" not in result["breakdown"]
+
+
+class TestHailOfBlades:
+    def test_temporary_attack_speed_changes_shared_swing_count(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="Hail of Blades",
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            one_rotation=False,
+            fight_duration_seconds=9.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        auto_row = result["breakdown"]["auto_attacks"]
+        row = result["breakdown"]["keystone_Hail of Blades"]
+        assert auto_row["count"] == 10
+        assert row["count"] == 2
+        assert [event["time"] for event in row["damage_events"]] == pytest.approx(
+            [0.0, 1.0 / 1.75]
+        )
+        assert row["total_damage"] == pytest.approx(40.0)
+
+    def test_cooldown_allows_a_later_two_attack_window(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="Hail of Blades",
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            one_rotation=False,
+            fight_duration_seconds=12.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        row = result["breakdown"]["keystone_Hail of Blades"]
+        assert row["count"] == 4
+        assert len(row["activation_times"]) == 2
+        assert row["activation_times"][1] >= 10.0
+
+    def test_no_basic_attack_timeline_does_not_proc(self, fight, attacker_stats):
+        result = fight(attacker_stats(), {}, keystone="Hail of Blades")
+        assert "keystone_Hail of Blades" not in result["breakdown"]
+
+
+class TestLethalTempo:
+    def test_max_stack_bolts_use_the_shared_stack_sensitive_schedule(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="Lethal Tempo",
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        auto_row = result["breakdown"]["auto_attacks"]
+        row = result["breakdown"]["keystone_Lethal Tempo"]
+        assert auto_row["count"] == len(row["stack_counts"])
+        assert row["bolt_attack_indices"][0] == 5
+        assert all(
+            row["stack_counts"][index] == 6 for index in row["bolt_attack_indices"]
+        )
+        assert row["damage_type"] == "magic"
+        assert row["count"] > 0
+
+    def test_stacks_expire_after_the_sourced_window(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(attack_speed=0.1),
+            {},
+            keystone="Lethal Tempo",
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            one_rotation=False,
+            fight_duration_seconds=30.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        row = result["breakdown"].get("keystone_Lethal Tempo")
+        assert row is None
+        assert any("never reached" in note for note in result["notes"])
+
+    def test_no_basic_attack_timeline_does_not_proc(self, fight, attacker_stats):
+        result = fight(attacker_stats(), {}, keystone="Lethal Tempo")
+        assert "keystone_Lethal Tempo" not in result["breakdown"]
 
 
 def _first_strike_row(result):
@@ -574,6 +827,14 @@ def _comet_row(result):
     return result["breakdown"].get("keystone_Arcane Comet")
 
 
+def _aery_row(result):
+    return result["breakdown"].get("keystone_Summon Aery")
+
+
+def _dark_harvest_row(result):
+    return result["breakdown"].get("keystone_Dark Harvest")
+
+
 # 100 base at 18, ×1.5 for the assumed 375-unit flight, into 100 MR.
 COMET_AMPED_AT_18 = 150.0
 COMET_MITIGATED_AT_18 = apply_resistance(COMET_AMPED_AT_18, 100.0)
@@ -698,3 +959,74 @@ class TestArcaneCometProcs:
     def test_assumed_flight_distance_is_disclosed(self, fight, attacker_stats):
         result = fight(attacker_stats(), _spell("Q"), keystone="Arcane Comet")
         assert any("Arcane Comet" in note and "375" in note for note in result["notes"])
+
+
+class TestSummonAeryProcs:
+    def test_damaging_cast_lands_after_the_sourced_flight(self, fight, attacker_stats):
+        result = fight(attacker_stats(), _spell("Q"), keystone="Summon Aery")
+        row = _aery_row(result)
+        assert row is not None
+        assert row["count"] == 1
+        assert row["damage_type"] == "magic"
+        assert row["total_damage"] == pytest.approx(25.0)
+        cast_time = result["cast_timeline"][0]["time"]
+        assert row["damage_events"][0]["time"] == pytest.approx(cast_time + 0.45)
+
+    def test_sourced_linger_gates_following_signals(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            _spell("Q", cooldown=10.0),
+            keystone="Summon Aery",
+            one_rotation=False,
+            fight_duration_seconds=25.0,
+        )
+        assert len(result["cast_timeline"]) == 3
+        assert _aery_row(result)["count"] == 3
+
+
+class TestDarkHarvestProcs:
+    def test_only_a_hit_after_the_threshold_triggers(self, fight, attacker_stats):
+        abilities = {
+            **_spell("Q", damage=600.0, cooldown=60.0),
+            **_spell("W", damage=100.0, cooldown=60.0),
+        }
+        result = fight(
+            attacker_stats(),
+            abilities,
+            keystone="Dark Harvest",
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+        )
+        row = _dark_harvest_row(result)
+        assert row is not None
+        assert row["count"] == 1
+        assert row["total_damage"] == pytest.approx(30.0)
+        assert row["damage_events"][0]["time"] == pytest.approx(1.75)
+        assert row["damage_events"][0]["trigger_time"] == pytest.approx(0.0)
+        assert row["damage_events"][0]["souls"] == 0
+
+    def test_cooldown_and_soul_reap_gate_later_procs(self, fight, attacker_stats):
+        abilities = {
+            **_spell("Q", damage=600.0, cooldown=60.0),
+            **_spell("W", damage=100.0, cooldown=60.0),
+            **_spell("E", damage=50.0, cooldown=10.0),
+        }
+        result = fight(
+            attacker_stats(),
+            abilities,
+            keystone="Dark Harvest",
+            one_rotation=False,
+            fight_duration_seconds=45.0,
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+        )
+        row = _dark_harvest_row(result)
+        assert row is not None
+        assert row["count"] == 2
+        assert [event["trigger_time"] for event in row["damage_events"]] == [
+            pytest.approx(0.0),
+            pytest.approx(40.0),
+        ]
+        assert [event["souls"] for event in row["damage_events"]] == [0, 1]
+        assert row["total_damage"] == pytest.approx(30.0 + 41.0)
+        assert any("takedown reset" in note for note in result["notes"])

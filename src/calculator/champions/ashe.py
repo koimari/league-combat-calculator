@@ -22,8 +22,61 @@ hardcoded.
 
 from typing import Any
 
+from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import extract_cooldown, extract_value, simple_damage
+
+# Focus is a typed kernel state (state_lifecycle.StackRule).  The numbers
+# are prose in the reviewed cache entry (Ashe Q effect 0: "basic attacks
+# on-attack generate a stack of Focus for 4 seconds, refreshing on
+# subsequent attacks and stacking up to 4 times. Stacks expire one by one
+# every second when the duration ends."), so the module pins them beside
+# the same source receipt the rest of the module publishes (gnar.py
+# precedent for reviewed prose constants).
+# P2 Slice 11: the Ranger's Focus ACTIVE window — 6 seconds (the game
+# file AsheQ DataValues.BuffDuration 6.0 flat at every rank + the cached
+# effect-1 prose "Active: For 6 seconds...").  The window is published
+# on the Q entry's auto_attack_override; the engine prices the per-swing
+# ratio (flurry inside [cast, cast+6), the normal 1.0 after) and the
+# Focus gains resume after the window (the "while inactive" clause).
+ASHE_Q_ACTIVE_DURATION_SECONDS = 6.0
+
+ASHE_FOCUS_STACK_RULE = StackRule(
+    name="Ashe — Ranger's Focus (Focus stacks)",
+    max_stacks=4,
+    gain_per_application=1,
+    duration_seconds=4.0,
+    refresh="refresh",
+    expiry="step_down",
+    expiry_step_seconds=1.0,
+    decay_stacks_per_step=1,
+    cap_behavior="noop",
+    source=SourceReceipt(
+        label="Local League Wiki cache — Ashe Q effect prose",
+        url="https://wiki.leagueoflegends.com/en-us/Ashe",
+        revision_id=4015971,
+        revision_timestamp="2026-05-08T04:11:38Z",
+    ),
+)
+
+
+def _require_q_rows(ability: dict[str, Any]) -> None:
+    """Fail loud when the Q leveling rows are missing (P1 Slice 10).
+
+    The flurry/AS pricing must never fall back to a silent zero when the
+    cached rows are stripped or degraded (the repo's fail-closed
+    convention).
+    """
+    for attribute in ("Bonus Attack Speed", "Total Damage Per Flurry"):
+        for effect in ability.get("effects", []):
+            for leveling in effect.get("leveling", []):
+                if leveling.get("attribute") == attribute:
+                    break
+            else:
+                continue
+            break
+        else:
+            raise KeyError(f"Ashe Ranger's Focus has no {attribute!r} leveling row")
 
 
 def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -31,14 +84,22 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
 
     Ranger's Focus is a 4-stack system: basic attacks on-attack build a
     Focus stack (cap 4) while the ability is inactive, and the ability
-    can only be activated at 4 stacks.  ``q_focus_stacks`` is the
-    explicit pre-stack state (0-4); ``q_active`` remains the legacy
-    activation override (default True).  The active window is
-    conditional on BOTH: the pre-stacked Focus must be full.
+    can only be activated at 4 stacks.  The stack state is kernel-owned
+    (``ASHE_FOCUS_STACK_RULE``): ``q_focus_stacks`` seeds the typed
+    state (0-4) and ``q_active`` remains the legacy activation override
+    (default True).  The active window is conditional on BOTH: the
+    pre-stacked Focus must be full.  Live per-attack gains during a
+    fight are not wired: the rotation resolver does not feed per-swing
+    events into champion-module parses, so the option is the explicit
+    pre-stack state (documented in ASSUMPTIONS).
     """
     if not bool(ctx.options.get("q_active", True)):
         return None
-    if int(ctx.options.get("q_focus_stacks", 4)) < 4:
+    focus = TimedStackState(
+        ASHE_FOCUS_STACK_RULE,
+        starting_stacks=max(0, min(int(ctx.options.get("q_focus_stacks", 4)), 4)),
+    )
+    if focus.stacks < focus.rule.max_stacks:
         return None
     ability = ctx.ability()
     if ability is None:
@@ -46,6 +107,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
+    _require_q_rows(ability)
 
     bonus_as_pct = extract_value(ability, "Bonus Attack Speed", rank)
     # Flurry AD ratio, e.g. 110 (% AD) -> 1.10.
@@ -70,6 +132,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
         "auto_attack_override": {
             "ad_ratio": flurry_ratio,
             "crit_as_bonus": True,
+            "active_duration": ASHE_Q_ACTIVE_DURATION_SECONDS,
         },
     }
 
@@ -112,13 +175,23 @@ OPTIONS = [
         "min": 0,
         "max": 4,
         "label": "Focus stacks (4 = Ranger's Focus ready)",
+        # Public kernel receipt for the user decision: the option seeds
+        # the typed Focus stack state (state_lifecycle) whose rule carries
+        # the cap, 4-second refresh window, and 1-stack-per-second decay.
+        "state": ASHE_FOCUS_STACK_RULE.public_receipt(),
     },
 ]
 
 ASSUMPTIONS = [
-    "Q (Ranger's Focus) is a 4-stack system: basic attacks build Focus "
-    "(cap 4, 4-second expiry not modeled) and the ability activates only "
-    "at 4 stacks; q_focus_stacks is the explicit pre-stack state",
+    "Q (Ranger's Focus) is a typed kernel stack state: basic attacks "
+    "on-attack build Focus (cap 4, 4-second duration, refreshing on "
+    "subsequent attacks, expiring one by one every second after the "
+    "window; a capped attack does not refresh the window); the ability "
+    "activates only at 4 stacks and q_focus_stacks is the explicit "
+    "pre-stack state.  Live per-attack gains during a fight are not "
+    "wired: the rotation resolver does not feed per-swing events into "
+    "champion-module parses (named reason), so the fight starts from "
+    "the seeded state and the kernel receipt documents the rule",
     "Q assumed active by default (4 pre-stacked Focus)",
     "Passive bonus damage from crit chance applied to all auto attacks",
     "W hits a single target (one arrow per enemy)",

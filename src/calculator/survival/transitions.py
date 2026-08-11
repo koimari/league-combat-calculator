@@ -47,7 +47,32 @@ from typing import Any, NamedTuple
 
 from .actions import ActionKind, SurvivalAction
 from .. import shield_ledger
+from ..crowd_control_eligibility import (
+    KNOWN_CONTROL_KINDS,
+    CrowdControlDecision,
+    CrowdControlEligibility,
+    classify_control,
+    immunity_holder,
+)
+from ..cleanse_eligibility import (
+    CleanseEligibility,
+    item_declaration,
+    movement_entry,
+    resolve_cleanse_item,
+    truncate_intervals,
+)
 from ..healing_reduction import GRIEVOUS_WOUNDS_FACTOR, matching_healing_reduction
+from ..delivery_eligibility import (
+    SPELL_SHIELD_ONE_USE_RULE,
+    DefenseWindow,
+    SourceReceipt,
+    SpellShieldComposition,
+    SpellShieldEligibility,
+    TriggeredHealRule,
+    spell_shield_block_decision,
+    spell_shield_group_key,
+    stable_event_key,
+)
 from ..item_effects import sustain_effect_value
 from ..resistance import apply_resistance
 
@@ -216,6 +241,9 @@ class TransitionContext:
     redirect_children: MutableMapping[str, Any] = field(default_factory=dict)
     redirect_gate_checked: set[str] = field(default_factory=set)
     redirect_cancelled: set[str] = field(default_factory=set)
+    shield_presence_at_time: dict[tuple[int, float], bool] = field(
+        default_factory=dict, repr=False
+    )
     # Derived per-walk speed fields (issue #171).  The ledger capability
     # flags let the kernel skip building kwargs a no-op adapter would drop
     # (missing attributes conservatively keep full observation), and
@@ -298,9 +326,13 @@ def update_combat_state(
 ) -> None:
     """Advance sourced combat-state item stacks before one damage packet."""
     profile = ctx.defense_profile(action.subject)
-    if not profile.has_stack_items:
+    aftershock_active = state["aftershock_until"] > action.time
+    if not profile.has_stack_items and not aftershock_active:
         # Neither Jak'Sho nor Force of Nature is armed: no stack can ever
-        # accrue, so the dynamic resistance bonuses stay at their inert zero.
+        # accrue, and Aftershock has no active resistance window. The
+        # dynamic resistance bonuses stay at their inert zero.
+        state["dynamic_bonus_armor"] = 0.0
+        state["dynamic_bonus_magic_resistance"] = 0.0
         return
     participant_id = ctx.combatants[action.subject].participant_id
     source_id = (
@@ -331,7 +363,12 @@ def update_combat_state(
 
     # Force of Nature counts incoming champion magic-damage cast instances.
     # The packet may carry an immobilisation marker from a reviewed module;
-    # absent that marker we do not guess the two-stack branch.
+    # absent that marker we do not guess the two-stack branch.  The
+    # per-instance cadence is the sourced rule ("Once per cast instance,
+    # each incoming basic attack, ability, or item effect can only generate
+    # 1 stack ... every 1 second"): every cast instance carries its own
+    # 1-second throttle, so DIFFERENT instances stack within a second and
+    # the SAME instance re-stacks at 1s intervals (P3 package 3Q).
     force_interval = profile.force_interval
     force_duration = profile.force_duration
     force_max = profile.force_max
@@ -344,25 +381,25 @@ def update_combat_state(
         ):
             target_state["force_stacks"] = 0
             target_state["force_last_stack_time"] = None
-            target_state["force_last_cast_key"] = None
+            target_state["force_cast_last_times"].clear()
         cast_key = str(
             action.ability_instance or f"{action.source_key}:{action.sequence or ''}"
         )
-        same_cast = cast_key == target_state["force_last_cast_key"]
+        last_for_cast = target_state["force_cast_last_times"].get(cast_key)
         elapsed = (
             float("inf")
-            if target_state["force_last_stack_time"] is None
-            else action.time - float(target_state["force_last_stack_time"])
+            if last_for_cast is None
+            else action.time - float(last_for_cast)
         )
-        if not same_cast and elapsed + 1e-9 >= force_interval:
+        if elapsed + 1e-9 >= force_interval:
             increment = (
                 max(1, profile.force_immobilize_stacks) if action.immobilized else 1
             )
             target_state["force_stacks"] = min(
                 force_max, target_state["force_stacks"] + increment
             )
+            target_state["force_cast_last_times"][cast_key] = action.time
             target_state["force_last_stack_time"] = action.time
-            target_state["force_last_cast_key"] = cast_key
             target_state["force_stacks_until"] = action.time + force_duration
             target_state["force_stack_events"].append(
                 {
@@ -394,6 +431,11 @@ def update_combat_state(
         target_state[
             "dynamic_bonus_magic_resistance"
         ] += profile.force_bonus_magic_resistance
+    if aftershock_active:
+        target_state["dynamic_bonus_armor"] += target_state["aftershock_bonus_armor"]
+        target_state["dynamic_bonus_magic_resistance"] += target_state[
+            "aftershock_bonus_magic_resistance"
+        ]
 
 
 def reprice_dynamic_resistance(
@@ -814,6 +856,15 @@ def _apply_revive(
     if state["death_time"] is None or state["revive_used"]:
         ctx.ledger.skip(action, "revive_not_available")
         return
+    # The resurrection window is anchored to the lethal hit: the holder
+    # stays dead for the full sourced delay after death.  Candidates
+    # authored from PRE-lethal packets fire early and are skipped here;
+    # the lethal packet's own candidate fires at exactly death + delay
+    # (P3 package 3P, Guardian Angel Rebirth parity).
+    delay = max(0.0, float(getattr(action, "delay", 0.0) or 0.0))
+    if float(action.time) < float(state["death_time"]) + delay - 1e-9:
+        ctx.ledger.skip(action, "revive_window_not_elapsed")
+        return
     ratio = max(0.0, min(1.0, action.health_ratio))
     amount = max(0.0, action.amount)
     restore = amount if amount > 0.0 else state["pools"].max_health * ratio
@@ -825,6 +876,13 @@ def _apply_revive(
     state["revived"] = True
     state["revive_used"] = True
     state["terminal_phase"] = "revived"
+    for interval in reversed(state["action_downtime_intervals"]):
+        if (
+            interval.get("kind") == "death"
+            and float(interval.get("end", 0.0)) >= ctx.duration - 1e-9
+        ):
+            interval["end"] = float(action.time)
+            break
     ctx.ledger.write(action, applied_amount=round(state["pools"].health, 6))
 
 
@@ -843,13 +901,29 @@ def _apply_combat_state_transition(
     if action.kind is ActionKind.STASIS:
         state["stasis_started_at"] = float(action.time)
         state["stasis_source"] = str(action.source or action.source_key or "Stasis")
+    if duration_value > 0.0:
+        state["action_downtime_intervals"].append(
+            {
+                "kind": action.kind.value,
+                "start": float(action.time),
+                "end": float(action.time + duration_value),
+                "source": str(action.source or action.source_key or action.kind.value),
+            }
+        )
     ctx.ledger.write(action, applied_amount=round(duration_value, 6))
 
 
 def _apply_spell_shield(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
-    """Arm (or refresh) a spell shield from the authored duration."""
+    """Arm (or refresh) a spell shield from the authored duration.
+
+    The kernel contract is built here (the ARMG phase of the lifecycle):
+    a timed window (start inclusive, end exclusive), the ability-only
+    acceptance, and the one-use-per-cast composition with the sourced
+    triggered heal when the packet carries one.  Annul shields are armed
+    earlier, at state construction, with an infinite window.
+    """
     duration_value = max(0.0, action.duration)
     if duration_value <= 0.0 or state["spell_shield_used"]:
         ctx.ledger.skip(action, "spell_shield_not_available")
@@ -860,7 +934,261 @@ def _apply_spell_shield(
     state["spell_shield_source"] = str(
         action.source or action.source_key or "Spell Shield"
     )
+    state["spell_shield_heal_amount"] = max(0.0, action.on_block_heal_amount)
+    state["spell_shield_heal_delay"] = max(0.0, action.on_block_heal_delay)
+    state["spell_shield_heal_source"] = str(
+        action.on_block_heal_source
+        or action.source
+        or action.source_key
+        or "Spell Shield"
+    )
+    state["spell_shield_heal_triggered"] = False
+    source_atoms = tuple(
+        dict(atom) for atom in ((action.event or {}).get("source_atoms") or ())
+    )
+    triggered_heal = (
+        TriggeredHealRule(
+            amount=state["spell_shield_heal_amount"],
+            delay=state["spell_shield_heal_delay"],
+            source=state["spell_shield_heal_source"],
+            source_atoms=source_atoms,
+        )
+        if state["spell_shield_heal_amount"] > 0.0
+        else None
+    )
+    state["spell_shield_eligibility"] = SpellShieldEligibility(
+        name="spell_shield",
+        window=DefenseWindow(
+            start=float(action.time),
+            until=float(action.time + duration_value),
+            source_atoms=source_atoms,
+        ),
+        block_rule=SPELL_SHIELD_ONE_USE_RULE,
+        source=SourceReceipt(
+            label=str(action.source or action.source_key or "Spell Shield"),
+            url="https://wiki.leagueoflegends.com",
+        ),
+    )
+    state["spell_shield_composition"] = SpellShieldComposition(
+        triggered_heal=triggered_heal
+    )
+    state["spell_shield_uses_remaining"] = 1
     ctx.ledger.write(action, applied_amount=round(duration_value, 6))
+
+
+def _write_spell_shield_reduction_receipt(
+    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any], attacker: Any
+) -> None:
+    """Mirror a projectile defense's reduction receipt onto a packet the
+    spell shield is about to block.
+
+    Interaction order: a prior projectile defense that REDUCES (but does
+    not destroy or fully block) a packet still lets the spell shield
+    fully block it; the public receipt then shows both the reduction and
+    the shield block.  Destroyed, full-blocked, and stasis-blocked
+    packets never reach the shield gate, so no mirror is needed there.
+    """
+    defense = state.get("projectile_defense")
+    pdef_eligibility = state.get("projectile_defense_eligibility")
+    pdef_composition = state.get("projectile_defense_composition")
+    if (
+        defense is None
+        or pdef_eligibility is None
+        or pdef_composition is None
+        or pdef_composition.destroy.enabled
+        or _interaction_event_key(action)
+        in state.get("projectile_defense_full_block_events", set())
+        or (
+            action.damage_type == "true"
+            and not pdef_composition.reduction.applies_to_true_damage
+        )
+    ):
+        return
+    pdef_decision = pdef_eligibility.decide(action, attacker)
+    if not pdef_decision.eligible:
+        return
+    before = max(0.0, float(action.amount))
+    reduction = pdef_composition.reduction.reduction_for(action)
+    after = before * max(0.0, 1.0 - reduction)
+    ctx.ledger.write(
+        action,
+        projectile_defense={
+            "source": defense.source,
+            "mode": "reduced",
+            "reduction": round(reduction, 6),
+            "mitigated": round(before - after, 6),
+            "delivery": pdef_decision.delivery.public_receipt(),
+            "eligible": True,
+            "remaining_uses": state["projectile_defense_uses_remaining"],
+        },
+    )
+
+
+def _schedule_spell_shield_heal(
+    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+) -> None:
+    """Schedule one authored heal after a spell shield blocks an effect."""
+    amount = max(0.0, state["spell_shield_heal_amount"])
+    if amount <= 0.0 or state["spell_shield_heal_triggered"]:
+        return
+    state["spell_shield_heal_triggered"] = True
+    event_time = action.time + max(0.0, state["spell_shield_heal_delay"])
+    state["spell_shield_heal_time"] = event_time
+    heal_event = {
+        "time": event_time,
+        "kind": "heal",
+        "amount": amount,
+        "attacker": ctx.combatants[action.subject].participant_id,
+        "target": ctx.combatants[action.subject].participant_id,
+        "source": state["spell_shield_heal_source"],
+        "source_key": action.source_key,
+        "healing_category": "champion",
+        "_event_id": f"{action.event_id or action.source_key}:spell_shield_heal",
+        "spell_shield_triggered": True,
+    }
+    ctx.ledger.schedule_heal(heal_event, ctx.combatants[action.subject].participant_id)
+    ctx.ledger.write(action, spell_shield_heal_scheduled=round(event_time, 3))
+
+
+def _guardian_skip(ctx: TransitionContext, action: SurvivalAction, reason: str) -> None:
+    """Record one Guardian candidate that did not activate."""
+    ctx.ledger.skip(action, reason)
+
+
+def _apply_guardian_shield(
+    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+) -> bool:
+    """Apply one side of a Guardian paired shield.
+
+    Candidate shield packets are sorted before their triggering damage.  The
+    owner ledger prices the current hit against the prior 2.5-second damage
+    window and opens one shared cooldown.  The paired candidate then applies
+    the same shield to the other protected participant.
+    """
+    event = action.event or {}
+    owner_id = str(event.get("_guardian_owner_id", ""))
+    owner_index = ctx.index_of.get(owner_id)
+    if owner_index is None:
+        _guardian_skip(ctx, action, "guardian_owner_unavailable")
+        return False
+    owner_state = ctx.states[owner_index]
+    if owner_state["death_time"] is not None:
+        _guardian_skip(ctx, action, "guardian_owner_dead")
+        return False
+
+    activation_id = str(event.get("_guardian_activation_id", ""))
+    if not activation_id:
+        _guardian_skip(ctx, action, "guardian_activation_unavailable")
+        return False
+    recipient_id = ctx.combatants[action.subject].participant_id
+    pending = owner_state["guardian_pending_shields"].get(activation_id)
+    if pending is not None:
+        applied_targets = pending["applied_targets"]
+        if recipient_id in applied_targets:
+            _guardian_skip(ctx, action, "guardian_peer_already_shielded")
+            return False
+    else:
+        if action.time < owner_state["guardian_cooldown_until"] - 1e-9:
+            _guardian_skip(ctx, action, "guardian_cooldown")
+            return False
+        threshold = max(0.0, float(event.get("_guardian_threshold", 0.0) or 0.0))
+        current_damage = max(
+            0.0, float(event.get("_guardian_trigger_amount", 0.0) or 0.0)
+        )
+        window = max(0.0, float(event.get("_guardian_window_seconds", 0.0) or 0.0))
+        cutoff = action.time - window
+        prior_damage = sum(
+            float(record.get("amount", 0.0) or 0.0)
+            for record in owner_state["guardian_damage_history"]
+            if cutoff - 1e-9 <= float(record.get("time", 0.0)) <= action.time + 1e-9
+        )
+        target_pools = state["pools"]
+        current_shields = sum(
+            (
+                target_pools.magic_shield,
+                target_pools.physical_shield,
+                target_pools.general_shield,
+            )
+        )
+        lethal = current_damage >= target_pools.health + current_shields - 1e-9
+        if prior_damage + current_damage < threshold - 1e-9 and not lethal:
+            _guardian_skip(ctx, action, "guardian_threshold_not_met")
+            return False
+        pending = {
+            "applied_targets": set(),
+            "trigger_time": float(action.time),
+            "trigger_event_id": str(event.get("_guardian_trigger_event_id", "")),
+        }
+        owner_state["guardian_pending_shields"][activation_id] = pending
+        cooldown = max(0.0, float(event.get("_guardian_cooldown_seconds", 0.0) or 0.0))
+        owner_state["guardian_cooldown_until"] = action.time + cooldown
+        owner_state["guardian_trigger_events"].append(
+            {
+                "time": round(float(action.time), 3),
+                "trigger_event_id": str(event.get("_guardian_trigger_event_id", "")),
+                "trigger_target": str(event.get("_guardian_trigger_target", "")),
+                "damage_window": round(prior_damage + current_damage, 6),
+                "threshold": round(threshold, 6),
+                "lethal": bool(lethal),
+                "cooldown_until": round(owner_state["guardian_cooldown_until"], 3),
+            }
+        )
+    amount = max(0.0, action.amount) * state["healing_received_multiplier"]
+    if state["pools"].venom_factor < 1.0:
+        amount *= state["pools"].venom_factor
+        ctx.ledger.annotate(
+            action,
+            venom={
+                "factor": round(state["pools"].venom_factor, 6),
+                "until": round(state["venom_until"], 6),
+            },
+        )
+    if amount <= 0.0:
+        _guardian_skip(ctx, action, "guardian_shield_not_available")
+        return False
+    expires_at = action.time + max(0.0, action.duration)
+    shield_ledger.grant(state["pools"], amount, expires_at=expires_at)
+    state["support_shield_received"] += amount
+    pending["applied_targets"].add(recipient_id)
+    ctx.ledger.write(
+        action,
+        applied_amount=round(amount, 6),
+        expires_at=round(expires_at, 3),
+        guardian_triggered={
+            "owner": owner_id,
+            "trigger_event_id": str(event.get("_guardian_trigger_event_id", "")),
+            "activation_id": activation_id,
+            "cooldown_until": round(owner_state["guardian_cooldown_until"], 3),
+        },
+    )
+    ctx.ledger.mark_applied(action)
+    return True
+
+
+def _record_guardian_damage(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    event_time: float,
+    event_damage: float,
+) -> None:
+    """Keep applied enemy damage for each Guardian holder's sourced window."""
+    if event_damage <= 0.0 or action.event is None:
+        return
+    owners = action.event.get("_guardian_owner_ids")
+    if not isinstance(owners, list):
+        return
+    for owner_id in owners:
+        owner_index = ctx.index_of.get(str(owner_id))
+        if owner_index is None:
+            continue
+        ctx.states[owner_index]["guardian_damage_history"].append(
+            {
+                "time": float(event_time),
+                "amount": max(0.0, float(action.amount)),
+                "target": ctx.combatants[action.subject].participant_id,
+                "event_id": str(action.event_id or ""),
+            }
+        )
 
 
 def _apply_shield(
@@ -868,7 +1196,17 @@ def _apply_shield(
 ) -> None:
     """A sourced shield lands before damage at its timestamp.  Serpent's
     Fang venom cuts shields the target gains while its window is active."""
+    if action.event is not None and action.event.get("_guardian_reactive"):
+        _apply_guardian_shield(ctx, action, state)
+        return
     amount = max(0.0, action.amount)
+    if callable(action.amount_formula):
+        amount = max(
+            0.0,
+            float(
+                action.amount_formula(state["pools"].health, state["pools"].max_health)
+            ),
+        )
     amount *= state["healing_received_multiplier"]
     if state["pools"].venom_factor < 1.0:
         amount *= state["pools"].venom_factor
@@ -882,12 +1220,83 @@ def _apply_shield(
     if amount <= 0.0:
         ctx.ledger.skip(action, "shield_not_available")
         return
+    pool = action.shield_pool or shield_ledger.GENERAL
+    if pool not in {
+        shield_ledger.GENERAL,
+        shield_ledger.MAGIC,
+        shield_ledger.PHYSICAL,
+    }:
+        ctx.ledger.skip(action, "unsupported_shield_pool")
+        return
     expires_at = action.time + action.duration if action.duration > 0.0 else None
-    shield_ledger.grant(state["pools"], amount, expires_at=expires_at)
+    source = str(action.source or action.source_key or "Shield")
+    shield_source = str(
+        action.crowd_control_immunity_source
+        if action.crowd_control_immunity_while_shield
+        and action.crowd_control_immunity_source
+        else source
+    )
+    shield_ledger.grant(
+        state["pools"],
+        amount,
+        pool=pool,
+        expires_at=expires_at,
+        source=shield_source,
+    )
     state["support_shield_received"] += amount
     if expires_at is not None:
         ctx.ledger.write(action, expires_at=round(expires_at, 3))
+    ctx.ledger.write(action, shield_pool=pool)
+    if action.crowd_control_immunity_while_shield and expires_at is not None:
+        # P2 Slice 3: the immunity contract is tied to the EXACT ledger
+        # entry granted below.  The legacy single-slot projection
+        # (``crowd_control_immunity_until`` / ``_source``) stays for the
+        # pinned public rows; the grant ledger is the authority the
+        # contract's ``immunity_holder`` reads.
+        state["crowd_control_immunity_until"] = max(
+            state["crowd_control_immunity_until"], expires_at
+        )
+        state["crowd_control_immunity_source"] = shield_source
+        source_atoms = tuple(
+            dict(atom)
+            for atom in (
+                (action.event or {}).get("source_atom"),
+                (action.event or {}).get("duration_atom"),
+            )
+            if atom is not None
+        )
+        state["crowd_control_immunity_grants"].append(
+            {
+                "source": shield_source,
+                "granted_at": float(action.time),
+                "expires_at": float(expires_at),
+                "amount": float(amount),
+                "source_atoms": source_atoms,
+                "ended_reason": None,
+            }
+        )
+        state["crowd_control_immunity_eligibility"] = CrowdControlEligibility(
+            name="crowd_control_immunity",
+            window=DefenseWindow(
+                start=float(action.time),
+                until=float(expires_at),
+                source_atoms=source_atoms,
+            ),
+            holder_source=shield_source,
+            source=SourceReceipt(
+                label=str(action.source or action.source_key or "Black Shield"),
+                url="https://wiki.leagueoflegends.com",
+            ),
+        )
+        ctx.ledger.write(
+            action,
+            crowd_control_immunity={
+                "source": shield_source,
+                "until": round(expires_at, 3),
+            },
+        )
     ctx.ledger.write(action, applied_amount=round(amount, 6))
+    ctx.ledger.mark_applied(action)
 
 
 def _apply_stat_buff(
@@ -895,13 +1304,30 @@ def _apply_stat_buff(
 ) -> None:
     """A timed ally stat buff; on-hit-magic components arm the source's
     live on-hit ledger so later attacks by that source are amplified."""
-    if action.duration <= 0.0:
+    permanent_health = max(0.0, action.bonus_health)
+    if action.duration <= 0.0 and permanent_health <= 0.0:
         ctx.ledger.skip(action, "stat_buff_not_available")
         return
+    if permanent_health > 0.0:
+        state["pools"].max_health += permanent_health
+        state["permanent_bonus_health_received"] += permanent_health
+        state["permanent_bonus_health_events"].append(
+            {
+                "time": round(action.time, 3),
+                "amount": round(permanent_health, 3),
+                "source": str(action.source or action.source_key),
+                "trigger_event_id": str(action.trigger_event_id or ""),
+            }
+        )
     buff = {
         "source": str(action.source or "Ally stat buff"),
-        "until": action.time + action.duration,
+        "until": (
+            action.time + action.duration if action.duration > 0.0 else float("inf")
+        ),
         "bonus_attack_speed_percent": action.bonus_attack_speed_percent,
+        "bonus_armor": action.bonus_armor,
+        "bonus_magic_resistance": action.bonus_magic_resistance,
+        "bonus_health": permanent_health,
         "ability_power": action.ability_power,
         "ability_haste": action.ability_haste,
         "on_hit_magic_damage": action.on_hit_magic_damage,
@@ -915,11 +1341,29 @@ def _apply_stat_buff(
                 "until": buff["until"],
             }
         )
-    ctx.ledger.write(
-        action,
-        expires_at=round(action.time + action.duration, 3),
-        applied_amount=round(action.amount, 6),
-    )
+    if action.event is not None and action.event.get("_aftershock"):
+        state["aftershock_bonus_armor"] = max(0.0, action.bonus_armor)
+        state["aftershock_bonus_magic_resistance"] = max(
+            0.0, action.bonus_magic_resistance
+        )
+        state["aftershock_until"] = action.time + action.duration
+        trigger_event = {
+            "time": round(action.time, 3),
+            "until": round(action.time + action.duration, 3),
+            "bonus_armor": round(action.bonus_armor, 3),
+            "bonus_magic_resistance": round(action.bonus_magic_resistance, 3),
+            "trigger_event_id": str(action.trigger_event_id or ""),
+            "source": str(action.source or action.source_key),
+        }
+        state["aftershock_trigger_events"].append(trigger_event)
+        ctx.ledger.write(action, aftershock=trigger_event)
+    fields: dict[str, Any] = {"applied_amount": round(action.amount, 6)}
+    if action.duration > 0.0:
+        fields["expires_at"] = round(action.time + action.duration, 3)
+    if permanent_health > 0.0:
+        fields["permanent_bonus_health"] = round(permanent_health, 6)
+    ctx.ledger.write(action, **fields)
+    ctx.ledger.mark_applied(action)
 
 
 def _apply_damage_modifier(
@@ -937,10 +1381,12 @@ def _apply_damage_modifier(
         "reduction": action.amount if action.damage_reduction else 0.0,
         "damage_reduction": action.damage_reduction,
         "next_event_only": action.next_event_only,
+        "all_sources": action.all_sources,
         "armor_reduction_percent": action.armor_reduction_percent,
         "mr_reduction_percent": action.mr_reduction_percent,
         "resistance_type": action.resistance_type,
         "owner": action.owner,
+        "source_participant": action.source_participant,
     }
     state["active_damage_modifiers"].append(modifier)
     if not persistent:
@@ -977,6 +1423,223 @@ def _apply_utility(
     ctx.ledger.write(action, applied_amount=round(action.amount, 6))
     if action.duration_set:
         ctx.ledger.write(action, expires_at=round(action.time + action.duration, 3))
+    if action.utility_kind == "cleanse":
+        # A cleanse-kind packet (QSS/Mercurial self-cast) applies the typed
+        # cleanse contract: interval truncation + receipts (P2 Slice 4).
+        _apply_cleanse(ctx, action, state)
+
+
+def _apply_cleanse(
+    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+) -> None:
+    """Apply one item-cleanse activation through the typed kernel.
+
+    The cleanse contract (P2 Slice 4, :mod:`cleanse_eligibility`) resolves
+    the sourced item declaration from the packet's marker/source, decides
+    eligibility against the recipient's ACTIVE control intervals at the
+    activation time, truncates BOTH the crowd-control ledger and the
+    action-downtime ledger with ONE kernel operation, and writes the
+    recipient ``cleanse`` and caster ``cleanse_use`` receipts.  A cleanse
+    removes ONLY eligible control active at its activation; historical
+    downtime before activation remains counted; the active interval ends
+    at activation; future control packets are untouched (no immunity).
+
+    The packet's event dict keeps the existing ``applied_amount``
+    observation; the receipts live on the survival rows (the acceptance
+    matrix pins no per-event annotation).
+    """
+    item = resolve_cleanse_item(action.cleanse_item or action.source_key)
+    declaration = item_declaration(item)
+    holder_index = (
+        action.attacker if 0 <= action.attacker < len(ctx.states) else action.subject
+    )
+    holder_state = ctx.states[holder_index]
+    holder_id = ctx.combatants[holder_index].participant_id
+    target_id = ctx.combatants[action.subject].participant_id
+    use = holder_state.setdefault("cleanse_uses", {}).setdefault(
+        item,
+        {
+            "uses_remaining": 1,
+            "activations": 0,
+            "last_activation": None,
+            "last_cleanse_group": None,
+        },
+    )
+    eligibility = CleanseEligibility(
+        declaration=declaration,
+        source=SourceReceipt(
+            label="Local League Wiki cache — " + item,
+            url="https://wiki.leagueoflegends.com",
+        ),
+    )
+    # ``item_held`` is True by construction: the packet authoring layer
+    # (derive_item_support_effects) only emits cleanse packets for items
+    # the holder actually equips, and timeline fixtures author the packet
+    # directly.  The kernel keeps the ``not_armed`` denial for explicit
+    # holder mappings that prove otherwise.
+    #
+    # P2 Slice 7: a multi-recipient cast (Milio R fan-out) shares ONE use
+    # per GROUP — the first recipient of a group consumes it, every
+    # same-group recipient sees the use still available for its own
+    # interval decision without re-consuming; a SECOND cast (a new group)
+    # fails closed with use_spent for all of its recipients.
+    group = str(action.cleanse_group or "")
+    same_group = bool(group) and group == use.get("last_cleanse_group")
+    decision = eligibility.decide(
+        _cleanse_action_view(action, item, target_id, holder_id, state),
+        holder={
+            "uses_remaining": 1 if same_group else int(use["uses_remaining"]),
+            "item_held": True,
+        },
+    )
+    if not same_group:
+        use["activations"] += 1
+        if decision.use_consumed:
+            use["uses_remaining"] = max(0, int(use["uses_remaining"]) - 1)
+            use["last_activation"] = float(action.time)
+            use["last_cleanse_group"] = group
+    fired_while_cc = (
+        float(holder_state.get("crowd_control_until", 0.0) or 0.0)
+        > float(action.time) + 1e-9
+    )
+    holder_state["cleanse_use"] = _cleanse_use_receipt(
+        item, declaration, use, fired_while_crowd_controlled=fired_while_cc
+    )
+    if decision.reason == "use_spent":
+        state.setdefault("cleanse_denied", []).append(
+            {"time": round(float(action.time), 6), "reason": "use_spent"}
+        )
+        return
+    if not decision.eligible:
+        # Denied outcomes (control_not_active / excluded_control_kind /
+        # unknown_control / target_not_selected / not_armed /
+        # caster_control_blocks_cleanse) never touch the interval ledgers;
+        # the receipt is the observable denial.
+        state["cleanse"] = {
+            **decision.public_receipt(),
+            "decision": decision.public_receipt(),
+            "heal": _cleanse_heal_entry(action, declaration),
+            "movement": movement_entry(declaration),
+        }
+        return
+    # One kernel truncation on BOTH ledgers (identical cc entries; the
+    # action-downtime ledger may carry death/stasis rows the kernel never
+    # touches — their kinds are outside the known control set).
+    eligible_kinds = frozenset(KNOWN_CONTROL_KINDS) - frozenset(
+        declaration.get("excluded_control_kinds", ())
+    )
+    kept_downtime, _ = truncate_intervals(
+        state["action_downtime_intervals"], float(action.time), eligible_kinds
+    )
+    state["action_downtime_intervals"] = kept_downtime
+    kept_cc, _removed_cc = truncate_intervals(
+        state["crowd_control_intervals"], float(action.time), eligible_kinds
+    )
+    state["crowd_control_intervals"] = kept_cc
+    state["crowd_control_until"] = max(
+        (float(interval.get("end", 0.0) or 0.0) for interval in kept_cc),
+        default=0.0,
+    )
+    heal_entry = _cleanse_heal_entry(action, declaration)
+    movement_receipt = movement_entry(declaration)
+    state["cleanse"] = {
+        **decision.public_receipt(),
+        "decision": decision.public_receipt(),
+        "heal": heal_entry,
+        "movement": movement_receipt,
+    }
+
+
+def _write_gated_cleanse_use(
+    _ctx: TransitionContext, action: SurvivalAction, holder_state: dict[str, Any]
+) -> None:
+    """Record the caster use receipt for a cleanse activation the walk
+    gated (attacker_state_blocked) — the cast never happened, so the use is
+    NOT consumed and ``fired_while_crowd_controlled`` is False."""
+    try:
+        item = resolve_cleanse_item(action.cleanse_item or action.source_key)
+        declaration = item_declaration(item)
+    except KeyError:
+        # Unknown cleanse sources fail closed without inventing a receipt.
+        return
+    use = holder_state.setdefault("cleanse_uses", {}).setdefault(
+        item,
+        {
+            "uses_remaining": 1,
+            "activations": 0,
+            "last_activation": None,
+            "last_cleanse_group": None,
+        },
+    )
+    # P2 Slice 7: a blocked multi-recipient cast writes its gated use
+    # receipt ONCE per group (every fan-out packet hits the gate; the
+    # first writes, the same-group rest skip).
+    group = str(action.cleanse_group or "")
+    if bool(group) and group == use.get("last_cleanse_group"):
+        return
+    use["activations"] += 1
+    use["last_cleanse_group"] = group
+    holder_state["cleanse_use"] = _cleanse_use_receipt(
+        item, declaration, use, fired_while_crowd_controlled=False
+    )
+
+
+def _cleanse_action_view(
+    action: SurvivalAction,
+    item: str,
+    target_id: str,
+    holder_id: str,
+    state: dict[str, Any],
+) -> Any:
+    """The kernel's typed view of one walk activation."""
+    from types import SimpleNamespace
+
+    return SimpleNamespace(
+        time=action.time,
+        source_key=action.source_key,
+        sequence=action.sequence,
+        event_id=action.event_id,
+        item=item,
+        target=target_id,
+        holder=holder_id,
+        cleanse_group=action.cleanse_group,
+        active_controls=list(state["crowd_control_intervals"]),
+    )
+
+
+def _cleanse_use_receipt(
+    item: str,
+    declaration: dict[str, Any],
+    use: dict[str, Any],
+    *,
+    fired_while_crowd_controlled: bool,
+) -> dict[str, Any]:
+    """The caster survival-row ``cleanse_use`` receipt."""
+    return {
+        "item": item,
+        "uses_before": 1,
+        "uses_after": int(use["uses_remaining"]),
+        "cooldown_seconds": declaration.get("cooldown_seconds"),
+        "cooldown_source_gap": bool(declaration.get("cooldown_source_gap", False)),
+        "activations": int(use["activations"]),
+        "fired_while_crowd_controlled": fired_while_crowd_controlled,
+    }
+
+
+def _cleanse_heal_entry(
+    action: SurvivalAction, declaration: dict[str, Any]
+) -> dict[str, Any] | None:
+    """The heal entry attached to a Mikael's cleanse receipt (the heal is a
+    SEPARATE effect with its own atoms; the amount is the packet's sourced
+    level-scaled heal)."""
+    heal = declaration.get("heal")
+    if heal is None:
+        return None
+    return {
+        "amount": max(0.0, float(action.amount)),
+        "source": str(action.source or heal.get("source", "")),
+        "source_atoms": [dict(atom) for atom in heal.get("source_atoms", ())],
+    }
 
 
 def _apply_temp_health(
@@ -1015,6 +1678,16 @@ def _apply_heal(
     event_time = action.time
     pools = state["pools"]
     if (
+        action.requires_maw_lifeline_omnivamp
+        and not state["maw_lifeline_omnivamp_active"]
+    ):
+        # P3 package 3T: the compiled walk pre-authors the post-Lifeline
+        # omnivamp heals beside every outgoing damage packet; the kernel
+        # gate keeps them inert until the threshold event arms the flag
+        # (mirrors the receipt walk's trigger-time scheduling).
+        ctx.ledger.skip(action, "maw_lifeline_not_active")
+        return
+    if (
         action.requires_holder_health_ratio > 0.0
         and pools.max_health > 0.0
         and pools.health
@@ -1027,6 +1700,19 @@ def _apply_heal(
     ):
         ctx.ledger.skip(action, "damage_free_window_not_ready")
         return
+    if action.requires_existing_shield:
+        gate_subject = action.shield_gate_subject
+        gate_time = (
+            action.shield_gate_time
+            if action.shield_gate_time is not None
+            else event_time
+        )
+        shield_present = gate_subject >= 0 and ctx.shield_presence_at_time.get(
+            (gate_subject, round(float(gate_time), 9)), False
+        )
+        if not shield_present:
+            ctx.ledger.skip(action, "existing_shield_required")
+            return
     amount = max(0.0, action.amount)
     amount_formula = action.amount_formula
     if callable(amount_formula):
@@ -1108,6 +1794,7 @@ def _apply_heal(
             ),
         )
     ctx.ledger.write(action, applied_amount=round(received, 6))
+    ctx.ledger.mark_applied(action)
     if action.defy_trigger_id is not None:
         state["defy_heal_received"] += received
 
@@ -1130,9 +1817,16 @@ def _apply_live_packet_chain(
     event = action.event
     raw_amount = action.amount if event is None else event.get("damage", action.amount)
     amount = max(0.0, float(raw_amount or 0.0))
-    if action.kind in _DAMAGE_KINDS and ctx.stack_flags[action.subject]:
+    if action.kind in _DAMAGE_KINDS and (
+        ctx.stack_flags[action.subject]
+        or state.get("aftershock_until", 0.0) > action.time
+    ):
         update_combat_state(ctx, action, state)
-    if state.get("dynamic_bonus_armor") or state.get("dynamic_bonus_magic_resistance"):
+    if (
+        state.get("dynamic_bonus_armor")
+        or state.get("dynamic_bonus_magic_resistance")
+        or state.get("aftershock_until", 0.0) > action.time
+    ):
         # Only a combat-state stack holder ever arms a dynamic delta; the
         # reprice call is skipped while both deltas are absent or zero.
         repriced = reprice_dynamic_resistance(ctx, action, state)
@@ -1152,6 +1846,7 @@ def _apply_live_packet_chain(
     source_state = states[attacker] if 0 <= attacker < len(states) else None
     if source_state is not None and source_state["active_on_hit_magic"]:
         amount = _apply_source_on_hit_magic(action, source_state, amount)
+    amount = _apply_projectile_damage_defense(ctx, action, state, amount)
     # Celestial Opposition's Blessed reduction is a target-state modifier,
     # not a basic-attack modifier.  Apply it to authored champion damage
     # after the pair engine's resistance math and refresh the exact
@@ -1189,6 +1884,576 @@ def _apply_live_packet_chain(
     return amount
 
 
+def _interaction_event_key(action: SurvivalAction) -> str:
+    """Build a stable identity for one projectile interaction packet.
+
+    Delegates to the delivery-eligibility kernel's shared identity
+    (``source_key:time:sequence``) so the walk's full-block bookkeeping
+    and the kernel's decision receipts use one key.
+    """
+    return stable_event_key(action)
+
+
+def _record_event_id_match(state: dict[str, Any], action: SurvivalAction) -> None:
+    """Record one applied event whose id was selected by event id.
+
+    Only exact event-id selections count (source-slot matches do not
+    clear a selected id from the unmatched receipt).  The unmatched
+    list on the survival row is the named fail-closed receipt for a
+    positional selection the option validator cannot see.
+    """
+    eligibility = state.get("projectile_defense_eligibility")
+    if eligibility is None or not eligibility.selection.blocked_event_ids:
+        return
+    event_id = str(getattr(action, "event_id", "") or "")
+    if event_id in eligibility.selection.blocked_event_ids:
+        state.setdefault("projectile_defense_event_id_matches", set()).add(event_id)
+
+
+def _prepare_full_block(
+    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+) -> None:
+    """Apply a selected full-block defense before a spell shield gate.
+
+    Eligibility is delegated to the delivery-eligibility kernel
+    (window + selection + delivery acceptance); the composition rules
+    declare the full-block mode and the finite use budget.  The applied
+    semantics are unchanged: Braum's first selected hit is fully
+    blocked and consumes the one-use budget; later selected hits fall
+    through to the reduction path.
+    """
+    defense = state.get("projectile_defense")
+    eligibility = state.get("projectile_defense_eligibility")
+    composition = state.get("projectile_defense_composition")
+    attacker = (
+        ctx.combatants[action.attacker]
+        if 0 <= action.attacker < len(ctx.combatants)
+        else None
+    )
+    if (
+        defense is None
+        or eligibility is None
+        or composition is None
+        or composition.full_block.mode == "none"
+        or (
+            action.damage_type == "true"
+            and not composition.full_block.blocks_true_damage
+        )
+        or (action.amount <= 0.0 and action.kind is not ActionKind.CROWD_CONTROL)
+        or not eligibility.decide(action, attacker).eligible
+        or (
+            bool(getattr(action, "area_damage", False))
+            and composition.reduction.area_damage_reduction > 0.0
+        )
+        or (
+            composition.full_block.mode == "first"
+            and (
+                state["projectile_defense_uses_remaining"] is None
+                or state["projectile_defense_uses_remaining"] <= 0
+            )
+        )
+    ):
+        return
+    key = _interaction_event_key(action)
+    if composition.full_block.mode == "first":
+        remaining = state["projectile_defense_uses_remaining"]
+        if remaining is not None:
+            state["projectile_defense_uses_remaining"] = remaining - 1
+    state["projectile_defense_full_block_events"].add(key)
+    state["projectile_defense_blocked"].append(
+        {
+            "time": round(float(action.time), 3),
+            "source": action.source_key,
+            "mode": "full_block",
+        }
+    )
+    _record_event_id_match(state, action)
+    decision = eligibility.decide(action, attacker)
+    ctx.ledger.write(
+        action,
+        projectile_defense={
+            "source": defense.source,
+            "mode": "full_block",
+            "delivery": decision.delivery.public_receipt(),
+            "eligible": True,
+            "remaining_uses": state["projectile_defense_uses_remaining"],
+        },
+    )
+
+
+def _apply_projectile_damage_defense(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: dict[str, Any],
+    amount: float,
+) -> float:
+    """Apply a selected projectile or parry defense after pair mitigation.
+
+    The reduction value comes from the kernel composition rule:
+    ``ReductionRule.reduction_for`` uses the defense's own area
+    reduction only when one is declared (Jax), so Braum's later-hit
+    reduction now also applies to area-marked skillshots (Trueshot
+    Barrage is intercepted in-game) instead of emitting a misleading
+    "reduced by 0.0" receipt.
+    """
+    defense = state.get("projectile_defense")
+    eligibility = state.get("projectile_defense_eligibility")
+    composition = state.get("projectile_defense_composition")
+    attacker = (
+        ctx.combatants[action.attacker]
+        if 0 <= action.attacker < len(ctx.combatants)
+        else None
+    )
+    if (
+        defense is None
+        or eligibility is None
+        or composition is None
+        or (
+            action.damage_type == "true"
+            and not composition.reduction.applies_to_true_damage
+        )
+        or not eligibility.decide(action, attacker).eligible
+    ):
+        return amount
+    key = _interaction_event_key(action)
+    if key in state["projectile_defense_full_block_events"]:
+        return 0.0
+    before = max(0.0, amount)
+    reduction = composition.reduction.reduction_for(action)
+    after = before * max(0.0, 1.0 - reduction)
+    _record_event_id_match(state, action)
+    ctx.ledger.write(
+        action,
+        projectile_defense={
+            "source": defense.source,
+            "mode": "reduced",
+            "reduction": round(reduction, 6),
+            "mitigated": round(before - after, 6),
+            "delivery": eligibility.decide(action, attacker).delivery.public_receipt(),
+            "eligible": True,
+            "remaining_uses": state["projectile_defense_uses_remaining"],
+        },
+    )
+    return after
+
+
+def _sync_crowd_control_immunity(state: dict[str, Any], event_time: float) -> None:
+    """Re-derive the legacy immunity projection and the ended reason.
+
+    The exact ledger entry (via :func:`immunity_holder`) is the only
+    authority: expiry or depletion clears the projection immediately and
+    records the named ended reason ("expired" / "drained").
+    """
+    grants = state.get("crowd_control_immunity_grants", ())
+    if grants:
+        latest = grants[-1]
+        if latest.get("ended_reason") is None:
+            holder = immunity_holder(state["pools"], latest["source"], event_time)
+            if holder is None:
+                latest["ended_reason"] = (
+                    "expired"
+                    if float(latest["expires_at"]) <= event_time + 1e-9
+                    else "drained"
+                )
+        holder = immunity_holder(state["pools"], latest["source"], event_time)
+        if holder is None:
+            state["crowd_control_immunity_until"] = 0.0
+            state["crowd_control_immunity_source"] = ""
+        else:
+            state["crowd_control_immunity_until"] = max(
+                state["crowd_control_immunity_until"], float(holder.expires_at)
+            )
+            state["crowd_control_immunity_source"] = latest["source"]
+        return
+    state["crowd_control_immunity_until"] = 0.0
+    state["crowd_control_immunity_source"] = ""
+
+
+# P2 Slice 8 — the sourced passive values (Dr. Mundo Goes Where He
+# Pleases): 4% CURRENT health cost, 4% MAX health pickup heal, 15s
+# pickup cooldown refund, 525-unit canister range, 7s canister lifetime,
+# 115-unit pickup radius (game DrMundoP DataValues; the wiki prose
+# corroborates the 4%/525/7 values).  The trigger scope (hostile
+# immobilizing effect), the enemy-destroy rule and the respawn reset are
+# wiki-prose-only (scripted in the uncached game Lua).
+_MUNDO_P_ITEM = "Dr. Mundo P"
+_MUNDO_P_HEALTH_COST_RATIO = 0.04
+_MUNDO_P_PICKUP_HEAL_RATIO = 0.04
+_MUNDO_P_COOLDOWN_REFUND_SECONDS = 15.0
+_MUNDO_P_CANISTER_RANGE = 525.0
+_MUNDO_P_CANISTER_LIFETIME = 7.0
+_MUNDO_P_PICKUP_RADIUS = 115.0
+_MUNDO_P_COOLDOWN_ROW = (60.0, 15.0)
+
+
+def _apply_mundo_p_resist(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: dict[str, Any],
+    profile: Any,
+) -> None:
+    """Resist one hostile immobilizing control through the armed passive.
+
+    The control never applies: no interval, no downtime, no
+    ``crowd_control_until`` change — an IMMUNITY, never a truncation
+    (removed_controls [] and downtime_before == downtime_after == 0).
+    The 4%-CURRENT-health cost is paid with the shared lethal
+    bookkeeping; the canister drop is receipted (525 units / 7s lifetime
+    / 115 pickup radius / 15s pickup refund); the pickup heal + the
+    enemy-destroy timing are NAMED unsupported (no movement simulation —
+    no auto-pickup, no user toggle).  The latch disarms; same-cast-
+    instance follow-up controls are blocked with a receipt and no second
+    cost (the wiki notes: immunity to additional immobilizing effects
+    from the same cast instance).
+    """
+    pools = state["pools"]
+    current_health = max(0.0, float(pools.health))
+    cost = min(current_health, _MUNDO_P_HEALTH_COST_RATIO * current_health)
+    pools.health = max(0.0, float(pools.health) - cost)
+    event_time = float(action.time)
+    if pools.health <= 0.0 and state["death_time"] is None:
+        if state["first_death_time"] is None:
+            state["first_death_time"] = float(event_time)
+        trigger_defy(
+            ctx, ctx.combatants[action.subject].participant_id, float(event_time)
+        )
+        state["death_time"] = min(float(ctx.duration), event_time)
+        state["terminal_phase"] = "dead"
+        state["action_downtime_intervals"].append(
+            {
+                "kind": "death",
+                "start": float(event_time),
+                "end": float(ctx.duration),
+                "source": str(action.source or action.source_key or "Death"),
+            }
+        )
+    resist = state["mundo_p_resist"]
+    resist["armed"] = False
+    resist["last_ability_instance"] = action.ability_instance
+    resist["activated"] = True
+    subject_name = (
+        ctx.combatants[action.subject].participant_id
+        if 0 <= action.subject < len(ctx.combatants)
+        else ""
+    )
+    attacker_name = (
+        ctx.combatants[action.attacker].participant_id
+        if 0 <= action.attacker < len(ctx.combatants)
+        else ""
+    )
+    max_health = max(0.0, float(pools.max_health))
+    decision = {
+        "eligible": True,
+        "reason": "",
+        "item": _MUNDO_P_ITEM,
+        "activation_time": round(event_time, 3),
+        "target": subject_name,
+        "active_controls_before": [],
+        "removed_controls": [],
+        "rejected_controls": [],
+        "intervals_after": [dict(i) for i in state["crowd_control_intervals"]],
+        "downtime_before": 0.0,
+        "downtime_after": 0.0,
+        "use_consumed": True,
+    }
+    state["cleanse"] = {
+        **decision,
+        "decision": decision,
+        "heal": None,
+        "movement": None,
+    }
+    state["cleanse_use"] = {
+        "item": _MUNDO_P_ITEM,
+        "uses_before": 1,
+        "uses_after": 0,
+        "cooldown_seconds": list(_MUNDO_P_COOLDOWN_ROW),
+        "cooldown_source_gap": False,
+        "activations": 1,
+        "fired_while_crowd_controlled": False,
+    }
+    state["passive_cost"] = {
+        "percent": _MUNDO_P_HEALTH_COST_RATIO * 100.0,
+        "amount": round(cost, 6),
+        "health_before": round(current_health, 6),
+        "health_after": round(max(0.0, float(pools.health)), 6),
+    }
+    state["canister"] = {
+        "time": round(event_time, 3),
+        "distance": _MUNDO_P_CANISTER_RANGE,
+        "lifetime": _MUNDO_P_CANISTER_LIFETIME,
+        "source": _MUNDO_P_ITEM,
+        "destruction": {
+            "supported": False,
+            "reason": "enemy movement not modeled",
+        },
+    }
+    state["pickup"] = {
+        "supported": False,
+        "reason": (
+            "the canister pickup needs Mundo's movement (no auto-pickup, "
+            "no user toggle)"
+        ),
+        "heal_percent": _MUNDO_P_PICKUP_HEAL_RATIO * 100.0,
+        "heal_amount": round(_MUNDO_P_PICKUP_HEAL_RATIO * max_health, 6),
+        "cooldown_refund": _MUNDO_P_COOLDOWN_REFUND_SECONDS,
+    }
+    resisted_row = {
+        "time": round(event_time, 3),
+        "attacker": attacker_name,
+        "source_key": str(action.source_key or ""),
+        "control_kind": str(profile.kind),
+        "health_cost": round(cost, 6),
+        "canister": dict(state["canister"]),
+    }
+    state.setdefault("crowd_control_resisted", []).append(resisted_row)
+    ctx.ledger.write(
+        action,
+        crowd_control_resisted=dict(resisted_row),
+        health_cost=round(cost, 6),
+        canister=dict(state["canister"]),
+        pickup=dict(state["pickup"]),
+    )
+
+
+def _apply_crowd_control_resist(
+    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+) -> None:
+    """Arm Dr. Mundo's passive immunity (one-shot per fight).
+
+    The cooldown 60 -> 15 (wiki row; the game's step function agrees at
+    levels 1 and 18 — flagged) is receipted, never enforced; the 15s
+    pickup refund likewise.  A second arm in one fight is a no-op
+    receipt (the cooldown is longer than any fight window).
+    """
+    duration = max(0.0, float(action.duration or 0.0))
+    if duration > 0.0:
+        # P2 Slice 9 (Olaf Ragnarok): the duration-armed immunity window
+        # [cast, cast + duration) — blocks EVERY hostile blocking control
+        # inside the window (no cost, no latch-off — the window is the
+        # state); the cleanse + stat receipts are separate packets.
+        event_time = float(action.time)
+        state["ragnarok_immunity"] = {
+            "source": "Olaf R — Ragnarok",
+            "start": round(event_time, 6),
+            "until": round(event_time + duration, 6),
+            "blocked": [],
+            "decisions": [],
+            "ended_reason": None,
+        }
+        ctx.ledger.write(
+            action,
+            ragnarok_immunity_armed=True,
+            until=round(event_time + duration, 6),
+        )
+        return
+    resist = state.get("mundo_p_resist")
+    if resist is not None:
+        ctx.ledger.write(
+            action,
+            crowd_control_resist_armed=False,
+            reason="already_armed_or_spent",
+        )
+        return
+    level = 1
+    if 0 <= action.subject < len(ctx.combatants):
+        level = max(1, int(getattr(ctx.combatants[action.subject], "level", 1) or 1))
+    cooldown_seconds = (
+        _MUNDO_P_COOLDOWN_ROW[level - 1]
+        if 0 <= level - 1 < len(_MUNDO_P_COOLDOWN_ROW)
+        else _MUNDO_P_COOLDOWN_ROW[-1]
+    )
+    state["mundo_p_resist"] = {
+        "armed": True,
+        "activated": False,
+        "last_ability_instance": None,
+        "cooldown_seconds": cooldown_seconds,
+    }
+    state["passive_state"] = {"armed": True}
+    state["passive_cooldown"] = {
+        "seconds": cooldown_seconds,
+        "affected_by_cdr": False,
+        "refund_on_pickup": _MUNDO_P_COOLDOWN_REFUND_SECONDS,
+        "row": list(_MUNDO_P_COOLDOWN_ROW),
+        "note": "the wiki row interpolates 60 -> 15 linearly; the game "
+        "step function (60/51/42/33/24/15 by level 1/4/7/10/13/16) "
+        "agrees at levels 1 and 18 — receipted, never enforced",
+    }
+    ctx.ledger.write(
+        action,
+        crowd_control_resist_armed=True,
+        passive_cooldown=dict(state["passive_cooldown"]),
+    )
+
+
+def _apply_crowd_control(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: dict[str, Any],
+    applied_amount: float,
+) -> None:
+    """Arm the target's action lock from an authored control packet.
+
+    The immunity gate is the typed crowd-control eligibility contract
+    (P2 Slice 3): ONE decision for damage-attached AND control-only
+    packets, tied to the exact Black Shield ledger entry.  A blocked
+    control adds NO action downtime; the extended
+    ``crowd_control_blocked`` receipt carries the decision and the
+    shield amount before (and, after absorption, the amount after).  A
+    denied decision (outside window / holder drained / holder expired)
+    falls through to the pinned downtime application; an unknown kind is
+    receipted as the denial but never applied (the model has no downtime
+    semantics for it).
+    """
+    profile = classify_control(action)
+    if not profile.kind:
+        return
+    duration = max(0.0, float(action.cc_duration))
+    if duration <= 0.0 or applied_amount <= 0.0:
+        return
+    if not profile.blocking and not profile.unknown:
+        # A known soft control (slow, silence, ...): no action-downtime
+        # model — pinned pass-through, never an immunity decision.
+        return
+    grants = state.get("crowd_control_immunity_grants", ())
+    if grants:
+        grant = grants[-1]
+        eligibility = state.get("crowd_control_immunity_eligibility")
+        holder = immunity_holder(state["pools"], grant["source"], action.time)
+        decision = (
+            eligibility.decide(action, holder=holder)
+            if eligibility is not None
+            else CrowdControlDecision(
+                eligible=False,
+                reason="shield_not_held",
+                control=profile,
+                shield_source=grant["source"],
+                event_key=stable_event_key(action),
+            )
+        )
+        state.setdefault("crowd_control_immunity_decisions", []).append(
+            decision.public_receipt()
+        )
+        _sync_crowd_control_immunity(state, action.time)
+        if decision.eligible:
+            state.setdefault("crowd_control_immunity_blocked", []).append(
+                {
+                    "time": round(float(action.time), 3),
+                    "source": action.source_key,
+                    "control_kind": profile.kind,
+                    "shield_amount_before": decision.public_receipt()[
+                        "shield_amount_before"
+                    ],
+                    "shield_amount_after": (
+                        decision.public_receipt()["shield_amount_before"]
+                        if action.amount <= 0.0
+                        else None
+                    ),
+                    "active_until": round(decision.active_until, 6),
+                    "event_key": decision.event_key,
+                }
+            )
+            ctx.ledger.write(
+                action,
+                crowd_control_blocked={
+                    "source": grant["source"],
+                    "until": round(decision.active_until, 6),
+                    "decision": decision.public_receipt(),
+                    "shield_amount_after": (
+                        decision.public_receipt()["shield_amount_before"]
+                        if action.amount <= 0.0
+                        else None
+                    ),
+                },
+            )
+            ctx.ledger.mark_applied(action)
+            return
+        # Denied with a named reason: the decision receipt is the
+        # observable denial.  Unknown kinds never apply (pinned); the
+        # in-window denials (outside_window / shield_not_held) apply the
+        # control below exactly like an unshielded packet.
+        ctx.ledger.annotate(
+            action, crowd_control_immunity_decision=decision.public_receipt()
+        )
+        if decision.reason == "unknown_control":
+            return
+    # P2 Slice 8 (Dr. Mundo Goes Where He Pleases): the passive IMMUNITY
+    # gate — an armed resist consumes the NEXT hostile immobilizing
+    # control BEFORE it applies (no interval, no downtime, no until
+    # change — never a truncation).  Spell shield / Black Shield take
+    # priority (the grants block above ran first).  The 4%-current-
+    # health cost + the canister drop are receipted; the pickup /
+    # destruction timings are named unsupported (no movement model).
+    # P2 Slice 9 (Olaf Ragnarok): the 3s immunity window — blocks every
+    # hostile BLOCKING control inside [start, until) (the end-exclusive
+    # Slice 3 convention), including the displacement family (Trait_
+    # CCImmune); the cleanse's displacement carve-out applies only to
+    # already-active controls, not new ones.
+    ragnarok = state.get("ragnarok_immunity")
+    if (
+        ragnarok
+        and profile.blocking
+        and not profile.unknown
+        and float(action.time) < float(ragnarok.get("until", 0.0))
+    ):
+        attacker_team = ""
+        subject_team = ""
+        if 0 <= action.attacker < len(ctx.combatants):
+            attacker_team = str(getattr(ctx.combatants[action.attacker], "team", ""))
+        if 0 <= action.subject < len(ctx.combatants):
+            subject_team = str(getattr(ctx.combatants[action.subject], "team", ""))
+        hostile = bool(attacker_team) and attacker_team != subject_team
+        if hostile:
+            blocked_row = {
+                "time": round(float(action.time), 3),
+                "source_key": str(action.source_key or ""),
+                "control_kind": str(profile.kind),
+            }
+            ragnarok.setdefault("blocked", []).append(blocked_row)
+            ctx.ledger.write(action, ragnarok_blocked=dict(blocked_row))
+            ctx.ledger.mark_applied(action)
+            return
+    resist = state.get("mundo_p_resist")
+    if resist and resist.get("armed") and profile.blocking and not profile.unknown:
+        attacker_team = ""
+        subject_team = ""
+        if 0 <= action.attacker < len(ctx.combatants):
+            attacker_team = str(getattr(ctx.combatants[action.attacker], "team", ""))
+        if 0 <= action.subject < len(ctx.combatants):
+            subject_team = str(getattr(ctx.combatants[action.subject], "team", ""))
+        hostile = bool(attacker_team) and attacker_team != subject_team
+        if hostile:
+            _apply_mundo_p_resist(ctx, action, state, profile)
+            ctx.ledger.mark_applied(action)
+            return
+    until = float(action.time + duration)
+    state["crowd_control_until"] = max(state["crowd_control_until"], until)
+    state["crowd_control_intervals"].append(
+        {
+            "kind": action.cc_kind or "crowd_control",
+            "start": float(action.time),
+            "end": until,
+            "source": str(action.source or action.source_key or "Crowd control"),
+        }
+    )
+    state["action_downtime_intervals"].append(
+        {
+            "kind": action.cc_kind or "crowd_control",
+            "start": float(action.time),
+            "end": until,
+            "source": str(action.source or action.source_key or "Crowd control"),
+        }
+    )
+    ctx.ledger.write(
+        action,
+        crowd_control={
+            "kind": action.cc_kind or "crowd_control",
+            "duration": round(duration, 6),
+            "until": round(until, 6),
+        },
+    )
+    ctx.ledger.mark_applied(action)
+
+
 def _apply_cross_participant_modifiers(
     ctx: TransitionContext,
     action: SurvivalAction,
@@ -1212,6 +2477,9 @@ def _apply_cross_participant_modifiers(
             # The originating holder's pair engine already priced its
             # own stack/amp.  The packet exists for every other eligible
             # participant in the coupled ledger.
+            continue
+        source_participant = str(modifier.get("source_participant", ""))
+        if source_participant and source_participant != source_id:
             continue
         is_attack_or_spell = bool(
             action.is_ability
@@ -1265,7 +2533,7 @@ def _apply_cross_participant_modifiers(
                         }
                     )
             continue
-        if not is_attack_or_spell:
+        if not modifier.get("all_sources") and not is_attack_or_spell:
             continue
         if modifier.get("damage_reduction"):
             before = max(0.0, amount)
@@ -1339,6 +2607,7 @@ def _apply_damage(
     pools = state["pools"]
     amount = _apply_live_packet_chain(ctx, action, state)
     ledger.mark_applied(action)
+    _apply_crowd_control(ctx, action, state, amount)
     if action.deferred:
         batch_id = str(action.deferred_batch_id or "")
         if batch_id in state["deferred_batches"]:
@@ -1411,6 +2680,9 @@ def _apply_damage(
     # by ``shield_ledger`` (issue #159); this kernel supplies the storage and
     # the ledger annotations, never a second copy of the semantics.
     outcome = shield_ledger.absorb(pools, amount, damage_type, event_time)
+    if state.get("crowd_control_immunity_grants"):
+        _sync_crowd_control_immunity(state, event_time)
+        _fill_blocked_shield_after(state, action, outcome.absorbed)
     event_absorbed = outcome.absorbed
     applied_to_health = outcome.applied_to_health
     if outcome.threshold_shield_triggered:
@@ -1449,6 +2721,7 @@ def _apply_damage(
         ledger.write(action, damage=event_damage)
     if event_damage > 0.0:
         state["last_damage_time"] = float(event_time)
+        _record_guardian_damage(ctx, action, event_time, event_damage)
         if ctx.dorans_flags[action.subject]:
             schedule_doran_shield_recovery(ctx, action, state)
         if (
@@ -1486,6 +2759,14 @@ def _apply_damage(
         state["execute_source"] = str(action.execute_source or "The Collector")
         state["death_time"] = min(float(ctx.duration), float(event_time))
         state["terminal_phase"] = "dead"
+        state["action_downtime_intervals"].append(
+            {
+                "kind": "death",
+                "start": float(event_time),
+                "end": float(ctx.duration),
+                "source": str(action.source or action.source_key or "Death"),
+            }
+        )
         ctx.ledger.write(
             action,
             execute_triggered=True,
@@ -1576,6 +2857,14 @@ def _apply_damage(
         )
         state["death_time"] = min(float(ctx.duration), event_time)
         state["terminal_phase"] = "dead"
+        state["action_downtime_intervals"].append(
+            {
+                "kind": "death",
+                "start": float(event_time),
+                "end": float(ctx.duration),
+                "source": str(action.source or action.source_key or "Death"),
+            }
+        )
         # A revive packet is intentionally scheduled by the caller.  A
         # dead participant remains terminal until that explicit packet;
         # no item is inferred from the loadout here.
@@ -1613,6 +2902,11 @@ def apply_transition(
         # a next-event-only modifier is armed), mirroring the walk.
         _apply_live_packet_chain(ctx, action, state)
         _apply_heal(ctx, action, state)
+        if action.cleanse or action.cleanse_item:
+            # Mikael's Purify rides its heal packet with the cleanse
+            # marker: the typed cleanse contract applies alongside the
+            # sourced heal (P2 Slice 4).
+            _apply_cleanse(ctx, action, state)
         return
     if kind is ActionKind.SHIELD:
         _apply_shield(ctx, action, state)
@@ -1626,6 +2920,9 @@ def apply_transition(
         return
     if kind in (ActionKind.STASIS, ActionKind.INVULNERABLE, ActionKind.UNTARGETABLE):
         _apply_combat_state_transition(ctx, action, state)
+        return
+    if kind is ActionKind.CROWD_CONTROL:
+        _apply_crowd_control(ctx, action, state, 1.0)
         return
     if kind is ActionKind.SPELL_SHIELD:
         _apply_spell_shield(ctx, action, state)
@@ -1659,6 +2956,7 @@ def run_survival_walk(
     # the action being processed (``current_index`` is its slot).
     tracks_index = hasattr(ledger, "current_index")
     action_index = 0
+    last_snapshot_time: float | None = None
     while action_index < len(actions):
         action = actions[action_index]
         action_index += 1
@@ -1675,6 +2973,20 @@ def run_survival_walk(
             # the receipt but cannot alter terminal state or totals.
             ledger.skip(action, "outside_window", damage_phase=phase >= 0)
             continue
+
+        snapshot_time = round(float(event_time), 9)
+        if last_snapshot_time != snapshot_time:
+            for snapshot_index, snapshot_state in enumerate(states):
+                snapshot_pools = snapshot_state["pools"]
+                if snapshot_pools.timed:
+                    shield_ledger.expire_timed(snapshot_pools, event_time)
+                ctx.shield_presence_at_time[(snapshot_index, snapshot_time)] = (
+                    snapshot_pools.magic_shield
+                    + snapshot_pools.physical_shield
+                    + snapshot_pools.general_shield
+                    > 1e-9
+                )
+            last_snapshot_time = snapshot_time
 
         pools = state["pools"]
         if pools.timed:
@@ -1716,8 +3028,12 @@ def run_survival_walk(
         ):
             ledger.skip(action, "defy_not_triggered")
             continue
+        guardian_reactive = bool(
+            action.event is not None and action.event.get("_guardian_reactive")
+        )
         if (
-            action.trigger >= 0 or action.trigger_event_id is not None
+            not guardian_reactive
+            and (action.trigger >= 0 or action.trigger_event_id is not None)
         ) and not ledger.trigger_applied(action):
             # An effect whose trigger packet was skipped (its target or
             # attacker was already dead) must not survive on its own —
@@ -1802,30 +3118,147 @@ def run_survival_walk(
         ):
             ledger.skip(action, "target_state_blocked", damage_phase=True)
             continue
-        if (
-            phase >= 0
-            and action.is_ability
-            and state["spell_shield_until"] > event_time
-        ):
-            # The cast identity is only priced when a spell shield is
-            # actually armed for this packet's window.
-            cast_identity = action.ability_instance
-            if not cast_identity:
-                cast_identity = f"{action.source_key}:" f"{round(float(event_time), 9)}"
-            cast_key = (str(cast_identity),)
+        if phase >= 0 and state.get("projectile_defense_eligibility") is not None:
+            defense = state.get("projectile_defense")
+            eligibility = state.get("projectile_defense_eligibility")
+            composition = state.get("projectile_defense_composition")
+            attacker = (
+                ctx.combatants[action.attacker]
+                if 0 <= action.attacker < len(ctx.combatants)
+                else None
+            )
+            decision = eligibility.decide(action, attacker)
             if (
-                not state["spell_shield_used"]
-                or state["spell_shield_blocked_cast"] == cast_key
+                defense is not None
+                and composition is not None
+                and composition.destroy.enabled
+                and decision.eligible
             ):
-                if not state["spell_shield_used"]:
-                    state["spell_shield_used"] = True
-                    state["spell_shield_blocked_cast"] = cast_key
-                ledger.mark_blocked(action)
-                ctx.ledger.annotate(
-                    action, spell_shield_source=state["spell_shield_source"]
+                state["projectile_defense_blocked"].append(
+                    {
+                        "time": round(float(event_time), 3),
+                        "source": action.source_key,
+                        "mode": "destroyed",
+                    }
                 )
-                ledger.skip(action, "spell_shield", damage_phase=True)
+                ledger.mark_blocked(action)
+                _record_event_id_match(state, action)
+                ctx.ledger.write(
+                    action,
+                    projectile_defense={
+                        "source": defense.source,
+                        "mode": "destroyed",
+                        "delivery": decision.delivery.public_receipt(),
+                        "eligible": True,
+                        "remaining_uses": state["projectile_defense_uses_remaining"],
+                    },
+                )
+                ledger.skip(action, defense.kind, damage_phase=True)
                 continue
+            if composition is not None and composition.full_block.mode != "none":
+                _prepare_full_block(ctx, action, state)
+        if phase >= 0 and state.get("spell_shield_eligibility") is not None:
+            # The kernel-owned spell-shield lifecycle (P2 Slice 2): one
+            # eligibility decision per packet, one use per hostile cast,
+            # cast grouping for same-cast multi-part packets.
+            eligibility = state.get("spell_shield_eligibility")
+            composition = state.get("spell_shield_composition")
+            attacker = (
+                ctx.combatants[action.attacker]
+                if 0 <= action.attacker < len(ctx.combatants)
+                else None
+            )
+            event_key = stable_event_key(action)
+            if event_key in state.get("projectile_defense_full_block_events", set()):
+                # Interaction order: a prior full-block defense already
+                # disposed of this packet (destroyed and stasis-blocked
+                # packets never reach this gate), so the shield must NOT
+                # spend its use.  The packet falls through to the damage
+                # application, which zeroes full-blocked packets.
+                ctx.ledger.write(
+                    action,
+                    spell_shield={
+                        "source": state["spell_shield_source"],
+                        "decision": "prior_defense_fully_blocked",
+                        "event_key": event_key,
+                    },
+                )
+            else:
+                decision = eligibility.decide(action, attacker)
+                state["spell_shield_decisions"].append(decision.public_receipt())
+                if decision.eligible:
+                    block, block_reason = spell_shield_block_decision(
+                        state["spell_shield_used"],
+                        state["spell_shield_blocked_cast"],
+                        decision.cast_identity,
+                        attacker,
+                    )
+                    if block:
+                        uses_before = state["spell_shield_uses_remaining"]
+                        if not state["spell_shield_used"]:
+                            state["spell_shield_used"] = True
+                            state["spell_shield_blocked_cast"] = spell_shield_group_key(
+                                attacker, decision.cast_identity
+                            )
+                            remaining = state["spell_shield_uses_remaining"]
+                            if remaining is not None and remaining > 0:
+                                state["spell_shield_uses_remaining"] = remaining - 1
+                        state["spell_shield_blocked_packets"].append(
+                            {
+                                "event_key": event_key,
+                                "time": round(float(event_time), 3),
+                                "source": action.source_key,
+                                "cast_identity": decision.cast_identity,
+                                "cast_identity_kind": decision.cast_identity_kind,
+                            }
+                        )
+                        ledger.mark_blocked(action)
+                        _write_spell_shield_reduction_receipt(
+                            ctx, action, state, attacker
+                        )
+                        ctx.ledger.write(
+                            action,
+                            spell_shield={
+                                "source": state["spell_shield_source"],
+                                "cast_identity": decision.cast_identity,
+                                "cast_identity_kind": decision.cast_identity_kind,
+                                "eligible": True,
+                                "blocked": True,
+                                "grouping": block_reason,
+                                "use_before": uses_before,
+                                "use_after": state["spell_shield_uses_remaining"],
+                            },
+                        )
+                        ctx.ledger.annotate(
+                            action, spell_shield_source=state["spell_shield_source"]
+                        )
+                        _schedule_spell_shield_heal(ctx, action, state)
+                        ledger.skip(action, "spell_shield", damage_phase=True)
+                        continue
+                    # Eligible, but the one use is already spent on another
+                    # cast: the packet lands; the receipt names the denial.
+                    ctx.ledger.write(
+                        action,
+                        spell_shield={
+                            **decision.public_receipt(),
+                            "blocked": False,
+                            "reason": block_reason,
+                        },
+                    )
+                else:
+                    # Ineligible (outside window / not an ability /
+                    # unknown delivery / unknown cast identity): the
+                    # packet lands; the decision receipt is the denial.
+                    ctx.ledger.write(action, spell_shield=decision.public_receipt())
+        heal_carry_exempt = kind in (
+            ActionKind.HEAL,
+            ActionKind.OVERHEAL_SHIELD,
+            ActionKind.ICHOR_CONVERT,
+        ) and (
+            (action.trigger >= 0 or action.trigger_event_id is not None)
+            and ledger.trigger_applied(action)
+            or bool(action.cast_while_disabled)
+        )
         if (
             phase >= 0
             and 0 <= action.attacker < len(states)
@@ -1834,8 +3267,20 @@ def run_survival_walk(
                 states[action.attacker]["stasis_until"] > event_time
                 or states[action.attacker]["invulnerable_until"] > event_time
                 or states[action.attacker]["untargetable_until"] > event_time
+                or (
+                    states[action.attacker]["crowd_control_until"] > event_time
+                    and not heal_carry_exempt
+                )
             )
         ):
+            if action.cleanse or action.cleanse_item:
+                # A gated cleanse activation (Mikael's Purify while the
+                # caster is crowd-controlled — the item's 3222Active
+                # carries no canCastWhileDisabled flag) never fires: the
+                # caster use receipt names the gate and the use is NOT
+                # consumed.  QSS/Mercurial self-casts are utility-kind and
+                # dispatch before this gate (canCastWhileDisabled).
+                _write_gated_cleanse_use(ctx, action, states[action.attacker])
             ledger.mark_blocked(action)
             ledger.skip(action, "attacker_state_blocked", damage_phase=True)
             continue
@@ -1852,6 +3297,23 @@ def run_survival_walk(
             # still takes the thorns with it).
             ledger.skip(action, "attacker_dead", damage_phase=True)
             continue
+        if kind is ActionKind.CROWD_CONTROL:
+            if (
+                _interaction_event_key(action)
+                in state["projectile_defense_full_block_events"]
+            ):
+                defense = state.get("projectile_defense")
+                ledger.skip(
+                    action,
+                    defense.kind if defense is not None else "projectile_defense",
+                    damage_phase=True,
+                )
+            else:
+                _apply_crowd_control(ctx, action, state, 1.0)
+            continue
+        if kind is ActionKind.CROWD_CONTROL_RESIST:
+            _apply_crowd_control_resist(ctx, action, state)
+            continue
         if kind is ActionKind.TEMP_HEALTH:
             # The shared packet chain runs for recovery packets too, exactly
             # like the authoritative walk (it is a no-op for them unless a
@@ -1867,12 +3329,98 @@ def run_survival_walk(
         ):
             _apply_live_packet_chain(ctx, action, state)
             _apply_heal(ctx, action, state)
+            if action.cleanse or action.cleanse_item:
+                # Mikael's Purify rides its heal packet with the cleanse
+                # marker: the typed cleanse contract applies alongside the
+                # sourced heal (P2 Slice 4; mirrored in apply_transition).
+                _apply_cleanse(ctx, action, state)
             continue
         if phase < 0:
             # Phase -1 residue: the authoritative walk's phase -1 branch
             # ends with a bare continue (no state change, no annotations).
             continue
+        if _interaction_event_key(action) in state.get(
+            "projectile_defense_full_block_events", set()
+        ):
+            # A prior full-block defense disposed of this packet (the
+            # full-block prepare ran before the attacker-state gate, so a
+            # state-skipped packet keeps its pinned skipped_reason).  The
+            # spell-shield gate above never spent a use on it.
+            defense = state.get("projectile_defense")
+            ledger.skip(
+                action,
+                defense.kind if defense is not None else "projectile_defense",
+                damage_phase=True,
+            )
+            continue
         _apply_damage(ctx, action, state)
+
+
+def _fill_blocked_shield_after(
+    state: dict[str, Any], action: SurvivalAction, absorbed: float
+) -> None:
+    """Fill a blocked-control receipt's post-absorption holder amount.
+
+    The immunity gate runs BEFORE the same packet's absorption (the
+    pinned same-hit order), so the blocked receipt's
+    ``shield_amount_after`` is unknown at decision time; the walk writes
+    it here, right after the ledger absorbs the packet's damage.  The
+    public convention (pinned by the acceptance matrix) reports the
+    after amount at the packet's public damage precision: ``before``
+    minus the absorbed damage rounded to 1 decimal, floored at zero.  A
+    control-only packet never absorbs and keeps before == after.
+    """
+    grants = state.get("crowd_control_immunity_grants", ())
+    if not grants:
+        return
+    # The same formula on both adapters: before (the decision's holder
+    # amount) minus this packet's absorbed damage rounded to 1 decimal,
+    # floored at zero.  Receipt mode reads the decision from the event
+    # annotation; score mode reads the blocked entry the walk recorded.
+    before: float | None = None
+    if action.event is not None:
+        blocked = action.event.get("crowd_control_blocked")
+        if isinstance(blocked, dict) and isinstance(blocked.get("decision"), dict):
+            before = max(
+                0.0, float(blocked["decision"].get("shield_amount_before", 0.0))
+            )
+            after = max(0.0, round(before - round(absorbed, 1), 6))
+            blocked["shield_amount_after"] = after
+    key = stable_event_key(action)
+    for entry in state.get("crowd_control_immunity_blocked", ()):
+        if entry.get("event_key") != key:
+            continue
+        if before is None:
+            before = max(0.0, float(entry.get("shield_amount_before", 0.0) or 0.0))
+            after = max(0.0, round(before - round(absorbed, 1), 6))
+        entry["shield_amount_after"] = after
+        break
+
+
+def _finalize_crowd_control_immunity(state: dict[str, Any], duration: float) -> None:
+    """Record the terminal immunity-ended reason and clear the legacy
+    projection at the fight edge."""
+    grants = state.get("crowd_control_immunity_grants", ())
+    if grants:
+        latest = grants[-1]
+        if latest.get("ended_reason") is None:
+            latest["ended_reason"] = (
+                "expired"
+                if float(latest["expires_at"]) <= duration + 1e-9
+                else "fight_end"
+            )
+        holder = immunity_holder(state["pools"], latest["source"], duration)
+        if holder is None:
+            state["crowd_control_immunity_until"] = 0.0
+            state["crowd_control_immunity_source"] = ""
+        else:
+            state["crowd_control_immunity_until"] = max(
+                state["crowd_control_immunity_until"], float(holder.expires_at)
+            )
+            state["crowd_control_immunity_source"] = latest["source"]
+    else:
+        state["crowd_control_immunity_until"] = 0.0
+        state["crowd_control_immunity_source"] = ""
 
 
 def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
@@ -1880,6 +3428,7 @@ def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
     edge (the authoritative walk's final pass)."""
     for state in states:
         shield_ledger.expire_timed(state["pools"], float(duration))
+        _finalize_crowd_control_immunity(state, float(duration))
         expire_temporary_health(state, float(duration))
 
 

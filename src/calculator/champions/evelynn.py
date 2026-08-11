@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage, source_row
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
@@ -77,6 +77,19 @@ def _allure(ctx: SlotCtx) -> dict[str, Any] | None:
         entry["detail"] = (
             f"Charmed champion branch: {shred:g}% magic-resistance reduction for 4 seconds."
         )
+        if bool(ctx.options.get("w_charm_triggered", False)):
+            entry["control_events"] = (
+                ControlEvent(
+                    "charm",
+                    extract_value(ability, "Disable Duration", rank),
+                    time_offset=2.5,
+                    skillshot=bool(entry.get("skillshot", False)),
+                ),
+            )
+            entry["detail"] += (
+                " The matured mark is explicitly expunged by a later hit at "
+                "the 2.5 second trigger boundary."
+            )
     return entry
 
 
@@ -167,6 +180,12 @@ OPTIONS = [
         "label": "Allure fully charmed champion",
     },
     {
+        "key": "w_charm_triggered",
+        "type": "bool",
+        "default": False,
+        "label": "Allure mark is expunged after its 2.5 second maturity",
+    },
+    {
         "key": "e_empowered",
         "type": "bool",
         "default": False,
@@ -181,9 +200,16 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Hate Spike requires an explicit recast count and mark state; neither is inferred from a single rotation.",
-    "Allure's champion branch applies the sourced MR shred only when the full charm is selected; monster-only bonus damage is not silently mixed into champion TDD.",
-    "Last Caress uses the 240% branch only below the sourced 30% target-health threshold.",
+    "Hate Spike requires an explicit recast count and mark state; neither is "
+    "inferred from a single rotation.",
+    "Allure's champion branch applies the sourced MR shred only when the full "
+    "charm is selected; monster-only bonus damage is not silently mixed into "
+    "champion TDD.",
+    "The charm control event is emitted only when the user selects an explicit "
+    "post-maturity trigger; its timestamp is the sourced 2.5 second mark "
+    "boundary and its duration is the cached Disable Duration row.",
+    "Last Caress uses the 240% branch only below the sourced 30% "
+    "target-health threshold.",
 ]
 
 SOURCES = [

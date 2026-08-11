@@ -39,6 +39,7 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
+    with_control,
 )
 
 
@@ -284,7 +285,7 @@ ASSUMPTIONS = [
     "W models the outer-cone sweet spot by default; W's self-heal and "
     "slow are not modeled",
     "E's 40-60% attack speed is applied for the whole fight (in-game: 5s "
-    "per cast); E's stun is not modeled",
+    "per cast); the sourced 0.75-second stun is counted as action downtime",
     "P (Adaptive Defenses) is modeled as a pre-fight granted shield: 20% "
     "of max HP for 2s riding the first W cast. The in-game trigger (the "
     "next auto against a champion) and the physical/magic adaptation "
@@ -307,6 +308,13 @@ SLOTS = {
 SLOTS = dict(SLOTS)
 _packet_w = SLOTS["W"]
 SLOTS["W"] = _tactical_sweep_with_shield
+SLOTS["E"] = with_control(
+    SLOTS["E"],
+    kind="stun",
+    duration_attr="Stun Duration",
+    source=("E", 1),
+    effect_index=1,
+)
 parse_abilities = build_parser(SLOTS, "Camille")
 
 

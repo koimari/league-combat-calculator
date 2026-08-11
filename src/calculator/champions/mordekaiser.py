@@ -26,6 +26,12 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(35/37.5/40/42.5/45% by W rank) of the stored shield — the E8a "
     "grey-health primitive authors it from the incoming/outgoing "
     "ledgers. Shield conversion and both decay curves are state.",
+    "R (Realm of Death) heals Mordekaiser for 10% of the TARGET's "
+    "maximum health on cast (cached R prose).  The outgoing self-heal "
+    "ledger (healing.py) carries only the main fighter's stats, so the "
+    "target-maximum-health term has no live input there; the heal is "
+    "documented-only until the coupled timeline can price it against "
+    "the defender's max health.",
 ]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"

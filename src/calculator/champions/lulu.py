@@ -17,7 +17,7 @@ from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import extract_named, on_hit_entry
+from .slotlib import extract_named, on_hit_entry, with_control_event
 
 # HARDCODED: verify on patch updates — the 3-bolt barrage and each bolt's
 # 5% AP ratio are wiki P prose; the JSON carries the per-bolt and
@@ -57,6 +57,11 @@ _pix_bolts.phase = ONHIT
 
 SLOTS = dict(SLOTS)
 SLOTS["P"] = _pix_bolts
+SLOTS["W"] = with_control_event(
+    SLOTS["W"],
+    kind="polymorph",
+    duration_attr="Disable Duration",
+)
 parse_abilities = build_parser(SLOTS, "Lulu")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

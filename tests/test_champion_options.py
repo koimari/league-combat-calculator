@@ -23,6 +23,7 @@ _OPTION_TYPES = {
     "int": int,
     "float": (int, float),
     "select": str,
+    "string_list": list,
 }
 
 
@@ -44,6 +45,18 @@ class TestGetChampionOptionsMeta:
                 "type": "bool",
                 "default": True,
                 "label": "E Condemn into wall",
+            },
+            {
+                "key": "q_tumble_reset",
+                "type": "bool",
+                "default": False,
+                "label": (
+                    "Model Tumble's attack-reset throughput: each accepted "
+                    "Q cast buys one extra basic attack (the wiki: 'Tumble "
+                    "resets Vayne's basic attack timer'; the binary "
+                    "Trait_AttackReset tag; the acceleration magnitude is "
+                    "script-side)"
+                ),
             },
         ]
         assert any("Silver Bolts" in text for text in meta["assumptions"])

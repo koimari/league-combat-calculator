@@ -34,6 +34,8 @@ from .compile import (
     coalesce_darius_q_heals,
     heal_trigger_key,
     revive_candidate_actions,
+    stage_knights_vow_heals,
+    stage_knights_vow_redirect_actions,
     thorns_return_damage,
     uncompilable_item_receipt,
     unrepresentable_damage_receipt,

@@ -110,6 +110,24 @@ def _leveling_flat_at_level(
     return 0.0
 
 
+def _level_breakpoint_value(values: list[Any], level: int) -> float:
+    """Read a 6-value wiki leveling row at the standard breakpoints.
+
+    The wiki publishes some per-level rows as six values at champion
+    levels 1 / 6 / 11 / 16 / 17 / 18 (the same convention as Jax P
+    Per-Level Scaling); rows with one value per level index directly.
+    """
+    if not values:
+        return 0.0
+    if len(values) == 6:
+        breakpoints = (1, 6, 11, 16, 17, 18)
+        for index in range(len(breakpoints) - 1, -1, -1):
+            if level >= breakpoints[index]:
+                return float(values[index])
+        return float(values[0])
+    return float(values[min(max(level, 1) - 1, len(values) - 1)])
+
+
 def _event_source(event: dict[str, Any]) -> str:
     return str(event.get("source_key", ""))
 
@@ -320,10 +338,12 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Kha'Zix",
         "Kindred",
         "Lissandra",
+        "Maokai",
         "Master Yi",
         "Nidalee",
         "Naafiri",
         "Senna",
+        "Sett",
         "Smolder",
         "Sylas",
         "Tahm Kench",
@@ -917,6 +937,87 @@ def derive_self_healing(
                 healing, event, q_heal, "Piercing Darkness", link_to_damage=False
             )
 
+    elif name == "Sett":
+        # Pit Grit (P, Heart of the Half-Beast): "Sett regenerates an
+        # additional 0.075 / 0.25 / 0.5 / 1 / 1.025 / 1.05 (based on
+        # level) health every 0.5 seconds per 5% of his missing health",
+        # up to the sourced maximum row (1.425 / 4.75 / 9.5 / 19 /
+        # 19.475 / 19.95 per 0.5 seconds, exactly 19x the base row at
+        # every breakpoint) "with the maximum reached at the threshold of
+        # 95% missing health" (cached P description prose — the P
+        # leveling array carries only the Right Punch damage).  The 6
+        # values follow the wiki's standard 1 / 6 / 11 / 16 / 17 / 18
+        # breakpoints (the Jax P Per-Level Scaling convention).  The
+        # regen is always active (no combat gate), so the ticks are
+        # authored for the whole fight with a live missing-health formula
+        # the survival walk re-prices from the fighter's health at each
+        # tick (the Garen Perseverance pattern without its
+        # damage-free-seconds gate).
+        p_text = (
+            " ".join(
+                effect.get("description", "")
+                for effect in _ability(champion_data, "P").get("effects", [])
+            )
+            .replace("[", " ")
+            .replace("]", " ")
+        )
+        base_match = re.search(
+            r"regenerates\s+an additional\s+([\d.\s/]+?)\s*\(based on level\)"
+            r"\s*health every 0\.5 seconds per 5% of his missing health",
+            p_text,
+            flags=re.IGNORECASE,
+        )
+        max_match = re.search(
+            r"up-to an additional\s+([\d.\s/]+?)\s*\(based on level\)"
+            r"\s*health per 0\.5 seconds",
+            p_text,
+            flags=re.IGNORECASE,
+        )
+        if base_match is not None and max_match is not None:
+            base_values = [
+                float(v) for v in re.findall(r"\d+(?:\.\d+)?", base_match.group(1))
+            ]
+            max_values = [
+                float(v) for v in re.findall(r"\d+(?:\.\d+)?", max_match.group(1))
+            ]
+            level = max(1, int(champion_stats.get("level", 18) or 18))
+            base = _level_breakpoint_value(base_values, level)
+            maximum = _level_breakpoint_value(max_values, level)
+            segments_cap = int(round(maximum / base)) if base > 0.0 else 0
+
+            def pit_grit_heal(
+                current_health: float,
+                maximum_health: float,
+                base: float = base,
+                segments_cap: int = segments_cap,
+            ) -> float:
+                if maximum_health <= 0.0:
+                    return 0.0
+                missing_pct = (
+                    max(0.0, maximum_health - current_health) / maximum_health * 100.0
+                )
+                segments = min(segments_cap, int(missing_pct // 5.0))
+                return segments * base
+
+            duration = max(0.0, float(fight_duration_seconds or 0.0))
+            if duration > 0.0 and base > 0.0:
+                tick = 0.5
+                sequence = 0
+                while tick <= duration + 1e-9:
+                    healing.append(
+                        {
+                            "time": tick,
+                            "amount": 0.0,
+                            "amount_formula": pit_grit_heal,
+                            "source": "Pit Grit",
+                            "kind": "regen",
+                            "actor_wide": True,
+                            "sequence": sequence,
+                        }
+                    )
+                    sequence += 1
+                    tick += 0.5
+
     elif name == "Smolder":
         # MMOOOMMMM! (R): the fire wave heals Smolder (wiki: "Self Heal:
         # 100 / 135 / 170 (+ 50% bonus AD) (+ 75% AP)").  Flat heal per
@@ -1144,6 +1245,7 @@ def derive_self_healing(
                         "kind": "champion_ability",
                         "actor_wide": True,
                         "target_scope": "self_and_one_teammate",
+                        "target_selection_key": f"heal:W:{cast_index}",
                         "_event_id": f"sona:w:{cast_index}",
                     }
                 )
@@ -1237,9 +1339,16 @@ def derive_self_healing(
         # (``target_scope: self_and_all_teammates``), so one formula prices
         # every recipient.
         r_rank = _rank(ability_damages, "R")
-        heal = extract_named(
-            _ability(champion_data, "R"), "Heal", r_rank, champion_stats
-        )
+        if r_rank < 1:
+            # P2 Slice 7: an unlearned R authors no heal/cleanse (the
+            # packet-module rank gate keeps the cast row off the timeline
+            # too).  The W (Cozy Campfire) branch below still runs.
+            r_heal = 0.0
+        else:
+            r_heal = extract_named(
+                _ability(champion_data, "R"), "Heal", r_rank, champion_stats
+            )
+        heal = r_heal
         if heal > 0.0:
             for cast_index, cast in enumerate(cast_timeline or []):
                 if cast.get("slot") != "R":
@@ -1252,6 +1361,15 @@ def derive_self_healing(
                         "kind": "champion_ability",
                         "actor_wide": True,
                         "target_scope": "self_and_all_teammates",
+                        # P2 Slice 7: the R cast is a Mikael's-style
+                        # heal+cleanse activation — the marker + group ride
+                        # the E8d fan-out so every recipient's heal packet
+                        # carries the cleanse; the group is the per-cast
+                        # one-use latch key (one cast = one use shared by
+                        # all recipients; a second cast denies them all).
+                        "cleanse": True,
+                        "cleanse_item": "Milio R",
+                        "cleanse_group": f"milio:r:{cast_index}",
                         "_event_id": f"milio:r:{cast_index}",
                     }
                 )
@@ -1801,6 +1919,12 @@ def derive_self_healing(
                     "source": "Remove Scurvy",
                     "kind": "champion_ability",
                     "actor_wide": True,
+                    # P2 Slice 5: Remove Scurvy is castable while disabled
+                    # (game canCastWhileDisabled — the QSS/Mercurial
+                    # precedent); the survival gate exempts this heal from
+                    # the crowd-control branch only.  Suppression/stasis
+                    # still block (the Cleanse atom).
+                    "cast_while_disabled": True,
                 }
             )
 
@@ -1952,6 +2076,152 @@ def derive_self_healing(
                     **_trigger_fields(event),
                 }
             )
+
+    elif name == "Maokai":
+        # Sap Magic (P): "Periodically, Maokai empowers his next basic
+        # attack to have an uncancellable windup and heal him for 4% :
+        # 12.8% (based on level) maximum health after a 0.25-second
+        # delay" (cached P).  The P cooldown (30 : 20 seconds by level,
+        # the cached cooldown array, affectedByCdr: false) is reduced by
+        # 4 seconds each time Maokai casts an ability, hits at least one
+        # enemy champion with Sapling Toss, or is struck by an enemy's
+        # ability (cached prose).  The 1v1 ledger carries Maokai's own
+        # casts (the Q/W/E/R cast timeline) and one sapling champion hit
+        # per E cast (the sapling explodes on the enemy in a 1v1);
+        # incoming enemy ability strikes are not visible to the outgoing
+        # ledger, so the model counts only the outgoing triggers — a
+        # conservative undercount that can only delay the proc.  The
+        # heal fires on the first basic attack after the cooldown
+        # completes (+0.25s) and "will not trigger if he is above 95%
+        # maximum health" (a live gate the survival walk evaluates from
+        # the fighter's health at the heal timestamp).  After a proc the
+        # cooldown restarts at its full value; the basic-attack-timer
+        # reset is state.
+        p = _ability(champion_data, "P")
+        maokai_level = max(1, int(champion_stats.get("level", 18) or 18))
+        cooldown_values: list[float] = []
+        for modifier in (p.get("cooldown") or {}).get("modifiers", []):
+            values = modifier.get("values", [])
+            if values:
+                cooldown_values = [float(v) for v in values]
+                break
+        pct = _leveling_value(p, "Max Health Damage", maokai_level)
+        if cooldown_values and pct > 0.0:
+            cooldown = float(
+                cooldown_values[min(maokai_level - 1, len(cooldown_values) - 1)]
+            )
+
+            def sap_magic_heal(
+                current_health: float,
+                maximum_health: float,
+                pct: float = pct,
+            ) -> float:
+                if maximum_health <= 0.0:
+                    return 0.0
+                if current_health > maximum_health * 0.95 + 1e-9:
+                    return 0.0
+                return maximum_health * pct / 100.0
+
+            if cooldown > 0.0:
+                duration = max(0.0, float(fight_duration_seconds or 0.0))
+                auto_events = _attributed_events(
+                    damage_events, lambda source, _event: source == "auto_attacks"
+                )
+                trigger_by_time: dict[float, int] = {}
+                for cast in cast_timeline or []:
+                    slot = cast.get("slot")
+                    if slot not in {"Q", "W", "E", "R"}:
+                        continue
+                    try:
+                        cast_time = float(cast.get("time", 0.0))
+                    except (TypeError, ValueError):
+                        continue
+                    # One ability cast, plus one sapling champion hit per
+                    # E cast (the 1v1 sapling explodes on the enemy).
+                    trigger_by_time[cast_time] = trigger_by_time.get(cast_time, 0) + (
+                        2 if slot == "E" else 1
+                    )
+                trigger_times = sorted(trigger_by_time)
+                auto_by_time: dict[float, dict[str, Any]] = {}
+                for event in auto_events:
+                    auto_by_time.setdefault(
+                        round(float(event.get("time", 0.0)), 6), event
+                    )
+                auto_times = sorted(auto_by_time)
+                trigger_index = 0
+                auto_index = 0
+                cycle_start = 0.0
+                while trigger_index < len(trigger_times) or auto_index < len(
+                    auto_times
+                ):
+                    # Find when the current P cooldown completes: the
+                    # smallest t such that (t - cycle_start) + 4 x the
+                    # triggers applied by t >= cooldown.  N(t) is the step
+                    # count of triggers with time <= t, so the completion
+                    # time is t* = cycle_start + cooldown - 4 x N(t*).
+                    trigger_count = 0
+                    previous_trigger = cycle_start
+                    completed = None
+                    while trigger_index < len(trigger_times):
+                        trigger_time = trigger_times[trigger_index]
+                        trigger_count += trigger_by_time[trigger_time]
+                        candidate = cycle_start + cooldown - 4.0 * trigger_count
+                        if candidate <= trigger_time + 1e-9:
+                            # With the jump applied the cooldown completes
+                            # at or before this trigger; check whether the
+                            # pre-jump count already completed it in real
+                            # time (t* >= the previous trigger).
+                            earlier = (
+                                cycle_start
+                                + cooldown
+                                - 4.0 * (trigger_count - trigger_by_time[trigger_time])
+                            )
+                            if earlier <= trigger_time + 1e-9:
+                                completed = max(previous_trigger, earlier)
+                            else:
+                                completed = trigger_time
+                            break
+                        previous_trigger = trigger_time
+                        trigger_index += 1
+                    if completed is None:
+                        # Real time carries the cooldown with the triggers
+                        # already applied.
+                        completed = cycle_start + cooldown - 4.0 * trigger_count
+                    if completed > duration + 1e-9:
+                        break
+                    while (
+                        auto_index < len(auto_times)
+                        and auto_times[auto_index] < completed - 1e-9
+                    ):
+                        auto_index += 1
+                    if auto_index >= len(auto_times):
+                        break
+                    proc_auto = auto_by_time[auto_times[auto_index]]
+                    heal_time = float(proc_auto.get("time", 0.0)) + 0.25
+                    if heal_time > duration + 1e-9:
+                        break
+                    healing.append(
+                        {
+                            "time": heal_time,
+                            "amount": 0.0,
+                            "amount_formula": sap_magic_heal,
+                            "source": "Sap Magic",
+                            "kind": "champion_passive",
+                            "actor_wide": True,
+                            **_trigger_fields(proc_auto),
+                        }
+                    )
+                    # The empowered attack consumes the proc; the cooldown
+                    # restarts at the attack's timestamp and triggers at or
+                    # before it no longer count.
+                    proc_time = float(proc_auto.get("time", 0.0))
+                    while (
+                        trigger_index < len(trigger_times)
+                        and trigger_times[trigger_index] <= proc_time + 1e-9
+                    ):
+                        trigger_index += 1
+                    cycle_start = proc_time
+                    auto_index += 1
 
     elif name == "Master Yi":
         # Meditate channels for up to 4 seconds, healing Master Yi every

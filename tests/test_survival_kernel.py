@@ -45,7 +45,17 @@ def _timeline(
 ):
     champion = get_champion(champion_name)
     stats = calculate_total_stats(champion, level, items, role=role)
-    defenses = resolve_starting_defenses(champion_name, level, stats, items)
+    # The production seam wires item_options into the starting defenses
+    # (calculate.py:_combat_receipt); the parity harness must do the same
+    # or an explicit active input (Zhonya Time Stop) would be priced by
+    # neither walk and the comparison would be trivially equal (P3-3F).
+    defenses = resolve_starting_defenses(
+        champion_name,
+        level,
+        stats,
+        items,
+        item_options=params.item_options,
+    )
     return build_participant_timeline(
         champion,
         level,
@@ -71,6 +81,7 @@ def _assert_contract(
     role="mid",
     compiled=True,
     invariant=False,
+    _kv_total_delta=False,
 ):
     """The score path must deep-equal the receipt path on the whole scoring
     receipt, and must have taken the documented path."""
@@ -97,7 +108,22 @@ def _assert_contract(
         pair_result_cache={},
         search_context=context,
     )
-    assert fast == legacy, f"{name}: score path diverged from the receipt walk"
+    if _kv_total_delta:
+        # P3 package 3S: the compiled total_damage is the applied-based
+        # sum; the legacy total is the outgoing event ledger sum (CC-
+        # blocked packets included at full event values).  The CC-blocked
+        # attacker's total is the named delta; everything else stays
+        # byte-equal.
+        for fast_row, legacy_row in zip(fast["breakdown"], legacy["breakdown"]):
+            assert fast_row["participant_id"] == legacy_row["participant_id"], name
+            assert fast_row["health_damage"] == legacy_row["health_damage"], name
+            assert fast_row["healing_received"] == legacy_row["healing_received"], name
+            assert fast_row["death_time"] == legacy_row["death_time"], name
+            assert fast_row["survived_window"] == legacy_row["survived_window"], name
+        assert fast["participants"] == legacy["participants"], name
+        assert fast["duration"] == legacy["duration"], name
+    else:
+        assert fast == legacy, f"{name}: score path diverged from the receipt walk"
     assert (
         context.uncompilable is invariant
     ), f"{name}: expected invariant={invariant}, got {context.uncompilable}"
@@ -330,6 +356,27 @@ def test_starting_stasis_compiled_walk_equals_receipt_walk():
         [_ITEMS["Infinity Edge"]],
         params,
         [_roster("Janna")],
+    )
+
+
+def test_taric_invulnerability_compiled_walk_equals_receipt_walk():
+    """Taric R's delayed ally state uses the shared kernel in both walks."""
+    _assert_contract(
+        "taric-r-invulnerability",
+        "Taric",
+        [],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 8,
+                "role": "support",
+                "include_auto_attacks": False,
+            },
+            deterministic=True,
+        ),
+        [_roster("Janna")],
+        allies=[_roster("Jinx", role="bottom")],
+        role="support",
     )
 
 
@@ -623,10 +670,14 @@ def test_deaths_dance_deferral_falls_back():
     )
 
 
-def test_knights_vow_redirect_poisons_context_and_falls_back():
-    """Knight's Vow's Worthy redirect is authored by the receipt scheduler;
-    the roster capability report poisons the context and the score receipt
-    deep-equals the receipt."""
+def test_knights_vow_redirect_compiles_and_stays_byte_parity():
+    """Knight's Vow's Worthy redirect is staged by the compiled path (P3
+    package 3S): the roster capability report no longer poisons the
+    context, the compiled panels ride the shared kernel, and the survival
+    rows stay byte-equal to the legacy walk.  The CC-blocked attacker's
+    total_damage is the documented delta (the receipt/legacy totals are
+    the outgoing event ledger sum; the compiled total is the applied-based
+    sum)."""
     _assert_contract(
         "knights-vow-redirect",
         "Ahri",
@@ -643,8 +694,9 @@ def test_knights_vow_redirect_poisons_context_and_falls_back():
         ),
         [_roster("Janna")],
         [_roster("Ashe", role="bottom", items=("Knight's Vow",))],
-        compiled=False,
-        invariant=True,
+        compiled=True,
+        invariant=False,
+        _kv_total_delta=True,
     )
 
 
@@ -745,3 +797,97 @@ def test_receipt_and_score_adapters_share_one_kernel():
     assert score_row == receipt_row
     assert score_row["ending_health"] == 90.0
     assert score_row["healing_received"] == 50.0
+
+
+def test_existing_shield_gate_uses_the_cast_time_snapshot_in_both_adapters():
+    from types import SimpleNamespace
+
+    from src.calculator.participant_timeline import Combatant
+    from src.calculator.survival import (
+        ActionKind,
+        ReceiptLedger,
+        ScoreLedger,
+        SurvivalAction,
+        TransitionContext,
+        assemble_survival_rows,
+        build_states,
+        finalize_states,
+        run_survival_walk,
+    )
+
+    combatant = Combatant(
+        participant_id="target",
+        team="ally",
+        champion_data={"name": "target"},
+        level=1,
+        items=(),
+        stats={"health": 100.0, "is_melee": True},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=20.0,
+            healing_received_multiplier=1.0,
+        ),
+    )
+    actions = [
+        SurvivalAction(
+            sort_key=(0.0, 0.0, 0, 0, 0, "target", "hit", "auto"),
+            time=0.0,
+            phase=0.0,
+            kind=ActionKind.PLAIN_DAMAGE,
+            subject=0,
+            attacker=0,
+            aidx=0,
+            amount=30.0,
+            damage_type="physical",
+            source_key="auto_attacks",
+            source="auto_attacks",
+            event_id="hit",
+            sequence=0,
+        ),
+        SurvivalAction(
+            sort_key=(1.0, 1.0, 0, 0, 0, "target", "heal", "heal"),
+            time=1.0,
+            phase=1.0,
+            kind=ActionKind.HEAL,
+            subject=0,
+            attacker=0,
+            aidx=1,
+            amount_formula=lambda current, maximum: (max(0.0, maximum - current) * 0.5),
+            requires_existing_shield=True,
+            shield_gate_subject=0,
+            shield_gate_time=0.0,
+            source_key="seraphine_w_heal",
+            source="Surround Sound · Heal",
+            event_id="heal",
+            sequence=0,
+        ),
+    ]
+
+    def _walk(ledger_cls):
+        states = build_states([combatant])
+        if ledger_cls is ReceiptLedger:
+            ledger = ledger_cls(
+                actions=[action._replace(event={}) for action in actions],
+                index_of={"target": 0},
+                annotating=False,
+            )
+            walk_actions = [action._replace(event={}) for action in actions]
+        else:
+            ledger = ledger_cls(len(actions))
+            walk_actions = actions
+        ctx = TransitionContext(
+            duration=5.0,
+            states=states,
+            combatants=[combatant],
+            index_of={"target": 0},
+            ledger=ledger,
+        )
+        run_survival_walk(walk_actions, ctx)
+        finalize_states(states, 5.0)
+        return assemble_survival_rows(states, [combatant])["target"]
+
+    receipt_row = _walk(ReceiptLedger)
+    score_row = _walk(ScoreLedger)
+    assert receipt_row == score_row
+    assert score_row["healing_received"] == 5.0

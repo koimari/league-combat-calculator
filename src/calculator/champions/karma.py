@@ -11,6 +11,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    extract_value,
 )
 
 
@@ -48,7 +49,15 @@ def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
     holds = bool(ctx.options.get("w_tether_holds", True))
     parts = [DamagePart("magic", value, time_offset=0.1)]
     if holds:
-        parts.append(DamagePart("magic", value, time_offset=2.0))
+        parts.append(
+            DamagePart(
+                "magic",
+                value,
+                time_offset=2.0,
+                cc_kind="root",
+                cc_duration=extract_value(ability, "Root Duration", rank),
+            )
+        )
     entry = damage_entry(
         ability.get("name", "Focused Resolve"),
         rank,
@@ -57,6 +66,7 @@ def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = tuple(parts)
+    entry["cc_reviewed"] = True
     entry["detail"] = (
         f"{'Renewal' if renewal else 'Focused Resolve'}; tether holds={holds}. Healing/root duration are utility/state."
     )
@@ -97,6 +107,15 @@ ASSUMPTIONS = [
     "Mantra is an explicit next-ability state; Soulflare and Renewal use the Mantra rank rather than silently changing base ranks.",
     "Focused Resolve emits one or two sourced magic hits depending on the tether-completion input.",
     "Inspire/Defiance shields and Gathering Fire cooldown refunds remain ally/state utility.",
+    "E (Inspire) shields Karma or the selected teammate the sourced "
+    "Shield Strength (80-280 + 60% AP) for 2.5s (self-or-target scope "
+    "one_teammate with self fallback in a solo fight; selection key "
+    "shield:E:<cast>); the 40% movement speed for 2s is utility state.",
+    "Mantra-empowered Inspire (Defiance) is documented-only: the cached "
+    "R data carries no sourced Defiance shield numbers (the Mantra "
+    "description only names the empowered effect), so the AoE ally "
+    "spread of the enhanced shield fails closed instead of inventing a "
+    "value.",
 ]
 SOURCES = [
     source_row(

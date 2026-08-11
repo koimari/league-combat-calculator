@@ -41,6 +41,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    with_control,
 )
 
 PACKET_SHA256 = "486c8deb9501df4c594a7d0e7c89daa625c864c627339407758da466dfc7c1e1"
@@ -140,8 +141,14 @@ _thunderclap.phase = BUFF
 
 SLOTS = dict(SLOTS)
 _packet_q = SLOTS["Q"]
+_packet_r = SLOTS["R"]
 SLOTS["Q"] = _seismic_shard
 SLOTS["W"] = _thunderclap
+SLOTS["R"] = with_control(
+    _packet_r,
+    kind="airborne",
+    duration_attr="Knock Up Duration",
+)
 parse_abilities = build_parser(SLOTS, "Malphite")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -158,6 +165,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Increased Bonus Armor row) for the whole fight, matching the E8c "
     "full-window Granite Shield assumption; the shield-break revert to "
     "the un-tripled value is part of that documented boundary",
+    "R's sourced 1.5-second knockup counts as target action downtime",
 ]
 
 MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}

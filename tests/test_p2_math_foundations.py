@@ -36,7 +36,7 @@ from src.calculator.resistance import (
     reduce_resistance,
 )
 from src.calculator.stats import apply_movement_speed_soft_caps, growth_stat
-from src.calculator.champions.veigar import _EXECUTE_MISSING_RATIO_START
+from src.calculator.champions.veigar import _EXECUTE_MISSING_RATIO_CAP
 
 # ─────────────────────────────────────────────────────────────────────
 # 1. Resistance: the 100/(100+R) identity
@@ -271,38 +271,39 @@ class TestExecuteQuantiles:
         assert threshold / max_health == 0.05
 
     def test_veigar_ramp_is_piecewise_affine(self) -> None:
-        """d(m) = d_min*(1 + clamp((m - 2/3)/(1/3), 0, 1)): min row below
-        m=2/3, max row (2x min) at m=1."""
-        assert _EXECUTE_MISSING_RATIO_START == pytest.approx(2.0 / 3.0)
+        """d(m) = d_min*(1 + min(1, m/(2/3))) (pass-16 decision): linear
+        from 1x at full health to the max row (2x min) at m=2/3, flat
+        afterwards."""
+        assert _EXECUTE_MISSING_RATIO_CAP == pytest.approx(2.0 / 3.0)
 
         def ramp(m: float) -> float:
             boost = max(
                 0.0,
                 min(
                     1.0,
-                    (m - _EXECUTE_MISSING_RATIO_START)
-                    / (1.0 - _EXECUTE_MISSING_RATIO_START),
+                    m / _EXECUTE_MISSING_RATIO_CAP,
                 ),
             )
             return 1.0 + boost  # in units of d_min
 
         assert ramp(0.0) == 1.0
-        assert ramp(2.0 / 3.0) == 1.0
+        assert ramp(1.0 / 3.0) == pytest.approx(1.5)
+        assert ramp(2.0 / 3.0) == 2.0
         assert ramp(1.0) == 2.0
-        assert ramp(0.75) == pytest.approx(1.25)
+        assert ramp(0.75) == pytest.approx(2.0)
 
-    def test_veigar_ramp_convexity_jensen(self) -> None:
-        """The ramp is convex, so E[d(M)] >= d(E[M]): the deterministic
-        path understates expected execute damage when health variance
-        straddles the ramp (documented approximation)."""
+    def test_veigar_ramp_concavity_jensen(self) -> None:
+        """The pass-16 ramp is concave (linear to 2x at m=2/3, then flat),
+        so E[d(M)] <= d(E[M]): the deterministic path OVERstates expected
+        execute damage when health variance straddles the saturation point
+        (documented approximation — the mirror image of a convex ramp)."""
 
         def ramp(m: float) -> float:
             boost = max(
                 0.0,
                 min(
                     1.0,
-                    (m - _EXECUTE_MISSING_RATIO_START)
-                    / (1.0 - _EXECUTE_MISSING_RATIO_START),
+                    m / _EXECUTE_MISSING_RATIO_CAP,
                 ),
             )
             return 1.0 + boost
@@ -310,9 +311,9 @@ class TestExecuteQuantiles:
         # M uniform on {0.5, 1.0}: E[M] = 0.75
         expected_value = 0.5 * ramp(0.5) + 0.5 * ramp(1.0)
         deterministic = ramp(0.75)
-        assert expected_value == pytest.approx(1.5)
-        assert deterministic == pytest.approx(1.25)
-        assert expected_value > deterministic  # Jensen, strict convex piece
+        assert expected_value == pytest.approx(1.875)
+        assert deterministic == pytest.approx(2.0)
+        assert expected_value < deterministic  # Jensen reversed (concave)
 
 
 # ─────────────────────────────────────────────────────────────────────

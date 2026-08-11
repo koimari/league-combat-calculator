@@ -11,14 +11,39 @@ E8c addition over the reviewed packet:
   carries the flat component only.
 """
 
-from .packet_module import build_packet_module
+from .packet_module import _rank_gated_no_damage, build_packet_module
 
 PACKET_SHA256 = "abc0765ed94d66999d26bc7fe98c41c49c3d5e3631c4cca2a96a59de1ba776eb"
 
+# P2 Slice 9 (Ragnarok): the R is heal/cleanse/immunity-only (no outgoing
+# damage) AND unlearnable-while-absent — an R rank 0 must not book a cast.
+_RANK_GATED_R = _rank_gated_no_damage(
+    "R",
+    reason="The pinned Wiki packet contains no enemy-damage formula for "
+    "this slot; it is modeled as a non-damaging/state-only ability.",
+)
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Olaf", PACKET_SHA256
+    "Olaf", PACKET_SHA256, slot_parsers={"R": _RANK_GATED_R}
 )
 PACKET_SPEC = SLOTS.packet_spec
+
+# P2 Slice 9 — Ragnarok sourced values (wiki rows + the game file
+# OlafRagnarok: Resists 10/15/20, Duration 3.0, FlatAD 10/20/30,
+# PercentTotalADAmp 0.25, HasteDuration 1.0, Haste 20/45/70 %,
+# DurationExtension 2.5, cooldownTime 100/90/80, mana 100,
+# canCastWhileDisabled true / cannotBeSuppressed true).  The cleanse +
+# immunity + stat receipts are authored per R cast by the participant
+# timeline; the AD + 10% size + 2.5s duration-extension have no kernel
+# fields — receipted named-unsupported (never applied); the first-second
+# MS facing/2000-unit condition is prose-only (the movement utility
+# surface carries the amount + 1s window).
+RAGNAROK_DURATION_SECONDS = 3.0
+RAGNAROK_FIRST_SECOND_MS_WINDOW = 1.0
+RAGNAROK_BONUS_AD = (10.0, 20.0, 30.0)
+RAGNAROK_BONUS_AD_TOTAL_PERCENT = 25.0
+RAGNAROK_SIZE_INCREASE_PERCENT = 10.0
+RAGNAROK_DURATION_EXTENSION_SECONDS = 2.5
 
 # HARDCODED: verify on patch updates — Tough It Out's 2.5s shield
 # duration and 17.5% missing-health ratio are prose/cached leveling

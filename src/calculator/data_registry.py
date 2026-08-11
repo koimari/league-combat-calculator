@@ -36,7 +36,7 @@ WRITERS: dict[str, tuple[str, ...]] = {
     "bin": ("scripts/decompose_binaries.py",),
     "wiki": ("scripts/decompose_wiki.py",),
     "wiki-raw": ("scripts/decompose_wiki.py",),
-    "atoms": ("scripts/extract_atoms.py",),
+    "atoms": ("scripts/atomize.py", "scripts/extract_atoms.py"),
     "practice-corpus": (),  # hand-authored only
 }
 

@@ -29,6 +29,7 @@ import pytest
 from src import app as app_module
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
+_ENEMY_RANKS = {"Q": 5, "W": 5, "E": 0, "R": 3}
 
 
 def _fight(
@@ -49,7 +50,7 @@ def _fight(
                 "level": 18,
                 "items": [],
                 "role": "mid",
-                "ability_ranks": dict(_RANKS),
+                "ability_ranks": dict(_ENEMY_RANKS),
             }
         ]
     payload = {
@@ -303,20 +304,19 @@ def test_veigar_r_uses_minimum_base_not_unconditional_maximum():
 
 
 def test_veigar_r_fight_damage_scales_with_missing_health():
-    data = _fight("Veigar")
+    # With MR=100, Q + W deal 120 + 152.5 = 272.5 post-mitigation before R.
+    # At 1000 HP that is 27.25% missing: bonus = 0.2725 / (2/3).
+    data = _fight("Veigar", target_health=1000.0, enemies=[])
     mr = float(data["effective_mr"])
-    sources = _main_sources(data)
-    # The target has taken only Q + W (mitigated) by the time R lands:
-    # missing ratio < 2/3, so the execute boost is 0 and R prices the
-    # Minimum row (325).
-    assert sources["Primordial Burst"] == pytest.approx(_mitigated(325.0, mr), abs=0.06)
+    r_damage = data["breakdown"]["R"]["total_damage"]
+    expected_raw = 325.0 * (1.0 + (272.5 / 1000.0) / (2.0 / 3.0))
+    assert r_damage == pytest.approx(_mitigated(expected_raw, mr), abs=0.06)
 
-    # A 300 HP target (no-enemy path uses the request's target health) is
-    # below 33% health by the time R lands: Q (120) + W (152.5) leave 27.5
-    # HP, missing ratio 0.9083 -> boost 0.725 -> raw 325 * 1.725 = 560.6.
+    # At 300 HP, the same Q + W leave 27.5 HP (90.83% missing), so the
+    # 66.66%-missing cap applies and R prices the 650 maximum row.
     low = _fight("Veigar", target_health=300.0, enemies=[])
     low_mr = float(low["effective_mr"])
     low_r = low["breakdown"]["R"]["total_damage"]
-    assert low_r == pytest.approx(_mitigated(560.625, low_mr), abs=0.06)
+    assert low_r == pytest.approx(_mitigated(650.0, low_mr), abs=0.06)
     assert low_r > _mitigated(325.0, low_mr)
     assert low_r <= _mitigated(650.0, low_mr)

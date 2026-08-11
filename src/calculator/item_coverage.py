@@ -26,13 +26,26 @@ _BLOCKED_REASONS: dict[str, str] = {}
 # optimiser must withhold the item because a separate progression/economy
 # state is not simulated.  Keep this list narrow and explicit: the API should
 # never silently turn an incomplete combat mechanic into a partial result.
-_CALCULATION_ALLOWED_BLOCKED = frozenset()
+_CALCULATION_ALLOWED_BLOCKED = frozenset({"Fimbulwinter"})
 
 # Items can have a registered damage packet while still carrying an
 # unrepresented sibling passive or state transition.  Keep those items
 # fail-closed until every fight-relevant child effect is covered; a name in
 # ``ITEM_EFFECTS`` is not proof that the whole item is modelled.
-_PARTIAL_BLOCKED_REASONS: dict[str, str] = {}
+_PARTIAL_BLOCKED_REASONS: dict[str, str] = {
+    "Fimbulwinter": (
+        "Everlasting's shield formula, trigger class, duration, and cooldown "
+        "remain typed. The current source set does not authorize the historical "
+        "20%-maximum-mana gate, its comparison operator, its mana terms, or "
+        "manaless behavior. Eligible trigger events therefore emit a named "
+        "mana_gate_authority_unavailable receipt, and optimizer selection is "
+        "withheld. The sourced 1.8 shield branch also requires more than one "
+        "enemy champion within 1200 units of the holder. The actor model has "
+        "no typed spatial snapshot, so the runtime keeps the base shield and "
+        "emits nearby_enemy_spatial_input_unavailable when a test-authorized "
+        "mana gate reaches that branch."
+    ),
+}
 
 # These items have explicit scenario state and a single shared receipt ledger
 # for their timed/progression branches.  They remain separate from ordinary
@@ -63,11 +76,89 @@ _STATEFUL_MODELED_ITEMS: dict[str, str] = {
     "Axiom Arc": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
     "Endless Hunger": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
     "Immortal Path": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
-    "Catalyst of Aeons": "Eternity's pre-mitigation champion-damage mana restoration and capped per-cast healing are represented by the ordered resource and participant ledgers.",
-    "Fimbulwinter": (
-        "Awe's bonus-mana-to-health conversion and Everlasting's sourced "
-        "post-control shield are represented by the ordered participant ledger; "
-        "unreviewed crowd-control packets remain fail-closed."
+    "Catalyst of Aeons": (
+        "Eternity's pre-mitigation champion-damage mana restoration rides the "
+        "typed mana resource ledger (10% at the hit timestamp, capped at max "
+        "mana), and the mana-spent heal (25%, capped 20 per cast and 20 per "
+        "second) is an automatic projection of the ledger's accepted spend "
+        "receipts — no user input is required, and a fight without the typed "
+        "account emits no heal with a named note."
+    ),
+    "Mikael's Blessing": (
+        "Purify is represented by the shared participant support ledger: an "
+        "explicit bounded active_seconds input emits the sourced 100-250 "
+        "level-scaled heal AND the named cleanse to the SELECTED teammate; "
+        "item presence alone never creates a cast or cleanse, excluded "
+        "control kinds (airborne/blind/disarm/nearsight/suppression) fail "
+        "closed with named reasons, and the 120s cooldown is receipted as a "
+        "binary-only source gap (one use per fight, never enforced)."
+    ),
+    "Cryptbloom": (
+        "Life From Death is represented by the shared participant support "
+        "ledger: a synthesized champion takedown (first defender pair, "
+        "holder alive at the kill) schedules the sourced 100 + 20% AP heal "
+        "packets to the holder and selected teammates at the takedown time, "
+        "with the 1.75s nova window and the 60s cooldown carried as typed "
+        "receipts (cooldown never enforced — one takedown per holder per "
+        "fight).  The 600-unit nova radius is NOT locally sourced and not "
+        "modeled: every selected roster member is assumed hit (named "
+        "boundary)."
+    ),
+    "Gluttonous Greaves": (
+        "Slay stacks are supplied through the explicit bounded scenario "
+        "control (slay_stacks 0..10) and their omnivamp (0.6% per stack, "
+        "6% maximum) is priced on the fight's explicitly single-target "
+        "attack/on-hit packets (the engine's conservative omnivamp scope — "
+        "area/pet/copied rows are withheld with a named receipt); the 4% "
+        "base omnivamp remains a parsed stat.  Takedown-driven stack "
+        "admission is NOT modeled: stats resolve pre-fight, so the authored "
+        "stack count is the valid champion-takedown admission (named "
+        "boundary)."
+    ),
+    "Eclipse": (
+        "Ever Rising Moon's two-hit stack gate (WindowStackGate: 2 stacks "
+        "within 2s, 6s per-target cooldown) rides the state-lifecycle kernel; "
+        "ordinary direct-damage and reviewed control-only cast instances use "
+        "typed cast and target identities, with damage plus control from the "
+        "same cast deduplicated.  The Wiki also authorizes DoT applications, "
+        "but the generic event packet does not source their application "
+        "timestamp, so those candidates emit a named zero-damage unavailable "
+        "receipt instead of counting ticks.  "
+        "The sourced melee/ranged max-health proc and the timed 160/80 + "
+        "40%/20% bonus-AD self shield (2s) attach to the certified pair "
+        "events in the ordered participant ledger.  A malformed proc ledger "
+        "keeps its duration-scaled coarse price but is stamped with a named "
+        "withheld reason and no shield (never a guessed event); the "
+        "proc_Eclipse timing source stays excluded before optimizer ranking "
+        "until every ability in the fight is event-certified."
+    ),
+    "Bastionbreaker": (
+        "Shaped Charge (wiki rev 4046567): the next damaging champion-ability "
+        "cast after the 20s cooldown deals 50/25 + 1.5/0.75-per-lethality "
+        "TRUE damage (unmitigated), preferring authored ability-hit packets "
+        "and marking cast-boundary rows coarse; basic attacks and item procs "
+        "never trigger; a malformed cast ledger keeps a named zero-damage "
+        "withheld row (malformed_proc_receipt) that makes the shaped_charge "
+        "timing source coarse and optimizer-excluded.  Sabotage (takedown -> "
+        "next basic attack vs turret/epic monster, 300/240 + 25/20 per "
+        "lethality true damage over 3s) is a NAMED BOUNDARY: its targets do "
+        "not exist in the 1v1 champion-only model, so it is not modeled (the "
+        "full-entry audit's 'modeled' claim for it is stale)."
+    ),
+    "Muramana": (
+        "Shock (wiki rev 4005926): one physical proc per DAMAGING ability "
+        "instance (4% melee / 3% ranged max mana) plus a 1.2% max-mana "
+        "on-hit on real basic attacks only — ability-carried on-hit "
+        "applications (Ezreal Q) never double-count, and zero-damage casts "
+        "never proc.  Authored ability-hit times are preferred; cast-boundary "
+        "rows are marked coarse and optimizer-excluded (muramana_ability); a "
+        "malformed or count-mismatched ledger keeps its aggregate price but "
+        "is stamped with a named withheld reason.  Awe (2% max mana as bonus "
+        "AD) is a separate stat conversion.  The sourced 6.5s per-target "
+        "Shock lockout (wiki + binary PerCastIDLockout + typed timing atom) "
+        "uses the shared lifecycle cadence keyed by exact target and cast "
+        "identity. Missing identity or exact timing keeps only the existing "
+        "named malformed-receipt aggregate."
     ),
     "Cull": (
         "Reap's authored minion-kill progression, completion payout, and on-hit "
@@ -82,16 +173,33 @@ _STATEFUL_MODELED_ITEMS: dict[str, str] = {
         "and vision receipts."
     ),
     "Tear of the Goddess": (
-        "Manaflow's bounded bonus-mana progression and minion-only Helping Hand "
-        "boundary are explicit state receipts."
+        "Manaflow's sourced 8-second charge cadence, 3/6 bonus-mana trigger "
+        "amounts, 360 bonus-mana cap, and minion-only Helping Hand boundary are "
+        "explicit ordered resource and state receipts projected from the typed "
+        "mana resource ledger (P3 slice 1): only proven accepted eligible hits "
+        "consume charges, and each granted bonus max-mana enters the same "
+        "account the cast admission reads."
+    ),
+    "Lost Chapter": (
+        "Enlighten's sourced 20%-max-mana-over-3-seconds level-up restore is an "
+        "explicit ordered resource receipt: the smallest public timing choice "
+        "(level-up at N seconds) authors one deterministic restore schedule on "
+        "the typed mana resource ledger; a missing choice creates no trigger. "
+        "It adds no direct damage."
     ),
     "Umbral Glaive": (
         "Nightstalker's unseen-ready state gates a typed first-auto true-damage "
-        "packet; Blackout remains a separate vision dimension."
+        "packet; Blackout is a sourced vision-dimension receipt (ward denial "
+        "aura), never converted into champion damage."
     ),
     "World Atlas": (
         "Support Quest, Shared Riches, and Ward charges are explicit state/economy "
         "and vision receipts."
+    ),
+    "Quicksilver Sash": (
+        "Quicksilver is the sourced self-cast cleanse: an explicit "
+        "active_seconds input emits the cleanse packet that truncates "
+        "eligible active crowd-control downtime (P2 Slice 4)."
     ),
 }
 
@@ -121,7 +229,6 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Executioner's Calling": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Oblivion Orb": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Quicksilver Sash": "Quicksilver is defensive cleanse.",
-    "Lost Chapter": "Enlighten restores mana on level-up; it adds no direct damage.",
     "Verdant Barrier": "Annul is defensive spell protection.",
     "Armored Advance": "Plating and Noxian Endurance are defensive effects.",
     "Bloodthirster": "Ichorshield is a defensive shield.",
@@ -136,7 +243,6 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
         "because its magnitude and spacing input are not sourced; the boot's "
         "attack-speed and life-steal stats are still applied."
     ),
-    "Cryptbloom": "Life From Death is a post-takedown heal.",
     "Death's Dance": "Ignore Pain and Defy change incoming damage and healing.",
     "Diadem of Songs": "Harmony and Consonance change healing, not outgoing damage.",
     "Dream Maker": "Dream Maker affects an ally, not the item holder's TDD.",
@@ -145,7 +251,6 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Force of Nature": "Steadfast grants defensive stats and movement speed.",
     "Frozen Heart": "Winter's Caress reduces enemy attack speed.",
     "Guardian Angel": "Rebirth is a defensive revive.",
-    "Gluttonous Greaves": "Slay grants omnivamp, not outgoing damage.",
     "Immortal Shieldbow": "Lifeline is a defensive shield.",
     "Jak'Sho, The Protean": "Voidborn Resilience changes defensive resistances.",
     "Kaenic Rookern": "Magebane is a defensive magic shield.",
@@ -185,6 +290,10 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
 # package.  Any equipped mechanic that changes their incoming damage, health,
 # shields, or combat healing must either be represented here or stop the run.
 _TARGET_MODELED_REASONS: dict[str, str] = {
+    "Guardian's Horn": (
+        "Undaunted blocks 15 post-mitigation damage from champion attacks and "
+        "abilities, or 3.75 against damage-over-time abilities."
+    ),
     "Armored Advance": (
         "Noxian Endurance grants a typed five-second physical shield after an "
         "authored champion physical-damage event; Plating reduces basic damage."
@@ -282,7 +391,10 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
     ),
     "Zhonya's Hourglass": (
         "Time Stop is priced only from the explicit bounded active-seconds "
-        "scenario input; item presence alone never assumes stasis."
+        "scenario input; item presence alone never assumes stasis.  The "
+        "stasis window is unpriced in optimizer ranking (candidates default "
+        "to zero active seconds); price it per candidate via "
+        "candidate_item_options when a Time Stop matters to the build."
     ),
     "Locket of the Iron Solari": (
         "Devotion is represented by the shared participant support ledger: an "
@@ -297,8 +409,16 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
     ),
     "Redemption": (
         "Intervention is represented by the shared participant support ledger: "
-        "an explicit active_seconds input schedules its delayed ally heal and "
-        "enemy true-damage area packet for the selected roster. Passive target "
+        "an explicit active_seconds input schedules its delayed (2.5s beam) "
+        "ally heal (150-350 by target level) and enemy 10%-max-health TRUE "
+        "damage area packets for the selected roster, plus a vision receipt "
+        "for the sourced call-down window.  The 5500-unit range is the "
+        "sourced CAST-RANGE coverage assumption (the beam area is the "
+        "sourced 550-radius area; every selected roster member is assumed "
+        "inside — no proximity order is invented); the binary-only 90s "
+        "cooldown is receipted and never enforced (one cast per fight); the "
+        "10% heal-and-shield-power stat is parsed but does not amplify item "
+        "ally heals (named limitation, cross-item).  Passive target "
         "calculations do not invent the active."
     ),
     "Spectre's Cowl": (
@@ -345,14 +465,22 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
         "withheld."
     ),
     "Fimbulwinter": (
-        "Everlasting's 100 + 4.5% current-mana shield (1.8x with more than one "
-        "nearby enemy) is scheduled after an authored immobilize, or a slow for "
-        "a melee holder; the 20%-maximum-mana gate and eight-second cooldown "
-        "are enforced, and unreviewed control packets are withheld."
+        "Everlasting's typed shield formula waits for direct authority for its "
+        "mana gate. The current Wiki entry, item cache, client binary, extracted "
+        "scripts, and atom receipt provide no threshold or comparison contract. "
+        "An eligible authored control event emits a named "
+        "mana_gate_authority_unavailable receipt. Optimizer selection remains "
+        "withheld. The 1200-unit multi-enemy multiplier is source-authorized, "
+        "but typed holder-centered positions are unavailable. The runtime "
+        "therefore withholds that multiplier and reports the spatial-input gap."
     ),
     "Force of Nature": (
         "Steadfast stacks are scheduled from exact incoming champion magic-damage "
-        "events, including expiry and the maximum-stack bonus resistance."
+        "events (per-cast-instance 1s cadence, 7s duration, 8-stack cap, "
+        "immobilize +2, all-at-once expiry), and the maximum-stack bonus "
+        "resistance is repriced prospectively per packet; the 6% bonus move "
+        "speed is declared metadata only and the dealing-damage refresh is a "
+        "named boundary."
     ),
     "Jak'Sho, The Protean": (
         "Voidborn Resilience's one-stack-per-second combat state is scheduled "
@@ -360,9 +488,7 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
     ),
 }
 
-_TARGET_BLOCKED_REASONS: dict[str, str] = {
-    "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
-}
+_TARGET_BLOCKED_REASONS: dict[str, str] = {}
 
 # Product-facing outcome dimensions for utility and non-TDD effects.  These
 # labels are deliberately descriptive: they do not claim a combat formula is
@@ -383,14 +509,19 @@ _UTILITY_DIMENSIONS: dict[str, tuple[str, ...]] = {
     "World Atlas": ("economy", "quest", "ally_support", "vision"),
     "Runic Compass": ("economy", "quest", "ally_support", "vision"),
     "Tear of the Goddess": ("progression", "resource"),
+    "Cryptbloom": ("ally_support", "sustain"),
     "Banshee's Veil": ("spell_protection",),
+    "Verdant Barrier": ("spell_protection",),
     "Edge of Night": ("spell_protection",),
     "Zhonya's Hourglass": ("stasis",),
     "Guardian Angel": ("revive",),
+    "Quicksilver Sash": ("cleanse",),
     "Mercurial Scimitar": ("cleanse", "movement"),
     "Boots of Swiftness": ("slow_resistance", "movement"),
     "Cosmic Drive": ("movement",),
     "Force of Nature": ("movement", "defense"),
+    "Jak'Sho, The Protean": ("defense",),
+    "Maw of Malmortius": ("defense",),
     "Phantom Dancer": ("movement",),
     "Shurelya's Battlesong": ("movement", "ally_support"),
     "Youmuu's Ghostblade": ("movement",),
@@ -454,6 +585,75 @@ def _has_described_effect(item: dict[str, Any]) -> bool:
     return bool(item.get("passives") or item.get("active") or item.get("actives"))
 
 
+# Named receipt-only boundaries: the item has a typed registry entry (so
+# the generic ITEM_EFFECTS/ITEM_INPUT_OPTIONS branches would over-claim),
+# but its passive cannot be represented by the 1v1 champion fight model —
+# the typed value rides the item_state_receipts row only, and the ordinary
+# stats still flow through stats.py.
+_RECEIPT_ONLY_BOUNDARY_REASONS: dict[str, str] = {
+    "Doran's Helm": (
+        "Helping Hand's 5 bonus physical damage is minion-only and "
+        "receipt-only (item_state_receipts.helping_hand_minion_only); "
+        "the champion fighter model has no minion targets, so the branch "
+        "is a named boundary, never an on-champion packet."
+    ),
+    "Ionian Boots of Lucidity": (
+        "Ionian Insight grants summoner spell haste, which is receipt-only "
+        "(item_state_receipts.ionian_insight_summoner_spell_haste): the "
+        "champion fighter model has no summoner-spell action state, so the "
+        "branch is a named boundary, never an ability-haste packet."
+    ),
+}
+
+
+# Named modeled-state reasons: the item's registry entry IS a scenario-
+# controlled state, but the generic ITEM_INPUT_OPTIONS wording would hide
+# the specific mechanic from the coverage surface.
+_MODELED_STATE_REASONS: dict[str, str] = {
+    "Knight's Vow": (
+        "Pledge designates the authored Worthy ally and Sacrifice redirects "
+        "14% of eligible pre-mitigation physical or magic damage to the "
+        "holder (healing it for 12% of post-mitigation Worthy damage) while "
+        "the authored tether/health gates are active; the compiled and "
+        "receipt walks stage the same split (item_state_receipts sacrifice "
+        "row, P3 package 3S)."
+    ),
+}
+
+
+# Named modeled-effect reasons: the item's registry entry IS a modeled
+# fight effect, but the generic ITEM_EFFECTS wording would hide the
+# specific mechanic and its named boundaries from the coverage surface.
+_MODELED_EFFECT_REASONS: dict[str, str] = {
+    "Force of Nature": (
+        "Steadfast is modeled from exact incoming champion magic-damage "
+        "events (per-cast-instance 1s cadence, 7s duration, 8-stack cap, "
+        "immobilize +2, all-at-once expiry) with the maximum-stack +70 "
+        "magic resistance repriced prospectively on the shared survival "
+        "kernel; the 6% bonus move speed is declared metadata only and the "
+        "dealing-damage refresh is a named boundary (item_state_receipts "
+        "steadfast row)."
+    ),
+    "Maw of Malmortius": (
+        "Lifeline arms a magic shield (melee 200 + 150% bonus AD / ranged "
+        "150 + 112.5% bonus AD, 3 seconds, magic-damage-only) when a magic "
+        "hit would reduce the holder below 30% maximum health, and grants "
+        "10% omnivamp until the end of combat; the threshold shield and "
+        "the omnivamp heals ride the shared survival kernel on both walks "
+        "(item_state_receipts lifeline row, P3 package 3T)."
+    ),
+    "Jak'Sho, The Protean": (
+        "Voidborn Resilience stacks one per second of champion combat from "
+        "the exact event ledger (5-stack cap) and multiplies BONUS armor and "
+        "magic resistance by 30% at maximum stacks — the bonus-resistance "
+        "reprice is prospective per packet on the shared survival kernel; "
+        "combat time is the packet timestamp, the holder's own outgoing "
+        "damage does not advance its stacks, and the fight window is the "
+        "combat window (named boundaries, item_state_receipts voidborn row)."
+    ),
+}
+
+
 def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     """Return the optimiser coverage classification for one resolved item."""
     name = str(item.get("name", ""))
@@ -479,7 +679,15 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
                 "Time Stop is priced only from the explicit bounded active-seconds "
                 "scenario input; item presence alone never assumes stasis."
                 if name in {"Zhonya's Hourglass", "Seeker's Armguard"}
-                else "The represented mechanic changes defense, not outgoing TDD."
+                else (
+                    "Annul's spell shield is ready at the opening and blocks the "
+                    "first authored hostile ability for the holder (one use per "
+                    "cast; the 60s cooldown and the damage-restart rule are "
+                    "receipted named boundaries — rearm is not modeled inside "
+                    "one fight)."
+                    if name in {"Banshee's Veil", "Edge of Night", "Verdant Barrier"}
+                    else "The represented mechanic changes defense, not outgoing TDD."
+                )
             )
         )
     elif name in _STATEFUL_MODELED_ITEMS:
@@ -510,20 +718,34 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
         status = "blocked"
         reason = _BLOCKED_REASONS[name]
     elif name == "Gunmetal Greaves":
-        # The boot's life steal is now pinned by the typed sustain receipt,
-        # but Noxian Gait's Riot-only movement branch stays out of scope.
+        # The boot's life steal is pinned by the typed sustain receipt and
+        # Noxian Gait's Riot-only movement branch is a typed named boundary
+        # (item_state_receipts noxian_gait_boundary): the magnitude is
+        # unsourced and the fight model has no decaying-movement input, so
+        # the movement sub-effect stays out of scope; the ordinary stats
+        # (40% attack speed, 45 move speed, 5% life steal) still apply.
         status: ItemCoverageStatus = "modeled_effect"
         reason = (
             "Noxian Gait's Riot-only movement branch remains explicitly out of "
-            "scope because its magnitude and spacing input are not sourced; the "
-            "boot's attack-speed and life-steal stats are still applied."
+            "scope: its magnitude is unsourced (the Wiki cache has no passive "
+            "branch) and the fight model has no decaying-movement input — the "
+            "sourced 2.0s decay and champions-only target ride the "
+            "noxian_gait_boundary receipt; the boot's attack-speed and "
+            "life-steal stats are still applied."
         )
+    elif name in _RECEIPT_ONLY_BOUNDARY_REASONS:
+        status, reason = "stats_only", _RECEIPT_ONLY_BOUNDARY_REASONS[name]
     elif name in ITEM_EFFECTS:
         status: ItemCoverageStatus = "modeled_effect"
-        reason = "Damage-relevant effects are represented by the fight model."
+        reason = _MODELED_EFFECT_REASONS.get(
+            name, "Damage-relevant effects are represented by the fight model."
+        )
     elif name in ITEM_INPUT_OPTIONS:
         status = "modeled_state"
-        reason = "The item exposes its damage-relevant state as a scenario control."
+        reason = _MODELED_STATE_REASONS.get(
+            name,
+            "The item exposes its damage-relevant state as a scenario control.",
+        )
     elif name in _REVIEWED_STATS_ONLY:
         status = "stats_only"
         reason = _REVIEWED_STATS_ONLY[name]

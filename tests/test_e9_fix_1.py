@@ -53,7 +53,9 @@ _ENEMY = {
     "level": 18,
     "items": [],
     "role": "mid",
-    "ability_ranks": _FULL_RANKS,
+    # Keep this numeric regression fixture free of incoming Ahri Charm
+    # downtime. Control timing has dedicated interaction tests.
+    "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
 }
 
 # One-decimal response rounding of per-event raw damage / heal amounts.

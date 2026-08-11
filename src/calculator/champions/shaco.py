@@ -11,9 +11,8 @@ row.  One fully-sprung box prices ``w_box_attacks`` x Increased Damage.
 - ``w_box_attacks`` (default 10) — the player-controlled uptime: 10 is
   the box's full sprung lifetime at the sourced 0.5s cadence; reduce it
   to model the target leaving the box's 450 range mid-fight.
-- The fear/root/slow are crowd-control utility the fight model does not
-  price (the root and fear hold the target in place — that is exactly
-  the assumption behind the full-volley default).
+- The sprung box fear is a typed downtime event. The same instant root and
+  slow remain utility. The full-volley default assumes the box has sprung.
 
 Boundary: box HP/stealth, arm time, trigger radius, targeting AI and
 leash range are state outside the damage model.
@@ -34,10 +33,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
 # Sourced box attack pattern (wiki Shaco W + "Champion summoned units"
 # page): the sprung box fires every 0.5 seconds for its 5-second
@@ -79,6 +78,13 @@ def _jack_in_the_box(ctx: SlotCtx) -> dict[str, Any] | None:
             count=attacks,
             time_offset=0.0,
             hit_interval=_BOX_ATTACK_INTERVAL,
+        ),
+    )
+    entry["control_events"] = (
+        ControlEvent(
+            "fear",
+            extract_value(ability, "Fear Duration", rank),
+            time_offset=0.0,
         ),
     )
     entry["event_order_certified"] = "sourced box attack cadence"
@@ -178,9 +184,9 @@ ASSUMPTIONS.extend(
         "The fight model is a single-target duel, so the box always uses "
         "its Increased Damage row (attacks only one target), never the "
         "plain Magic Damage row.",
-        "The fear/root/slow are crowd-control utility the fight model "
-        "does not price; box HP, arm time, trigger radius and leash "
-        "range are state outside the damage model.",
+        "The sprung box applies its sourced fear at the first volley hit; "
+        "the same instant root and slow remain utility. Box HP, arm time, "
+        "trigger radius and leash range are state outside the model.",
         "E (Two-Shiv Poison) prices the base Magic Damage row by default "
         "(the deterministic target is above 30% of its maximum health); "
         "e_execute=True prices the sourced Increased Damage row for "

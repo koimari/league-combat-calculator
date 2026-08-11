@@ -38,6 +38,7 @@ from .slotlib import (
     pct_health_per_hit,
     simple_damage,
     stat_buff,
+    with_control,
 )
 
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).
@@ -47,12 +48,31 @@ _tumble_damage = simple_damage(attr="Bonus Physical Damage", dmg_type="physical"
 
 
 def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: empowered-auto damage entry, cooldown scaled by R's published CDR."""
+    """Q: empowered-auto damage entry, cooldown scaled by R's published CDR.
+
+    The attack reset's THROUGHPUT is opt-in: with the ``q_tumble_reset``
+    option the empower is stamped as a self-supplying burst at an
+    infinite rate (``hits: 1`` + ``attack_speed: inf``) — "the auto
+    fires immediately" (the wiki reset prose + the binary
+    Trait_AttackReset tag; the acceleration magnitude is script-side,
+    so the infinite rate is the exact encoding of "immediately", and
+    the engine's burst machinery buys one EXTRA swing per accepted
+    cast with zero dead time).  Default keeps the conservative
+    ``True`` form (casts capped at the auto count; the reset's gain
+    not modeled).  The option is read STRICTLY (``is True``) so junk
+    values fail closed to the default.
+    """
     entry = _tumble_damage(ctx)
     if entry is not None:
         reduction = ctx.stats.get("tumble_cd_reduction_percent", 0.0)
         entry["cooldown"] *= 1.0 - reduction / 100.0
-        entry["empowers_next_auto"] = True
+        if ctx.options.get("q_tumble_reset") is True:
+            entry["empowers_next_auto"] = {
+                "hits": 1,
+                "attack_speed": float("inf"),
+            }
+        else:
+            entry["empowers_next_auto"] = True
     return entry
 
 
@@ -97,14 +117,36 @@ OPTIONS = [
         "default": True,
         "label": "E Condemn into wall",
     },
+    {
+        "key": "q_tumble_reset",
+        "type": "bool",
+        "default": False,
+        "label": (
+            "Model Tumble's attack-reset throughput: each accepted Q cast "
+            "buys one extra basic attack (the wiki: 'Tumble resets Vayne's "
+            "basic attack timer'; the binary Trait_AttackReset tag; the "
+            "acceleration magnitude is script-side)"
+        ),
+        # NO rotation metadata — a throughput assertion is not a rotation
+        # edge (centrally classified irrelevant, the w_kill_assertion
+        # precedent).
+    },
 ]
 
 ASSUMPTIONS = [
     "R (Final Hour) always active if ranked — bonus AD applied",
     "W (Silver Bolts) procs every 3rd hit (on-hit model)",
     "Q (Tumble) damage rides the next auto — casts capped by the auto "
-    "count; the dash is an attack reset, so it costs no attack time "
-    "(reset acceleration not modeled)",
+    "count; the dash is an attack reset, so it costs no attack time.  "
+    "The reset's THROUGHPUT is opt-in via q_tumble_reset: with the "
+    "option on, each accepted Q cast's empowered auto is an EXTRA swing "
+    "(the entry becomes a self-supplying burst at an infinite rate — "
+    "'fires immediately', the wiki reset prose + the binary "
+    "Trait_AttackReset tag; the acceleration magnitude is script-side, "
+    "so no finite number is invented); casts lift to the cooldown grid "
+    "and the W/on-hit counters ride the augmented stream.  Default "
+    "keeps the conservative cap (the reset's gain not modeled).",
+    "E stuns for the sourced 1.5 seconds only when Condemn is set to hit a wall",
     "Passive (Night Hunter) is utility only — not modeled",
 ]
 
@@ -120,7 +162,12 @@ SLOTS = {
     "E": by_option(
         "condemn_wall",
         {
-            True: simple_damage(attr="Total Physical Damage", dmg_type="physical"),
+            True: with_control(
+                simple_damage(attr="Total Physical Damage", dmg_type="physical"),
+                kind="stun",
+                duration_attr="Stun Duration",
+                effect_index=1,
+            ),
             False: simple_damage(attr="Physical Damage", dmg_type="physical"),
         },
         default=True,

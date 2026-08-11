@@ -87,6 +87,13 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "AD == 120% of the physical row, 'converted to true damage').  Fury "
     "generation (P Fury of the Xer'Sai) and burrow CC remain documented "
     "out-of-scope",
+    "P (Fury of the Xer'Sai) heals on Burrow: 'consumes her current Fury "
+    "over 3 seconds to heal for 0% : 100% (based on Fury) of 9% : "
+    "21.29% (based on level) maximum health' (cached P prose).  The "
+    "heal is documented-only: the rotation's W slot is a damaging row, "
+    "not the burrow stance switch, so the ledger has no faithful burrow "
+    "trigger for the heal; the e_fury option prices E's max-Fury bite "
+    "but not a burrow state.",
 ]
 
 VARIANT_OPTION_KEYS = ("q_variant", "e_fury")

@@ -52,6 +52,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from .ability_spec import ACTION_BLOCKING_CC_KINDS
 from .damage import DEFAULT_CAST_ORDER, effective_cooldown
 
 # Fallback rationale when no combo rule and no certified order exists.
@@ -607,8 +608,15 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
 
     # ── typed apply atoms per slot ──
     apply_atoms: dict[str, list[str]] = {}
+    immediate_cc_slots: set[str] = set()
     for s in corpora:
         info = infos[s]
+        has_damage_part = any(
+            float(getattr(part, "amount", 0.0) or 0.0) > 0.0
+            or getattr(part, "hp_scaled_damage", None) is not None
+            for part in info.get("parts", ())
+        )
+        cc_can_set_up_rotation = not has_damage_part or bool(info.get("skillshot"))
         atoms: list[str] = []
         if float(info.get("cooldown", 0.0) or 0.0) <= 0:
             atoms.append("passive-row(cd=0)")  # auto-stream row, not a cast
@@ -629,6 +637,27 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
         for part in info.get("parts", ()):
             if getattr(part, "cc_kind", None):
                 atoms.append(f"cc_kind={part.cc_kind}")
+                if (
+                    str(part.cc_kind).lower() in ACTION_BLOCKING_CC_KINDS
+                    and float(getattr(part, "cc_duration", 0.0) or 0.0) > 0.0
+                    and cc_can_set_up_rotation
+                    and (
+                        getattr(part, "time_offset", None) is None
+                        or float(getattr(part, "time_offset", 0.0) or 0.0) <= 0.0
+                    )
+                ):
+                    immediate_cc_slots.add(s)
+        for control in info.get("control_events", ()):
+            if (
+                str(getattr(control, "kind", "")).lower() in ACTION_BLOCKING_CC_KINDS
+                and float(getattr(control, "duration", 0.0) or 0.0) > 0.0
+                and cc_can_set_up_rotation
+                and (
+                    getattr(control, "time_offset", None) is None
+                    or float(getattr(control, "time_offset", 0.0) or 0.0) <= 0.0
+                )
+            ):
+                immediate_cc_slots.add(s)
         if _P_APPLIES_STACK.search(texts[s]):
             atoms.append("phrase:applies-stack")
         if _P_MARKS_TARGET.search(texts[s]):
@@ -716,6 +745,15 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                 else "proc"
             )
             cons.append(("detonation_consume", "stacks", f"post_hit_proc {nm!r}"))
+        execute_ratio = float(info.get("execute_threshold_ratio", 0.0) or 0.0)
+        if execute_ratio > 0 and _is_damage_row(info):
+            cons.append(
+                (
+                    "execute",
+                    "execute",
+                    f"execute_threshold_ratio={execute_ratio:g}",
+                )
+            )
         at = atexts[b]
         if _ATTR_PER_STACK.search(at):
             cons.append(
@@ -954,9 +992,13 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                         "buff",
                         f"{s} {amp_keys[0]} amplifies ability damage — before {d}",
                     )
-        if any(a.startswith("cc_kind=") for a in atoms):
+        if s in immediate_cc_slots:
             for d in corpora:
                 if d != s and _is_damage_row(infos[d]) and _castable(infos[d], d):
+                    if d in immediate_cc_slots and _CAST_SLOTS.index(
+                        s
+                    ) > _CAST_SLOTS.index(d):
+                        continue
                     add(
                         s,
                         d,
@@ -1127,6 +1169,19 @@ def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel,unused-argu
     )
 
 
+def _freeze_option_value(value: Any) -> Any:
+    """Convert JSON-shaped option values into stable cache-key values."""
+    if isinstance(value, Mapping):
+        return tuple(
+            sorted(
+                (str(key), _freeze_option_value(item)) for key, item in value.items()
+            )
+        )
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_option_value(item) for item in value)
+    return value
+
+
 def _option_signature(
     champion_name: str, champion_options: Mapping[str, Any] | None
 ) -> frozenset[tuple[str, Any]] | None:
@@ -1149,7 +1204,7 @@ def _option_signature(
         for opt in get_champion_options_meta(champion_name).get("options", [])
     }
     return frozenset(
-        (key, champion_options[key])
+        (key, _freeze_option_value(champion_options[key]))
         for key in sorted(champion_options)
         if key in declared
     )
@@ -1348,9 +1403,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             aoe=aoe,
             derived=True,
         )
-        rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
         _DERIVED_RULE_CACHE[cache_key] = rule
-        return rule
+        return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
 
     base_idx = {s: i for i, s in enumerate(base)}
     outgoing = {s: any(e.setup == s for e in edges) for s in base}
@@ -1379,9 +1433,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             aoe=aoe,
             derived=True,
         )
-        rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
         _DERIVED_RULE_CACHE[cache_key] = rule
-        return rule
+        return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
 
     fight_dps = rank_ability_dps(ability_damages, target_count=1, aoe=aoe)
     dps_idx = {s: i for i, (s, *_) in enumerate(fight_dps)}
@@ -1445,9 +1498,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         aoe=aoe,
         derived=True,
     )
-    rule = _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
     _DERIVED_RULE_CACHE[cache_key] = rule
-    return rule
+    return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
 
 
 def resolve_cast_order(

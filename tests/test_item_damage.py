@@ -2212,12 +2212,18 @@ class TestEclipseEverRisingMoon:
                 "amount": 80.0,
                 "duration": 2.0,
                 "source": "Eclipse (Ever Rising Moon)",
+                # P3-3C: the shield receipt carries the pair event's time
+                # and precision.
+                "time": 0.0,
+                "event_precision": "exact",
             }
         ]
         assert fight["damage_events"][-1]["self_shield"] == {
             "amount": 80.0,
             "duration": 2.0,
             "source": "Eclipse (Ever Rising Moon)",
+            "time": 0.0,
+            "event_precision": "exact",
         }
 
     def test_eclipse_damage_mitigated_by_armor(self) -> None:
@@ -4560,6 +4566,39 @@ class TestStatikkShiv(_FightHarness):
         parsed = parse_item_effect("Statikk Shiv", fetch_item_data())
         assert parsed["energized_attack_stacks"] == 15
         assert parsed["energized_max_stacks"] == 100
+
+
+class TestBorkFirstAutoCurrentHealthOrdering(_FightHarness):
+    """First-auto packets lower later current-health on-hit applications."""
+
+    def test_statikk_first_auto_is_in_bork_hp_walk_once(self) -> None:
+        stats = self._make_stats(is_melee=False, attack_speed=1.0)
+        result = self.fight(
+            stats,
+            target_health=2000.0,
+            target_armor=50.0,
+            target_magic_resistance=50.0,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            one_rotation=True,
+            items=[
+                {"name": "Statikk Shiv"},
+                {"name": "Blade of the Ruined King"},
+            ],
+        )
+
+        bork = result["breakdown"]["on_hit_Blade of the Ruined King"]
+        shiv = result["breakdown"]["on_hit_once_Statikk Shiv"]
+        assert [event["damage"] for event in bork["damage_events"]] == pytest.approx(
+            [80.0, 72.5333333333, 66.9653333333, 61.6200533333, 56.4885845333]
+        )
+        assert shiv["total_damage"] == pytest.approx(40.0)
+        # The first-auto packet is an HP-walk input, not a second damage row.
+        assert result["total_damage"] == pytest.approx(
+            result["breakdown"]["auto_attacks"]["total_damage"]
+            + bork["total_damage"]
+            + shiv["total_damage"]
+        )
 
 
 class TestRunaanHurricane(_FightHarness):

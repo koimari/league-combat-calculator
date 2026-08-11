@@ -16,7 +16,7 @@ packet.
 from typing import Any
 
 from .engine import build_parser
-from .slotlib import attach_self_shield, simple_damage
+from .slotlib import attach_self_shield, simple_damage, with_control
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -29,6 +29,16 @@ ASSUMPTIONS = [
     "Fey Feathers' periodic self-shield (30:247.94 by level + 95% AP) rides "
     "the first damaging cast (Q) as a timed shield for the fight window; "
     "the periodic/out-of-combat refresh cadence is state.",
+    "Q (Gleaming Quill) emits an ally-only heal packet per cast (scope "
+    "all_teammates, selection key heal:Q:<cast>) priced at the scanner's "
+    "rank-indexed 80 + 55% AP while the champion rule owns the per-level "
+    "self heal (40 : 230 based on level + 55% AP) — the self copy pays "
+    "exactly once and the ally branch never double-grants it.",
+    "E (Battle Dance) shields the selected teammate the sourced Shield "
+    "Strength (50-150 + 70% AP) for 3s (selection key shield:E:<cast>); "
+    "the free 5s recast is a second cast in the rotation when the fight "
+    "schedule casts E twice and 'the shields do not stack' refresh rule "
+    "is state.",
 ]
 
 SOURCES = [
@@ -103,7 +113,11 @@ def _q_with_p_shield(ctx: Any) -> dict[str, Any] | None:
 SLOTS = {
     "Q": _q_with_p_shield,
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": with_control(
+        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        kind="charm",
+        duration_attr="Disable Duration",
+    ),
 }
 
 parse_abilities = build_parser(SLOTS, "Rakan")

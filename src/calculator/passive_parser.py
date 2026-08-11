@@ -420,6 +420,15 @@ def _parse_mana_on_hit(text: str) -> dict[str, Any]:
     mana_match = re.search(r"(\d+(?:\.\d+)?)%\s+'''maximum'''\s+mana", without_splits)
     if mana_match:
         result["max_mana_ratio_on_hit"] = float(mana_match.group(1)) / 100.0
+
+    lockout_match = re.search(
+        r"same target once every\s+(\d+(?:\.\d+)?)\s+seconds\s+"
+        r"from the same cast instance",
+        text,
+        re.IGNORECASE,
+    )
+    if lockout_match:
+        result["same_target_cast_lockout_seconds"] = float(lockout_match.group(1))
     return result
 
 

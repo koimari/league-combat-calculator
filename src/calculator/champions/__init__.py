@@ -415,6 +415,16 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
 
 _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "accelerated_q": {"role": "irrelevant", "slot": "Q"},
+    # P4-14: Darius's W kill rule is a resource/cooldown assertion, NOT a
+    # rotation edge (an execute role would reorder the derived rotation) —
+    # classified irrelevant so the exhaustiveness contract passes.
+    "w_kill_assertion": {"role": "irrelevant", "slot": "W"},
+    # P4-Vayne-Q: the reset-throughput assertion is not a rotation edge
+    # (classified irrelevant, the w_kill_assertion precedent).
+    "q_tumble_reset": {"role": "irrelevant", "slot": "Q"},
+    # P4-Mundo-E: the reset-throughput assertion is not a rotation edge
+    # (classified irrelevant, the q_tumble_reset precedent).
+    "e_reset_throughput": {"role": "irrelevant", "slot": "E"},
     "adoration_cash_in": {"role": "irrelevant", "slot": "P"},
     "adoration_stacks": {"role": "self_state", "slot": "P"},
     "all_out": {"role": "self_state", "slot": "R"},
@@ -437,6 +447,12 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "chimes": {"role": "self_state", "slot": "P"},
     "clean_cuts_stacks": {"role": "self_state", "slot": "P"},
     "condemn_wall": {"role": "irrelevant", "slot": "E"},
+    "e_active": {"role": "self_state", "slot": "E"},
+    "e_active_from": {"role": "self_state", "slot": "E"},
+    "e_active_seconds": {"role": "self_state", "slot": "E"},
+    "e_tether_holds": {"role": "self_state", "slot": "E"},
+    "e_blocked_skillshots": {"role": "irrelevant", "slot": "E"},
+    "e_blocked_event_ids": {"role": "irrelevant", "slot": "E"},
     "daisy_attacks": {"role": "self_state", "slot": "R"},
     "denting_blows_starting_stacks": {
         "condition": "denting-blows",
@@ -589,6 +605,7 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "q_pull": {"role": "irrelevant", "slot": "Q"},
     "q_recast": {"role": "self_state", "slot": "Q"},
     "q_recasts": {"role": "self_state", "slot": "Q"},
+    "q_second_bomb": {"role": "self_state", "slot": "Q"},
     "q_shred": {"role": "self_state", "slot": "Q"},
     "q_snippy_stacks": {"role": "self_state", "slot": "Q"},
     "q_spirit_blade_hit": {"role": "irrelevant", "slot": "Q"},
@@ -643,6 +660,7 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "r_start_distance": {"role": "self_state", "slot": "R"},
     "r_starting_charges": {"role": "self_state", "slot": "R"},
     "r_sweet_spot": {"role": "irrelevant", "slot": "R"},
+    "r_target_facing": {"role": "irrelevant", "slot": "R"},
     "r_terrain": {"role": "irrelevant", "slot": "R"},
     "r_ticks": {"role": "self_state", "slot": "R"},
     "r_transcendent": {"role": "self_state", "slot": "R"},
@@ -687,7 +705,6 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "true_form": {"role": "self_state", "slot": "R"},
     "voidling_attacks": {"role": "self_state", "slot": "R"},
     "voidling_count": {"role": "self_state", "slot": "R"},
-    "w_active": {"role": "self_state", "slot": "W"},
     "w_active_empower": {"role": "self_state", "slot": "W"},
     "w_attacks": {"role": "self_state", "slot": "W"},
     "w_box_attacks": {"role": "self_state", "slot": "W"},
@@ -695,6 +712,7 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "w_charge": {"role": "self_state", "slot": "W"},
     "w_charge_seconds": {"role": "self_state", "slot": "W"},
     "w_charmed": {"role": "irrelevant", "slot": "W"},
+    "w_charm_triggered": {"role": "irrelevant", "slot": "W"},
     "w_empowered": {"role": "irrelevant", "slot": "W"},
     "w_epicenter": {"role": "irrelevant", "slot": "W"},
     "w_evolved": {"role": "irrelevant", "slot": "W"},
@@ -722,6 +740,14 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "w_ticks": {"role": "self_state", "slot": "W"},
     "w_traps": {"role": "self_state", "slot": "W"},
     "w_variant": {"role": "irrelevant", "slot": "W"},
+    "w_already_shielded": {"role": "self_state", "slot": "W"},
+    "w_active": {"role": "self_state", "slot": "W"},
+    "w_active_from": {"role": "self_state", "slot": "W"},
+    "w_active_seconds": {"role": "self_state", "slot": "W"},
+    "w_blocked_skillshots": {"role": "irrelevant", "slot": "W"},
+    "w_blocked_event_ids": {"role": "irrelevant", "slot": "W"},
+    "w_blocked_sources": {"role": "irrelevant", "slot": "W"},
+    "w_mark_detonation": {"role": "irrelevant", "slot": "W"},
     "w_wounded": {
         "condition": "wounded",
         "kind": "mark_consume",

@@ -206,14 +206,6 @@ def _pyromania_placeholder(ctx: SlotCtx) -> None:
         )
 
 
-# HARDCODED: verify on patch updates — Molten Shield's duration is prose
-# in the cached ability description ("a shield for 3 seconds"); the
-# shield amount (60/95/130/165/200 + 40% AP) is the cached Shield
-# Strength leveling row, emitted by the ally-support scanner at the E
-# cast (E8c).
-_MOLTEN_SHIELD_DURATION_SECONDS = 3.0
-
-
 def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: ranked zero-damage row with the real cooldown."""
     ability = ctx.ability()
@@ -257,10 +249,9 @@ OPTIONS = [
 ASSUMPTIONS = [
     "R magic penetration passive is always active",
     "E (Molten Shield) shields Annie for the sourced 60/95/130/165/200 "
-    "+ 40% AP (cached Shield Strength row) for 3s at the cast; the "
-    "ally-support scanner emits the packet (untimed — the 3s expiry is "
-    "a documented boundary of that interface) and it absorbs incoming "
-    "damage in the participant ledger",
+    "+ 40% AP (cached Shield Strength row) for the typed active-duration "
+    "atom at the cast; the ally-support scanner emits the packet and it "
+    "absorbs incoming damage in the participant ledger",
     "Tibbers auto attacks are priced at the wiki pets cadence (5 enrage "
     "attacks from the summon, then the 0.625 base AS) truncated to the "
     "fight window; positioning/leash uptime is a player choice via the "

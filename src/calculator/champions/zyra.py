@@ -27,7 +27,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .slotlib import extract_named
+from .slotlib import extract_named, with_control
 
 PACKET_SHA256 = "e34a0a227a5432c3c99a6fc6850e3c3ea23f9b2148c3690c93907949b5874b5b"
 
@@ -156,7 +156,11 @@ SLOTS = {
     "P": _BATCH_SLOTS["P"],
     "Q": _BATCH_SLOTS["Q"],
     "W": _plants,
-    "E": _BATCH_SLOTS["E"],
+    "E": with_control(
+        _BATCH_SLOTS["E"],
+        kind="root",
+        duration_attr="Root Duration",
+    ),
     "R": _BATCH_SLOTS["R"],
 }
 

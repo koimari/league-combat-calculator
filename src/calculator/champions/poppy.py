@@ -14,7 +14,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx, build_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    on_hit_entry,
+    with_control,
+)
 
 PACKET_SHA256 = "1a31e4f033cd7f636b093e6398b78eaa559462a22552cb2fe1cc48b46f618be5"
 
@@ -89,6 +95,11 @@ SLOTS = dict(SLOTS)
 SLOTS["P"] = _iron_ambassador
 _packet_r = SLOTS["R"]
 SLOTS["R"] = _keepers_verdict
+SLOTS["E"] = with_control(
+    SLOTS["E"],
+    kind="stun",
+    duration_attr="Stun Duration",
+)
 parse_abilities = build_parser(SLOTS, "Poppy")
 
 OPTIONS = list(OPTIONS) + [

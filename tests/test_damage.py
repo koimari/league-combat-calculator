@@ -556,6 +556,85 @@ class TestAmplifierEventAttribution:
 class TestTargetIncomingDamageModifiers:
     """Target item defenses apply to their exact damage events."""
 
+    def test_guardians_horn_blocks_flat_champion_damage_and_reduces_dot(
+        self, fight, attacker_stats
+    ):
+        direct = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Direct spell",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 100.0,
+                    "parts": (DamagePart("magic", 100.0),),
+                }
+            },
+            target_magic_resistance=0.0,
+            target_champion_damage_flat_reduction=15.0,
+            target_champion_dot_damage_flat_reduction=3.75,
+        )
+        dot = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Damage-over-time spell",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 100.0,
+                    "dot_duration": 3.0,
+                    "parts": (DamagePart("magic", 100.0),),
+                }
+            },
+            target_magic_resistance=0.0,
+            target_champion_damage_flat_reduction=15.0,
+            target_champion_dot_damage_flat_reduction=3.75,
+        )
+
+        assert direct["breakdown"]["Q"]["total_damage"] == pytest.approx(85.0)
+        assert dot["breakdown"]["Q"]["total_damage"] == pytest.approx(96.25)
+
+    def test_target_physical_reduction_applies_before_armor_per_instance(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(attack_damage=100.0, attack_speed=1.0),
+            {
+                "Q": {
+                    "name": "Two physical hits",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 200.0,
+                    "parts": (DamagePart("physical", 100.0, count=2),),
+                }
+            },
+            target_armor=100.0,
+            target_physical_damage_flat_reduction=16.0,
+            target_physical_damage_flat_reduction_cap=0.50,
+        )
+
+        # Each 100 raw hit loses 16 before armor, then 50% resistance:
+        # (100 - 16) * 0.5 * 2 = 84.
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(84.0)
+
+    def test_guardians_horn_blocks_basic_attack_damage_after_basic_defenses(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(attack_damage=100.0, attack_speed=1.0),
+            target_armor=0.0,
+            target_champion_damage_flat_reduction=15.0,
+            auto_attack_uptime=1.0,
+            fight_duration_seconds=1.0,
+        )
+
+        assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
+            85.0
+        )
+
     def test_plating_and_rock_solid_apply_after_armor(self, fight, attacker_stats):
         result = fight(
             attacker_stats(attack_damage=100.0, attack_speed=1.0),
@@ -800,7 +879,7 @@ class TestTargetIncomingDamageModifiers:
             "total_damage"
         ] == pytest.approx(60.0)
         cinderbloom = result["breakdown"]["shadowflame_Shadowflame"]
-        assert cinderbloom["timeline_events"] == [
+        assert cinderbloom["damage_events"] == [
             {
                 "time": 2.0,
                 "damage": pytest.approx(60.0),

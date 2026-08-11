@@ -19,6 +19,8 @@ from enum import Enum
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from ..ability_spec import ACTION_BLOCKING_CC_KINDS
+
 # ---------------------------------------------------------------------------
 # Action kinds
 # ---------------------------------------------------------------------------
@@ -56,6 +58,13 @@ class ActionKind(Enum):
     INVULNERABLE = "invulnerable"
     UNTARGETABLE = "untargetable"
     SPELL_SHIELD = "spell_shield"
+    CROWD_CONTROL = "crowd_control"
+    # P2 Slice 8: a passive IMMUNITY arm (Dr. Mundo Goes Where He
+    # Pleases) — the next hostile immobilizing control is RESISTED before
+    # it ever applies (never a truncation): the arm packet sorts before
+    # same-timestamp controls and the resist gate sits inside
+    # _apply_crowd_control after the spell-shield/Black-Shield gates.
+    CROWD_CONTROL_RESIST = "crowd_control_resist"
     STAT_BUFF = "stat_buff"
     DAMAGE_MODIFIER = "damage_modifier"
     ON_HIT_MAGIC = "on_hit_magic"
@@ -135,11 +144,34 @@ class SurvivalAction(NamedTuple):
     sequence: Any = None
     immobilized: bool = False
     cc_kind: str = ""
+    cc_duration: float = 0.0
+    skillshot: bool = False
+    area_damage: bool = False
+    damage_over_time: bool = False
     baseline_effective_armor: float | None = None
     baseline_effective_mr: float | None = None
     # Heal fields
     healing_category: str = ""
     amount_formula: Any = None
+    requires_existing_shield: bool = False
+    # P2 Slice 5: a self-cast that fires while the caster is crowd-
+    # controlled (Gangplank W Remove Scurvy — game canCastWhileDisabled;
+    # the QSS/Mercurial item precedent dispatches utility-kind cleanses
+    # before the attacker gate).  The gate exempts HEAL kinds carrying
+    # the flag from the crowd-control branch ONLY — stasis, invulnerable
+    # and untargetable still block (the Cleanse atom: castable while
+    # disabled, but not under suppression/stasis).
+    cast_while_disabled: bool = False
+    # P2 Slice 7: the per-cast cleanse group (Milio R fan-out — one cast
+    # authors one packet per recipient; the group is the shared one-use
+    # latch key so all recipients of one cast consume ONE use).
+    cleanse_group: str = ""
+    # P3 package 3T: the compiled path pre-authors Maw's post-Lifeline
+    # omnivamp heals with this gate; the kernel applies them only after
+    # the threshold event armed the holder's omnivamp flag.
+    requires_maw_lifeline_omnivamp: bool = False
+    shield_gate_subject: int = -1
+    shield_gate_time: float | None = None
     requires_holder_health_ratio: float = 0.0
     requires_damage_free_seconds: float = 0.0
     overheal_to_temporary_health: bool = False
@@ -150,26 +182,49 @@ class SurvivalAction(NamedTuple):
     defy_trigger_id: str | None = None
     # Timed / state kinds
     duration: float = 0.0
+    # Revive windows: the sourced delay between the lethal hit and the
+    # resurrection (the kernel re-anchors the window to the death time, so
+    # a pre-lethal candidate never revives early).
+    delay: float = 0.0
     health_ratio: float = 0.0
+    on_block_heal_amount: float = 0.0
+    on_block_heal_delay: float = 0.0
+    on_block_heal_source: str = ""
     # Stat buff fields
     bonus_attack_speed_percent: float = 0.0
+    bonus_armor: float = 0.0
+    bonus_magic_resistance: float = 0.0
+    bonus_health: float = 0.0
     ability_power: float = 0.0
     ability_haste: float = 0.0
     on_hit_magic_damage: float = 0.0
+    shield_pool: str = ""
+    crowd_control_immunity_while_shield: bool = False
+    crowd_control_immunity_source: str = ""
     # Damage-modifier fields
     persistent: bool = False
     multiplier: float = 1.0
     damage_reduction: bool = False
     next_event_only: bool = False
+    all_sources: bool = False
     armor_reduction_percent: float = 0.0
     mr_reduction_percent: float = 0.0
     resistance_type: str = ""
     owner: str = ""
+    source_participant: str = ""
     # Utility fields
     utility_kind: str = ""
     gold_amount: float = 0.0
     ward_uses: float = 0.0
     duration_set: bool = False
+    # Cleanse-activation fields (item actives that remove crowd control).
+    # ``cleanse`` marks a packet as a cleanse activation (Mikael's Purify
+    # rides its heal packet with the marker; QSS/Mercurial ride cleanse-kind
+    # utility packets); ``cleanse_item`` names the declaration item so the
+    # walk can resolve the sourced eligibility without parsing display
+    # labels.
+    cleanse: bool = False
+    cleanse_item: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -223,6 +278,11 @@ _I_SOURCE_KEY = _INDEX("source_key")
 _I_SOURCE = _INDEX("source")
 _I_EVENT_ID = _INDEX("event_id")
 _I_SEQUENCE = _INDEX("sequence")
+_I_IMMOBILIZED = _INDEX("immobilized")
+_I_CC_KIND = _INDEX("cc_kind")
+_I_CC_DURATION = _INDEX("cc_duration")
+_I_SKILLSHOT = _INDEX("skillshot")
+_I_DAMAGE_OVER_TIME = _INDEX("damage_over_time")
 
 
 def compiled_damage_action(
@@ -242,12 +302,25 @@ def compiled_damage_action(
     source: str,
     event_id: str,
     sequence: Any,
+    immobilized: bool = False,
+    cc_kind: str = "",
+    cc_duration: float = 0.0,
+    skillshot: bool = False,
+    damage_over_time: bool = False,
+    ability_instance: Any = None,
+    baseline_effective_armor: float | None = None,
+    baseline_effective_mr: float | None = None,
+    is_ability: bool = False,
+    basic_attack: bool = False,
+    area_damage: bool = False,
 ) -> SurvivalAction:
     """Build a compiler damage action without keyword-default parsing.
 
     Exactly ``SurvivalAction(**those sixteen fields)``: every other field
     keeps its class default (``phase=0.0`` and ``reactive=False`` included,
-    matching what the compiler always passes for damage packets).
+    matching what the compiler always passes for damage packets).  The
+    ``is_ability``/``basic_attack`` delivery flags feed the Annul spell-
+    shield eligibility (P3 package 3U).
     """
     row = _ACTION_DEFAULT_ROW.copy()
     row[_I_SORT_KEY] = sort_key
@@ -266,6 +339,17 @@ def compiled_damage_action(
     row[_I_SOURCE] = source
     row[_I_EVENT_ID] = event_id
     row[_I_SEQUENCE] = sequence
+    row[_I_IMMOBILIZED] = immobilized
+    row[_I_CC_KIND] = cc_kind
+    row[_I_CC_DURATION] = cc_duration
+    row[_I_SKILLSHOT] = skillshot
+    row[_I_DAMAGE_OVER_TIME] = damage_over_time
+    row[_INDEX("ability_instance")] = ability_instance
+    row[_INDEX("baseline_effective_armor")] = baseline_effective_armor
+    row[_INDEX("baseline_effective_mr")] = baseline_effective_mr
+    row[_INDEX("is_ability")] = is_ability
+    row[_INDEX("basic_attack")] = basic_attack
+    row[_INDEX("area_damage")] = area_damage
     return tuple.__new__(SurvivalAction, row)
 
 
@@ -327,6 +411,8 @@ _STANDALONE_KINDS = {
     "invulnerability": ActionKind.INVULNERABLE,
     "untargetable": ActionKind.UNTARGETABLE,
     "spell_shield": ActionKind.SPELL_SHIELD,
+    "crowd_control": ActionKind.CROWD_CONTROL,
+    "crowd_control_resist": ActionKind.CROWD_CONTROL_RESIST,
     "shield": ActionKind.SHIELD,
     "stat_buff": ActionKind.STAT_BUFF,
     "damage_modifier": ActionKind.DAMAGE_MODIFIER,
@@ -450,6 +536,10 @@ def survival_action_from_event(
     trigger_id = get("_trigger_event_id")
     batch_id = get("_deferred_batch_id")
     defy_id = get("_defy_trigger_id")
+    shield_gate_target = get("shield_gate_target")
+    if shield_gate_target == "attacker":
+        shield_gate_target = attacker_id
+    shield_gate_time_raw = get("shield_gate_time")
     baseline_armor = get("_baseline_effective_armor")
     baseline_mr = get("_baseline_effective_mr")
     cc_kind = str(get("cc_kind", ""))
@@ -471,6 +561,7 @@ def survival_action_from_event(
         trigger_event_id=str(trigger_id) if trigger_id else None,
         event=event,
         amount=max(0.0, float(get("damage", get("amount", 0.0)) or 0.0)),
+        delay=max(0.0, float(get("delay", 0.0) or 0.0)),
         damage_type=str(get("damage_type", "")),
         raw_formula=raw_formula,
         raw_damage=raw_damage,
@@ -503,16 +594,31 @@ def survival_action_from_event(
             get("immobilized")
             or get("crowd_control")
             or get("hard_cc")
-            or cc_kind.lower()
-            in {"immobilize", "stun", "root", "knockup", "suppression"}
+            or cc_kind.lower() in ACTION_BLOCKING_CC_KINDS
         ),
         cc_kind=cc_kind,
+        cc_duration=max(0.0, float(get("cc_duration", 0.0) or 0.0)),
+        skillshot=bool(get("skillshot")),
+        area_damage=bool(get("area_damage")),
+        damage_over_time=bool(get("damage_over_time")),
         baseline_effective_armor=(
             float(baseline_armor) if baseline_armor is not None else None
         ),
         baseline_effective_mr=(float(baseline_mr) if baseline_mr is not None else None),
         healing_category=str(get("healing_category", "")),
         amount_formula=get("amount_formula"),
+        requires_existing_shield=bool(get("requires_existing_shield")),
+        cast_while_disabled=bool(get("cast_while_disabled")),
+        cleanse_group=str(get("cleanse_group", "") or ""),
+        requires_maw_lifeline_omnivamp=bool(get("requires_maw_lifeline_omnivamp")),
+        shield_gate_subject=(
+            index_of.get(str(shield_gate_target), -1)
+            if shield_gate_target is not None
+            else -1
+        ),
+        shield_gate_time=(
+            float(shield_gate_time_raw) if shield_gate_time_raw is not None else None
+        ),
         requires_holder_health_ratio=max(
             0.0, float(get("requires_holder_health_ratio", 0.0) or 0.0)
         ),
@@ -531,22 +637,42 @@ def survival_action_from_event(
         defy_trigger_id=str(defy_id) if defy_id else None,
         duration=max(0.0, float(get("duration", 0.0) or 0.0)),
         health_ratio=max(0.0, float(get("health_ratio", 0.0) or 0.0)),
+        on_block_heal_amount=max(0.0, float(get("on_block_heal_amount", 0.0) or 0.0)),
+        on_block_heal_delay=max(0.0, float(get("on_block_heal_delay", 0.0) or 0.0)),
+        on_block_heal_source=str(get("on_block_heal_source", "") or ""),
         bonus_attack_speed_percent=float(get("bonus_attack_speed_percent", 0.0) or 0.0),
+        bonus_armor=float(get("bonus_armor", 0.0) or 0.0),
+        bonus_magic_resistance=float(get("bonus_magic_resistance", 0.0) or 0.0),
+        bonus_health=float(get("bonus_health", 0.0) or 0.0),
         ability_power=float(get("ability_power", 0.0) or 0.0),
         ability_haste=float(get("ability_haste", 0.0) or 0.0),
         on_hit_magic_damage=float(get("on_hit_magic_damage", 0.0) or 0.0),
+        shield_pool=str(get("shield_pool", "") or ""),
+        crowd_control_immunity_while_shield=bool(
+            get("crowd_control_immunity_while_shield")
+        ),
+        crowd_control_immunity_source=str(
+            get("crowd_control_immunity_source", "") or ""
+        ),
         persistent=bool(get("persistent")),
         multiplier=float(get("multiplier", 1.0) or 1.0),
         damage_reduction=bool(get("damage_reduction")),
         next_event_only=bool(get("next_event_only")),
+        all_sources=bool(get("all_sources")),
         armor_reduction_percent=float(get("armor_reduction_percent", 0.0) or 0.0),
         mr_reduction_percent=float(get("mr_reduction_percent", 0.0) or 0.0),
         resistance_type=str(get("resistance_type", "")),
         owner=str(get("owner", "")),
-        utility_kind=kind if kind in _UTILITY_KINDS else "",
+        source_participant=str(get("source_participant", "")),
+        # ``kind_str`` is the event's authored kind string — the typed
+        # utility marker must come from the event, not the classified
+        # ActionKind enum (an enum is never a member of the string set).
+        utility_kind=kind_str if kind_str in _UTILITY_KINDS else "",
         gold_amount=float(get("gold_amount", 0.0) or 0.0),
         ward_uses=float(get("ward_uses", 0.0) or 0.0),
         duration_set="duration" in event,
+        cleanse=bool(get("cleanse")),
+        cleanse_item=str(get("cleanse_item", "") or ""),
     )
 
 

@@ -21,8 +21,14 @@ Both of E's leveling entries are named "Bonus Magic Damage", so
 ``_bonus_magic_damage_levelings`` collects both in JSON order.
 """
 
+from dataclasses import replace
 from typing import Any
 
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ability_atom,
+)
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import (
@@ -166,12 +172,66 @@ def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _petrifying_gaze(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: damage plus a facing-selected stun or slow state."""
+    parser = simple_damage(attr="Magic Damage", dmg_type="magic")
+    entry = parser(ctx)
+    if entry is None:
+        return None
+    source = "Cassiopeia.R[0].effects[0].description"
+    atom = required_ability_atom(
+        ctx.champion_name,
+        {"name": ctx.champion_name, "abilities": ctx.abilities},
+        "R",
+        query=AbilityAtomQuery(
+            source=source,
+            behavior="timing",
+            evidence_prefix="control duration@",
+        ),
+    )
+    duration = ranked_ability_atom_value(atom, 1, source=source)
+    if atom.get("units") != ["s"]:
+        raise ValueError("Cassiopeia R control duration atom must use seconds")
+    kind = "stun" if bool(ctx.options.get("r_target_facing", True)) else "slow"
+    part = entry["parts"][0]
+    entry["parts"] = (
+        replace(
+            part,
+            cc_kind=kind,
+            cc_duration=duration,
+            control_source_atoms=(
+                *part.control_source_atoms,
+                {
+                    key: atom[key]
+                    for key in (
+                        "atom_id",
+                        "behavior",
+                        "source",
+                        "values",
+                        "units",
+                        "evidence",
+                        "hash",
+                    )
+                },
+            ),
+        ),
+    )
+    entry["detail"] = f"Petrifying Gaze facing branch: {kind} for {duration:g}s"
+    return entry
+
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "target_poisoned",
         "type": "bool",
         "default": True,
         "label": "Target poisoned (E enhanced damage)",
+    },
+    {
+        "key": "r_target_facing",
+        "type": "bool",
+        "default": True,
+        "label": "R target faces Cassiopeia (stun instead of slow)",
     },
 ]
 
@@ -182,7 +242,8 @@ ASSUMPTIONS = [
     "5-second duration",
     "E's healing against poisoned targets is not modeled (damage calculator)",
     "Passive (Serpentine Grace) is movement-speed only and not modeled",
-    "R's stun/slow facing condition is not modeled (damage is identical either way)",
+    "R applies the typed 2-second stun when the target faces Cassiopeia; "
+    "the option selects the sourced slow branch when the target faces away",
 ]
 
 SLOTS = {
@@ -192,7 +253,7 @@ SLOTS = {
     "Q": _noxious_blast,
     "W": _miasma,
     "E": _twin_fang,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": _petrifying_gaze,
 }
 
 parse_abilities = build_parser(SLOTS, "Cassiopeia")

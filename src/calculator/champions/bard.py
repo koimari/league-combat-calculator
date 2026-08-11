@@ -25,7 +25,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .slotlib import ability_on_hit_entry, simple_damage
+from .slotlib import ability_on_hit_entry, simple_damage, with_control
 
 # HARDCODED: verify on patch updates — Bard's P[0] "Traveler's Call" has
 # no effects/leveling in the wiki JSON at all (known-degraded parse), so
@@ -63,6 +63,50 @@ _MEEP_RECHARGE_TIERS = (
 )
 
 _DEFAULT_CHIMES = 35
+
+
+class _TravelersCallRule:
+    """The typed Traveler's Call (chimes + meeps) declaration (P3 package 3Y).
+
+    Chimes are a PERMANENT counter seeded by the user — the model cannot
+    simulate map chime spawning/collection (no engine stream) — so the
+    seed prices the meep math at parse time.  Meep AVAILABILITY is a
+    consumable fight-window resource (stock + floor(duration / recharge))
+    priced into the P on-hit's ``max_procs``; each meep-empowered auto
+    consumes one meep.  ``public_receipt()`` rides the option's state
+    and the resource-ledger chimes declaration.
+    """
+
+    def __init__(self) -> None:
+        self.meep_base = _MEEP_BASE
+        self.meep_per_tier = _MEEP_PER_TIER
+        self.chimes_per_tier = _CHIMES_PER_TIER
+        self.meep_ap_ratio = _MEEP_AP_RATIO
+        self.stock_tiers = list(_MEEP_STOCK_TIERS)
+        self.recharge_tiers = list(_MEEP_RECHARGE_TIERS)
+        self.permanent = True
+        self.source = {
+            "label": "Local League Wiki cache — Bard P (Traveler's Call) prose",
+            "url": "https://wiki.leagueoflegends.com/en-us/Bard",
+            "revision_id": 4002472,
+            "revision_timestamp": "2026-03-25T15:16:50Z",
+        }
+
+    def public_receipt(self) -> dict[str, Any]:
+        return {
+            "name": "Bard — Traveler's Call (Chimes + Meeps)",
+            "meep_base": self.meep_base,
+            "meep_per_tier": self.meep_per_tier,
+            "chimes_per_tier": self.chimes_per_tier,
+            "meep_ap_ratio": self.meep_ap_ratio,
+            "stock_tiers": self.stock_tiers,
+            "recharge_tiers": self.recharge_tiers,
+            "permanent": self.permanent,
+            "source": dict(self.source),
+        }
+
+
+BARD_TRAVELERS_CALL_RULE = _TravelersCallRule()
 
 
 def _tier_value(tiers: tuple, chimes: int) -> Any:
@@ -114,6 +158,7 @@ OPTIONS: list[dict[str, Any]] = [
         "label": "Chimes collected",
         "min": 0,
         "max": 200,
+        "state": BARD_TRAVELERS_CALL_RULE.public_receipt(),
     },
 ]
 
@@ -133,7 +178,11 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "P": _travelers_call,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": with_control(
+        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        kind="stun",
+        duration_attr="Disable Duration",
+    ),
 }
 
 parse_abilities = build_parser(SLOTS, "Bard")

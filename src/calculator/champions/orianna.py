@@ -23,11 +23,12 @@ Why each slot is non-generic:
   ("Shield Strength") and ball-attached resistances ("Bonus
   Resistances") are defensive-only and excluded.
 - R reads "Magic Damage" explicitly for symmetry with the rest of the
-  kit; stun/pull is utility, not modeled.
+  kit; the sourced stun is attached to the damage part.
 """
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
@@ -37,6 +38,7 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
     sum_modifiers,
+    with_control,
 )
 
 
@@ -86,6 +88,44 @@ def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
 _clockwork_windup.phase = ONHIT
 
 
+def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: primary-target magic damage plus reduced hits beyond the first.
+
+    The cached prose: the ball "deal[s] magic damage to enemies it
+    passes through and nearby enemies upon arrival, reduced to 70%
+    against those hit beyond the first" — the "Reduced Damage" row is
+    exactly 70% of "Magic Damage" at every rank.  Each secondary target
+    selected via ``q_secondary_targets`` takes one reduced hit.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    primary = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
+    secondary = min(max(int(ctx.options.get("q_secondary_targets", 0)), 0), 5)
+    total = primary + reduced * secondary
+    entry = damage_entry(
+        ability.get("name", "Command: Attack"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "magic",
+    )
+    parts = [DamagePart("magic", primary)]
+    if secondary:
+        parts.append(DamagePart("magic", reduced, count=secondary))
+        entry["detail"] = (
+            f"primary target + {secondary} secondary target(s) at the "
+            f"sourced {reduced / primary * 100:g}% Reduced Damage row each"
+        )
+    entry["parts"] = tuple(parts)
+    return entry
+
+
 def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: pass-through magic damage; zero when the ball stops on an ally.
 
@@ -114,6 +154,18 @@ def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
 
 OPTIONS: list[dict[str, Any]] = [
     {
+        "key": "q_secondary_targets",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Enemies hit by the ball beyond the first (each takes the "
+            "sourced 70% Reduced Damage row)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "Q"},
+    },
+    {
         "key": "e_passes_through_target",
         "type": "bool",
         "default": True,
@@ -127,23 +179,30 @@ ASSUMPTIONS = [
     "mid-fight (4s refresh window, sustained attacking)",
     "Passive applies spell effects, not on-hit effects — it does not "
     "trigger on-hit items",
-    "Q always hits the target as the primary (full damage; the 70% "
-    "secondary-target reduction is not modeled)",
+    "Q prices the primary target at full damage plus one sourced 70% "
+    "Reduced Damage hit per q_secondary_targets (default 0) — the "
+    "cached prose's 'reduced to 70% against those hit beyond the first'",
     "W speed field and slow are not modeled (utility)",
     "E shield (55-195 +45% AP) and bonus armor/MR (6-30) are not "
     "modeled (defensive only)",
     "E damage assumes the ball passes through the target (toggleable "
     "via champion option)",
-    "R stun/pull is not modeled (utility)",
+    "R stuns the target for the sourced 0.75-second interval; the pull is "
+    "utility and is not modeled",
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": _command_attack,
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "E": _command_protect,
     "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "P": _clockwork_windup,
 }
+SLOTS["R"] = with_control(
+    SLOTS["R"],
+    kind="stun",
+    duration_attr="Stun Duration",
+)
 
 parse_abilities = build_parser(SLOTS, "Orianna")
 

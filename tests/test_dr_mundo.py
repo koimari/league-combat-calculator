@@ -450,6 +450,7 @@ class TestMissingHealthIsOneInput:
         assert {option["key"] for option in OPTIONS} == {
             "mundo_missing_health_percent",
             "r_nearby_champions",
+            "e_reset_throughput",
         }
 
     @pytest.mark.parametrize("missing", range(0, 101, 5))

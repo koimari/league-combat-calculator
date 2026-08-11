@@ -122,6 +122,37 @@ OPTIONS = [
         "max": 6,
         "label": "Style stacks (6 = S rank, R ready)",
     },
+    {
+        "key": "w_active",
+        "type": "bool",
+        "default": False,
+        "label": "W (Blade Whirl) active against selected skillshots",
+    },
+    {
+        "key": "w_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "W active start time in seconds",
+    },
+    {
+        "key": "w_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 0.75,
+        "label": "W active seconds; zero uses the sourced 0.75 second duration",
+    },
+    {
+        "key": "w_blocked_skillshots",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Skillshot slots to destroy; an empty list destroys all marked skillshots"
+        ),
+    },
 ]
 
 ASSUMPTIONS = [
@@ -133,6 +164,9 @@ ASSUMPTIONS = [
     "is state, not damage",
     "Q/W/E and R damage keep the reviewed CP10.7 packet pricing (R: 10 "
     "sourced 0.2s shots)",
+    "W Blade Whirl destroys selected champion projectiles during its sourced "
+    "0.75 second window; the source selection is an explicit incoming-event "
+    "contract.",
 ]
 
 SOURCES = load_champion_sources("Samira")

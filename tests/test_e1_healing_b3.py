@@ -28,7 +28,7 @@ import pytest
 from src import app as app_module
 
 _ENEMY = "Ahri"
-_ENEMY_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
+_ENEMY_RANKS = {"Q": 5, "W": 5, "E": 0, "R": 3}
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
 

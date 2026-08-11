@@ -30,7 +30,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx, build_parser
-from .slotlib import damage_entry, extract_named, simple_damage
+from .slotlib import damage_entry, extract_named, simple_damage, with_control
 
 _CURSE_BONUS_FRACTION = 0.10  # 10% bonus true damage on magic damage
 
@@ -125,16 +125,26 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Target is assumed already Cursed (Passive) — all magic damage gets 10% bonus true damage",
     "Q uses recharge timer as cooldown (fight engine determines cast count)",
+    "Q's sourced 1-second stun and R's sourced 1.5-second stun count as "
+    "target action downtime",
     "W defaults to 3 seconds active (6 ticks at 0.5s intervals)",
-    "E passive (damage reduction) is not modeled — defensive only",
+    "E passive reduces each physical raw damage instance with its sourced rank, bonus-resist scaling, and 50% instance cap",
 ]
 
 SLOTS = {
     "P": _cursed_touch_display,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic", cooldown="recharge"),
+    "Q": with_control(
+        simple_damage(attr="Magic Damage", dmg_type="magic", cooldown="recharge"),
+        kind="stun",
+        duration_attr="Stun Duration",
+    ),
     "W": _despair,
     "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": with_control(
+        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        kind="stun",
+        duration_attr="Stun Duration",
+    ),
     "curse": _cursed_touch_amp,
 }
 
