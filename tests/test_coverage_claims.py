@@ -50,6 +50,7 @@ from src.calculator.coverage_evidence import (
     validate_claim,
 )
 from src.calculator.data_fetcher import fetch_item_data
+from src.calculator import item_behavior_catalog
 from src.calculator import item_coverage
 from src.calculator.item_coverage import (
     COVERAGE_EVIDENCE,
@@ -1565,8 +1566,12 @@ def test_the_capture_gate_names_the_record_that_moved() -> None:
 
 CACHE = cached_items()
 
-# The effect tags a live handler branches on, read off the two dispatch sites
+# The effect tags a live handler branches on, read off the dispatch sites
 # rather than listed.  Their complement is what the frontier has to name.
+# There are now two homes: ``item_effects``' effect-type ladder, and Phase 3's
+# behaviour catalog for every tag whose behaviour has become a declaration.
+# Reading only the ladder would report a migrated tag as undispatched on the
+# commit that gave it a real home.
 DISPATCHED_TAGS: frozenset[str] = (
     frozenset(
         tag
@@ -1578,8 +1583,8 @@ DISPATCHED_TAGS: frozenset[str] = (
             coverage_resolver.read_repo_file("src/calculator/item_effects.py"), handler
         )
     )
-    & _KNOWN_EFFECT_TYPES
-)
+    | item_behavior_catalog.declared_tags()
+) & _KNOWN_EFFECT_TYPES
 
 FRONTIER_TAGS: frozenset[str] = frozenset(
     key.removeprefix("tag:") for key in FRONTIER if key.startswith("tag:")

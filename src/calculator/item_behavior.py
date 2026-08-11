@@ -470,6 +470,67 @@ class ZeroPolicy:
 # ── payloads ──────────────────────────────────────────────────────────────
 
 
+class AmpChainSlot(Enum):
+    """The seven ordered positions of the damage-amplifier chain.
+
+    Amplification is not commutative: each slot multiplies a total the
+    slots before it already moved, so the order *is* part of every mixed
+    build's number.  Today that order is an accident of the call sequence in
+    ``damage.py`` and nothing stops a refactor changing it.  Naming the seven
+    positions makes the order a declaration, and
+    :func:`chain_rank` is the only place a rule's ``lane_chain_rank`` comes
+    from.
+
+    A slot is a *position*, not a mechanic: several mechanics share
+    ``WHOLE_TOTAL``, which is the one slot whose occupants are additive among
+    themselves before the chain multiplies.  These seven are also **not**
+    Phase 4's seven authority moves — the two sets overlap and neither
+    contains the other.
+    """
+
+    CINDERBLOOM = "cinderbloom"
+    EXPOSE_WEAKNESS = "expose_weakness"
+    OPENING_WINDOW = "opening_window"
+    LASTING_PROC_AMP = "lasting_proc_amp"
+    WHOLE_TOTAL = "whole_total"
+    POST_IMMOBILIZE = "post_immobilize"
+    HYPERSHOT = "hypershot"
+
+
+# The compiled sequence, frozen.  Declared as its own tuple rather than
+# derived from the enum's declaration order: a tuple somebody can diff is the
+# artifact a reordering shows up in, and ``tuple(AmpChainSlot)`` would pin
+# nothing because it is true by construction.
+AMP_CHAIN_ORDER: tuple[AmpChainSlot, ...] = (
+    AmpChainSlot.CINDERBLOOM,
+    AmpChainSlot.EXPOSE_WEAKNESS,
+    AmpChainSlot.OPENING_WINDOW,
+    AmpChainSlot.LASTING_PROC_AMP,
+    AmpChainSlot.WHOLE_TOTAL,
+    AmpChainSlot.POST_IMMOBILIZE,
+    AmpChainSlot.HYPERSHOT,
+)
+
+
+def chain_rank(slot: AmpChainSlot) -> int:
+    """*slot*'s position in the chain — the value ``lane_chain_rank`` carries."""
+    return AMP_CHAIN_ORDER.index(slot)
+
+
+def _validate_amp_chain() -> None:
+    """The chain names every slot exactly once, checked at import."""
+    if len(AMP_CHAIN_ORDER) != len(frozenset(AMP_CHAIN_ORDER)):
+        raise BehaviorRuleError("AMP_CHAIN_ORDER holds a slot twice")
+    if frozenset(AMP_CHAIN_ORDER) != frozenset(AmpChainSlot):
+        missing = sorted(
+            slot.value for slot in frozenset(AmpChainSlot) - frozenset(AMP_CHAIN_ORDER)
+        )
+        raise BehaviorRuleError(f"AMP_CHAIN_ORDER omits chain slots: {missing}")
+
+
+_validate_amp_chain()
+
+
 @dataclass(frozen=True, slots=True)
 class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     """One amplification slot: which events, when, how much, and to whom.
@@ -479,7 +540,8 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     number both call themselves the answer.  ``lane_chain_rank`` is an
     explicit integer: the seven chain slots are ordered, nothing in the
     engine stops a refactor reordering them, and every mixed build's number
-    moves when they do.
+    moves when they do.  It is :func:`chain_rank` of the rule's
+    :class:`AmpChainSlot` and is validated against the chain's length.
     """
 
     pool: Pool
@@ -574,6 +636,11 @@ def _validate_payload(rule: BehaviorRule) -> None:
         payload.lane_chain_rank, int
     ):
         raise BehaviorRuleError(f"{rule.mechanic_id}: lane_chain_rank must be an int")
+    if not 0 <= payload.lane_chain_rank < len(AMP_CHAIN_ORDER):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: lane_chain_rank {payload.lane_chain_rank} names no "
+            "slot in AMP_CHAIN_ORDER"
+        )
 
 
 # The ``str``-typed fields that are identifiers and citations rather than
@@ -643,23 +710,34 @@ class KernelField(NamedTuple):
 class BuildContext:
     """What an interpreter may read at build time.
 
-    Level, the owner whose registry entry is being compiled, and the
-    ``data_registry.data_version()`` its memo keys on (D-49).  No walk state
-    and no ``SurvivalAction``: an interpreter that could see those would be
-    running inside the walk, which is the cycle this contract prevents.
+    Level, the owner whose registry entry is being compiled, the
+    ``data_registry.data_version()`` its memo keys on (D-49), and the two
+    fight facts a magnitude may scale with.  No walk state and no
+    ``SurvivalAction``: an interpreter that could see those would be running
+    inside the walk, which is the cycle this contract prevents.
+
+    ``fight_duration_seconds`` and ``target_bonus_health`` are configuration,
+    not walk state — both are fixed before the first event — and they are
+    here because a ramping or health-scaled magnitude cannot become a number
+    without them.  Every field is required: a magnitude that silently read a
+    defaulted zero duration is the campaign's own failure shape.
     """
 
     level: int
     owner: str
     data_version: int
+    fight_duration_seconds: float
+    target_bonus_health: float
 
 
 __all__ = [
     "ACTIVATION_TYPES",
+    "AMP_CHAIN_ORDER",
     "AbsoluteWindow",
     "Activation",
     "AfterTrigger",
     "Always",
+    "AmpChainSlot",
     "Attribution",
     "BehaviorRule",
     "BehaviorRuleError",
@@ -703,6 +781,7 @@ __all__ = [
     "WindowBoundary",
     "WindowMerge",
     "ZeroPolicy",
+    "chain_rank",
     "is_value_reference",
     "policy_values",
     "validate_rule",

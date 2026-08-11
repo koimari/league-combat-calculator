@@ -33,6 +33,24 @@ def _build(*names: str) -> list[dict[str, str]]:
     return [{"name": name} for name in names]
 
 
+def _hypershot_slot(owners):
+    """Resolve the Hypershot chain slot for a build, as the engine does."""
+    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        delta_amp,
+    )
+    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        AmpChainSlot,
+    )
+
+    return delta_amp.resolve_slot(
+        owners,
+        AmpChainSlot.HYPERSHOT,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+    )
+
+
 def _simulate_bork_damage(
     *,
     target_health,
@@ -3728,16 +3746,15 @@ class TestHorizonFocusHypershotAmp:
         assert abs(effect["amp"] - 0.10) < 0.001
 
     def test_amplifier_with_item(self) -> None:
-        """With Horizon Focus, hypershot amp should be 1.10."""
-        items = [{"name": "Horizon Focus"}]
-        result = resolve_damage_effects(items).hypershot_amp
-        assert abs(result - 1.10) < 0.001
+        """With Horizon Focus, the declared chain slot resolves to 1.10."""
+        slot = _hypershot_slot(["Horizon Focus"])
+        assert slot is not None
+        assert abs(slot.multiplier - 1.10) < 0.001
+        assert slot.owner == "Horizon Focus"
 
     def test_amplifier_without_item(self) -> None:
-        """Without Horizon Focus, hypershot amp should be 1.0."""
-        items = [{"name": "Liandry's Torment"}]
-        result = resolve_damage_effects(items).hypershot_amp
-        assert result == 1.0
+        """Without Horizon Focus nobody declares the slot, which is not a zero."""
+        assert _hypershot_slot(["Liandry's Torment"]) is None
 
     def test_first_ability_not_amped(self) -> None:
         """First ability triggers the mark and should NOT be amplified."""

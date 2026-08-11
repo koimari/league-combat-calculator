@@ -838,7 +838,6 @@ class TestResolveDamageEffects:
         assert effects.basic_amp.multiplier(is_melee=False) == pytest.approx(1.10)
         assert effects.basic_amp.multiplier(is_melee=True) == pytest.approx(1.02)
         assert effects.magic_amp == pytest.approx(1.12)
-        assert effects.hypershot_amp == pytest.approx(1.10)
         assert effects.ability_amp is not None
         assert effects.ability_amp.multiplier(
             {"bonus_mana": 300.0}, include_actives=True

@@ -109,7 +109,40 @@ def test_one_compiler_per_family_and_every_stub_names_its_slice() -> None:
         getattr(compiler, "__name__", "") and not compiler.__name__ == "<lambda>"
         for compiler in compilers.values()
     )
-    assert frozenset(catalog.UNMIGRATED_FAMILIES) == frozenset(RuleFamily)
+    stubbed = frozenset(
+        family
+        for family, compiler in compilers.items()
+        if compiler.__name__ == "_unmigrated"
+    )
+    assert frozenset(catalog.UNMIGRATED_FAMILIES) == stubbed
+    assert RuleFamily.DELTA_AMP not in stubbed
+
+
+def test_a_partly_migrated_family_still_names_what_it_refuses() -> None:
+    """Leaving UNMIGRATED_FAMILIES must not retire promises nobody kept."""
+    delta_tags = frozenset(
+        tag
+        for tag, family in catalog.TAG_FAMILY.items()
+        if family is RuleFamily.DELTA_AMP
+    )
+    named = catalog.MIGRATED_DELTA_AMP_TAGS | frozenset(
+        catalog.DELTA_AMP_UNMIGRATED_TAGS
+    )
+    assert named == delta_tags
+    assert not catalog.MIGRATED_DELTA_AMP_TAGS & frozenset(
+        catalog.DELTA_AMP_UNMIGRATED_TAGS
+    )
+    for tag, slice_name in catalog.DELTA_AMP_UNMIGRATED_TAGS.items():
+        assert slice_name.strip(), tag
+
+
+def test_an_unnamed_delta_amp_tag_fails_the_catalog(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """R-05's red for the partial-migration closure."""
+    monkeypatch.setattr(catalog, "MIGRATED_DELTA_AMP_TAGS", frozenset())
+    with pytest.raises(catalog.BehaviorCatalogError, match="unnamed"):
+        catalog.validate_catalog()
 
 
 # ── H4's ten tags ─────────────────────────────────────────────────────────
@@ -161,13 +194,28 @@ def test_an_h4_tag_without_a_reason_fails_the_catalog(
 # ── compilation ───────────────────────────────────────────────────────────
 
 
-def test_the_skeleton_declares_no_rules_and_says_so() -> None:
-    """At 3.1 every registry entry is undeclared, and it is *named*, not zeroed."""
-    assert catalog.declared_owners() == frozenset()
-    assert catalog.undeclared_owners() == catalog.registry_owners()
-    assert catalog.undeclared_entry_count() == len(ITEM_EFFECTS) + len(
-        ALLY_ITEM_EFFECTS
+def test_what_is_not_declared_yet_is_named_rather_than_zeroed() -> None:
+    """Counter 3's population is entries, and every undeclared one is named."""
+    entries = len(ITEM_EFFECTS) + len(ALLY_ITEM_EFFECTS)
+    declared_entries = sum(
+        len(catalog.registry_entries(owner)) for owner in catalog.declared_owners()
     )
+    assert catalog.undeclared_entry_count() == entries - declared_entries
+    assert catalog.declared_owners() | catalog.undeclared_owners() == (
+        catalog.registry_owners()
+    )
+    assert not catalog.declared_owners() & catalog.undeclared_owners()
+
+
+def test_the_hypershot_slot_is_declared_and_holds_no_number() -> None:
+    """3.2's canary: the amp is a reference into the registry, not a literal."""
+    (rule,) = catalog.behavior_rules("Horizon Focus")
+    assert rule.family is RuleFamily.DELTA_AMP
+    assert rule.mechanic_id == "horizon_focus.hypershot"
+    assert rule.payload.magnitude.value.registry == "ITEM_EFFECTS"
+    assert rule.payload.magnitude.value.key == "amp"
+    assert rule.receipt.url.endswith("Horizon_Focus")
+    assert "compiled score kernel" in rule.compilability.reason
 
 
 def test_an_owner_in_both_registries_owes_two_declarations() -> None:
@@ -199,7 +247,9 @@ def test_the_build_context_carries_the_data_version() -> None:
     """D-49: every downstream memo keys on one counter, read in one place."""
     from src.calculator import data_registry  # pylint: disable=import-outside-toplevel
 
-    context = catalog.build_context("Black Cleaver", 18)
+    context = catalog.build_context(
+        "Black Cleaver", 18, fight_duration_seconds=5.0, target_bonus_health=0.0
+    )
     assert context.data_version == data_registry.data_version()
     assert context.owner == "Black Cleaver"
     assert context.level == 18

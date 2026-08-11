@@ -202,5 +202,11 @@ def test_the_kernel_contract_carries_no_program_type() -> None:
         name="amp", value=0.07, lane=EngineLane.RECEIPT_WALK, rule_id="x"
     )
     assert isinstance(field.value, (float, int, bool, str))
-    context = BuildContext(level=18, owner="Test Item", data_version=3)
+    context = BuildContext(
+        level=18,
+        owner="Test Item",
+        data_version=3,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+    )
     assert context.data_version == 3

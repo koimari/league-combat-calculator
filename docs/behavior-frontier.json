@@ -102,7 +102,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 142
+      "value": 141
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -128,7 +128,6 @@
         "damage_routing/pair_engine",
         "damage_routing/receipt_walk",
         "delta_amp/compiled_score_walk",
-        "delta_amp/pair_engine",
         "delta_amp/receipt_walk",
         "on_hit_strike/compiled_score_walk",
         "on_hit_strike/pair_engine",
@@ -162,7 +161,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 51
+      "value": 50
     }
   },
   "exclusions": {
@@ -269,5 +268,5 @@
     }
   },
   "schema_version": 1,
-  "slice": "3.1"
+  "slice": "3.2"
 }

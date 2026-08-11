@@ -42,6 +42,7 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, registry_entries, registry_owners
 from ..trigger_stream import CAPABILITIES
+from . import delta_amp
 
 
 class InterpreterRegistryError(RuntimeError):
@@ -201,10 +202,14 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
 }
 
 
-# The registry itself.  Empty until each family's interpreter module lands
-# with the slice that migrates it; every gap is counted by the frontier's
-# counter 4 rather than being an absence nobody measures.
-INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {}
+# The registry itself.  One entry per family per lane, filled by the slice
+# that migrates it; every remaining gap is counted by the frontier's counter
+# 4 rather than being an absence nobody measures.  ``delta_amp`` serves the
+# pair engine only — H5 is descoped, so no amp is compilable, and the
+# receipt-walk half arrives with the amps the coupled walk owns.
+INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
+    (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
+}
 
 
 def lanes_for(family: RuleFamily) -> frozenset[EngineLane]:

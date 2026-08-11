@@ -47,9 +47,24 @@ def test_every_family_declares_the_lanes_that_owe_it_an_answer() -> None:
 
 
 def test_counter_four_is_the_gap_between_the_table_and_the_registry() -> None:
-    """At the skeleton every declared pair is uninterpreted, and it is counted."""
-    assert len(interpreters.uninterpreted_pairs()) == len(interpreters.declared_pairs())
-    assert interpreters.INTERPRETERS == {}
+    """Every declared pair with no interpreter is counted, never assumed away."""
+    gap = frozenset(interpreters.uninterpreted_pairs())
+    assert gap == interpreters.declared_pairs() - frozenset(interpreters.INTERPRETERS)
+    assert (
+        RuleFamily.DELTA_AMP,
+        EngineLane.PAIR_ENGINE,
+    ) in interpreters.INTERPRETERS
+
+
+def test_the_compiled_score_walk_gap_is_a_receipt_and_not_a_zero() -> None:
+    """H5 is descoped, so an amp's compiled lane is a named refusal (D-101)."""
+    assert (
+        RuleFamily.DELTA_AMP,
+        EngineLane.COMPILED_SCORE_WALK,
+    ) in interpreters.uninterpreted_pairs()
+    verdict = interpreters.compilability_for("Horizon Focus")
+    assert isinstance(verdict, ReceiptOnly)
+    assert "compiled score kernel" in verdict.reason
 
 
 def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable() -> None:
@@ -100,26 +115,36 @@ def test_all_compilable_folds_to_compilable(monkeypatch: pytest.MonkeyPatch) -> 
     assert isinstance(interpreters.compilability_for("Anything"), Compilable)
 
 
-def test_reachability_is_empty_in_both_directions_at_the_skeleton() -> None:
-    """No declaration and no interpreter means neither direction has a subject."""
+def test_no_registered_interpreter_is_an_orphan_branch() -> None:
+    """D-51's interpreter->author direction, over the live registry."""
+    assert interpreters.reachability_report(registry_owners()).orphan_branches == ()
+
+
+def test_a_declaration_no_lane_serves_is_reported_rather_than_silent() -> None:
+    """The other direction: the compiled lane owes Hypershot an answer it has not got."""
     report = interpreters.reachability_report(registry_owners())
-    assert report.unreached_declarations == ()
-    assert report.orphan_branches == ()
+    assert any(
+        "horizon_focus.hypershot" in entry and "compiled_score_walk" in entry
+        for entry in report.unreached_declarations
+    )
+    assert all("pair_engine" not in entry for entry in report.unreached_declarations)
 
 
 def test_an_interpreter_no_declaration_reaches_is_an_orphan_branch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """D-51's interpreter->author direction, with a red it can reproduce."""
-    stub = _StubInterpreter(RuleFamily.DELTA_AMP, frozenset({EngineLane.PAIR_ENGINE}))
+    stub = _StubInterpreter(RuleFamily.SUSTAIN, frozenset({EngineLane.PAIR_ENGINE}))
     monkeypatch.setattr(
         interpreters,
         "INTERPRETERS",
-        {(RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): stub},
+        dict(interpreters.INTERPRETERS)
+        | {(RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE): stub},
     )
     report = interpreters.reachability_report(frozenset())
-    assert report.orphan_branches == (
-        "delta_amp/pair_engine is registered and no declaration reaches it",
+    assert (
+        "sustain/pair_engine is registered and no declaration reaches it"
+        in report.orphan_branches
     )
     with pytest.raises(interpreters.InterpreterRegistryError, match="orphan|reaches"):
         interpreters.validate_registrations()

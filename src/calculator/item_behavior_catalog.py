@@ -31,16 +31,33 @@ import ast
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import quote
 
 from . import data_registry, item_effects
+from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
+    AmpChainSlot,
+    Attribution,
     BehaviorRule,
     BuildContext,
+    DeltaAmpRule,
+    ExcludeTrigger,
+    Fixed,
+    Isolation,
+    Persist,
+    Pool,
     RULE_FAMILY_COUNT,
+    ReceiptOnly,
     RuleFamily,
+    Subject,
+    TriggerEvent,
+    Typing,
+    ZeroPolicy,
+    chain_rank,
+    validate_rule,
 )
 from .survival.actions import ActionKind
-from .value_ref import ValueRegistry
+from .value_ref import SourceReceipt, ValueRef, ValueRegistry, receipt_for
 
 
 class BehaviorCatalogError(RuntimeError):
@@ -257,11 +274,145 @@ def defense_source_labels() -> frozenset[str]:
     return frozenset(labels)
 
 
+# ── citations ─────────────────────────────────────────────────────────────
+
+# Where a rule's numbers were read from when its registry entry carries no
+# citation of its own.  The item and rune caches are patch-stamped and expose
+# no MediaWiki revision id, so the id is an explicit zero rather than an
+# invented number — the spelling ``defensive_effects`` already uses for the
+# same provenance.  The page is derived from the owner rather than typed, so
+# a citation cannot name a different item than the rule it sits on.
+CACHED_ITEM_SOURCE = "cached data/items.json (patch 16.15)"
+CACHED_RUNE_SOURCE = "cached data/runes.json (patch 16.15)"
+
+_WIKI = "https://wiki.leagueoflegends.com/en-us"
+
+
+def cached_source_receipt(owner: str, stamp: str) -> SourceReceipt:
+    """The cache-backed citation for an owner whose entry carries none."""
+    return SourceReceipt(
+        url=f"{_WIKI}/{quote(owner.replace(' ', '_'))}",
+        revision_id=0,
+        revision_timestamp=stamp,
+    )
+
+
+# ── the compiled-kernel refusal every amp carries (D-101) ─────────────────
+
+# H5 is descoped by the umbrella, so no ``delta_amp`` rule is compilable and
+# every amp holder falls back to the receipt walk with this reason printed.
+# It is one constant because it is one fact about the kernel, not a per-item
+# judgement — and a per-item copy is how sixteen conservatism notes ended up
+# indistinguishable from sixteen representability facts.
+COMPILED_KERNEL_CANNOT_AMP = ReceiptOnly(
+    "the compiled score kernel cannot represent a timed, typed damage "
+    "modifier: unrepresentable_template_receipt returns support_kind=<kind> "
+    "for anything but shield/heal and add_support_templates raises on it "
+    "(D-101; H5 descoped, so this is the standing answer)"
+)
+
+
 # ── compilers (D-52's ruled exception to "no callables in declarations") ──
 
 Compiler = Callable[
     [RuleFamily, str, ValueRegistry, Mapping[str, Any]], tuple[BehaviorRule, ...]
 ]
+
+# Which registry tags the delta-amp compiler below turns into declarations,
+# and — for the rest — which slice retires each refusal.  ``_unmigrated``
+# carries that promise for a whole family; a *partly* migrated family needs
+# it per tag, or the family's disappearance from UNMIGRATED_FAMILIES would
+# quietly retire promises nobody kept.
+MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset({"hypershot_amp"})
+
+DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
+    "damage_amp": "3.2 — the WHOLE_TOTAL chain slot",
+    "magic_true_crit": "3.2 — Shadowflame's Cinderbloom, last of the seven",
+    "ability_damage_amp": (
+        "3.7 — Actualizer's ability amp is applied per ability and per proc "
+        "inside the rotation, so it occupies no chain slot"
+    ),
+    "basic_damage_amp": (
+        "3.7 — Hexoptics C44 amplifies each basic attack where it is priced, "
+        "so it occupies no chain slot"
+    ),
+    "magic_damage_amp": (
+        "3.7 — Abyssal Mask's magic amp is applied by _mitigate on the "
+        "defender's side, so it occupies no chain slot"
+    ),
+}
+
+
+def _all_damage_typing() -> Typing:
+    """Every damage class from every attack class — "from all sources", said.
+
+    D-04 bans empty-means-all, so an amp that really does apply to
+    everything has to enumerate everything.  This is that enumeration, in one
+    place, so "all" cannot drift into "all the ones somebody remembered".
+    """
+    return Typing(
+        damage_classes=frozenset(DamageClass),
+        attack_classes=frozenset(AttackClass),
+    )
+
+
+def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Horizon Focus's Hypershot: everything except the cast that armed it.
+
+    The exclusion set is "the trigger ability's own damage" — a pair-local
+    rotation fact, which is why the mechanic is ``PAIR_ONLY`` and the coupled
+    walk emits nothing for it.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id="horizon_focus.hypershot",
+        payload=DeltaAmpRule(
+            pool=Pool.ALL_EVENTS,
+            activation=ExcludeTrigger(
+                trigger=TriggerEvent.ABILITY_HIT,
+                isolation=Isolation.TRIGGER_EVENT_ONLY,
+            ),
+            consumption=Persist(),
+            magnitude=Fixed(ValueRef(registry, owner, "amp")),
+            attribution=Attribution.HOLDER,
+            typing=_all_damage_typing(),
+            subject=Subject.HOLDER,
+            lane_chain_rank=chain_rank(AmpChainSlot.HYPERSHOT),
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the amp is a sourced ratio read live from the registry; a zero "
+            "here would mean the registry holds zero, which is a measurement",
+        ),
+    )
+
+
+def _compile_delta_amp(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the amp-chain slots one registry entry declares.
+
+    Dispatch is on the entry's **tag**, never on the owner's name: the shape
+    comes from the tag, the numbers from a :class:`~.value_ref.ValueRef` into
+    the entry, and the owner from whichever item the registry hung it on — so
+    no item name is a literal here and none needs to be.
+    """
+    del family
+    tag = str(entry.get("type"))
+    rules: list[BehaviorRule] = []
+    if tag == "hypershot_amp":
+        rules.append(_hypershot_rule(owner, registry))
+    for rule in rules:
+        validate_rule(rule)
+    return tuple(rules)
 
 
 def _unmigrated(
@@ -297,7 +448,7 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.PERIODIC: _unmigrated,
     RuleFamily.ACTIVE_CAST: _unmigrated,
     RuleFamily.SECONDARY_TARGET: _unmigrated,
-    RuleFamily.DELTA_AMP: _unmigrated,
+    RuleFamily.DELTA_AMP: _compile_delta_amp,
     RuleFamily.RESISTANCE_SHRED: _unmigrated,
     RuleFamily.CRIT_PROFILE: _unmigrated,
     RuleFamily.DAMAGE_ROUTING: _unmigrated,
@@ -312,7 +463,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.DELTA_AMP: "3.2",
     RuleFamily.RESISTANCE_SHRED: "3.3",
     RuleFamily.ON_HIT_STRIKE: "3.4",
     RuleFamily.CHARGED_STRIKE: "3.4",
@@ -376,6 +526,24 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     return tuple(rules)
 
 
+def declared_tags() -> frozenset[str]:
+    """Every ``ITEM_EFFECTS`` tag some entry now declares a rule for.
+
+    The migration's answer to "which tags does a live handler branch on".
+    Behaviour that has moved into a declaration is no longer dispatched by
+    ``item_effects``' effect-type ladder, so a totality check reading only
+    that ladder would report a tag as *undispatched* on the very commit that
+    gave it a real home.  Derived from what actually compiles, never listed.
+    """
+    return frozenset(
+        str(entry.get("type"))
+        for owner in registry_owners()
+        for registry, family, entry in registry_entries(owner)
+        if registry == "ITEM_EFFECTS"
+        and _COMPILERS[family](family, owner, registry, entry)
+    )
+
+
 def registry_owners() -> frozenset[str]:
     """Every owner either number registry holds an entry for."""
     return frozenset(item_effects.ITEM_EFFECTS) | frozenset(
@@ -407,15 +575,27 @@ def undeclared_entry_count() -> int:
     return sum(len(registry_entries(owner)) for owner in sorted(undeclared_owners()))
 
 
-def build_context(owner: str, level: int) -> BuildContext:
+def build_context(
+    owner: str,
+    level: int,
+    *,
+    fight_duration_seconds: float,
+    target_bonus_health: float,
+) -> BuildContext:
     """The build-time context an interpreter reads, stamped with the data version.
 
     ``data_registry.data_version()`` (D-49) is read here rather than by each
     interpreter, so every memo downstream keys on one counter instead of on
-    object identity.
+    object identity.  The two fight facts are keyword-only and required: a
+    caller that forgets one gets a ``TypeError``, never a defaulted zero
+    duration silently flattening a ramping magnitude.
     """
     return BuildContext(
-        level=level, owner=owner, data_version=data_registry.data_version()
+        level=level,
+        owner=owner,
+        data_version=data_registry.data_version(),
+        fight_duration_seconds=fight_duration_seconds,
+        target_bonus_health=target_bonus_health,
     )
 
 
@@ -512,6 +692,30 @@ def _validate_compilers() -> None:
         )
 
 
+def _validate_delta_amp_migration() -> None:
+    """Every delta-amp tag is either compiled here or named with its slice.
+
+    A family whose compiler is real no longer appears in
+    :data:`UNMIGRATED_FAMILIES`, so a partly migrated family would otherwise
+    lose the record of what it still refuses.  This is that record, closed:
+    the two sets partition the family's tags exactly.
+    """
+    declared = frozenset(
+        tag for tag, family in TAG_FAMILY.items() if family is RuleFamily.DELTA_AMP
+    )
+    named = MIGRATED_DELTA_AMP_TAGS | frozenset(DELTA_AMP_UNMIGRATED_TAGS)
+    if MIGRATED_DELTA_AMP_TAGS & frozenset(DELTA_AMP_UNMIGRATED_TAGS):
+        raise BehaviorCatalogError(
+            "a delta-amp tag cannot be both migrated and awaiting a slice"
+        )
+    if named != declared:
+        raise BehaviorCatalogError(
+            "every delta_amp tag is either migrated or carries the slice that "
+            f"retires it; unnamed={sorted(declared - named)} "
+            f"stale={sorted(named - declared)}"
+        )
+
+
 def validate_catalog() -> None:
     """Every closure this catalog claims, checked at import.
 
@@ -523,6 +727,7 @@ def validate_catalog() -> None:
     _validate_action_kind_closure()
     _validate_defense_source_closure()
     _validate_compilers()
+    _validate_delta_amp_migration()
 
 
 validate_catalog()
@@ -530,17 +735,24 @@ validate_catalog()
 
 __all__ = [
     "ACTION_KIND_FAMILY",
+    "CACHED_ITEM_SOURCE",
+    "CACHED_RUNE_SOURCE",
+    "COMPILED_KERNEL_CANNOT_AMP",
     "BehaviorCatalogError",
     "Compiler",
     "DEFENSE_SOURCE_FAMILY",
+    "DELTA_AMP_UNMIGRATED_TAGS",
     "H4_DEAD_TAGS",
     "H4_SELF_REFERENTIAL_TAGS",
     "H4_TAG_REASONS",
+    "MIGRATED_DELTA_AMP_TAGS",
     "TAG_FAMILY",
     "UNMIGRATED_FAMILIES",
     "behavior_rules",
     "build_context",
+    "cached_source_receipt",
     "declared_owners",
+    "declared_tags",
     "defense_source_labels",
     "registry_entries",
     "registry_owners",

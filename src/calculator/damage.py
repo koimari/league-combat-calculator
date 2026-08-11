@@ -132,6 +132,8 @@ from . import item_effects
 from . import rune_effects
 from . import shield_ledger
 from .ability_spec import DamagePart
+from .interpreters import delta_amp
+from .item_behavior import AmpChainSlot
 from .trigger_stream import (
     Stream,
     authored_triggers,
@@ -473,7 +475,6 @@ class FightState:
     magic_amp: float  # Abyssal Mask
     ability_amp: float  # Actualizer
     basic_amp: float  # Hexoptics C44
-    hypershot_amp: float  # Horizon Focus
     # ── Attack timing ─────────────────────────────────────────────────────
     attack_speed: float
     attack_speed_ratio: float
@@ -2250,7 +2251,6 @@ def _resolve_combat_state(
             if damage_effects.basic_amp is not None
             else 1.0
         ),
-        hypershot_amp=damage_effects.hypershot_amp,
         attack_speed=attack_speed,
         attack_speed_ratio=as_ratio,
         num_auto_attacks=num_auto_attacks,
@@ -9218,6 +9218,22 @@ def _hypershot_delta_events(
     )
 
 
+def _amp_slot(state: FightState, slot: AmpChainSlot) -> "delta_amp.AmpSlot | None":
+    """The declared amp occupying one chain slot for this build.
+
+    ``None`` means no held item declares the slot — an answer, not a zero.
+    The build is passed as owner names because a declaration is keyed by the
+    item that owns it; the engine never spells one.
+    """
+    return delta_amp.resolve_slot(
+        [str(item.get("name", "")) for item in state.items],
+        slot,
+        level=state.level,
+        fight_duration_seconds=state.fight_duration_seconds,
+        target_bonus_health=max(0.0, state.target_bonus_health),
+    )
+
+
 def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> None:
     """Apply whole-total amps (Lord Dominik's, Riftmaker, Liandry-class).
 
@@ -9314,21 +9330,24 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
     # Imperial Mandate's Command: the holder's own post-immobilize amp.
     _apply_command_amp(state, rotation)
 
-    # Horizon Focus Hypershot: amp all damage except the first ability cast
-    # (the first ability triggers the mark; its own damage is not amped).
-    if state.hypershot_amp > 1.0:
+    # Hypershot: amp all damage except the first ability cast (the first
+    # ability triggers the mark; its own damage is not amped).  The exclusion
+    # is the rule's declared ExcludeTrigger activation and the multiplier is
+    # its declared magnitude; the engine supplies only the ledger.
+    hypershot = _amp_slot(state, AmpChainSlot.HYPERSHOT)
+    if hypershot is not None and hypershot.multiplier > 1.0:
         amped_damage = state.total_damage - rotation.first_ability_damage
-        hypershot_bonus = amped_damage * (state.hypershot_amp - 1.0)
+        hypershot_bonus = amped_damage * (hypershot.multiplier - 1.0)
         row = {
-            "name": "Damage Amplification (Horizon Focus)",
-            "multiplier": state.hypershot_amp,
+            "name": f"Damage Amplification ({hypershot.owner})",
+            "multiplier": hypershot.multiplier,
             "total_damage": hypershot_bonus,
         }
         delta_events = _hypershot_delta_events(state, rotation, hypershot_bonus)
         if delta_events:
             row["damage_events"] = delta_events
             row["event_phase"] = "amplifier"
-        breakdown["damage_amp_Horizon Focus"] = row
+        breakdown[f"damage_amp_{hypershot.owner}"] = row
         state.total_damage += hypershot_bonus
 
 

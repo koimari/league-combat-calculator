@@ -3761,7 +3761,6 @@ class BuildDamageEffects:
     magic_amp: float = 1.0
     basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
-    hypershot_amp: float = 1.0
     armor_reduction: ArmorReductionEffect | None = None
     ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
@@ -4756,7 +4755,6 @@ def _resolve_damage_effects_uncached(
     magic_amp = 1.0
     basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
-    hypershot_amp = 1.0
     armor_reduction: ArmorReductionEffect | None = None
     ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
@@ -4879,8 +4877,6 @@ def _resolve_damage_effects_uncached(
             damage_amplifiers.append(_compile_damage_amplifier(item_name, values))
         if effect_type == "magic_damage_amp":
             magic_amp += _RequiredValues(item_name, values).number("magic_amp")
-        if effect_type == "hypershot_amp":
-            hypershot_amp += _RequiredValues(item_name, values).number("amp")
         if effect_type == "armor_reduction":
             required = _RequiredValues(item_name, values)
             armor_reduction = ArmorReductionEffect(
@@ -4966,7 +4962,6 @@ def _resolve_damage_effects_uncached(
         magic_amp=magic_amp,
         basic_amp=basic_amp,
         ability_amp=ability_amp,
-        hypershot_amp=hypershot_amp,
         armor_reduction=armor_reduction,
         ability_amp_source=ability_amp_source,
         execute=execute,
