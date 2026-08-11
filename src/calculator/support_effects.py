@@ -6,7 +6,7 @@ import math
 from typing import Any
 
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
-from .data_registry import data_version
+from .data_registry import live_generation
 from .champions.slotlib import extract_named
 from .champions.skill_orders import get_ability_rank
 
@@ -180,7 +180,7 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
 
 
 def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
-    memo_key = (data_version(), id(champion_data))
+    memo_key = (live_generation(_SUPPORT_ATTRS_MEMO), id(champion_data))
     memo = _SUPPORT_ATTRS_MEMO.get(memo_key)
     if memo is not None and memo[0] is champion_data:
         return memo[1]
@@ -196,8 +196,10 @@ def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
 
 # The attribute names and target-scope markers below are pure cached-JSON
 # facts per ability, so they are derived once per ability object and cache
-# generation — ``(data_version(), id(ability))``, identity-verified on every
-# hit (D-49) — instead of per optimizer candidate.
+# generation — ``(live_generation(...), id(ability))``, identity-verified on
+# every hit (D-49) — instead of per optimizer candidate.  ``live_generation``
+# also drops the superseded generation, which an unbounded version-prefixed
+# memo would otherwise retain along with every cached dict it references.
 _SUPPORT_PROFILE_MEMO: dict[tuple[int, int], tuple[dict, tuple]] = {}
 
 
@@ -220,7 +222,7 @@ def _sourced_cast_time(cast: dict[str, Any], *, slot: str) -> float:
 def _support_profile(
     ability: dict[str, Any],
 ) -> tuple[str | None, str | None, bool, str]:
-    memo_key = (data_version(), id(ability))
+    memo_key = (live_generation(_SUPPORT_PROFILE_MEMO), id(ability))
     memo = _SUPPORT_PROFILE_MEMO.get(memo_key)
     if memo is not None and memo[0] is ability:
         return memo[1]

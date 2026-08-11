@@ -193,6 +193,113 @@ def test_support_profile_memo_recomputes_after_a_version_bump(bumped_version) ->
     assert support_effects._support_profile(ability)[1] == "Heal"
 
 
+UNBOUNDED_KEYED_MEMOS = {
+    "calculator.stats._ITEM_STATS_MEMO": (stats, "_ITEM_STATS_MEMO"),
+    "calculator.stats._ITEM_STATS_VALIDATION_MEMO": (
+        stats,
+        "_ITEM_STATS_VALIDATION_MEMO",
+    ),
+    "calculator.support_effects._SUPPORT_ATTRS_MEMO": (
+        support_effects,
+        "_SUPPORT_ATTRS_MEMO",
+    ),
+    "calculator.support_effects._SUPPORT_PROFILE_MEMO": (
+        support_effects,
+        "_SUPPORT_PROFILE_MEMO",
+    ),
+}
+"""The version-keyed memos with no size bound, and therefore no other evictor.
+
+``_CAST_ORDER_PARAMS_MEMO`` and ``_STATE_PROTO_MEMO`` clear wholesale at 512
+entries and ``_ITEM_BY_ID_MEMO`` is rebuilt rather than appended to, so the
+generation prefix costs them nothing.  These four grow without limit, which
+is why they read the generation through ``live_generation``.
+"""
+
+
+def test_a_superseded_generation_is_evicted_rather_than_retained(
+    bumped_version,
+) -> None:
+    """Unreachable is not gone: the version prefix must also collect.
+
+    Keying on ``(data_version(), id(x))`` makes a stale entry unreachable —
+    but before the prefix existed, a refresh that recycled an ``id()``
+    overwrote its predecessor.  With the prefix and no size bound, both
+    generations coexist and each holds a strong reference to the cached
+    dict it was derived from, so every superseded generation is retained
+    for the life of the process.
+    """
+    item = {
+        "id": 3031,
+        "name": "Synthetic Blade",
+        "stats": {
+            "attackDamage": {
+                "flat": 40.0,
+                "percent": 0.0,
+                "perLevel": 0.0,
+                "percentPerLevel": 0.0,
+                "percentBase": 0.0,
+                "percentBonus": 0.0,
+            }
+        },
+    }
+    champion = {
+        "abilities": {
+            "Q": [{"effects": [{"leveling": [{"attribute": "Damage"}]}]}],
+            "W": [],
+            "E": [],
+            "R": [],
+        }
+    }
+    ability = {"effects": [{"leveling": [{"attribute": "Damage"}]}]}
+
+    def touch_every_memo() -> None:
+        stats.get_item_stats(item)
+        support_effects._has_support_attributes(champion)
+        support_effects._support_profile(ability)
+
+    touch_every_memo()
+    before = {
+        name: len(getattr(module, attribute))
+        for name, (module, attribute) in UNBOUNDED_KEYED_MEMOS.items()
+    }
+    assert all(size > 0 for size in before.values()), before
+
+    bumped_version()
+    touch_every_memo()
+
+    after = {
+        name: len(getattr(module, attribute))
+        for name, (module, attribute) in UNBOUNDED_KEYED_MEMOS.items()
+    }
+    assert after == before, (
+        "a bumped generation must replace the previous one, not accumulate "
+        f"beside it: {before} -> {after}"
+    )
+    versions = {
+        name: {key[0] for key in getattr(module, attribute)}
+        for name, (module, attribute) in UNBOUNDED_KEYED_MEMOS.items()
+    }
+    assert all(len(seen) == 1 for seen in versions.values()), versions
+
+
+def test_the_unbounded_memo_set_is_the_keyed_set_minus_the_bounded_ones() -> None:
+    """The four are derived from the declared table, never re-listed.
+
+    ``UNBOUNDED_KEYED_MEMOS`` above must stay a subset of the memos
+    ``data_registry`` declares version-keyed; a keyed memo that later loses
+    its size bound has to join it rather than quietly grow.
+    """
+    keyed = set(data_registry.DATA_VERSION_KEYED_MEMOS)
+    assert set(UNBOUNDED_KEYED_MEMOS) <= keyed
+    bounded_or_rebuilt = keyed - set(UNBOUNDED_KEYED_MEMOS)
+    assert bounded_or_rebuilt == {
+        "calculator.economy._ITEM_BY_ID_MEMO",
+        "calculator.pipeline._CAST_ORDER_PARAMS_MEMO",
+        "calculator.survival.receipt_state._STATE_PROTO_MEMO",
+    }
+
+
 def test_state_proto_memo_key_carries_the_version() -> None:
     """The survival prototype memo is keyed ``(version, id(combatant))``.
 

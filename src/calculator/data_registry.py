@@ -27,6 +27,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Any
 
@@ -67,6 +68,30 @@ def data_version() -> int:
     declared would be a counter the other could not use.
     """
     return _DATA_VERSION
+
+
+def live_generation(memo: MutableMapping[tuple[int, Any], Any]) -> int:
+    """The live :func:`data_version`, after evicting a superseded generation.
+
+    Prefixing a memo key with the cache generation makes a stale entry
+    unreachable, which is correctness — but unreachable is not gone.  An
+    unbounded memo keyed that way keeps every superseded generation, and
+    each entry holds a strong reference to the cached dict it was derived
+    from, so a process that refreshes twice retains three copies of
+    everything it ever memoized.  Before ``id()`` was prefixed, a recycled
+    address at least overwrote its predecessor.
+
+    Every entry in a memo passed here shares one generation, because this
+    function is what puts keys in it: on the first read after a bump the
+    whole mapping is dropped.  That is one comparison against the first key,
+    not a scan, so the hot-path cost is a dict lookup either way.
+    """
+    version = _DATA_VERSION
+    for key in memo:
+        if key[0] != version:
+            memo.clear()
+        break
+    return version
 
 
 # ── who keys on the counter ──────────────────────────────────────────────
