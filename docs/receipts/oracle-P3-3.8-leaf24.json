@@ -1,0 +1,140 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf24",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-11",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle24",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "leaf_kind": "prose justification string, not a numeric quantity — adjudicated by checking each factual claim it makes against the cached sources",
+
+    "step_1_decompose_the_two_strings": {
+      "shared_operative_claim": "the represented mechanic is defensive and therefore does not change outgoing TDD (total damage dealt)",
+      "delta_A_added_by_new_value": "a universal quantifier: 'Every declared family on this item is a defence'",
+      "delta_B_added_by_new_value": "wording change 'defense' -> 'durability' in the operative clause"
+    },
+
+    "step_2_verify_the_shared_operative_claim": {
+      "result": "SUPPORTED by cached sources",
+      "reasoning": "The cached corpus uses exactly this convention for defensive mechanics. data/champion-audit/batch-6.json records for Vi: 'P Blast Shield is explicitly documented as defensive-only (\\'does not change outgoing TDD\\')', and the same file lists the non-damaging entry 'P (Blast Shield - defensive shield, does not change outgoing TDD)'. Likewise data/champion-audit/batch-1.json (Ekko): R heal and W shield are 'both sustain/defense, outside TDD'. A defence/durability mechanic changing incoming-damage survivability and not the outgoing-damage functional is the corpus's own audited semantics.",
+      "math_doc_cross_check": "docs/math-foundations.md defines the scored number as T = E[ D | model, config ] (Section 0), an outgoing-damage functional; shield/heal/durability terms appear only in the survival walk (Sec. 5 table rows 'Shield absorption', 'Grey health', 'Revive') and in the EHP identity 'A target with H0 health and resistance R survives exactly H0*(1+R/100)' (Sec. 2.2). Durability terms therefore enter effective health, never T. Both strings' operative clause is consistent with this."
+    },
+
+    "step_3_verify_the_NEW_string_s_added_universal_claim": {
+      "claim_under_test": "'Every declared family on this item is a defence.'",
+      "result": "UNSUPPORTED, and FALSE under the only family taxonomy that exists in the cached data",
+      "taxonomy_census": {
+        "champion_atom_families (data/atoms/classification-report.json .vocab.families)": ["crowd-control-mobility", "damage", "heal-shield", "interaction", "stack-transform-summon-resource", "vision-economy"],
+        "item_atom_families (computed over data/atoms/items.json .objects, the file data/atoms/README.md names as the authoritative unified item record)": {
+          "stat": 703,
+          "economy": 335,
+          "damage": 294,
+          "heal": 102,
+          "control": 81,
+          "timing": 44,
+          "stack": 40,
+          "shield": 37,
+          "vision": 24,
+          "summon": 3
+        },
+        "note": "Neither vocabulary contains a family named 'defence', 'defense', or 'durability'. The strings 'defence' and 'durability' do not occur anywhere under data/ (grep -rn over the whole export: 0 hits each)."
+      },
+      "quantifier_census_over_all_324_items": {
+        "items_in_corpus": 324,
+        "items_declaring_the_economy_family": 324,
+        "items_declaring_the_stat_family": 276,
+        "items_whose_declared_family_set_is_a_subset_of_{shield,heal}": 0,
+        "items_whose_declared_family_set_is_a_subset_of_{shield,heal,stat}": 0,
+        "conclusion": "No item in the cached corpus has an all-defensive declared family set. Every item declares 'economy' (shop-price atoms), which is not a defence; 276/324 also declare 'stat'. The universal claim is therefore false for every possible referent item, whatever the Syndra build at breakdown[0] happens to be."
+      },
+      "worked_counterexample_for_the_likeliest_referent": {
+        "item": "Zhonya's Hourglass (id 3157) — the canonical purely-defensive active on an AP mage build such as Syndra's",
+        "cached_wiki_text (data/items.json .3157.active[0])": "Time Stop: 'Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].'",
+        "why_the_operative_clause_holds": "Time Stop grants invulnerability/untargetability and explicitly forbids attacking and casting for its duration; it adds zero damage terms, so it cannot raise outgoing TDD. The old string's operative claim is exactly right for it.",
+        "why_the_added_universal_claim_fails": "Zhonya's declared families are ['control','damage','economy','stat'] (computed from data/atoms/items.json .objects['3157']). The legacy per-item decomposition data/item-atoms/3157.json makes the 'damage' member explicit: {'atom_id': 'damage.resistance-mitigation', 'family': 'damage', 'behavior': 'Time Stop', 'provenance': {'evidence': 'active:Time Stop'}}. A declared 'damage' family (plus 'economy' and 'stat') directly contradicts 'Every declared family on this item is a defence.'",
+        "other_defensive_candidates_checked": {
+          "Seraph's Embrace (3040)": ["economy", "heal", "shield", "stat"],
+          "Banshee's Veil (3102)": ["economy", "shield", "stat", "timing"],
+          "Guardian Angel (3026)": ["economy", "heal", "stat", "timing"],
+          "Verdant Barrier (4632)": ["economy", "shield", "stat", "timing"],
+          "Fimbulwinter (3121)": ["control", "economy", "heal", "shield", "stat", "timing"],
+          "Seeker's Armguard (2420)": ["control", "damage", "economy", "stat"],
+          "note": "Every one of them declares at least one non-defence family."
+        }
+      }
+    },
+
+    "step_4_verify_delta_B (defense -> durability)": {
+      "result": "NEUTRAL — both wordings denote the same quantity (resistance to incoming damage) and both are consistent with docs/math-foundations.md Sec. 2.2's effective-health treatment. This wording change alone would not decide the verdict; it is the added universal quantifier that does."
+    },
+
+    "step_5_adjudication": "The two strings agree on the only claim the cached sources support, and the new string additionally asserts a universal proposition over 'declared families' that (a) is not expressible in any family taxonomy present in data/ — no 'defence'/'durability' family exists in either the champion-atom or item-atom vocabulary — and (b) is false for all 324 corpus items under the item-atom taxonomy, with Zhonya's Hourglass (the most likely referent for a Syndra build's first utility-only item) a direct counterexample because its Time Stop active decomposes to a 'damage'-family atom on top of the unavoidable 'economy' and 'stat' families. A reason string that is strictly a superset of a correct claim, where the added part is contradicted by the cached data, is less correct than the original. Verdict: old_value_correct."
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "locator": "['3157'].active[0].branches[0] (Zhonya's Hourglass, 'Time Stop')",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "path": "data/item-atoms/3157.json",
+      "locator": "atoms[3]",
+      "quote": "{\"atom_id\": \"damage.resistance-mitigation\", \"family\": \"damage\", \"behavior\": \"Time Stop\", \"provenance\": {\"wiki\": [\"Zhonya's Hourglass\"], \"evidence\": \"active:Time Stop\"}}"
+    },
+    {
+      "path": "data/atoms/items.json",
+      "locator": ".objects (324 items) — family census computed by splitting each atom_id on '.'",
+      "quote": "families present: stat(703), economy(335), damage(294), heal(102), control(81), timing(44), stack(40), shield(37), vision(24), summon(3); 324/324 items declare 'economy'; 0/324 items have a declared family set contained in {shield, heal} or {shield, heal, stat}."
+    },
+    {
+      "path": "data/atoms/classification-report.json",
+      "locator": ".vocab.families",
+      "quote": "[\"crowd-control-mobility\", \"damage\", \"heal-shield\", \"interaction\", \"stack-transform-summon-resource\", \"vision-economy\"]"
+    },
+    {
+      "path": "data/atoms/README.md",
+      "locator": "Item domain (unified Atomizer, issue #140)",
+      "quote": "The legacy per-item files under the `data/item-atoms/` tree are no longer written; consumers should read `data/atoms/items.json`"
+    },
+    {
+      "path": "data/champion-audit/batch-6.json",
+      "locator": "Vi entry, gap_summary and non-damaging slot list",
+      "quote": "P Blast Shield is explicitly documented as defensive-only ('does not change outgoing TDD')."
+    },
+    {
+      "path": "data/champion-audit/batch-1.json",
+      "locator": "Ekko entry, gap_summary",
+      "quote": "Two notable atom families are unmodeled but documented: R Chronobreak heal (2 heal atoms; Ekko not in HEALING_RULE_CHAMPIONS) and W shield (3 shield atoms) - both sustain/defense, outside TDD."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 0, Semantics of the deterministic single number",
+      "quote": "T = E[ D | model, config ]      (point estimate under the expectation heuristic)"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 2.2, effective-health identity",
+      "quote": "A target with `H0` health and resistance `R` survives exactly `H0*(1+R/100)`"
+    }
+  ],
+
+  "limitations": [
+    "The scenario id 'syndra_derived_order_39' does not appear anywhere in the permitted export (grep over data/ and docs/math-foundations.md: 0 hits; data/practice-corpus/scenarios.json holds 22 scenarios, none Syndra). The specific item at breakdown[0]/utility_outcomes/item_coverage[0] therefore could not be identified from the permitted sources, so the counterexample is argued two ways: (i) the universal claim fails for ALL 324 corpus items regardless of which one is the referent, and (ii) it fails concretely for Zhonya's Hourglass, the likeliest referent.",
+    "'Declared family' was interpreted against the only family taxonomies that exist in the cached data (data/atoms/items.json item-atom families; data/atoms/classification-report.json champion-atom families). If the engine maintains a separate, code-level family vocabulary in src/ containing a 'defence' family, that vocabulary is out of bounds for this runbook and was not consulted; under every taxonomy that is in the cached data, the new string's first clause is false.",
+    "Neither the operative clause's truth (which both strings share) nor the 'defense' -> 'durability' rewording is in dispute; the verdict turns solely on the unsupported universal quantifier the new value adds."
+  ],
+
+  "verdict_rationale": "Both strings carry the same correct operative claim; the new string adds 'Every declared family on this item is a defence', which is contradicted by the cached item-atom data for all 324 items (all declare the non-defence 'economy' family, and the leading defensive candidate Zhonya's Hourglass additionally declares a 'damage'-family atom from its Time Stop active). The old value states only what the sources support.",
+  "committed": false
+}

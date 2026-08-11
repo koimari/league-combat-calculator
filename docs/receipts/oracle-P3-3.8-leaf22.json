@@ -1,0 +1,99 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf22",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-11",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_120/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+  "leaf_kind": "prose reason string (non-numeric)",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle22",
+    "read": ["data/items.json", "data/atoms/items.json", "data/item-atoms/3157.json", "data/item-atoms/item-atom-summary.json", "data/practice-corpus/scenarios.json", "data/worklists/e9-bis-b-task.md", "data/README.md", "data/atoms/README.md", "data/wiki/article-index.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "item_identification": {
+    "method": "The scenario definition lives outside the permitted export (no 'syndra_custom_order_120' string anywhere under data/ or docs/math-foundations.md; data/practice-corpus/scenarios.json contains 22 scenarios, none Syndra). The item was therefore narrowed from the cached item corpus by the constraint the leaf itself imposes: an item in an AP Syndra build whose represented mechanic is defensive-only.",
+    "candidate_enumeration": "Enumerated the declared passives/actives of every plausible AP-mage item in data/items.json: Archangel's Staff (Awe, Manaflow), Seraph's Embrace (Awe + Lifeline), Mejai's (Glory), Rabadon's (Magical Opus), Lich Bane (Spellblade), Banshee's Veil (Annul), Rylai's (Rimefrost), Malignance (Scorn, Hatefog), Void Staff (none), Zhonya's Hourglass (Time Stop), Morellonomicon (Grievous Wounds), Horizon Focus (Hypershot, Focus), Cosmic Drive (Spelldance), Riftmaker (Void Corruption, Void Infusion), Shadowflame (Cinderbloom), Stormsurge (Stormraider, Squall), Liandry's (Torment, Suffering), Sorcerer's Shoes (none).",
+    "result": "Exactly two of these declare a purely defensive effect set: Zhonya's Hourglass (id 3157, one active, Time Stop/stasis) and Banshee's Veil (id 3102, one passive, Annul/spell shield). Every other candidate declares at least one offensive family, so none of them could carry a 'changes defence, not outgoing TDD' reason. The verification below was run for BOTH survivors so the verdict does not depend on which of the two the scenario's custom order puts at index 0.",
+    "confidence": "high on the claim being verified; the exact item is one of {Zhonya's Hourglass, Banshee's Veil} and the result is identical for both."
+  },
+
+  "independent_computation": {
+    "claim_1_the_mechanic_is_defensive_only": {
+      "zhonyas_hourglass_3157": {
+        "declared_effects": "passives: [] (none); active: [Time Stop]",
+        "cached_wiki_text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+        "riotDescription_crosscheck": "<active>Time Stop</active> Enter <keyword>Stasis</keyword> for 2.5 seconds.",
+        "analysis": "The effect text contains no damage term, no scaling, no amplifier, and no penetration term. Its two operative words -- untargetable, invulnerable -- are incoming-damage terms only, i.e. durability. It moreover explicitly forbids the holder from declaring basic attacks, casting abilities and using items for the window, so the mechanic's contribution to outgoing damage is not merely zero but sign-negative in real play. Contribution to outgoing TDD from the represented mechanic = 0."
+      },
+      "banshees_veil_3102": {
+        "declared_effects": "passives: [Annul]; active: [] (none)",
+        "cached_wiki_text": "Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).",
+        "analysis": "Blocks an incoming hostile ability. Purely an incoming-damage/durability term; no outgoing-damage term appears in the text. Contribution to outgoing TDD = 0."
+      }
+    },
+    "claim_2_every_declared_family_is_a_defence": {
+      "test": "Count the item's declared effect families (data/items.json passives[] + active[], the fields data/README.md names as 'the complete text of one effect') and check each is defensive.",
+      "zhonyas_hourglass_3157": "1 declared effect family total (Time Stop -> stasis/invulnerability). 1 of 1 defensive. Universal claim TRUE.",
+      "banshees_veil_3102": "1 declared effect family total (Annul -> spell shield). 1 of 1 defensive. Universal claim TRUE.",
+      "scope_note": "'Family' here is scoped to represented mechanics (effects), which is the domain item coverage operates over -- data/worklists/e9-bis-b-task.md describes src/calculator/item_coverage.py as 'how item EFFECTS get blocked/withheld verdicts'. Under that scope the universal quantifier is exact for both candidates. Flat stat lines (both items carry 105 AP, which does change outgoing TDD) are applied directly to the stat block and are never 'represented mechanics' needing a coverage verdict, so they are correctly outside the quantifier."
+    },
+    "claim_3_durability_is_the_right_word": {
+      "analysis": "'Durability' is the game's own term for the incoming-damage axis; data/wiki/article-index.json carries a first-class 'Durability' article (pageid 961552). Substituting 'durability' for 'defense' in the second clause is at worst neutral and at best more precise, because stasis and spell shield are not resistance ('defense') effects at all -- they are damage-negation effects, which 'durability' covers and 'defense' arguably does not."
+    },
+    "formal_anchor": {
+      "source": "docs/math-foundations.md Section 0, 'Semantics of the deterministic single number'",
+      "quote": "T = E[ D | model, config ]      (point estimate under the expectation heuristic)",
+      "why_it_settles_it": "The scored quantity T is an expectation over OUTGOING damage D only. There is no term in T for the attacker's own survivability, so any mechanic whose entire effect text acts on incoming damage (untargetable/invulnerable/spell shield) enters T with coefficient 0. Both the old and the new reason state this correctly; the new one additionally states the predicate under which the engine reaches that conclusion, and that predicate is verifiably satisfied by the cached data for both candidate items."
+    },
+    "conclusion": "Both the old and the new string state a true fact about the mechanic. The new string adds a universal claim -- 'Every declared family on this item is a defence' -- and that claim checks out against the cached effect list for each candidate item (exactly one declared effect, and it is defensive). The new value is therefore correct AND strictly more informative: it names the predicate (all families defensive) rather than only the consequence, and it upgrades 'defense' to the more accurate 'durability' for negation-type effects. No regression; the change is sound."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "id 3157, Zhonya's Hourglass, active[0] 'Time Stop', branches[0]",
+      "text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "id 3157, Zhonya's Hourglass, passives",
+      "text": "[] (no declared passive effects; Time Stop is the item's only represented mechanic)"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "id 3102, Banshee's Veil, passives[0] 'Annul', branches[0]",
+      "text": "Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions)."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 0",
+      "text": "T = E[ D | model, config ]      (point estimate under the expectation heuristic)"
+    },
+    {
+      "file": "data/README.md",
+      "locator": "Item source fields table",
+      "text": "passives[].branches, active[].branches | Wiki description, description2, ... | The complete text of one effect"
+    },
+    {
+      "file": "data/worklists/e9-bis-b-task.md",
+      "locator": "CONTEXT list",
+      "text": "src/calculator/item_coverage.py - how item effects get 'blocked'/'withheld' verdicts and what certification requires."
+    },
+    {
+      "file": "data/wiki/article-index.json",
+      "locator": "\"Durability\" (pageid 961552)",
+      "text": "Durability is a first-class wiki article title, i.e. the game's own term for the incoming-damage axis."
+    }
+  ],
+
+  "asides_for_the_parent": [
+    "Atomizer artifact worth knowing about (off-task, not a defect in this leaf): the atom catalogs classify Zhonya's Time Stop under a DAMAGE family from negative-clause keywords. data/item-atoms/3157.json emits {atom_id: 'damage.resistance-mitigation', family: 'damage', behavior: 'Time Stop', evidence: 'active:Time Stop'}, and the unified data/atoms/items.json emits 'damage.basic_attack' for 3157 with evidence 'active:Time Stop@kw:basic attack' -- both matched on the text 'unable to ... declare basic attacks', i.e. on a prohibition. If any consumer ever derives 'declared families' from the atom catalog rather than from the effect layer, Zhonya's would read as having a non-defence family and this reason string would become false. The reason being emitted at all is evidence the coverage layer uses its own effect taxonomy, which is the correct choice; the atomizer's keyword sign-blindness on negated clauses is the thing to fix.",
+    "The scenario definition for syndra_custom_order_120 is not reachable from data/ or docs/math-foundations.md, so item identity was derived by elimination over the cached item corpus rather than read directly. The verdict is invariant across both surviving candidates."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf26",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-11",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+  "leaf_kind": "prose reason string (non-numeric)",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_leaf26_fresh",
+    "isolation": "Read only data/** and docs/math-foundations.md from the export. Did not read src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, or git history."
+  },
+
+  "independent_computation": {
+    "step_0_what_the_leaf_asserts": "Both strings assert one domain proposition: the item effect represented at item_coverage[0] is a durability/defence mechanic, therefore it contributes no term to the attacker's outgoing total damage dealt (TDD). The new string adds a justification clause ('every declared family on this item is a defence') and swaps the word 'defense' for the game's standard term 'durability'. The substantive proposition is identical in both.",
+
+    "step_1_does_attacker_durability_enter_the_outgoing_damage_identity": {
+      "source": "docs/math-foundations.md Sec. 2.1 'The 100/(100+R) identity'",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py) ... post = raw * m(R)  <=>  raw = post * (1 + R/100) = post * EHP_multiplier(R), EHP(R) = H0 * (1 + R/100).",
+      "derivation": "R in the outgoing-damage multiplier is the TARGET's post-penetration resistance; H0 and EHP(R) in the round-trip are the TARGET's health and effective health. The attacker's own armor / magic resistance / health / shields / stasis appear nowhere in raw -> post. Therefore any mechanic that only raises the ATTACKER's effective health (resists, health, shields, spell shields, stasis/invulnerability) leaves every per-hit term raw * m(R_target) unchanged, and hence leaves the sum of those terms (TDD) unchanged. The proposition common to old and new is CORRECT."
+    },
+
+    "step_2_confirm_the_candidate_mechanics_are_self-durability_only": {
+      "source": "data/items.json (cached wiki effect text, passives[].branches / active[].branches)",
+      "quotes": [
+        "Zhonya's Hourglass (3157), active 'Time Stop': \"Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.\"",
+        "Banshee's Veil (3102), passive 'Annul': \"Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).\"",
+        "Spirit Visage (3065), passive 'Boundless Vitality': heal / heal-amplification / health-regeneration / shield atoms only (data/item-atoms/3065.json)."
+      ],
+      "reading": "Each of these mechanics acts only on the holder's incoming damage or effective health. None of them adds, amplifies, penetrates, or converts anything on the outgoing-damage side. 'Changes durability, not outgoing TDD' is a faithful description of this class of mechanic."
+    },
+
+    "step_3_terminology_check": "'Durability' is the game's own term for the effective-health axis (resists + health + shields; League Wiki has a dedicated 'Durability' article, present in data/wiki/article-index.json line 4868). 'Defense' and 'durability' denote the same axis here, so the swap is a terminology tightening, not a semantic change. No factual regression.",
+
+    "step_4_the_added_universal_clause": {
+      "claim_under_test": "'Every declared family on this item is a defence.'",
+      "what_data_shows": "The only family taxonomy present in the cached data is the atom taxonomy in data/wiki-atoms/*.json, applied per item in data/item-atoms/<id>.json. It has exactly six family values across all 1775 item atoms: stats (586), damage (348), heal-shield (266), stack-transform-summon-resource (248), vision-economy (190), crowd-control-mobility (137). None of the six is named or defined as 'defence'. Defensive mechanics are in fact declared under families that read as non-defensive, e.g. Zhonya's Time Stop -> {crowd-control-mobility.stasis, damage.resistance-mitigation}; Jak'Sho Voidborn Resilience -> {damage.resistance-mitigation, ...}; Warmog's -> {damage.zero-damage, ...}. Additionally, every item declares the 'stats' family, which routinely carries offensive stats (Zhonya's 105 AP, Banshee's 80 AP).",
+      "conclusion": "Under the data-side atom taxonomy the clause would be false for EVERY item, which is a reductio: the coverage layer must be using its own effect-level family classification (one in which 'defence' is a family value), not the atom taxonomy. From data/ alone the clause is therefore UNVERIFIABLE rather than falsifiable. It is not contradicted by any cached source, and it does not weaken or alter the substantive proposition verified in step 1, which is what the leaf is actually reporting.",
+      "identification_limit": "The identity of item_coverage[0] for 'syndra_derived_order_39' could not be established from the permitted tree: the scenario is not defined anywhere under data/ (grep for 'syndra_derived_order_39', 'focus_utility', 'item_coverage', 'coupled_scenario' over data/** returns nothing but the E9 worklist prose), and its definition lives in scripts/, which this runbook forbids. The verdict below is therefore based on the class-level proposition, which holds for every mechanic that can legitimately trigger this reason."
+    },
+
+    "result": "The new string states a true proposition (attacker-side durability mechanics do not enter outgoing TDD; verified from the 100/(100+R) identity in docs/math-foundations.md Sec. 2.1 plus the cached wiki effect text for the defence-only item mechanics), states it in the game's standard vocabulary, and adds a justification clause that no cached source contradicts. The old string states the same true proposition more thinly. New value is correct."
+  },
+
+  "sources_quoted": [
+    "docs/math-foundations.md Sec. 2.1 - 'The 100/(100+R) identity': m(R) = 100/(100+R); EHP(R) = H0*(1+R/100) - R and H0 are the TARGET's",
+    "docs/math-foundations.md Sec. 3.1 - f(S) = 'deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (score + EHP*1e-9)'",
+    "data/items.json - item 3157 Zhonya's Hourglass, active 'Time Stop' branch text (stasis / untargetable / invulnerable)",
+    "data/items.json - item 3102 Banshee's Veil, passive 'Annul' branch text (spell shield)",
+    "data/items.json - item 3040 Seraph's Embrace, passives 'Awe' and 'Lifeline' branch text",
+    "data/item-atoms/*.json (325 files, 1775 atoms) - the per-item 'family' declarations",
+    "data/wiki-atoms/*.json - the six-family atom taxonomy (stats, damage, heal-shield, crowd-control-mobility, stack-transform-summon-resource, vision-economy)",
+    "data/wiki/article-index.json line 4868 - League Wiki 'Durability' article exists (terminology anchor)",
+    "data/practice-corpus/scenarios.json - scenario 'cp21-bis-utility-ahri' (utility-objective BIS coverage expectations; no syndra_derived_order_* scenario present)"
+  ],
+
+  "asides_flagged_not_verdict_bearing": [
+    "Coupled-score nuance: docs/math-foundations.md Sec. 3.1 defines the coupled score as damage dealt BEFORE the participant's own death, plus an explicit EHP tiebreak. In that coupled sense a durability mechanic CAN raise realized damage by extending the participant's life, so 'does not change outgoing TDD' is exact only for the per-hit damage model, not for a survival-truncated fight window. This nuance is present identically in the old and the new string, so it does not discriminate between them - but if the coverage note is meant to justify withholding an item from a coupled-score optimizer, that phrasing understates the item's real contribution.",
+    "Zhonya's-specific nuance: Time Stop costs 2.5 s during which the holder cannot attack or cast. If it were modeled with timing, it would REDUCE outgoing TDD rather than leave it unchanged. Again identical under both strings.",
+    "Wording precision: 'Every declared family on this item' reads as a claim about the whole item (stat block included). Every mage defensive item in the cache also declares ability power (Zhonya's 105 AP, Banshee's 80 AP), which does change outgoing TDD. If the coverage layer means the families of the represented EFFECT, '...on this effect' would be the accurate scope."
+  ],
+
+  "gates": "None run - read-only oracle pass. Nothing committed, nothing outside this receipt written."
+}

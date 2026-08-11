@@ -1,0 +1,86 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf37",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/combat/utility_outcomes/focus/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+
+  "subject_identification": {
+    "claim": "The leaf concerns the item whose effect is named 'Time Stop'. The cached corpus contains exactly two non-Arena items with a 'Time Stop' active: Zhonya's Hourglass (3157) and its component Seeker's Armguard (2420); both carry byte-identical active text and the same atom-family set, so the analysis below holds for either.",
+    "evidence": "data/items.json — grep of every item whose record mentions 'Time Stop'/'stasis' yields 2420 Seeker's Armguard (active ['Time Stop']), 3157 Zhonya's Hourglass (active ['Time Stop']), 3026 Guardian Angel (no active), 228002 Wooglet's Witchcap (Arena-only, active 'Stasis').",
+    "note": "The golden leaf path is index-stable, so the diff is a change of reason for the same item, not a change of item."
+  },
+
+  "independent_computation": {
+    "test_1_every_declared_family_is_a_defence": {
+      "method": "Enumerate the declared atom families for the item in the tracked unified atomizer output data/atoms/items.json (the file data/atoms/README.md names as the consumer-facing source).",
+      "zhonyas_3157_atoms": [
+        "control.stasis  (behavior 'control', source Zhonya's Hourglass.actives[0].branches[0], values [2.5] flat, evidence 'active:Time Stop@kw:stasis')",
+        "damage.basic_attack  (source actives[0].branches[0], evidence 'active:Time Stop@kw:basic attack')",
+        "economy.total  (shop.prices.total = 3250 gold)",
+        "stat.ability_power  (stats.abilityPower.flat = 105.0)",
+        "stat.armor  (stats.armor.flat = 50.0)"
+      ],
+      "seekers_2420_atoms_families": ["control", "damage", "economy", "stat"],
+      "result": "FALSE. The declared families are {control, damage, economy, stat}. `stat.ability_power` (105 AP) and `economy.total` are not defences, and a `damage.*` family is declared outright. Corpus-wide check: 0 of 324 item objects lack an `economy` family and 703 `stat` atoms are spread across the corpus, so no item in the cached corpus can satisfy 'every declared family is a defence' under this taxonomy."
+    },
+    "test_2_mechanic_changes_durability_not_outgoing_tdd": {
+      "method": "Read the cached wiki effect text verbatim, then propagate it through the engine's own damage-schedule identity in docs/math-foundations.md §1.1 / §5.",
+      "cached_effect_text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+      "argument_a_active_suppresses_own_output": {
+        "identity": "docs/math-foundations.md §1.1: N(T) = ⌊AS · u · T⌋ with swing timestamps t_i = i·Δ; ability recasts share ONE timeline and 'a cast counts when it *starts* within the window'.",
+        "computation": "Syndra L18 (data/champions.json): base AS 0.658, AS ratio 0.625, AS growth 2%/lvl. Bonus AS% = 2 × 17 × (0.7025 + 0.0175 × 17) = 34 × 1.0 = 34%. AS = 0.658 + 0.625 × 0.34 = 0.8705. Over the scenario's 60 s window, u = 1: N(60) = ⌊0.8705 × 60⌋ = ⌊52.23⌋ = 52 autos. Two-and-a-half seconds of stasis remove 2.5/60 = 4.167% of the action window: N(57.5) = ⌊0.8705 × 57.5⌋ = ⌊50.05⌋ = 50 autos, i.e. −2 autos, plus every ability cast whose start epoch falls inside the frozen 2.5 s is pushed out of (or off the end of) the shared timeline.",
+        "conclusion": "Time Stop *does* change outgoing TDD — it strictly reduces it. So the new reason's premise is false in the direction that matters: assuming the mechanic is 'durability only' would let a stasis be assumed for free, silently deleting ~4% of the action window from TDD (or, symmetrically, crediting durability without charging its damage cost)."
+      },
+      "argument_b_stat_block_is_offensive": {
+        "computation": "Zhonya's grants 105 AP (data/items.json stats.abilityPower.flat = 105.0). Syndra AP ratios from data/champions.json: Q Dark Sphere 70% AP, W Force of Will 65% AP, E Scatter the Weak 60% AP, R Unleashed Power minimum 60% AP. Σ ratios = 0.70 + 0.65 + 0.60 + 0.60 = 2.55. Raw magic damage added per full rotation by this item's stats = 105 × 2.55 = 267.75 (pre-mitigation).",
+        "conclusion": "The item is not a pure defence on the stat side either."
+      },
+      "result": "FALSE on both halves of the new value."
+    },
+    "test_3_is_the_old_reason_data_consistent": {
+      "checks": [
+        "Duration is fixed and bounded in the cached data (control.stasis values [2.5], units flat) — so the only quantity the model can legitimately consume is a bounded active-seconds figure.",
+        "The cached active carries `\"cooldown\": null` (data/items.json 3157.active[0] and 2420.active[0]) — there is no cached cooldown from which uses-per-fight could be derived, so stasis seconds cannot be inferred from item presence; they must be supplied by the scenario.",
+        "Fail-closed doctrine of the corpus (data/README.md, data/atoms/README.md provenance contract): an effect with no evidence for its usage is withheld, never assumed."
+      ],
+      "result": "The old reason is exactly the statement the cached data supports: a bounded, explicitly-supplied active-seconds input is the only sound pricing channel, and item presence alone must not assume stasis."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json → 3157 Zhonya's Hourglass.active[0]",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+      "also": "name 'Time Stop', unique true, cooldown null; stats.abilityPower.flat 105.0, stats.armor.flat 50.0; identical branch text at 2420 Seeker's Armguard (abilityPower 40.0, armor 25.0)."
+    },
+    {
+      "path": "data/atoms/items.json → objects['3157']",
+      "quote": "atom_id 'control.stasis' values [2.5] units ['flat'] evidence ['active:Time Stop@kw:stasis']; atom_id 'damage.basic_attack' evidence ['active:Time Stop@kw:basic attack']; atom_id 'economy.total' values [3250.0]; atom_id 'stat.ability_power' values [105.0]; atom_id 'stat.armor' values [50.0]",
+      "derived": "declared families = {control, damage, economy, stat}; corpus-wide 0/324 objects lack an economy family."
+    },
+    {
+      "path": "docs/math-foundations.md §1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "N(T) = ⌊AS · u · T⌋ … Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time … and a cast counts when it *starts* within the window"
+    },
+    {
+      "path": "docs/math-foundations.md §5 (formula-audit table)",
+      "quote": "| Auto DPS / auto count (`_auto_attack_timestamps`, `num_auto_attacks`) | renewal counting `N(T)=⌊AS·u·T⌋`; periodic schedule `t_i=i/rate` | **EXACT*** |"
+    },
+    {
+      "path": "data/champions.json → Syndra",
+      "quote": "stats.attackSpeed.flat 0.658, perLevel 2; stats.attackSpeedRatio.flat 0.625. Abilities: Q Dark Sphere 'Magic Damage' 70% AP; W Force of Will 'Magic Damage' 65% AP; E Scatter the Weak 'Magic Damage' 60% AP; R Unleashed Power 'Minimum Magic Damage' 60% AP."
+    },
+    {
+      "path": "data/atoms/README.md",
+      "quote": "The legacy per-item files under the `data/item-atoms/` tree are no longer written; consumers should read `data/atoms/items.json` … Every non-stat atom's `evidence` names the exact effect + keyword that produced it"
+    }
+  ],
+
+  "reasoning_summary": "The new value asserts two things that the cached data contradicts. (1) 'Every declared family on this item is a defence' — the stasis item declares control, damage, economy and stat families, including 105 flat AP, which for Syndra is worth 105 × 2.55 = 267.75 raw magic damage per rotation; and no item in the 324-object corpus has an all-defensive family set (every one declares economy). (2) 'the represented mechanic changes durability, not outgoing TDD' — the cached wiki text says the holder is, for the 2.5 s duration, 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items', so under the engine's own N(T) = ⌊AS·u·T⌋ / shared-cast-timeline identity a 2.5 s stasis inside the 60 s scenario window removes 4.167% of action time (Syndra L18: 52 → 50 autos, plus displaced casts). Time Stop therefore has a first-order, negative effect on outgoing TDD. That is precisely why the old reason is the correct one: the duration is bounded and the cached active carries no cooldown, so stasis seconds cannot be inferred from item presence and must come from an explicit bounded active-seconds scenario input.",
+
+  "verdict_detail": "old_value_correct — the pre-change reason is supported by the cached wiki text, the atom provenance and the §1.1 scheduling identity; the post-change reason is factually false on both of its clauses for the only items in the corpus that carry the represented mechanic.",
+  "constraints_observed": "Worked only from a scratch export of `data/` and `docs/math-foundations.md` at HEAD. No src/, tests/, scripts/, docs/plans/, docs/receipts/, diff or git history was read. Nothing committed."
+}

@@ -1,0 +1,64 @@
+{
+  "receipt": "oracle-P3-3.8-leaf27",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-11",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+  "item_identified": {
+    "item": "Zhonya's Hourglass",
+    "id": 3157,
+    "how_identified": "The leaf is a per-item coverage reason and the OLD text names the effect 'Time Stop'. Scanning the whole cached item table for that active, only three entries carry stasis: Zhonya's Hourglass (3157), Seeker's Armguard (2420, its component, identical Time Stop text) and Wooglet's Witchcap (228002, `classic sr 5v5: false` -> not an SR build item). For a Syndra (mid/AP) build on Summoner's Rift the coverage row is Zhonya's Hourglass; the argument below is identical for 2420 because the cached active text is byte-identical.",
+    "sr_availability": "data/items.json 3157: modes['classic sr 5v5'] = true, purchasable = true, championRestriction = [], acquisitionNote = \"\" -> legal on an ordinary SR build."
+  },
+  "independent_computation": {
+    "method": "This leaf is a prose justification, not a number, so the check is whether each candidate string is entailed or contradicted by the cached source text and the cached atom decompositions of the item. Three independent cached sources were read: the wiki item record, and two separate atom decompositions of the same item.",
+    "step_1_what_the_mechanic_actually_does": {
+      "source": "data/items.json -> 3157.active[0] (name 'Time Stop'), branches[0]",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+      "corroborating_quotes": [
+        "data/items.json -> 3157.simpleDescription: \"Activate to become invincible but unable to take actions\"",
+        "data/items.json -> 3157.riotDescription: \"<active>Time Stop</active><br>Enter <keyword>Stasis</keyword> for 2.5 seconds.\""
+      ],
+      "derivation": "The cached text states two coupled consequences, joined by 'but also': (a) untargetable + invulnerable for 2.5 s -> a durability effect; (b) unable to move, declare basic attacks, cast abilities, use summoner spells or activate items for those same 2.5 s -> outgoing damage is forced to zero for the whole duration. Over a fight window of length T the mechanic therefore removes a bounded 2.5 s of the attacker's own damage schedule (autos: floor(AS*u*T) loses the swings inside the stasis interval; casts: the shared cast timeline is blocked for 2.5 s). So the represented mechanic changes BOTH durability and outgoing TDD, and the sign on TDD is negative."
+    },
+    "step_2_what_families_the_item_declares": {
+      "source_a": "data/item-atoms/3157.json",
+      "source_a_families": [
+        "stats / abilityPower flat 105.0",
+        "stats / armor flat 50.0",
+        "crowd-control-mobility / stasis (evidence 'active:Time Stop')",
+        "damage / damage.resistance-mitigation (evidence 'active:Time Stop', relations: damage.damage-instance, damage.armor-penetration, damage.magic-penetration)"
+      ],
+      "source_b": "data/atoms/items.json -> key \"3157\"",
+      "source_b_atoms": [
+        "control.stasis (behavior 'control', source \"Zhonya's Hourglass.actives[0].branches[0]\", values [2.5], evidence 'active:Time Stop@kw:stasis')",
+        "damage.basic_attack (behavior 'damage', same source branch, evidence 'active:Time Stop@kw:basic attack')",
+        "economy.total (3250 gold)",
+        "stat.ability_power (105.0 flat)",
+        "stat.armor (50.0 flat)"
+      ],
+      "derivation": "Both independent decompositions declare a `damage`-family atom on this item, and both declare 105 flat ability power, which is an offence stat feeding outgoing TDD directly. Neither decomposition contains any 'defence' family: the atom family enum in data/atoms/atoms.schema.json is {damage, heal, shield, crowd_control, stack, transform, summon, execute, resource, movement, vision, buff, debuff, interaction, economy} and has no defence member at all. A universally quantified claim ('every declared family ... is a defence') is therefore false on the cached decomposition on two independent counts."
+    },
+    "step_3_pricing_policy": {
+      "derivation": "Time Stop is an `active`, not a passive (data/items.json places it under 3157.active, passives = []), and its duration is a fixed bound of 2.5 s. Ownership of an activated item does not entail its use inside any given fight window, and the cached record carries no cast schedule. The only way to price it deterministically is from an explicit, bounded active-seconds input supplied by the scenario - exactly what the OLD reason states. Assuming stasis from item presence would silently (i) grant free invulnerability and (ii) simultaneously owe a 2.5 s hole in the attacker's own damage schedule, neither of which the cache authorises.",
+      "supporting_doc": "docs/math-foundations.md Sec. 1.1: auto swings are the renewal count N(T) = floor(AS*u*T) and ability recasts occupy a single shared cast timeline where 'a cast counts when it starts within the window'. A 2.5 s stasis is a blackout on that shared timeline, i.e. it is inside the TDD model, not outside it - which is why it cannot be dismissed as 'durability, not outgoing TDD'."
+    },
+    "conclusion": "The NEW value makes two claims, both contradicted by the cached sources: (1) 'every declared family on this item is a defence' - the item declares a `damage` family atom in both decompositions and 105 flat ability power, an offence stat, and no 'defence' family exists in the taxonomy; (2) 'the represented mechanic changes durability, not outgoing TDD' - the cached Time Stop text explicitly makes the holder 'unable to ... declare basic attacks, cast abilities, use summoner spells, or activate items' for 2.5 s, which is a direct change to outgoing TDD. The OLD value is faithful to the cache: Time Stop is a bounded (2.5 s) activated effect, so it must be priced from an explicit bounded active-seconds scenario input and never assumed from item presence."
+  },
+  "sources_quoted": [
+    "data/items.json -> \"3157\" (Zhonya's Hourglass): active[0].name 'Time Stop', active[0].branches[0], passives = [], simpleDescription, riotDescription, stats.abilityPower.flat = 105.0, stats.armor.flat = 50.0, shop.prices.total = 3250, modes, championRestriction, acquisitionNote",
+    "data/items.json -> \"2420\" (Seeker's Armguard): identical 'Time Stop' active text; \"228002\" (Wooglet's Witchcap): stasis active but modes['classic sr 5v5'] = false",
+    "data/item-atoms/3157.json: declared families stats / stats / crowd-control-mobility / damage",
+    "data/atoms/items.json -> \"3157\": atoms control.stasis, damage.basic_attack, economy.total, stat.ability_power, stat.armor",
+    "data/atoms/atoms.schema.json: family enum (no 'defence' member)",
+    "docs/math-foundations.md Sec. 1.1 (renewal auto count N(T) = floor(AS*u*T); shared cast timeline `_schedule_shared_casts`)"
+  ],
+  "caveats": [
+    "Only data/ and docs/math-foundations.md were read, per runbook; src/, tests/, scripts/, docs/plans/, docs/receipts/ and git history were not consulted, and no diff or plan was read.",
+    "The identity of item_coverage[1] is inferred from the OLD reason naming 'Time Stop' plus the cached stasis-item scan; the scenario roster itself is not present under data/ (data/practice-corpus/scenarios.json has no 'syndra_derived_order_39' entry). If the build order had changed so that index [1] became a different, purely defensive item, that would be a different leaf semantics than a reason-only edit; under the stated premise that only this reason string changed, the item is a stasis item and the analysis above applies.",
+    "Aside (off-task, flagged per repo habit): data/item-atoms/2420.json is named 'Seeker's Armguard' yet carries the full Zhonya's 'Time Stop' active in data/items.json. If Armguard is not supposed to grant stasis this patch, that is a wiki-cache inheritance artefact worth an audit."
+  ]
+}

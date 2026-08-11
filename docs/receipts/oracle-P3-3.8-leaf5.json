@@ -1,0 +1,100 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf5",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_39/combat/utility_outcomes/focus/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "method": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle5",
+    "read": ["data/items.json", "data/item-atoms/*.json", "data/atoms/README.md", "data/atoms/items.json", "data/practice-corpus/scenarios.json", "data/wiki/article-index.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "step_1_identify_the_item": {
+      "reasoning": "The leaf's own text names the mechanic 'Time Stop'. Scanning every cached item record for an active named exactly 'Time Stop' yields precisely two Summoner's-Rift-legal items.",
+      "matches": [
+        {"id": 2420, "name": "Seeker's Armguard", "modes": {"classic sr 5v5": true, "aram": true, "nb": true, "ar": false}, "abilityPower_flat": 40.0, "armor_flat": 25.0},
+        {"id": 3157, "name": "Zhonya's Hourglass", "modes": {"classic sr 5v5": true, "aram": true, "nb": true, "ar": true}, "abilityPower_flat": 105.0, "armor_flat": 50.0}
+      ],
+      "conclusion": "For a Syndra ordinary-SR build the item under test is Zhonya's Hourglass (3157); the argument below holds identically for Seeker's Armguard (2420) and for the only other stasis-active item, Wooglet's Witchcap (228002)."
+    },
+    "step_2_enumerate_the_declared_families": {
+      "source": "data/item-atoms/3157.json",
+      "declared_atoms": [
+        {"atom_id": "stats.ability-power", "family": "stats", "parameters": {"flat": 105.0}},
+        {"atom_id": "stats.armor", "family": "stats", "parameters": {"flat": 50.0}},
+        {"atom_id": "crowd-control-mobility.stasis", "family": "crowd-control-mobility", "behavior": "Time Stop"},
+        {"atom_id": "damage.resistance-mitigation", "family": "damage", "behavior": "Time Stop", "relations": ["damage.damage-instance", "damage.armor-penetration", "damage.magic-penetration"]}
+      ],
+      "declared_families": ["stats", "crowd-control-mobility", "damage"],
+      "full_family_taxonomy_in_cache": {
+        "source": "census over data/item-atoms/*.json plus data/atoms/README.md ('6 families')",
+        "families_and_atom_counts": {"stats": 586, "damage": 348, "heal-shield": 266, "stack-transform-summon-resource": 248, "vision-economy": 190, "crowd-control-mobility": 137},
+        "note": "There is no family named 'defence' (or 'defensive') anywhere in the cached taxonomy. The literal string 'defence' occurs in data/ exactly once, in an unrelated wiki article title ('League of Legends: Turret Defence' in data/wiki/article-index.json)."
+      }
+    },
+    "step_3_test_the_new_value": {
+      "claim_a": "'Every declared family on this item is a defence.'",
+      "result_a": "FALSE. Zhonya's Hourglass declares family `damage` (damage.resistance-mitigation, whose relations point at damage.damage-instance / armor-penetration / magic-penetration, i.e. the outgoing-damage machinery) and declares stats.ability-power = 105 flat AP. Neither is a defence, and no 'defence' family exists in the taxonomy at all, so the universal quantifier cannot hold for any item.",
+      "claim_b": "'the represented mechanic changes durability, not outgoing TDD.'",
+      "result_b": "FALSE on two independent counts. (i) The item carries +105 ability power, which raises Syndra's outgoing damage directly; it is not a durability-only item. (ii) The cached wiki text of the mechanic itself says stasis suppresses the holder's own output for its whole duration, so even the active leg changes outgoing damage over the 2.5 s window rather than being durability-only."
+    },
+    "step_4_test_the_old_value": {
+      "claim": "'Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.'",
+      "result": "CONSISTENT with the cache. Time Stop lives in the item record's `active[]` array (Zhonya's `passives` is the empty list []), i.e. it is an activated, non-always-on effect with a bounded 2.5-second duration ('{{fd|2.5}} seconds'). Nothing in the cached record makes it persistent, and nothing in the record says whether or when the holder spent those seconds. Therefore the number of stasis-seconds is not derivable from ownership and must arrive as an explicit bounded scenario input - the fail-closed posture the repo already applies to item availability (CLAUDE.md rule 6: an item whose sources are missing is withheld, not assumed).",
+      "bounded_duration": {"seconds": 2.5, "source_token": "{{fd|2.5}}"}
+    },
+    "step_5_math_foundations_check": {
+      "result": "docs/math-foundations.md contains no definition of 'TDD', 'durability', 'item_coverage', or a 'defence' family, and no formula that would license the new value. Its family vocabulary is mathematical (sigmoid/logistic family for m(R)=100/(100+R), greedy-with-guarantee family, conformal coverage), unrelated to the item-atom families this leaf reasons over. So the new value has no support there either."
+    },
+    "conclusion": "The new reason states a universal claim ('every declared family ... is a defence') that the cached decomposition falsifies for this item, and a substantive claim ('changes durability, not outgoing TDD') that both the item's +105 AP and the cached stasis text falsify. The old reason states a rule that matches the cached record's own structure (bounded active, not a passive). The old value is the correct one."
+  },
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "locator": "item 3157 -> active[0]",
+      "quote": "{\"unique\": true, \"name\": \"Time Stop\", \"branches\": [\"Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].\"]}"
+    },
+    {
+      "path": "data/items.json",
+      "locator": "item 3157 -> passives",
+      "quote": "\"passives\": []"
+    },
+    {
+      "path": "data/items.json",
+      "locator": "item 3157 -> stats",
+      "quote": "\"abilityPower\": {\"flat\": 105.0, ...}, \"armor\": {\"flat\": 50.0, ...}"
+    },
+    {
+      "path": "data/item-atoms/3157.json",
+      "locator": "atoms[]",
+      "quote": "stats.ability-power (family stats, flat 105.0); stats.armor (family stats, flat 50.0); crowd-control-mobility.stasis (family crowd-control-mobility, behavior \"Time Stop\", evidence \"active:Time Stop\"); damage.resistance-mitigation (family damage, behavior \"Time Stop\", relations [damage.damage-instance, damage.armor-penetration, damage.magic-penetration])"
+    },
+    {
+      "path": "data/item-atoms/2420.json",
+      "locator": "atoms[]",
+      "quote": "Seeker's Armguard - same four atoms, families {stats, crowd-control-mobility, damage}, stats.ability-power flat 40.0"
+    },
+    {
+      "path": "data/atoms/README.md",
+      "locator": "Classifier v3 / Current state (v4)",
+      "quote": "wiki vocabularies in data/wiki-atoms/ (185 atoms, 6 families incl. `interaction`) are the only identity source ... 19/19 sanity checks across all 6 families"
+    },
+    {
+      "path": "data/item-atoms/*.json",
+      "locator": "family census (computed)",
+      "quote": "stats 586, damage 348, heal-shield 266, stack-transform-summon-resource 248, vision-economy 190, crowd-control-mobility 137 - no 'defence' family exists"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "full-file grep for TDD | durability | untargetable | invulnerab | coverage | family",
+      "quote": "No occurrence of TDD, durability, untargetable, or invulnerable; 'family' occurrences are mathematical (sigmoid/logistic family, greedy-with-guarantee family) and 'coverage' occurrences are conformal-prediction coverage - nothing licenses the new value."
+    }
+  ],
+  "caveats": [
+    "Scenario definitions for syndra_custom_order_39 are not present under data/ (data/practice-corpus/scenarios.json contains no Syndra entry), and src/, tests/, and scripts/ were out of scope, so the item at item_coverage[1] was identified from the leaf's own 'Time Stop' wording rather than read from the scenario. The falsification of the new value does not depend on that identification: every stasis-bearing item in the cache (3157 Zhonya's Hourglass, 2420 Seeker's Armguard, 228002 Wooglet's Witchcap, 3026 Guardian Angel, 446691 Duskblade of Draktharr) declares the `damage` family plus an offensive stat atom, so 'every declared family on this item is a defence' is false for all of them."
+  ]
+}

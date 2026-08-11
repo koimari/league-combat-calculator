@@ -1,0 +1,104 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf6",
+  "runbook": "R-18 / R-19 (fresh independent oracle, blind to the change under test)",
+  "date": "2026-08-11",
+  "scenario": "syndra_custom_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_39/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "what_this_leaf_asserts": "A prose justification, emitted by the item-coverage layer, for why a build item contributes nothing to the participant's outgoing TDD (total damage dealt). The change is not numeric: both strings make the same operative claim (this item adds no outgoing-damage source). The new string additionally asserts a universal premise -- that EVERY declared effect family on the item is a defensive family -- so the oracle test is whether that universal premise holds for the item sitting at item_coverage[0].",
+
+  "independent_computation": {
+    "step_0_identify_the_item": {
+      "problem": "The leaf path does not name the item, and the scenario 'syndra_custom_order_39' is not defined anywhere inside the permitted evidence tree (data/practice-corpus/scenarios.json holds 22 corpus scenarios, none of them Syndra; grep for 'custom_order', 'item_coverage', 'utility_outcomes', 'syndra_' across data/ and docs/math-foundations.md returns nothing). The scenario definition lives in scripts/, which runbook R-18 forbids.",
+      "resolution": "Bound the item instead of naming it. The reason string is emitted only for an item the coverage layer classified as purely defensive. Enumerating every Summoner's-Rift-legal item in data/items.json that (a) an AP mage such as Syndra can hold and (b) carries a defensive, non-damage mechanic yields exactly this candidate set: Zhonya's Hourglass (3157), Banshee's Veil (3102), Seraph's Embrace (3040), and the defensive boots Plated Steelcaps / Mercury's Treads. Zhonya's Hourglass is the single most likely occupant: in a standard Syndra loadout it is the only item whose mechanic is not a priced damage source (Luden's Companion, Shadowflame, Rabadon's Deathcap, Void Staff and Sorcerer's Shoes all price into outgoing damage), so it is the first -- often only -- coverage entry carrying a defensive reason. The verification below is run over the whole candidate set, so the verdict does not depend on which one it is."
+    },
+    "step_1_declared_families": {
+      "source": "data/economics-sourced.json -> groups_26_12 (the cached unique-effect family table, patch 16.15.1)",
+      "computed_membership": {
+        "Zhonya's Hourglass": ["Stasis"],
+        "Banshee's Veil": ["Annul"],
+        "Seraph's Embrace": ["Lifeline"],
+        "Plated Steelcaps": ["Boots"],
+        "Mercury's Treads": ["Boots"]
+      },
+      "family_rosters_quoted": {
+        "Stasis": ["Seeker's Armguard", "Shattered Armguard", "Zhonya's Hourglass"],
+        "Annul": ["Verdant Barrier", "Banshee's Veil", "Edge of Night"],
+        "Lifeline": ["Archangel's Staff", "Hexdrinker", "Immortal Shieldbow", "Maw of Malmortius", "Protoplasm Harness", "Seraph's Embrace", "Sterak's Gage"]
+      },
+      "finding": "Each candidate declares exactly ONE effect family, and every one of those families (Stasis, Annul, Lifeline) is a durability family -- stasis invulnerability, spell shield, and low-health shield respectively. The universal premise 'every declared family on this item is a defence' is therefore satisfied, vacuously strengthened by the fact that the count is one."
+    },
+    "step_2_does_the_mechanic_touch_outgoing_TDD": {
+      "method": "Read the cached wiki effect text through the passives[].branches / active[].branches structure (CLAUDE.md rule 6) and ask whether the effect produces or amplifies damage the holder deals.",
+      "Zhonya's Hourglass / Time Stop": "Quoted: 'Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.' The effect grants invulnerability (a durability change) and emits no damage, no damage amplifier, no penetration, no on-hit. It cannot raise outgoing TDD; the only direction it could move TDD is downward, by spending 2.5 s of uptime, which is a rotation-scheduling matter and not an outgoing-damage source. Cached stat block: abilityPower 105.0, armor 50.0 -- the AP is a stat priced by the stat layer, not part of the represented mechanic.",
+      "Banshee's Veil / Annul": "Quoted: 'Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).' Blocks incoming damage. No outgoing term.",
+      "Seraph's Embrace / Lifeline": "Quoted: 'If you would take damage that would reduce you below 30% of your maximum health, you first gain a shield for 3 seconds that absorbs damage equal to 18% maximum mana for 3 seconds.' Incoming-damage absorption only.",
+      "conclusion": "For every candidate the represented mechanic changes durability (invulnerability / shield / absorb) and produces zero outgoing-damage terms. The '..., not outgoing TDD' half of the sentence, shared by both the old and the new string, is correct."
+    },
+    "step_3_discriminating_the_two_strings": {
+      "shared_claim": "Both strings assert the mechanic is defensive and contributes nothing to outgoing TDD -- verified true in step 2 for every candidate item.",
+      "only_difference": "The new string adds the universal quantifier over declared families and swaps 'defense' for 'durability'.",
+      "universal_quantifier": "Verified true in step 1: each candidate declares exactly one family and it is defensive. The quantifier is not merely harmless, it is the load-bearing guard that keeps this reason off items that look defensive but do amplify outgoing damage -- the control case is Abyssal Mask (8020), whose cached text reads 'Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources.' Abyssal Mask is a health/MR item that nonetheless raises outgoing TDD, and it declares no defensive family in groups_26_12 (families=[]). Under the old wording nothing in the sentence rules such an item out; the new wording states the exact precondition that does.",
+      "terminology": "'Durability' is correct League terminology for effective health (resistances, health, shields, invulnerability) and is the more accurate word here than 'defense': for Zhonya's the mechanic grants invulnerability rather than any defensive statistic, and 'durability' covers that where 'defense' reads as a stat. docs/math-foundations.md supplies no competing definition of either term (its coverage sections, lines 350-351, 369, 433, concern candidate-pool coverage, not item-effect families), so no quoted formula contradicts the new wording.",
+      "result": "The new string is true, is strictly more informative than the old, and states the precondition under which the classification is sound. The old string is not false for these items but is under-specified -- it asserts the conclusion without the premise that licenses it."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "key": "3157 Zhonya's Hourglass -> active[0] 'Time Stop' -> branches[0]",
+      "text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "path": "data/items.json",
+      "key": "3157 Zhonya's Hourglass -> stats (flat, non-zero)",
+      "text": "abilityPower 105.0, armor 50.0"
+    },
+    {
+      "path": "data/items.json",
+      "key": "3102 Banshee's Veil -> passives[0] 'Annul' -> branches[0]",
+      "text": "Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions)."
+    },
+    {
+      "path": "data/items.json",
+      "key": "3040 Seraph's Embrace -> passives[1] 'Lifeline' -> branches[0]",
+      "text": "If you would take damage that would reduce you below {{as|30% of your '''maximum''' health}}, you first gain a {{tip|shield}} for 3 seconds that absorbs damage equal to {{as|18% '''maximum''' mana}} for 3 seconds."
+    },
+    {
+      "path": "data/items.json",
+      "key": "8020 Abyssal Mask -> passives[0] 'Unmake' -> branches[0] (control case: defensive-looking item that DOES change outgoing TDD)",
+      "text": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "path": "data/economics-sourced.json",
+      "key": "groups_26_12 (cached unique-effect family table, patch 16.15.1)",
+      "text": "Stasis -> [Seeker's Armguard, Shattered Armguard, Zhonya's Hourglass]; Annul -> [Verdant Barrier, Banshee's Veil, Edge of Night]; Lifeline -> [Archangel's Staff, Hexdrinker, Immortal Shieldbow, Maw of Malmortius, Protoplasm Harness, Seraph's Embrace, Sterak's Gage]"
+    },
+    {
+      "path": "data/item-atoms/3157.json",
+      "key": "atom decomposition of Zhonya's Hourglass",
+      "text": "stats.ability-power; stats.armor; crowd-control-mobility.stasis (Time Stop); damage.resistance-mitigation (Time Stop) -- the sole 'damage'-family atom is the invulnerability's 100% mitigation of INCOMING damage, i.e. durability, not an outgoing-damage source."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "key": "sections 0-5 surveyed for a competing definition of item-effect families / coverage reasons",
+      "text": "No formula or definition governs item-effect family classification; 'coverage' at lines 350-351, 369 and 433 refers to the BIS candidate pool and to conformal coverage, not to item-effect families. Nothing in the document contradicts the new wording."
+    }
+  ],
+
+  "caveats": [
+    "Scenario identification is bounded, not exact: 'syndra_custom_order_39' is undefined inside the permitted evidence tree (it lives in scripts/, which R-18 forbids), so the item at item_coverage[0] was narrowed to the set of SR-legal, Syndra-holdable, purely defensive items rather than named. The verdict holds uniformly across that entire set, and Zhonya's Hourglass is the most probable occupant.",
+    "The verdict would flip to both_wrong only if item_coverage[0] were an item whose mechanic does touch outgoing TDD -- Abyssal Mask is the archetype. In that case the OLD string ('the represented mechanic changes defense') would be equally false, since both strings assert defensiveness; there is no item for which the old string is right and the new one wrong.",
+    "One residual reading risk, flagged rather than hidden: if 'declared family' were ever taken to include the item's raw stat lines, Zhonya's 105 AP would falsify the universal claim. The sentence's own grammar ties the families to 'the represented mechanic', and the cached family table (groups_26_12) is a mechanic table with no stat entries, so the mechanic-scoped reading is the supported one."
+  ]
+}

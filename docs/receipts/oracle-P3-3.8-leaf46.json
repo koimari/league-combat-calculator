@@ -1,0 +1,113 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf46",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-11",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle46",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_0_scope": "The leaf is a natural-language justification for withholding an item from the outgoing-TDD (total damage dealt) accounting. It carries two checkable factual claims: (a) a UNIVERSAL claim that every declared effect family on the item is defensive, and (b) a claim that the represented mechanic acts on durability (incoming side), not on outgoing TDD. Both were checked against the cached item/atom data.",
+
+    "step_1_item_identity": {
+      "problem": "The scenario definition for 'syndra_derived_order_120' lives outside the permitted evidence tree (no occurrence of the scenario id anywhere under data/ or docs/math-foundations.md), and the name indicates a DERIVED (optimizer-chosen) item order, so the exact item at item_coverage[0] cannot be read off the cache.",
+      "resolution": "Instead of guessing the item, the universal claim was tested against the ENTIRE candidate space: every purchasable Summoner's Rift legendary item (tier >= 3, modes['classic sr 5v5'] == true, purchasable, not removed) carrying flat ability power - i.e. every item a Syndra build could hold whose coverage entry could carry a 'defence' reason.",
+      "scan": "For each such item, the declared atom families were taken from data/item-atoms/<id>.json, discarding the 'stats' family (stat lines are accounted separately from effect coverage; e.g. Zhonya's 105 AP obviously does move outgoing TDD, so 'declared family' can only mean the effect-derived atoms).",
+      "result": "Exactly 2 of the 33 AP legendaries scanned have an all-defensive declared effect-family set:",
+      "defensive_only_items": [
+        {
+          "id": 3157,
+          "name": "Zhonya's Hourglass",
+          "declared_effect_atoms": ["crowd-control-mobility.stasis", "damage.resistance-mitigation"],
+          "effects": "passives: [] ; active: Time Stop (stasis)"
+        },
+        {
+          "id": 3102,
+          "name": "Banshee's Veil",
+          "declared_effect_atoms": ["heal-shield.heal-and-shield-power", "heal-shield.shield", "heal-shield.shield-magic"],
+          "effects": "passive: Annul (spell shield) ; active: []"
+        }
+      ],
+      "counterexamples_confirming_the_predicate_is_discriminative": [
+        "8020 Abyssal Mask -> damage.magic (Unmake amplifies incoming magic damage on enemies: NOT all-defensive)",
+        "3040 Seraph's Embrace -> stack-transform-summon-resource.mana + heal-shield.* (Awe converts mana to AP: NOT all-defensive)",
+        "4633 Riftmaker -> heal-shield.omnivamp + stack consumption (Void Corruption is damage amp: NOT all-defensive)",
+        "6653 Liandry's Torment, 4645 Shadowflame, 6655 Luden's Echo, 3100 Lich Bane, 3116 Rylai's, 3118 Malignance, ... all declare damage-family or offensive-utility atoms"
+      ],
+      "conclusion": "Whichever of the two the derived order placed at item_coverage[0], the universal claim 'Every declared family on this item is a defence' is TRUE. The predicate is not vacuous flattery: it is false for the other 31 AP legendaries, so it is exactly the property that licenses withholding the item from outgoing TDD."
+    },
+
+    "step_2_durability_vs_defense": {
+      "claim_b": "'the represented mechanic changes durability, not outgoing TDD'",
+      "zhonyas": "data/item-atoms/3157.json declares crowd-control-mobility.stasis, whose cached wiki-atom definition (data/wiki-atoms/crowd-control-mobility.json) is: 'Full disable that also makes the unit invulnerable and untargetable; cannot be cleansed, unaffected by tenacity, disables even summoner spells.' Invulnerability/untargetability is a survivability property of the HOLDER. It is NOT a change to a defensive STAT - Time Stop grants no armor or magic resistance (data/items.json[3157].active[0].branches quotes only 'Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable...'). Hence the old wording 'changes defense' is the wrong noun for the mechanic; 'durability' is the correct umbrella term, and 'Durability' is itself a real cached wiki article (data/wiki/article-index.json -> \"Durability\": pageid 961552).",
+      "zhonyas_second_family": "The other declared family is damage.resistance-mitigation, whose cached definition (data/wiki-atoms/damage.json) reads: 'Armor and magic resistance reduce INCOMING physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)) ...'. The word 'incoming' is explicit in the source: this family is on the receiving side, which independently confirms the 'not outgoing TDD' half of the claim. Note this also shows why the OLD singular phrasing ('the represented mechanic') under-describes Zhonya's, which declares two distinct effect families, not one.",
+      "banshees": "data/items.json[3102].passives[0] 'Annul' branches: 'Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).' Blocking an incoming hostile ability is purely durability; it changes nothing on the holder's damage output. All three declared atoms are heal-shield.* (shield / shield-magic / heal-and-shield-power)."
+    },
+
+    "step_3_math_foundations_cross_check": {
+      "quoted": "docs/math-foundations.md, audit table (line 457): '| Resistance mitigation (`apply_resistance`) | `m(R)=100/(100+R)`; EHP round-trip `raw = post*(1+R/100)`; sigmoid family | **EXACT** | Negative branch is `2-100/(100-R)` (not the analytic continuation); continuous at 0, saturates at 2x |'",
+      "reading": "The document's mitigation identity m(R) = 100/(100+R) is applied to damage RECEIVED by a target (EHP round-trip), i.e. it is a durability transform on the defender. It never enters the attacker's outgoing-TDD accumulation as a multiplier the attacker controls. This corroborates the new leaf's structural claim that a resistance/durability-family mechanic on the attacker's own item does not enter that attacker's outgoing TDD.",
+      "note": "docs/math-foundations.md contains no reason-string vocabulary and no item_coverage taxonomy; it was used only as the formula cross-check above."
+    },
+
+    "step_4_verdict_reasoning": {
+      "new_value": "Both of its factual claims verify against the cache. The universal quantifier is TRUE for both (and only) candidate items and is discriminative rather than vacuous. 'Durability' is the accurate noun for stasis/spell-shield/invulnerability and matches the cached wiki taxonomy ('Durability', pageid 961552).",
+      "old_value": "Its consequent ('not outgoing TDD') is true, but its antecedent noun is wrong for the mechanic actually represented: stasis and spell shield do not 'change defense' (no armor/MR delta anywhere in the cached effect text), they confer invulnerability / ability negation. It is additionally incomplete for Zhonya's Hourglass, which declares TWO effect families (crowd-control-mobility.stasis AND damage.resistance-mitigation) while the old string speaks of a single 'represented mechanic' and asserts nothing about the item's remaining families - exactly the gap the universal quantifier closes.",
+      "both_wrong_rejected": "The shared consequent 'not outgoing TDD' is independently confirmed: for Zhonya's, data/items.json[3157].passives == [] and the sole active is Time Stop (stasis, no damage terms); for Banshee's, the sole passive Annul is a spell shield. Neither item's effect text contains any damage, on-hit, penetration or amplification term, so neither can contribute to outgoing TDD. The claim is therefore not jointly false."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json[3157] (Zhonya's Hourglass)",
+      "quote": "active[0].name = 'Time Stop'; branches[0] = 'Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.'; passives = []"
+    },
+    {
+      "path": "data/items.json[3102] (Banshee's Veil)",
+      "quote": "passives[0].name = 'Annul'; branches[0] = 'Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).'; active = []"
+    },
+    {
+      "path": "data/item-atoms/3157.json",
+      "quote": "atoms: stats.ability-power, stats.armor, crowd-control-mobility.stasis (active:Time Stop), damage.resistance-mitigation (active:Time Stop)"
+    },
+    {
+      "path": "data/item-atoms/3102.json",
+      "quote": "atoms: stats.ability-power, stats.magic-resistance, heal-shield.heal-and-shield-power (passive:Annul), heal-shield.shield (passive:Annul), heal-shield.shield-magic (passive:Annul)"
+    },
+    {
+      "path": "data/wiki-atoms/crowd-control-mobility.json -> crowd-control-mobility.stasis",
+      "quote": "Full disable that also makes the unit invulnerable and untargetable; cannot be cleansed, unaffected by tenacity, disables even summoner spells."
+    },
+    {
+      "path": "data/wiki-atoms/damage.json -> damage.resistance-mitigation",
+      "quote": "Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage. The amount actually received is called post-mitigation damage."
+    },
+    {
+      "path": "data/wiki/article-index.json",
+      "quote": "\"Durability\": {\"cats\": [], \"len\": 0, \"pageid\": \"961552\"}"
+    },
+    {
+      "path": "data/atoms/classification-report.json",
+      "quote": "vocab.families = [crowd-control-mobility, damage, heal-shield, interaction, stack-transform-summon-resource, vision-economy] (plus 'stats' as emitted on item atoms) - establishes what 'declared family' ranges over."
+    },
+    {
+      "path": "docs/math-foundations.md:457",
+      "quote": "| Resistance mitigation (`apply_resistance`) | `m(R)=100/(100+R)`; EHP round-trip `raw = post*(1+R/100)`; sigmoid family | **EXACT** | Negative branch is `2-100/(100-R)` (not the analytic continuation); continuous at 0, saturates at 2x |"
+    },
+    {
+      "path": "data/champion-audit/batch-6.json:489",
+      "quote": "\"P (Blast Shield - defensive shield, does not change outgoing TDD)\" - corroborates that the project's own cached audit vocabulary treats self-protection mechanics as 'does not change outgoing TDD'."
+    }
+  ],
+
+  "residual_uncertainty": "The identity of item_coverage[0] could not be pinned to a single item from the permitted evidence tree, because the scenario 'syndra_derived_order_120' is defined outside data/ and docs/math-foundations.md and its item order is derived rather than literal. This was handled by exhaustive candidate enumeration rather than assumption: the universal claim was verified for the complete set of SR-legal AP legendaries that could carry an all-defensive coverage reason (Zhonya's Hourglass 3157 and Banshee's Veil 3102), so the verdict does not depend on which one it is. If a future build placed a mixed item (e.g. Abyssal Mask, Seraph's Embrace, Riftmaker) at this slot, the NEW string would become false there - but so would the old one, and no such item satisfies the all-defensive predicate today."
+}

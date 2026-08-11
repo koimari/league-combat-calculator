@@ -1,0 +1,77 @@
+{
+  "receipt": "oracle-P3-3.8-leaf44",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/combat/utility_outcomes/focus/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+  "confidence": "medium-high (class-level verification; see residual_uncertainty)",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle44",
+    "contents": ["data/ (324 items, 173 champions, item-atoms/, wiki-atoms/, worklists/, practice-corpus/)", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_0_what_the_leaf_asserts": "Both values are the same operative proposition — the item at item_coverage[0] contributes no outgoing-damage source, so its mechanic is excluded from TDD. The new value adds a universally quantified precondition ('Every declared family on this item is a defence') and swaps the noun 'defense' for 'durability'. So the check is: (a) is the core proposition supported by the cached wiki text, and (b) is the added universal claim true / checkable rather than an unguarded overreach.",
+
+    "step_1_scenario_identity": "'120' is Syndra's max Splinters of Wrath stack. data/worklists/e3-mechanics.json (Syndra, innate): 'Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.' data/champion-audit/batch-e9-1.json (Syndra): 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)'. 'derived_order' is the F2/F3 rotation_resolver's algorithmically derived cast order (data/worklists/f2-task.md, f3-task.md). So the scenario is Syndra at full 120 splinters running her derived rotation. The scenario's item list is defined outside the permitted export, so the specific item at item_coverage[0] is NOT recoverable — the verification below is therefore class-level over the whole cached item corpus.",
+
+    "step_2_corpus_partition_from_cached_wiki_text": {
+      "method": "Read every item's effect text through passives[].branches and active[].branches in data/items.json (never a single indexed description), and classify each item as (i) purely-defensive-effect (durability language only: shield / spell shield / stasis / invulnerable / untargetable / regeneration / resist / revive / cleanse) or (ii) carrying at least one outgoing-damage or damage-amplification clause.",
+      "result": "45 of 324 cached items have purely defensive effect text; 107 of 324 carry an explicitly offensive effect clause (damage dealt, damage amplification, AP/AD/penetration granted by an effect).",
+      "purely_defensive_members_plausible_in_a_mage_loadout": ["Zhonya's Hourglass", "Banshee's Veil", "Verdant Barrier", "Seeker's Armguard", "Guardian Angel", "Kaenic Rookern"]
+    },
+
+    "step_3_the_two_most_plausible_coverage_items": {
+      "Zhonya's Hourglass (id 3157)": {
+        "wiki_effect_text": "ACTIVE Time Stop — 'Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].'",
+        "declared_atom_families (data/item-atoms/3157.json)": ["stats/stats.ability-power", "stats/stats.armor", "crowd-control-mobility/crowd-control-mobility.stasis (behavior: Time Stop)", "damage/damage.resistance-mitigation (behavior: Time Stop)"],
+        "analysis": "No effect atom emits outgoing damage. The one atom in the 'damage' family is damage.resistance-mitigation — incoming-damage mitigation (its declared relations are damage-instance / armor-penetration / magic-penetration), i.e. durability. The active is strictly anti-damage-taken and, by the wiki text, explicitly *forbids* attacking or casting, so it can only ever lower, never raise, damage output. Core proposition TRUE; 'every declared family is a defence' TRUE in substance (every non-stat declared behavior is a durability behavior)."
+      },
+      "Banshee's Veil (id 3102)": {
+        "wiki_effect_text": "PASSIVE Annul — 'Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).'",
+        "declared_atom_families (data/item-atoms/3102.json)": ["stats/stats.ability-power", "stats/stats.magic-resistance", "heal-shield/heal-shield.heal-and-shield-power", "heal-shield/heal-shield.shield", "heal-shield/heal-shield.shield-magic"],
+        "analysis": "Every declared effect family is heal-shield — a defence, literally and in the vocabulary. Core proposition TRUE; universal claim TRUE."
+      }
+    },
+
+    "step_4_the_universal_claim_is_falsifiable_not_boilerplate": {
+      "purpose": "A stronger sentence is only an improvement if it can fail. It can: the cache holds defensive-statline items whose declared families are NOT all defences, and the new wording would be false for them (the old wording would not have been caught).",
+      "counterexamples_from_cache": {
+        "Abyssal Mask (id 8020)": "PASSIVE Unmake — 'Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources.' Declared atoms: stats.health, stats.magic-resistance, stats.ability-haste, and damage/damage.magic (behavior: Unmake). A defensive statline, but a declared 'damage' family that directly amplifies a mage's outgoing magic TDD by 12%. The new sentence's quantifier excludes it; the old sentence would not have.",
+        "Seraph's Embrace (id 3040)": "PASSIVE Awe — 'Grants {{as|ability power}} equal to {{as|2% bonus mana}}' alongside the Lifeline shield. The Lifeline mechanic alone is defensive (old sentence would read true), but the item as a whole declares an offensive conversion — the new sentence would be false here, which is exactly the failure mode the quantifier guards.",
+        "Sterak's Gage / Riftmaker": "Mixed items (shield + tenacity, shield + omnivamp/stack consumption) — same guard applies."
+      },
+      "conclusion": "The new wording is strictly stronger than the old and is emitted under a checkable precondition. It cannot be true where the old was false; the only way it could be wrong while the old is right is a mixed item whose *particular* mechanic is defensive — and for such items (Abyssal Mask, Seraph's) the declared families visibly are not all defences, so the guard is not satisfied."
+    },
+
+    "step_5_wording_check": "'durability' vs 'defense': every mechanic in the purely-defensive class reduces damage taken (stasis = untargetable + invulnerable; spell shield blocks the next hostile ability; Lifeline shields at a health threshold). 'Durability' is the accurate umbrella noun for that set — 'defense' is ambiguous with the armor/MR stats, which are priced as stats, not as a coverage source. Wording change is an improvement, not a semantic change.",
+
+    "step_6_math_foundations_cross_check": {
+      "quote": "docs/math-foundations.md §3.1: 'f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (score + EHP*1e-9, optimizer.py _evaluate_build_uncached)'",
+      "bearing": "TDD is damage *dealt*, with durability entering only through the EHP tiebreak and the 'before its own death' window. So a durability-only item legitimately contributes no TDD source term — the coverage attribution both values state is consistent with the documented objective.",
+      "aside_flagged": "Strictly, because the window is 'before its own death', a durability effect CAN raise realised TDD by extending survival; and Zhonya's 2.5s stasis (which forbids attacking/casting) can lower it. Both the old and the new wording share this simplification, so it does not separate them — but it is a standing imprecision in the sentence 'not outgoing TDD' worth noting to the owner."
+    }
+  },
+
+  "sources_quoted": [
+    "data/items.json -> Zhonya's Hourglass (3157) active[].branches: 'Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable ... but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.'",
+    "data/items.json -> Banshee's Veil (3102) passives[].branches: 'Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).'",
+    "data/items.json -> Abyssal Mask (8020) passives[].branches (Unmake): 'Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources.'",
+    "data/items.json -> Seraph's Embrace (3040) passives[].branches (Awe / Lifeline): 'Grants ability power equal to 2% bonus mana.' / 'If you would take damage that would reduce you below 30% of your maximum health, you first gain a shield ... equal to 18% maximum mana.'",
+    "data/item-atoms/3157.json, 3102.json, 8020.json, 3040.json — declared atom families per item",
+    "data/atoms/atoms.schema.json — the family enum (damage, heal, shield, crowd_control, ... ) and the requirement that every atom declares a family",
+    "data/worklists/e3-mechanics.json (Syndra innate: 'stacking up to 120 times') and data/champion-audit/batch-e9-1.json (Syndra: 'splinters option: 120 -> 1.15x AP buff')",
+    "data/worklists/f2-task.md / f3-task.md — 'derived order' = rotation_resolver's algorithmic cast order",
+    "docs/math-foundations.md §3.1 — definition of the coupled participant-timeline score (TDD)"
+  ],
+
+  "residual_uncertainty": "The scenario's loadout (and hence the exact item at item_coverage[0]) is defined outside the permitted evidence tree — scenario definitions live in scripts/ or tests/, which runbook R-18/R-19 forbids reading. The verification is therefore class-level: it establishes (1) the core proposition is true for every purely-defensive item in the cache, (2) the added universal is checkable from data/item-atoms and discriminating (it fails for Abyssal Mask, Seraph's Embrace, Sterak's, Riftmaker), and (3) the new sentence can never be true where the old was false. The one unverifiable branch is a mixed-family item reaching this leaf, which would make BOTH values wrong for the item-level claim in the old wording's case too; nothing in the cache suggests a coverage reason of this shape would be emitted for such an item.",
+
+  "checked_at": "2026-08-11",
+  "committed": false
+}

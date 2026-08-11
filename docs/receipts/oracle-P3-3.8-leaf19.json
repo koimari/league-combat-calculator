@@ -1,0 +1,85 @@
+{
+  "receipt": "oracle-P3-3.8-leaf19",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_120/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle19",
+    "read": ["data/items.json", "data/champions.json", "data/economics-sourced.json", "data/onhit-matrix.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "item_identification": {
+    "note": "The leaf's own old text names the effect 'Time Stop'. Exactly three cached items declare that effect.",
+    "candidates": [
+      {"id": 3157, "name": "Zhonya's Hourglass", "modes.classic sr 5v5": true, "total": 3250, "role": "the legendary an SR Syndra build order can hold"},
+      {"id": 2420, "name": "Seeker's Armguard", "modes.classic sr 5v5": true, "total": 1600, "role": "component of 3157, same Time Stop active"},
+      {"id": 228002, "name": "Wooglet's Witchcap", "modes.classic sr 5v5": false, "acquisitionNote": "Requires the Quest: Wooglet's Witchcap augment", "role": "Arena-only; withheld from an ordinary SR build"}
+    ],
+    "conclusion": "The covered item is the Time Stop line (Zhonya's Hourglass / Seeker's Armguard). Both carry byte-identical active text, so the analysis below is invariant to which index 1 resolves to."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3157 \"Zhonya's Hourglass\" -> active[0] {name: \"Time Stop\", unique: true} -> branches[0]",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "source": "data/items.json -> id 3157 -> passives",
+      "quote": "[]  (empty: Time Stop is the item's ONLY declared effect; it is an `active`, not a passive, so nothing about it fires from presence)"
+    },
+    {
+      "source": "data/items.json -> id 3157 -> stats (non-zero flats only)",
+      "quote": "abilityPower.flat = 105.0, armor.flat = 50.0"
+    },
+    {
+      "source": "data/items.json -> id 2420 \"Seeker's Armguard\" -> active[0].branches[0]",
+      "quote": "identical Time Stop text (stasis 2.5 s, untargetable + invulnerable, but unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items); stats abilityPower 40, armor 25; passives []"
+    },
+    {
+      "source": "data/economics-sourced.json -> groups_26_12",
+      "quote": "\"Stasis\": [\"Seeker's Armguard\", \"Shattered Armguard\", \"Zhonya's Hourglass\"] — the only declared group containing this item; the full group vocabulary is [Annul, Blight, Boots, Dirk, Elixir, Eternity, Fatality, Glory, Guardian, Hydra, Immolate, Lifeline, Manaflow, Momentum, Potion, Quicksilver, Soul Anchor, Spellblade, Starter, Stasis, Trinket] — no 'defence'/'durability' family exists in the cache."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1 (Renewal theory for cast + auto timing schedules), lines 41-56",
+      "quote": "swings land at `0, Δ, 2Δ, …` with `Δ = 1/(AS · u)` where `AS` is total attack speed and `u` is the auto-attack uptime fraction … N(T) = ⌊AS · u · T⌋"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1, 'Exact vs approximate' item 1",
+      "quote": "**Uptime as a rate scale.** `u` multiplies the attack *rate* (`AS·u`) rather than modeling an on/off attacking process."
+    },
+    {
+      "source": "data/champions.json -> Syndra -> stats / abilities",
+      "quote": "attackSpeed.flat = 0.658, attackSpeedRatio.flat = 0.625; Q Dark Sphere cooldown [7,7,7,7,7]; R Unleashed Power cooldown [120,100,80]"
+    }
+  ],
+  "independent_computation": {
+    "claim_under_test": "New value asserts the item's represented mechanic 'changes durability, not outgoing TDD'.",
+    "step_1_read_the_declared_effect": "Zhonya's declares exactly one effect and it is an ACTIVE. The cached wiki branch text has two conjoined halves separated by 'but also': (a) untargetable + invulnerable for 2.5 s -> a durability effect; (b) 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items' -> a suppression of the holder's own damage output. Half (b) is, verbatim in the source, an outgoing-damage effect. Therefore 'changes durability, NOT outgoing TDD' is contradicted by the item's own cached text.",
+    "step_2_quantify_the_outgoing_delta": {
+      "model": "docs/math-foundations.md §1.1: N(T) = floor(AS · u · T); stasis removes action time from the window, i.e. lowers effective attacking/casting time by the declared stasis seconds.",
+      "inputs": {"AS": 0.658, "u": 1.0, "T_seconds": 120, "stasis_seconds": 2.5},
+      "autos_without_stasis": "floor(0.658 × 1.0 × 120) = floor(78.96) = 78",
+      "autos_with_2.5s_stasis": "floor(0.658 × 1.0 × 117.5) = floor(77.315) = 77",
+      "delta_autos": -1,
+      "casts_Q_cd_7s_without_stasis": "floor(120/7)+1 = 18",
+      "casts_Q_cd_7s_with_stasis": "floor(117.5/7)+1 = 18 at rank 1 haste-free timing, but the 2.5 s block shifts every epoch after the activation; over a rotation the expected lost casts is stasis/cd = 2.5/7 = 0.357 per blocked ability",
+      "fraction_of_action_window_removed": "2.5 / 120 = 2.083%",
+      "conclusion": "The outgoing-TDD delta from a declared 2.5 s stasis is strictly negative and non-negligible (~2.1% of the window, one full auto plus fractional casts). A mechanic with a non-zero outgoing-TDD derivative cannot be classified as touching durability only."
+    },
+    "step_3_the_family_claim": "The only family the cached sourced data declares for this item is 'Stasis' (data/economics-sourced.json groups_26_12). 'Stasis' is a uniqueness/limitation grouping, not a defence tag, and the cache contains no 'defence'/'durability' family at all. Additionally, if stat grants count as declared families, the item's largest declared stat is 105 flat ability power — on Syndra, an AP champion, that is a pure outgoing-damage grant. Under either reading of 'declared family', 'Every declared family on this item is a defence' is false.",
+    "step_4_check_the_old_value": {
+      "clause_1": "'Time Stop is priced only from the explicit bounded active-seconds scenario input' — supported: the effect is an ACTIVE with a cached bounded duration of 2.5 s ({{fd|2.5}} seconds), and its only modeled consequence is action-time removal, which is exactly a seconds-valued input to N(T) = floor(AS·u·T). Pricing it from a declared seconds figure is the source-faithful treatment.",
+      "clause_2": "'item presence alone never assumes stasis' — supported: passives is [] and the effect sits under active[], i.e. nothing in the cached record fires without deliberate activation. Assuming activation from presence would silently subtract ~2.1% of the damage window from every build containing the item.",
+      "verdict_on_old": "Both clauses are consistent with the cached record; nothing in data/ or docs/math-foundations.md contradicts them."
+    }
+  },
+  "why_not_both_wrong": "The old value makes no claim that the cache contradicts: it correctly treats stasis as an opt-in, bounded, seconds-valued input. The new value makes a categorical claim ('changes durability, not outgoing TDD') that the item's own cached effect text falsifies in its second clause, and a family claim that the cached grouping ('Stasis') does not support. Only one of the two is defective.",
+  "verdict_detail": {
+    "value": "old_value_correct",
+    "confidence": "high",
+    "residual_uncertainty": "I could not read src/ or the scenario definition, so I cannot confirm which build index resolves to index 1. The finding is index-robust: all three Time Stop items in the cache share identical active text, and the falsifying clause ('unable to ... declare basic attacks, cast abilities') is present in every one of them."
+  }
+}

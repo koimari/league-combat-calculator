@@ -1,0 +1,98 @@
+{
+  "receipt": "oracle-P3-3.8-leaf39",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+
+  "item_identification": {
+    "how": "The leaf's reason text names the behavior 'Time Stop'. Grepping the export for that string resolves it to exactly two cached items.",
+    "candidates": [
+      {"id": 3157, "name": "Zhonya's Hourglass", "file": "data/item-atoms/3157.json"},
+      {"id": 2420, "name": "Seeker's Armguard", "file": "data/item-atoms/2420.json"}
+    ],
+    "note": "Both declare the identical family set (stats + crowd-control-mobility + damage), so every finding below holds for either. Zhonya's Hourglass (3250g, tier 3, 'classic sr 5v5': true, shop tag MAGE) is the Summoner's Rift build item and is treated as the referent."
+  },
+
+  "independent_computation": {
+    "step_1_read_the_declared_families": {
+      "source": "data/item-atoms/3157.json",
+      "atoms": [
+        {"atom_id": "stats.ability-power", "family": "stats", "behavior": "abilityPower", "parameters": {"flat": 105.0}},
+        {"atom_id": "stats.armor", "family": "stats", "behavior": "armor", "parameters": {"flat": 50.0}},
+        {"atom_id": "crowd-control-mobility.stasis", "family": "crowd-control-mobility", "behavior": "Time Stop"},
+        {"atom_id": "damage.resistance-mitigation", "family": "damage", "behavior": "Time Stop", "relations": ["damage.damage-instance", "damage.armor-penetration", "damage.magic-penetration"]}
+      ],
+      "declared_family_set": ["stats", "crowd-control-mobility", "damage"],
+      "finding": "The new value's premise -- 'Every declared family on this item is a defence' -- is false on its face. The item declares the `damage` family (damage.resistance-mitigation, whose own relations point at damage-instance / armor-penetration / magic-penetration) and the `stats` family carrying 105 flat ability power."
+    },
+    "step_2_no_defence_family_exists": {
+      "method": "Enumerated `family` over every file in data/item-atoms/*.json (1775 atoms).",
+      "families_observed": {"stats": 586, "damage": 348, "heal-shield": 266, "stack-transform-summon-resource": 248, "vision-economy": 190, "crowd-control-mobility": 137},
+      "schema_enum": "data/atoms/atoms.schema.json family enum = [damage, heal, shield, crowd_control, stack, transform, summon, execute, resource, movement, vision, buff, debuff, interaction, economy]",
+      "finding": "There is no 'defence' family in either taxonomy. The claim 'every declared family on this item is a defence' is not a statement that can be true of ANY cached item, let alone this one."
+    },
+    "step_3_the_item_does_change_outgoing_TDD": {
+      "source_stat": "data/items.json['3157'].stats.abilityPower.flat = 105.0; riotDescription: '<attention> 105</attention> Ability Power<br><attention> 50</attention> Armor'",
+      "syndra_ap_ratios_from_data_champions_json": {
+        "Q Dark Sphere Magic Damage": "70% AP (all ranks)",
+        "W Force of Will Magic Damage": "65% AP (all ranks)",
+        "W Force of Will Bonus True Damage": "9.2/9.8/10.4/11/11.6% AP + 1.14% AP",
+        "E Scatter the Weak Magic Damage": "60% AP (all ranks)",
+        "R Unleashed Power Minimum Magic Damage": "60% AP (3 spheres)",
+        "R Unleashed Power Maximum Magic Damage": "140% AP (7 spheres)"
+      },
+      "arithmetic": {
+        "QWER_AP_share_min_R": "0.70 + 0.65 + 0.60 + 0.60 = 2.55 -> 2.55 x 105 = 267.75 raw magic",
+        "QWER_AP_share_max_R": "0.70 + 0.65 + 0.60 + 1.40 = 3.35 -> 3.35 x 105 = 351.75 raw magic",
+        "W_bonus_true_AP_share_rank5": "(0.116 + 0.0114) x 105 = 13.38 true",
+        "post_mitigation_identity": "actual = raw x 100/(100+R)  [docs/math-foundations.md section 2.1, 'The 100/(100+R) identity']",
+        "added_TDD_one_rotation": {
+          "0_MR": "281.1 (3 spheres) / 365.1 (7 spheres)",
+          "30_MR": "219.3 / 284.0",
+          "60_MR": "180.7 / 233.2",
+          "100_MR": "147.3 / 189.3"
+        }
+      },
+      "finding": "Holding the item changes outgoing TDD by roughly 150-365 damage on a single Syndra rotation. 'Changes durability, not outgoing TDD' is quantitatively false for this item."
+    },
+    "step_4_the_active_is_conditional_and_bounded": {
+      "cached_wiki_text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+      "source": "data/items.json['3157'].active[0] (name 'Time Stop', unique: true), branches[0]",
+      "findings": [
+        "Time Stop is an ACTIVE ('Put yourself in stasis'), not a passive aura. Owning the item does not place the champion in stasis; a cast must occur. So 'item presence alone never assumes stasis' is exactly right.",
+        "Its duration is hard-bounded at 2.5 seconds by the same wiki line, which is what 'bounded active-seconds' names. Any pricing therefore needs the seconds as an explicit scenario input -- there is no defensible default.",
+        "Stasis is NOT TDD-neutral even in the charitable reading. The same sentence says the holder is 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items'. Over a fixed fight window the 2.5s is a dead window that REMOVES outgoing damage (e.g. ~0.36 of a 7s-cooldown Dark Sphere cast). A mechanic that subtracts damage output cannot be described as one that 'changes durability, not outgoing TDD'.",
+        "The signed direction of that effect is precisely why the value must come from the scenario input rather than from item presence: assuming stasis by default would silently deduct a rotation's worth of damage from every build containing the item."
+      ]
+    },
+    "step_5_convention_check": {
+      "source": "data/champion-audit/batch-*.json gap_summary entries",
+      "quotes": [
+        "\"shield ... is pure mitigation and deliberately not modeled\" (defensive, outside TDD scope)",
+        "\"E passive damage reduction (defensive -- 'not modeled -- defensive only')\""
+      ],
+      "finding": "A generic 'this is defensive, therefore out of TDD scope' reason is a real pattern in this corpus -- but it is applied to mechanics that are purely mitigation. Zhonya's Hourglass is not one of them: it is an offensive stat-stick (105 AP) carrying a conditional, castable, bounded, TDD-SUBTRACTING active. Applying the generic defensive-exclusion sentence to it misclassifies the item."
+    }
+  },
+
+  "conclusion": "The old value is a correct and precise statement about this item: Time Stop is an active with a 2.5s hard bound, so its cost/benefit is priced only from an explicitly supplied bounded active-seconds input, and mere possession of the item never implies stasis was entered. The new value is wrong on three independent counts: (a) the item's declared families are stats / crowd-control-mobility / damage, and no 'defence' family exists in either the item-atom taxonomy or atoms.schema.json, so 'every declared family is a defence' is unsatisfiable; (b) the item grants 105 AP, worth ~150-365 added TDD on one Syndra rotation, so it plainly does change outgoing damage; (c) even restricted to the active, stasis suppresses all actions for its duration, which changes outgoing TDD downward rather than leaving it untouched.",
+
+  "sources_quoted": [
+    "data/item-atoms/3157.json (Zhonya's Hourglass atoms: families stats / crowd-control-mobility / damage)",
+    "data/item-atoms/2420.json (Seeker's Armguard -- identical family set, same Time Stop behavior)",
+    "data/items.json['3157'].active[0].branches[0] (Time Stop wiki text: 2.5s self-stasis, untargetable/invulnerable, unable to act)",
+    "data/items.json['3157'].riotDescription and .stats.abilityPower.flat = 105.0, .stats.armor.flat = 50.0",
+    "data/items.json['3157'].shop (3250g) and .modes ('classic sr 5v5': true)",
+    "data/champions.json['Syndra'].abilities (Q 70% AP, W 65% AP + true-damage AP terms, E 60% AP, R 60%/140% AP)",
+    "data/atoms/atoms.schema.json (family enum -- contains no 'defence' member)",
+    "data/item-atoms/*.json family census (stats, damage, heal-shield, stack-transform-summon-resource, vision-economy, crowd-control-mobility)",
+    "docs/math-foundations.md section 2.1 'The 100/(100+R) identity' (post-mitigation conversion used above)",
+    "data/practice-corpus/scenarios.json (establishes 'tdd' = total damage dealt)",
+    "data/champion-audit/batch-0.json, batch-1.json (defensive-mitigation exclusion convention)"
+  ],
+
+  "isolation_statement": "Evidence tree built solely with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`. No src/, tests/, scripts/, docs/plans/, docs/receipts/, diff, or git history was read. Nothing committed."
+}

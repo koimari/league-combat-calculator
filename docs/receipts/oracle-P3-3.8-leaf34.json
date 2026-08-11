@@ -1,0 +1,65 @@
+{
+  "receipt": "oracle-P3-3.8-leaf34",
+  "runbook": "R-18 / R-19 independent oracle",
+  "generated_by": "fresh oracle investigator; evidence tree built ONLY with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>` (no src/, tests/, scripts/, docs/plans/, docs/receipts/, no diff, no plan, no git history)",
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "what_is_actually_checkable_from_the_export": {
+    "note": "The leaf is a prose coverage-certification reason, not a number. The scenario definition (which item sits at item_coverage[0]) lives outside the permitted export - it is not in data/ nor in docs/math-foundations.md. Confirmed by exhaustive search: `syndra_derived_order_60`, `item_coverage`, `focus_utility_outcomes`, `coupled_scenarios`, `derived_order` appear nowhere under data/ (the only hit is data/worklists/e9-bis-b-task.md, which names src/calculator/item_coverage.py as the mechanism but lists no scenario builds). So the item identity was NOT assumed; instead the claim was tested against the whole class of cached items whose represented mechanic is defensive, and against the corpus-attested candidates for a mana-mage coupled scenario.",
+    "operative_claim_shared_by_both_values": "the represented mechanic contributes no outgoing TDD",
+    "claims_unique_to_the_new_value": [
+      "scope statement: every declared family on the item is a defence",
+      "terminology: the affected quantity is 'durability', not 'defense'"
+    ]
+  },
+
+  "independent_computation": {
+    "step_1_identify_the_candidate_class": "In data/practice-corpus/scenarios.json the mage/utility coupled scenarios are pinned on defensive items carried by the focus: 'cp21-bis-utility-ahri' lists Fimbulwinter as the partial-coverage item, and 'e9-item-serpents-fang-venom' / 'e9-item-fimbulwinter-everlasting' both put Fimbulwinter on the focused mid mage. Fimbulwinter is therefore the corpus-attested focus-side defensive item for exactly this kind of block; Seraph's Embrace, Zhonya's Hourglass, Banshee's Veil and Celestial Opposition were checked as the alternative candidates.",
+    "step_2_read_the_cached_wiki_text": {
+      "Fimbulwinter (data/items.json id 3121) passive Awe": "Grants {{as|'''bonus''' health}} equal to {{as|15% '''bonus''' mana}}.",
+      "Fimbulwinter passive Everlasting": "{{tip|immobilize|Immobilizing}}, or {{tip|slow|slowing}} if you are {{tip|melee}}, an enemy champion grants a 100 {{as|(+ {{fd|4.5}}% '''current''' mana)}} {{tip|shield}} for 3 seconds (8 second cooldown). The shield's strength is increased{{ft|by 80%|to 180 ...}}if there is more than one enemy champion within 1200 units.",
+      "Fimbulwinter cached stat block": "health 550, mana 1000, abilityHaste 15, armor 0.0, magicResistance 0.0, attackDamage 0.0, abilityPower 0.0"
+    },
+    "step_3_arithmetic_sanity_check_of_that_reading": {
+      "Awe": "0.15 x 1000 item mana = 150 bonus health (durability term)",
+      "Everlasting": "100 + 0.045 x 1783 current mana = 180.235 shield",
+      "cross_check": "180.235 reproduces exactly the corpus expectation in data/practice-corpus/scenarios.json -> e9-item-fimbulwinter-everlasting.expected.shield = 180.235 ('100 base + 4.5% of current mana (1783) = 180.235'), and the Serpent's Fang scenario's 180.235 -> 90.1175 melee cut. So the cached text is being read correctly."
+    },
+    "step_4_where_those_terms_enter_the_math": {
+      "identity_quoted": "docs/math-foundations.md: post = raw * m(R), m(R) = 100/(100+R); EHP round-trip raw = post*(1 + R/100), EHP(R) = H0*(1 + R/100)",
+      "derivation": "Awe moves H0 (150 bonus health) and Everlasting adds a 180.235 absorption pool. Both are arguments of the INCOMING-side identity EHP(R) = H0*(1+R/100); neither appears in any outgoing damage expression. Neither touches R at all - the cached stat block grants armor 0.0 and magicResistance 0.0. Outgoing TDD contribution of the represented mechanic = exactly 0 (no damage term exists in either passive's cached text).",
+      "textual_confirmation": "A regex scan for 'damage' over the passives/actives of every defensive-mechanic candidate returns: Fimbulwinter 0 hits; Zhonya's 0 hits; Banshee's 1 hit ('taking damage from champions'); Seraph's 2 hits ('would take damage', 'absorbs damage'); Celestial Opposition 3 hits ('reduce incoming champion damage', 'after taking damage from a champion'). Every single occurrence is an incoming-damage clause; none of these items declares an outgoing damage source. The 'not outgoing TDD' half of both strings is therefore correct for the whole candidate class."
+    },
+    "step_5_defense_vs_durability": {
+      "finding": "'Defense' is not a League stat; the game's defensive stats are armor and magic resistance, which are the R in m(R) = 100/(100+R). The cached mechanics at issue grant NO armor and NO magic resistance (Fimbulwinter armor 0.0 / MR 0.0; Sterak's-style and Everlasting-style shields likewise). They move H0 and the absorption pool. The wiki's own umbrella article for that quantity is 'Durability' (data/wiki/article-index.json, pageid 961552).",
+      "consequence": "The OLD wording ('changes defense') names the one thing the mechanic provably does not change - the resistance term R - while the NEW wording ('changes durability') names exactly what the cached text does change (H0 + shield pool). The new value is the strictly more accurate description of the same, correct, operative fact."
+    },
+    "step_6_the_added_universal_clause": {
+      "claim": "'Every declared family on this item is a defence.'",
+      "test_for_the_corpus_attested_item": "Fimbulwinter declares exactly two effects in the cache - Awe (bonus health) and Everlasting (shield). Both are durability. The universal holds.",
+      "caveat_recorded_honestly": "The clause could NOT be validated for every possible occupant of item_coverage[0], because the item identity is outside the permitted export and the phrase 'declared family' refers to a code-side effect taxonomy that does not exist in data/. Under the only family vocabulary the export does carry (atom_id prefixes in data/atoms/items.json: stat / economy / damage / heal / control / timing / stack / shield / vision / summon), some defensive-mechanic items would fail a literal reading of the universal - Seraph's Embrace declares stat.ability_power (its Awe converts bonus mana to AP, which does raise outgoing TDD), Zhonya's and Banshee's declare stat.ability_power, and Celestial Opposition declares control.slow + vision.ward. That vocabulary is an atomizer artifact rather than the coverage layer's declared-family list, so it does not falsify the leaf; it is flagged as the one clause an oracle restricted to data/ cannot independently certify.",
+      "why_it_does_not_change_the_verdict": "Nothing in the export contradicts the clause for the corpus-attested candidate, and the clause is the kind of statement a coverage layer derives mechanically before certifying a no-damage source (the E9-BIS-B worklist in data/worklists/e9-bis-b-task.md states the contract explicitly: 'Where the game effect is a stat-only or utility-only item ... certify it as a no-damage source with the sourced reason'). The old value carries no compensating advantage - it is the same fact stated with a less accurate noun."
+    }
+  },
+
+  "sources_quoted": [
+    "data/items.json id 3121 Fimbulwinter - passives[].branches: Awe ('bonus health equal to 15% bonus mana'), Everlasting ('100 (+ 4.5% current mana) shield for 3 seconds, 8 second cooldown, increased by 80% ... to 180 ... within 1200 units'); stats block armor 0.0, magicResistance 0.0, health 550, mana 1000, abilityHaste 15",
+    "data/items.json id 3040 Seraph's Embrace - Awe ('Grants ability power equal to 2% bonus mana'), Lifeline ('shield ... 18% maximum mana')",
+    "data/items.json id 3157 Zhonya's Hourglass - Time Stop ('stasis for 2.5 seconds ... untargetable and invulnerable')",
+    "data/items.json id 3102 Banshee's Veil - Annul ('spell shield that blocks the next hostile ability')",
+    "data/items.json id 3869 Celestial Opposition - Blessing of the Mountain ('reduce incoming champion damage by 35%/25% ...')",
+    "data/practice-corpus/scenarios.json - e9-item-fimbulwinter-everlasting.expected {shield: 180.235, formula: 'Everlasting: 100 base + 4.5% of current mana (1783) = 180.235'}; e9-item-serpents-fang-venom (180.235 -> 90.1175); cp21-bis-utility-ahri (partial: ['Fimbulwinter'])",
+    "docs/math-foundations.md sec. 'Resistance mitigation': 'm(R) = 100 / (100 + R)'; 'post = raw * m(R)  <=>  raw = post * (1 + R/100) = post * EHP_multiplier(R), EHP(R) = H0 * (1 + R/100)'",
+    "docs/math-foundations.md sec. 3.1: 'f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death' (the definition of the TDD objective the reason string refers to)",
+    "data/wiki/article-index.json - 'Durability' is a canonical wiki article (pageid 961552); 'defense' is not a League stat name",
+    "data/worklists/e9-bis-b-task.md - the certification contract for no-damage item coverage entries ('certify it as a no-damage source with the sourced reason ... never silent')"
+  ],
+
+  "conclusion": "Both strings assert the same, verifiably correct operative fact: a durability/defensive mechanic in the cache declares no outgoing damage term, so its outgoing-TDD contribution is exactly 0. They differ in accuracy of the noun: the represented mechanics grant 0 armor and 0 magic resistance, so they do not change 'defense' (the R of m(R) = 100/(100+R)) - they change H0 and the shield pool, i.e. durability. The new value states the correct quantity and adds a scope clause that holds for the corpus-attested candidate item (Fimbulwinter: Awe and Everlasting are both durability effects). No evidence in the permitted export contradicts the new value.",
+  "verdict_enum": "new_value_correct",
+  "confidence": "medium-high on the operative fact and the defense->durability correction (directly computed from cached wiki text plus the quoted EHP identity); medium on the added universal clause, which is unverifiable from data/ alone because the item identity and the 'declared family' taxonomy both live outside the permitted export."
+}

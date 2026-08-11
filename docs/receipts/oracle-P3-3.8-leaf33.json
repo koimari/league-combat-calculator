@@ -1,0 +1,96 @@
+{
+  "receipt": "oracle-P3-3.8-leaf33",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+
+  "item_identification": {
+    "reasoning": "Both candidate strings describe the same leaf (item_coverage index 1). The old string names the mechanic 'Time Stop'. In the cached data only two items carry a 'Time Stop' effect: Zhonya's Hourglass (id 3157) and Seeker's Armguard (id 2420). Syndra (AP mid) build => Zhonya's Hourglass id 3157. Every falsification below holds identically for 2420, so the verdict does not depend on which of the two is at index 1.",
+    "grep": "data/item-atoms/3157.json, data/item-atoms/2420.json, data/items.json (riotDescription), data/atoms/items.json keys \"3157\"/\"2420\""
+  },
+
+  "independent_computation": {
+    "step_1_enumerate_declared_families": {
+      "source": "data/item-atoms/3157.json (item-atom decomposition, family vocab from data/atoms/classification-report.json: crowd-control-mobility | damage | heal-shield | interaction | stack-transform-summon-resource | vision-economy, plus stats)",
+      "atoms": [
+        {"atom_id": "stats.ability-power", "family": "stats", "behavior": "abilityPower", "parameters": {"flat": 105.0}},
+        {"atom_id": "stats.armor", "family": "stats", "behavior": "armor", "parameters": {"flat": 50.0}},
+        {"atom_id": "crowd-control-mobility.stasis", "family": "crowd-control-mobility", "behavior": "Time Stop"},
+        {"atom_id": "damage.resistance-mitigation", "family": "damage", "behavior": "Time Stop", "relations": ["damage.damage-instance", "damage.armor-penetration", "damage.magic-penetration"]}
+      ],
+      "declared_family_set": ["stats", "crowd-control-mobility", "damage"],
+      "second_independent_decomposition": {
+        "source": "data/atoms/items.json key \"3157\" (wiki-vocab classifier v2.1)",
+        "atoms": ["control.stasis (behavior control, 2.5 flat)", "damage.basic_attack (behavior damage, 2.5 flat)", "economy.total (3250 gold)", "stat.ability_power (105.0 flat)", "stat.armor (50.0 flat)"],
+        "declared_family_set": ["control", "damage", "economy", "stat"]
+      },
+      "conclusion": "The new value's premise 'Every declared family on this item is a defence' is FALSE under both independent atom decompositions. (a) A family literally named `damage` is declared in both, carrying relations to damage.damage-instance / armor-penetration / magic-penetration. (b) The `stats`/`stat` family declares 105 flat Ability Power, an unambiguously offensive stat that scales Syndra's outgoing damage directly. Only `stats.armor` (50) is defensive."
+    },
+
+    "step_2_does_the_mechanic_change_outgoing_tdd": {
+      "wiki_active_text_quoted": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+      "wiki_atom_definition_quoted": "crowd-control-mobility.stasis — \"Full disable that also makes the unit invulnerable and untargetable; cannot be cleansed, unaffected by tenacity, disables even summoner spells.\"",
+      "engine_formula_quoted": "docs/math-foundations.md §1.1: \"N(T) = ⌊AS · u · T⌋\" with \"swing timestamps t_i = i·Δ, Δ = 1/(AS·u)\"; \"Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time … and a cast counts when it *starts* within the window (`_schedule_shared_casts`).\"",
+      "derivation": "Stasis is a FULL self-disable: for its 2.5 s the champion cannot declare basic attacks or cast abilities. In the engine's fight model, damage over a window T is the finite-horizon renewal-reward functional Σ_{i<N(T)} R_i with N(T)=⌊AS·u·T⌋, plus casts placed on the single shared timeline. Removing 2.5 s of that timeline strictly removes attack epochs and cast starts, hence strictly lowers outgoing TDD. Illustrative sensitivity at an effective swing rate AS·u = 0.80/s over a 60 s window: ⌊0.80·60⌋ = 48 autos with no stasis vs ⌊0.80·57.5⌋ = 46 autos with one 2.5 s stasis, i.e. 2 fewer autos, before the additional loss of ability casts whose cooldowns come up inside the frozen 2.5 s. (The rate 0.80/s is an illustration, not a scenario-sourced number; the sign of the effect is rate-independent because ⌊AS·u·(T−2.5)⌋ ≤ ⌊AS·u·T⌋ for all AS·u ≥ 0.)",
+      "conclusion": "The new value's second clause — 'the represented mechanic changes durability, not outgoing TDD' — is FALSE. Stasis changes BOTH: it grants invulnerability (durability) AND it suppresses all outgoing damage for its duration. Outgoing TDD is exactly what a stasis window costs."
+    },
+
+    "step_3_is_the_old_value_supported": {
+      "claim_a": "'Time Stop is priced only from the explicit bounded active-seconds scenario input' — consistent with step 2: because the effect is a bounded-duration full disable (2.5 s per the wiki active text), pricing it requires knowing how many seconds of the fight window it consumes. That is a scenario input, not an item property; no seconds-in-fight number exists anywhere in the cached item data.",
+      "claim_b": "'item presence alone never assumes stasis' — the effect is an ACTIVE (data/items.json `active[0]` for 3157; for 2420 it is even marked 'Single use'), not a passive. Nothing in the cached data licenses assuming the active was pressed during the modeled window, and assuming it would silently subtract autos/casts from the shared timeline (step 2). Failing closed on an unpressed active is the only data-supported behavior.",
+      "conclusion": "Both clauses of the old value are supported by the cached wiki text and the engine's own timing formula. No contradiction found in data/ or docs/math-foundations.md."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/item-atoms/3157.json",
+      "quote": "atom_id \"stats.ability-power\", family \"stats\", parameters {flat: 105.0}; atom_id \"damage.resistance-mitigation\", family \"damage\", behavior \"Time Stop\", relations [damage.damage-instance, damage.armor-penetration, damage.magic-penetration]; atom_id \"crowd-control-mobility.stasis\", family \"crowd-control-mobility\", behavior \"Time Stop\""
+    },
+    {
+      "path": "data/item-atoms/2420.json",
+      "quote": "Seeker's Armguard: same four families (stats.ability-power 40.0, stats.armor 25.0, crowd-control-mobility.stasis, damage.resistance-mitigation) — the fallback candidate for item_coverage[1] falsifies the new value identically."
+    },
+    {
+      "path": "data/items.json (Zhonya's Hourglass, active[0].branches[0])",
+      "quote": "Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items."
+    },
+    {
+      "path": "data/items.json (Zhonya's Hourglass, riotDescription)",
+      "quote": "<attention> 105</attention> Ability Power<br><attention> 50</attention> Armor … <active>Time Stop</active><br>Enter <keyword>Stasis</keyword> for 2.5 seconds."
+    },
+    {
+      "path": "data/wiki-atoms/crowd-control-mobility.json (atom crowd-control-mobility.stasis)",
+      "quote": "Full disable that also makes the unit invulnerable and untargetable; cannot be cleansed, unaffected by tenacity, disables even summoner spells."
+    },
+    {
+      "path": "data/wiki-atoms/damage.json (atom damage.resistance-mitigation)",
+      "quote": "Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage."
+    },
+    {
+      "path": "data/atoms/items.json (key \"3157\")",
+      "quote": "atoms: control.stasis (2.5 flat), damage.basic_attack (2.5 flat), economy.total (3250 gold), stat.ability_power (105.0 flat), stat.armor (50.0 flat)"
+    },
+    {
+      "path": "data/atoms/classification-report.json",
+      "quote": "vocab.families: [crowd-control-mobility, damage, heal-shield, interaction, stack-transform-summon-resource, vision-economy]"
+    },
+    {
+      "path": "docs/math-foundations.md §1.1",
+      "quote": "N(T) = ⌊AS · u · T⌋ (damage.py: num_auto_attacks = floor(...)) … Ability recasts are scheduled on one shared timeline (the champion has one set of hands) … a cast counts when it starts within the window."
+    }
+  ],
+
+  "falsifications_of_new_value": [
+    "Premise false: the item declares a `damage` family atom (both decompositions) — not every declared family is a defence.",
+    "Premise false: the item declares 105 flat Ability Power, an offensive stat that raises outgoing TDD for an AP champion (Syndra).",
+    "Consequent false: stasis is a full self-disable per the cached wiki text and the stasis wiki-atom, so the represented mechanic removes 2.5 s of autos and casts from the shared timeline — it changes outgoing TDD, not only durability."
+  ],
+
+  "verdict_rationale": "The new value is falsified twice over by the cached data (declared families include `damage` and offensive `stats.ability-power`; the stasis mechanic demonstrably suppresses outgoing TDD). The old value is fully supported: the effect is a bounded 2.5 s active whose fight-window cost can only come from an explicit bounded active-seconds scenario input, and nothing in the cached data licenses assuming the active was used from item presence alone.",
+  "scope_note": "Computed only from the `git archive HEAD data docs/math-foundations.md` export. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, and git history were not read.",
+  "not_committed": true
+}

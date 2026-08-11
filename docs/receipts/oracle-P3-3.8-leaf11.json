@@ -1,0 +1,77 @@
+{
+  "receipt": "oracle-P3-3.8-leaf11",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_60/combat/objective/focus_utility_outcomes/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle11",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, the plan, and git history were not consulted."
+  },
+  "leaf_identification": {
+    "method": "The leaf's item is anchored by the old value, which names the effect 'Time Stop'. Exactly five cached items declare a Time Stop / stasis atom.",
+    "time_stop_items_in_cache": [
+      {"id": 3157, "name": "Zhonya's Hourglass", "classic_sr_5v5": true, "abilityPower_flat": 105.0, "attackDamage_flat": 0.0},
+      {"id": 2420, "name": "Seeker's Armguard", "classic_sr_5v5": true, "abilityPower_flat": 40.0, "attackDamage_flat": 0.0},
+      {"id": 3026, "name": "Guardian Angel", "classic_sr_5v5": true, "abilityPower_flat": 0.0, "attackDamage_flat": 55.0},
+      {"id": 228002, "name": "Wooglet's Witchcap", "classic_sr_5v5": false, "abilityPower_flat": 300.0, "attackDamage_flat": 0.0},
+      {"id": 446691, "name": "Duskblade of Draktharr", "classic_sr_5v5": false, "abilityPower_flat": 0.0, "attackDamage_flat": 50.0}
+    ],
+    "most_likely_item": "Zhonya's Hourglass (3157) — the only Summoner's Rift legendary Time Stop item appropriate to an AP Syndra scenario.",
+    "note": "The verdict does not depend on which of these five it is: every stasis-bearing item in the cache carries an offensive stat atom (AP or AD)."
+  },
+  "independent_computation": {
+    "step_1_cached_active_text": {
+      "source": "data/items.json -> 3157.active[0]",
+      "name": "Time Stop",
+      "unique": true,
+      "branch_text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+      "reading": "The active is an optional, player-triggered effect with a fixed bounded duration of 2.5 s. It carries no damage term of any kind. Its only combat consequences are (a) invulnerability/untargetability for the window, and (b) a hard suppression of the holder's own actions for the same window."
+    },
+    "step_2_declared_families_of_the_item": {
+      "source": "data/item-atoms/3157.json",
+      "atoms": [
+        {"atom_id": "stats.ability-power", "family": "stats", "parameters": {"flat": 105.0}},
+        {"atom_id": "stats.armor", "family": "stats", "parameters": {"flat": 50.0}},
+        {"atom_id": "crowd-control-mobility.stasis", "family": "crowd-control-mobility", "behavior": "Time Stop"},
+        {"atom_id": "damage.resistance-mitigation", "family": "damage", "behavior": "Time Stop"}
+      ],
+      "declared_family_set": ["stats", "crowd-control-mobility", "damage"]
+    },
+    "step_3_family_taxonomy_check": {
+      "source_a": "data/atoms/classification-report.json -> vocab.families",
+      "vocab_families": ["crowd-control-mobility", "damage", "heal-shield", "interaction", "stack-transform-summon-resource", "vision-economy"],
+      "source_b": "census over all 324 files in data/item-atoms/*.json",
+      "item_family_census": {"stats": 586, "damage": 348, "heal-shield": 266, "stack-transform-summon-resource": 248, "vision-economy": 190, "crowd-control-mobility": 137},
+      "finding": "No family named 'defence' (or 'defense') exists anywhere in the cached atom taxonomy. A universal claim that 'every declared family on this item is a defence' cannot be sourced from the cache for ANY item, and is contradicted for this item, whose declared families are literally 'stats', 'crowd-control-mobility', and 'damage'."
+    },
+    "step_4_outgoing_tdd_check": {
+      "objective_definition_quoted": "docs/math-foundations.md sec. 3.1: 'f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (score + EHP*1e-9, optimizer.py _evaluate_build_uncached)'",
+      "cached_stat_line": "data/items.json -> 3157.stats: abilityPower.flat = 105.0, armor.flat = 50.0; riotDescription: '<attention> 105</attention> Ability Power<br><attention> 50</attention> Armor'",
+      "computation": "Syndra is an AP champion; her ability damage scales with ability power. Holding this item therefore raises the AP term that feeds every ability damage instance, so it strictly increases the objective f(S) = total damage dealt. Concretely, an ability with AP ratio r gains 105*r raw damage per cast, which after mitigation contributes 105*r*100/(100+MR) to TDD. That is a non-zero increase in outgoing TDD for any r > 0.",
+      "finding": "The item unambiguously changes outgoing TDD. Only the Time Stop ACTIVE is TDD-neutral; the item as a whole is not."
+    },
+    "step_5_evaluate_old_value": {
+      "claim_a": "'Time Stop is priced only from the explicit bounded active-seconds scenario input' — supported: the cached active gives a fixed, bounded 2.5 s stasis window, so the effect is expressible purely as an active-seconds quantity, and it has no damage term to price.",
+      "claim_b": "'item presence alone never assumes stasis' — supported: the cached text describes a manually activated ability ('Put yourself in stasis'), not an automatic proc, and it also disables the holder's own attacks and abilities for the window. Assuming the active fires from mere item presence would silently mutate the fight timeline (both the invulnerability window and the self-action lockout) with no scenario input authorizing it. This is the same fail-closed doctrine the repo applies to item availability and effect values.",
+      "verdict_on_old": "Both clauses are factually accurate against the cached wiki text and internally consistent."
+    },
+    "step_6_evaluate_new_value": {
+      "clause_1": "'Every declared family on this item is a defence' — FALSE. The declared families are stats, crowd-control-mobility, and damage (data/item-atoms/3157.json). 'defence' is not a family in this taxonomy at all, and stats.ability-power (105 flat AP) is an offensive atom.",
+      "clause_2": "'the represented mechanic changes durability, not outgoing TDD' — half-true at best. Stasis itself is durability-only, so if 'the represented mechanic' is read narrowly as the Time Stop active, the clause holds. But the sentence's subject is 'this item', and the item raises outgoing TDD by 105 AP. The stated reason is therefore not a sound justification for the coverage entry.",
+      "additional": "The new value also drops the operative content of the old one: it no longer states HOW Time Stop is priced (bounded active-seconds input) nor that stasis is never assumed from presence. It replaces a checkable pricing rule with an unsourced categorical assertion."
+    }
+  },
+  "sources_quoted": [
+    "data/items.json -> item 3157 'Zhonya's Hourglass': active[0].name = 'Time Stop'; active[0].branches[0] = 'Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].'; stats.abilityPower.flat = 105.0; stats.armor.flat = 50.0; passives = []",
+    "data/items.json -> item 2420 'Seeker's Armguard': same Time Stop active text (2.5 s), abilityPower.flat = 40.0, armor.flat = 25.0",
+    "data/item-atoms/3157.json: atoms = [stats.ability-power (family 'stats'), stats.armor (family 'stats'), crowd-control-mobility.stasis (family 'crowd-control-mobility', behavior 'Time Stop'), damage.resistance-mitigation (family 'damage', behavior 'Time Stop')]",
+    "data/atoms/classification-report.json -> vocab.families = ['crowd-control-mobility','damage','heal-shield','interaction','stack-transform-summon-resource','vision-economy']",
+    "census of data/item-atoms/*.json (324 files): family counts {stats 586, damage 348, heal-shield 266, stack-transform-summon-resource 248, vision-economy 190, crowd-control-mobility 137} — no 'defence' family",
+    "docs/math-foundations.md sec. 3.1: 'f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (score + EHP*1e-9 ...)'"
+  ],
+  "verdict": "old_value_correct",
+  "verdict_rationale": "The old reason is fully supported by the cached wiki text: Time Stop is a manually activated, bounded 2.5-second stasis with no damage term, so pricing it only from an explicit bounded active-seconds input and never inferring stasis from item presence is exactly right. The new reason asserts a universal that the cache contradicts twice over: 'defence' is not a family in the atom taxonomy, and the item's declared families include stats.ability-power (105 flat AP) plus a literal 'damage' family atom — so the item does change outgoing TDD for an AP champion like Syndra. The new string would only be defensible if narrowed to the active alone, which it is not."
+}

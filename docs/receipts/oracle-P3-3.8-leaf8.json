@@ -1,0 +1,61 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_60/combat/breakdown[0]/utility_outcomes/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "read": ["data/items.json", "data/item-atoms/*.json", "data/README.md", "data/atoms/README.md", "data/worklists/e9-bis-b-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "step_0_scope": "The leaf is a prose reason on an item_coverage entry, so the checkable content is (a) the terminology used for the mechanic and (b) the new universal claim 'Every declared family on this item is a defence'. Both are decidable from the cached wiki effect text in data/items.json, which stores each item's declared unique-passive/active families under passives[].name / active[].name with the full text in .branches (data/README.md: 'passives[].branches, active[].branches | Wiki description, description2, ... | The complete text of one effect').",
+    "step_1_what_a_declared_family_is": "data/items.json declares one named family per effect, exactly as the Wiki does: Banshee's Veil -> 'Annul'; Zhonya's Hourglass -> active 'Time Stop'; Seraph's Embrace -> 'Awe' + 'Lifeline'; Sterak's Gage -> 'The Claws that Catch' + 'Lifeline'. There is no 'family' key on the item record itself, so 'declared family' can only mean these named effects (the same vocabulary as the exclusivity groups quoted in docs/math-foundations.md 3.1: 'exclusivity groups: at most one item per group (Spellblade, Fatality, Blight, ...)').",
+    "step_2_enumeration": "Classified every tier-3 item's declared effect text in data/items.json as offence-bearing vs durability-bearing by keyword. Items whose every declared family is durability-only include: Banshee's Veil (Annul), Zhonya's Hourglass (Time Stop), Guardian Angel (Rebirth), Kaenic Rookern (Magebane), Spirit Visage (Boundless Vitality), Jak'Sho (Voidborn Resilience), Gargoyle Stoneplate (Unbreakable), Locket (Devotion), Maw of Malmortius (Lifeline), Immortal Shieldbow (Lifeline). The Syndra-plausible members of that set (AP mid, Summoner's Rift legal per modes['classic sr 5v5'] = true, no champion restriction, no acquisition note) are Banshee's Veil (id 3102) and Zhonya's Hourglass (id 3157).",
+    "step_3_wiki_text_check": "Banshee's Veil / Annul: 'Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).' -- blocks an incoming ability; nothing in the text adds, amplifies, or converts outgoing damage. Zhonya's Hourglass / Time Stop: 'Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.' -- pure incoming-damage denial that in fact suppresses the holder's own output during the window. Neither mechanic increases outgoing TDD, so the shared clause 'not outgoing TDD' is true either way.",
+    "step_4_terminology": "The discriminating word is 'defense' vs 'durability'. Neither Annul nor Time Stop touches a defensive STAT: Banshee's spell shield blocks an ability outright and Zhonya's stasis grants invulnerability; the cached stat blocks show the resistances are flat item stats (Banshee's magicResistance 40, Zhonya's armor 50) that exist independently of the represented mechanic. Calling a spell shield / stasis a change to 'defense' mislabels it as a resistance change; 'durability' is the correct superset term for shields, invulnerability and stasis. The new value is therefore strictly more accurate on the mechanic, and it does not overstate: it says 'changes durability', not 'changes resistances'.",
+    "step_5_universal_claim": "The added clause 'Every declared family on this item is a defence' holds for both Syndra-plausible candidates -- Banshee's Veil declares exactly one family (Annul, and its atomization in data/item-atoms/3102.json is heal-shield only: heal-shield.shield, heal-shield.shield-magic, heal-shield.heal-and-shield-power, with zero damage atoms), and Zhonya's Hourglass declares exactly one (Time Stop; data/item-atoms/3157.json emits crowd-control-mobility.stasis plus damage.resistance-mitigation, i.e. incoming mitigation, again no outgoing-damage atom). The clause is also falsifiable and correctly discriminating: it would be FALSE for a mixed item such as Seraph's Embrace, whose declared families are 'Awe' ('Grants ability power equal to 2% bonus mana') plus 'Lifeline' -- Awe feeds outgoing TDD, so the old, weaker sentence could have been emitted on a mixed item without lying on its face, while the new sentence cannot. Strengthening the reason to a per-item universal is therefore sound rather than an overclaim.",
+    "conclusion": "Both strings share a true core ('not outgoing TDD'), but the old string mislabels a spell-shield/stasis mechanic as a change to 'defense', and the new string both fixes the term ('durability') and adds a universal over declared families that is verified true for every Summoner's-Rift, Syndra-legal item that can carry this reason. New value is correct."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> id 3102 Banshee's Veil, passives[0]",
+      "quote": "Annul: Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions)."
+    },
+    {
+      "source": "data/items.json -> id 3157 Zhonya's Hourglass, active[0]",
+      "quote": "Time Stop: Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "source": "data/items.json -> Seraph's Embrace, passives (contrast case for the universal claim)",
+      "quote": "Awe: Grants {{as|ability power}} equal to {{as|2% '''bonus''' mana}}. / Lifeline: If you would take damage that would reduce you below {{as|30% of your '''maximum''' health}}, you first gain a {{tip|shield}} ..."
+    },
+    {
+      "source": "data/item-atoms/3102.json",
+      "quote": "atoms: heal-shield.heal-and-shield-power (Annul), heal-shield.shield (Annul), heal-shield.shield-magic (Annul) -- no damage-family atom"
+    },
+    {
+      "source": "data/item-atoms/3157.json",
+      "quote": "atoms: crowd-control-mobility.stasis (Time Stop), damage.resistance-mitigation (Time Stop) -- mitigation of incoming damage, no outgoing-damage atom"
+    },
+    {
+      "source": "data/README.md",
+      "quote": "passives[].branches, active[].branches | Wiki description, description2, ... | The **complete** text of one effect; replaces the old single effects string, which truncated multi-branch passives"
+    },
+    {
+      "source": "docs/math-foundations.md, section 3.1",
+      "quote": "exclusivity groups: at most one item per group (Spellblade, Fatality, Blight, ...), enforced by loadout_rules  -- establishes that named unique-passive families are the repo's item-family vocabulary"
+    },
+    {
+      "source": "data/worklists/e9-bis-b-task.md",
+      "quote": "src/calculator/item_coverage.py -- how item effects get 'blocked'/'withheld' verdicts and what certification requires. ... Where the game effect is a stat-only or utility-only item ..., certify it as a no-damage source with the sourced reason. -- confirms item_coverage reasons are meant to be sourced statements about whether an effect contributes damage"
+    }
+  ],
+  "caveats": [
+    "The scenario definition 'syndra_custom_order_60' lives outside the permitted evidence tree (data/ + docs/math-foundations.md), so the exact item at item_coverage[0] was not read. The verdict was established over the full set of items that can legally carry this reason for a Summoner's-Rift Syndra build; the new wording is true for every member of that set (Banshee's Veil, Zhonya's Hourglass) and the old wording mislabels the mechanic for every member of that set.",
+    "No numeric value is involved in this leaf; the computation is a text/classification check against cached wiki effect text, which is the only oracle data/ can supply for a prose reason."
+  ]
+}

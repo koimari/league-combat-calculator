@@ -1,0 +1,113 @@
+{
+  "receipt": "oracle-P3-3.8-leaf4",
+  "runbook": "R-18 / R-19 (fresh independent oracle, evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_39/combat/utility_outcomes/focus/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle4",
+    "read": ["data/items.json", "data/atoms/items.json", "data/atoms/README.md", "data/item-atoms/*.json", "data/practice-corpus/scenarios.json", "data/worklists/e9-bis-b-task.md", "data/README.md", "data/wiki/README.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (other than writing this file)", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "nature_of_leaf": "This leaf is a prose justification string, not a number. There is no arithmetic to reproduce; the checkable content is a factual claim about an item's mechanic: (a) the mechanic is defensive/durability-affecting, and (b) it contributes nothing to outgoing TDD. The new value adds a universally quantified clause over the item's declared effect families.",
+
+    "step_1_identify_the_item": {
+      "result": "NOT determinable from the permitted evidence tree.",
+      "detail": "Grepping the whole export for 'custom_order', 'coupled_scenario', 'item_coverage', 'utility_outcomes' and 'syndra' returns no scenario definition (only data/worklists/e9-bis-b-task.md mentions src/calculator/item_coverage.py in prose). data/practice-corpus/scenarios.json holds 22 corpus scenarios, none named syndra_custom_order_39. The golden scenario catalog lives under scripts/, which this runbook forbids. Therefore the claim was verified against the full candidate set of defensive items that can appear in a Syndra (AP mid) build rather than against one named item."
+    },
+
+    "step_2_family_taxonomies_present_in_the_cache": {
+      "unified_atomizer (data/atoms/items.json, the current source per data/atoms/README.md)": ["stat (703)", "economy (335)", "damage (294)", "heal (102)", "control (81)", "timing (44)", "stack (40)", "shield (37)", "vision (24)", "summon (3)"],
+      "legacy per-item files (data/item-atoms/*.json, described in the README as no longer written)": ["stats", "damage", "heal-shield", "stack-transform-summon-resource", "vision-economy", "crowd-control-mobility"],
+      "finding": "Neither cached taxonomy contains a family literally named 'defence'. The word 'defence' in the new string is therefore a code-side classification of families (defensive vs. offensive), not a cached label. The cached data can still falsify or support it per item, which is what step 3 does."
+    },
+
+    "step_3_candidate_by_candidate_check": [
+      {
+        "item": "Zhonya's Hourglass (3157)",
+        "cached_wiki_text": "Time Stop (active): \"Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.\"",
+        "effect_families_declared_in_cache": ["control.stasis (evidence active:Time Stop@kw:stasis)", "damage.basic_attack (evidence active:Time Stop@kw:basic attack)"],
+        "assessment": "Purely defensive mechanic: stasis is invulnerability/untargetability; the text explicitly forbids attacking or casting, so it emits no damage instance. The `damage.basic_attack` atom is a keyword artifact of the NEGATION clause 'unable to ... declare basic attacks' — the wiki text proves the item deals no damage. Both old and new statements are TRUE of the mechanic; the new one's universal clause holds over the item's effect (mechanic) families."
+      },
+      {
+        "item": "Banshee's Veil (3102)",
+        "cached_wiki_text": "Annul: \"Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).\"",
+        "effect_families_declared_in_cache": ["shield.flat (passive:Annul@kw:shield)", "timing.cooldown (passive:Annul@kw:cooldown)"],
+        "assessment": "Every non-stat/non-economy declared family is defensive (shield + its cooldown). No damage or damage-amplification family. New statement TRUE; old statement TRUE but weaker."
+      },
+      {
+        "item": "Kaenic Rookern (2504)",
+        "cached_wiki_text": "Magebane: \"After not taking magic damage for 15 seconds, gain a shield that absorbs magic damage equal to 15% of maximum health until destroyed.\"",
+        "effect_families_declared_in_cache": ["shield.flat", "heal.flat", "damage.magic (artifact: the keyword 'magic damage' here is the damage ABSORBED, not dealt)"],
+        "assessment": "Mechanic is a pure absorb shield; no outgoing damage. New statement TRUE on the substance; the cached `damage.magic` atom is again a keyword artifact of absorbed-damage text."
+      },
+      {
+        "item": "Warmog's Armor (3083)",
+        "cached_wiki_text": "Warmog's Heart: regenerate 1.5% maximum health every 0.5s out of combat; Warmog's Vitality: bonus health equal to 12% bonus health from items.",
+        "assessment": "Pure durability/regen; no declared damage family at all. New statement unambiguously TRUE."
+      },
+      {
+        "item": "Seraph's Embrace (3040) — COUNTEREXAMPLE",
+        "cached_wiki_text": "Awe: \"Grants ability power equal to 2% bonus mana.\" / Lifeline: shield below 30% max health for 18% max mana.",
+        "effect_families_declared_in_cache": ["stat.ability_power (evidence passive:Awe@kw:ability power)", "shield.flat", "heal.flat", "stat.mana"],
+        "assessment": "This defensive-looking item DOES change outgoing TDD (Awe converts mana into AP). Both the old and the new string would be FALSE here — but only the NEW string carries a guard that would prevent it firing, because Awe declares an offensive `stat.ability_power` family. This is the discriminating case."
+      },
+      {
+        "item": "Abyssal Mask (8020) — COUNTEREXAMPLE",
+        "cached_wiki_text": "Unmake: \"Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources.\"",
+        "effect_families_declared_in_cache": ["control.curse", "damage.magic (12% amplification)"],
+        "assessment": "A resistance/health item whose mechanic amplifies outgoing magic damage. The OLD wording ('The represented mechanic changes defense, not outgoing TDD') is exactly the kind of hand-wave that could be attached to a mechanic like Unmake; the NEW wording's whole-item family test excludes it, because `damage.magic` is a declared non-defensive family."
+      }
+    ],
+
+    "conclusion": "For every candidate whose mechanic is genuinely defensive (Zhonya's, Banshee's, Kaenic Rookern, Warmog's), the cached wiki text confirms the operative claim shared by both strings: the mechanic emits no damage instance and no damage amplification, so it adds nothing to outgoing total damage dealt. The new string additionally asserts that every declared family on the item is defensive, which holds over the effect families the cache declares for those items, and — unlike the old string — is a test that fails closed for the real counterexamples (Seraph's Awe, Abyssal Mask's Unmake). The new value is therefore correct and strictly more informative; the change is a precision improvement, not a semantic regression."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> 3157 Zhonya's Hourglass, active[0] 'Time Stop', branches[0]",
+      "quote": "Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items."
+    },
+    {
+      "source": "data/items.json -> 3102 Banshee's Veil, passives[0] 'Annul', branches[0]",
+      "quote": "Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions)."
+    },
+    {
+      "source": "data/items.json -> 2504 Kaenic Rookern, passives[0] 'Magebane', branches[0]",
+      "quote": "After not taking magic damage for 15 seconds, gain a shield that absorbs magic damage equal to 15% of maximum health until destroyed."
+    },
+    {
+      "source": "data/items.json -> 3040 Seraph's Embrace, passives 'Awe' / 'Lifeline'",
+      "quote": "Awe: Grants ability power equal to 2% bonus mana. | Lifeline: If you would take damage that would reduce you below 30% of your maximum health, you first gain a shield for 3 seconds that absorbs damage equal to 18% maximum mana."
+    },
+    {
+      "source": "data/items.json -> 8020 Abyssal Mask, passives[0] 'Unmake'",
+      "quote": "Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources."
+    },
+    {
+      "source": "data/atoms/items.json (unified Atomizer records; families are the atom_id prefixes)",
+      "quote": "3157: control.stasis|Time Stop, damage.basic_attack|Time Stop, stat.ability_power, stat.armor, economy.total. 3102: shield.flat|Annul, timing.cooldown|Annul, stat.ability_power, stat.magic_resistance. 3040: stat.ability_power|['passive:Awe@kw:ability power','stats.abilityPower.flat']. 8020: control.curse|Unmake, damage.magic|Unmake."
+    },
+    {
+      "source": "data/atoms/README.md",
+      "quote": "The legacy per-item files under the `data/item-atoms/` tree are no longer written; consumers should read `data/atoms/items.json` ... Each passive/active is classified from its own fragment text (`passives[i].branches`, `active[i].branches`), never a whole-item blob."
+    },
+    {
+      "source": "docs/math-foundations.md lines 353-356 (definition of the coupled score / TDD)",
+      "quote": "`f(S)` = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (`score + EHP*1e-9`, optimizer.py `_evaluate_build_uncached`)."
+    }
+  ],
+
+  "caveats_and_asides": [
+    "Item identity unresolved: the scenario definition for syndra_custom_order_39 lives outside the permitted evidence tree, so the verdict is over the candidate set of defensive items a Syndra build can hold, not a single named item. If the item at item_coverage[0] is in fact Seraph's Embrace or Abyssal Mask, BOTH values are wrong — a follow-up with access to the scenario definition should confirm which item this leaf indexes.",
+    "Scope of 'family': the claim is only true if 'declared family on this item' means the item's EFFECT (passive/active) families. If stat lines count as declared families, the clause is false for Zhonya's Hourglass and Banshee's Veil, which each carry 105 flat AP — a stat that plainly raises outgoing TDD. Recommend the emitting code scope the wording to the effect families it actually inspected.",
+    "TDD-definition nuance (applies equally to old and new, so it does not discriminate): under docs/math-foundations.md's definition, TDD is damage dealt BEFORE THE PARTICIPANT'S OWN DEATH. A durability mechanic therefore does change TDD indirectly by extending the fight window. Both strings say 'not outgoing TDD', which is correct only in the narrow sense 'contributes no damage instance / no damage amplification'. Worth tightening if these reasons are ever read as claims about the coupled score.",
+    "Cached-atom artifacts spotted while checking (off-task, harmless to the verdict but wrong in the cache): `damage.basic_attack` on Zhonya's Time Stop comes from the negation 'unable to ... declare basic attacks', and `damage.magic` on Kaenic Rookern's Magebane comes from ABSORBED magic damage. Both are keyword-polarity misses in the atomizer: the item deals no damage in either case."
+  ]
+}

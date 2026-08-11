@@ -1,0 +1,94 @@
+{
+  "receipt": "oracle-P3-3.8-leaf2",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "scenario": "syndra_custom_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_39/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle38",
+    "read": ["data/items.json", "data/item-atoms/*.json", "data/wiki-atoms/damage.json", "data/atoms/classification-report.json", "data/wiki/article-index.json", "data/practice-corpus/scenarios.json", "data/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "scope_limitation": {
+    "note": "The scenario tuple for 'syndra_custom_order_39' is not present anywhere under data/ (grepped the whole export for 'syndra_custom_order', 'coupled', 'item_coverage', 'focus_utility' - zero hits; data/practice-corpus/scenarios.json holds a different, hand-written corpus). The scenario definition and the coverage classifier both live in scripts/ and src/, which this runbook forbids. So the exact item at item_coverage[0] could not be pinned from the allowed evidence.",
+    "method_used": "Instead of assuming one item, the claim was tested against the cached-data taxonomy itself: (a) what the atom families mean, (b) every plausible defensive item a Syndra utility-objective build can hold, and (c) a negative control - an item for which the claim MUST come out false - to show the test is discriminating rather than vacuous."
+  },
+
+  "independent_computation": {
+    "what_the_leaf_asserts": "An item in the build carries a mechanic that the TDD (total damage dealt) model does not represent, and the stated reason is that the mechanic is defensive. The new text adds a justification clause: every family the item declares is a defence.",
+
+    "step_1_family_vocabulary": {
+      "source": "data/atoms/classification-report.json -> vocab.families",
+      "quote": "[\"crowd-control-mobility\", \"damage\", \"heal-shield\", \"interaction\", \"stack-transform-summon-resource\", \"vision-economy\"]  (item atoms additionally use \"stats\")",
+      "finding": "There is no family literally named 'defence'. 'Is a defence' must therefore be a judgment about what the declared family DOES, which is settled by the atom definitions in data/wiki-atoms/."
+    },
+
+    "step_2_atom_semantics": {
+      "source": "data/wiki-atoms/damage.json",
+      "quotes": [
+        "damage.resistance-mitigation - 'Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage. The amount actually received is called post-mitigation damage.'",
+        "damage.damage-instance - 'A discrete offensive interaction that deducts a unit's current health...'",
+        "damage.magic - 'Damage type mitigated by magic resistance; dealt by most AP-scaling abilities and some item effects.'"
+      ],
+      "finding": "Within the 'damage' family the taxonomy separates INCOMING-side atoms (resistance-mitigation: what you take) from OUTGOING-side atoms (damage-instance, damage.magic/physical/true: what you deal). A 'damage'-family declaration is therefore not automatically outgoing; damage.resistance-mitigation is by its own definition a durability atom."
+    },
+
+    "step_3_candidate_items": {
+      "note": "Only two cached items are both (i) plausible in a Syndra build and (ii) carry a mechanic that is purely defensive. Both were checked end to end.",
+      "zhonyas_hourglass": {
+        "id": 3157,
+        "wiki_effect_text": "data/items.json[3157]: passives = [] (none); active = [{name: 'Time Stop', branches: ['Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.']}]",
+        "declared_atoms": "data/item-atoms/3157.json: stats.ability-power (ev: stats) | stats.armor (ev: stats) | crowd-control-mobility.stasis (ev: active:Time Stop) | damage.resistance-mitigation (ev: active:Time Stop)",
+        "mechanic_derived_families": ["crowd-control-mobility", "damage"],
+        "each_is_a_defence": "YES. crowd-control-mobility.stasis = self-stasis, untargetable + invulnerable. damage.resistance-mitigation = incoming-damage reduction per the vocabulary definition quoted above.",
+        "outgoing_tdd_effect": "ZERO. The wiki text is explicit that during Time Stop you are 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items' - the mechanic contributes no damage instance at all; if anything it suppresses your own output. Nothing in the effect text or in either declared atom multiplies, adds to, or amplifies damage dealt."
+      },
+      "banshees_veil": {
+        "id": 3102,
+        "wiki_effect_text": "data/items.json[3102]: passive 'Annul' - 'Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).'",
+        "declared_atoms": "data/item-atoms/3102.json: stats.ability-power | stats.magic-resistance | heal-shield.heal-and-shield-power (ev: passive:Annul) | heal-shield.shield (ev: passive:Annul) | heal-shield.shield-magic (ev: passive:Annul)",
+        "mechanic_derived_families": ["heal-shield"],
+        "each_is_a_defence": "YES - a spell shield is pure durability.",
+        "outgoing_tdd_effect": "ZERO."
+      }
+    },
+
+    "step_4_negative_control": {
+      "item": "Abyssal Mask (id 8020)",
+      "wiki_effect_text": "passive 'Unmake' - 'Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources.'",
+      "declared_atoms": "data/item-atoms/8020.json: stats.health | stats.magic-resistance | stats.ability-haste | damage.magic (ev: passive:Unmake)",
+      "why_it_matters": "Abyssal Mask is the archetypal 'defensive-looking' item whose mechanic DOES change outgoing TDD (+12% magic damage taken by cursed enemies), and its mechanic-derived family is the outgoing atom damage.magic, not damage.resistance-mitigation. The all-families-are-a-defence test therefore comes out FALSE for it and TRUE for Zhonya's / Banshee's - the test discriminates correctly and is not vacuous. This is what makes the new clause a real, checkable justification rather than decoration."
+    },
+
+    "step_5_the_one_caveat": {
+      "observation": "Every candidate also declares the 'stats' family, and for both Zhonya's (105 flat AP) and Banshee's (105 flat AP) that family includes stats.ability-power, which unambiguously does change outgoing TDD.",
+      "resolution": "This does not falsify the new value. The 'stats' atoms carry provenance evidence 'stats', not 'active:Time Stop' / 'passive:Annul' - they are the base stat line, which the stats pipeline models in full and which can never be a coverage gap. An item_coverage entry is scoped to a represented mechanic (the sentence itself says 'the represented mechanic'), so 'declared family on this item' reads on the mechanic-derived families. Under the mechanic-scoped reading the clause is true for both candidates; under an over-literal reading that swept in the base stat line it would be false for every AP item, which would make the sentence unusable for any item at all and is therefore not the intended reading.",
+      "residual_risk": "Low. If the classifier really does include the base 'stats' family in its universal quantifier, the new clause would be over-claiming for any AP item. That cannot be checked without reading src/, which this runbook forbids."
+    },
+
+    "step_6_wording_check": {
+      "defense_vs_durability": "'Durability' is the League wiki's own term for the incoming-damage side (data/wiki/article-index.json contains a 'Durability' article, pageid 961552), and stasis/invulnerability and spell shields both sit on that side. Replacing the ambiguous 'defense' with 'durability' is a strict wording improvement, not a semantic change.",
+      "math_foundations": "docs/math-foundations.md carries no identity for item coverage or for coverage reason strings (its item/resistance content is the mitigation identity m(R)=100/(100+R), line 457, which is the incoming-damage identity and is consistent with damage.resistance-mitigation being a durability atom). It neither supports nor contradicts either wording; the decisive evidence is the cached wiki effect text plus the atom taxonomy."
+    },
+
+    "conclusion": "Both strings share the same operative claim - the mechanic is defensive and contributes nothing to outgoing TDD - and that claim is TRUE for every item that can plausibly occupy this slot (Zhonya's Hourglass Time Stop; Banshee's Veil Annul), verified directly from the cached wiki effect text. The new string additionally states the ground for that claim, and that ground checks out against data/item-atoms + data/wiki-atoms: every mechanic-derived family declared by those items (crowd-control-mobility.stasis, damage.resistance-mitigation, heal-shield.shield*) is an incoming/durability atom, while the negative control (Abyssal Mask, damage.magic) correctly fails the same test. The new value is accurate and strictly more informative; the old value is not false but is unjustified and uses the looser word 'defense'."
+  },
+
+  "sources_quoted": [
+    "data/items.json [3157] Zhonya's Hourglass - active Time Stop branch text",
+    "data/items.json [3102] Banshee's Veil - passive Annul branch text",
+    "data/items.json [8020] Abyssal Mask - passive Unmake branch text (negative control)",
+    "data/item-atoms/3157.json - declared atoms + provenance evidence",
+    "data/item-atoms/3102.json - declared atoms + provenance evidence",
+    "data/item-atoms/8020.json - declared atoms + provenance evidence",
+    "data/wiki-atoms/damage.json - definitions of damage.resistance-mitigation, damage.damage-instance, damage.magic",
+    "data/atoms/classification-report.json - vocab.families (the complete family vocabulary)",
+    "data/wiki/article-index.json - 'Durability' article entry",
+    "docs/math-foundations.md line 457 - resistance mitigation identity m(R)=100/(100+R) (incoming-damage side)"
+  ]
+}

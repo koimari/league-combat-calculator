@@ -1,0 +1,133 @@
+{
+  "receipt": "oracle-P3-3.8-leaf30",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md`, no src/, tests/, scripts/, docs/plans/, docs/receipts/, diff, or history read)",
+  "date": "2026-08-11",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/combat/utility_outcomes/participants/main/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "leaf_kind": "prose justification string (no numeric quantity); correctness = whether the assertion is true of the item's cached effect text and of the documented TDD objective",
+
+  "independent_computation": {
+    "step_1_objective_definition": {
+      "question": "What exactly is 'outgoing TDD', and through which channel could a defensive mechanic enter it?",
+      "source": "docs/math-foundations.md Sec. 3.1 (Exact formulation)",
+      "quote": "f(S) = the **coupled participant-timeline score**: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (`score + EHP*1e-9`, optimizer.py `_evaluate_build_uncached`)",
+      "derivation": "TDD is the sum over the fight window of damage the main participant deals. Its terms are the damage identities of Sec. 1 (renewal-process auto stream, linearity-of-expectation multi-hit/proc/DoT sums) composed with the target-side mitigation multiplier m(R) = 100/(100+R) of Sec. 2.1. A self-defence mechanic (shield, damage reduction, spell shield, stasis/invulnerability) appears in NONE of those terms: it modifies the attacker's own effective health, which the documented objective carries only as (a) the 1e-9 EHP tiebreak and (b) the 'before its own death' window bound. The engine-facing statement 'changes durability, not outgoing TDD' is therefore exactly the right characterisation of a defence-only effect: the mechanic is not a damage source, so it contributes 0 to the damage sum.",
+      "supporting_quote": "docs/math-foundations.md Sec. 2.1: 'post = raw * m(R)  <=>  raw = post * (1 + R/100) = post * EHP_multiplier(R), EHP(R) = H0 * (1 + R/100)' — resistance/durability terms live on the *incoming*-damage side of the identity (effective health), never in the attacker's raw-damage construction."
+    },
+
+    "step_2_item_identity": {
+      "attempted": "grep for 'syndra_derived_order_39', 'derived_order', 'item_coverage' across the whole exported data/ tree and docs/math-foundations.md",
+      "result": "not present. data/practice-corpus/scenarios.json contains only the 22 hand-authored corpus scenarios (cp21-*, e0-*, e9-*, vladimir-*); no 'derived_order' family and no Syndra build. The derived/coupled scenario generator and its build list live in code (src/, scripts/), which this runbook forbids reading.",
+      "consequence": "The exact item at item_coverage[0] cannot be pinned from the permitted evidence. Verification therefore proceeds over the full candidate set: every item in data/items.json whose cached Wiki effect text is defence-only and that a Syndra (AP mid) build can hold. If the claim holds for every member of that set, the leaf is correct regardless of which member the scenario used."
+    },
+
+    "step_3_candidate_set_from_cached_wiki_text": {
+      "method": "Scanned all 324 entries of data/items.json, reading effect text through passives[].branches / active[].branches (every description branch, per project rule 6). Selected tier-3 items whose branch text contains only durability vocabulary (shield / damage reduction / resistances / stasis / spell shield) and no damage-dealing or damage-amplifying clause; then filtered to those an ordinary Summoner's Rift AP-mid build may hold.",
+      "candidates": [
+        {
+          "id": 3157,
+          "name": "Zhonya's Hourglass",
+          "declared_effects": ["active: Time Stop"],
+          "wiki_text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+          "families_present": ["defence (stasis / invulnerability / untargetable)"],
+          "damage_clauses_found": [],
+          "all_families_defence": true
+        },
+        {
+          "id": 3102,
+          "name": "Banshee's Veil",
+          "declared_effects": ["passive: Annul"],
+          "wiki_text": "Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).",
+          "families_present": ["defence (spell shield)"],
+          "damage_clauses_found": [],
+          "all_families_defence": true
+        },
+        {
+          "id": 444644,
+          "name": "Crown of the Shattered Queen",
+          "declared_effects": ["passive: Safeguard"],
+          "wiki_text": "Become ''Safeguarded'' to reduce incoming champion damage by 90%, lingering for {{fd|1.25}} seconds after taking damage from a champion (30 second cooldown, timer restarts upon taking damage from champions).",
+          "families_present": ["defence (incoming damage reduction)"],
+          "damage_clauses_found": [],
+          "all_families_defence": true,
+          "note": "The historical version of this item carried an offensive rider; the CURRENT cached text does not. Verified against the cache, not memory."
+        },
+        {
+          "id": 2504,
+          "name": "Kaenic Rookern",
+          "declared_effects": ["passive: Magebane"],
+          "wiki_text": "After not taking {{as|magic damage}} for 15 seconds, gain a {{tip|shield}} that absorbs {{as|magic damage}} equal to {{as|15% of '''maximum''' health}} until destroyed.",
+          "families_present": ["defence (shield)"],
+          "damage_clauses_found": [],
+          "all_families_defence": true
+        }
+      ],
+      "regex_check": "For each candidate, a search for /deals? [^.]{0,40}damage/ over the concatenated branch text returned [] — no candidate's mechanic emits damage, so none can contribute a term to the TDD sum.",
+      "counterexample_probe": "Items that would FALSIFY the new wording were also identified so the claim is not vacuous: Seraph's Embrace (3040) declares two families — 'Awe: Grants ability power equal to 2% bonus mana' (offensive stat conversion) plus 'Lifeline' (shield) — so 'every declared family is a defence' would be FALSE there; Abyssal Mask (8020) 'Unmake: Enemy champions ... receive 12% increased magic damage from all sources' is an outgoing-damage amplifier, so BOTH wordings would be false there. Neither of those items is defence-only, so neither can be the item behind a defence-branch coverage reason; their existence confirms the new sentence makes a checkable, non-trivial claim."
+    },
+
+    "step_4_evaluation_of_the_two_strings": {
+      "old_value_assessment": "TRUE but weaker and imprecise. It asserts the conclusion ('changes defense, not outgoing TDD') without stating the condition that licenses it, so it does not exclude the possibility that the item also declares a non-defensive family that WOULD touch TDD (the Seraph's Embrace shape above). 'defense' is also not the term the model uses for the non-TDD channel — the documented channel is effective health / EHP.",
+      "new_value_assessment": "TRUE and strictly more precise. (a) The universal clause 'Every declared family on this item is a defence' is exactly the condition under which the exclusion is sound, and it holds for every defence-only candidate above (each declares one family; that family is a shield / damage reduction / spell shield / stasis). (b) 'changes durability, not outgoing TDD' matches the documented objective in Sec. 3.1: durability enters f(S) only as the 1e-9 EHP tiebreak and the death-time window bound, never as a term of the damage sum, so the mechanic's contribution to outgoing TDD is exactly 0.",
+      "shared_caveat_neither_string_is_worse_for": "Durability can raise TDD indirectly by extending 'before its own death' (and Zhonya's stasis can lower it by suspending 2.5s of action). Both the old and the new string share this second-order caveat, so it does not separate them; in a fixed-window / one-rotation evaluation it is nil.",
+      "conclusion": "The new value is a superset of the old value's true content, adds the correct licensing condition, and uses the term ('durability') that matches the documented model. No candidate item makes the new universal clause false."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "docs/math-foundations.md",
+      "locus": "Sec. 3.1 Exact formulation (BIS optimization)",
+      "quote": "f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (score + EHP*1e-9)"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locus": "Sec. 2.1 The 100/(100+R) identity",
+      "quote": "post = raw * m(R)  <=>  raw = post * (1 + R/100) = post * EHP_multiplier(R), EHP(R) = H0 * (1 + R/100)"
+    },
+    {
+      "path": "data/items.json",
+      "locus": "3157 Zhonya's Hourglass -> active[0] 'Time Stop' -> branches[0]",
+      "quote": "Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items."
+    },
+    {
+      "path": "data/items.json",
+      "locus": "3102 Banshee's Veil -> passives[0] 'Annul' -> branches[0]",
+      "quote": "Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions)."
+    },
+    {
+      "path": "data/items.json",
+      "locus": "444644 Crown of the Shattered Queen -> passives[0] 'Safeguard' -> branches[0]",
+      "quote": "Become Safeguarded to reduce incoming champion damage by 90%, lingering for 1.25 seconds after taking damage from a champion (30 second cooldown...)."
+    },
+    {
+      "path": "data/items.json",
+      "locus": "2504 Kaenic Rookern -> passives[0] 'Magebane' -> branches[0]",
+      "quote": "After not taking magic damage for 15 seconds, gain a shield that absorbs magic damage equal to 15% of maximum health until destroyed."
+    },
+    {
+      "path": "data/items.json",
+      "locus": "3040 Seraph's Embrace -> passives[0] 'Awe' (falsifier probe)",
+      "quote": "Grants ability power equal to 2% bonus mana."
+    },
+    {
+      "path": "data/items.json",
+      "locus": "8020 Abyssal Mask -> passives[0] 'Unmake' (falsifier probe)",
+      "quote": "Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources."
+    },
+    {
+      "path": "data/champion-audit/batch-6.json",
+      "locus": "Vi entry, module_slots / gap_summary (independent precedent for the vocabulary)",
+      "quote": "P Blast Shield is explicitly documented as defensive-only ('does not change outgoing TDD')."
+    }
+  ],
+
+  "limitations": [
+    "The scenario 'syndra_derived_order_39' is not defined anywhere in the permitted evidence tree (data/ + docs/math-foundations.md); it is generated by code this runbook forbids reading. The specific item at item_coverage[0] could therefore not be pinned by name.",
+    "Verification was performed over the complete set of defence-only items in data/items.json that a Syndra build may hold; the claim holds for every member, so the verdict is invariant to which member the scenario used. It would only be overturned if the coverage entry pointed at an item with a non-defensive declared family (e.g. Seraph's Embrace) — in which case the OLD string would be wrong too (verdict would become both_wrong), so the new string is never the worse of the two."
+  ],
+
+  "verdict": "new_value_correct"
+}

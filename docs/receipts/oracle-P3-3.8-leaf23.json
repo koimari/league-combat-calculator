@@ -1,0 +1,110 @@
+{
+  "receipt": "oracle-P3-3.8-leaf23",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md, nothing else read)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_120/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+
+  "item_identification": {
+    "method": "The scenario definition lives outside the permitted evidence tree (tests/scripts are off-limits), so the item was identified from the only mechanic both candidate strings describe: 'Time Stop'.",
+    "cached_items_carrying_Time_Stop": [
+      "Zhonya's Hourglass (id 3157) - data/items.json, data/item-atoms/3157.json",
+      "Seeker's Armguard (id 2420) - data/items.json, data/item-atoms/2420.json"
+    ],
+    "note": "Both carry an identical single active (Time Stop, 2.5 s self-stasis), zero passives, and identical declared atom families, so the analysis below holds for either.",
+    "residual_uncertainty": "If the change under test re-ordered the item_coverage list so that index [1] now names a different, wholly defensive item, this leaf would have to be re-judged against that item. Nothing in the permitted evidence tree indicates such a re-ordering, and the new string's own universal claim is falsifiable against the cached data for the Time Stop item."
+  },
+
+  "independent_computation": {
+    "step_1_what_the_item_actually_is": {
+      "source": "data/items.json -> 3157 (Zhonya's Hourglass) / 2420 (Seeker's Armguard)",
+      "passives": [],
+      "active": "Time Stop (unique): 'Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.'",
+      "cached_cooldown_field": null,
+      "stats": {
+        "Zhonya's Hourglass": {"abilityPower": 105.0, "armor": 50.0},
+        "Seeker's Armguard": {"abilityPower": 40.0, "armor": 25.0}
+      }
+    },
+    "step_2_declared_families_from_cached_atoms": {
+      "source": "data/item-atoms/3157.json and data/item-atoms/2420.json",
+      "atoms": [
+        {"atom_id": "stats.ability-power", "family": "stats", "parameters": "flat 105 (3157) / flat 40 (2420)"},
+        {"atom_id": "stats.armor", "family": "stats", "parameters": "flat 50 (3157) / flat 25 (2420)"},
+        {"atom_id": "crowd-control-mobility.stasis", "family": "crowd-control-mobility", "behavior": "Time Stop"},
+        {"atom_id": "damage.resistance-mitigation", "family": "damage", "behavior": "Time Stop", "relations": ["damage.damage-instance", "damage.armor-penetration", "damage.magic-penetration"]}
+      ],
+      "distinct_declared_families": ["crowd-control-mobility", "damage", "stats"],
+      "taxonomy_check": {
+        "source": "data/atoms/classification-report.json -> vocab.families",
+        "families_in_vocabulary": ["crowd-control-mobility", "damage", "heal-shield", "interaction", "stack-transform-summon-resource", "vision-economy"],
+        "finding": "The cached atom taxonomy contains no family named or classifiable as 'a defence'. The families this item actually declares are 'stats', 'crowd-control-mobility' and 'damage'."
+      }
+    },
+    "step_3_test_the_new_string_claim_A": {
+      "claim": "Every declared family on this item is a defence.",
+      "result": "FALSE against cached data.",
+      "why": [
+        "The item declares stats.ability-power (+105 AP on Zhonya's, +40 on Seeker's). Ability power is an offensive stat: Syndra's Q/W/E/R packets all scale with AP, so this declared family is priced straight into outgoing TDD. A universal 'every declared family is a defence' is contradicted by the item's own first atom.",
+        "The item also declares the 'damage' family (damage.resistance-mitigation), which is the very family the TDD ledger is built from; it is not a defence family in this taxonomy.",
+        "'crowd-control-mobility' is a mixed family (it holds slows, roots, airborne, stasis, dashes) and is not a defence family either - stasis just happens to be self-cast here."
+      ]
+    },
+    "step_4_test_the_new_string_claim_B": {
+      "claim": "the represented mechanic changes durability, not outgoing TDD",
+      "result": "FALSE in a bounded-time scenario.",
+      "why": [
+        "Cached wiki text for the active states the wielder is, for the 2.5 s, 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items'.",
+        "docs/math-foundations.md S1.1: swings are counted as N(T) = floor(AS * u * T) over the fight window T, and 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time... and a cast counts when it starts within the window'.",
+        "Therefore 2.5 s of stasis inside a bounded window removes 2.5 s of attack/cast time from that shared timeline, i.e. it strictly LOWERS outgoing TDD. Saying the mechanic leaves outgoing TDD untouched is wrong in exactly the direction that matters for a duration-bounded scenario ('_120')."
+      ]
+    },
+    "step_5_test_the_old_string": {
+      "claim_A": "Time Stop is priced only from the explicit bounded active-seconds scenario input",
+      "claim_B": "item presence alone never assumes stasis",
+      "result": "Both TRUE / sound against cached data.",
+      "why": [
+        "Time Stop is an ACTIVE (data/items.json: 'active' array, unique), not a passive: it applies only if the player presses it. Nothing about owning the item implies it was used, so pricing it from presence would be an unsourced assumption.",
+        "Its effect is duration-typed and bounded: 'stasis for 2.5 seconds'. Its cached cooldown field is null, so no uptime fraction can be derived from the cached data at all - the number of stasis seconds inside the window is only knowable if the scenario declares it. An explicit bounded active-seconds input is the only sourced way to price it.",
+        "Assuming stasis from presence would also be actively harmful given step_4: it would silently subtract action time (and add invulnerability) that the scenario never declared."
+      ]
+    },
+    "conclusion": "The old reason states the correct, data-grounded rule for this leaf: an unused-by-default bounded active, priced only from a declared seconds input. The new reason replaces it with a universal family claim the item's own cached atoms falsify (it declares ability power under 'stats' and the 'damage' family) and with a mechanical claim the cached active text plus the shared-timeline model contradict (stasis does change outgoing TDD downward inside a bounded window)."
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json -> 3157 Zhonya's Hourglass -> active[0]",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "path": "data/items.json -> 2420 Seeker's Armguard -> active[0]",
+      "quote": "identical Time Stop text; passives: [] ; stats abilityPower 40, armor 25; cooldown field null"
+    },
+    {
+      "path": "data/item-atoms/3157.json",
+      "quote": "atoms: stats.ability-power (family 'stats', flat 105.0), stats.armor (family 'stats', flat 50.0), crowd-control-mobility.stasis (family 'crowd-control-mobility', behavior 'Time Stop'), damage.resistance-mitigation (family 'damage', behavior 'Time Stop')"
+    },
+    {
+      "path": "data/wiki-atoms/crowd-control-mobility.json -> crowd-control-mobility.stasis",
+      "quote": "Full disable that also makes the unit invulnerable and untargetable; cannot be cleansed, unaffected by tenacity, disables even summoner spells."
+    },
+    {
+      "path": "data/wiki-atoms/damage.json -> damage.resistance-mitigation",
+      "quote": "Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage."
+    },
+    {
+      "path": "data/atoms/classification-report.json -> vocab.families",
+      "quote": "[\"crowd-control-mobility\", \"damage\", \"heal-shield\", \"interaction\", \"stack-transform-summon-resource\", \"vision-economy\"]"
+    },
+    {
+      "path": "docs/math-foundations.md S1.1 (lines 42-68)",
+      "quote": "swings land at 0, D, 2D, ... with D = 1/(AS * u) ... N(T) = floor(AS * u * T) ... Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window."
+    }
+  ],
+
+  "method_note": "Evidence tree built with: git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>. Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were not read.",
+  "committed": false
+}

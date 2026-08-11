@@ -1,0 +1,83 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_120/combat/utility_outcomes/focus/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/items.json",
+      "data/item-atoms/3157.json",
+      "data/atoms/items.json",
+      "data/economics-sourced.json",
+      "data/champions.json",
+      "data/wiki/article-index.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "identification_of_the_item": {
+    "reasoning": "The old reason names 'Time Stop', which in the cached item corpus belongs to exactly two items: id 3157 Zhonya's Hourglass and its component id 2420 Seeker's Armguard (identical active text). Both are the only Stasis-group items in data/economics-sourced.json groups_26_12.Stasis alongside Shattered Armguard. A Syndra legendary build slot resolves to Zhonya's Hourglass (3157). Every claim below holds for either item.",
+    "stasis_group_quote": "\"Stasis\": [\"Seeker's Armguard\", \"Shattered Armguard\", \"Zhonya's Hourglass\"]  (data/economics-sourced.json, groups_26_12)"
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> 3157 Zhonya's Hourglass -> active[0] 'Time Stop' -> branches[0]",
+      "text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "source": "data/items.json -> 3157 -> simpleDescription",
+      "text": "Activate to become invincible but unable to take actions"
+    },
+    {
+      "source": "data/items.json -> 3157 -> stats",
+      "text": "abilityPower.flat = 105.0, armor.flat = 50.0"
+    },
+    {
+      "source": "data/item-atoms/3157.json -> atoms[].family (the item's declared families)",
+      "text": "stats (stats.ability-power 105 flat; stats.armor 50 flat), crowd-control-mobility (crowd-control-mobility.stasis, behavior 'Time Stop'), damage (damage.resistance-mitigation, behavior 'Time Stop', relations: damage.damage-instance, damage.armor-penetration, damage.magic-penetration)"
+    },
+    {
+      "source": "data/atoms/items.json -> objects['3157']",
+      "text": "atom 'control.stasis' (behavior control, evidence 'active:Time Stop@kw:stasis', value 2.5 flat) AND atom 'damage.basic_attack' (behavior damage, evidence 'active:Time Stop@kw:basic attack', value 2.5 flat)"
+    },
+    {
+      "source": "data/champions.json -> Syndra -> abilities",
+      "text": "Q Dark Sphere: 90/125/160/195/230 (+70% AP) magic damage; W Force of Will: 70..190 (+65% AP); E Scatter the Weak: 60..200 (+60% AP); R Unleashed Power: 80/120/160 (+20% AP) per sphere, max 560/840/1120 (+140% AP)"
+    },
+    {
+      "source": "data/economics-sourced.json -> groups_26_12",
+      "text": "\"Stasis\": [\"Seeker's Armguard\", \"Shattered Armguard\", \"Zhonya's Hourglass\"] — 'Stasis' is a unique-effect item group, not a defence family"
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "text": "Contains no definition of utility-outcome item coverage, defence families, or stasis pricing (headings 0-6: deterministic single number, expected damage/renewal timing, resistance & penetration, BIS optimization, variance, formula-audit table, references). No quoted formula supports either reason; the decision therefore rests on the cached wiki text under data/."
+    }
+  ],
+  "independent_computation": {
+    "step_1_family_census": {
+      "claim_under_test": "new_value: 'Every declared family on this item is a defence'",
+      "computation": "Enumerated every atom family across data/item-atoms/*.json. The cached taxonomy has exactly six families: stats (586), damage (348), heal-shield (266), stack-transform-summon-resource (248), vision-economy (190), crowd-control-mobility (137). There is no 'defence' family in the corpus at all. Zhonya's Hourglass (3157) declares three of them: stats, crowd-control-mobility, damage.",
+      "result": "FALSE. The item declares a 'damage' family atom (damage.resistance-mitigation, wired to damage.damage-instance / armor-penetration / magic-penetration) and a 'stats' family atom stats.ability-power = 105 flat. A 105 AP stat line is not a defence under any reading."
+    },
+    "step_2_tdd_sensitivity": {
+      "claim_under_test": "new_value: 'the represented mechanic changes durability, not outgoing TDD'",
+      "computation": "Syndra scales with AP on every damaging ability. The item's own declared stats.ability-power = 105 therefore moves outgoing damage directly: Q 0.70 x 105 = +73.5 raw magic per Dark Sphere; W 0.65 x 105 = +68.25; E 0.60 x 105 = +63.0; R at 7 spheres 1.40 x 105 = +147.0 raw magic. Total single-rotation Q+W+E+R uplift from this one item's AP = 73.5 + 68.25 + 63.0 + 147.0 = +351.75 raw magic damage before mitigation (post-mitigation against R resistance the sign is unchanged: raw x 100/(100+R) is strictly increasing in raw).",
+      "result": "FALSE. The item changes outgoing TDD by a large, computable amount."
+    },
+    "step_3_direction_of_the_active": {
+      "claim_under_test": "new_value's implied neutrality of the Time Stop mechanic toward outgoing damage",
+      "computation": "Wiki text: stasis lasts a bounded {{fd|2.5}} seconds and renders you 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.' In a duration-bounded fight (this scenario is a *_120 time-boxed coupled scenario), s seconds of stasis remove s seconds of casting and auto-attacking from the schedule, so d(TDD)/d(stasis seconds) < 0, not 0. The cached decomposition agrees: data/atoms/items.json files Time Stop under BOTH control.stasis and damage.basic_attack (evidence 'active:Time Stop@kw:basic attack'), i.e. the mechanic is recorded as touching basic-attack behaviour, and data/item-atoms/3157.json files it a second time under family 'damage'.",
+      "result": "The active is not TDD-neutral; it trades outgoing damage for invulnerability. Its effect is therefore only determinate once the number of stasis seconds is stated."
+    },
+    "step_4_old_value_check": {
+      "claim_under_test": "old_value: 'Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.'",
+      "computation": "Time Stop is listed under 'active' (not 'passives') in data/items.json 3157 — it does nothing until activated, so owning the item entails no stasis. Its per-activation duration is a fixed bound of 2.5 s ({{fd|2.5}}), which is exactly a 'bounded active-seconds' quantity; how many of those seconds are actually spent inside the modelled window is a scenario fact, not an item fact. Both directions of the trade (invulnerability gained, casts/autos forgone, per step 3) hinge on that same input.",
+      "result": "TRUE and fully grounded in the cached wiki text: an active-only, bounded-duration, action-forfeiting effect can only be priced from an explicit stated-seconds input, and presence alone cannot assume it."
+    }
+  },
+  "correct_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "conclusion": "The new value is contradicted by the cached data three times over: (1) the item's declared families include 'stats' (105 AP) and 'damage', and the cached taxonomy contains no 'defence' family; (2) the 105 AP alone moves Syndra's outgoing TDD by ~+352 raw magic in one full rotation; (3) the Time Stop active is not TDD-neutral but TDD-negative for its duration, since the wiki text forbids attacks, abilities, summoners and item actives while in stasis, which is precisely why it must be priced from an explicit bounded active-seconds input. The old value states that policy and matches the wiki text."
+}

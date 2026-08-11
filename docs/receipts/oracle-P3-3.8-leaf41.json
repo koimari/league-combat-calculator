@@ -1,0 +1,87 @@
+{
+  "receipt": "oracle-P3-3.8-leaf41",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md`; src/, tests/, scripts/, docs/plans/, docs/receipts/, diff and git history NOT read)",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+
+  "item_identification": {
+    "reasoning": "The leaf is a per-item coverage `reason`. The old text names the effect `Time Stop` by its exact wiki effect name. Exactly three cached items declare a Time Stop / stasis effect, and only one is a Summoner's Rift legendary a Syndra build may hold.",
+    "candidates": [
+      {"id": "3157", "name": "Zhonya's Hourglass", "tier": 3, "rank": "LEGENDARY", "modes.classic sr 5v5": true, "acquisitionNote": "", "verdict": "the item under test"},
+      {"id": "2420", "name": "Seeker's Armguard", "tier": 2, "rank": "EPIC", "modes.classic sr 5v5": true, "note": "component; identical Time Stop active text"},
+      {"id": "228002", "name": "Wooglet's Witchcap", "modes.classic sr 5v5": false, "acquisitionNote": "Requires the {{aug|ar|Quest: Wooglet's Witchcap}} augment.", "verdict": "Arena-only, withheld under CLAUDE.md rule 6"}
+    ],
+    "note": "Both surviving candidates carry byte-identical Time Stop branch text, so the analysis below is invariant to which of the two occupies item_coverage[1]."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json → id 3157 \"Zhonya's Hourglass\" → active[0].branches[0]",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "source": "data/items.json → id 3157 → simpleDescription",
+      "quote": "Activate to become invincible but unable to take actions"
+    },
+    {
+      "source": "data/items.json → id 3157 → passives / active / stats",
+      "quote": "\"passives\": [], \"active\": [{\"unique\": true, \"name\": \"Time Stop\", ...}], stats.abilityPower.flat = 105.0, stats.armor.flat = 50.0"
+    },
+    {
+      "source": "data/items.json → id 3157 → riotDescription",
+      "quote": "<active>Time Stop</active><br>Enter <keyword>Stasis</keyword> for 2.5 seconds."
+    },
+    {
+      "source": "docs/math-foundations.md §1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "N(T) = ⌊AS · u · T⌋   (damage.py: num_auto_attacks = floor(...))  …  an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`)."
+    },
+    {
+      "source": "docs/math-foundations.md §5 formula-audit table, Attack speed row",
+      "quote": "Attack speed (`calculate_attack_speed`) | `base_AS + AS_ratio·bonus/100` | EXACT"
+    },
+    {
+      "source": "data/champions.json → Syndra → stats / abilities",
+      "quote": "attackSpeed.flat = 0.658, attackSpeed.perLevel = 2, attackSpeedRatio.flat = 0.625; Q \"Dark Sphere\" cooldown values [7,7,7,7,7]"
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (stat growth), applied to the AS growth term",
+      "quote": "base + growth × (level - 1) × (0.7025 + 0.0175 × (level - 1))"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_declared_families": {
+      "claim_under_test": "\"Every declared family on this item is a defence.\"",
+      "evidence": "The cached record declares `passives: []` and exactly one `active` family, Time Stop, plus a stat block of 105 flat ability power and 50 flat armor.",
+      "finding": "The claim fails under both readings of \"declared family\". (a) If families = declared effect families, the sole family is Time Stop, and the cached branch text is explicitly two-sided: it grants untargetable + invulnerable (durability) AND renders the holder \"unable to move, declare basic attacks, cast abilities\" — an outgoing-damage effect, not a durability-only one. (b) If families include the declared stat lines, 105 ability power is an offence family outright, so \"every declared family … is a defence\" is false on its face."
+    },
+    "step_2_does_stasis_change_outgoing_TDD": {
+      "claim_under_test": "\"the represented mechanic changes durability, not outgoing TDD.\"",
+      "method": "Price the action lockout the wiki text mandates against the engine's own sourced counting identities. Per docs/math-foundations.md §1.1, autos are a deterministic renewal process counted N(T) = ⌊AS·u·T⌋, and a cast counts only when it starts within the window on one shared timeline. 2.5 s of stasis removes 2.5 s of actionable window: T_eff = 120 − 2.5 = 117.5 s.",
+      "attack_speed": {
+        "formula": "AS = base_AS + AS_ratio × (bonus_percent / 100), bonus_percent = growth × (L−1) × (0.7025 + 0.0175 × (L−1))",
+        "level_18": "bonus = 2 × 17 × (0.7025 + 0.0175×17) = 2 × 17 × 1.0 = 34.00% → AS = 0.658 + 0.625 × 0.34 = 0.8705",
+        "level_20": "bonus = 2 × 19 × (0.7025 + 0.0175×19) = 39.33% → AS = 0.658 + 0.625 × 0.3933 = 0.9038"
+      },
+      "auto_attack_counts": {
+        "level_18": "N(120) = ⌊0.8705 × 120⌋ = ⌊104.46⌋ = 104 ; N(117.5) = ⌊0.8705 × 117.5⌋ = ⌊102.28⌋ = 102 → Δ = −2 swings",
+        "level_20": "N(120) = ⌊0.9038 × 120⌋ = ⌊108.46⌋ = 108 ; N(117.5) = ⌊0.9038 × 117.5⌋ = ⌊106.20⌋ = 106 → Δ = −2 swings"
+      },
+      "ability_cast_counts": "Syndra Q (Dark Sphere) base cooldown 7 s. Casts starting inside the window: ⌊120/7⌋ + 1 = 18 → ⌊117.5/7⌋ + 1 = 17 → Δ = −1 Dark Sphere cast (ability haste shortens the cooldown and makes the loss larger, never smaller).",
+      "finding": "The mechanic removes roughly 2 basic attacks and 1 Q cast from a 120 s Syndra window. Zhonya's Hourglass itself grants 0 attack speed and 0 ability haste, so this loss is entirely attributable to the stasis lockout. The change in outgoing total damage dealt is strictly nonzero and strictly negative, so \"changes durability, not outgoing TDD\" is false.",
+      "sign_note": "Note the loss is only realised if the active is actually used — which is precisely the gating the old reason states."
+    },
+    "step_3_the_old_reason": {
+      "claim_under_test": "\"Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.\"",
+      "evidence": "The cached record files Time Stop under `active`, not `passives`, and simpleDescription reads \"Activate to become invincible but unable to take actions\". An active is not automatically expended; the 2.5 s duration is a bounded quantity that only enters the timeline if the scenario declares the item was activated.",
+      "finding": "Consistent with the source in both halves: (i) the mechanic is gated on activation, so item presence alone cannot assume stasis; (ii) it is nevertheless *priced* rather than dismissed, which is the correct treatment given step_2 shows a nonzero effect on the 120 s outgoing total once activated. The old reason is the statement the cached wiki text supports."
+    }
+  },
+
+  "conclusion": "The new value replaces a source-faithful, correctly gated statement with a universal defensive classification that the item's own cached wiki text contradicts twice over: the item declares 105 ability power (an offence line), and its sole declared effect family explicitly forbids basic attacks and ability casts for 2.5 s, which under the engine's own sourced counting identities (N(T) = ⌊AS·u·T⌋ and start-within-window cast scheduling) costs a level-18 Syndra ~2 autos and ~1 Dark Sphere cast over a 120 s window. Classifying Time Stop as touching durability but not outgoing TDD is therefore incorrect; the item is only unpriceable-by-presence, which is what the old text said.",
+  "confidence": "High on the source facts and the arithmetic. Residual uncertainty: the coverage-entry schema and the precise engine meaning of \"declared family\" live in src/, which this runbook forbids reading — but the new claim fails under every reading of that term that the cached data admits.",
+  "verdict_enum": "old_value_correct"
+}

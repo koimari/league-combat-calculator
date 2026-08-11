@@ -1,0 +1,55 @@
+{
+  "receipt": "oracle-P3-3.8-leaf12",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_60/combat/utility_outcomes/focus/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/or18b",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_0_what_the_leaf_asserts": "The leaf is a prose justification, not a number. Its truth-content is a single physical claim: the item effect represented by this coverage entry is a durability/defensive mechanic and therefore contributes no term to the attacker's outgoing total-damage-dealt (TDD). The new value adds a stated criterion ('every declared family on this item is a defence') in front of the same conclusion.",
+
+    "step_1_scenario_pinning": "'syndra_custom_order_60' is a Syndra coupled scenario at 60 Splinters of Wrath. data/champion-audit/batch-e9-1.json (Syndra): 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)' — the trailing 60 is the splinter-stack option, confirming the scenario family. The scenario's item list itself is NOT in the permitted evidence tree (data/practice-corpus/scenarios.json holds 22 corpus scenarios, none Syndra; no file under data/ contains 'coupled_scenarios', 'item_coverage', or 'custom_order'). The identity of item_coverage[0] therefore could not be pinned from data/ alone — see uncertainty section.",
+
+    "step_2_TDD_definition_quoted": "docs/math-foundations.md Sec. 3.1 defines the scored quantity: 'f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak'. Outgoing damage is built only from the damage pipeline rows audited in Sec. 5: resistance mitigation m(R)=100/(100+R), penetration (percent-then-flat, floor 0), stat growth base + growth*(L-1)*(0.7025+0.0175*(L-1)), crit expectation E[swing]=1+p*(CM-1), renewal auto count N(T)=floor(AS*u*T), DoT partition, on-hit/proc counting. A self-durability effect enters NONE of these terms.",
+
+    "step_3_where_defence_enters_instead": "Sec. 5 puts shields on the INCOMING side only: 'Shield absorption (survival walk) | clipping identity absorbed = min(shield, damage), overkill = max(0, damage-absorbed); absorbed+overkill = damage'. min(shield, damage) is applied to damage arriving at the participant, so d(outgoing TDD)/d(shield) = 0 through the damage pipeline. The only coupling to the coupled score is indirect (survival horizon / death time), which is exactly what the qualifier 'outgoing' in both strings excludes.",
+
+    "step_4_wiki_text_of_every_candidate_defensive_effect_a_syndra_build_can_hold": "From the cached wiki text in data/items.json (read through the passives[].branches / active[].branches contract), the only defensive mechanics available to a Syndra (AP, Summoner's Rift) build are: (a) Zhonya's Hourglass 3157 active 'Time Stop': 'Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.' (b) Banshee's Veil 3102 passive 'Annul': 'Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions).' (c) Seraph's Embrace 3040 passive 'Lifeline': 'If you would take damage that would reduce you below 30% of your maximum health, you first gain a shield for 3 seconds that absorbs damage equal to 18% maximum mana for 3 seconds.' NONE of these three texts contains a damage term, a damage-amplifier term, or an offensive stat term. Each is purely a durability mechanic (invulnerability, ability-block, absorb-shield). Substituting into step 2/3: contribution to outgoing TDD = 0 for all three.",
+
+    "step_5_family_check": "data/item-atoms/<id>.json is the cached family declaration. Zhonya's Hourglass = {crowd-control-mobility (stasis, 'Time Stop'), damage.resistance-mitigation ('Time Stop'), stats}; Banshee's Veil = {heal-shield x3 ('Annul'), stats}; Seraph's Embrace = {heal-shield ('Awe'/'Lifeline'), stack-transform-summon-resource (mana), stats}. Scoped to the represented EFFECT (which is what a per-effect coverage entry declares), the families are defensive in every case: crowd-control-mobility.stasis = self-stasis, damage.resistance-mitigation = invulnerability/mitigation, heal-shield.shield = absorb. So the new value's added premise ('every declared family on this item is a defence') is consistent with the cached family declarations for every candidate, and its conclusion is the same physically-correct conclusion the old value states.",
+
+    "step_6_conclusion": "Both strings assert the one checkable claim, and that claim is TRUE and independently reproduced above (zero outgoing-damage term from stasis / spell shield / absorb-shield, per the wiki text plus the math-foundations pipeline and the incoming-side shield clipping identity). The new value is a strict superset: same true conclusion, plus a stated criterion that the cached family data supports. 'Durability' is the correct term for stasis/spell-shield/absorb mechanics. No cached source contradicts any clause of the new value, so the new value is correct.",
+
+    "codebase_convention_corroboration": "The same conclusion is the documented convention throughout the cached audit data: data/champion-audit/batch-1.json 'shield ... is pure mitigation and deliberately not modeled (defensive, outside TDD scope)'; batch-6.json (Vi) 'P Blast Shield is explicitly documented as defensive-only (does not change outgoing TDD)'; batch-0.json 'defensive shields are out-of-scope by codebase convention'."
+  },
+
+  "sources_quoted": [
+    {"file": "docs/math-foundations.md", "locator": "Sec. 3.1 (score definition)", "quote": "f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak"},
+    {"file": "docs/math-foundations.md", "locator": "Sec. 5 audit table, 'Shield absorption (survival walk)' row", "quote": "clipping identity absorbed = min(shield, damage), overkill = max(0, damage-absorbed); absorbed+overkill = damage"},
+    {"file": "docs/math-foundations.md", "locator": "Sec. 5 audit table, mitigation row", "quote": "m(R)=100/(100+R); EHP round-trip raw = post*(1+R/100)"},
+    {"file": "data/items.json", "locator": "3157 Zhonya's Hourglass -> active 'Time Stop' branches[0]", "quote": "Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items."},
+    {"file": "data/items.json", "locator": "3102 Banshee's Veil -> passive 'Annul' branches[0]", "quote": "Grants a spell shield that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions)."},
+    {"file": "data/items.json", "locator": "3040 Seraph's Embrace -> passive 'Lifeline' branches[0]", "quote": "If you would take damage that would reduce you below 30% of your maximum health, you first gain a shield for 3 seconds that absorbs damage equal to 18% maximum mana for 3 seconds."},
+    {"file": "data/item-atoms/3157.json", "locator": "atoms[].family", "quote": "crowd-control-mobility.stasis (Time Stop), damage.resistance-mitigation (Time Stop), stats"},
+    {"file": "data/item-atoms/3102.json", "locator": "atoms[].family", "quote": "heal-shield.shield / heal-shield.shield-magic / heal-shield.heal-and-shield-power (Annul), stats"},
+    {"file": "data/item-atoms/3040.json", "locator": "atoms[].family", "quote": "heal-shield.shield + heal-shield.heal-and-shield-power (Awe/Lifeline), stack-transform-summon-resource.mana, stats"},
+    {"file": "data/champion-audit/batch-e9-1.json", "locator": "Syndra.gap_summary", "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"},
+    {"file": "data/champion-audit/batch-6.json", "locator": "Vi gap_summary", "quote": "P Blast Shield is explicitly documented as defensive-only ('does not change outgoing TDD')"}
+  ],
+
+  "residual_uncertainty": [
+    "The scenario's build list is not reachable from the permitted evidence tree, so item_coverage[0] could not be named. The computation was therefore run over the exhaustive set of defensive mechanics a Syndra Summoner's Rift build can carry (Zhonya's Time Stop, Banshee's Annul, Seraph's Lifeline); the conclusion 'no outgoing-TDD term' holds for all of them, so the verdict does not depend on which one it is.",
+    "Read literally at the ITEM level against data/item-atoms/*.json, 'every declared family on this item is a defence' would be false for any legendary, because every legendary also declares a `stats` family that (for these AP items) carries abilityPower, which does change outgoing TDD, and because the cached atom vocabulary has no family named or defined as a 'defence' (the six are crowd-control-mobility, damage, heal-shield, interaction, stack-transform-summon-resource, vision-economy, plus stats). Under that reading the sentence could never be emitted for any real item, so it is not the intended reading; the coverage entry is per-effect and the effect-scoped families are defensive in every candidate. Flagged as a wording nit, not a value error: if 'declared family' is ever surfaced item-wide rather than effect-wide, the sentence would overclaim.",
+    "Style nit (non-blocking): the cached corpus spells this 'defense'/'defensive' everywhere (batch-0/1/6 audits); 'defence' in the new string is the only British-spelled instance in the tree."
+  ],
+
+  "committed": false
+}

@@ -1,0 +1,90 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf25",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+  "item_identification": {
+    "conclusion": "The covered item is Zhonya's Hourglass (id 3157); the only other Summoner's Rift-legal item carrying a 'Time Stop' active is its component Seeker's Armguard (id 2420), whose effect content is identical, so the analysis is unchanged either way.",
+    "method": "Scanned every entry of data/items.json for the strings 'Time Stop' / 'stasis'. Exactly four items match: 2420 Seeker's Armguard, 3026 Guardian Angel (Rebirth, not Time Stop), 3157 Zhonya's Hourglass, 228002 Wooglet's Witchcap (active named 'Stasis', and modes['classic sr 5v5'] = false plus acquisitionNote 'Requires the Quest: Wooglet's Witchcap augment', so it is withheld from an ordinary SR build per the cached modes/acquisition gate).",
+    "zhonyas_modes": {"classic sr 5v5": true, "aram": true, "nb": true, "ar": true}
+  },
+  "independent_computation": {
+    "step_1_declared_effect_content": {
+      "source": "data/items.json -> item 3157",
+      "passives": [],
+      "active": [
+        {
+          "name": "Time Stop",
+          "unique": true,
+          "branches": ["Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."]
+        }
+      ],
+      "finding": "The item declares exactly one effect (one branch, no passives). Its entire mechanic is self-applied stasis: untargetable + invulnerable, i.e. an effect on damage TAKEN. The same branch text explicitly forbids attacking, casting abilities, using summoner spells and activating items for the duration, so the mechanic cannot contribute any outgoing damage in any parameterisation."
+    },
+    "step_2_family_decomposition": {
+      "source": "data/item-atoms/3157.json (identical shape in data/item-atoms/2420.json)",
+      "atoms": [
+        {"atom_id": "stats.ability-power", "family": "stats", "parameters": {"flat": 105.0}, "evidence": "stats"},
+        {"atom_id": "stats.armor", "family": "stats", "parameters": {"flat": 50.0}, "evidence": "stats"},
+        {"atom_id": "crowd-control-mobility.stasis", "family": "crowd-control-mobility", "behavior": "Time Stop", "evidence": "active:Time Stop"},
+        {"atom_id": "damage.resistance-mitigation", "family": "damage", "behavior": "Time Stop", "evidence": "active:Time Stop"}
+      ],
+      "finding": "Both effect-derived (non-stat) atoms are inbound-durability concepts, so every family the item declares through its mechanic is a defence: (a) crowd-control-mobility.stasis is defined in the cached vocabulary as 'Full disable that also makes the unit invulnerable and untargetable'; (b) damage.resistance-mitigation is defined as 'Armor and magic resistance reduce INCOMING physical/magic damage by a percentage (actual = raw x 100/(100 + resistance))'. Neither family alters outgoing damage. The two remaining atoms are the stat line (105 AP / 50 armor), which is not a mechanic family — the AP is already priced into the damage numbers by the stat pipeline, which is precisely why the mechanic-coverage entry has nothing offensive left to attribute."
+    },
+    "step_3_check_of_the_old_reason": {
+      "claim_under_test": "'Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.'",
+      "checks": [
+        "Duration is NOT a scenario-supplied quantity in the cached source: the wiki branch fixes it at {{fd|2.5}} seconds and Riot's own text says 'Enter Stasis for 2.5 seconds' (data/items.json 3157.riotDescription). So the mechanic is not parameterised by a free 'active-seconds' input in the source data.",
+        "More decisively, the coverage question is contribution to the combat/TDD breakdown, and stasis has ZERO outgoing-damage contribution for ANY number of seconds — the branch text forbids basic attacks, abilities, summoner spells and item activations during it. Making coverage contingent on an active-seconds input misdescribes a mechanic that is categorically, not conditionally, outside outgoing damage.",
+        "The old reason is also item-specific narrative ('Time Stop') rather than a statement derivable from the item's own declared families, so it does not generalise to the other defence-only items the same ledger must classify."
+      ],
+      "conclusion": "The old string is not supported by the cached source as a coverage rationale; the second clause ('item presence alone never assumes stasis') is true but does not state why the item is out of scope for the damage ledger."
+    },
+    "step_4_check_of_the_new_reason": {
+      "claim_under_test": "'Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.'",
+      "result": "Confirmed by the cached data. Declared mechanic families on 3157 = {crowd-control-mobility.stasis, damage.resistance-mitigation}; both are durability/damage-taken concepts per data/wiki-atoms/. The item declares no passive at all and its single active cannot produce outgoing damage by its own wiki text."
+    }
+  },
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "locator": "item 3157 Zhonya's Hourglass -> passives / active[0].branches[0]",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "path": "data/items.json",
+      "locator": "item 3157 -> riotDescription",
+      "quote": "<stats><attention> 105</attention> Ability Power<br><attention> 50</attention> Armor</stats> ... <active>Time Stop</active><br>Enter <keyword>Stasis</keyword> for 2.5 seconds."
+    },
+    {
+      "path": "data/item-atoms/3157.json",
+      "locator": "atoms[]",
+      "quote": "stats.ability-power (family stats); stats.armor (family stats); crowd-control-mobility.stasis (family crowd-control-mobility, evidence active:Time Stop); damage.resistance-mitigation (family damage, evidence active:Time Stop)"
+    },
+    {
+      "path": "data/wiki-atoms/crowd-control-mobility.json",
+      "locator": "atom crowd-control-mobility.stasis -> description",
+      "quote": "Full disable that also makes the unit invulnerable and untargetable; cannot be cleansed, unaffected by tenacity, disables even summoner spells."
+    },
+    {
+      "path": "data/wiki-atoms/damage.json",
+      "locator": "atom damage.resistance-mitigation -> description",
+      "quote": "Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage. The amount actually received is called post-mitigation damage."
+    },
+    {
+      "path": "data/items.json",
+      "locator": "item 228002 Wooglet's Witchcap -> modes / acquisitionNote",
+      "quote": "modes {'classic sr 5v5': false, ...}; acquisitionNote 'Requires the {{aug|ar|Quest: Wooglet's Witchcap}} augment.' (excluded from an ordinary SR build, so the Time Stop item in this scenario is 3157/2420)"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "sec. 2.1 / audit table row 'Resistance mitigation'",
+      "quote": "m(R)=100/(100+R) ... EHP round-trip raw = post*(1+R/100) — i.e. the resistance-mitigation family is defined over damage RECEIVED, confirming it is a durability concept rather than an outgoing-damage one."
+    }
+  ],
+  "isolation_statement": "Worked only from a fresh `git archive --format=tar HEAD data docs/math-foundations.md | tar -x` export in a scratch directory. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, the plan and git history were not read.",
+  "residual_uncertainty": "The scenario definition for 'syndra_derived_order_39' is not present under data/, so the item at item_coverage[1] was identified indirectly from the old string's naming of 'Time Stop' plus the SR-legality gate. If the list order changed such that index 1 now names a different item, the new string still holds only for a defence-only item; for Zhonya's Hourglass / Seeker's Armguard (the only SR-legal Time Stop items) it is exactly right."
+}

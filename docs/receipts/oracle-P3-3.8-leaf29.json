@@ -1,0 +1,71 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf29",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-11",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/combat/utility_outcomes/focus/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle29",
+    "read_only_scope": "data/**, docs/math-foundations.md (no src/, tests/, scripts/, docs/plans/, docs/receipts/, no git history, no diff/plan)"
+  },
+  "item_identification": {
+    "method": "The leaf's reason names the active 'Time Stop'. Scanned every entry in data/items.json for the string 'Time Stop' / 'stasis'.",
+    "matches": [
+      {"id": 3157, "name": "Zhonya's Hourglass", "active": "Time Stop", "modes.classic sr 5v5": true},
+      {"id": 2420, "name": "Seeker's Armguard", "active": "Time Stop", "modes.classic sr 5v5": true},
+      {"id": 228002, "name": "Wooglet's Witchcap", "active": "Stasis (not 'Time Stop')", "modes.classic sr 5v5": false, "note": "Arena/Mayhem only - excluded by the SR availability rule"},
+      {"id": 3026, "name": "Guardian Angel", "active": "none; Rebirth passive mentions resurrection, not Time Stop"}
+    ],
+    "conclusion": "The Time Stop item on an ordinary SR Syndra build is Zhonya's Hourglass (3157) (its component Seeker's Armguard 2420 carries the identical active and the identical family set, so the analysis below holds for either)."
+  },
+  "independent_computation": {
+    "step_1_declared_families_of_the_item": {
+      "source": "data/item-atoms/3157.json (and data/item-atoms/item-atom-summary.json)",
+      "atoms": [
+        {"atom_id": "stats.ability-power", "family": "stats", "parameters": {"flat": 105.0}},
+        {"atom_id": "stats.armor", "family": "stats", "parameters": {"flat": 50.0}},
+        {"atom_id": "crowd-control-mobility.stasis", "family": "crowd-control-mobility", "behavior": "Time Stop", "parameters": {}},
+        {"atom_id": "damage.resistance-mitigation", "family": "damage", "behavior": "Time Stop", "parameters": {}, "relations": ["damage.damage-instance", "damage.armor-penetration", "damage.magic-penetration"]}
+      ],
+      "distinct_declared_families": ["stats", "crowd-control-mobility", "damage"],
+      "summary_cross_check": "item-atom-summary.json lists \"Zhonya's Hourglass\" under exactly three family buckets: crowd-control-mobility, damage, stats.",
+      "finding": "The item DOES declare the 'damage' family, and its 'stats' family carries 105 flat ability power - an offensive stat that raises Syndra's outgoing damage directly. Seeker's Armguard 2420 is identical in shape (40 AP, 25 armor, crowd-control-mobility.stasis, damage.resistance-mitigation)."
+    },
+    "step_2_the_word_defence_is_not_in_the_taxonomy": {
+      "source": "exhaustive scan of every \"family\" value across data/**",
+      "family_value_histogram": {"stats": 586, "damage": 495, "stack-transform-summon-resource": 337, "heal-shield": 312, "vision-economy": 227, "crowd-control-mobility": 209, "interaction": 5, "buff": 4, "heal": 4, "resource": 1},
+      "defence_token_search": "grep for \"defence\"/\"defense\" as a JSON key or family value across data/** returned zero hits",
+      "finding": "No item or champion atom anywhere in the cached corpus declares a family called 'defence'. The premise 'Every declared family on this item is a defence' cannot be satisfied by any item under the cached taxonomy, and is falsified for this item specifically by the declared 'damage' family."
+    },
+    "step_3_stasis_does_change_outgoing_TDD": {
+      "source": "data/items.json -> 3157.active[0].branches[0] (cached wiki text)",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+      "finding": "Stasis explicitly suppresses basic attacks, abilities, summoner spells and item actives for its 2.5 s. It therefore SUBTRACTS from outgoing damage over the fight window. The claim 'the represented mechanic changes durability, not outgoing TDD' contradicts the item's own cached wiki text - the mechanic changes both, which is precisely why its cost has to be taken from a bounded active-seconds input rather than assumed."
+    },
+    "step_4_why_the_old_reason_is_the_sourced_one": {
+      "cached_parameters_available": {
+        "items.json 3157.active[0].cooldown": null,
+        "items.json 3157.active[0].range": null,
+        "item-atoms 3157 crowd-control-mobility.stasis.parameters": {},
+        "only numeric fact present": "2.5 seconds of stasis, in prose"
+      },
+      "finding": "The cache carries no cooldown, no range and no atom parameters for Time Stop - there is literally nothing in data/ from which uptime or in-fight activation could be derived. The only priceable number is a 2.5 s bounded window that the player must choose to trigger. Consequently the effect can only be priced from an explicit bounded active-seconds scenario input, and owning the item can never by itself imply that stasis occurred during the modeled fight. That is exactly what the old value states, and it matches the fail-closed / no-literal-assumption posture the cached data forces."
+    },
+    "docs_math_foundations_check": "docs/math-foundations.md (523 lines) states no identity for utility-outcome item coverage, stasis, or effect-family classification (greps for 'stasis', 'coverage', 'family', 'utility', 'defence' return only the resistance-mitigation sigmoid family and optimizer-coverage passages). It neither supports nor is needed for this leaf; the decision rests on the cached item/atom data."
+  },
+  "sources_quoted": [
+    {"path": "data/items.json", "locator": "id 3157 Zhonya's Hourglass -> active[0] name 'Time Stop', branches[0]; cooldown: null; range: null; stats.abilityPower.flat = 105.0; stats.armor.flat = 50.0; modes['classic sr 5v5'] = true"},
+    {"path": "data/items.json", "locator": "id 2420 Seeker's Armguard -> identical 'Time Stop' active branch text; SR-legal"},
+    {"path": "data/items.json", "locator": "id 228002 Wooglet's Witchcap -> active named 'Stasis', modes['classic sr 5v5'] = false (Arena/Mayhem) - not the item in an SR Syndra build"},
+    {"path": "data/item-atoms/3157.json", "locator": "atoms[] -> families {stats, crowd-control-mobility, damage}; damage.resistance-mitigation relates to damage-instance / armor-penetration / magic-penetration"},
+    {"path": "data/item-atoms/2420.json", "locator": "atoms[] -> same three families"},
+    {"path": "data/item-atoms/item-atom-summary.json", "locator": "\"Zhonya's Hourglass\" appears under crowd-control-mobility, damage and stats"},
+    {"path": "docs/math-foundations.md", "locator": "no identity governing utility-outcome item coverage or an item 'defence' family; checked by keyword scan"}
+  ],
+  "conclusion": "The new value is false on three independent counts: (1) the item declares a 'damage' family in the cached atom corpus, so not every declared family is defensive; (2) the item's declared 'stats' family carries 105 flat ability power, which increases outgoing TDD for an AP champion such as Syndra; (3) the cached wiki text for Time Stop shows stasis blocks attacks, abilities, summoners and item actives, so the mechanic does change outgoing TDD. There is additionally no 'defence' family anywhere in the cached taxonomy. The old value is the statement the cached data supports: Time Stop carries no cooldown/range/atom parameters in the cache, only a 2.5 s player-triggered window, so it is priceable only from an explicit bounded active-seconds scenario input and item presence alone can never assume stasis.",
+  "verdict_restated": "old_value_correct"
+}

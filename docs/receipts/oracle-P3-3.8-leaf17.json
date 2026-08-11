@@ -1,0 +1,92 @@
+{
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_120/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_respected": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never opened."
+  },
+  "item_identification": {
+    "reasoning": "The leaf is a per-item coverage reason inside utility_outcomes. The old value names 'Time Stop'. In the cached item data exactly two Summoner's Rift items carry an active named 'Time Stop': Zhonya's Hourglass (id 3157) and Seeker's Armguard (id 2420, its component). For a Syndra AP build the coverage row is Zhonya's Hourglass; the argument below holds for either item, since both carry ability power.",
+    "caveat": "Scenario definitions (build order, coverage-row ordering) live outside data/ and were therefore not inspected. The computation below evaluates the truth of each candidate reason against the cached source for the Time Stop item."
+  },
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "key": "3157 (Zhonya's Hourglass) .active[0]",
+      "quote": "Time Stop — \"Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].\""
+    },
+    {
+      "path": "data/items.json",
+      "key": "3157 .stats",
+      "quote": "abilityPower.flat = 105.0 ; armor.flat = 50.0 ; every other stat 0.0 ; shop.prices.total = 3250"
+    },
+    {
+      "path": "data/item-atoms/3157.json",
+      "key": "atoms[].family",
+      "quote": "declared families = {stats (stats.ability-power flat 105.0, stats.armor flat 50.0), crowd-control-mobility (crowd-control-mobility.stasis, behavior 'Time Stop'), damage (damage.resistance-mitigation, behavior 'Time Stop', relations to damage.damage-instance / damage.armor-penetration / damage.magic-penetration)}"
+    },
+    {
+      "path": "data/item-atoms/2420.json",
+      "key": "Seeker's Armguard atoms",
+      "quote": "same four atoms: stats.ability-power flat 40.0, stats.armor flat 25.0, crowd-control-mobility.stasis 'Time Stop', damage.resistance-mitigation 'Time Stop'"
+    },
+    {
+      "path": "data/atoms/items.json",
+      "key": "objects['3157']",
+      "quote": "{atom_id: 'control.stasis', source: \"Zhonya's Hourglass.actives[0].branches[0]\", name: 'Time Stop', values: [2.5], units: ['flat'], evidence: ['active:Time Stop@kw:stasis']} and {atom_id: 'damage.basic_attack', source: \"Zhonya's Hourglass.actives[0].branches[0]\", name: 'Time Stop', values: [2.5], units: ['flat'], evidence: ['active:Time Stop@kw:basic attack']}"
+    },
+    {
+      "path": "data/item-atoms/*.json (all 121 cached items, family census)",
+      "key": "family vocabulary",
+      "quote": "the atom taxonomy has exactly six families: stats (586), damage (348), heal-shield (266), stack-transform-summon-resource (248), vision-economy (190), crowd-control-mobility (137). There is no family named 'defence'/'defense' anywhere in the cache."
+    },
+    {
+      "path": "data/champions.json",
+      "key": "Syndra.abilities[*].effects[*].leveling[*].modifiers with units '% AP'",
+      "quote": "Q Dark Sphere Magic Damage 70% AP; W Force of Will Magic Damage 65% AP (+ bonus true damage 9.2-11.6% AP); E Scatter the Weak Magic Damage 60% AP; R Unleashed Power 20% AP per sphere (min 60% AP, max 140% AP)"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "key": "§0 Semantics of the deterministic single number",
+      "quote": "\"The engine runs with deterministic=True in every scoring path ... every stochastic draw is replaced by its expectation ... T = E[ D | model, config ] (point estimate under the expectation heuristic)\" — the output is conditioned on the scenario config, i.e. usage-dependent terms must come from declared config, not from inventory membership. §1.1 / audit table row: auto counting is N(T)=⌊AS·u·T⌋ with u the uptime fraction, so any seconds removed from the window scale outgoing damage down linearly. No section of the document discusses item utility coverage, so the decisive evidence is the cached wiki text."
+    }
+  ],
+  "independent_computation": {
+    "claim_under_test_new": "'Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.'",
+    "test_1_family_census": {
+      "method": "Enumerate the declared families of the Time Stop item from the cached atomization and check the universal quantifier 'every declared family ... is a defence'.",
+      "result": "FALSE. Zhonya's Hourglass declares three families: stats, crowd-control-mobility, damage. (a) 'stats' carries stats.ability-power = 105.0 flat, an offensive stat; (b) 'damage' is, by name and by its own relations (damage.damage-instance, damage.armor-penetration, damage.magic-penetration), the offensive family of the taxonomy; (c) the taxonomy contains no family called 'defence' at all, so the sentence's category does not exist in the cached vocabulary. Seeker's Armguard, the only other Time Stop item, fails identically (40 AP)."
+    },
+    "test_2_does_the_item_change_outgoing_TDD": {
+      "method": "Price the item's ability power through Syndra's cached AP ratios.",
+      "arithmetic": [
+        "Zhonya's ability power = 105.0 (data/items.json 3157.stats.abilityPower.flat)",
+        "Q Dark Sphere: 0.70 x 105 = 73.5 extra magic damage per sphere",
+        "E Scatter the Weak: 0.60 x 105 = 63.0 extra magic damage",
+        "W Force of Will: 0.65 x 105 = 68.25 extra magic damage (plus 0.092-0.116 x 105 = 9.66-12.18 bonus true damage)",
+        "R Unleashed Power: 0.20 x 105 = 21.0 extra magic damage per sphere; at the cached maximum ratio 1.40 x 105 = 147.0"
+      ],
+      "result": "The item raises raw outgoing damage by 63-147 per instance before resistances. 'The represented mechanic changes durability, not outgoing TDD' is false of the item as a whole."
+    },
+    "test_3_does_the_mechanic_itself_change_outgoing_TDD": {
+      "method": "Read the Time Stop branch text and apply the uptime identity from docs/math-foundations.md §1.1.",
+      "reasoning": "The cached wiki branch says stasis renders you 'untargetable and invulnerable for the duration but also unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items.' The cache's own second atomization records this as damage.basic_attack with evidence 'active:Time Stop@kw:basic attack' and value 2.5 flat seconds — i.e. the parser itself binds the Time Stop branch to a damage-side effect. Under N(T)=⌊AS·u·T⌋, spending s seconds of a T-second window in stasis multiplies auto uptime by (T-s)/T and deletes every cast in that interval. For the cached 2.5 s duration in, say, a 10 s window that is a 25% cut to auto count and a hard hole in the cast schedule.",
+      "result": "Time Stop is NOT durability-only: it strictly reduces outgoing damage over a fixed window. This is exactly why it cannot be priced from item presence and must come from a declared, bounded active-seconds input."
+    },
+    "claim_under_test_old": {
+      "statement": "'Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.'",
+      "check_bounded": "The duration is a hard bound in the cache: '{{fd|2.5}} seconds', atomized as control.stasis values [2.5] units ['flat']. 'Bounded active-seconds' is literally what the source provides.",
+      "check_not_implied_by_presence": "The branch describes an activated effect ('Put yourself in stasis'), listed under active[], not passives[]. Ownership grants the option, not the usage; nothing in the cached text makes the effect automatic. Under §0's T = E[D | model, config], a usage-dependent term must be supplied by config, and assuming stasis from inventory alone would silently cut the attacker's own cast/auto uptime (test_3).",
+      "result": "TRUE and source-consistent on both halves."
+    },
+    "conclusion": "The old string is a correct, source-grounded statement about a bounded 2.5 s activated effect whose usage cannot be inferred from ownership. The new string is false three ways: no 'defence' family exists in the cached taxonomy; the item's declared families include stats (105 AP) and damage, both offensive; and the Time Stop mechanic itself does move outgoing TDD (downward, by blocking basic attacks and abilities for 2.5 s) rather than being durability-only."
+  },
+  "confidence_notes": [
+    "The verdict rests on the cached wiki text and atomizations only; no engine source was consulted.",
+    "If coverage-row ordering changed such that item_coverage[1] no longer resolves to the Time Stop item, the new string would have to be re-judged against whatever item it now names — but its stated rationale ('every declared family is a defence') cannot be satisfied by any Time Stop item in the cache, and 'defence' is not a family the cached taxonomy defines for any item."
+  ]
+}

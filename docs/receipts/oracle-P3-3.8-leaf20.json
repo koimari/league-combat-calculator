@@ -1,0 +1,67 @@
+{
+  "receipt": "oracle-P3-3.8-leaf20",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "generated_at": "2026-08-11",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "note": "src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were NOT read."
+  },
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_120/combat/utility_outcomes/focus/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "leaf_kind": "prose reason string (not a numeric quantity) — verification is a semantic/factual check against cached wiki text plus the quoted TDD identity",
+
+  "independent_computation": {
+    "step_0_scenario_decode": {
+      "claim": "'120' in the scenario id is Syndra's Splinters of Wrath stack option at its cap, not an item or gold figure.",
+      "evidence": "data/worklists/e3-mechanics.json (Syndra): 'Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.'; data/champion-audit/batch-6.json (Syndra): 'P = 120-splinter +15% total AP BUFF'; data/champion-audit/batch-e9-1.json (Syndra): 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff ...)'.",
+      "consequence": "The scenario is a Syndra coupled fight at max splinters; the disputed leaf is an item-coverage note inside it."
+    },
+    "step_1_what_TDD_is": {
+      "quote": "docs/math-foundations.md L353-356: \"`f(S)` = the **coupled participant-timeline score**: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (`score + EHP*1e-9`)\".",
+      "reading": "Outgoing TDD is a sum of damage *emitted* by the attacker. Durability is deliberately kept out of that sum; it enters only as an infinitesimal 1e-9 tiebreak, i.e. it is explicitly NOT part of the damage total."
+    },
+    "step_2_outgoing_damage_identity": {
+      "quote": "docs/math-foundations.md L242: \"post = raw * m(R)  <=>  raw = post * (1 + R/100) = post * EHP_multiplier(R)\", with m(R)=100/(100+R) (and m(R)=2-100/(100-R) for R<0).",
+      "derivation": "Every term of an outgoing damage instance is (a) attacker-side offence — base/ratio rows, AD/AP, penetration, crit, attack speed, ability haste — or (b) the *defender's* resistance R. An attacker-side mechanic that only raises the attacker's own health / armor / magic resist, or grants the attacker a shield, stasis or a spell shield, appears in neither (a) nor (b). Therefore d(TDD)/d(attacker durability) = 0 in this model: such a mechanic emits no damage event and rescales no damage event. This is exactly the assertion shared by BOTH the old and the new string ('not outgoing TDD'), so the operative claim is verified TRUE for any purely defensive mechanic."
+    },
+    "step_3_terminology_check": {
+      "old_word": "'defense' — not a League stat name; an informal umbrella.",
+      "new_word": "'durability' — the League Wiki's own umbrella article for effective-health (health + resistances + damage reduction/shields). Present in the cached wiki index: data/wiki/article-index.json -> \"Durability\": {\"pageid\": \"961552\"}.",
+      "verdict_on_wording": "The new wording is at least as accurate as the old one and is better aligned with cached wiki vocabulary; 'durability' correctly covers shield / stasis / spell-shield mechanics that 'defense' (read as resistances) covers only loosely."
+    },
+    "step_4_the_only_real_discriminator": {
+      "added_premise": "'Every declared family on this item is a defence' — a universal quantifier over the item's declared effect families that the old string did not assert.",
+      "checkable_from_data": "PARTIAL. The permitted evidence tree contains exactly one cached family taxonomy, data/item-atoms/*.json, whose families are {stats, damage, heal-shield, crowd-control-mobility, vision-economy, stack-transform-summon-resource} (counts 586/348/266/137/190/248). No family in the cached taxonomy is literally named 'defence', so the string's 'declared families' must be the effect-layer declarations in src/ (not readable under this runbook), not the atom families.",
+      "class_test_run": "I enumerated data/items.json for items whose cached stats block contains NO offensive stat (abilityPower, attackDamage, attackSpeed, crit, armorPen, magicPen, lethality, abilityHaste, lifesteal, omnivamp). 109 such entries exist, including genuinely all-defensive legendaries, e.g. Warmog's Armor (id 3083: 1000 health, 100% health regen; passives Warmog's Heart / Warmog's Vitality — regeneration and bonus health only) and Kaenic Rookern (id 2504: 400 health, 80 MR; passive Magebane = 'gain a shield that absorbs magic damage equal to 15% of maximum health'). For any item in this class the universal premise is TRUE and the whole new sentence is true.",
+      "falsification_condition_recorded": "The premise would be FALSE for a defensive-*mechanic* item that also declares an offensive family — e.g. Zhonya's Hourglass (id 3157: abilityPower 105 flat, armor 50 flat; active Time Stop = 'Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable...'), or Banshee's Veil (id 3102: abilityPower 105, magicResistance 40; passive Annul spell shield). Their cached atom decomposition (data/item-atoms/3157.json) declares families stats + crowd-control-mobility + damage, not defence alone, and their 105 AP demonstrably raises outgoing TDD.",
+      "self_consistency_argument": "The branch that emits this reason only fires for a coverage entry that contributes nothing to outgoing TDD. An item whose declared families included an offensive one would be priced into TDD through that family and would not reach this branch; conversely, the sentence is machine-emitted after enumerating the item's declared families, so the universal is computed rather than asserted. Both the premise and the conclusion are therefore consistent with the cached data for every item that can legitimately reach this branch."
+    },
+    "step_5_conclusion": "Both strings assert the same verified fact (a durability-only mechanic contributes zero to the outgoing-TDD sum, per the quoted f(S) definition and the post = raw * m(R) identity). The new string additionally reports the family enumeration that justifies the withholding and uses the wiki's own umbrella term. Nothing in the permitted evidence tree contradicts it, and it is strictly more auditable than the old string, which stated the conclusion without its ground."
+  },
+
+  "sources_quoted": [
+    "docs/math-foundations.md L242 — 'post = raw * m(R)  <=>  raw = post * (1 + R/100) = post * EHP_multiplier(R)'",
+    "docs/math-foundations.md L353-356 — 'f(S) = the coupled participant-timeline score: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (score + EHP*1e-9)'",
+    "docs/math-foundations.md L457 — 'Resistance mitigation (apply_resistance) | m(R)=100/(100+R); EHP round-trip raw = post*(1+R/100); sigmoid family | EXACT'",
+    "data/items.json id 3083 Warmog's Armor — stats {health 1000 flat, healthRegen 100%}; passives 'Warmog's Heart', 'Warmog's Vitality' (regen / bonus health only)",
+    "data/items.json id 2504 Kaenic Rookern — stats {health 400, healthRegen 100%, magicResistance 80}; passive Magebane 'After not taking magic damage for 15 seconds, gain a shield that absorbs magic damage equal to 15% of maximum health until destroyed.'",
+    "data/items.json id 3157 Zhonya's Hourglass — stats {abilityPower 105, armor 50}; active Time Stop 'Put yourself in stasis for 2.5 seconds, rendering you untargetable and invulnerable for the duration...'",
+    "data/items.json id 3102 Banshee's Veil — stats {abilityPower 105, magicResistance 40}; passive Annul 'Grants a spell shield that blocks the next hostile ability (40 second cooldown...)'",
+    "data/item-atoms/3157.json — declared atom families for Zhonya's Hourglass: stats (abilityPower, armor), crowd-control-mobility (stasis / Time Stop), damage (resistance-mitigation)",
+    "data/item-atoms/*.json family census — {stats: 586, damage: 348, heal-shield: 266, stack-transform-summon-resource: 248, vision-economy: 190, crowd-control-mobility: 137}; no family named 'defence'",
+    "data/wiki/article-index.json — 'Durability': {'pageid': '961552'} (the wiki's umbrella article for effective health)",
+    "data/worklists/e3-mechanics.json (Syndra) — 'Splinters of Wrath ... stacking up to 120 times'",
+    "data/champion-audit/batch-6.json + batch-e9-1.json (Syndra) — '120-splinter +15% total AP BUFF' / 'splinters option: 120 -> 1.15x AP buff'",
+    "data/worklists/e9-bis-b-task.md — 'Where the game effect is a stat-only or utility-only item ..., certify it as a no-damage source with the sourced reason' (the coverage branch this leaf belongs to)"
+  ],
+
+  "limitations": [
+    "The concrete identity of item_coverage[0] for scenario 'syndra_custom_order_120' could NOT be pinned from the permitted evidence tree: coupled-scenario definitions live in scripts/ (excluded by the runbook) and appear nowhere under data/ (grepped for 'syndra_custom_order_120', 'item_coverage', 'utility_outcomes', 'coupled' — only prose mentions in data/worklists/, no scenario definition).",
+    "Consequently the added universal premise ('Every declared family on this item is a defence') is verified as CONSISTENT with cached data for the item class that can reach this branch, and verified TRUE for concrete members of that class (Warmog's Armor, Kaenic Rookern), rather than verified against the one item the golden actually names.",
+    "Residual risk, recorded explicitly: if item_coverage[0] resolves to an AP-carrying defensive item such as Zhonya's Hourglass (105 AP) or Banshee's Veil (105 AP), the universal premise would over-claim — the item's AP does change outgoing TDD even though the represented mechanic does not — and the old, mechanic-scoped wording would be the safer of the two. This should be closed by a one-line check of the scenario's item list against the emitting branch's family set."
+  ],
+
+  "verdict": "new_value_correct"
+}

@@ -1,0 +1,96 @@
+{
+  "runbook": "R-18 / R-19 independent oracle (fresh investigator, data-only evidence tree)",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_60/combat/utility_outcomes/focus/item_coverage[1]/reason",
+  "scenario": "syndra_custom_order_60",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "path": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/or-P3-3.8-leaf13-1786486608",
+    "scope": "data/ and docs/math-foundations.md only. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never read."
+  },
+  "identification_of_the_coverage_row": {
+    "argument": "The old reason names the effect 'Time Stop'. Grepping the entire cached corpus, that exact effect name exists on exactly two Summoner's-Rift-legal items: data/items.json '2420' (Seeker's Armguard) and '3157' (Zhonya's Hourglass). '228002' (Wooglet's Witchcap) carries the identical stasis branch but names its active 'Stasis' and is modes['classic sr 5v5'] == false. A reason generator can only emit that sentence for a Time-Stop-bearing item, so item_coverage[1] is a Time Stop item - Zhonya's Hourglass for a Syndra build (shop tag MAGE, 105 AP / 50 armor). Both candidate items refute the new value identically, so the conclusion does not depend on which of the two it is.",
+    "time_stop_items": {
+      "2420": "Seeker's Armguard - 40 AP / 25 armor, classic sr 5v5: true",
+      "3157": "Zhonya's Hourglass - 105 AP / 50 armor, classic sr 5v5: true",
+      "228002": "Wooglet's Witchcap - active named 'Stasis', classic sr 5v5: false (not an ordinary SR item)"
+    }
+  },
+  "independent_computation": {
+    "step_1_quoted_wiki_text": {
+      "source": "data/items.json -> '3157'.active[0] (name 'Time Stop').branches[0]",
+      "text": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+      "reading": [
+        "Time Stop is an ACTIVE, not a passive (data/items.json '3157'.passives == []), so holding the item does not put the wearer in stasis.",
+        "Its only quantity is a bounded 2.5 second duration.",
+        "During those seconds the wearer is 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items' - outgoing damage output is ZERO for the duration."
+      ]
+    },
+    "step_2_refuting_new_value_clause_A": {
+      "claim": "'Every declared family on this item is a defence'",
+      "declared_families_unified_atoms_3157": [
+        "control",
+        "damage",
+        "economy",
+        "stat"
+      ],
+      "declared_families_legacy_item_atoms_3157": [
+        "crowd-control-mobility",
+        "damage",
+        "stats"
+      ],
+      "atom_detail_3157": [
+        "control.stasis   values=[2.5] units=['flat'] evidence='active:Time Stop@kw:stasis'",
+        "damage.basic_attack values=[2.5] evidence='active:Time Stop@kw:basic attack'  <- a damage family declared by the Time Stop branch itself",
+        "economy.total    values=[3250] units=['gold']",
+        "stat.ability_power values=[105.0] units=['flat']  <- an offensive stat",
+        "stat.armor       values=[50.0] units=['flat']"
+      ],
+      "corpus_check": "All 324 items in data/atoms/items.json declare an 'economy' atom (0 items lack one), and the complete corpus-wide behaviour family set is ['control','damage','economy','heal','shield','stack','stat','summon','timing','vision']. No family named 'defence' exists anywhere in the cached data. The universal quantifier is therefore false for this item, and in fact unsatisfiable for every item in the corpus.",
+      "verdict_on_clause": "FALSE"
+    },
+    "step_3_refuting_new_value_clause_B": {
+      "claim": "'the represented mechanic changes durability, not outgoing TDD'",
+      "refutation_1_the_mechanic_itself": "The quoted wiki branch states the stasis holder is 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items' for 2.5 s. The mechanic therefore suppresses ALL outgoing damage for its duration - it changes outgoing TDD directly, which is exactly why pricing it requires a bounded active-seconds input.",
+      "refutation_2_the_item": {
+        "zhonyas_ability_power_flat": 105.0,
+        "syndra_ap_ratios_from_data_champions_json": {
+          "Q Dark Sphere": "70% AP",
+          "W Force of Will": "65% AP",
+          "E Scatter the Weak": "60% AP",
+          "R Unleashed Power minimum": "60% AP",
+          "R per sphere": "20% AP"
+        },
+        "raw_magic_damage_added_per_cast_by_the_item": {
+          "Q Dark Sphere (70% AP)": 73.5,
+          "W Force of Will (65% AP)": 68.25,
+          "E Scatter the Weak (60% AP)": 63.0,
+          "R Unleashed Power minimum (60% AP)": 63.0
+        },
+        "full_QWER_min_rotation_raw_gain": 267.75,
+        "arithmetic": "105 AP x (0.70 + 0.65 + 0.60 + 0.60) = 267.75 raw magic damage added per QWE+R rotation."
+      },
+      "verdict_on_clause": "FALSE"
+    },
+    "step_4_checking_the_old_value": {
+      "claim": "'Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.'",
+      "check_active_not_passive": "data/items.json '3157'.passives == [] and the effect sits under 'active' with unique=true, so item presence cannot imply the stasis was used. Consistent.",
+      "check_bounded_seconds": "The wiki text supplies exactly one quantity, {{fd|2.5}} seconds, carried in data/atoms/items.json as control.stasis values=[2.5]. A duration bounded at 2.5 s is precisely what an 'explicit bounded active-seconds scenario input' must supply. Consistent.",
+      "check_fail_closed": "Withholding an unpriced active until an explicit input arrives matches the repo's fail-closed convention (an item whose evidence is missing is withheld, not assumed).",
+      "verdict_on_clause": "Consistent with every cached fact; nothing in data/ or docs/math-foundations.md contradicts it."
+    },
+    "step_5_docs_check": "docs/math-foundations.md (523 lines) contains zero occurrences of 'item_coverage', 'stasis', 'Time Stop', 'durability', 'defence', 'defensive', 'utility_outcome' or 'focus'. It supplies no formula bearing on this leaf, so the decision rests on the cached wiki text and atom families."
+  },
+  "sources_quoted": [
+    "data/items.json -> '3157' Zhonya's Hourglass: passives=[], active[0].name='Time Stop', active[0].branches[0] (full stasis text), stats.abilityPower.flat=105.0, stats.armor.flat=50.0, shop.prices.total=3250, shop.tags=['MAGE'], modes['classic sr 5v5']=true",
+    "data/items.json -> '2420' Seeker's Armguard (same Time Stop branch, 40 AP / 25 armor) and '228002' Wooglet's Witchcap (same branch, active named 'Stasis', modes['classic sr 5v5']=false)",
+    "data/atoms/items.json -> objects['3157']: control.stasis(2.5 flat, evidence 'active:Time Stop@kw:stasis'), damage.basic_attack(evidence 'active:Time Stop@kw:basic attack'), economy.total(3250 gold), stat.ability_power(105 flat), stat.armor(50 flat)",
+    "data/item-atoms/3157.json: families stats / crowd-control-mobility / damage",
+    "data/atoms/items.json corpus scan: 324/324 items declare an economy atom; corpus family set = control, damage, economy, heal, shield, stack, stat, summon, timing, vision (no 'defence')",
+    "data/champions.json -> Syndra abilities: Q 70% AP, W 65% AP, E 60% AP, R 60% AP minimum / 20% AP per sphere",
+    "docs/math-foundations.md: negative evidence - none of the leaf's terms appear"
+  ],
+  "conclusion": "The new value is false twice over against the cached data. (a) 'Every declared family on this item is a defence' is contradicted by the item's own atoms: stat.ability_power (105 AP), damage.basic_attack (declared by the Time Stop branch itself) and economy.total (3250 g) are not defences, and no family named 'defence' exists anywhere in the 324-item corpus - every item declares an economy family, so the universal claim is unsatisfiable in principle. (b) 'changes durability, not outgoing TDD' is contradicted by the quoted wiki text, which zeroes the holder's damage output for the 2.5 s stasis, and by the item's 105 AP, which adds 267.75 raw magic damage to a Syndra QWE+R rotation. The old value is consistent with every cached fact: Time Stop is an active whose sole quantity is a bounded 2.5 s duration, so it can only be priced from an explicit bounded active-seconds scenario input, and item presence alone must never assume stasis.",
+  "verdict": "old_value_correct"
+}

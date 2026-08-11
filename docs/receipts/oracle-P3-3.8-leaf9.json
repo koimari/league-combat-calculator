@@ -1,0 +1,85 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf9",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_60/combat/breakdown[0]/utility_outcomes/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle9",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, and git history were not consulted."
+  },
+  "identification_of_the_item": {
+    "method": "The leaf's old text names the mechanic 'Time Stop'. Scanned every entry of data/items.json for that active / for stasis.",
+    "items_carrying_a_stasis_self-cast": [
+      {"id": 2420, "name": "Seeker's Armguard", "active": "Time Stop", "classic_sr_5v5": true, "ability_power_flat": 40.0, "armor_flat": 25.0},
+      {"id": 3157, "name": "Zhonya's Hourglass", "active": "Time Stop", "classic_sr_5v5": true, "ability_power_flat": 105.0, "armor_flat": 50.0},
+      {"id": 228002, "name": "Wooglet's Witchcap", "active": "Stasis", "classic_sr_5v5": false, "note": "Arena/Mayhem only per data/items.json modes; per CLAUDE.md rule 6 it cannot appear in an ordinary SR Syndra build"},
+      {"id": 3026, "name": "Guardian Angel", "mechanic": "Rebirth (resurrection), not a stasis active"}
+    ],
+    "conclusion": "For an ordinary Summoner's Rift Syndra build the Time-Stop item is Zhonya's Hourglass (3157) (its component Seeker's Armguard 2420 carries the identical active text). Both carry ability power, so the analysis below is unchanged whichever of the two occupies item_coverage[1]."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> \"3157\" (Zhonya's Hourglass)",
+      "quotes": {
+        "passives": "[]  (empty - the item has no passive at all)",
+        "active[0].name": "Time Stop",
+        "active[0].branches[0]": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].",
+        "simpleDescription": "Activate to become invincible but unable to take actions",
+        "stats.abilityPower.flat": 105.0,
+        "stats.armor.flat": 50.0,
+        "riotDescription": "<active>Time Stop</active><br>Enter <keyword>Stasis</keyword> for 2.5 seconds."
+      }
+    },
+    {
+      "source": "data/item-atoms/3157.json (declared atom families for this item)",
+      "quotes": {
+        "atoms[0]": "atom_id stats.ability-power, family 'stats', parameters.flat 105.0",
+        "atoms[1]": "atom_id stats.armor, family 'stats', parameters.flat 50.0",
+        "atoms[2]": "atom_id crowd-control-mobility.stasis, family 'crowd-control-mobility', behavior 'Time Stop', evidence 'active:Time Stop'",
+        "atoms[3]": "atom_id damage.resistance-mitigation, family 'damage', behavior 'Time Stop', relations [damage.damage-instance, damage.armor-penetration, damage.magic-penetration]"
+      },
+      "declared_family_set": ["stats", "crowd-control-mobility", "damage"]
+    },
+    {
+      "source": "data/atoms/items.json -> objects[\"3157\"] (second, independent atom decomposition)",
+      "quotes": {
+        "atom": "control.stasis  (source: Zhonya's Hourglass.actives[0].branches[0], values [2.5], units [flat], evidence 'active:Time Stop@kw:stasis')",
+        "atom_2": "damage.basic_attack  (source: Zhonya's Hourglass.actives[0].branches[0], evidence 'active:Time Stop@kw:basic attack')",
+        "atom_3": "stat.ability_power  values [105.0]",
+        "atom_4": "stat.armor  values [50.0]",
+        "atom_5": "economy.total  values [3250.0] units [gold]"
+      },
+      "declared_family_set": ["control", "damage", "stat", "economy"]
+    },
+    {
+      "source": "data/wiki-atoms/crowd-control-mobility.json -> crowd-control-mobility.stasis",
+      "quotes": {
+        "name": "Stasis",
+        "description": "Full disable that also makes the unit invulnerable and untargetable; cannot be cleansed, unaffected by tenacity, disables even summoner spells.",
+        "keywords": ["stasis", "zhonya's hourglass", "stasis (buff)", "invulnerable", "untargetable", "statis"]
+      }
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "quotes": {
+        "result": "The document defines no 'item_coverage', 'TDD', 'defence-family', or stasis-pricing identity (grep for coverage/TDD/stasis/defence/utility/family returns only unrelated hits: modeling-family taxonomy at L11/L35, the sigmoid mitigation family at L247-264, conformal coverage at L433). It therefore neither supports nor contradicts either candidate string; the arbitration rests on the cached wiki text."
+      }
+    }
+  ],
+  "independent_computation": {
+    "step_1_what_the_item_actually_does": "data/items.json['3157'].passives is empty and the entire mechanic lives in active[0] 'Time Stop'. So the mechanic is discretionary: it exists in the game state only if the player casts it. Nothing in the cached item record (no passive, no on-ownership trigger) lets ownership imply that the effect occurred.",
+    "step_2_the_effect_is_bounded_in_seconds": "The branch text states the duration explicitly: '{{fd|2.5}} seconds' (riotDescription repeats 'Enter Stasis for 2.5 seconds'). The effect is therefore a bounded seconds-valued window, which is exactly the shape of quantity the old reason says must be supplied ('explicit bounded active-seconds scenario input'). The number of casts inside a 60-second window is not derivable from the item record (active[0].cooldown is null in the cache), reinforcing that the seconds must come from the scenario, not from the item.",
+    "step_3_test_the_new_value_clause_A_(every declared family is a defence)": "FALSE under both cached taxonomies. data/item-atoms/3157.json declares families {stats, crowd-control-mobility, damage} - stats.ability-power = 105 AP is an offensive stat (for Syndra, whose damage is entirely AP-ratio driven, +105 AP raises outgoing TDD directly), and a 'damage'-family atom is declared outright. data/atoms/items.json declares {control, damage, stat, economy} for the same item, including stat.ability_power 105.0 and damage.basic_attack. There is no cached taxonomy in which every declared family on this item is defensive, and the string 'defence' appears nowhere in data/ except an unrelated wiki article-index entry.",
+    "step_4_test_the_new_value_clause_B_(mechanic changes durability, not outgoing TDD)": "FALSE against the item's own wiki text. The branch says the holder is 'unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]', and the canonical atom in data/wiki-atoms/crowd-control-mobility.json calls stasis a 'Full disable'. Inside a fixed-length combat window the mechanic suppresses the holder's own damage output for its full 2.5 s, i.e. it changes outgoing TDD (downward) as well as durability. The atomizer itself recorded this coupling: data/atoms/items.json emits a damage.basic_attack atom whose evidence is 'active:Time Stop@kw:basic attack'. Hence stasis cannot be dismissed as TDD-neutral; on the contrary, its TDD effect is precisely why the seconds spent in it must be an explicit scenario input.",
+    "step_5_test_the_old_value": "CONSISTENT with the cache on every clause. (a) 'priced only from the explicit bounded active-seconds scenario input' - the effect is an active with a bounded 2.5 s duration and an uncached cooldown, so the only sound input is a scenario-declared seconds figure. (b) 'item presence alone never assumes stasis' - passives is empty; ownership triggers nothing. This is also the fail-closed posture CLAUDE.md rule 5 demands (missing information must not be silently supplied by an assumed default).",
+    "conclusion": "The old string is the reason the cached source supports; the new string asserts two things the cached source contradicts."
+  },
+  "caveats": [
+    "This oracle judges the truth of the reason strings against the cached source data only. Whether the engine's code literally implements the old wording could not be checked, because src/, tests/ and scripts/ are outside the permitted evidence tree - but a reason field that states a falsehood about the item is wrong regardless of which code path emitted it.",
+    "item_coverage[1] was identified by mechanic name rather than by reading the scenario definition (scenario 'syndra_custom_order_60' does not appear anywhere under data/). Both SR-legal Time Stop items (3157 Zhonya's Hourglass, 2420 Seeker's Armguard) carry ability power and the identical active text, so the verdict is invariant to that ambiguity."
+  ]
+}

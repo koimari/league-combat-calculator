@@ -1,0 +1,161 @@
+{
+  "receipt_id": "oracle-P3-3.8-leaf42",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "generated_at": "2026-08-11",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/combat/objective/focus_utility_outcomes/item_coverage[0]/reason",
+  "old_value": "The represented mechanic changes defense, not outgoing TDD.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle42",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_0_leaf_is_prose": "This leaf is a coverage-verdict justification string, not a number. The verifiable content is two factual claims: (a) the item's represented mechanic changes the holder's survivability rather than outgoing TDD, and (b) EVERY declared effect family on the item is a defence. (b) is new; it is a universal quantifier that the old string did not assert, so the change is only safe if it holds for the item this coverage entry is about.",
+
+    "step_1_identify_the_scenario": {
+      "claim": "'syndra_derived_order_120' is a Syndra scenario at the 120-splinter state with a derived cast order.",
+      "source": "data/champion-audit/batch-6.json -> Syndra entry",
+      "quote": "\"buff (120-splinter +15% total AP capstone)\" ... \"P = 120-splinter +15% total AP BUFF.\" ... \"splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff\"",
+      "so": "The '120' is the Splinters of Wrath stack option, and Syndra is a mid-lane AP champion. This fixes the role-compatible candidate pool as the mid pool."
+    },
+
+    "step_2_identify_the_item": {
+      "reasoning": "No scenario definitions exist under data/, so the item is identified from the only pinned analogue of this objective in the cached corpus: the mid-role utility BIS coverage scenario.",
+      "source": "data/practice-corpus/scenarios.json -> scenario id 'cp21-bis-utility-ahri'",
+      "quote": "{\"setup\": {\"champion\": \"Ahri\", \"level\": 18, \"role\": \"mid\", \"objective\": \"utility\", \"bis_slot\": \"buildA.0\"}, \"expected\": {\"certified\": \"95 certified of 96 mid role-compatible candidates\", \"withheld_before_timeline\": [], \"partial\": [\"Fimbulwinter\"]}}",
+      "corroboration": "data/worklists/e9-bis-b-task.md documents the mechanism producing these strings: \"src/calculator/item_coverage.py - how item effects get 'blocked'/'withheld' verdicts and what certification requires\" and \"convert the withholding into a DOCUMENTED boundary: update the corpus scenario expectation + item coverage note so the withholding is an audited, sourced decision - never silent.\"",
+      "conclusion": "For a mid-role AP champion under the utility objective, the single non-fully-certified item in the cached pool is Fimbulwinter. That is the item this coverage entry describes. (Banshee's Veil / Verdant Barrier / Zhonya's Hourglass are the only other whole-item-defensive mid candidates; the check below is run against them too, so the verdict does not hinge on the identification.)"
+    },
+
+    "step_3_enumerate_the_declared_families_from_cached_wiki_text": {
+      "source": "data/items.json -> id 3121 'Fimbulwinter' (LEGENDARY)",
+      "effects": [
+        {
+          "name": "Awe",
+          "branches_quote": "Grants {{as|'''bonus''' health}} equal to {{as|15% '''bonus''' mana}}.",
+          "family_kind": "flat effective-HP grant (bonus health)",
+          "is_defence": true,
+          "changes_outgoing_tdd": false,
+          "why": "Bonus health enters only the holder's EHP term; it appears nowhere in the outgoing damage chain (raw -> penetration -> mitigation -> total)."
+        },
+        {
+          "name": "Everlasting",
+          "branches_quote": "{{tip|immobilize|Immobilizing}}, or {{tip|slow|slowing}} if you are {{tip|melee}}, an enemy champion grants a 100 {{as|(+ {{fd|4.5}}% '''current''' mana)}} {{tip|shield}} for 3 seconds (8 second cooldown). The shield's strength is increased{{ft|by 80%|to 180 {{as|(+ {{ap|4.5*1.8}}% '''current''' mana)}}}}if there is more than one enemy champion within {{tip|cr|icononly=true}} 1200 units.",
+          "family_kind": "shield (absorbs incoming damage)",
+          "is_defence": true,
+          "changes_outgoing_tdd": false,
+          "why": "A shield is an incoming-damage absorber on the holder. The trigger condition mentions immobilize/slow but the item itself applies no CC and no damage; nothing in the branch text adds damage, penetration, or a damage amplifier."
+        }
+      ],
+      "atom_cross_check": {
+        "source": "data/atoms/items.json -> objects['3121'] (unified Atomizer, per-effect provenance; contract described in data/atoms/README.md: \"Each passive/active is classified from its own fragment text (passives[i].branches, active[i].branches), never a whole-item blob\")",
+        "non_stat_non_economy_families_present": ["heal (the health grant)", "shield"],
+        "damage_family_present": false,
+        "note": "The atomizer emits no damage.* atom for 3121 from either effect fragment, which independently confirms neither declared effect touches outgoing damage."
+      },
+      "universal_claim_result": "TRUE. Both — i.e. every — declared effect family on Fimbulwinter is a defence."
+    },
+
+    "step_4_why_the_stat_line_does_not_falsify_the_claim": {
+      "source": "data/items.json -> 3121 stats",
+      "quote": "health flat 550.0; mana flat 1000.0; abilityHaste flat 15.0",
+      "reasoning": "Fimbulwinter's 15 ability haste does raise outgoing TDD (docs/math-foundations.md, project domain rule: effective_cd = base_cd x 100/(100 + ability_haste), so more casts land in the window). The coverage reason is therefore necessarily scoped to the item's DECLARED EFFECT FAMILIES (passives[]/active[]), not to its stat block — stats are priced by the stats layer and are never the subject of an effect-coverage verdict. Read at that scope the new string is exactly right, and the same scoping was already implicit in the old string ('the represented mechanic').",
+      "cross_check": "The same holds for the alternative candidates: Banshee's Veil (3102) grants 105 AP as a stat yet declares exactly one effect family, 'Annul :: Grants a spell shield that blocks the next hostile ability (40 second cooldown...)' — again all-defence."
+    },
+
+    "step_5_terminology": {
+      "defense_vs_durability": "Fimbulwinter grants ZERO armor and ZERO magic resistance (data/items.json 3121 stats: only health, mana, abilityHaste). Its two effects grant bonus health and a shield. 'Defense' colloquially denotes resistances — the quantity R in the engine's mitigation operator (docs/math-foundations.md §1.2: 'the mitigation operator x -> x*100/(100+R)'). 'Durability' is the correct umbrella for health + shields + resistances, i.e. the effective-HP term the engine tiebreaks on (docs/math-foundations.md §3.1: 'with an infinitesimal effective-health tiebreak (score + EHP*1e-9)'). So the new wording is strictly MORE accurate for this item, not merely a paraphrase: the old wording named a quantity the item does not modify.",
+      "outgoing_tdd_phrase_is_house_vocabulary": {
+        "source": "data/champion-audit/batch-6.json",
+        "quote": "\"P (Blast Shield - defensive shield, does not change outgoing TDD)\" ... \"P Blast Shield is explicitly documented as defensive-only ('does not change outgoing TDD').\"",
+        "note": "Confirms 'does not change outgoing TDD' is the established repo phrasing for a defensive-only mechanic; both strings use it consistently."
+      }
+    },
+
+    "step_6_falsification_attempt": {
+      "question": "Is there a plausible subject item for which the new universal claim would be FALSE while the old string stayed true?",
+      "candidates_tested_from_data_items_json": [
+        {"item": "Seraph's Embrace (3040)", "declared_families": ["Awe :: Grants ability power equal to 2% bonus mana. (OFFENSIVE)", "Lifeline :: shield below 30% max health (defence)"], "universal_claim": "would be FALSE"},
+        {"item": "Winter's Approach (3119)", "declared_families": ["Awe :: bonus health (defence)", "Manaflow :: bonus mana (resource, not a defence)"], "universal_claim": "would be FALSE"},
+        {"item": "Riftmaker (4633)", "declared_families": ["Void Corruption :: 2%/s stacking increased damage (OFFENSIVE)", "Void Infusion :: AP from bonus health (OFFENSIVE)"], "universal_claim": "would be FALSE"}
+      ],
+      "resolution": "None of these can be the subject. The coverage VERDICT itself — the item is excluded from the outgoing-TDD accounting — is only emitted for an item with no outgoing-damage effect family. Any item on that falsifier list declares a family that does move outgoing TDD (Awe->AP, Void Corruption->damage amp, Manaflow->mana feeding an AP/mana scaler), so it would be certified/covered rather than carry this reason. In other words: wherever this reason is legitimately emitted at all, the new universal claim is exactly the condition that licenses it. The strengthening cannot be false while the surrounding verdict is true."
+    },
+
+    "step_7_conclusion": "For the subject item (Fimbulwinter under the mid-role utility objective; and equally for every other item that can legitimately carry this verdict), both claims in the new string hold: (a) every declared effect family is a defence — bonus health and a shield, with no damage atom emitted from either fragment; (b) the represented mechanic changes durability, not outgoing TDD. The old string is not false but is (i) under-justified — it speaks of a single 'represented mechanic' for an item that declares two effect families, and (ii) imprecise — it says 'defense' for an item that grants no armor or magic resistance, only health and a shield. The new string fixes both."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "id 3121, Fimbulwinter, passives[0] 'Awe'.branches[0]",
+      "quote": "Grants {{as|'''bonus''' health}} equal to {{as|15% '''bonus''' mana}}."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "id 3121, Fimbulwinter, passives[1] 'Everlasting'.branches[0]",
+      "quote": "{{tip|immobilize|Immobilizing}}, or {{tip|slow|slowing}} if you are {{tip|melee}}, an enemy champion grants a 100 {{as|(+ {{fd|4.5}}% '''current''' mana)}} {{tip|shield}} for 3 seconds (8 second cooldown)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "id 3121, Fimbulwinter, stats",
+      "quote": "health.flat = 550.0, mana.flat = 1000.0, abilityHaste.flat = 15.0 (armor and magicResistance are 0)"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "id 3102, Banshee's Veil, passives[0] 'Annul'.branches[0] (alternative-subject cross-check)",
+      "quote": "Grants a {{tip|spell shield}} that blocks the next hostile ability (40 second cooldown, timer restarts upon taking damage from champions)."
+    },
+    {
+      "file": "data/atoms/items.json",
+      "locator": "objects['3121']",
+      "quote": "non-stat/non-economy atom families emitted for Fimbulwinter are {heal, shield}; no damage.* atom is emitted."
+    },
+    {
+      "file": "data/atoms/README.md",
+      "locator": "Item domain (unified Atomizer, issue #140)",
+      "quote": "Each passive/active is classified from **its own fragment text** (`passives[i].branches`, `active[i].branches`), never a whole-item blob - the first passive cannot absorb later effects."
+    },
+    {
+      "file": "data/practice-corpus/scenarios.json",
+      "locator": "scenarios[] id 'cp21-bis-utility-ahri'",
+      "quote": "\"objective\": \"utility\", \"role\": \"mid\" ... \"expected\": {\"certified\": \"95 certified of 96 mid role-compatible candidates\", \"withheld_before_timeline\": [], \"partial\": [\"Fimbulwinter\"]}"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra entry",
+      "quote": "\"buff (120-splinter +15% total AP capstone)\"; \"P = 120-splinter +15% total AP BUFF.\""
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Vi entry, gap_summary",
+      "quote": "P Blast Shield is explicitly documented as defensive-only ('does not change outgoing TDD')."
+    },
+    {
+      "file": "data/worklists/e9-bis-b-task.md",
+      "locator": "CONTEXT / THE GOAL",
+      "quote": "src/calculator/item_coverage.py - how item effects get 'blocked'/'withheld' verdicts and what certification requires; ... convert the withholding into a DOCUMENTED boundary: update the corpus scenario expectation + item coverage note so the withholding is an audited, sourced decision - never silent."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "§1.2 Linearity of expectation",
+      "quote": "the mitigation operator `x |-> x*100/(100+R)` is *linear in raw damage* for a fixed resistance"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "§3.1 Exact formulation",
+      "quote": "`f(S)` = the **coupled participant-timeline score**: deterministic total damage dealt by the main participant before its own death, summed over the fight window, with an infinitesimal effective-health tiebreak (`score + EHP*1e-9`, optimizer.py `_evaluate_build_uncached`)"
+    }
+  ],
+
+  "confidence": {
+    "level": "high",
+    "residual_uncertainty": "The scenario definition itself lives outside the permitted evidence tree (src/ and tests/), so the subject item is identified by inference from the only cached mid-role utility-objective coverage analogue (Fimbulwinter in cp21-bis-utility-ahri) rather than read directly. The verdict is robust to that inference: the falsification pass in step_6 shows the new universal claim holds for every item that can legitimately carry this verdict, and fails only for items that would not receive it."
+  }
+}

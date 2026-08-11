@@ -1,0 +1,84 @@
+{
+  "receipt": "oracle-P3-3.8-leaf7",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-11",
+  "scenario": "syndra_custom_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_39/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18b",
+    "read_only_scope": "data/** and docs/math-foundations.md from the export; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were not read"
+  },
+  "item_identified": {
+    "item": "Zhonya's Hourglass",
+    "id": 3157,
+    "how_identified": "The old leaf value names 'Time Stop'; the only cached item whose effect is named Time Stop is Zhonya's Hourglass (data/items.json id 3157, data/item-atoms/3157.json). Both the old and the new string are rationales for the same leaf, so both describe this item."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> \"3157\".active[0]",
+      "quote": "\"name\": \"Time Stop\", branches: \"Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]].\""
+    },
+    {
+      "source": "data/items.json -> \"3157\".stats",
+      "quote": "abilityPower.flat = 105.0 ; armor.flat = 50.0 ; every other stat line 0.0 ; \"passives\": [] (the item's only non-stat effect is the active)"
+    },
+    {
+      "source": "data/item-atoms/3157.json (cached atom decomposition of the item)",
+      "quote": "atoms = [ {atom_id: \"stats.ability-power\", family: \"stats\", behavior: \"abilityPower\", parameters: {flat: 105.0}}, {atom_id: \"stats.armor\", family: \"stats\", parameters: {flat: 50.0}}, {atom_id: \"crowd-control-mobility.stasis\", family: \"crowd-control-mobility\", behavior: \"Time Stop\", evidence: \"active:Time Stop\"}, {atom_id: \"damage.resistance-mitigation\", family: \"damage\", behavior: \"Time Stop\", relations: [\"damage.damage-instance\", \"damage.armor-penetration\", \"damage.magic-penetration\"], evidence: \"active:Time Stop\"} ]"
+    },
+    {
+      "source": "data/atoms/classification-report.json -> vocab.families",
+      "quote": "[\"crowd-control-mobility\", \"damage\", \"heal-shield\", \"interaction\", \"stack-transform-summon-resource\", \"vision-economy\"] (no family in the cached vocabulary is named or defined as \"defence\")"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (\"Dark Sphere\")",
+      "quote": "leveling \"Magic Damage\" modifiers: values [90,125,160,195,230] (flat) + values [70,70,70,70,70] units \"% AP\"; cooldown 7 s"
+    },
+    {
+      "source": "data/champions.json -> Syndra.stats",
+      "quote": "attackSpeed.flat = 0.658, perLevel = 2 ; attackSpeedRatio.flat = 0.625"
+    },
+    {
+      "source": "docs/math-foundations.md §1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "\"N(T) = floor(AS * u * T)\" and \"Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window.\""
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (resistance identity, used only for the illustrative post-mitigation figure)",
+      "quote": "actual_damage = raw * 100 / (100 + resistance)"
+    }
+  ],
+  "independent_computation": {
+    "claim_under_test_A": "New value asserts: 'Every declared family on this item is a defence.'",
+    "test_A": {
+      "declared_families_on_3157": ["stats (abilityPower 105.0)", "stats (armor 50.0)", "crowd-control-mobility (stasis / Time Stop)", "damage (resistance-mitigation, related to damage-instance, armor-penetration, magic-penetration)"],
+      "result": "FALSE. Two of the four cached atoms are not defensive: stats.ability-power (105 AP is a pure offence stat) and the atom filed under family \"damage\". The cached family vocabulary contains no \"defence\" family at all, so the universal-quantifier claim cannot be satisfied by the data as cached."
+    },
+    "claim_under_test_B": "New value asserts: 'the represented mechanic changes durability, not outgoing TDD.'",
+    "test_B_offence_from_stats": {
+      "step_1": "Zhonya's grants abilityPower.flat = 105.0 (data/items.json 3157).",
+      "step_2": "Syndra Q (Dark Sphere) AP ratio = 70% AP (data/champions.json).",
+      "step_3": "Delta raw magic damage per Q cast from this item = 0.70 * 105 = 73.5.",
+      "step_4": "Post-mitigation against an illustrative 60 MR target: 73.5 * 100 / (100 + 60) = 45.94 per Q cast.",
+      "result": "The item measurably increases outgoing damage. Its represented mechanics are not durability-only."
+    },
+    "test_B_offence_from_the_active_itself": {
+      "step_1": "Time Stop's own wiki text says the wielder is 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items' for 2.5 s.",
+      "step_2": "docs/math-foundations.md §1.1 models autos as N(T) = floor(AS * u * T) and casts as occupancy on one shared timeline. A 2.5 s stasis window inside the fight window is 2.5 s of zero attack rate and zero cast occupancy.",
+      "step_3": "Autos forgone at Syndra's level-1 base attack speed alone: floor(0.658 * 2.5) = 1 swing, rising with bonus AS; casts forgone: Q's 7 s base cooldown means a 2.5 s freeze displaces up to a full Q cast (>= 90 + 0.70*AP raw) out of any window it straddles.",
+      "result": "Stasis strictly REDUCES outgoing TDD over the window it occupies. It is precisely a mechanic that changes outgoing TDD, which is the opposite of what the new string asserts."
+    },
+    "claim_under_test_C": "Old value asserts: 'Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.'",
+    "test_C": {
+      "step_1": "Time Stop is an ACTIVE (data/items.json places it under \"active\", not \"passives\"), so it only takes effect when the player chooses to use it.",
+      "step_2": "Because using it costs 2.5 s of the shared cast/auto timeline (test_B above), assuming stasis from item presence would silently subtract damage that a scenario never asked for; assuming no stasis while pricing it would silently add damage. The only sound treatment is to price it from an explicit, bounded active-seconds input.",
+      "step_3": "The wiki text also fixes the bound the input must respect: 2.5 seconds per use.",
+      "result": "TRUE and consistent with both the cached wiki text and the timeline model in docs/math-foundations.md."
+    }
+  },
+  "conclusion": "The old value is a correct, sourced statement about Zhonya's Hourglass; the new value is contradicted twice by the cached data: (1) the item declares stats.ability-power (105 AP), an offence family, so 'every declared family is a defence' is false, and the cached vocabulary has no 'defence' family; (2) Time Stop's own wiki text (2.5 s unable to attack or cast) plus the shared-timeline model in docs/math-foundations.md make stasis a mechanic that lowers outgoing TDD, not a durability-only mechanic. The rewrite replaces a true, item-specific rationale with a false generalisation.",
+  "caveat": "The scenario definition for 'syndra_custom_order_39' is not present in the exported data/ tree (data/practice-corpus/scenarios.json contains 22 scenarios, none Syndra), and src/, tests/ and scripts/ were out of scope, so the item at item_coverage[1] was identified from the leaf's own old text ('Time Stop') rather than from the scenario build list. If the change also reordered item_coverage so that index 1 now names a different item, this verdict applies to the Zhonya's Hourglass rationale as quoted."
+}

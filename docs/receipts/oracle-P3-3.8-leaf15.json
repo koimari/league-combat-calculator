@@ -1,0 +1,68 @@
+{
+  "receipt": "oracle-P3-3.8-leaf15",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_custom_order_60/combat/utility_outcomes/participants/main/item_coverage[1]/reason",
+  "old_value": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+  "new_value": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle15",
+    "read_only_from": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan", "data/worklists/ (deliberately skipped to preserve independence)"]
+  },
+  "item_identification": {
+    "method": "The old reason names the effect 'Time Stop'. Only three cached items carry Time Stop / stasis, and they are grouped as a unique-effect family in the cached economics table.",
+    "quote_data/economics-sourced.json_groups_26_12": "\"Stasis\": [\"Seeker's Armguard\", \"Shattered Armguard\", \"Zhonya's Hourglass\"]",
+    "grep_result_for_'Time Stop'_under_data/": ["data/items.json", "data/atoms/items.json", "data/item-atoms/3157.json (Zhonya's Hourglass)", "data/item-atoms/2420.json (Seeker's Armguard)", "data/wiki/article-index.json"],
+    "conclusion": "item_coverage[1] is a stasis item (Zhonya's Hourglass id 3157, or its component Seeker's Armguard id 2420). Both carry an identical Time Stop active and an identical atom family set, so the analysis below is invariant to which of them occupies the slot. Shattered Armguard (2421) declares no Time Stop atoms at all."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> \"Zhonya's Hourglass\" (id 3157), active[0] \"Time Stop\", branches[0]",
+      "quote": "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} seconds, rendering you {{tip|untargetable}} and {{tip|invulnerable}} for the duration but also unable to move, declare [[basic attack]]s, cast [[champion ability|abilities]], use [[summoner spell]]s, or [[active ability items|activate items]]."
+    },
+    {
+      "source": "data/items.json -> \"Zhonya's Hourglass\" (id 3157), stats + passives",
+      "quote": "\"passives\": [], stats.abilityPower.flat = 105.0, stats.armor.flat = 50.0, simpleDescription = \"Activate to become invincible but unable to take actions\""
+    },
+    {
+      "source": "data/items.json -> \"Seeker's Armguard\" (id 2420)",
+      "quote": "identical Time Stop active text; \"passives\": []; stats.abilityPower.flat = 40.0, stats.armor.flat = 25.0"
+    },
+    {
+      "source": "data/item-atoms/3157.json (declared families/atoms for Zhonya's Hourglass)",
+      "quote": "families = [crowd-control-mobility, damage, stats]; atoms = [stats.ability-power (abilityPower, flat 105.0), stats.armor (armor, flat 50.0), crowd-control-mobility.stasis (behavior \"Time Stop\", evidence \"active:Time Stop\"), damage.resistance-mitigation (family \"damage\", behavior \"Time Stop\", relations [damage.damage-instance, damage.armor-penetration, damage.magic-penetration])]"
+    },
+    {
+      "source": "data/item-atoms/2420.json (Seeker's Armguard)",
+      "quote": "families = [crowd-control-mobility, damage, stats]; same four atom ids as 3157 (ability-power 40.0, armor 25.0, stasis, resistance-mitigation)"
+    },
+    {
+      "source": "data/atoms/classification-report.json -> vocab.families",
+      "quote": "[\"crowd-control-mobility\", \"damage\", \"heal-shield\", \"interaction\", \"stack-transform-summon-resource\", \"vision-economy\"] (plus the \"stats\" family used by item atoms). No family in the vocabulary is named \"defence\"."
+    },
+    {
+      "source": "docs/math-foundations.md, section 1.1 (Renewal theory for cast + auto timing schedules), lines ~42-49 and ~91-96",
+      "quote": "swings land at `0, Delta, 2Delta, ...` with `Delta = 1/(AS * u)` where `AS` is total attack speed and `u` is the auto-attack uptime fraction ... N(T) = floor(AS * u * T) ... **Uptime as a rate scale.** `u` multiplies the attack *rate* (`AS*u`) rather than modeling an on/off attacking process."
+    },
+    {
+      "source": "docs/math-foundations.md, section 1.1 (shared cast timeline)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time ... and a cast counts when it *starts* within the window."
+    }
+  ],
+  "independent_computation": {
+    "step_1_what_the_item_declares": "The cached atom decomposition for the stasis item declares exactly three families: `stats`, `crowd-control-mobility`, and `damage`. Two of the four atoms are stat atoms (ability-power 105.0 flat, armor 50.0 flat for 3157; 40.0/25.0 for 2420); one is `crowd-control-mobility.stasis`; one is `damage.resistance-mitigation`, whose declared family is literally `damage` and whose relations point at `damage.damage-instance`, `damage.armor-penetration`, `damage.magic-penetration`.",
+    "step_2_test_the_new_claim_literally": "The new reason asserts 'Every declared family on this item is a defence.' This is false on the cached data on two counts: (a) the item declares the family `damage`, not a defensive family - and the atom vocabulary in data/atoms/classification-report.json contains no family named 'defence' at all, so no item can satisfy the claim as written; (b) the item declares `stats.ability-power` = 105.0 flat AP (40.0 on the component). On an AP champion such as Syndra, 105 AP is a purely offensive stat that raises outgoing damage through every ability ratio - it is a change to outgoing TDD, not to durability.",
+    "step_3_test_the_new_claim_charitably": "Read charitably as a claim about the represented mechanic only (Time Stop), it still fails. The cached wiki text is explicit that stasis makes the holder 'unable to move, declare basic attacks, cast abilities, use summoner spells, or activate items' for a fixed 2.5 seconds. Under the engine's own timing model quoted from docs/math-foundations.md, N(T) = floor(AS * u * T) with `u` the uptime fraction, and casts occupy a single shared timeline: 2.5 s of enforced inaction inside a T-second fight window removes auto swings and cast slots outright. Concretely, 2.5 s of stasis inside a 60-second-flavoured window is 2.5 s during which the shared cast timeline advances with zero casts and `u` loses 2.5/T of its budget. The mechanic therefore *does* change outgoing TDD (downward), which is precisely why it cannot be free-rolled from item presence. 'changes durability, not outgoing TDD' is contradicted by the item's own cached text.",
+    "step_4_test_the_old_claim": "The old reason states a pricing policy: Time Stop is priced only from an explicit bounded active-seconds scenario input, and item presence alone never assumes stasis. Every element of this is consistent with the cached data: Time Stop is an `active` (not a `passive` - `passives` is empty for both 3157 and 2420), with a bounded, fixed duration of 2.5 s ('for {{fd|2.5}} seconds'), and it is a player-elected action whose use, timing, and realized seconds are not implied by ownership. Because the mechanic buys invulnerability at the cost of an equal span of zero output, pricing it requires a bounded seconds input on both sides of the ledger; assuming it from item presence would silently grant free mitigation and/or silently charge free downtime. Nothing in data/ or docs/math-foundations.md contradicts the old statement.",
+    "step_5_robustness": "The conclusion does not depend on which stasis item occupies build slot 1: 3157 and 2420 have byte-identical Time Stop text and identical declared family sets ([crowd-control-mobility, damage, stats]), and both carry offensive ability power. Shattered Armguard (2421) declares only `stats` and no Time Stop, so it cannot be the item the old reason names."
+  },
+  "verdict": "old_value_correct",
+  "verdict_rationale": "The new reason is falsified twice by the cached data - the item declares the `damage` family and 105 flat AP (no 'defence' family exists in the atom vocabulary), and the represented mechanic demonstrably alters outgoing damage by imposing 2.5 s of enforced inaction under the engine's uptime/shared-timeline model. The old reason is fully consistent with the cached active text (a bounded 2.5 s player-elected active with no passive component) and states the only defensible pricing policy for it.",
+  "caveats": [
+    "src/, tests/, scripts/, git history, the diff and the plan were never read, per runbook R-18/R-19; the exact runtime schema of `item_coverage` entries is therefore unknown to this investigation.",
+    "If the calculator's runtime code maintains a private per-item 'family' taxonomy distinct from data/item-atoms (which does contain a literal 'defence' label), the new string could be internally consistent with that private taxonomy - but it would still be substantively wrong about the game mechanic, because the cached wiki text shows Time Stop suppresses all outgoing damage for its duration and the item grants offensive ability power.",
+    "The scenario's build order was not visible from data/; item slot 1 was identified from the effect name in the old value plus the cached Stasis unique-group, and the conclusion was shown to be invariant across every cached item in that group."
+  ]
+}
