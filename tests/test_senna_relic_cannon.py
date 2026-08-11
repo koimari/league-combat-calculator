@@ -477,11 +477,9 @@ class TestSourceEvidence:
 
     def test_registered_golden_senna_fights_match_current_pipeline(self):
         # The registered Senna fights in scripts/golden_baseline.json are
-        # exactly what the current rider-free pipeline produces (2-dp
-        # rounding, same FightParams as golden_snapshot).  An OPT-IN
-        # completion keeps this green (default byte-identical); an
-        # INHERENT completion must re-capture the baseline and explain
-        # every delta (the S2 xfail below pins the delta formula).
+        # exactly what the current pipeline produces (2-dp rounding,
+        # same FightParams as golden_snapshot). The reviewed baseline
+        # includes the inherent rider in sustained fights.
         builds = {
             "no_items": [],
             "physical_build": [
@@ -540,27 +538,18 @@ class TestSourceEvidence:
                         "total_damage": round(float(result["total_damage"]), 2),
                     }
                     rider = round(float(totals.get("on_hit_ability_P2", 0.0)), 2)
+                    assert got == want, (
+                        f"Senna {level} {scenario}/{build_name} golden drift "
+                        f"(re-capture baseline and explain every delta)"
+                    )
                     if scenario == build_name:
-                        # Burst fights (no autos): byte-identical to the
-                        # checked-in baseline (the rider row is absent).
-                        assert got == want, (
-                            f"Senna {level} {scenario}/{build_name} golden drift "
-                            f"(re-capture baseline and explain every delta)"
-                        )
+                        # Burst fights have no autos, so the rider row is absent.
                         assert rider == 0.0
                     else:
-                        # Sustained fights: the INHERENT rider adds its own
-                        # row (on_hit_ability_P2, count == autos) and shifts
-                        # total_damage by the rider plus the secondary
-                        # missing-HP walk composition (Kraken) — every delta
-                        # is enumerated in HANDOVER §4.64 and the golden gate.
+                        # Sustained fights include the reviewed inherent rider
+                        # in both the current result and the golden baseline.
                         assert "on_hit_ability_P2" in totals
                         assert totals["on_hit_ability_P2"] > 0.0
-                        assert got["total_damage"] > want["total_damage"]
-                        assert (
-                            got["total_damage"]
-                            >= round(want["total_damage"] + rider, 2) - 0.02
-                        )
 
     def test_golden_parse_snapshot_has_no_rider_payload(self):
         # The golden abilities_level_11 parse surface: the passive entry
