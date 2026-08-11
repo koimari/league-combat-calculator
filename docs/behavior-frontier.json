@@ -1,0 +1,273 @@
+{
+  "by_module": {
+    "app.py": {
+      "class_d": 1
+    },
+    "calculator/ally_effects.py": {
+      "counter_1": 2
+    },
+    "calculator/bis.py": {
+      "counter_2": 3
+    },
+    "calculator/champions/janna.py": {
+      "class_d": 1
+    },
+    "calculator/champions/viego.py": {
+      "class_d": 1
+    },
+    "calculator/damage.py": {
+      "counter_1": 16
+    },
+    "calculator/defensive_effects.py": {
+      "counter_1": 77
+    },
+    "calculator/item_coverage.py": {
+      "counter_2": 409
+    },
+    "calculator/item_effects.py": {
+      "class_c": 451
+    },
+    "calculator/item_source.py": {
+      "class_c": 8
+    },
+    "calculator/item_support_effects.py": {
+      "counter_1": 122
+    },
+    "calculator/loadout_rules.py": {
+      "class_c": 28
+    },
+    "calculator/optimizer.py": {
+      "counter_1": 1
+    },
+    "calculator/participant_timeline.py": {
+      "counter_1": 5
+    },
+    "calculator/passive_parser.py": {
+      "class_c": 92
+    },
+    "calculator/pipeline.py": {
+      "counter_1": 15
+    },
+    "calculator/role_quests.py": {
+      "class_c": 21
+    },
+    "calculator/roster_composition.py": {
+      "counter_1": 4
+    },
+    "calculator/rotation_resolver.py": {
+      "class_d": 9
+    },
+    "calculator/scenario.py": {
+      "class_d": 1
+    },
+    "calculator/shield_ledger.py": {
+      "class_d": 1
+    },
+    "calculator/stats.py": {
+      "counter_1": 3
+    },
+    "calculator/survival/actions.py": {
+      "counter_1": 1
+    },
+    "calculator/survival/compile.py": {
+      "counter_1": 18
+    },
+    "calculator/survival/receipt_state.py": {
+      "counter_1": 2
+    },
+    "calculator/survival/transitions.py": {
+      "counter_1": 7
+    },
+    "calculator/trigger_stream.py": {
+      "class_c": 38
+    }
+  },
+  "counters": {
+    "counter_1": {
+      "counts": "runtime item-name dispatch sites",
+      "provenance": "VERIFIED",
+      "retires_at": "3.4-3.7",
+      "target": 0,
+      "value": 273
+    },
+    "counter_2": {
+      "counts": "claim-prose sites in name-keyed containers",
+      "provenance": "VERIFIED",
+      "retires_at": "3.8",
+      "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
+      "value": 412
+    },
+    "counter_3": {
+      "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
+      "provenance": "VERIFIED",
+      "retires_at": "3.2-3.7",
+      "target": 0,
+      "value": 142
+    },
+    "counter_4": {
+      "counts": "declared (family, lane) pairs with no interpreter",
+      "pairs": [
+        "active_cast/compiled_score_walk",
+        "active_cast/pair_engine",
+        "active_cast/receipt_walk",
+        "ally_packet/compiled_score_walk",
+        "ally_packet/receipt_walk",
+        "cast_proc/compiled_score_walk",
+        "cast_proc/pair_engine",
+        "cast_proc/receipt_walk",
+        "charged_strike/compiled_score_walk",
+        "charged_strike/pair_engine",
+        "charged_strike/receipt_walk",
+        "combat_state/compiled_score_walk",
+        "combat_state/defense_resolver",
+        "combat_state/receipt_walk",
+        "crit_profile/compiled_score_walk",
+        "crit_profile/pair_engine",
+        "crit_profile/receipt_walk",
+        "damage_routing/compiled_score_walk",
+        "damage_routing/pair_engine",
+        "damage_routing/receipt_walk",
+        "delta_amp/compiled_score_walk",
+        "delta_amp/pair_engine",
+        "delta_amp/receipt_walk",
+        "on_hit_strike/compiled_score_walk",
+        "on_hit_strike/pair_engine",
+        "on_hit_strike/receipt_walk",
+        "opening_defense/compiled_score_walk",
+        "opening_defense/defense_resolver",
+        "opening_defense/receipt_walk",
+        "periodic/compiled_score_walk",
+        "periodic/pair_engine",
+        "periodic/receipt_walk",
+        "reactive/compiled_score_walk",
+        "reactive/defense_resolver",
+        "reactive/receipt_walk",
+        "resistance_shred/compiled_score_walk",
+        "resistance_shred/pair_engine",
+        "resistance_shred/receipt_walk",
+        "secondary_target/pair_engine",
+        "secondary_target/receipt_walk",
+        "spellblade/compiled_score_walk",
+        "spellblade/pair_engine",
+        "spellblade/receipt_walk",
+        "stat_derivation/pair_engine",
+        "stat_derivation/stat_resolver",
+        "sustain/compiled_score_walk",
+        "sustain/pair_engine",
+        "sustain/receipt_walk",
+        "threshold_defense/compiled_score_walk",
+        "threshold_defense/defense_resolver",
+        "threshold_defense/receipt_walk"
+      ],
+      "provenance": "VERIFIED",
+      "retires_at": "3.9",
+      "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
+      "value": 51
+    }
+  },
+  "exclusions": {
+    "class_b_claim_prose": {
+      "modules": {
+        "calculator/bis.py": "three name-keyed build-profile claims that ride the same flip",
+        "calculator/item_coverage.py": "the hand registries that assert coverage rather than compute it; 3.8 replaces them with a status derived from declarations"
+      },
+      "sites": 412
+    },
+    "class_c_declarative_homes": {
+      "modules": {
+        "calculator/item_effects.py": "the number registries themselves \u2014 ITEM_EFFECTS, ALLY_ITEM_EFFECTS and the static effect tables. An item name is the key of the home this phase reads through",
+        "calculator/item_source.py": "availability from the cached source data; the name is the identity of the row being decided, per CLAUDE.md rule 6",
+        "calculator/loadout_rules.py": "build legality \u2014 uniques, boots and slot rules keyed by the item they constrain",
+        "calculator/passive_parser.py": "the wiki-text parser's per-item parse configuration; the names decide how a page is read, not how a fight is priced",
+        "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
+        "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
+      },
+      "sites": 638
+    },
+    "class_d_non_behavioural": {
+      "modules": {
+        "app.py": "one `kind=\"Boots\"` stat-category label that collides with the item literally named Boots \u2014 a name match, not a dispatch",
+        "calculator/champions/janna.py": "an ability display-name default (`Zephyr` is Janna's W) that collides with an item name",
+        "calculator/champions/viego.py": "an ability display-name default (Viego's R is named after the item he steals) that collides with an item name",
+        "calculator/rotation_resolver.py": "three sample builds in the rotation certification matrix; they name builds to certify orders over and dispatch no behaviour",
+        "calculator/scenario.py": "the same `kind=\"Boots\"` stat-category label on the request-parsing side",
+        "calculator/shield_ledger.py": "the shield-source label `Lifeline`, which names a mechanic class and collides with an item name"
+      },
+      "sites": 14
+    }
+  },
+  "h4_tags": {
+    "dead": [
+      "conditional_attack_speed",
+      "shield_reduction",
+      "target_attack_speed_aura",
+      "target_state"
+    ],
+    "families": {
+      "conditional_attack_speed": "stat_derivation",
+      "defensive_start": "opening_defense",
+      "shield_reduction": "damage_routing",
+      "stat_conversion": "stat_derivation",
+      "sustain": "sustain",
+      "target_attack_speed_aura": "stat_derivation",
+      "target_mitigation": "opening_defense",
+      "target_state": "combat_state",
+      "target_threshold_health": "threshold_defense",
+      "target_threshold_shield": "threshold_defense"
+    },
+    "reasons": {
+      "conditional_attack_speed": "dead: read nowhere in src/. Yun Tal Wildarrows' crit-gated attack speed is a derived stat, so STAT_DERIVATION is where a rule for it would land the day one is written",
+      "defensive_start": "self-referential: read only by item_coverage's own claim, while the behaviour is reached by item name in defensive_effects. The mechanic is a defence ready when the exchange opens",
+      "shield_reduction": "dead: read nowhere in src/. Serpent's Fang changes how much shielding a strike must pass through on its way to health, which is a routing rule and not a defence the holder owns",
+      "stat_conversion": "self-referential: read only by item_coverage's own claim, while the behaviour is reached by item name in stats. The mechanic derives one stat from another",
+      "sustain": "self-referential: read only by item_coverage's own claim, while the behaviour is reached by item name. The mechanic is sustain and the family it names is SUSTAIN",
+      "target_attack_speed_aura": "dead: read nowhere in src/. Frozen Heart's aura derives a stat on everyone in range",
+      "target_mitigation": "self-referential: read only by item_coverage's own claim, while the behaviour is reached by item name in defensive_effects. Plated Steelcaps-class mitigation is part of StartingDefenses",
+      "target_state": "dead: read nowhere in src/. Force of Nature and Jak'Sho carry stack ledgers on the defender, which is COMBAT_STATE's shape",
+      "target_threshold_health": "self-referential: read only by item_coverage's own claim. A lifeline on a health threshold is THRESHOLD_DEFENSE",
+      "target_threshold_shield": "self-referential: read only by item_coverage's own claim. A lifeline granting a shield at a threshold is THRESHOLD_DEFENSE"
+    },
+    "self_referential": [
+      "defensive_start",
+      "stat_conversion",
+      "sustain",
+      "target_mitigation",
+      "target_threshold_health",
+      "target_threshold_shield"
+    ]
+  },
+  "no_runtime_behavior": {
+    "ceiling_source": "len(item_coverage._REVIEWED_STATS_ONLY) on this commit \u2014 the reviewed no-modelled-effect claim this set replaces",
+    "members": [],
+    "ratchet_ceiling": 56,
+    "rule": "|members| may never exceed the ceiling and may never grow once a slice has set it; every member carries a SourceReceipt and a reviewed reason"
+  },
+  "priors": {
+    "class_c": {
+      "cause": "trigger_stream.py did not exist when the prior was taken",
+      "value": 600
+    },
+    "class_d": {
+      "cause": "unchanged",
+      "value": 14
+    },
+    "counter_1": {
+      "cause": "measured over a tree without Phase 1's evidence corpus and without Phase 2's trigger_stream; item_support_effects also lost sites to 0B's corrections",
+      "value": 282
+    },
+    "counter_2": {
+      "cause": "item_coverage grew Phase 1's claim corpus (_SOURCE_REFS, _RULE_CLAIMS and the evidence tables), which is claim prose by this counter's definition and 3.8 retires with the rest",
+      "value": 191
+    },
+    "counter_3": {
+      "cause": "unchanged",
+      "value": 142
+    },
+    "counter_4": {
+      "cause": "no producing tool before this script; the plan records n/a",
+      "value": null
+    }
+  },
+  "schema_version": 1,
+  "slice": "3.1"
+}
