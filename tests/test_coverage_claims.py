@@ -1200,13 +1200,14 @@ def test_the_front_door_survey_reads_imports_and_not_mentions(tmp_path: Path) ->
     }
 
 
-def test_the_survey_reproduces_the_pre_campaign_reading_of_this_tree() -> None:
-    """The rule is stable: it finds every live module's importer, or names it.
+def test_the_live_survey_reports_only_real_and_unimported_modules() -> None:
+    """The property the frontier rests on, over the two real trees.
 
-    The report is a survey of two real trees rather than a fabricated one
-    here, so the assertion is the property the frontier depends on — every
-    module it reports is real, and every module it does not report is named
-    by an import somewhere in ``tests/``.
+    Every module the report names is a file this repository has, and none of
+    them is named by an import anywhere in ``tests/`` — the second half
+    recomputed here from :func:`imported_package_modules` rather than trusted
+    from the report, so a survey that quietly stopped reading a tree would
+    show up as a module reported despite being imported.
     """
     report = coverage_resolver.front_door_report(
         ROOT / "src" / "calculator", ROOT / "tests"

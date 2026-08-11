@@ -1,6 +1,7 @@
 """Static guards for high-value module boundaries."""
 
 import ast
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,6 +14,18 @@ SRC_ROOT = ROOT / "src" / "calculator"
 TEST_ROOT = ROOT / "tests"
 
 DAMAGE_PATH = ROOT / "src" / "calculator" / "damage.py"
+
+# The hand registry the derived report replaced (D-95), pinned at zero
+# occurrences.  The scan reads file *text* rather than a parsed tree, because
+# a retired name does its remaining damage as prose: it is what a reader
+# greps, and a comment discussing a registry reads as a registry that still
+# exists.  It is spelled in halves so this scanner is not itself the
+# occurrence it forbids — "zero" has to be literally true of every scanned
+# file, and the file this tuple used to live in is the one that matters most.
+# `docs/plans/` is out of scope by construction: the document that ordered
+# the deletion has to be able to name what it deleted.
+RETIRED_FRONT_DOOR_REGISTRY = "SUBSTANTIAL_MODULE" + "_FRONT_DOORS"
+SCANNED_TREES = ("src", "tests", "scripts")
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +136,38 @@ def test_every_frontier_entry_carries_a_reason_and_an_owner() -> None:
     for module, entry in FRONT_DOOR_FRONTIER.items():
         assert entry.reason.strip(), module
         assert entry.owning_phase.strip(), module
+
+
+def scanned_sources() -> dict[str, str]:
+    """Every Python file in the three scanned trees, by repository path."""
+    return {
+        path.relative_to(ROOT).as_posix(): path.read_text(encoding="utf-8")
+        for tree in SCANNED_TREES
+        for path in sorted((ROOT / tree).rglob("*.py"))
+    }
+
+
+def retired_registry_sites(sources: Mapping[str, str] | None = None) -> tuple[str, ...]:
+    """Every scanned file naming the retired hand registry in its text."""
+    pattern = rf"\b{re.escape(RETIRED_FRONT_DOOR_REGISTRY)}\b"
+    return tuple(
+        path
+        for path, text in sorted((sources or scanned_sources()).items())
+        if re.search(pattern, text)
+    )
+
+
+def test_the_retired_front_door_registry_has_zero_occurrences() -> None:
+    """Criterion 13's first clause, read literally — comments included."""
+    assert retired_registry_sites() == ()
+
+
+def test_the_zero_occurrence_scan_has_a_permanent_injection_seam() -> None:
+    """R-05: the hand registry reappearing anywhere is a finding, on demand."""
+    injected = {
+        "tests/test_regrown.py": f"{RETIRED_FRONT_DOOR_REGISTRY} = ('healing',)\n"
+    }
+    assert retired_registry_sites(injected) == ("tests/test_regrown.py",)
 
 
 def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> None:
