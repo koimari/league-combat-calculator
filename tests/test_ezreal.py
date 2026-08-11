@@ -12,7 +12,7 @@ Hand-validated against the wiki (see /add-champion spec):
 import pytest
 
 from src.calculator import item_effects
-from src.calculator.interpreters import on_hit_strike
+from src.calculator.interpreters import on_hit_strike, spellblade
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
@@ -293,7 +293,13 @@ class TestAbilityItemOnHits:
         result = _fight(stats, abilities, [trinity], target_health=100000.0)
         row = result["breakdown"]["spellblade_Trinity Force"]
         assert row["count"] == 1
-        effect = item_effects.resolve_damage_effects([trinity]).spellblade
+        effect = spellblade.resolve_slot(
+            ["Trinity Force"],
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        )
         inputs = item_effects.DamageInputs(
             champion_stats=stats,
             level=18,

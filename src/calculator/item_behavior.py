@@ -710,6 +710,38 @@ class SecondaryTargetRule:
     applies_on_hit: bool
 
 
+@dataclass(frozen=True, slots=True)
+class SpellbladeRule:  # pylint: disable=too-many-instance-attributes
+    """The empowered attack an ability cast arms.
+
+    Nine fields because a spellblade really does answer nine questions, and
+    the five that end in a declared ``None`` are the point rather than
+    clutter: Lich Bane's attack-speed burst, Essence Reaver's mana refund and
+    Dusk and Dawn's self-heal are *sibling mechanics of specific spellblades*,
+    and the registry's own compiler decided which by comparing item names.
+
+    Which siblings an entry carries is now decided by
+    ``item_behavior_catalog``'s sibling groups: a group is declared whole or
+    not at all, so a parse that dropped half of Essence Reaver's mana refund
+    is a stop rather than a quietly weaker item — the fail-closed contract the
+    name comparison used to carry, without the names.
+
+    ``double_on_hit`` is a structural flag rather than a reference: it says
+    whether the empowered attack applies on-hit effects twice, which is a
+    shape of the mechanic and not a quantity anybody patches.
+    """
+
+    formula: DamageFormula
+    cooldown: AnyValueRef
+    weave_delay: AnyValueRef
+    double_on_hit: bool
+    bonus_attack_speed_percent: AnyValueRef | None
+    mana_restore_base_ad_ratio: AnyValueRef | None
+    mana_restore_crit_ratio: AnyValueRef | None
+    self_heal_ap_ratio: AnyValueRef | None
+    self_heal_bonus_health_ratio: AnyValueRef | None
+
+
 class PeriodicCadence(Enum):
     """How a periodic strike spreads one item's damage over time.
 
@@ -1023,6 +1055,7 @@ class AllyPacketRule:
 RulePayload = Union[
     ActiveCastRule,
     PeriodicRule,
+    SpellbladeRule,
     AllyPacketRule,
     DeltaAmpRule,
     OnHitStrikeRule,
@@ -1036,6 +1069,7 @@ RulePayload = Union[
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ActiveCastRule: RuleFamily.ACTIVE_CAST,
     PeriodicRule: RuleFamily.PERIODIC,
+    SpellbladeRule: RuleFamily.SPELLBLADE,
     AllyPacketRule: RuleFamily.ALLY_PACKET,
     DeltaAmpRule: RuleFamily.DELTA_AMP,
     OnHitStrikeRule: RuleFamily.ON_HIT_STRIKE,
@@ -1108,6 +1142,9 @@ def _validate_payload(rule: BehaviorRule) -> None:
     if isinstance(payload, OnHitStrikeRule):
         _validate_formula(rule, payload.formula)
         return
+    if isinstance(payload, SpellbladeRule):
+        _validate_spellblade(rule, payload)
+        return
     if isinstance(payload, PeriodicRule):
         _validate_periodic(rule, payload)
         return
@@ -1159,6 +1196,39 @@ PERIODIC_CADENCE_FIELDS: dict[PeriodicCadence, frozenset[str]] = {
     PeriodicCadence.CONTINUOUS_AURA: frozenset(),
     PeriodicCadence.FIXED_INTERVAL: frozenset({"aoe_range_units", "self_heal_share"}),
 }
+
+
+def _validate_spellblade(rule: BehaviorRule, payload: SpellbladeRule) -> None:
+    """A spellblade names a formula, two clocks and whichever siblings it has."""
+    _validate_formula(rule, payload.formula)
+    _validate_refs(
+        rule, {"cooldown": payload.cooldown, "weave_delay": payload.weave_delay}
+    )
+    _validate_refs(
+        rule,
+        {
+            "bonus_attack_speed_percent": payload.bonus_attack_speed_percent,
+            "mana_restore_base_ad_ratio": payload.mana_restore_base_ad_ratio,
+            "mana_restore_crit_ratio": payload.mana_restore_crit_ratio,
+            "self_heal_ap_ratio": payload.self_heal_ap_ratio,
+            "self_heal_bonus_health_ratio": payload.self_heal_bonus_health_ratio,
+        },
+        optional=True,
+    )
+    if not isinstance(payload.double_on_hit, bool):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: double_on_hit is a declared bool; whether the "
+            "empowered attack applies on-hit effects twice has no default answer"
+        )
+    for pair in (
+        (payload.mana_restore_base_ad_ratio, payload.mana_restore_crit_ratio),
+        (payload.self_heal_ap_ratio, payload.self_heal_bonus_health_ratio),
+    ):
+        if (pair[0] is None) != (pair[1] is None):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a sibling mechanic is declared whole or "
+                "not at all; half of one is a parse that dropped a number"
+            )
 
 
 def _validate_periodic(rule: BehaviorRule, payload: PeriodicRule) -> None:
@@ -1513,6 +1583,7 @@ __all__ = [
     "RulePayload",
     "SUBJECT_AUTHORITY",
     "SecondaryTargetRule",
+    "SpellbladeRule",
     "StackRamp",
     "Subject",
     "TRIGGER_STREAM",

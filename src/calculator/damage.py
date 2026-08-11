@@ -140,6 +140,12 @@ from .interpreters import (
     resistance_shred,
     secondary_target,
 )
+
+# The spellblade interpreter is reached through its one entry point rather
+# than as a module: ``spellblade`` is already this file's name for the armed
+# effect in five functions, and a module shadowed by a local is a bug waiting
+# for somebody to add a read above the assignment.
+from .interpreters.spellblade import resolve_slot as resolve_spellblade_slot
 from .item_behavior import AmpChainSlot, Isolation, Probe, Resistance
 from .trigger_stream import (
     Stream,
@@ -468,6 +474,8 @@ class FightState:
     # projection for the same reason, and one field rather than three because
     # the three cadences are one declared family.
     item_periodics: "periodic.PeriodicSlots"
+    # The one spellblade this build arms, resolved through its rule.
+    item_spellblade: "item_effects.SpellbladeEffect | None"
     secondary_target_bolts: "secondary_target.SecondaryTargetSlot | None"
     cast_order: list[str]
     target_health: float
@@ -2316,6 +2324,13 @@ def _resolve_combat_state(
             target_bonus_health=max(0.0, config.target_bonus_health),
             holder_is_melee=bool(is_melee),
         ),
+        item_spellblade=resolve_spellblade_slot(
+            owners,
+            level=level,
+            fight_duration_seconds=fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=bool(is_melee),
+        ),
         secondary_target_bolts=secondary_target.resolve_slot(
             owners,
             level=level,
@@ -3494,7 +3509,7 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     # the preceding empowered attack returned.  Scheduling the restore only
     # after its arming cast is accepted also prevents an omitted cast from
     # minting phantom resources.
-    spellblade = state.damage_effects.spellblade
+    spellblade = state.item_spellblade
     mana_restore_per_proc = 0.0
     spellblade_cooldown_ready = float("-inf")
     spellblade_restore_count = 0
@@ -6461,7 +6476,7 @@ def _prepare_spellblade_attack_schedule(
     state: FightState, rotation: RotationResult
 ) -> None:
     """Prepare Lich Bane's proc timestamps before the auto stream is priced."""
-    effect = state.damage_effects.spellblade
+    effect = state.item_spellblade
     if effect is None or effect.bonus_attack_speed_percent <= 0.0:
         return
     onhit_applications = [
@@ -6557,7 +6572,7 @@ def _add_spellblade_damage(
     resists = state.resists
     result = SpellbladeResult()
 
-    effect = state.damage_effects.spellblade
+    effect = state.item_spellblade
     if effect is not None:
         result.item = effect.source.item_name
 

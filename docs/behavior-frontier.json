@@ -25,7 +25,7 @@
       "counter_2": 409
     },
     "calculator/item_effects.py": {
-      "class_c": 446
+      "class_c": 443
     },
     "calculator/item_source.py": {
       "class_c": 8
@@ -99,7 +99,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 83
+      "value": 77
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -138,7 +138,6 @@
         "resistance_shred/receipt_walk",
         "secondary_target/receipt_walk",
         "spellblade/compiled_score_walk",
-        "spellblade/pair_engine",
         "spellblade/receipt_walk",
         "stat_derivation/pair_engine",
         "stat_derivation/stat_resolver",
@@ -152,7 +151,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 44
+      "value": 43
     }
   },
   "exclusions": {
@@ -172,7 +171,7 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 633
+      "sites": 630
     },
     "class_d_non_behavioural": {
       "modules": {

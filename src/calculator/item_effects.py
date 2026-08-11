@@ -3680,7 +3680,6 @@ class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
     on_hit_heals: tuple[OnHitHealEffect, ...] = ()
-    spellblade: SpellbladeEffect | None = None
     cooldown_procs: tuple[CooldownProcEffect, ...] = ()
     ultimate_procs: tuple[UltimateProcEffect, ...] = ()
     first_autos: tuple[FirstAutoEffect, ...] = ()
@@ -3805,95 +3804,6 @@ def _compile_per_ability_hit(
         raw,
         suffix="Shock - abilities",
         breakdown_key="muramana_ability",
-    )
-
-
-def _compile_spellblade(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> SpellbladeEffect:
-    """Compile one spellblade formula and its engine scheduling values."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    base_ad_ratio = required.number("base_ad_ratio")
-
-    if formula == "base_ad":
-
-        def raw(inputs: DamageInputs) -> float:
-            return base_ad_ratio * inputs.champion_stats.get("base_attack_damage", 0.0)
-
-    elif formula == "base_ad_ap":
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            stats = inputs.champion_stats
-            return base_ad_ratio * stats.get(
-                "base_attack_damage", 0.0
-            ) + ap_ratio * stats.get("ability_power", 0.0)
-
-    elif formula == "base_ad_crit":
-        crit_bonus_max = required.number("crit_bonus_max")
-
-        def raw(inputs: DamageInputs) -> float:
-            stats = inputs.champion_stats
-            crit_ratio = min(stats.get("critical_strike_chance", 0.0) / 100.0, 1.0)
-            return (
-                base_ad_ratio * stats.get("base_attack_damage", 0.0)
-                + crit_bonus_max * crit_ratio
-            )
-
-    else:
-        raise ValueError(
-            f"Unsupported spellblade formula {formula!r} for {item_name!r}"
-        )
-
-    source = damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="Spellblade",
-        breakdown_key=f"spellblade_{item_name}",
-    )
-    # These sibling mechanics are parser-owned for specific spellblades.  A
-    # successful parse that drops one must fail closed rather than silently
-    # compiling a weaker version of the item.
-    required_siblings: dict[str, tuple[str, ...]] = {
-        "Lich Bane": ("bonus_attack_speed_percent",),
-        "Essence Reaver": (
-            "mana_restore_base_ad_ratio",
-            "mana_restore_crit_ratio",
-        ),
-        "Dusk and Dawn": (
-            "self_heal_ap_ratio",
-            "self_heal_bonus_health_ratio",
-        ),
-    }
-    sibling_values = {
-        key: required.number(key) for key in required_siblings.get(item_name, ())
-    }
-    return SpellbladeEffect(
-        source=source,
-        cooldown=required.number("cooldown"),
-        weave_delay=required.number("weave_delay"),
-        double_on_hit=bool(values.get("double_on_hit", False)),
-        bonus_attack_speed_percent=sibling_values.get(
-            "bonus_attack_speed_percent",
-            float(values.get("bonus_attack_speed_percent", 0.0)),
-        ),
-        mana_restore_base_ad_ratio=sibling_values.get(
-            "mana_restore_base_ad_ratio",
-            float(values.get("mana_restore_base_ad_ratio", 0.0)),
-        ),
-        mana_restore_crit_ratio=sibling_values.get(
-            "mana_restore_crit_ratio", float(values.get("mana_restore_crit_ratio", 0.0))
-        ),
-        self_heal_ap_ratio=sibling_values.get(
-            "self_heal_ap_ratio", float(values.get("self_heal_ap_ratio", 0.0))
-        ),
-        self_heal_bonus_health_ratio=sibling_values.get(
-            "self_heal_bonus_health_ratio",
-            float(values.get("self_heal_bonus_health_ratio", 0.0)),
-        ),
     )
 
 
@@ -4296,6 +4206,27 @@ _KNOWN_EFFECT_TYPES = frozenset(
 )
 
 
+def entry_schema_keys(item_name: str) -> frozenset[str]:
+    """Which value keys this item's registry entry is *expected* to carry.
+
+    The schema, never the current parse.  A declaration deciding "does this
+    mechanic carry that sibling" must read the shape of the entry rather than
+    what happens to be in it today: keyed on the live entry, a parse that
+    dropped a key would make the declaration quietly conclude the mechanic
+    does not exist, while keyed on the schema the reference is still declared
+    and raises naming the item and the key.  That is the fail-closed contract
+    the registry's own compilers used to buy by comparing item names.
+
+    An item the last-known-good snapshot does not know has no schema but its
+    live entry, which is then the only shape there is.
+    """
+    snapshot = _OFFLINE_ITEM_EFFECTS.get(item_name)
+    if isinstance(snapshot, Mapping):
+        return frozenset(snapshot)
+    entry = ITEM_EFFECTS.get(item_name)
+    return frozenset(entry) if isinstance(entry, Mapping) else frozenset()
+
+
 def known_effect_types() -> frozenset[str]:
     """The closed set of effect tags an ``ITEM_EFFECTS`` entry may carry.
 
@@ -4345,7 +4276,6 @@ def _resolve_damage_effects_uncached(
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
     on_hit_heals: list[OnHitHealEffect] = []
-    spellblade: SpellbladeEffect | None = None
     cooldown_procs: list[CooldownProcEffect] = []
     ultimate_procs: list[UltimateProcEffect] = []
     first_autos: list[FirstAutoEffect] = []
@@ -4379,8 +4309,6 @@ def _resolve_damage_effects_uncached(
             )
         if effect_type == "on_hit_heal":
             on_hit_heals.append(_compile_on_hit_heal(item_name, values))
-        elif effect_type == "spellblade" and spellblade is None:
-            spellblade = _compile_spellblade(item_name, values)
         elif effect_type == "proc":
             cooldown_procs.append(_compile_proc(item_name, values))
         elif effect_type == "ult_proc":
@@ -4512,7 +4440,6 @@ def _resolve_damage_effects_uncached(
 
     return BuildDamageEffects(
         on_hit_heals=tuple(on_hit_heals),
-        spellblade=spellblade,
         cooldown_procs=tuple(cooldown_procs),
         ultimate_procs=tuple(ultimate_procs),
         first_autos=tuple(first_autos),

@@ -82,6 +82,7 @@ from .item_behavior import (
     ResistanceShredRule,
     RuleFamily,
     SecondaryTargetRule,
+    SpellbladeRule,
     StackRamp,
     Subject,
     Term,
@@ -515,6 +516,40 @@ ACTIVE_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
         (Basis.ABILITY_POWER, "ap_ratio"),
     ),
 }
+
+# The spellblade schemas.  ``base_ad_crit`` reads the holder's crit chance as
+# a *fraction* — the basis caps it at one — which is the reading the registry
+# compiler's own `min(chance / 100, 1.0)` encoded inside its closure.
+SPELLBLADE_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
+    "base_ad": ((Basis.BASE_ATTACK_DAMAGE, "base_ad_ratio"),),
+    "base_ad_ap": (
+        (Basis.BASE_ATTACK_DAMAGE, "base_ad_ratio"),
+        (Basis.ABILITY_POWER, "ap_ratio"),
+    ),
+    "base_ad_crit": (
+        (Basis.BASE_ATTACK_DAMAGE, "base_ad_ratio"),
+        (Basis.HOLDER_CRIT_FRACTION, "crit_bonus_max"),
+    ),
+}
+
+# The sibling mechanics specific spellblades carry, grouped so each is
+# declared whole or not at all.  The registry's own compiler decided which
+# entry carried which by comparing item names — Lich Bane, Essence Reaver,
+# Dusk and Dawn — and required every key of the group it named, so that a
+# successful parse which dropped one failed closed rather than compiling a
+# weaker item.  Keying on the group's own keys keeps the fail-closed contract
+# and drops the names: any key present means every key is required.
+SPELLBLADE_SIBLING_GROUPS: tuple[tuple[str, ...], ...] = (
+    ("bonus_attack_speed_percent",),
+    ("mana_restore_base_ad_ratio", "mana_restore_crit_ratio"),
+    ("self_heal_ap_ratio", "self_heal_bonus_health_ratio"),
+)
+
+# The key a spellblade's delay between the arming cast and the empowered
+# attack lives under, and the registry's structural flag for an empowered
+# attack that applies on-hit effects twice.
+WEAVE_DELAY_KEY = "weave_delay"
+DOUBLE_ON_HIT_KEY = "double_on_hit"
 
 # The periodic schemas, across all three cadences.  One table rather than
 # three because the six formula names are distinct: the registry never spells
@@ -1270,16 +1305,103 @@ def _compile_secondary_target(
     return (rule,)
 
 
+def _schema_keys(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> frozenset[str]:
+    """Which keys *owner*'s entry is expected to carry, not which it has.
+
+    The item registry publishes a schema — the shape of the last-known-good
+    entry — and reading it rather than the live entry is what keeps a dropped
+    parse a stop instead of a declaration silently concluding the mechanic
+    does not exist.  The ally registry is hand-authored and refresh-inert
+    (D-47), so its entry *is* its schema.
+    """
+    if registry == "ITEM_EFFECTS":
+        return item_effects.entry_schema_keys(owner)
+    return frozenset(entry)
+
+
 def _optional_ref(
     owner: str, registry: ValueRegistry, entry: Mapping[str, Any], key: str
 ) -> ValueRef | None:
-    """A reference to *key*, or ``None`` where the entry does not carry it.
+    """A reference to *key*, or ``None`` where the schema does not carry it.
 
     The declared-absence idiom: a mechanic that has no such sibling declares
     ``None``, which is a different claim from a reference that resolves to
-    zero.  Presence in the entry is the test, so no item name decides it.
+    zero.  The registry's schema is the test, so no item name decides it and
+    a parse that dropped the key still raises rather than being read as an
+    absence.
     """
-    return ValueRef(registry, owner, key) if key in entry else None
+    return (
+        ValueRef(registry, owner, key)
+        if key in _schema_keys(owner, registry, entry)
+        else None
+    )
+
+
+def _sibling_refs(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> dict[str, ValueRef | None]:
+    """One entry's spellblade siblings, each group declared whole or not at all.
+
+    Presence of *any* key of a group makes *every* key of it required, so a
+    parse that dropped half of a sibling mechanic raises when the rule reads
+    it rather than compiling a quietly weaker item.
+    """
+    schema = _schema_keys(owner, registry, entry)
+    refs: dict[str, ValueRef | None] = {}
+    for group in SPELLBLADE_SIBLING_GROUPS:
+        declared = any(key in schema for key in group)
+        for key in group:
+            refs[key] = ValueRef(registry, owner, key) if declared else None
+    return refs
+
+
+def _compile_spellblade(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the empowered attack one registry entry declares.
+
+    Seven items share one mechanic — an ability cast arms the next basic
+    attack — and differ in a formula and in which sibling mechanic rides
+    along.  Both are read off the entry's own keys, so no item name decides
+    either.
+    """
+    del family
+    siblings = _sibling_refs(owner, registry, entry)
+    rule = BehaviorRule(
+        family=RuleFamily.SPELLBLADE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.spellblade",
+        payload=SpellbladeRule(
+            formula=_damage_formula(
+                owner, registry, entry, SPELLBLADE_FORMULA_TERMS, {}
+            ),
+            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
+            weave_delay=ValueRef(registry, owner, WEAVE_DELAY_KEY),
+            double_on_hit=bool(entry.get(DOUBLE_ON_HIT_KEY, False)),
+            bonus_attack_speed_percent=siblings["bonus_attack_speed_percent"],
+            mana_restore_base_ad_ratio=siblings["mana_restore_base_ad_ratio"],
+            mana_restore_crit_ratio=siblings["mana_restore_crit_ratio"],
+            self_heal_ap_ratio=siblings["self_heal_ap_ratio"],
+            self_heal_bonus_health_ratio=siblings["self_heal_bonus_health_ratio"],
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the empowered attack is a sum of sourced shares of the holder's "
+            "stats; a zero means every share resolved to zero, which the "
+            "formula measured",
+        ),
+    )
+    validate_rule(rule)
+    return (rule,)
 
 
 def _compile_periodic(
@@ -2356,7 +2478,7 @@ def _unmigrated(
 _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.ON_HIT_STRIKE: _compile_on_hit_strike,
     RuleFamily.CHARGED_STRIKE: _unmigrated,
-    RuleFamily.SPELLBLADE: _unmigrated,
+    RuleFamily.SPELLBLADE: _compile_spellblade,
     RuleFamily.CAST_PROC: _unmigrated,
     RuleFamily.PERIODIC: _compile_periodic,
     RuleFamily.ACTIVE_CAST: _compile_active_cast,
@@ -2377,7 +2499,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
     RuleFamily.CHARGED_STRIKE: "3.4",
-    RuleFamily.SPELLBLADE: "3.4",
     RuleFamily.CAST_PROC: "3.4",
     RuleFamily.OPENING_DEFENSE: "3.5",
     RuleFamily.THRESHOLD_DEFENSE: "3.5",

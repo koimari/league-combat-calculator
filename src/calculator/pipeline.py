@@ -30,7 +30,7 @@ from .damage import (
     split_by_damage_type,
 )
 from . import item_effects
-from .interpreters import periodic
+from .interpreters import periodic, spellblade
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
 from .trigger_stream import holders_in, tuple_incapable_items
@@ -479,16 +479,10 @@ def _has_item_self_healing(
     and Unending Despair's periodic Anguish heal are item-owned packets that
     must remain in the full result even when the champion has no healing rule.
     """
-    spellblade = effects.spellblade
-    if spellblade is not None and (
-        spellblade.self_heal_ap_ratio > 0.0
-        or spellblade.self_heal_bonus_health_ratio > 0.0
-    ):
-        return True
+    names = [str(item.get("name", "")) for item in (items or ())]
     return (
-        periodic.declares_self_heal(
-            [str(item.get("name", "")) for item in (items or ())]
-        )
+        spellblade.declares_self_heal(names)
+        or periodic.declares_self_heal(names)
         or bool(effects.on_hit_heals)
         or (
             effects.first_auto_crit is not None

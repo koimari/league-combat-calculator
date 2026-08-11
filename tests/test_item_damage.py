@@ -25,7 +25,12 @@ from src.calculator.damage import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _calculate_stacking_procs,
 )
-from src.calculator.interpreters import on_hit_strike, periodic, resistance_shred
+from src.calculator.interpreters import (
+    on_hit_strike,
+    periodic,
+    resistance_shred,
+    spellblade,
+)
 from src.calculator.item_behavior import Resistance
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
 
@@ -56,6 +61,17 @@ def _periodic_slots(*owners: str) -> "periodic.PeriodicSlots":
 def _build(*names: str) -> list[dict[str, str]]:
     """Build the minimal item shape accepted by the typed resolver."""
     return [{"name": name} for name in names]
+
+
+def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
+    """The spellblade a build arms, resolved through its declaration."""
+    return spellblade.resolve_slot(
+        owners,
+        level=level,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
 
 
 def _hypershot_slot(owners):
@@ -1480,7 +1496,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
     def test_spellblade_damage_equals_base_ad(self) -> None:
         """Bloodsong spellblade should deal 100% base AD."""
         stats = {"base_attack_damage": 104.0}
-        effect = resolve_damage_effects(_build("Bloodsong")).spellblade
+        effect = _spellblade_slot("Bloodsong")
         assert effect is not None
         damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         assert abs(damage - 104.0) < 0.01
@@ -1715,7 +1731,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     def test_spellblade_damage_formula(self) -> None:
         """Dusk and Dawn spellblade should deal 75% base AD + 10% AP."""
         stats = {"base_attack_damage": 104.0, "ability_power": 160.0}
-        effect = resolve_damage_effects(_build("Dusk and Dawn")).spellblade
+        effect = _spellblade_slot("Dusk and Dawn")
         assert effect is not None
         damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         expected = 0.75 * 104.0 + 0.10 * 160.0  # 78 + 16 = 94
@@ -5606,7 +5622,7 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
         row = fight["breakdown"]["spellblade_Bloodsong"]
         events = row["damage_events"]
         assert len(events) == row["count"] == 2
-        effect = resolve_damage_effects(_build("Bloodsong")).spellblade
+        effect = _spellblade_slot("Bloodsong")
         first_cast = min(event["time"] for event in fight["cast_timeline"])
         assert events[0]["time"] == pytest.approx(first_cast + effect.weave_delay)
         assert events[1]["time"] >= events[0]["time"] + effect.cooldown
@@ -5789,7 +5805,7 @@ class TestSheenSpellblade:
         }
 
     def test_spellblade_compiles_and_scales_from_base_ad(self) -> None:
-        effect = resolve_damage_effects(_build("Sheen")).spellblade
+        effect = _spellblade_slot("Sheen")
         assert effect is not None
         assert effect.source.item_name == "Sheen"
         assert effect.cooldown == pytest.approx(1.5)
@@ -5813,7 +5829,7 @@ class TestSheenSpellblade:
     def test_spellblade_damage_equals_base_ad(self) -> None:
         """Sheen's proc is exactly 100% base AD with no AP scaling."""
         stats = {"base_attack_damage": 104.0, "ability_power": 300.0}
-        effect = resolve_damage_effects(_build("Sheen")).spellblade
+        effect = _spellblade_slot("Sheen")
         assert effect is not None
         damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         assert damage == pytest.approx(104.0)

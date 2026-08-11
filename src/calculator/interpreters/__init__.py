@@ -50,6 +50,7 @@ from . import (
     periodic,
     resistance_shred,
     secondary_target,
+    spellblade,
 )
 
 
@@ -241,6 +242,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         RuleFamily.SECONDARY_TARGET,
         EngineLane.PAIR_ENGINE,
     ): secondary_target.PAIR_INTERPRETER,
+    (
+        RuleFamily.SPELLBLADE,
+        EngineLane.PAIR_ENGINE,
+    ): spellblade.PAIR_INTERPRETER,
 }
 
 

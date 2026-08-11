@@ -83,6 +83,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "Deal {{as|90% AD}}",
         0.90,
     ),
+    RuleFamily.SPELLBLADE: (
+        "Sheen",
+        "base_ad_ratio",
+        "deals {{as|100% '''base''' AD}}",
+        "deals {{as|140% '''base''' AD}}",
+        1.40,
+    ),
     RuleFamily.PERIODIC: (
         "Unending Despair",
         "bonus_hp_ratio",

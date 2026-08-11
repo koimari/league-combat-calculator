@@ -11,7 +11,7 @@ import copy
 import pytest
 
 from src.calculator import item_effects
-from src.calculator.interpreters import on_hit_strike
+from src.calculator.interpreters import on_hit_strike, spellblade
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
@@ -71,6 +71,17 @@ from src.calculator.item_effects import (
 def _build(*names: str) -> list[dict]:
     """Make a minimal item build from item names."""
     return [{"name": name} for name in names]
+
+
+def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
+    """The spellblade a build arms, resolved through its declaration."""
+    return spellblade.resolve_slot(
+        owners,
+        level=level,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
 
 
 def test_frozen_heart_registers_typed_attack_speed_aura() -> None:
@@ -397,7 +408,7 @@ class TestResolveDamageEffects:
         assert effects.on_hit_heals[0].amount == pytest.approx(3.0)
 
     def test_spellblade_compiles_formula_and_scheduling(self) -> None:
-        effects = resolve_damage_effects(_build("Lich Bane"))
+        armed = _spellblade_slot("Lich Bane", is_melee=False)
         inputs = DamageInputs(
             champion_stats={"base_attack_damage": 100.0, "ability_power": 200.0},
             level=18,
@@ -406,15 +417,15 @@ class TestResolveDamageEffects:
             target_current_health=1000.0,
         )
 
-        assert effects.spellblade is not None
-        assert effects.spellblade.source.raw_damage(inputs) == 165.0
-        assert effects.spellblade.cooldown == 1.5
-        assert effects.spellblade.weave_delay == 1.5
-        assert effects.spellblade.bonus_attack_speed_percent == 50.0
+        assert armed is not None
+        assert armed.source.raw_damage(inputs) == 165.0
+        assert armed.cooldown == 1.5
+        assert armed.weave_delay == 1.5
+        assert armed.bonus_attack_speed_percent == 50.0
 
     def test_spellblade_sibling_values_are_typed(self) -> None:
-        essence = resolve_damage_effects(_build("Essence Reaver")).spellblade
-        dusk = resolve_damage_effects(_build("Dusk and Dawn")).spellblade
+        essence = _spellblade_slot("Essence Reaver")
+        dusk = _spellblade_slot("Dusk and Dawn")
         assert essence is not None and dusk is not None
         assert essence.mana_restore_base_ad_ratio == pytest.approx(0.625)
         assert essence.mana_restore_crit_ratio == pytest.approx(25.0)
@@ -437,7 +448,7 @@ class TestResolveDamageEffects:
         monkeypatch.setitem(ITEM_EFFECTS, item_name, broken)
 
         with pytest.raises(KeyError, match=f"{item_name}.*{key}"):
-            resolve_damage_effects(_build(item_name))
+            _spellblade_slot(item_name)
 
     def test_guinsoo_seething_attack_speed_is_patch_sourced(self) -> None:
         build = _build("Guinsoo's Rageblade")
@@ -1164,7 +1175,7 @@ class TestItemEffectProvenance:
 
         monkeypatch.setattr(item_effects, "ITEM_EFFECTS", registry)
         with pytest.raises(KeyError, match="ap_ratio"):
-            resolve_damage_effects(_build("Lich Bane"))
+            _spellblade_slot("Lich Bane")
 
     @pytest.mark.parametrize("failure_stage", ["load", "parse", "empty"])
     def test_whole_pipeline_failure_uses_complete_offline_snapshot(
