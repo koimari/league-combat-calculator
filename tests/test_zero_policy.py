@@ -125,6 +125,26 @@ def test_the_policy_is_absent_from_the_golden_repr() -> None:
     assert printed == repr(DamagePart("physical", 5.0))
 
 
+def test_the_policy_is_metadata_and_not_part_of_a_part_s_identity() -> None:
+    """Equality and hashing say what the repr says, or one of them is lying.
+
+    ``DamagePart`` is a frozen dataclass, so a new field joins ``__eq__``
+    and ``__hash__`` unless it declares otherwise.  A field the repr hides
+    but equality reads would make two parts that print identically compare
+    unequal and take two slots in a set — a future dedup discriminating on
+    an invisible field.  The policy is a statement *about* the number, not
+    part of the number's identity, so it is ``compare=False``.
+    """
+    plain = DamagePart("physical", 5.0)
+    dispositioned = DamagePart("physical", 5.0, zero_policy=MODULE_FORMULA_ZERO)
+    assert plain == dispositioned
+    assert hash(plain) == hash(dispositioned)
+    assert len({plain, dispositioned}) == 1
+    # And the field still carries its value — excluded from equality is not
+    # excluded from the record.
+    assert dispositioned.zero_policy is MODULE_FORMULA_ZERO
+
+
 def test_a_policy_without_a_reason_is_refused() -> None:
     """A disposition with no receipt is a label (the rule-level check too)."""
     with pytest.raises(ValueError, match="reason"):

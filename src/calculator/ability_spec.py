@@ -18,7 +18,7 @@ rule union declare one.
 """
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -263,7 +263,15 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
     # publishes through ``serialize_leaf``, not a value the pair snapshot
     # serializes, and printing it would move every golden ability repr for
     # a field no engine reads.
-    zero_policy: "ZeroPolicy | None" = None
+    #
+    # ``compare=False`` for the same reason, and it is not a cosmetic
+    # choice: a field the repr hides but ``__eq__`` and ``__hash__`` read
+    # makes two parts that print identically compare unequal and occupy two
+    # slots in a set, so any future dedup would silently discriminate on an
+    # invisible field.  The policy is a statement *about* the number, not
+    # part of the number's identity, so repr and equality agree by saying
+    # the same thing.
+    zero_policy: "ZeroPolicy | None" = field(default=None, compare=False)
 
     def __post_init__(self) -> None:
         if self.damage_type not in part_damage_types():
