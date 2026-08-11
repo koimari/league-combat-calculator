@@ -41,6 +41,7 @@ from .item_behavior import (
     Always,
     AmpChainSlot,
     Attribution,
+    Comparison,
     BonusTyping,
     BehaviorRule,
     BuildContext,
@@ -48,10 +49,12 @@ from .item_behavior import (
     ExcludeTrigger,
     Fixed,
     Isolation,
+    LivePredicate,
     Magnitude,
     MeleeRangedSplit,
     Persist,
     Pool,
+    Probe,
     RULE_FAMILY_COUNT,
     RampModel,
     RampPerSecond,
@@ -70,7 +73,14 @@ from .item_behavior import (
     validate_rule,
 )
 from .survival.actions import ActionKind
-from .value_ref import Const, SourceReceipt, ValueRef, ValueRegistry, receipt_for
+from .value_ref import (
+    Const,
+    DerivedValueRef,
+    SourceReceipt,
+    ValueRef,
+    ValueRegistry,
+    receipt_for,
+)
 
 
 class BehaviorCatalogError(RuntimeError):
@@ -336,10 +346,11 @@ Compiler = Callable[
 # carries that promise for a whole family; a *partly* migrated family needs
 # it per tag, or the family's disappearance from UNMIGRATED_FAMILIES would
 # quietly retire promises nobody kept.
-MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset({"damage_amp", "hypershot_amp"})
+MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset(
+    {"damage_amp", "hypershot_amp", "magic_true_crit"}
+)
 
 DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
-    "magic_true_crit": "3.2 — Shadowflame's Cinderbloom, last of the seven",
     "ability_damage_amp": (
         "3.7 — Actualizer's ability amp is applied per ability and per proc "
         "inside the rotation, so it occupies no chain slot"
@@ -410,6 +421,12 @@ KEYSTONE_AMPS: Mapping[str, AmpChainSlot] = {
 # quantity anybody patches, which is what ``origin`` says and ``count`` would
 # not.
 COMBAT_START = Const(0.0, "origin")
+
+# The origin of the multiplier axis.  A registry entry that states an
+# amplifier as a *multiplier* (Shadowflame's Cinderbloom is 120%) states the
+# same mechanic the chain prices as a *fraction*; 1.0 is the coordinate the
+# two are measured from, not a quantity anybody patches.
+MULTIPLIER_ORIGIN = Const(1.0, "origin")
 
 # How long the engine assumes one whole-total amp stack takes to accrue.  A
 # modelling assumption, not a wiki number — Spear of Shojin stacks per
@@ -725,6 +742,85 @@ def _expose_weakness_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
+def _cinderbloom_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Shadowflame's Cinderbloom: the one amp whose pool is not precomputable.
+
+    Every other amp in the chain resolves to a number before the first event
+    exists.  This one reads the target's health *at the instant of the hit*,
+    under fire from a whole roster, so forcing it into a window would make
+    the algebra claim a certainty the mechanic does not have.  It declares a
+    :class:`~.item_behavior.LivePredicate`, whose ``requires_live_pool`` is a
+    property of the shape rather than a flag a caller may forget, and the
+    interpreter compiles the *threshold* while the *reading* arrives event by
+    event.
+
+    The magnitude is a subtraction because the registry states the mechanic
+    the way the Wiki does — "critically strike for 120% damage" — and the
+    chain prices fractions.  Declaring ``crit_multiplier - 1`` keeps the
+    sourced number the one the page states, instead of a second number
+    nobody can check against it.
+
+    Subject is the holder: the cached text reads "**Your** magic damage and
+    true damage will critically strike".  The authority is nevertheless
+    coupled-with-preview, because the *predicate* reads a roster fact — how
+    much health the target has left under everyone's fire — and that move is
+    Phase 4's, last of seven.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.cinderbloom",
+        payload=DeltaAmpRule(
+            pool=Pool.ALL_EVENTS,
+            activation=LivePredicate(
+                probe=Probe.TARGET_HEALTH_FRACTION,
+                cmp=Comparison.LT,
+                threshold=ValueRef(registry, owner, "health_threshold"),
+            ),
+            consumption=Persist(),
+            magnitude=Fixed(
+                DerivedValueRef(
+                    "SUB",
+                    (
+                        ValueRef(registry, owner, "crit_multiplier"),
+                        MULTIPLIER_ORIGIN,
+                    ),
+                )
+            ),
+            attribution=Attribution.HOLDER,
+            typing=_magic_and_true_typing(),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
+            subject=Subject.HOLDER,
+            lane_chain_rank=chain_rank(AmpChainSlot.CINDERBLOOM),
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the bonus is a sourced ratio of the magic and true damage that "
+            "landed while the target was under the declared health "
+            "threshold; a zero means the target never went low enough or "
+            "nothing qualifying landed there, which the ordered ledger "
+            "measured",
+        ),
+    )
+
+
+def _magic_and_true_typing() -> Typing:
+    """The two damage classes Cinderbloom crits, from every attack class.
+
+    Physical damage is excluded because the mechanic excludes it, and D-04
+    makes that a thing the declaration says rather than a tuple membership
+    test inside the ledger walk.
+    """
+    return Typing(
+        damage_classes=frozenset({DamageClass.MAGIC, DamageClass.TRUE}),
+        attack_classes=frozenset(AttackClass),
+    )
+
+
 def _compile_ally_delta_amp(
     owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
 ) -> tuple[BehaviorRule, ...]:
@@ -853,6 +949,8 @@ def _compile_delta_amp(
         tag = str(entry.get("type"))
         if tag == "hypershot_amp":
             rules.append(_hypershot_rule(owner, registry))
+        if tag == "magic_true_crit":
+            rules.append(_cinderbloom_rule(owner, registry))
         if tag == "damage_amp" or _declares_secondary(
             registry, entry, RuleFamily.DELTA_AMP
         ):
@@ -1246,6 +1344,7 @@ __all__ = [
     "H4_TAG_REASONS",
     "KEYSTONE_AMPS",
     "MIGRATED_DELTA_AMP_TAGS",
+    "MULTIPLIER_ORIGIN",
     "TAG_FAMILY",
     "UNMIGRATED_FAMILIES",
     "behavior_rules",

@@ -102,7 +102,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 132
+      "value": 131
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",

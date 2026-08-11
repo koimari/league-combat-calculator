@@ -18,9 +18,13 @@ from src.calculator.interpreters import delta_amp
 from src.calculator.item_behavior import (
     AMP_CHAIN_ORDER,
     AmpChainSlot,
+    BuildContext,
+    Comparison,
     EngineLane,
     Fixed,
     KernelField,
+    LivePredicate,
+    Probe,
     RampModel,
     RampPerSecond,
     RampPerStack,
@@ -34,6 +38,7 @@ from src.calculator.item_behavior_catalog import (
     BehaviorCatalogError,
     behavior_rules,
     build_context,
+    rule_owners,
 )
 from src.calculator.item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS
 from src.calculator.value_ref import Const
@@ -393,3 +398,114 @@ def _with_activation(slot: "delta_amp.AmpSlot", activation) -> "delta_amp.AmpSlo
     return dataclasses.replace(
         slot, rules=(dataclasses.replace(rule, payload=payload),)
     )
+
+
+# ---------------------------------------------------------------------------
+# Cinderbloom — the one amp whose pool cannot be precomputed
+# ---------------------------------------------------------------------------
+
+
+def _cinderbloom_slot(*owners: str) -> "delta_amp.AmpSlot | None":
+    """Resolve the Cinderbloom chain slot for a build."""
+    return delta_amp.resolve_slot(
+        owners,
+        AmpChainSlot.CINDERBLOOM,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+
+
+def test_cinderbloom_prices_the_multiplier_the_page_states_as_a_fraction() -> None:
+    """The registry keeps 120%; the chain gets 0.2, by a declared subtraction."""
+    slot = _cinderbloom_slot("Shadowflame")
+    assert slot is not None
+    multiplier = ITEM_EFFECTS["Shadowflame"]["crit_multiplier"]
+    assert slot.bonus_fraction == multiplier - 1.0
+    assert slot.value(delta_amp.LIVE_THRESHOLD_FIELD) == pytest.approx(
+        ITEM_EFFECTS["Shadowflame"]["health_threshold"]
+    )
+
+
+def test_cinderbloom_crits_only_magic_and_true() -> None:
+    """D-04: the excluded class is something the declaration says."""
+    slot = _cinderbloom_slot("Shadowflame")
+    assert slot is not None
+    assert slot.prices_damage_type("magic")
+    assert slot.prices_damage_type("true")
+    assert not slot.prices_damage_type("physical")
+
+
+def test_the_live_predicate_reads_a_pool_and_not_a_precomputed_ratio() -> None:
+    """The comparison is ``value < scale * threshold``, the engine's own.
+
+    A ratio would be a different float, and the whole point of the live
+    predicate is that this migration moved no number.
+    """
+    slot = _cinderbloom_slot("Shadowflame")
+    assert slot is not None
+    threshold = slot.value(delta_amp.LIVE_THRESHOLD_FIELD)
+    probe = Probe.TARGET_HEALTH_FRACTION
+    assert not slot.live_predicate_holds(probe, 1000.0, 1000.0)
+    assert not slot.live_predicate_holds(probe, 1000.0 * threshold, 1000.0)
+    assert slot.live_predicate_holds(probe, 1000.0 * threshold - 1e-9, 1000.0)
+
+
+def test_offering_the_wrong_pool_to_a_live_predicate_is_a_stop() -> None:
+    """A rule that reads the target's health may not be handed the holder's."""
+    slot = _cinderbloom_slot("Shadowflame")
+    assert slot is not None
+    with pytest.raises(
+        delta_amp.DeltaAmpInterpretationError, match="the engine offered"
+    ):
+        slot.live_predicate_holds(Probe.HOLDER_HEALTH_FRACTION, 1.0, 1000.0)
+
+
+def test_a_comparison_no_declaration_uses_has_no_branch() -> None:
+    """D-51: three of the four comparisons are unreached and raise."""
+    slot = _cinderbloom_slot("Shadowflame")
+    assert slot is not None
+    declared = slot.rules[0].payload.activation
+    for cmp_member in (Comparison.LE, Comparison.GT, Comparison.GE):
+        mutated = _with_activation(slot, dataclasses.replace(declared, cmp=cmp_member))
+        with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="comparison"):
+            mutated.live_predicate_holds(Probe.TARGET_HEALTH_FRACTION, 1.0, 1000.0)
+
+
+def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
+    """Criterion: ``requires_live_pool`` means the pool is never a build value.
+
+    Two halves.  The build context an interpreter may read carries no pool —
+    it is level, owner, data version and three configuration facts fixed
+    before the first event — so there is nothing to precompute *from*.  And
+    the fields a live-predicate rule compiles to are exactly the sourced
+    fraction and the sourced threshold: no reading, no crossing time, no
+    pre-resolved answer.
+    """
+    context_fields = {field.name for field in dataclasses.fields(BuildContext)}
+    assert not any(
+        "health" in name for name in context_fields - {"target_bonus_health"}
+    )
+
+    live = [
+        rule
+        for owner in sorted(rule_owners())
+        for rule in behavior_rules(owner)
+        if isinstance(getattr(rule.payload, "activation", None), LivePredicate)
+    ]
+    assert live, "no rule declares a live predicate, so this test proves nothing"
+    for rule in live:
+        assert rule.payload.activation.requires_live_pool
+        ctx = build_context(
+            rule.owner,
+            18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        )
+        names = {field.name for field in delta_amp.PAIR_INTERPRETER.compile(rule, ctx)}
+        assert names == {
+            delta_amp.AMP_FRACTION_FIELD,
+            delta_amp.LIVE_THRESHOLD_FIELD,
+        }

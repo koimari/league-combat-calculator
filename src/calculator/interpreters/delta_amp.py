@@ -34,18 +34,21 @@ from dataclasses import dataclass
 from ..item_behavior import (
     AbsoluteWindow,
     AfterTrigger,
-    ExcludeTrigger,
     AmpChainSlot,
     BehaviorRule,
     BonusTyping,
     BuildContext,
+    Comparison,
     DeltaAmpRule,
     EngineLane,
+    ExcludeTrigger,
     Fixed,
-    KernelField,
     Isolation,
+    KernelField,
+    LivePredicate,
     Magnitude,
     MeleeRangedSplit,
+    Probe,
     RampModel,
     RampPerSecond,
     RampPerStack,
@@ -67,6 +70,7 @@ AMP_FRACTION_FIELD = "amp_fraction"
 WINDOW_START_FIELD = "window_start"
 WINDOW_END_FIELD = "window_end"
 WINDOW_DURATION_FIELD = "window_duration"
+LIVE_THRESHOLD_FIELD = "live_threshold"
 
 
 class DeltaAmpInterpretationError(ValueError):
@@ -201,6 +205,18 @@ class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
             )
             fields.append(
                 field(WINDOW_END_FIELD, resolve(payload.activation.end, ctx.level))
+            )
+        if isinstance(payload.activation, LivePredicate):
+            # The *threshold* is a sourced number and compiles here; the
+            # pool it is compared against does not exist yet and must not be
+            # guessed at build time.  That asymmetry is what
+            # ``requires_live_pool`` names, and it is why the comparison
+            # lives in ``live_predicate_holds`` and not in a field.
+            fields.append(
+                field(
+                    LIVE_THRESHOLD_FIELD,
+                    resolve(payload.activation.threshold, ctx.level),
+                )
             )
         if isinstance(payload.activation, TriggerWindow):
             fields.append(
@@ -373,6 +389,43 @@ class AmpSlot:
             )
         return activation.isolation
 
+    def live_predicate_holds(
+        self, probe: Probe, value: float, scale: float, index: int = 0
+    ) -> bool:
+        """Whether a live pool satisfies the rule's declared predicate.
+
+        Shadowflame's Cinderbloom is the one amp whose pool cannot be
+        precomputed: it reads the target's health at the instant of the hit,
+        under fire from a whole roster.  So the *threshold* is compiled and
+        the *reading* is passed in here, event by event.
+
+        ``value`` and ``scale`` are two arguments rather than one ratio on
+        purpose: the engine compares ``value < scale * threshold`` and
+        ``value / scale < threshold`` is a different float.  ``probe`` is the
+        pool the caller believes it is offering, checked against the one the
+        rule declares — an engine handing the holder's health to a rule that
+        reads the target's would otherwise be a silent wrong answer.
+        """
+        activation = self.rules[index].payload.activation
+        if not isinstance(activation, LivePredicate):
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares no live predicate, "
+                "so it has no answer for a pool reading"
+            )
+        if activation.probe is not probe:
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} reads {activation.probe.value} "
+                f"and the engine offered {probe.value}"
+            )
+        if activation.cmp is not Comparison.LT:
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares the "
+                f"{activation.cmp.value} comparison and no rule this "
+                "interpreter serves does; the slice that declares one owns "
+                "the branch"
+            )
+        return value < scale * self.value(LIVE_THRESHOLD_FIELD, index)
+
     def bonus_damage_type(self, source_type: str, index: int = 0) -> str:
         """What this amp's own bonus lands as, given the event it amplified."""
         typing = self.rules[index].payload.bonus_typing
@@ -489,6 +542,7 @@ def resolve_slot(
 
 __all__ = [
     "AMP_FRACTION_FIELD",
+    "LIVE_THRESHOLD_FIELD",
     "WINDOW_DURATION_FIELD",
     "WINDOW_END_FIELD",
     "WINDOW_START_FIELD",

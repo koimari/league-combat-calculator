@@ -108,10 +108,24 @@ def _calculate_phantom_hits(num_auto_attacks, item_names):
 
 
 def _shadowflame_effect():
-    """Return the live compiled low-health magic/true crit rule."""
-    effect = resolve_damage_effects([{"name": "Shadowflame"}]).magic_true_crit
-    assert effect is not None
-    return effect
+    """The declared Cinderbloom chain slot, resolved for a Shadowflame build."""
+    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        delta_amp,
+    )
+    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        AmpChainSlot,
+    )
+
+    slot = delta_amp.resolve_slot(
+        ["Shadowflame"],
+        AmpChainSlot.CINDERBLOOM,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert slot is not None
+    return slot
 
 
 def _simulate_kraken_damage(

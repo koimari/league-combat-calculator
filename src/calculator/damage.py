@@ -133,7 +133,7 @@ from . import rune_effects
 from . import shield_ledger
 from .ability_spec import DamagePart
 from .interpreters import delta_amp
-from .item_behavior import AmpChainSlot, Isolation
+from .item_behavior import AmpChainSlot, Isolation, Probe
 from .trigger_stream import (
     Stream,
     authored_triggers,
@@ -1844,7 +1844,7 @@ def _liandry_max_health_reprice(
 
 
 def _simulate_ordered_damage(
-    effect: item_effects.MagicTrueCritEffect | None,
+    cinderbloom: "delta_amp.AmpSlot | None",
     breakdown: dict[str, Any],
     ability_damages: dict[str, dict[str, Any]],
     target_health: float,
@@ -1897,7 +1897,7 @@ def _simulate_ordered_damage(
     """
     if cast_order is None:
         cast_order = list(DEFAULT_CAST_ORDER)
-    crit_bonus = effect.crit_multiplier - 1.0 if effect is not None else 0.0
+    crit_bonus = cinderbloom.bonus_fraction if cinderbloom is not None else 0.0
     pools = shield_ledger.build_pools(
         target_health,
         magic_shield=target_magic_shield,
@@ -1952,9 +1952,11 @@ def _simulate_ordered_damage(
             )
         event_damage = damage
         if (
-            effect is not None
-            and dtype in ("magic", "true")
-            and pools.health < pools.max_health * effect.health_threshold
+            cinderbloom is not None
+            and cinderbloom.prices_damage_type(dtype)
+            and cinderbloom.live_predicate_holds(
+                Probe.TARGET_HEALTH_FRACTION, pools.health, pools.max_health
+            )
         ):
             bonus = damage * crit_bonus
             total_bonus += bonus
@@ -1964,7 +1966,7 @@ def _simulate_ordered_damage(
                     "time": event_time,
                     "damage": bonus,
                     "damage_type": dtype,
-                    "source_key": f"shadowflame_{effect.item_name}",
+                    "source_key": f"shadowflame_{cinderbloom.owner}",
                     "trigger_source": event.get("source_key", ""),
                 }
             )
@@ -9101,9 +9103,9 @@ def _add_shadowflame_cinderbloom(
     is this function's.  They are applied by two named steps so a change to
     either has an attributable diff.
     """
-    effect = state.damage_effects.magic_true_crit
+    cinderbloom = _amp_slot(state, AmpChainSlot.CINDERBLOOM)
     has_threshold_health = config.target_threshold_health_bonus > 0
-    if effect is None and not has_threshold_health:
+    if cinderbloom is None and not has_threshold_health:
         return
     (
         shadowflame_bonus,
@@ -9111,7 +9113,7 @@ def _add_shadowflame_cinderbloom(
         bonus_events,
         adjustments,
     ) = _simulate_ordered_damage(
-        effect,
+        cinderbloom,
         state.breakdown,
         state.ability_damages,
         state.target_health,
@@ -9137,8 +9139,8 @@ def _add_shadowflame_cinderbloom(
     )
     _apply_liandry_reprice(state, adjustments)
     if shadowflame_bonus > 0:
-        state.breakdown[f"shadowflame_{effect.item_name}"] = {
-            "name": f"{effect.item_name} (Cinderbloom)",
+        state.breakdown[f"shadowflame_{cinderbloom.owner}"] = {
+            "name": f"{cinderbloom.owner} (Cinderbloom)",
             "total_damage": shadowflame_bonus,
             # Cinderbloom is computed from the ordered source ledger above.
             # Keep those bonus timestamps for precision certification without

@@ -832,8 +832,6 @@ class TestResolveDamageEffects:
         assert effects.crit_damage_bonus == pytest.approx(0.30)
         assert effects.first_auto_crit is not None
         assert effects.first_auto_crit.reduced_crit_ratio == pytest.approx(0.80)
-        assert effects.magic_true_crit is not None
-        assert effects.magic_true_crit.health_threshold == pytest.approx(0.40)
         assert effects.ultimate_auto_buff is not None
         assert effects.ultimate_auto_buff.empowered_auto_count == 3
         assert effects.basic_amp is not None

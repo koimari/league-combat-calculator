@@ -68,9 +68,14 @@ LevelScale = Literal["registry_start", "linear_1_18"]
 LEVEL_SCALES: frozenset[str] = frozenset({"registry_start", "linear_1_18"})
 
 # The arithmetic a derived reference may perform over other references.
-DerivedOp = Literal["ADD", "MUL", "MIN", "MAX", "RATIO"]
+# ``SUB`` exists because an amplifier's registry number is sometimes a
+# *multiplier* (Shadowflame's crit multiplier is 1.2) while the chain prices
+# a *fraction*, and the conversion is a subtraction of the multiplier axis'
+# origin.  Spelling it ADD against a negative constant would hide a
+# conversion inside a sign.
+DerivedOp = Literal["ADD", "SUB", "MUL", "MIN", "MAX", "RATIO"]
 
-DERIVED_OPS: frozenset[str] = frozenset({"ADD", "MUL", "MIN", "MAX", "RATIO"})
+DERIVED_OPS: frozenset[str] = frozenset({"ADD", "SUB", "MUL", "MIN", "MAX", "RATIO"})
 
 
 class ValueRefError(ValueError):
@@ -303,9 +308,9 @@ class LevelValueRef:
 class DerivedValueRef:
     """Arithmetic over other references, so a derivation is never a literal.
 
-    ``RATIO`` is two-operand division; the rest fold left over one or more
-    operands.  A derived reference resolves its operands at call time, so a
-    refresh moves the derived number too.
+    ``RATIO`` and ``SUB`` are two-operand; the rest fold left over one or
+    more operands.  A derived reference resolves its operands at call time,
+    so a refresh moves the derived number too.
     """
 
     op: DerivedOp
@@ -317,14 +322,17 @@ class DerivedValueRef:
             raise ValueRefError(f"derived op {self.op!r} is not one of {DERIVED_OPS}")
         if not self.operands:
             raise ValueRefError("a DerivedValueRef needs at least one operand")
-        if self.op == "RATIO" and len(self.operands) != 2:
-            raise ValueRefError("RATIO takes exactly two operands")
+        if self.op in ("RATIO", "SUB") and len(self.operands) != 2:
+            raise ValueRefError(f"{self.op} takes exactly two operands")
 
     def get(self, level: int | None = None) -> float:
         """Fold the operands, resolving each against its registry now."""
         values = [_resolve(operand, level) for operand in self.operands]
         if self.op == "ADD":
             return math.fsum(values)
+        if self.op == "SUB":
+            minuend, subtrahend = values
+            return minuend - subtrahend
         if self.op == "MIN":
             return min(values)
         if self.op == "MAX":

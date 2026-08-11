@@ -3625,15 +3625,6 @@ class FirstAutoCritEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class MagicTrueCritEffect:
-    """Low-health critical modifier for magic and true damage."""
-
-    item_name: str
-    health_threshold: float
-    crit_multiplier: float
-
-
-@dataclass(frozen=True, slots=True)
 class StackingReductionEffect:
     """Per-hit resistance reduction and its stack cap."""
 
@@ -3746,7 +3737,6 @@ class BuildDamageEffects:
     navori_refund_percent: float = 0.0
     crit_damage_bonus: float = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
-    magic_true_crit: MagicTrueCritEffect | None = None
     magic_amp: float = 1.0
     basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
@@ -4626,7 +4616,6 @@ def _resolve_damage_effects_uncached(
     navori_refund_percent = 0.0
     crit_damage_bonus = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
-    magic_true_crit: MagicTrueCritEffect | None = None
     magic_amp = 1.0
     basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
@@ -4701,13 +4690,6 @@ def _resolve_damage_effects_uncached(
                 f"({required.number('bonus_attack_speed_melee'):.0f}% melee / "
                 f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
                 "bonus AS) is applied from time 0."
-            )
-        elif effect_type == "magic_true_crit":
-            required = _RequiredValues(item_name, values)
-            magic_true_crit = MagicTrueCritEffect(
-                item_name,
-                required.number("health_threshold"),
-                required.number("crit_multiplier"),
             )
         elif effect_type == "basic_damage_amp":
             required = _RequiredValues(item_name, values)
@@ -4830,7 +4812,6 @@ def _resolve_damage_effects_uncached(
         navori_refund_percent=navori_refund_percent,
         crit_damage_bonus=crit_damage_bonus,
         first_auto_crit=first_auto_crit,
-        magic_true_crit=magic_true_crit,
         magic_amp=magic_amp,
         basic_amp=basic_amp,
         ability_amp=ability_amp,
