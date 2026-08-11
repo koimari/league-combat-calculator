@@ -804,7 +804,175 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     lane_chain_rank: int
 
 
+class AllyProducer(Enum):
+    """The closed set of cross-participant packet producers.
+
+    An ally packet is the one family whose mechanics share no arithmetic:
+    Redemption heals a radius and Phage grants move speed, and nothing but
+    the *shape of the emission* is common to them.  So the family's policy is
+    "which producer is this, what does it emit, to whom, and when" — and this
+    enum is the first of those four.
+
+    It is deliberately **not** an item name.  A member's value is the *effect*
+    half of the mechanic id Phase 2's capability registry already uses, and
+    which registry entry carries it is decided by that entry's own value keys
+    (``item_behavior_catalog``'s shape table), never by a literal.  That is
+    what lets the whole ally-packet compiler be name-free while still
+    dispatching one branch per mechanic — and it makes the correspondence
+    checkable: one producer per walk capability carrying a ``packet_source``,
+    asserted rather than asserted-by-convention.
+    """
+
+    # heals and shields
+    EVERLASTING = "everlasting"
+    LIFE_FROM_DEATH = "life_from_death"
+    STARLIT_GRACE = "starlit_grace"
+    SOUL_SIPHON = "soul_siphon"
+    CONSONANCE = "consonance"
+    GOING_SLEDDING = "going_sledding"
+    SACRIFICE = "sacrifice"
+    # stat buffs and cross-participant modifiers
+    SANCTIFY = "sanctify"
+    RAPIDS = "rapids"
+    FANFARE = "fanfare"
+    UNMAKE = "unmake"
+    EXPOSE_WEAKNESS = "expose_weakness"
+    CARVE = "carve"
+    VILE_DECAY = "vile_decay"
+    BLUE_BUBBLE = "blue_bubble"
+    PURPLE_BUBBLE = "purple_bubble"
+    COMMAND = "command"
+    # utility and quest
+    REAP = "reap"
+    RAGE = "rage"
+    SHARED_RICHES = "shared_riches"
+    WARD = "ward"
+    # explicit actives
+    DEVOTION = "devotion"
+    PURIFY = "purify"
+    INTERVENTION = "intervention"
+    INSPIRING_SPEECH = "inspiring_speech"
+    BREAKING_SHOCKWAVE = "breaking_shockwave"
+
+
+class PacketKind(Enum):
+    """The kinds a cross-participant packet may be built with.
+
+    Closed over ``item_support_effects``' ``kind=`` arguments, which is what
+    makes D-50 checkable: Moonstone Renewer used to compute its kind at
+    runtime from the trigger it chained off, and a kind computed at runtime
+    can be resolved by no static reader — not Phase 1's ``PacketSource``, not
+    a family assignment, not this union.  It declares both instead.
+    """
+
+    HEAL = "heal"
+    SHIELD = "shield"
+    TEMPORARY_HEALTH = "temporary_health"
+    STAT_BUFF = "stat_buff"
+    MOVEMENT = "movement"
+    ECONOMY = "economy"
+    VISION = "vision"
+    SLOW = "slow"
+    DAMAGE = "damage"
+    DAMAGE_MODIFIER = "damage_modifier"
+    ON_HIT_MAGIC = "on_hit_magic"
+
+
+class PacketTrigger(Enum):
+    """What makes a producer emit.
+
+    The walk's own event vocabulary, at the granularity the emitters branch
+    on.  It is not :class:`TriggerEvent`: that says which *bus stream* a
+    pricing rule reads, and several producers here fire off things the bus
+    carries no stream for — an explicit active timestamp, or the fight's own
+    start.
+    """
+
+    FIGHT_START = "fight_start"
+    BASIC_ATTACK = "basic_attack"
+    CROWD_CONTROL = "crowd_control"
+    DAMAGE_DEALT = "damage_dealt"
+    TAKEDOWN = "takedown"
+    ALLY_HEAL_OR_SHIELD = "ally_heal_or_shield"
+    ALLY_DAMAGE_DEALT = "ally_damage_dealt"
+    ITEM_ACTIVE = "item_active"
+
+
+class Recipients(Enum):
+    """Whose ledger a packet lands on.
+
+    The roster classes the emitters actually select, named once.  ``SELF`` and
+    the ``HOLDER_AND_*`` members are distinct on purpose: "the holder, and one
+    ally" is two packets and "the holder" is one, and a declaration that
+    collapsed them could not say which.
+    """
+
+    SELF = "self"
+    SELECTED_ALLY = "selected_ally"
+    OTHER_ALLY = "other_ally"
+    TRIGGERING_ALLY = "triggering_ally"
+    HOLDER_AND_ALLIES = "holder_and_allies"
+    HOLDER_AND_SELECTED_ALLY = "holder_and_selected_ally"
+    HOLDER_AND_TRIGGERING_ALLY = "holder_and_triggering_ally"
+    ENEMIES = "enemies"
+    TRIGGERING_ENEMY = "triggering_enemy"
+
+
+class Persistence(Enum):
+    """How long one emitted packet is in force.
+
+    Three members rather than a duration reference, because the question the
+    compiled score kernel asks is categorical: it stages a support template
+    only when the template is instantaneous
+    (``survival/compile.unrepresentable_template_receipt`` refuses any
+    ``duration > 0``), and an aura already in force at ``t = 0`` is a third
+    thing again — it arms at :class:`~.survival.actions.TransitionRank`'s
+    ``AURA_ARM`` rather than after the damage at its own timestamp.
+    """
+
+    SINGLE_MOMENT = "single_moment"
+    TIMED_WINDOW = "timed_window"
+    PERSISTENT_AURA = "persistent_aura"
+
+
+@dataclass(frozen=True, slots=True)
+class PacketSpec:
+    """One packet a producer emits: its kind, and whose ledger it lands on."""
+
+    kind: PacketKind
+    recipients: Recipients
+
+
+@dataclass(frozen=True, slots=True)
+class AllyPacketRule:
+    """One cross-participant producer, declared.
+
+    ``secondary_target`` is D-50's: a producer that reaches a *second* roster
+    class carries the class it reaches.  Redemption's Intervention is the
+    motivating case — one active, one ``source=`` literal, and two packets,
+    one healing every ally in the radius and one dealing true damage to every
+    enemy in it — so a reader of the declaration alone could not otherwise
+    tell that the second half exists.  It is ``None`` exactly when every
+    declared packet lands on one class, which :func:`validate_rule` checks
+    rather than trusting.
+
+    ``values`` is every number the producer may read, held as references.  The
+    emitter resolves them through the rule, so a key the declaration does not
+    carry is a stop rather than a silent registry read — which is what makes
+    the declaration load-bearing instead of descriptive.
+    """
+
+    producer: AllyProducer
+    trigger: PacketTrigger
+    packets: tuple[PacketSpec, ...]
+    secondary_target: Recipients | None
+    persistence: Persistence
+    redirects_incoming_damage: bool
+    values: tuple[AnyValueRef, ...]
+
+
 RulePayload = Union[
+    AllyPacketRule,
     DeltaAmpRule,
     OnHitStrikeRule,
     ResistanceShredRule,
@@ -815,6 +983,7 @@ RulePayload = Union[
 # migration slice adds its family's payload here, so a rule can never carry
 # a payload its family does not name.
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
+    AllyPacketRule: RuleFamily.ALLY_PACKET,
     DeltaAmpRule: RuleFamily.DELTA_AMP,
     OnHitStrikeRule: RuleFamily.ON_HIT_STRIKE,
     ResistanceShredRule: RuleFamily.RESISTANCE_SHRED,
@@ -880,6 +1049,9 @@ def validate_rule(rule: BehaviorRule) -> None:
 def _validate_payload(rule: BehaviorRule) -> None:
     """Per-payload structure, kept out of :func:`validate_rule`'s ladder."""
     payload = rule.payload
+    if isinstance(payload, AllyPacketRule):
+        _validate_ally_packet(rule, payload)
+        return
     if isinstance(payload, OnHitStrikeRule):
         _validate_formula(rule, payload.formula)
         return
@@ -945,6 +1117,92 @@ def _validate_secondary_target(
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a secondary target says whether it carries "
             "on-hit effects; there is no default answer"
+        )
+
+
+def _validate_ally_packet(rule: BehaviorRule, payload: AllyPacketRule) -> None:
+    """A producer names its packets, their recipients and its numbers.
+
+    The ``secondary_target`` clause is the load-bearing one (D-50): a producer
+    reaching two roster classes must *say so*, and a producer reaching one may
+    not claim it does.  Both halves are checked, because a field that is only
+    ever checked in one direction is a field a second producer can quietly
+    stop filling in.
+    """
+    if not isinstance(payload.producer, AllyProducer):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: producer is not an AllyProducer")
+    if not isinstance(payload.trigger, PacketTrigger):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: an ally packet says what fires it"
+        )
+    if not isinstance(payload.persistence, Persistence):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: an ally packet says how long it is in force"
+        )
+    if not isinstance(payload.redirects_incoming_damage, bool):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: redirects_incoming_damage is a declared bool; "
+            "a producer that re-routes another participant's damage is not "
+            "representable by the compiled kernel and must not default"
+        )
+    if not payload.packets:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a producer that emits no packet is an item "
+            "that quietly does nothing"
+        )
+    kinds: list[PacketKind] = []
+    for spec in payload.packets:
+        if not isinstance(spec, PacketSpec):
+            raise BehaviorRuleError(f"{rule.mechanic_id}: packets holds PacketSpecs")
+        if not isinstance(spec.kind, PacketKind) or not isinstance(
+            spec.recipients, Recipients
+        ):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a packet names a kind and its recipients"
+            )
+        if spec.kind in kinds:
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: declares {spec.kind.value} twice; one kind "
+                "is one declared packet"
+            )
+        kinds.append(spec.kind)
+    _validate_secondary_recipients(rule, payload)
+    if not payload.values:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a producer declares the numbers it reads"
+        )
+    for reference in payload.values:
+        if not isinstance(reference, VALUE_REF_TYPES):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: values holds sourced references, never "
+                "numbers in the declaration"
+            )
+
+
+def _validate_secondary_recipients(rule: BehaviorRule, payload: AllyPacketRule) -> None:
+    """``secondary_target`` is present exactly when a second class is reached."""
+    primary = payload.packets[0].recipients
+    others = {
+        spec.recipients for spec in payload.packets if spec.recipients is not primary
+    }
+    if len(others) > 1:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: reaches {len(others) + 1} recipient classes and "
+            "secondary_target names one; a third class needs its own declared axis"
+        )
+    if not others:
+        if payload.secondary_target is not None:
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: every packet lands on {primary.value} and "
+                "the rule still declares a secondary_target"
+            )
+        return
+    (second,) = others
+    if payload.secondary_target is not second:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: emits to {second.value} beside {primary.value} "
+            f"and declares secondary_target={payload.secondary_target}; the "
+            "second class a producer reaches is declared, never inferred (D-50)"
         )
 
 
@@ -1070,6 +1328,8 @@ __all__ = [
     "AbsoluteWindow",
     "Activation",
     "AfterTrigger",
+    "AllyPacketRule",
+    "AllyProducer",
     "Always",
     "AmpChainSlot",
     "AtLeast",
@@ -1104,7 +1364,11 @@ __all__ = [
     "OnHitStrikeRule",
     "PAYLOAD_FAMILY",
     "POLICY_IDENTIFIER_FIELDS",
+    "PacketKind",
+    "PacketSpec",
+    "PacketTrigger",
     "Persist",
+    "Persistence",
     "Pool",
     "Probe",
     "RULE_FAMILY_COUNT",
@@ -1112,6 +1376,7 @@ __all__ = [
     "RampPerSecond",
     "RampPerStack",
     "ReceiptOnly",
+    "Recipients",
     "Resistance",
     "ResistanceShredRule",
     "RuleFamily",

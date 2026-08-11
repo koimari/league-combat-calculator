@@ -978,14 +978,25 @@ class TestDreamMakerIsCoupledOnly:
         assert "Dream Maker" not in ITEM_EFFECTS
 
     def test_only_the_coupled_producer_reads_the_blue_bubble_values(self):
-        """A second reader would be a pair-side half arriving unannounced."""
+        """A second reader would be a pair-side half arriving unannounced.
+
+        Three names, not two, since 3.6: the catalog's ally-packet shape table
+        *names* the bubble's keys, because naming a record's value keys is how
+        a producer is identified without spelling its item.  That is a
+        declarative home — it reads no number and prices nothing — and the
+        claim this test makes is about pricers.
+        """
         registry = Path(item_support_effects.__file__).parent
         readers = {
             path.name
             for path in registry.rglob("*.py")
             if "blue_reduction" in path.read_text(encoding="utf-8")
         }
-        assert readers == {"item_effects.py", "item_support_effects.py"}
+        assert readers == {
+            "item_behavior_catalog.py",
+            "item_effects.py",
+            "item_support_effects.py",
+        }
 
 
 class TestAbyssalMaskOwnerHandshake:
@@ -1131,7 +1142,10 @@ class TestEventViewTupleGate:
         """D-03: dropping it disarms a fail-closed raise downstream."""
         assert "Fimbulwinter" in trigger_stream.enriched_view_items()
         body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
-        everlasting = body.split('if "Fimbulwinter" in names:')[1].split("\n    if ")[0]
+        # 3.6 replaced the item-name guard with the declared producer; the
+        # branch is found by the declaration it now reads rather than by the
+        # name it used to spell.
+        everlasting = body.split("if everlasting is not None:")[1].split("\n    if ")[0]
         # P2b moved the read off the raw row and onto the bus; the claim is
         # the same one — the shield carries its trigger's event id, and an
         # unenriched shield carries an absent link rather than an empty one.

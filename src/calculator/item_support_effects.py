@@ -45,6 +45,14 @@ from .item_effects import (
     required_effect_value,
 )
 
+# Phase 3's declarations, and the interpreter that resolves them.  A producer
+# is reached through the rule its registry entry declares — "does this holder
+# declare Everlasting?" — rather than by spelling the item that has it, and
+# every number comes back through the rule's own references, so a key no
+# declaration carries is a stop instead of a silent registry read.
+from .item_behavior import AllyProducer, PacketKind
+from .interpreters.ally_packet import AllyPacketSlot, resolve_slots
+
 # The item layer's one edge into the survival kernel: packet authors declare
 # when their packet arms, in the walk's vocabulary, so there is no second
 # ordering language to keep in sync.  Note the reach — importing
@@ -92,6 +100,26 @@ def _option(attacker: Any, item_name: str, key: str, default: float = 0.0) -> fl
     if not math.isfinite(parsed):
         raise ValueError(f"{item_name}.{key} must be finite")
     return parsed
+
+
+def _producer(
+    slots: Mapping[AllyProducer, tuple[AllyPacketSlot, ...]], producer: AllyProducer
+) -> AllyPacketSlot | None:
+    """This build's one holder of *producer*, or ``None``.
+
+    ``None`` is an answer, not a zero: the build declares the mechanic
+    nowhere, so no packet is owed.  Two holders is a stop — every producer but
+    the support quest is carried by exactly one registry record, and a second
+    one would be two ledgers nothing says how to combine.
+    """
+    found = slots.get(producer, ())
+    if len(found) > 1:
+        raise ValueError(
+            f"{[slot.owner for slot in found]} all declare the "
+            f"{producer.value} producer and no rule says how two of them "
+            "combine"
+        )
+    return found[0] if found else None
 
 
 def _event_time(event: Mapping[str, Any]) -> float:
@@ -188,6 +216,23 @@ def _packet(  # pylint: disable=too-many-arguments
     }
 
 
+# Which declared packet a chained enchanter effect emits, keyed by the kind
+# of the packet that triggered it, and which sourced fraction that packet
+# carries.  Two tables rather than one runtime-computed kind (D-50): the kind
+# a producer emits has to be readable from the declaration, and the fraction
+# it uses has to be readable from the kind.
+_CHAIN_KINDS: Mapping[str, PacketKind] = MappingProxyType(
+    {"heal": PacketKind.HEAL, "shield": PacketKind.SHIELD}
+)
+
+_CHAIN_FRACTION_KEYS: Mapping[PacketKind, str] = MappingProxyType(
+    {
+        PacketKind.HEAL: "heal_chain_fraction",
+        PacketKind.SHIELD: "shield_chain_fraction",
+    }
+)
+
+
 def _support_triggers(
     trigger_effects: Iterable[Mapping[str, Any]], attacker: Any
 ) -> list[Mapping[str, Any]]:
@@ -269,10 +314,11 @@ def _target_by_id(all_actors: Iterable[Any], participant_id: str) -> Any | None:
     )
 
 
-def _selected_teammate(attacker: Any, teammates: list[Any]) -> Any | None:
+def _selected_teammate(attacker: Any, teammates: list[Any], owner: str) -> Any | None:
+    """The teammate the holder's scenario tethered, under *owner*'s options."""
     if not teammates:
         return None
-    raw_index = _option(attacker, "Knight's Vow", "worthy_target_index", 0.0)
+    raw_index = _option(attacker, owner, "worthy_target_index", 0.0)
     index = max(0, min(len(teammates) - 1, int(raw_index)))
     return teammates[index]
 
@@ -424,6 +470,15 @@ def derive_item_support_effects(
     packets: list[dict[str, Any]] = []
     triggers = _support_triggers(trigger_effects, attacker)
     cc_events, damage_events, takedown_events = _bus_streams(result, names)
+    # The build's declared cross-participant producers, resolved once.  Every
+    # migrated branch below asks this map whether the holder declares its
+    # mechanic; the branches still spelling an item name are the producers
+    # the remaining commits of 3.6 migrate.
+    slots = resolve_slots(names)
+    starlit_grace = _producer(slots, AllyProducer.STARLIT_GRACE)
+    soul_siphon = _producer(slots, AllyProducer.SOUL_SIPHON)
+    consonance = _producer(slots, AllyProducer.CONSONANCE)
+    going_sledding = _producer(slots, AllyProducer.GOING_SLEDDING)
 
     # Reap is a progression/economy branch, not a guessed combat bonus.  The
     # authored minion-kill count is bounded by its sourced 100-kill quest and
@@ -501,7 +556,9 @@ def derive_item_support_effects(
     # current-mana threshold and cooldown are resolved from the same ordered
     # cast receipt that drives resource admission; no cast or crowd-control
     # state is inferred from a spell name.
-    if "Fimbulwinter" in names:
+    everlasting = _producer(slots, AllyProducer.EVERLASTING)
+    if everlasting is not None:
+        everlasting.declared(PacketKind.SHIELD)
         is_melee = bool(attacker.stats.get("is_melee", False))
         champion_stats = result.get("champion_stats", attacker.stats)
         if not isinstance(champion_stats, Mapping):
@@ -510,16 +567,14 @@ def derive_item_support_effects(
             0.0,
             float(champion_stats.get("max_mana", attacker.stats.get("max_mana", 0.0))),
         )
-        mana_threshold_ratio = required_effect_value(
-            "Fimbulwinter", "everlasting_mana_threshold_ratio"
-        )
+        mana_threshold_ratio = everlasting.value("everlasting_mana_threshold_ratio")
         nearby_enemy_count = sum(
             1 for actor in all_actors if not _same_side(attacker, actor)
         )
-        cooldown = required_effect_value("Fimbulwinter", "everlasting_cooldown")
+        cooldown = everlasting.value("everlasting_cooldown")
         last_activation = float("-inf")
         seen_casts: set[str] = set()
-        source_meta = ITEM_INPUT_OPTIONS["Fimbulwinter"]
+        source_meta = ITEM_INPUT_OPTIONS[everlasting.owner]
         for event in cc_events:
             trigger_kind = _everlasting_trigger_kind(event)
             if not trigger_kind or (trigger_kind == "slow" and not is_melee):
@@ -540,18 +595,13 @@ def derive_item_support_effects(
             ):
                 continue
             multiplier = (
-                required_effect_value(
-                    "Fimbulwinter", "everlasting_multi_target_multiplier"
-                )
+                everlasting.value("everlasting_multi_target_multiplier")
                 if nearby_enemy_count > 1
                 else 1.0
             )
             amount = (
-                required_effect_value("Fimbulwinter", "everlasting_base_shield")
-                + current_mana
-                * required_effect_value(
-                    "Fimbulwinter", "everlasting_current_mana_ratio"
-                )
+                everlasting.value("everlasting_base_shield")
+                + current_mana * everlasting.value("everlasting_current_mana_ratio")
             ) * multiplier
             packets.append(
                 _packet(
@@ -561,9 +611,7 @@ def derive_item_support_effects(
                     kind="shield",
                     source="Fimbulwinter — Everlasting",
                     amount=amount,
-                    duration=required_effect_value(
-                        "Fimbulwinter", "everlasting_duration"
-                    ),
+                    duration=everlasting.value("everlasting_duration"),
                     target_scope="self",
                     trigger=trigger_kind,
                     # ``None`` when the producer did not enrich: the survival
@@ -774,13 +822,13 @@ def derive_item_support_effects(
     # The holder guard sat *inside* the loop as a ``break``, which reads as a
     # loop condition and is really a name guard — the one shape the capability
     # projections cannot see.  Same packets, same order.
-    if "Cryptbloom" in names:
+    nova = _producer(slots, AllyProducer.LIFE_FROM_DEATH)
+    if nova is not None:
+        nova.declared(PacketKind.HEAL)
         for takedown in takedown_events:
-            amount = ally_item_effect_value(
-                "Cryptbloom", "life_from_death_base_heal"
-            ) + (
+            amount = nova.value("life_from_death_base_heal") + (
                 float(attacker.stats.get("ability_power", 0.0) or 0.0)
-                * ally_item_effect_value("Cryptbloom", "life_from_death_ap_ratio")
+                * nova.value("life_from_death_ap_ratio")
             )
             for recipient in (attacker, *teammates):
                 packets.append(
@@ -791,14 +839,10 @@ def derive_item_support_effects(
                         kind="heal",
                         source="Cryptbloom — Life From Death",
                         amount=amount,
-                        duration=ally_item_effect_value(
-                            "Cryptbloom", "life_from_death_nova_duration"
-                        ),
+                        duration=nova.value("life_from_death_nova_duration"),
                         target_scope="nova_allied_champions",
                         trigger="explicit_takedown_within_damage_window",
-                        cooldown=ally_item_effect_value(
-                            "Cryptbloom", "life_from_death_cooldown"
-                        ),
+                        cooldown=nova.value("life_from_death_cooldown"),
                     )
                 )
 
@@ -861,32 +905,34 @@ def derive_item_support_effects(
                     for recipient in (attacker, target)
                 )
             )
-        if "Moonstone Renewer" in names:
+        if starlit_grace is not None:
             candidates = [
                 actor
                 for actor in teammates
                 if actor.participant_id != target.participant_id
             ]
             chain_target = candidates[0] if candidates else target
-            fraction_key = (
-                "heal_chain_fraction"
-                if str(trigger.get("kind")) == "heal"
-                else "shield_chain_fraction"
-            )
+            # D-50: the chained packet's kind used to be computed from the
+            # trigger at runtime, which no static reader could resolve — not
+            # Phase 1's ``PacketSource``, not a family assignment.  Starlit
+            # Grace declares *two* packets instead, one per kind it chains,
+            # and the trigger selects between them.  A third kind is a stop
+            # rather than a packet nothing declared; ``_support_triggers``
+            # admits only heal and shield, so no live trigger can reach it.
+            chained = _CHAIN_KINDS[str(trigger.get("kind", "shield"))]
+            starlit_grace.declared(chained)
+            fraction = starlit_grace.value(_CHAIN_FRACTION_KEYS[chained])
             packets.append(
                 _packet(
                     attacker=attacker,
                     target=chain_target,
                     time=time,
-                    kind=str(trigger.get("kind", "shield")),
+                    kind=chained.value,
                     source="Moonstone Renewer — Starlit Grace",
-                    amount=float(trigger.get("amount", 0.0))
-                    * ally_item_effect_value("Moonstone Renewer", fraction_key),
+                    amount=float(trigger.get("amount", 0.0)) * fraction,
                     duration=float(trigger.get("duration", 0.0) or 0.0),
                     target_scope="other_nearest_wounded_ally",
-                    chain_fraction=ally_item_effect_value(
-                        "Moonstone Renewer", fraction_key
-                    ),
+                    chain_fraction=fraction,
                 )
             )
         if "Dream Maker" in names:
@@ -946,24 +992,19 @@ def derive_item_support_effects(
                     ),
                 )
             )
-        if "Echoes of Helia" in names:
+        if soul_siphon is not None:
             # Soul Charges read every authored row's raw number, so this
             # branch reads the damage stream whole rather than the stack
             # ledgers' filtered view — and reads it off the bus, where a row
             # that is not a Mapping cannot reach a ``.get`` at all.  That
             # missing guard is what made a tuple ledger an AttributeError
             # here and a silent zero everywhere else.
+            soul_siphon.declared(PacketKind.HEAL)
             raw_damage = sum(
                 event.raw_damage or event.damage for event in damage_events
             )
-            cap = ally_item_level_value(
-                "Echoes of Helia", "charge_cap_min", "charge_cap_max", target.level
-            )
-            charges = min(
-                cap,
-                raw_damage
-                * ally_item_effect_value("Echoes of Helia", "charge_damage_ratio"),
-            )
+            cap = soul_siphon.level_value("charge_cap_min", target.level)
+            charges = min(cap, raw_damage * soul_siphon.value("charge_damage_ratio"))
             if charges > 0.0:
                 packets.append(
                     _packet(
@@ -981,7 +1022,8 @@ def derive_item_support_effects(
                 # shield; subsequent triggers in this authored window do not
                 # duplicate the same stored pool.
                 break
-        if "Diadem of Songs" in names:
+        if consonance is not None:
+            consonance.declared(PacketKind.HEAL)
             wounded = target
             packets.append(
                 _packet(
@@ -991,13 +1033,9 @@ def derive_item_support_effects(
                     kind="heal",
                     source="Diadem of Songs — Consonance",
                     amount=float(attacker.stats.get("mana", 0.0))
-                    * ally_item_effect_value(
-                        "Diadem of Songs", "consonance_max_mana_ratio"
-                    ),
+                    * consonance.value("consonance_max_mana_ratio"),
                     target_scope="nearest_most_wounded_ally",
-                    cooldown=ally_item_effect_value(
-                        "Diadem of Songs", "consonance_cooldown"
-                    ),
+                    cooldown=consonance.value("consonance_cooldown"),
                 )
             )
 
@@ -1050,7 +1088,8 @@ def derive_item_support_effects(
                         trigger="authored_immobilize_or_slow",
                     )
                 )
-        if "Solstice Sleigh" in names and teammates:
+        if going_sledding is not None and teammates:
+            going_sledding.declared(PacketKind.TEMPORARY_HEALTH)
             target = teammates[0]
             for recipient in (attacker, target):
                 packets.append(
@@ -1060,17 +1099,14 @@ def derive_item_support_effects(
                         time=time,
                         kind="temporary_health",
                         source="Solstice Sleigh — Going Sledding",
-                        amount=ally_item_level_value(
-                            "Solstice Sleigh",
-                            "temporary_health_min",
-                            "temporary_health_max",
-                            recipient.level,
+                        amount=going_sledding.level_value(
+                            "temporary_health_min", recipient.level
                         ),
-                        duration=ally_item_effect_value("Solstice Sleigh", "duration"),
-                        bonus_move_speed_percent=ally_item_effect_value(
-                            "Solstice Sleigh", "bonus_move_speed_percent"
+                        duration=going_sledding.value("duration"),
+                        bonus_move_speed_percent=going_sledding.value(
+                            "bonus_move_speed_percent"
                         ),
-                        cooldown=ally_item_effect_value("Solstice Sleigh", "cooldown"),
+                        cooldown=going_sledding.value("cooldown"),
                         target_scope=(
                             "self" if recipient is attacker else "most_wounded_ally"
                         ),
@@ -1287,17 +1323,21 @@ def schedule_knights_vow(
 ) -> None:
     """Attach one deterministic Worthy tether and redirect/heal receipts."""
     for holder in all_actors:
-        if "Knight's Vow" not in _item_names(holder):
+        sacrifice = _producer(
+            resolve_slots(_item_names(holder)), AllyProducer.SACRIFICE
+        )
+        if sacrifice is None:
             continue
+        sacrifice.declared(PacketKind.HEAL)
         teammates = _teammates(holder, all_actors)
-        target = _selected_teammate(holder, teammates)
+        target = _selected_teammate(holder, teammates, sacrifice.owner)
         if target is None:
             continue
-        fraction = ally_item_effect_value("Knight's Vow", "redirect_fraction")
-        heal_fraction = ally_item_effect_value("Knight's Vow", "holder_heal_fraction")
-        within_range = _option(holder, "Knight's Vow", "worthy_within_range", 1.0)
+        fraction = sacrifice.value("redirect_fraction")
+        heal_fraction = sacrifice.value("holder_heal_fraction")
+        within_range = _option(holder, sacrifice.owner, "worthy_within_range", 1.0)
         holder_health_ready = _option(
-            holder, "Knight's Vow", "holder_above_30_percent", 1.0
+            holder, sacrifice.owner, "holder_above_30_percent", 1.0
         )
         # Pledge is unit-targeted and only operates inside 1250 units.  The
         # roster has no spatial coordinates, so the scenario must expose the
@@ -1331,14 +1371,12 @@ def schedule_knights_vow(
             event["redirect_target"] = holder.participant_id
             event["redirect_source"] = "Knight's Vow — Sacrifice"
             event["redirect_pre_mitigation_required"] = True
-            event["redirect_holder_health_ratio"] = ally_item_effect_value(
-                "Knight's Vow", "holder_health_threshold_ratio"
+            event["redirect_holder_health_ratio"] = sacrifice.value(
+                "holder_health_threshold_ratio"
             )
-            event["redirect_range_units"] = ally_item_effect_value(
-                "Knight's Vow", "worthy_range_units"
-            )
+            event["redirect_range_units"] = sacrifice.value("worthy_range_units")
             event["redirect_source_revision_id"] = int(
-                ally_item_effect_value("Knight's Vow", "source_revision_id")
+                sacrifice.value("source_revision_id")
             )
         for event in outgoing.get(target.participant_id, []):
             if str(event.get("damage_type", "")) not in {"physical", "magic", "true"}:
@@ -1356,15 +1394,11 @@ def schedule_knights_vow(
                     amount=amount * heal_fraction,
                     target_scope="holder_from_worthy_damage",
                     healing_category="knights_vow",
-                    requires_holder_health_ratio=ally_item_effect_value(
-                        "Knight's Vow", "holder_health_threshold_ratio"
+                    requires_holder_health_ratio=sacrifice.value(
+                        "holder_health_threshold_ratio"
                     ),
-                    range_units=ally_item_effect_value(
-                        "Knight's Vow", "worthy_range_units"
-                    ),
-                    source_revision_id=int(
-                        ally_item_effect_value("Knight's Vow", "source_revision_id")
-                    ),
+                    range_units=sacrifice.value("worthy_range_units"),
+                    source_revision_id=int(sacrifice.value("source_revision_id")),
                 )
             )
 

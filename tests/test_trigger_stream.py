@@ -27,7 +27,9 @@ from types import MappingProxyType, SimpleNamespace
 import pytest
 
 from src.calculator import damage
+from src.calculator import item_behavior_catalog as catalog
 from src.calculator import trigger_stream as ts
+from src.calculator.item_behavior import AllyProducer
 from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
     IMMOBILIZING_CC_KINDS,
@@ -85,6 +87,32 @@ def _enclosing(tree: ast.AST, node: ast.AST) -> str:
             if best is None or candidate.lineno > best.lineno:
                 best = candidate
     return best.name if best else "<module>"
+
+
+def _declared_guard_names(function: ast.AST) -> frozenset[str]:
+    """Every item this function guards through a Phase 3 ally-packet producer.
+
+    Phase 3's ``3.6`` replaces ``if "Fimbulwinter" in names`` with a guard on
+    the declared producer the holder's registry entry carries, so A3's
+    question — "does this impl guard exactly the items it declares?" — has to
+    be asked of both guard forms or it would read a migrated branch as an
+    unguarded one.  The producer is mapped back to its owners by
+    ``item_behavior_catalog.owners_for``, which derives the answer from the
+    registries; nothing here is a name list.
+    """
+    producers: set[str] = set()
+    for node in ast.walk(function):
+        if (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "AllyProducer"
+        ):
+            producers.add(node.attr)
+    return frozenset(
+        owner
+        for producer in producers
+        for owner in catalog.owners_for(AllyProducer[producer])
+    )
 
 
 def _guarded_names(function: ast.AST) -> frozenset[str]:
@@ -991,7 +1019,8 @@ def name_guarded_impls(
         declared.setdefault(capability.impl, set()).add(capability.owner.name)
     return {
         impl: (
-            _guarded_names(_function_node(sources[_impl_path(impl)], impl)),
+            _guarded_names(_function_node(sources[_impl_path(impl)], impl))
+            | _declared_guard_names(_function_node(sources[_impl_path(impl)], impl)),
             frozenset(names),
         )
         for impl, names in sorted(declared.items())

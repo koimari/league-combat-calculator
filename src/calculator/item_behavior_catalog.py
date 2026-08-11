@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import quote
@@ -38,11 +39,14 @@ from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
     AbsoluteWindow,
     AfterTrigger,
+    AllyPacketRule,
+    AllyProducer,
     Always,
     AmpChainSlot,
     AtLeast,
     Attribution,
     Basis,
+    Compilability,
     Compilable,
     Comparison,
     BonusTyping,
@@ -58,9 +62,14 @@ from .item_behavior import (
     MeleeRangedSplit,
     NoFloor,
     OnHitStrikeRule,
+    PacketKind,
+    PacketSpec,
+    PacketTrigger,
     Persist,
+    Persistence,
     Pool,
     Probe,
+    Recipients,
     RULE_FAMILY_COUNT,
     RampModel,
     RampPerSecond,
@@ -87,6 +96,7 @@ from .survival.actions import ActionKind
 from .value_ref import (
     Const,
     DerivedValueRef,
+    LevelValueRef,
     SourceReceipt,
     ValueRef,
     ValueRegistry,
@@ -411,7 +421,13 @@ ALLY_DELTA_AMP_KEYS: frozenset[str] = frozenset(
 # ``expose_weakness_*`` keys as its ally record, and reading them there would
 # claim the pair-side spellblade entry declares an amplifier it does not.
 SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
-    "ITEM_EFFECTS": {"damage_amp_per_second": RuleFamily.DELTA_AMP},
+    "ITEM_EFFECTS": {
+        "damage_amp_per_second": RuleFamily.DELTA_AMP,
+        # An ally packet hung on an item-registry record.  The key is the
+        # producer's own signature key from ALLY_ENTRY_SHAPES, so the two
+        # tables cannot name different keys for one mechanic.
+        "everlasting_base_shield": RuleFamily.ALLY_PACKET,
+    },
     "ALLY_ITEM_EFFECTS": {
         key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)
     },
@@ -1284,6 +1300,563 @@ def _compile_resistance_shred(
     return tuple(rules)
 
 
+# ── ally packets (3.6) ────────────────────────────────────────────────────
+#
+# The one family whose mechanics share no arithmetic.  Redemption heals a
+# radius and Phage grants move speed; what they have in common is only the
+# *shape of the emission* — which producer, what kinds, to whom, on what
+# trigger — so that is what the declarations say, and the emitters in
+# ``item_support_effects`` read their numbers back through the rule instead of
+# spelling an item's name.
+#
+# Dispatch is on the entry's **value keys**, the device ``ALLY_DELTA_AMP_SLOTS``
+# already uses for the same registry and for the same reason: an
+# ``ALLY_ITEM_EFFECTS`` record carries no effect tag, so the only thing that
+# can identify its mechanic without naming its item is the set of keys its
+# numbers live under.
+
+# The three keys every registry entry may carry that are citations rather than
+# numbers.  Excluded from shape matching so a record that grows a citation
+# does not stop matching the mechanic it has always been.
+CITATION_KEYS: frozenset[str] = frozenset(
+    {"source_url", "source_revision_id", "source_revision_timestamp"}
+)
+
+# The packet kinds the compiled score kernel can stage.  ``shield`` and
+# ``heal`` are the two ``survival/compile.unrepresentable_template_receipt``
+# admits as support templates; ``damage`` is not a support template at all and
+# rides the compiled damage walk like any other damage row.
+COMPILED_SUPPORT_KINDS: frozenset[PacketKind] = frozenset(
+    {PacketKind.HEAL, PacketKind.SHIELD, PacketKind.DAMAGE}
+)
+
+COMPILED_KERNEL_CANNOT_REDIRECT = ReceiptOnly(
+    "the compiled score kernel cannot represent a producer that re-routes "
+    "another participant's incoming damage: the redirect is stamped on the "
+    "victim's own events by the receipt scheduler, which the score ledger "
+    "does not run (survival/compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS "
+    "records the same fact per item)"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class EntryShape:
+    """Which registry entry carries a producer, said in value keys.
+
+    Matching differs by registry, and the difference is a property of the
+    registries rather than a convenience.  ``ALLY_ITEM_EFFECTS`` is
+    hand-authored and refresh-**inert** (D-47), so its records do not grow
+    keys on patch day and the match can be exact — an entry whose key set
+    stops equalling its shape is a defect somebody must look at.
+    ``ITEM_EFFECTS`` is parsed from the wiki on every refresh, so a match that
+    demanded equality there would fail the first time a page grew a number;
+    the first key is a **signature** instead, and the rest must accompany it —
+    a record carrying the signature and missing the rest is a broken parse,
+    never an item that quietly emits nothing.
+    """
+
+    registry: ValueRegistry
+    keys: tuple[str, ...]
+
+    def matches(self, entry: Mapping[str, Any]) -> bool:
+        """Whether *entry* carries this producer."""
+        if self.registry == "ALLY_ITEM_EFFECTS":
+            return frozenset(entry) - CITATION_KEYS == frozenset(self.keys)
+        return self.keys[0] in entry
+
+    def missing(self, entry: Mapping[str, Any]) -> tuple[str, ...]:
+        """The signature's companion keys *entry* does not carry."""
+        return tuple(key for key in self.keys if key not in entry)
+
+
+@dataclass(frozen=True, slots=True)
+class AllyPacketDeclaration:
+    """One cross-participant producer's shape, before an owner is known.
+
+    Owner-free on purpose: two items carry the support quest and the
+    declaration is the same declaration for both, so binding it to an owner
+    would be the item-name literal this migration removes coming back as a
+    table key.
+    """
+
+    trigger: PacketTrigger
+    packets: tuple[PacketSpec, ...]
+    secondary_target: Recipients | None
+    persistence: Persistence
+    redirects_incoming_damage: bool
+    reads: tuple[str, ...]
+    ramps: tuple[tuple[str, str], ...]
+    zero_reason: str
+
+
+# Two records carry two mechanics each, so two producers share one shape:
+# Dream Maker's blue and purple bubbles are one item's two bubbles with two
+# packet sources, and the support quest's gold and ward are two outcomes of
+# one quest carried by whichever transformed item is equipped.
+_DREAM_KEYS: tuple[str, ...] = (
+    "blue_reduction_max",
+    "blue_reduction_min",
+    "dream_duration",
+    "level_scaling_start",
+    "purple_magic_max",
+    "purple_magic_min",
+)
+
+_QUEST_KEYS: tuple[str, ...] = ("support_quest_threshold", "ward_charges")
+
+# Which commit of 3.6 retires each remaining producer's stub.  Named once so
+# the three groups cannot drift into three spellings.
+_STAT_BUFF_SLICE = "3.6 — stat buffs and cross-participant modifiers"
+_UTILITY_SLICE = "3.6 — utility and quest outcomes"
+_ACTIVES_SLICE = "3.6 — explicit item actives"
+
+
+# Every producer's entry shape, including the ones whose emitter has not
+# migrated yet: the closure below asserts that every ``ALLY_ITEM_EFFECTS``
+# record is claimed by one, and a shape table missing the unmigrated half
+# could not make that claim on the commit that first states it.
+ALLY_ENTRY_SHAPES: Mapping[AllyProducer, EntryShape] = {
+    AllyProducer.EVERLASTING: EntryShape(
+        "ITEM_EFFECTS",
+        (
+            "everlasting_base_shield",
+            "everlasting_cooldown",
+            "everlasting_current_mana_ratio",
+            "everlasting_duration",
+            "everlasting_mana_threshold_ratio",
+            "everlasting_multi_target_multiplier",
+        ),
+    ),
+    AllyProducer.LIFE_FROM_DEATH: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "life_from_death_ap_ratio",
+            "life_from_death_base_heal",
+            "life_from_death_cooldown",
+            "life_from_death_nova_duration",
+        ),
+    ),
+    AllyProducer.STARLIT_GRACE: EntryShape(
+        "ALLY_ITEM_EFFECTS", ("heal_chain_fraction", "shield_chain_fraction")
+    ),
+    AllyProducer.SOUL_SIPHON: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        ("charge_cap_max", "charge_cap_min", "charge_damage_ratio"),
+    ),
+    AllyProducer.CONSONANCE: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "consonance_cooldown",
+            "consonance_max_mana_ratio",
+            "harmony_bonus_mana_ratio",
+        ),
+    ),
+    AllyProducer.GOING_SLEDDING: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "bonus_move_speed_percent",
+            "cooldown",
+            "duration",
+            "level_scaling_start",
+            "temporary_health_max",
+            "temporary_health_min",
+        ),
+    ),
+    AllyProducer.SACRIFICE: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "holder_heal_fraction",
+            "holder_health_threshold_ratio",
+            "redirect_fraction",
+            "worthy_range_units",
+        ),
+    ),
+    AllyProducer.SANCTIFY: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "sanctify_bonus_attack_speed",
+            "sanctify_duration",
+            "sanctify_on_hit_magic",
+        ),
+    ),
+    AllyProducer.RAPIDS: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        ("bonus_ability_haste", "bonus_ability_power", "duration"),
+    ),
+    AllyProducer.FANFARE: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "fanfare_ally_attack_speed_melee",
+            "fanfare_ally_attack_speed_ranged",
+            "fanfare_bonus_move_speed",
+            "fanfare_duration_melee",
+            "fanfare_duration_ranged",
+        ),
+    ),
+    AllyProducer.UNMAKE: EntryShape("ALLY_ITEM_EFFECTS", ("magic_damage_amp",)),
+    AllyProducer.EXPOSE_WEAKNESS: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "expose_weakness_cooldown",
+            "expose_weakness_duration",
+            "expose_weakness_melee",
+            "expose_weakness_ranged",
+        ),
+    ),
+    AllyProducer.CARVE: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "armor_reduction_duration",
+            "armor_reduction_max_stacks",
+            "armor_reduction_per_stack",
+        ),
+    ),
+    AllyProducer.VILE_DECAY: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        ("mr_reduction_duration", "mr_reduction_max_stacks", "mr_reduction_per_stack"),
+    ),
+    AllyProducer.BLUE_BUBBLE: EntryShape("ALLY_ITEM_EFFECTS", _DREAM_KEYS),
+    AllyProducer.PURPLE_BUBBLE: EntryShape("ALLY_ITEM_EFFECTS", _DREAM_KEYS),
+    AllyProducer.COMMAND: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        ("command_damage_amp", "command_duration", "control_ability_haste"),
+    ),
+    AllyProducer.REAP: EntryShape(
+        "ITEM_EFFECTS",
+        ("reap_gold_per_minion", "reap_completion_gold", "reap_max_gold"),
+    ),
+    AllyProducer.RAGE: EntryShape(
+        "ITEM_EFFECTS",
+        (
+            "rage_duration",
+            "rage_bonus_move_speed_melee",
+            "rage_bonus_move_speed_ranged",
+        ),
+    ),
+    AllyProducer.SHARED_RICHES: EntryShape("ITEM_EFFECTS", _QUEST_KEYS),
+    AllyProducer.WARD: EntryShape("ITEM_EFFECTS", _QUEST_KEYS),
+    AllyProducer.DEVOTION: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        ("level_scaling_start", "shield_duration", "shield_max", "shield_min"),
+    ),
+    AllyProducer.PURIFY: EntryShape("ALLY_ITEM_EFFECTS", ("heal_max", "heal_min")),
+    AllyProducer.INTERVENTION: EntryShape(
+        "ALLY_ITEM_EFFECTS",
+        (
+            "beam_delay",
+            "cooldown",
+            "enemy_max_health_true_damage_ratio",
+            "heal_max",
+            "heal_min",
+            "target_area_range_units",
+            "target_area_reveal_duration",
+        ),
+    ),
+    AllyProducer.INSPIRING_SPEECH: EntryShape(
+        "ALLY_ITEM_EFFECTS", ("bonus_move_speed_percent", "duration")
+    ),
+    AllyProducer.BREAKING_SHOCKWAVE: EntryShape(
+        "ITEM_EFFECTS",
+        (
+            "front_offset",
+            "area_radius",
+            "bonus_move_speed_duration",
+            "bonus_move_speed_percent",
+            "slow_duration",
+            "slow_percent",
+        ),
+    ),
+}
+
+
+# One entry per migrated producer.  Each slice of 3.6 moves a producer group
+# from ``ALLY_PACKET_UNMIGRATED_PRODUCERS`` to here together with its emitter,
+# so a declaration never lands without the code that reads it.
+ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
+    AllyProducer.EVERLASTING: AllyPacketDeclaration(
+        trigger=PacketTrigger.CROWD_CONTROL,
+        packets=(PacketSpec(PacketKind.SHIELD, Recipients.SELF),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "everlasting_mana_threshold_ratio",
+            "everlasting_cooldown",
+            "everlasting_multi_target_multiplier",
+            "everlasting_base_shield",
+            "everlasting_current_mana_ratio",
+            "everlasting_duration",
+        ),
+        ramps=(),
+        zero_reason=(
+            "the shield is a sourced base plus a sourced share of the mana the "
+            "ordered cast receipt says the holder still had; a zero means the "
+            "receipt measured no qualifying immobilize"
+        ),
+    ),
+    AllyProducer.LIFE_FROM_DEATH: AllyPacketDeclaration(
+        trigger=PacketTrigger.TAKEDOWN,
+        packets=(PacketSpec(PacketKind.HEAL, Recipients.HOLDER_AND_ALLIES),),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=(
+            "life_from_death_base_heal",
+            "life_from_death_ap_ratio",
+            "life_from_death_nova_duration",
+            "life_from_death_cooldown",
+        ),
+        ramps=(),
+        zero_reason=(
+            "the nova is a sourced base plus a sourced share of the holder's "
+            "ability power; a zero means the authored stream carried no "
+            "takedown, which the walk measured"
+        ),
+    ),
+    AllyProducer.STARLIT_GRACE: AllyPacketDeclaration(
+        trigger=PacketTrigger.ALLY_HEAL_OR_SHIELD,
+        packets=(
+            PacketSpec(PacketKind.HEAL, Recipients.OTHER_ALLY),
+            PacketSpec(PacketKind.SHIELD, Recipients.OTHER_ALLY),
+        ),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=("heal_chain_fraction", "shield_chain_fraction"),
+        ramps=(),
+        zero_reason=(
+            "the chain is a sourced share of the heal or shield that triggered "
+            "it; a zero means the triggering packet carried nothing to chain"
+        ),
+    ),
+    AllyProducer.SOUL_SIPHON: AllyPacketDeclaration(
+        trigger=PacketTrigger.ALLY_HEAL_OR_SHIELD,
+        packets=(PacketSpec(PacketKind.HEAL, Recipients.TRIGGERING_ALLY),),
+        secondary_target=None,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=False,
+        reads=("charge_damage_ratio",),
+        ramps=(("charge_cap_min", "charge_cap_max"),),
+        zero_reason=(
+            "the heal is the stored charge pool, a sourced share of the "
+            "authored damage capped by a sourced level ramp; a zero means the "
+            "ledger carried no damage to charge from"
+        ),
+    ),
+    AllyProducer.CONSONANCE: AllyPacketDeclaration(
+        trigger=PacketTrigger.ALLY_HEAL_OR_SHIELD,
+        packets=(PacketSpec(PacketKind.HEAL, Recipients.TRIGGERING_ALLY),),
+        secondary_target=None,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=False,
+        reads=("consonance_max_mana_ratio", "consonance_cooldown"),
+        ramps=(),
+        zero_reason=(
+            "the heal is a sourced share of the holder's own mana pool; a zero "
+            "means the holder has no mana, which the stat block measured"
+        ),
+    ),
+    AllyProducer.GOING_SLEDDING: AllyPacketDeclaration(
+        trigger=PacketTrigger.CROWD_CONTROL,
+        packets=(
+            PacketSpec(
+                PacketKind.TEMPORARY_HEALTH, Recipients.HOLDER_AND_SELECTED_ALLY
+            ),
+        ),
+        secondary_target=None,
+        persistence=Persistence.TIMED_WINDOW,
+        redirects_incoming_damage=False,
+        reads=("duration", "bonus_move_speed_percent", "cooldown"),
+        ramps=(("temporary_health_min", "temporary_health_max"),),
+        zero_reason=(
+            "the temporary health is a sourced level ramp read at the "
+            "recipient's own level; a zero means no authored control landed"
+        ),
+    ),
+    AllyProducer.SACRIFICE: AllyPacketDeclaration(
+        trigger=PacketTrigger.ALLY_DAMAGE_DEALT,
+        packets=(PacketSpec(PacketKind.HEAL, Recipients.SELF),),
+        secondary_target=None,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=True,
+        reads=(
+            "redirect_fraction",
+            "holder_heal_fraction",
+            "holder_health_threshold_ratio",
+            "worthy_range_units",
+            "source_revision_id",
+        ),
+        ramps=(),
+        zero_reason=(
+            "the holder's heal is a sourced share of the damage the Worthy "
+            "ally dealt; a zero means the Worthy dealt none, which the "
+            "outgoing ledger measured"
+        ),
+    ),
+}
+
+
+# Which slice of 3.6 retires each producer's stub, in the idiom
+# :data:`DELTA_AMP_UNMIGRATED_TAGS` uses for the other partly-migrated family:
+# a family whose compiler is real no longer appears in
+# :data:`UNMIGRATED_FAMILIES`, so without this the promises would disappear
+# with the stub rather than being kept.
+ALLY_PACKET_UNMIGRATED_PRODUCERS: Mapping[AllyProducer, str] = {
+    AllyProducer.SANCTIFY: _STAT_BUFF_SLICE,
+    AllyProducer.RAPIDS: _STAT_BUFF_SLICE,
+    AllyProducer.FANFARE: _STAT_BUFF_SLICE,
+    AllyProducer.UNMAKE: _STAT_BUFF_SLICE,
+    AllyProducer.EXPOSE_WEAKNESS: _STAT_BUFF_SLICE,
+    AllyProducer.CARVE: _STAT_BUFF_SLICE,
+    AllyProducer.VILE_DECAY: _STAT_BUFF_SLICE,
+    AllyProducer.BLUE_BUBBLE: _STAT_BUFF_SLICE,
+    AllyProducer.PURPLE_BUBBLE: _STAT_BUFF_SLICE,
+    AllyProducer.COMMAND: _STAT_BUFF_SLICE,
+    AllyProducer.REAP: _UTILITY_SLICE,
+    AllyProducer.RAGE: _UTILITY_SLICE,
+    AllyProducer.SHARED_RICHES: _UTILITY_SLICE,
+    AllyProducer.WARD: _UTILITY_SLICE,
+    AllyProducer.DEVOTION: _ACTIVES_SLICE,
+    AllyProducer.PURIFY: _ACTIVES_SLICE,
+    AllyProducer.INTERVENTION: _ACTIVES_SLICE,
+    AllyProducer.INSPIRING_SPEECH: _ACTIVES_SLICE,
+    AllyProducer.BREAKING_SHOCKWAVE: _ACTIVES_SLICE,
+}
+
+
+def _ally_compilability(declaration: AllyPacketDeclaration) -> Compilability:
+    """Whether the compiled score kernel can stage this producer's packets.
+
+    Derived from three declared axes rather than judged per item, because a
+    per-item judgement is exactly how sixteen conservatism notes ended up
+    indistinguishable from sixteen representability facts (D-43).  Each
+    refusal names the kernel clause that produces it.
+    """
+    if declaration.redirects_incoming_damage:
+        return COMPILED_KERNEL_CANNOT_REDIRECT
+    unstageable = sorted(
+        spec.kind.value
+        for spec in declaration.packets
+        if spec.kind not in COMPILED_SUPPORT_KINDS
+    )
+    if unstageable:
+        return ReceiptOnly(
+            "the compiled score kernel stages only shield and heal support "
+            "templates: unrepresentable_template_receipt returns "
+            f"support_kind=<kind> for {unstageable}"
+        )
+    if declaration.persistence is not Persistence.SINGLE_MOMENT:
+        return ReceiptOnly(
+            "the compiled score kernel stages only instantaneous support "
+            "templates: unrepresentable_template_receipt returns "
+            "support_duration=<d> for a shield or heal that stays in force"
+        )
+    return Compilable()
+
+
+def _ally_packet_rule(
+    producer: AllyProducer, owner: str, registry: ValueRegistry
+) -> BehaviorRule:
+    """One producer's declaration, bound to the owner whose entry carries it."""
+    declaration = ALLY_PACKET_DECLARATIONS[producer]
+    values: tuple[Any, ...] = tuple(
+        ValueRef(registry, owner, key) for key in declaration.reads
+    ) + tuple(
+        LevelValueRef(registry, owner, minimum, maximum, "registry_start")
+        for minimum, maximum in declaration.ramps
+    )
+    return BehaviorRule(
+        family=RuleFamily.ALLY_PACKET,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.{producer.value}",
+        payload=AllyPacketRule(
+            producer=producer,
+            trigger=declaration.trigger,
+            packets=declaration.packets,
+            secondary_target=declaration.secondary_target,
+            persistence=declaration.persistence,
+            redirects_incoming_damage=declaration.redirects_incoming_damage,
+            values=values,
+        ),
+        compilability=_ally_compilability(declaration),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(Disposition.MEASURED, declaration.zero_reason),
+    )
+
+
+def producers_for(
+    registry: ValueRegistry, entry: Mapping[str, Any]
+) -> tuple[AllyProducer, ...]:
+    """Every ally-packet producer *entry*'s value keys declare.
+
+    A record can carry more than one — Dream Maker's two bubbles and the
+    support quest's gold and ward are two mechanics each, with two packet
+    sources and two capabilities apiece — so this returns a tuple in
+    declaration order rather than an answer.
+    """
+    matched: list[AllyProducer] = []
+    for producer, shape in ALLY_ENTRY_SHAPES.items():
+        if shape.registry != registry or not shape.matches(entry):
+            continue
+        missing = shape.missing(entry)
+        if missing:
+            raise BehaviorCatalogError(
+                f"{registry} declares the {producer.value} producer and is "
+                f"missing {list(missing)}; a partly-parsed producer is a "
+                "registry defect, not an item that quietly emits nothing"
+            )
+        matched.append(producer)
+    return tuple(matched)
+
+
+def owners_for(producer: AllyProducer) -> frozenset[str]:
+    """Every registry owner whose entry carries *producer*.
+
+    The inverse of :func:`producers_for`, derived by walking the registries
+    rather than tabulated: "which item has this mechanic" is a question about
+    the data, and answering it from a list beside the shapes would be the
+    item-name literal this migration removes, re-entering as a lookup table.
+    """
+    shape = ALLY_ENTRY_SHAPES[producer]
+    records = (
+        item_effects.ITEM_EFFECTS
+        if shape.registry == "ITEM_EFFECTS"
+        else item_effects.ALLY_ITEM_EFFECTS
+    )
+    return frozenset(
+        owner
+        for owner, entry in records.items()
+        if isinstance(entry, Mapping)
+        and producer in producers_for(shape.registry, entry)
+    )
+
+
+def _compile_ally_packet(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the cross-participant producers one registry entry declares.
+
+    A producer whose emitter has not migrated yet compiles no rule and is
+    named in :data:`ALLY_PACKET_UNMIGRATED_PRODUCERS` with the slice that
+    retires it — the same refusal-with-a-date :func:`_unmigrated` gives a
+    whole family, at the granularity a partly-migrated family needs.
+    """
+    del family
+    rules = tuple(
+        _ally_packet_rule(producer, owner, registry)
+        for producer in producers_for(registry, entry)
+        if producer in ALLY_PACKET_DECLARATIONS
+    )
+    for rule in rules:
+        validate_rule(rule)
+    return rules
+
+
 def _unmigrated(
     family: RuleFamily,
     owner: str,
@@ -1327,7 +1900,7 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.REACTIVE: _unmigrated,
     RuleFamily.SUSTAIN: _unmigrated,
     RuleFamily.STAT_DERIVATION: _unmigrated,
-    RuleFamily.ALLY_PACKET: _unmigrated,
+    RuleFamily.ALLY_PACKET: _compile_ally_packet,
 }
 
 # Which numbered slice of this phase replaces each family's stub compiler.
@@ -1341,7 +1914,6 @@ UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
     RuleFamily.THRESHOLD_DEFENSE: "3.5",
     RuleFamily.COMBAT_STATE: "3.5",
     RuleFamily.REACTIVE: "3.5",
-    RuleFamily.ALLY_PACKET: "3.6",
     RuleFamily.CRIT_PROFILE: "3.7",
     RuleFamily.DAMAGE_ROUTING: "3.7",
     RuleFamily.SUSTAIN: "3.7",
@@ -1631,6 +2203,72 @@ def _validate_delta_amp_migration() -> None:
         )
 
 
+def _validate_ally_packet_migration() -> None:
+    """Every producer is compiled here or carries the commit that retires it.
+
+    The same record :data:`DELTA_AMP_UNMIGRATED_TAGS` keeps for the other
+    partly-migrated family, and closed the same way: the two tables partition
+    :class:`~.item_behavior.AllyProducer` exactly, so a producer cannot be
+    silently dropped and a kept promise cannot outlive the stub it described.
+    """
+    declared = frozenset(AllyProducer)
+    migrated = frozenset(ALLY_PACKET_DECLARATIONS)
+    promised = frozenset(ALLY_PACKET_UNMIGRATED_PRODUCERS)
+    if migrated & promised:
+        raise BehaviorCatalogError(
+            "an ally-packet producer cannot be both migrated and awaiting a "
+            f"commit: {sorted(p.value for p in migrated & promised)}"
+        )
+    if migrated | promised != declared:
+        raise BehaviorCatalogError(
+            "every AllyProducer is either migrated or carries the commit that "
+            f"retires it; unnamed={sorted(p.value for p in declared - migrated - promised)}"
+        )
+    if frozenset(ALLY_ENTRY_SHAPES) != declared:
+        raise BehaviorCatalogError(
+            "every AllyProducer declares the entry shape that carries it; "
+            f"unshaped={sorted(p.value for p in declared - frozenset(ALLY_ENTRY_SHAPES))}"
+        )
+
+
+def _validate_ally_entry_closure() -> None:
+    """Every ally-registry record is claimed by a producer, and vice versa.
+
+    Both directions, because both failures are real.  A record no producer
+    claims is a mechanic that would silently emit nothing once the emitters
+    stop naming items; a producer no record carries is a declaration against a
+    registry entry that no longer exists, which is the stale-literal failure
+    one layer up.
+    """
+    unclaimed = sorted(
+        owner
+        for owner, entry in item_effects.ALLY_ITEM_EFFECTS.items()
+        if isinstance(entry, Mapping) and not producers_for("ALLY_ITEM_EFFECTS", entry)
+    )
+    if unclaimed:
+        raise BehaviorCatalogError(
+            "every ALLY_ITEM_EFFECTS record is an ally packet by construction "
+            "and must match one producer's value keys; unclaimed="
+            f"{unclaimed}"
+        )
+    carried = {
+        producer
+        for registry, records in (
+            ("ITEM_EFFECTS", item_effects.ITEM_EFFECTS),
+            ("ALLY_ITEM_EFFECTS", item_effects.ALLY_ITEM_EFFECTS),
+        )
+        for entry in records.values()
+        if isinstance(entry, Mapping)
+        for producer in producers_for(registry, entry)
+    }
+    orphans = sorted(producer.value for producer in frozenset(AllyProducer) - carried)
+    if orphans:
+        raise BehaviorCatalogError(
+            f"these producers are declared and no registry record carries "
+            f"them: {orphans}"
+        )
+
+
 def validate_catalog() -> None:
     """Every closure this catalog claims, checked at import.
 
@@ -1643,6 +2281,8 @@ def validate_catalog() -> None:
     _validate_defense_source_closure()
     _validate_compilers()
     _validate_delta_amp_migration()
+    _validate_ally_packet_migration()
+    _validate_ally_entry_closure()
 
 
 validate_catalog()
@@ -1653,6 +2293,14 @@ __all__ = [
     "ASSUMED_CARVE_LEADING_ABILITY_HITS",
     "ALLY_DELTA_AMP_KEYS",
     "ALLY_DELTA_AMP_SLOTS",
+    "ALLY_ENTRY_SHAPES",
+    "ALLY_PACKET_DECLARATIONS",
+    "ALLY_PACKET_UNMIGRATED_PRODUCERS",
+    "AllyPacketDeclaration",
+    "CITATION_KEYS",
+    "COMPILED_KERNEL_CANNOT_REDIRECT",
+    "COMPILED_SUPPORT_KINDS",
+    "EntryShape",
     "CACHED_ITEM_SOURCE",
     "CACHED_RUNE_SOURCE",
     "COMPILED_KERNEL_CANNOT_AMP",
@@ -1682,6 +2330,8 @@ __all__ = [
     "entry_families",
     "keystone_entries",
     "defense_source_labels",
+    "owners_for",
+    "producers_for",
     "registry_entries",
     "registry_owners",
     "rule_owners",

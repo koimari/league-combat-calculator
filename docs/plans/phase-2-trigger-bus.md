@@ -120,7 +120,7 @@ registry projects the five hand-maintained holder name sets, so the two gates th
 - **Solstice Sleigh is tuple-incapable by declaration** (D-02) — its branch is nested inside
   `for cc in cc_events:` and today it is protected only by a `healthRegen.percent` coincidence.
   **Fimbulwinter needs the enriched view** (D-03) — it carries a
-  `_trigger_event_id` (`item_support_effects.py:573`), and dropping it strips the only
+  `_trigger_event_id` (`item_support_effects.py:621`), and dropping it strips the only
   trigger link any support author emits, the one the fail-closed
   `support_trigger_link` raise at `survival/compile.py:938` exists to refuse.
 
@@ -128,7 +128,7 @@ registry projects the five hand-maintained holder name sets, so the two gates th
   `survival/compile.py` Shape row below undischarged** — flagged as a lane-authored
   plan-text change the way this phase's other five are, so the next verifier adjudicates
   it. The spelling was `_trigger_event_id=event.get("_event_id")`, which P2b retired when
-  the scan moved onto the bus: `item_support_effects.py:573` reads
+  the scan moved onto the bus: `item_support_effects.py:621` reads
   `_trigger_event_id=event.event_id or None`. The verb was "disarms", and it overstated:
   Everlasting's shield carries a 3.0 s `duration`, so
   `unrepresentable_template_receipt` declines it one branch earlier and the trigger-link
@@ -238,7 +238,7 @@ registry projects the five hand-maintained holder name sets, so the two gates th
 | `src/calculator/item_support_effects.py` | `_CC_TRIGGER_KINDS`, the four scanners, the five name sets and three `has_*` helpers deleted; Phage's (`:349-355`) and Echoes of Helia's (`:797-804`) inline row loops read the bus; two guard forms normalized |
 | `src/calculator/pipeline.py` | tuple gate (`:994`) reads `tuple_incapable_items()`; the `item_support_effects` import is gone |
 | `src/calculator/participant_timeline.py` | enrichment gate (`:2613`) reads `enriched_view_items()`; the stale "the tuple predicate excludes every event-scanning holder" comment dies with the predicate it described |
-| `src/calculator/survival/compile.py` | the stale comment above the `support_trigger_link` raise (`:938`) — "No current support author emits a trigger link" — dies too: `item_support_effects.py:573` emits `_trigger_event_id` for every Fimbulwinter shield under the enriched view, which is exactly why D-03's fail-closed argument holds. **Landed after the phase-2 sign-off, which found this row alone in the phase carrying no amendment, no disclosure and no escalation.** The replacement is three facts, each asserted in `TestTheSupportTriggerLinkRaise` rather than stated, because a replacement sentence only moves the day it goes stale: the link is emitted; the emitted one is declined a branch earlier for its duration; the guard is live for a linked template the earlier receipt admits |
+| `src/calculator/survival/compile.py` | the stale comment above the `support_trigger_link` raise (`:938`) — "No current support author emits a trigger link" — dies too: `item_support_effects.py:621` emits `_trigger_event_id` for every Fimbulwinter shield under the enriched view, which is exactly why D-03's fail-closed argument holds. **Landed after the phase-2 sign-off, which found this row alone in the phase carrying no amendment, no disclosure and no escalation.** The replacement is three facts, each asserted in `TestTheSupportTriggerLinkRaise` rather than stated, because a replacement sentence only moves the day it goes stale: the link is emitted; the emitted one is declined a branch earlier for its duration; the guard is live for a linked template the earlier receipt admits |
 | `src/calculator/damage.py` | `_apply_command_amp` (`:9341-9347`) and `_fimbulwinter_event_coverage` (`:1716-1729`) read the bus; `:9956` reads `pair_outcome_items()` |
 | `src/calculator/survival/actions.py` | the inline immobilize set (`:497-503`) becomes the bus predicate |
 | `tests/test_trigger_stream.py` | **new** — construction invariants, registry validation, pinned projections, assertions A1–A9, the inertness proof |

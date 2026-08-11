@@ -42,7 +42,7 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, registry_entries, rule_owners
 from ..trigger_stream import CAPABILITIES
-from . import delta_amp, on_hit_strike, resistance_shred, secondary_target
+from . import ally_packet, delta_amp, on_hit_strike, resistance_shred, secondary_target
 
 
 class InterpreterRegistryError(RuntimeError):
@@ -208,6 +208,10 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
 # pair engine only — H5 is descoped, so no amp is compilable, and the
 # receipt-walk half arrives with the amps the coupled walk owns.
 INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
+    (
+        RuleFamily.ALLY_PACKET,
+        EngineLane.RECEIPT_WALK,
+    ): ally_packet.WALK_INTERPRETER,
     (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
     (
         RuleFamily.ON_HIT_STRIKE,
