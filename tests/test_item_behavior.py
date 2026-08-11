@@ -19,6 +19,7 @@ from src.calculator.ability_spec import AttackClass, Authority, DamageClass, Dis
 from src.calculator.item_behavior import (
     Always,
     Attribution,
+    BonusTyping,
     BehaviorRule,
     BehaviorRuleError,
     BuildContext,
@@ -60,6 +61,7 @@ def _rule(**overrides: object) -> BehaviorRule:
         magnitude=Fixed(Const(1, "unit_scale")),
         attribution=Attribution.HOLDER,
         typing=Typing(frozenset(DamageClass), frozenset(AttackClass)),
+        bonus_typing=BonusTyping.SAME_AS_SOURCE,
         subject=Subject.HOLDER,
         lane_chain_rank=1,
     )

@@ -33,12 +33,14 @@ from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import quote
 
-from . import data_registry, item_effects
+from . import data_registry, item_effects, rune_effects
 from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
+    AbsoluteWindow,
     Always,
     AmpChainSlot,
     Attribution,
+    BonusTyping,
     BehaviorRule,
     BuildContext,
     DeltaAmpRule,
@@ -359,6 +361,20 @@ SECONDARY_KEY_FAMILY: Mapping[str, RuleFamily] = {
     "damage_amp_per_second": RuleFamily.DELTA_AMP,
 }
 
+# Which keystones declare an amp-chain slot, and which slot.  A rune record
+# carries no effect tag — the shape *is* the keystone — so this is the closed
+# key set that makes the name dispatch total, exactly as
+# ``rune_effects._KEYSTONE_COMPILERS`` is for the runes themselves.  Rule 5
+# reaches keystones (D-46), so their numbers are references like any other.
+KEYSTONE_AMPS: Mapping[str, AmpChainSlot] = {
+    "First Strike": AmpChainSlot.OPENING_WINDOW,
+}
+
+# The fight's own ``t = 0``.  A coordinate the model measures from, not a
+# quantity anybody patches, which is what ``origin`` says and ``count`` would
+# not.
+COMBAT_START = Const(0.0, "origin")
+
 # How long the engine assumes one whole-total amp stack takes to accrue.  A
 # modelling assumption, not a wiki number — Spear of Shojin stacks per
 # ability cast and the compact damage model does not simulate casts for this
@@ -426,6 +442,7 @@ def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             magnitude=Fixed(ValueRef(registry, owner, "amp")),
             attribution=Attribution.HOLDER,
             typing=_all_damage_typing(),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.HYPERSHOT),
         ),
@@ -504,6 +521,7 @@ def _whole_total_rule(
             magnitude=_whole_total_magnitude(owner, registry, entry),
             attribution=Attribution.HOLDER,
             typing=_all_damage_typing(),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.WHOLE_TOTAL),
         ),
@@ -517,6 +535,63 @@ def _whole_total_rule(
             "zero means the ramp had no time or the target no bonus health, "
             "both of which the rule measured",
         ),
+    )
+
+
+def _opening_window_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """A First Strike-class keystone: the opening seconds of the exchange.
+
+    The window is absolute because the engine's is: a continuous fight
+    initiates combat once, at ``t = 0``, so the buff covers ``[0, duration)``
+    rather than tracking a re-entry the model has no way to reach.  The bonus
+    lands as true damage whatever it amplified, which is why ``bonus_typing``
+    exists as a separate axis from ``typing``.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.opening_window_amp",
+        payload=DeltaAmpRule(
+            pool=Pool.CERTIFIED_ONLY,
+            activation=AbsoluteWindow(
+                start=COMBAT_START,
+                end=ValueRef(registry, owner, "buff_duration_seconds"),
+            ),
+            consumption=Persist(),
+            magnitude=Fixed(ValueRef(registry, owner, "bonus_true_damage_ratio")),
+            attribution=Attribution.HOLDER,
+            typing=_all_damage_typing(),
+            bonus_typing=BonusTyping.TRUE,
+            subject=Subject.HOLDER,
+            lane_chain_rank=chain_rank(AmpChainSlot.OPENING_WINDOW),
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_RUNE_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the bonus is a sourced ratio of the certified damage inside the "
+            "window; a zero means nothing certified landed there, which the "
+            "rule measured over the ledger",
+        ),
+    )
+
+
+def _compile_keystone_amp(owner: str) -> tuple[BehaviorRule, ...]:
+    """The amp-chain slots one compiled keystone declares.
+
+    Dispatch is on the keystone's name because a rune record has no effect
+    tag to dispatch on — the shape *is* the keystone.  That is
+    ``rune_effects._KEYSTONE_COMPILERS``' own idiom, and :data:`KEYSTONE_AMPS`
+    is the closed key set that makes it total.
+    """
+    slot = KEYSTONE_AMPS[owner]
+    if slot is AmpChainSlot.OPENING_WINDOW:
+        return (_opening_window_rule(owner, "RUNE_EFFECTS"),)
+    raise BehaviorCatalogError(
+        f"RUNE_EFFECTS[{owner!r}] is declared in the {slot.value} chain slot "
+        "and no compiler builds that slot's rule yet"
     )
 
 
@@ -535,12 +610,15 @@ def _compile_delta_amp(
     needs to be.
     """
     del family
-    tag = str(entry.get("type"))
     rules: list[BehaviorRule] = []
-    if tag == "hypershot_amp":
-        rules.append(_hypershot_rule(owner, registry))
-    if tag == "damage_amp" or _declares_secondary(entry, RuleFamily.DELTA_AMP):
-        rules.append(_whole_total_rule(owner, registry, entry))
+    if registry == "RUNE_EFFECTS":
+        rules.extend(_compile_keystone_amp(owner))
+    else:
+        tag = str(entry.get("type"))
+        if tag == "hypershot_amp":
+            rules.append(_hypershot_rule(owner, registry))
+        if tag == "damage_amp" or _declares_secondary(entry, RuleFamily.DELTA_AMP):
+            rules.append(_whole_total_rule(owner, registry, entry))
     for rule in rules:
         validate_rule(rule)
     return tuple(rules)
@@ -652,10 +730,36 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     it.  Never memoized: ``refresh_item_effects()`` must move the answer.
     """
     rules: list[BehaviorRule] = []
-    for registry, family, entry in registry_entries(owner):
+    for registry, family, entry in registry_entries(owner) + keystone_entries(owner):
         for claimed in entry_families(family, entry):
             rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
     return tuple(rules)
+
+
+def keystone_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:
+    """The rune record *owner* declares an amp-chain slot from, if any.
+
+    Deliberately not part of :func:`registry_entries`: counter 3's population
+    is the two **item** registries, and folding runes into it would silently
+    change what the frontier's headline number counts.  Keystones are still
+    bound by rule 5 — their numbers are references — they are simply not
+    entries of the registries that counter measures.
+    """
+    if owner not in KEYSTONE_AMPS:
+        return ()
+    entry = rune_effects.RUNE_EFFECTS.get(owner)
+    if not isinstance(entry, Mapping):
+        raise BehaviorCatalogError(
+            f"{owner!r} declares an amp-chain slot and RUNE_EFFECTS holds no "
+            "record for it — a declaration against a missing rune is a stop, "
+            "not a keystone that quietly amplifies nothing"
+        )
+    return (("RUNE_EFFECTS", RuleFamily.DELTA_AMP, entry),)
+
+
+def rule_owners() -> frozenset[str]:
+    """Every owner a rule can be compiled for — items and declared keystones."""
+    return registry_owners() | frozenset(KEYSTONE_AMPS)
 
 
 def entry_families(
@@ -893,9 +997,11 @@ __all__ = [
     "Compiler",
     "DEFENSE_SOURCE_FAMILY",
     "DELTA_AMP_UNMIGRATED_TAGS",
+    "COMBAT_START",
     "H4_DEAD_TAGS",
     "H4_SELF_REFERENTIAL_TAGS",
     "H4_TAG_REASONS",
+    "KEYSTONE_AMPS",
     "MIGRATED_DELTA_AMP_TAGS",
     "TAG_FAMILY",
     "UNMIGRATED_FAMILIES",
@@ -904,9 +1010,12 @@ __all__ = [
     "cached_source_receipt",
     "declared_owners",
     "declared_tags",
+    "entry_families",
+    "keystone_entries",
     "defense_source_labels",
     "registry_entries",
     "registry_owners",
+    "rule_owners",
     "undeclared_entry_count",
     "undeclared_owners",
     "validate_catalog",

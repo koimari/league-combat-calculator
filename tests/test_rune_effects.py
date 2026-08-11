@@ -95,9 +95,28 @@ class TestFirstStrike:
         assert isinstance(effect, rune_effects.KeystoneWindowAmpEffect)
         assert effect.keystone_name == "First Strike"
         assert effect.breakdown_key == "keystone_First Strike"
-        assert effect.window_seconds == 3.0
-        assert effect.bonus_damage_ratio == pytest.approx(0.07)
         assert effect.activation_gold == 10.0
+
+    def test_the_window_and_the_ratio_live_in_the_declaration(self):
+        """One number, one home: the amp chain slot owns both (3.2)."""
+        from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+            delta_amp,
+        )
+        from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+            AmpChainSlot,
+        )
+
+        slot = delta_amp.resolve_slot(
+            ["First Strike"],
+            AmpChainSlot.OPENING_WINDOW,
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+        )
+        assert slot is not None
+        assert slot.window() == (0.0, 3.0)
+        assert slot.fractions[0] == pytest.approx(0.07)
+        assert slot.uniform_bonus_damage_type() == "true"
 
     def test_gold_conversion_is_melee_ranged_split(self):
         effect = rune_effects.resolve_keystone("First Strike")

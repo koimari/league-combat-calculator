@@ -7460,15 +7460,19 @@ def _add_keystone_ability_proc_damage(
     )
 
 
-def _certified_ledger(
+def _certified_only_pool(
     state: FightState, rotation: RotationResult
 ) -> tuple[list[dict[str, Any]], set[str], list[str]]:
-    """The ordered damage events plus the certified/coarse source split.
+    """Build the ``Pool.CERTIFIED_ONLY`` event pool, with what it excluded.
 
-    Window and lasting-amp keystones must agree with the fight report
-    about which sources carry certified event times; both read this one
-    helper so ``_event_timeline_coverage``'s definition of "certified"
-    stays structural rather than by convention.
+    A rule declaring ``Pool.CERTIFIED_ONLY`` prices only sources that carry
+    certified event times; coarse-timed rows (DoTs whose totals resolve past
+    their cast, item effects with no authored events, auto-coupled casts) are
+    excluded and disclosed, so omitting a source can only understate a bonus
+    and never overstate it.  The pool constructor is named for the declared
+    pool rather than for the ledger it reads, so "certified" has one
+    structural definition — ``_event_timeline_coverage``'s — and every rule
+    that names the pool gets that one.
     """
     events = _ordered_damage_events(
         state.breakdown,
@@ -7505,20 +7509,23 @@ def _add_keystone_window_amp_damage(
     effect = state.keystone_effect
     if not isinstance(effect, rune_effects.KeystoneWindowAmpEffect):
         return
-    # Only sources with certified event times can be placed inside the
-    # window. Coarse-timed rows (DoTs whose totals resolve past their
-    # cast, item effects without authored events, auto-coupled casts)
-    # are excluded and disclosed — omitting a source can only understate
-    # the bonus, never overstate it.
-    events, certified, coarse_sources = _certified_ledger(state, rotation)
+    window = _amp_slot(state, AmpChainSlot.OPENING_WINDOW, effect.keystone_name)
+    if window is None:
+        return
+    # The pool, the window and the ratio are the rule's; the ledger is the
+    # engine's. `Pool.CERTIFIED_ONLY` is why coarse-timed rows are excluded
+    # and disclosed below.
+    events, certified, coarse_sources = _certified_only_pool(state, rotation)
+    _, window_end = window.window()
     contributing = [
         event
         for event in events
-        if event["source_key"] in certified and event["time"] < effect.window_seconds
+        if event["source_key"] in certified and event["time"] < window_end
     ]
     window_damage = sum(event["damage"] for event in contributing)
 
-    bonus = effect.bonus_damage_ratio * window_damage
+    bonus_ratio = window.fractions[0]
+    bonus = bonus_ratio * window_damage
     gold = effect.activation_gold + effect.gold_conversion(state.is_melee) * bonus
     if window_damage > 0:
         auto_stream_damage = sum(
@@ -7529,7 +7536,7 @@ def _add_keystone_window_amp_damage(
         state.breakdown[effect.breakdown_key] = {
             "name": effect.display_name,
             "total_damage": bonus,
-            "damage_type": "true",
+            "damage_type": window.uniform_bonus_damage_type(),
             "count": 1,
             "event_phase": "effect",
             "gold_generated": gold,
@@ -7537,8 +7544,8 @@ def _add_keystone_window_amp_damage(
             "damage_events": [
                 {
                     "time": event["time"],
-                    "damage": effect.bonus_damage_ratio * event["damage"],
-                    "damage_type": "true",
+                    "damage": bonus_ratio * event["damage"],
+                    "damage_type": window.bonus_damage_type(event["damage_type"]),
                 }
                 for event in contributing
             ],
@@ -7634,7 +7641,7 @@ def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -
     # lands the same instant the buff turns on — is excluded by the
     # strictly-after cut, matching the wiki's triggering-attack rule.
     amp_start = proc_times[0]
-    events, certified, coarse_sources = _certified_ledger(state, rotation)
+    events, certified, coarse_sources = _certified_only_pool(state, rotation)
     amplified = [
         event
         for event in events
@@ -9218,15 +9225,20 @@ def _hypershot_delta_events(
     )
 
 
-def _amp_slot(state: FightState, slot: AmpChainSlot) -> "delta_amp.AmpSlot | None":
+def _amp_slot(
+    state: FightState, slot: AmpChainSlot, *extra_owners: str
+) -> "delta_amp.AmpSlot | None":
     """The declared amp occupying one chain slot for this build.
 
-    ``None`` means no held item declares the slot — an answer, not a zero.
-    The build is passed as owner names because a declaration is keyed by the
-    item that owns it; the engine never spells one.
+    ``None`` means nothing the build holds declares the slot — an answer, not
+    a zero.  Owners are passed as names because a declaration is keyed by
+    whatever owns it; the engine never spells one.  ``extra_owners`` carries
+    the selected keystone, which is an owner the item list cannot hold.
     """
+    owners = [str(item.get("name", "")) for item in state.items]
+    owners.extend(extra_owners)
     return delta_amp.resolve_slot(
-        [str(item.get("name", "")) for item in state.items],
+        owners,
         slot,
         level=state.level,
         fight_duration_seconds=state.fight_duration_seconds,

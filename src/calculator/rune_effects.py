@@ -54,11 +54,28 @@ def rune_effect_value(rune_name: str, key: str) -> float:
     the same fail-loud accessor items already have.  It reuses
     ``_RequiredRuneValues`` rather than re-reading the registry, so "read a
     rune number" keeps one implementation.
+
+    A rune record has two levels — the entry's own fields (``cooldown``) and
+    the parser's ``effects`` block — and a reference names a number, not a
+    level, so both are searched.  A key present in **both** raises rather
+    than picking one: two numbers under one name is a parse defect, and
+    silently preferring a level is how a declaration starts citing the wrong
+    one.
     """
     entry = RUNE_EFFECTS.get(rune_name)
     if not isinstance(entry, Mapping):
         raise KeyError(f"RUNE_EFFECTS[{rune_name!r}] is missing")
-    return _RequiredRuneValues(rune_name, entry).number(key)
+    effects = entry.get("effects")
+    effects = effects if isinstance(effects, Mapping) else {}
+    top_level = entry.get(key) is not None
+    if top_level and effects.get(key) is not None:
+        raise KeyError(
+            f"RUNE_EFFECTS[{rune_name!r}] holds {key!r} at both levels; two "
+            "numbers under one name is a parse defect, not a preference"
+        )
+    if top_level:
+        return _RequiredRuneValues(rune_name, entry).number(key)
+    return _RequiredRuneValues(rune_name, effects).number(key)
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,19 +102,23 @@ class KeystoneProcEffect:
 class KeystoneWindowAmpEffect:
     """A combat-opening damage-window keystone (First Strike-class).
 
-    Post-mitigation damage dealt inside the opening window gains
-    ``bonus_damage_ratio`` as bonus true damage; activation grants flat
-    gold plus a melee/ranged share of the bonus damage as gold. Window
-    summation lives in the fight engine, which owns the damage ledger.
-    A continuous fight activates the buff exactly once, so the rune's
-    out-of-combat cooldown never gates anything the engine models.
+    Post-mitigation damage dealt inside the opening window gains a sourced
+    ratio as bonus true damage; activation grants flat gold plus a
+    melee/ranged share of the bonus damage as gold. A continuous fight
+    activates the buff exactly once, so the rune's out-of-combat cooldown
+    never gates anything the engine models.
+
+    **The window and the ratio are not here.** They are the amp chain's
+    ``OPENING_WINDOW`` slot, declared as a ``BehaviorRule`` over
+    ``RUNE_EFFECTS`` references, and one number with two homes is the drift
+    this campaign exists to remove. What is left is the gold accounting and
+    the receipt strings, which no amp declaration models: gold is not damage
+    and never joins the total.
     """
 
     keystone_name: str
     breakdown_key: str
     display_name: str
-    window_seconds: float
-    bonus_damage_ratio: float
     activation_gold: float
     gold_conversion_melee: float
     gold_conversion_ranged: float
@@ -282,8 +303,6 @@ def _compile_first_strike(entry: Mapping[str, Any]) -> KeystoneWindowAmpEffect:
         keystone_name=name,
         breakdown_key=f"keystone_{name}",
         display_name=f"{name} (keystone)",
-        window_seconds=effects.number("buff_duration_seconds"),
-        bonus_damage_ratio=effects.number("bonus_true_damage_ratio"),
         activation_gold=effects.number("flat_gold"),
         gold_conversion_melee=melee_ratio,
         gold_conversion_ranged=ranged_ratio,

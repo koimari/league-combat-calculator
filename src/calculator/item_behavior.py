@@ -408,6 +408,20 @@ class Attribution(Enum):
     DAMAGE_SOURCE = "damage_source"
 
 
+class BonusTyping(Enum):
+    """What damage type an amplifier's own bonus lands as.
+
+    A separate question from :class:`Typing`, which says which events a rule
+    is allowed to price.  Most amps hand back more of what they amplified;
+    First Strike hands back true damage whatever it amplified, and that
+    difference lived as a hard-coded ``"damage_type": "true"`` inside one
+    engine function where no declaration could see it.
+    """
+
+    SAME_AS_SOURCE = "same_as_source"
+    TRUE = "true"
+
+
 class Subject(Enum):
     """Whose numbers the rule acts on.
 
@@ -554,13 +568,15 @@ _validate_amp_chain()
 class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     """One amplification slot: which events, when, how much, and to whom.
 
-    Eight fields because the amp chain has eight independent questions and
+    Nine fields because the amp chain has nine independent questions and
     collapsing any two of them is what let a pair-side preview and a coupled
     number both call themselves the answer.  ``lane_chain_rank`` is an
     explicit integer: the seven chain slots are ordered, nothing in the
     engine stops a refactor reordering them, and every mixed build's number
     moves when they do.  It is :func:`chain_rank` of the rule's
     :class:`AmpChainSlot` and is validated against the chain's length.
+    ``typing`` says which events the rule may price and ``bonus_typing`` what
+    its own bonus lands as — one amp really does answer those differently.
     """
 
     pool: Pool
@@ -569,6 +585,7 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     magnitude: Magnitude
     attribution: Attribution
     typing: Typing
+    bonus_typing: BonusTyping
     subject: Subject
     lane_chain_rank: int
 
@@ -651,6 +668,10 @@ def _validate_payload(rule: BehaviorRule) -> None:
         raise BehaviorRuleError(f"{rule.mechanic_id}: magnitude is not in the union")
     if not isinstance(payload.typing, Typing):
         raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+    if not isinstance(payload.bonus_typing, BonusTyping):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: bonus_typing must say what the bonus lands as"
+        )
     if isinstance(payload.lane_chain_rank, bool) or not isinstance(
         payload.lane_chain_rank, int
     ):
@@ -758,6 +779,7 @@ __all__ = [
     "Always",
     "AmpChainSlot",
     "Attribution",
+    "BonusTyping",
     "BehaviorRule",
     "BehaviorRuleError",
     "BuildContext",

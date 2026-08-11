@@ -40,7 +40,7 @@ from ..item_behavior import (
     RuleFamily,
     SUBJECT_AUTHORITY,
 )
-from ..item_behavior_catalog import behavior_rules, registry_entries, registry_owners
+from ..item_behavior_catalog import behavior_rules, registry_entries, rule_owners
 from ..trigger_stream import CAPABILITIES
 from . import delta_amp
 
@@ -290,7 +290,7 @@ class ReachabilityReport:
 
 def reachability_report(owners: frozenset[str] | None = None) -> ReachabilityReport:
     """Walk both directions between declarations and interpreters."""
-    subjects = registry_owners() if owners is None else owners
+    subjects = rule_owners() if owners is None else owners
     unreached: list[str] = []
     reached: set[tuple[RuleFamily, EngineLane]] = set()
     for owner in sorted(subjects):
@@ -372,7 +372,7 @@ def _validate_authority_agreement(owners: frozenset[str]) -> tuple[str, ...]:
 
 def validate_registrations() -> None:
     """Totality, authority agreement and no orphan branch — or raise."""
-    owners = registry_owners()
+    owners = rule_owners()
     failures = list(_validate_registry_keys())
     failures.extend(_validate_authority_agreement(owners))
     failures.extend(reachability_report(owners).orphan_branches)

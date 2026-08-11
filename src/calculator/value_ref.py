@@ -49,11 +49,14 @@ VALUE_REGISTRIES: frozenset[str] = frozenset(
 
 # Why a raw number is allowed to sit inside a frozen declaration at all.
 # Closed: a reason outside this set means the number is a *quantity*, and a
-# quantity belongs in a registry behind a ValueRef.
-StructuralReason = Literal["count", "cap", "rank", "flag", "unit_scale"]
+# quantity belongs in a registry behind a ValueRef.  ``origin`` is a
+# coordinate the model measures from — the start of the fight — rather than a
+# magnitude: no patch moves it, and spelling it ``count`` would say a
+# window's start is a tally of something.
+StructuralReason = Literal["count", "cap", "rank", "flag", "unit_scale", "origin"]
 
 STRUCTURAL_REASONS: frozenset[str] = frozenset(
-    {"count", "cap", "rank", "flag", "unit_scale"}
+    {"count", "cap", "rank", "flag", "unit_scale", "origin"}
 )
 
 # How a two-key level ramp is interpolated.  ``registry_start`` delegates to

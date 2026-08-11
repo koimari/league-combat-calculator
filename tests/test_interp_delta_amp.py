@@ -16,7 +16,9 @@ from src.calculator.interpreters import delta_amp
 from src.calculator.item_behavior import (
     AMP_CHAIN_ORDER,
     AmpChainSlot,
+    EngineLane,
     Fixed,
+    KernelField,
     RampModel,
     RampPerSecond,
     RampPerStack,
@@ -86,24 +88,68 @@ def test_a_build_that_declares_no_holder_gets_no_slot() -> None:
     assert _slot() is None
 
 
+def _fixed_slot(*fractions: float) -> "delta_amp.AmpSlot":
+    """A slot whose holders contribute exactly *fractions*, for fold tests."""
+    rules = delta_amp.slot_rules(["Horizon Focus"], AmpChainSlot.HYPERSHOT)
+    return delta_amp.AmpSlot(
+        slot=AmpChainSlot.HYPERSHOT,
+        rules=rules * len(fractions),
+        fields=tuple(
+            (
+                KernelField(
+                    delta_amp.AMP_FRACTION_FIELD,
+                    fraction,
+                    EngineLane.PAIR_ENGINE,
+                    "test",
+                ),
+            )
+            for fraction in fractions
+        ),
+    )
+
+
 def test_the_multiplier_is_one_plus_the_holders_sum() -> None:
     """The engine's own spelling, kept: not a running ``+=`` and not ``fsum``."""
-    rules = delta_amp.slot_rules(["Horizon Focus"], AmpChainSlot.HYPERSHOT)
-    # Not an arbitrary triple: these three fractions are one of the pairs on
+    # Not an arbitrary triple: these three fractions are one of the triples on
     # which `1.0 + sum(f)` and a running `+=` land on different floats, which
     # is the whole reason the spelling is pinned rather than left to taste.
-    slot = delta_amp.AmpSlot(
-        slot=AmpChainSlot.HYPERSHOT, rules=rules * 3, fractions=(0.134, 0.16, 0.028)
-    )
+    slot = _fixed_slot(0.134, 0.16, 0.028)
     assert slot.multiplier == 1.0 + sum(slot.fractions)
     running = 1.0
     for fraction in slot.fractions:
         running += fraction
     assert slot.multiplier != running
-    single = delta_amp.AmpSlot(
-        slot=AmpChainSlot.HYPERSHOT, rules=rules, fractions=(0.134,)
+    assert _fixed_slot(0.134).multiplier == 1.0 + 0.134  # one holder: all agree
+
+
+def test_asking_a_rule_for_a_field_it_does_not_compile_is_a_stop() -> None:
+    """A window's end from a rule with no window is a bug, never a zero."""
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="window_start"):
+        _fixed_slot(0.1).window()
+
+
+def test_a_bonus_that_follows_its_source_has_no_aggregate_type() -> None:
+    """An aggregate row needs one type; a source-following amp has none."""
+    slot = _fixed_slot(0.1)
+    assert slot.bonus_damage_type("magic") == "magic"
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="single"):
+        slot.uniform_bonus_damage_type()
+
+
+def test_the_opening_window_slot_declares_its_window_and_its_true_bonus() -> None:
+    """First Strike's two numbers now have one home, and the bonus type is declared."""
+    slot = delta_amp.resolve_slot(
+        ["First Strike"],
+        AmpChainSlot.OPENING_WINDOW,
+        level=18,
+        fight_duration_seconds=10.0,
+        target_bonus_health=0.0,
     )
-    assert single.multiplier == 1.0 + 0.134  # one holder: every fold agrees
+    assert slot is not None
+    assert slot.window() == (0.0, 3.0)
+    assert slot.fractions[0] == pytest.approx(0.07)
+    assert slot.uniform_bonus_damage_type() == "true"
+    assert slot.bonus_damage_type("physical") == "true"
 
 
 def test_the_pair_interpreter_emits_one_value_typed_field() -> None:

@@ -27,7 +27,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from ..item_behavior import (
+    AbsoluteWindow,
     AmpChainSlot,
+    BonusTyping,
     BehaviorRule,
     BuildContext,
     DeltaAmpRule,
@@ -45,10 +47,13 @@ from ..item_behavior import (
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import resolve
 
-# The one field name a delta-amp rule compiles to.  A slot's magnitude is a
+# The field names a delta-amp rule compiles to.  A slot's magnitude is a
 # fraction of the pool it prices, never a multiplier: the multiplier is the
-# chain's, and folding fractions is what keeps two holders additive.
+# chain's, and folding fractions is what keeps two holders additive.  The two
+# window bounds appear only for a rule whose activation declares them.
 AMP_FRACTION_FIELD = "amp_fraction"
+WINDOW_START_FIELD = "window_start"
+WINDOW_END_FIELD = "window_end"
 
 
 class DeltaAmpInterpretationError(ValueError):
@@ -142,20 +147,36 @@ class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
     LANES = frozenset({EngineLane.PAIR_ENGINE})
 
     def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This rule's amp fraction, resolved against the live registries."""
+        """Every number this rule contributes, resolved against the registries.
+
+        The fraction always; the window bounds when the activation declares
+        an absolute one.  This is the single path from a declaration to a
+        number the engine uses — a caller that resolved a `ValueRef` itself
+        would be a second reader of the same declaration.
+        """
         payload = rule.payload
         if not isinstance(payload, DeltaAmpRule):
             raise DeltaAmpInterpretationError(
                 f"{rule.mechanic_id} is not a delta-amp rule"
             )
-        return (
-            KernelField(
-                name=AMP_FRACTION_FIELD,
-                value=magnitude_fraction(payload.magnitude, ctx),
+
+        def field(name: str, value: float) -> KernelField:
+            return KernelField(
+                name=name,
+                value=value,
                 lane=EngineLane.PAIR_ENGINE,
                 rule_id=rule.mechanic_id,
-            ),
-        )
+            )
+
+        fields = [field(AMP_FRACTION_FIELD, magnitude_fraction(payload.magnitude, ctx))]
+        if isinstance(payload.activation, AbsoluteWindow):
+            fields.append(
+                field(WINDOW_START_FIELD, resolve(payload.activation.start, ctx.level))
+            )
+            fields.append(
+                field(WINDOW_END_FIELD, resolve(payload.activation.end, ctx.level))
+            )
+        return tuple(fields)
 
 
 PAIR_INTERPRETER = DeltaAmpPairInterpreter()
@@ -175,7 +196,59 @@ class AmpSlot:
 
     slot: AmpChainSlot
     rules: tuple[BehaviorRule, ...]
-    fractions: tuple[float, ...]
+    fields: tuple[tuple[KernelField, ...], ...]
+
+    @property
+    def fractions(self) -> tuple[float, ...]:
+        """Each holder's sourced fraction, in build order."""
+        return tuple(
+            float(self.value(AMP_FRACTION_FIELD, index))
+            for index in range(len(self.rules))
+        )
+
+    def value(self, name: str, index: int = 0) -> float:
+        """One compiled field of one holder's rule, or a stop.
+
+        A missing field means the rule's activation or magnitude does not
+        declare what the caller is asking for — asking a window's end of a
+        rule with no window — and that is a programming error, never a zero.
+        """
+        for field in self.fields[index]:
+            if field.name == name:
+                return float(field.value)
+        raise DeltaAmpInterpretationError(
+            f"{self.rules[index].mechanic_id} compiles no {name!r} field; the "
+            "engine asked its declaration a question it does not answer"
+        )
+
+    def window(self, index: int = 0) -> tuple[float, float]:
+        """The ``[start, end)`` an absolute-window holder declares."""
+        return self.value(WINDOW_START_FIELD, index), self.value(
+            WINDOW_END_FIELD, index
+        )
+
+    def bonus_damage_type(self, source_type: str, index: int = 0) -> str:
+        """What this amp's own bonus lands as, given the event it amplified."""
+        typing = self.rules[index].payload.bonus_typing
+        if typing is BonusTyping.SAME_AS_SOURCE:
+            return source_type
+        return typing.value
+
+    def uniform_bonus_damage_type(self, index: int = 0) -> str:
+        """The single type this amp's bonus always lands as, or a stop.
+
+        An aggregate breakdown row needs one type for a sum of bonuses.  A
+        rule whose bonus follows whatever it amplified has no single answer,
+        and a caller that needs one is asking the wrong rule — so this raises
+        rather than picking a plausible spelling.
+        """
+        typing = self.rules[index].payload.bonus_typing
+        if typing is BonusTyping.SAME_AS_SOURCE:
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares a bonus that follows "
+                "its source, so it has no single aggregate damage type"
+            )
+        return typing.value
 
     @property
     def multiplier(self) -> float:
@@ -240,23 +313,25 @@ def resolve_slot(
     rules = slot_rules(owners, slot)
     if not rules:
         return None
-    fractions: list[float] = []
-    for rule in rules:
-        ctx = build_context(
-            rule.owner,
-            level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
+    compiled = tuple(
+        PAIR_INTERPRETER.compile(
+            rule,
+            build_context(
+                rule.owner,
+                level,
+                fight_duration_seconds=fight_duration_seconds,
+                target_bonus_health=target_bonus_health,
+            ),
         )
-        fields = PAIR_INTERPRETER.compile(rule, ctx)
-        fractions.append(
-            float(next(f.value for f in fields if f.name == AMP_FRACTION_FIELD))
-        )
-    return AmpSlot(slot=slot, rules=rules, fractions=tuple(fractions))
+        for rule in rules
+    )
+    return AmpSlot(slot=slot, rules=rules, fields=compiled)
 
 
 __all__ = [
     "AMP_FRACTION_FIELD",
+    "WINDOW_END_FIELD",
+    "WINDOW_START_FIELD",
     "AmpSlot",
     "DeltaAmpInterpretationError",
     "DeltaAmpPairInterpreter",
