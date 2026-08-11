@@ -25,10 +25,8 @@ another module's source text and this stays a light import.
 
 from __future__ import annotations
 
-import ast
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Callable, NamedTuple
 from urllib.parse import quote
 
@@ -43,6 +41,7 @@ from .item_behavior import (
     Always,
     AmpChainSlot,
     AtLeast,
+    AttackCooldownRefundRule,
     Attribution,
     Basis,
     Compilability,
@@ -54,6 +53,8 @@ from .item_behavior import (
     ChargedSplash,
     CombatStateRule,
     CooldownProcRule,
+    CritDamageBonusRule,
+    CritOccurrence,
     DamageFormula,
     DEFENSE_FIELD_COMBINE,
     DamageThreshold,
@@ -64,6 +65,8 @@ from .item_behavior import (
     DeltaAmpRule,
     ExcludeTrigger,
     Fixed,
+    ForcedCritHeal,
+    ForcedCritRule,
     ChainTargets,
     EmpoweredAutoBuffRule,
     EmpoweredHitRule,
@@ -300,9 +303,10 @@ ACTION_KIND_FAMILY: Mapping[ActionKind, RuleFamily] = {
 # The population is ``DefenseMechanic``, a closed enum, so the closure below
 # fails *collection* on an unmapped mechanic instead of depending on a scrape
 # of the resolver's source text for the hand-written provenance records this
-# replaced.  The rulings are unchanged, mechanic for mechanic — two of them deliberately point outside
-# the four defence families, because Ignore Pain reroutes damage over time
-# and Boundless Vitality is sustain, and both ride their own family's slice.
+# replaced.  The rulings are unchanged, mechanic for mechanic — two of them
+# deliberately point outside the four defence families, because Ignore Pain
+# reroutes damage over time and Boundless Vitality is sustain, and both ride
+# their own family's slice.
 
 DEFENSE_SOURCE_FAMILY: Mapping[DefenseMechanic, RuleFamily] = {
     DefenseMechanic.SHIELD_OF_DURAND: RuleFamily.OPENING_DEFENSE,
@@ -2921,6 +2925,192 @@ def _compile_resistance_shred(
     return tuple(rules)
 
 
+# ── the critical-strike profile (3.7) ─────────────────────────────────────
+#
+# Three mechanics share one registry tag pair and nothing else: a flat bonus
+# on the crit multiplier, a strike that is made to crit whether or not the
+# roll would have, and an ability-cooldown refund that rides a crit item's
+# passive.  Which one an entry declares is answered by the entry's own value
+# keys — the device the defence and ally families already use — so no item
+# name enters the dispatch.
+
+# The heal a forced crit pays is declared whole or not at all: an entry
+# carrying some of these keys is a broken parse, and reading the survivors as
+# "this crit heals a little" is exactly the silent weakening rule 5 forbids.
+FORCED_CRIT_HEAL_KEYS: tuple[str, ...] = (
+    "heal_base_ad_ratio",
+    "heal_base_ad_ratio_ranged",
+    "heal_missing_health_ratio",
+    "temporary_health_duration",
+)
+
+CRIT_DAMAGE_BONUS_KEY = "bonus_crit_damage"
+COOLDOWN_REFUND_KEY = "cd_refund_percent"
+FORCED_CRIT_RATIO_KEY = "reduced_crit_ratio"
+
+# The three signature keys, as one set: an entry tagged into this family that
+# carries none of them is a parse that failed, and the refusal names them.
+CRIT_PROFILE_KEYS: frozenset[str] = frozenset(
+    {CRIT_DAMAGE_BONUS_KEY, COOLDOWN_REFUND_KEY, FORCED_CRIT_RATIO_KEY}
+)
+
+
+def _crit_damage_bonus_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Infinity Edge's shape: every critical strike pays a bigger multiplier.
+
+    The base multiplier is the game's and belongs to the engine (CLAUDE.md
+    records 200%); what the item declares is the bonus added to it.  The
+    typing is every damage class from every attack class because a crit
+    multiplier applies to whatever critically struck — an ability that can
+    crit pays the same bonus an attack does.
+    """
+    return BehaviorRule(
+        family=RuleFamily.CRIT_PROFILE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.crit_damage_bonus",
+        payload=CritDamageBonusRule(
+            bonus=ValueRef(registry, owner, CRIT_DAMAGE_BONUS_KEY),
+            typing=_all_damage_typing(),
+            subject=Subject.HOLDER,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the bonus is a sourced fraction added to the crit multiplier; a "
+            "zero would be the registry stating the item adds nothing, which "
+            "the rule read rather than assumed",
+        ),
+    )
+
+
+def _attack_cooldown_refund_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Navori Flickerblade's shape: attacks refund basic ability cooldowns.
+
+    The trigger is the basic attack, declared rather than implied by the
+    accumulator the refund used to be summed into.  It changes a cooldown and
+    not a damage number, which is why it is its own payload inside the family
+    the registry files it under.
+    """
+    return BehaviorRule(
+        family=RuleFamily.CRIT_PROFILE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.cooldown_refund",
+        payload=AttackCooldownRefundRule(
+            refund_fraction=ValueRef(registry, owner, COOLDOWN_REFUND_KEY),
+            trigger=TriggerEvent.BASIC_ATTACK_HIT,
+            subject=Subject.HOLDER,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the refund is a sourced fraction of the remaining cooldown per "
+            "attack; a zero means the registry states no refund, which the "
+            "rule read",
+        ),
+    )
+
+
+def _forced_crit_heal(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> Any:
+    """The heal a forced crit pays, or ``None`` where its entry declares none.
+
+    All four keys or none: presence of any of them makes every one of them
+    required, so a parse that dropped half the heal raises when the rule is
+    read instead of compiling a quietly weaker item.
+    """
+    schema = _schema_keys(owner, registry, entry)
+    if not any(key in schema for key in FORCED_CRIT_HEAL_KEYS):
+        return None
+    return ForcedCritHeal(
+        base_ad_ratio=ValueRef(registry, owner, "heal_base_ad_ratio"),
+        base_ad_ratio_ranged=ValueRef(registry, owner, "heal_base_ad_ratio_ranged"),
+        missing_health_ratio=ValueRef(registry, owner, "heal_missing_health_ratio"),
+        temporary_health_duration=ValueRef(
+            registry, owner, "temporary_health_duration"
+        ),
+    )
+
+
+def _forced_crit_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """Sundered Sky's shape: one strike is made to crit, at a reduced ratio.
+
+    The ratio is a fraction of a *full* critical strike, and the forced crit
+    overrides a natural one — so a holder who would have critted anyway is
+    made weaker, which is a real property of the item and not a modelling
+    choice.  Declaring the ratio rather than a multiplier is what keeps that
+    visible.
+    """
+    return BehaviorRule(
+        family=RuleFamily.CRIT_PROFILE,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.forced_crit",
+        payload=ForcedCritRule(
+            occurrence=CritOccurrence.FIRST_ATTACK,
+            reduced_ratio=ValueRef(registry, owner, FORCED_CRIT_RATIO_KEY),
+            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
+            heal=_forced_crit_heal(owner, registry, entry),
+            typing=Typing(
+                damage_classes=frozenset(DamageClass),
+                attack_classes=frozenset({AttackClass.BASIC_ATTACK}),
+            ),
+            subject=Subject.HOLDER,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the forced strike pays a sourced fraction of a full critical "
+            "strike; a zero means the registry states the strike does not "
+            "crit, which the rule read rather than defaulted",
+        ),
+    )
+
+
+def _compile_crit_profile(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile every crit-profile mechanic one registry entry declares.
+
+    One entry may carry more than one — the tag names the family and the
+    value keys name the mechanics — so this is a fan-out rather than a
+    ladder, and an entry whose tag lands here carrying none of the keys is a
+    stop: a crit modifier that modifies nothing is a parse that failed.
+    """
+    del family
+    schema = _schema_keys(owner, registry, entry)
+    rules: list[BehaviorRule] = []
+    if CRIT_DAMAGE_BONUS_KEY in schema:
+        rules.append(_crit_damage_bonus_rule(owner, registry))
+    if COOLDOWN_REFUND_KEY in schema:
+        rules.append(_attack_cooldown_refund_rule(owner, registry))
+    if FORCED_CRIT_RATIO_KEY in schema:
+        rules.append(_forced_crit_rule(owner, registry, entry))
+    if not rules:
+        raise BehaviorCatalogError(
+            f"{registry}[{owner!r}] is tagged into the crit-profile family and "
+            f"carries none of {sorted(CRIT_PROFILE_KEYS)}; a crit modifier that "
+            "modifies nothing is a parse that failed, not an item with no "
+            "behaviour"
+        )
+    for rule in rules:
+        validate_rule(rule)
+    return tuple(rules)
+
+
 # ── ally packets (3.6) ────────────────────────────────────────────────────
 #
 # The one family whose mechanics share no arithmetic.  Redemption heals a
@@ -4007,7 +4197,7 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.SECONDARY_TARGET: _compile_secondary_target,
     RuleFamily.DELTA_AMP: _compile_delta_amp,
     RuleFamily.RESISTANCE_SHRED: _compile_resistance_shred,
-    RuleFamily.CRIT_PROFILE: _unmigrated,
+    RuleFamily.CRIT_PROFILE: _compile_crit_profile,
     RuleFamily.DAMAGE_ROUTING: _unmigrated,
     RuleFamily.OPENING_DEFENSE: _compile_opening_defense,
     RuleFamily.THRESHOLD_DEFENSE: _compile_threshold_defense,
@@ -4020,7 +4210,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.CRIT_PROFILE: "3.7",
     RuleFamily.DAMAGE_ROUTING: "3.7",
     RuleFamily.SUSTAIN: "3.7",
     RuleFamily.STAT_DERIVATION: "3.7",

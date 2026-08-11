@@ -132,6 +132,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "below {{as|45% of your '''maximum''' health}}",
         0.45,
     ),
+    RuleFamily.CRIT_PROFILE: (
+        "Navori Flickerblade",
+        "cd_refund_percent",
+        "cooldowns of your basic abilities by 15%",
+        "cooldowns of your basic abilities by 24%",
+        0.24,
+    ),
     RuleFamily.REACTIVE: (
         "Bramble Vest",
         "base",

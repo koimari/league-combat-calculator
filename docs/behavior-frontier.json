@@ -99,7 +99,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 34
+      "value": 31
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -114,7 +114,6 @@
         "combat_state/compiled_score_walk",
         "combat_state/receipt_walk",
         "crit_profile/compiled_score_walk",
-        "crit_profile/pair_engine",
         "crit_profile/receipt_walk",
         "damage_routing/compiled_score_walk",
         "damage_routing/pair_engine",
@@ -145,7 +144,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 37
+      "value": 36
     }
   },
   "exclusions": {
@@ -252,7 +251,7 @@
     }
   },
   "schema_version": 2,
-  "slice": "3.5",
+  "slice": "3.7",
   "zero_policy_frontier": {
     "declared_default": "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry and simple_damage and overridable per call (D-24)",
     "forbidden_input_fallbacks": [],

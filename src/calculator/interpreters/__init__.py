@@ -50,6 +50,7 @@ from . import (
     cast_proc,
     charged_strike,
     combat_state,
+    crit_profile,
     delta_amp,
     on_hit_strike,
     opening_defense,
@@ -242,6 +243,10 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         RuleFamily.CHARGED_STRIKE,
         EngineLane.PAIR_ENGINE,
     ): charged_strike.PAIR_INTERPRETER,
+    (
+        RuleFamily.CRIT_PROFILE,
+        EngineLane.PAIR_ENGINE,
+    ): crit_profile.PAIR_INTERPRETER,
     (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
     (
         RuleFamily.ON_HIT_STRIKE,

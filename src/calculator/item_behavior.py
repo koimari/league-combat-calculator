@@ -1129,6 +1129,91 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     lane_chain_rank: int
 
 
+# ── the critical-strike profile ───────────────────────────────────────────
+
+
+class CritOccurrence(Enum):
+    """Which strike of a fight a forced critical strike lands on.
+
+    One member today, and it is still an enum rather than a boolean: the
+    registry tag is ``first_auto_crit`` and the engine's own test is
+    ``i == 0``, so "which strike" is a question the model already asks and
+    answers with an index nobody named.
+    """
+
+    FIRST_ATTACK = "first_attack"
+
+
+@dataclass(frozen=True, slots=True)
+class ForcedCritHeal:
+    """The heal a forced critical strike pays, and where its excess goes.
+
+    Declared as one record rather than four loose references because the
+    four numbers are one mechanic: a melee and a ranged share of base attack
+    damage, a share of the target's missing health, and the duration the
+    overflow is held as bonus health.  An item that forces a crit without
+    healing declares ``None`` rather than four zeroes — the declared-absence
+    idiom, so "this crit heals nothing" and "this crit's heal resolved to
+    zero" stay distinguishable.
+    """
+
+    base_ad_ratio: AnyValueRef
+    base_ad_ratio_ranged: AnyValueRef
+    missing_health_ratio: AnyValueRef
+    temporary_health_duration: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class CritDamageBonusRule:
+    """A flat addition to the multiplier every critical strike pays.
+
+    The base multiplier is the game's (CLAUDE.md: 200%) and belongs to the
+    engine; what an item declares is the *bonus* on top of it.  ``typing``
+    says which damage the bonus reaches, which is the declaration's answer to
+    a question the engine answers by where in the formula the addition sits.
+    """
+
+    bonus: AnyValueRef
+    typing: Typing
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ForcedCritRule:
+    """One strike that crits whether or not the roll would have.
+
+    ``reduced_ratio`` is a fraction of a full critical strike, not a
+    multiplier: the forced crit *overrides* a natural one, so a build that
+    would have critted anyway is made weaker by holding the item, and the
+    ratio is what says by how much.  ``cooldown`` is how long before the next
+    strike is forced again.
+    """
+
+    occurrence: CritOccurrence
+    reduced_ratio: AnyValueRef
+    cooldown: AnyValueRef
+    heal: ForcedCritHeal | None
+    typing: Typing
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class AttackCooldownRefundRule:
+    """A fraction of the holder's ability cooldowns refunded by an event.
+
+    It lands in the crit family because that is what the registry tag says
+    and where the mechanic lives: the refund rides a critical-strike item's
+    passive, and the number is read from the same entry as every other crit
+    modifier.  What it changes is a cooldown rather than a damage number,
+    which is why it is its own payload and not a field on
+    :class:`CritDamageBonusRule`.
+    """
+
+    refund_fraction: AnyValueRef
+    trigger: TriggerEvent
+    subject: Subject
+
+
 # ── defence ───────────────────────────────────────────────────────────────
 
 
@@ -1619,6 +1704,9 @@ RulePayload = Union[
     OnHitStrikeRule,
     ResistanceShredRule,
     SecondaryTargetRule,
+    CritDamageBonusRule,
+    ForcedCritRule,
+    AttackCooldownRefundRule,
     OpeningDefenseRule,
     ThresholdDefenseRule,
     CombatStateRule,
@@ -1643,6 +1731,9 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     OnHitStrikeRule: RuleFamily.ON_HIT_STRIKE,
     ResistanceShredRule: RuleFamily.RESISTANCE_SHRED,
     SecondaryTargetRule: RuleFamily.SECONDARY_TARGET,
+    CritDamageBonusRule: RuleFamily.CRIT_PROFILE,
+    ForcedCritRule: RuleFamily.CRIT_PROFILE,
+    AttackCooldownRefundRule: RuleFamily.CRIT_PROFILE,
     OpeningDefenseRule: RuleFamily.OPENING_DEFENSE,
     ThresholdDefenseRule: RuleFamily.THRESHOLD_DEFENSE,
     CombatStateRule: RuleFamily.COMBAT_STATE,
@@ -1781,6 +1872,17 @@ def _validate_payload(rule: BehaviorRule) -> None:
         return
     if isinstance(payload, ResistanceShredRule):
         _validate_shred_payload(rule, payload)
+        return
+    if isinstance(payload, (CritDamageBonusRule, ForcedCritRule)):
+        _validate_crit_profile(rule, payload)
+        return
+    if isinstance(payload, AttackCooldownRefundRule):
+        _validate_refs(rule, {"refund_fraction": payload.refund_fraction})
+        if not isinstance(payload.trigger, TriggerEvent):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a cooldown refund names the event that "
+                "refunds it"
+            )
         return
     if not isinstance(payload, DeltaAmpRule):
         return
@@ -2119,6 +2221,48 @@ def _validate_shred_payload(rule: BehaviorRule, payload: ResistanceShredRule) ->
         )
 
 
+def _validate_crit_profile(
+    rule: BehaviorRule, payload: CritDamageBonusRule | ForcedCritRule
+) -> None:
+    """A crit profile names its typing and, if it forces one, which strike.
+
+    The holder is the only legal subject: a critical strike is the holder's
+    own roll, so a crit profile filed against the target or an ally would be
+    a rule reading a number no engine gives it.
+    """
+    if not isinstance(payload.typing, Typing):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+    if payload.subject is not Subject.HOLDER:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a crit profile changes the holder's own "
+            "critical strikes and has no other subject"
+        )
+    if isinstance(payload, CritDamageBonusRule):
+        _validate_refs(rule, {"bonus": payload.bonus})
+        return
+    if not isinstance(payload.occurrence, CritOccurrence):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a forced crit says which strike it lands on"
+        )
+    _validate_refs(
+        rule,
+        {"reduced_ratio": payload.reduced_ratio, "cooldown": payload.cooldown},
+    )
+    if payload.heal is None:
+        return
+    if not isinstance(payload.heal, ForcedCritHeal):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: heal is not a ForcedCritHeal")
+    _validate_refs(
+        rule,
+        {
+            "heal.base_ad_ratio": payload.heal.base_ad_ratio,
+            "heal.base_ad_ratio_ranged": payload.heal.base_ad_ratio_ranged,
+            "heal.missing_health_ratio": payload.heal.missing_health_ratio,
+            "heal.temporary_health_duration": payload.heal.temporary_health_duration,
+        },
+    )
+
+
 # The ``str``-typed fields that are identifiers and citations rather than
 # policy.  Criterion 6 requires them **named**, not waived on contact, so
 # they are a constant the assertion reads and not a judgement it makes.
@@ -2283,6 +2427,7 @@ __all__ = [
     "Always",
     "AmpChainSlot",
     "AtLeast",
+    "AttackCooldownRefundRule",
     "Attribution",
     "Basis",
     "BehaviorRule",
@@ -2299,6 +2444,8 @@ __all__ = [
     "Compilable",
     "Consumption",
     "CooldownProcRule",
+    "CritDamageBonusRule",
+    "CritOccurrence",
     "DEFENSE_FIELD_COMBINE",
     "DEFENSE_PAYLOAD_TYPES",
     "DamageFormula",
@@ -2319,6 +2466,8 @@ __all__ = [
     "FLOOR_TYPES",
     "Fixed",
     "Floor",
+    "ForcedCritHeal",
+    "ForcedCritRule",
     "Isolation",
     "KernelField",
     "LevelSteppedRate",
