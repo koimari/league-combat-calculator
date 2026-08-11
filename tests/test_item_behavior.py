@@ -216,36 +216,35 @@ def test_the_kernel_contract_carries_no_program_type() -> None:
     assert context.data_version == 3
 
 
-def test_the_utility_vocabulary_lands_beside_the_two_it_replaces() -> None:
-    """D-98's delta, asserted before the flip that deletes the legacy sets.
+def test_the_utility_vocabulary_is_the_single_home_both_readers_project() -> None:
+    """The flip's other side: two readers, one home, asserted in both directions.
 
-    ``UtilityDimension`` is the single home of the outcome vocabulary, and it
-    is landed *beside* the two containers it replaces rather than instead of
-    them: ``item_coverage._UTILITY_DIMENSIONS`` (43 items over the dimension
-    strings) and Phase 1's ``coverage_evidence.UTILITY_DIMENSIONS`` (the
-    measured distinct set).  All three must name the same strings, which is
-    what makes the following commit a one-symbol flip rather than a rewrite
-    with a behaviour change hidden in it.
+    ``item_coverage.UTILITY_OUTCOMES`` now holds ``UtilityDimension`` members
+    rather than open strings, and Phase 1's
+    ``coverage_evidence.UTILITY_DIMENSIONS`` is asserted equal to this enum's
+    values rather than to whatever the per-item declaration happens to
+    contain.  The two readers can therefore only disagree with the home, never
+    quietly with each other.
 
-    Set equality, never a count: a 43 and a 29 are two plausible-looking
-    wrong answers for one population, which is exactly why the legacy set's
-    own comment refuses to pin an integer.
+    Set equality, never a count: 43 items and 29 dimensions are two
+    plausible-looking wrong answers for one population.
     """
-    # Imported here rather than at module scope: this suite is
-    # ``item_behavior``'s front door, and the leaf-ness test above asserts the
-    # module imports nothing but ``value_ref`` and ``ability_spec``.
+    # Imported here rather than at module scope: the leaf-ness test above
+    # asserts ``item_behavior`` itself imports nothing but ``value_ref`` and
+    # ``ability_spec``, and these two readers depend on it, not the reverse.
     from src.calculator import item_coverage
     from src.calculator.coverage_evidence import UTILITY_DIMENSIONS
 
     declared = {dimension.value for dimension in UtilityDimension}
-    measured = {
+    assigned = {
         dimension
-        for dimensions in item_coverage._UTILITY_DIMENSIONS.values()  # noqa: SLF001
+        for dimensions in item_coverage.UTILITY_OUTCOMES.values()
         for dimension in dimensions
     }
 
-    assert declared == measured
     assert declared == set(UTILITY_DIMENSIONS)
+    assert assigned <= set(UtilityDimension)
+    assert {dimension.value for dimension in assigned} == declared
     assert len(UtilityDimension) == len(declared), "two members share a value"
 
 

@@ -1823,11 +1823,11 @@ def test_a_target_blocked_item_stops_the_run(item: str) -> None:
         item_coverage.require_target_item_coverage([record])
 
 
-@pytest.mark.parametrize("item", sorted(item_coverage._UTILITY_DIMENSIONS))
+@pytest.mark.parametrize("item", sorted(item_coverage.UTILITY_OUTCOMES))
 def test_a_utility_item_publishes_its_declared_dimensions(item: str) -> None:
     """The product-facing dimensions reach both public payloads, unchanged."""
     record = CACHE[item]
-    declared = list(item_coverage._UTILITY_DIMENSIONS[item])
+    declared = [dimension.value for dimension in item_coverage.UTILITY_OUTCOMES[item]]
     assert item_coverage.item_model_coverage(record)["outcome_dimensions"] == declared
     assert (
         item_coverage.target_item_model_coverage(record)["outcome_dimensions"]
@@ -1946,7 +1946,7 @@ def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None
         "_TARGET_MODELED_REASONS": "target",
         "_TARGET_EVENT_CERTIFIED_REASONS": "target",
         "_TARGET_BLOCKED_REASONS": "target",
-        "_UTILITY_DIMENSIONS": "utility",
+        "UTILITY_OUTCOMES": "utility",
     }
     unclaimed: list[str] = []
     for container_name, lane in lanes.items():
@@ -2078,16 +2078,16 @@ def test_the_effect_tag_union_is_total() -> None:
 def test_every_declared_dimension_is_a_member_of_the_closed_set() -> None:
     """Criterion 12: set equality, and every claim's dimensions inside it."""
     measured = {
-        dimension
-        for dimensions in item_coverage._UTILITY_DIMENSIONS.values()
+        dimension.value
+        for dimensions in item_coverage.UTILITY_OUTCOMES.values()
         for dimension in dimensions
     }
     assert UTILITY_DIMENSIONS == measured
     for claim in COVERAGE_EVIDENCE.values():
         assert set(claim.dimensions) <= UTILITY_DIMENSIONS
-    for item, dimensions in item_coverage._UTILITY_DIMENSIONS.items():
+    for item, dimensions in item_coverage.UTILITY_OUTCOMES.items():
         claim = COVERAGE_EVIDENCE[("item", item, "utility")]
-        assert claim.dimensions == tuple(dimensions)
+        assert claim.dimensions == tuple(dimension.value for dimension in dimensions)
 
 
 def test_the_frontier_holds_no_damage_or_durability_lane_and_every_entry_is_tracked() -> (

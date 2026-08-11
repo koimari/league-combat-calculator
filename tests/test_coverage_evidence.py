@@ -50,7 +50,8 @@ from src.calculator.coverage_evidence import (
     validate_precedence,
     validate_precedence_rule,
 )
-from src.calculator.item_coverage import PRECEDENCE, _UTILITY_DIMENSIONS
+from src.calculator.item_behavior import UtilityDimension
+from src.calculator.item_coverage import PRECEDENCE
 
 MODULE_PATH = (
     Path(__file__).resolve().parents[1] / "src" / "calculator" / "coverage_evidence.py"
@@ -612,20 +613,20 @@ def test_the_support_packet_overlay_adds_exactly_one_requirement() -> None:
     assert overlaid.forbidden == base.forbidden
 
 
-def test_utility_dimensions_equal_the_measured_set() -> None:
-    """Set equality against the dict it was measured from — never a count.
+def test_utility_dimensions_project_the_single_home() -> None:
+    """Set equality against ``UtilityDimension`` — the projection, mechanised.
 
-    ``item_coverage._UTILITY_DIMENSIONS`` maps item names to dimension
-    tuples, so its key count and its distinct-value count are different
-    numbers and either is a plausible-looking wrong answer.  Pinning the set
-    is what makes this checkable at all.
+    The load tier may not import ``src.calculator`` (D-20, asserted below over
+    this module's own AST), so the projection cannot be a live read and this
+    assertion is what discharges it instead.  Authority is the enum's; the
+    frozenset is its shadow, and a member added to either side fails here on
+    the commit that adds it.
+
+    Pinned as a set and never as a count: the per-item declaration these were
+    measured from maps 43 items onto the distinct strings, so either integer
+    is a plausible-looking wrong answer.
     """
-    measured = {
-        dimension
-        for dimensions in _UTILITY_DIMENSIONS.values()
-        for dimension in dimensions
-    }
-    assert UTILITY_DIMENSIONS == measured
+    assert UTILITY_DIMENSIONS == {dimension.value for dimension in UtilityDimension}
 
 
 # ---------------------------------------------------------------------------

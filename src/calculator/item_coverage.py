@@ -38,6 +38,7 @@ from .coverage_evidence import (
     validate_claim_table,
     validate_precedence,
 )
+from .item_behavior import UtilityDimension
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 
 ItemCoverageStatus = Literal[
@@ -390,54 +391,102 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
 }
 
-# Product-facing outcome dimensions for utility and non-TDD effects.  These
-# labels are deliberately descriptive: they do not claim a combat formula is
-# implemented.  A dimension with ``blocked`` coverage remains withheld rather
-# than being silently presented as a stat-only item.
-_UTILITY_DIMENSIONS: dict[str, tuple[str, ...]] = {
-    "Bandlepipes": ("ally_support", "stat_buff"),
-    "Gunmetal Greaves": ("movement",),
-    "Cull": ("economy", "progression", "on_hit"),
-    "Phage": ("movement",),
-    "Heartsteel": ("progression", "health_state"),
-    "Hubris": ("progression", "stat_conversion"),
-    "Axiom Arc": ("progression", "resource"),
-    "Mejai's Soulstealer": ("progression", "stat_conversion"),
-    "Rod of Ages": ("progression", "health_state", "resource"),
-    "Solstice Sleigh": ("ally_support", "movement", "sustain"),
-    "Swiftmarch": ("movement", "stat_conversion"),
-    "World Atlas": ("economy", "quest", "ally_support", "vision"),
-    "Runic Compass": ("economy", "quest", "ally_support", "vision"),
-    "Tear of the Goddess": ("progression", "resource"),
-    "Banshee's Veil": ("spell_protection",),
-    "Edge of Night": ("spell_protection",),
-    "Zhonya's Hourglass": ("stasis",),
-    "Guardian Angel": ("revive",),
-    "Mercurial Scimitar": ("cleanse", "movement"),
-    "Boots of Swiftness": ("slow_resistance", "movement"),
-    "Cosmic Drive": ("movement",),
-    "Force of Nature": ("movement", "defense"),
-    "Phantom Dancer": ("movement",),
-    "Shurelya's Battlesong": ("movement", "ally_support"),
-    "Youmuu's Ghostblade": ("movement",),
-    "Rylai's Crystal Scepter": ("slow",),
-    "Serylda's Grudge": ("slow",),
-    "Frozen Heart": ("attack_speed_reduction",),
-    "Randuin's Omen": ("slow", "critical_mitigation"),
-    "Runaan's Hurricane": ("multi_target", "copied_on_hit"),
-    "Titanic Hydra": ("multi_target",),
-    "Profane Hydra": ("multi_target",),
-    "Ravenous Hydra": ("multi_target", "sustain"),
-    "Stridebreaker": ("multi_target", "slow", "movement"),
-    "Statikk Shiv": ("multi_target", "energized"),
-    "Stormrazor": ("energized", "movement"),
-    "Rapid Firecannon": ("energized", "range"),
-    "Umbral Glaive": ("vision",),
-    "Horizon Focus": ("vision", "damage_amplification"),
-    "Locket of the Iron Solari": ("ally_support", "shield"),
-    "Mikael's Blessing": ("ally_support", "cleanse", "sustain"),
-    "Redemption": ("ally_support", "sustain"),
-    "The Collector": ("execute", "takedown_state"),
+# What each item changes about a fight besides the damage number.  The labels
+# are deliberately descriptive: they do not claim a combat formula is
+# implemented, and an item whose coverage is withheld stays withheld rather
+# than being silently presented as a stat-only one.
+#
+# The *vocabulary* is not declared here — it is
+# :class:`~.item_behavior.UtilityDimension`, the single home both this payload
+# and Phase 1's claim table read.  What is declared here is the per-item
+# assignment, which no rule can derive: twenty of these items compile to no
+# ``BehaviorRule`` at all (a revive, a stasis, a spell shield), so their
+# outcome is a reviewed product fact rather than a consequence of a
+# declaration.  Typed members instead of open strings is the difference the
+# flip makes: a misspelling is now an ``AttributeError`` at import.
+UTILITY_OUTCOMES: Mapping[str, tuple[UtilityDimension, ...]] = {
+    "Bandlepipes": (UtilityDimension.ALLY_SUPPORT, UtilityDimension.STAT_BUFF),
+    "Gunmetal Greaves": (UtilityDimension.MOVEMENT,),
+    "Cull": (
+        UtilityDimension.ECONOMY,
+        UtilityDimension.PROGRESSION,
+        UtilityDimension.ON_HIT,
+    ),
+    "Phage": (UtilityDimension.MOVEMENT,),
+    "Heartsteel": (UtilityDimension.PROGRESSION, UtilityDimension.HEALTH_STATE),
+    "Hubris": (UtilityDimension.PROGRESSION, UtilityDimension.STAT_CONVERSION),
+    "Axiom Arc": (UtilityDimension.PROGRESSION, UtilityDimension.RESOURCE),
+    "Mejai's Soulstealer": (
+        UtilityDimension.PROGRESSION,
+        UtilityDimension.STAT_CONVERSION,
+    ),
+    "Rod of Ages": (
+        UtilityDimension.PROGRESSION,
+        UtilityDimension.HEALTH_STATE,
+        UtilityDimension.RESOURCE,
+    ),
+    "Solstice Sleigh": (
+        UtilityDimension.ALLY_SUPPORT,
+        UtilityDimension.MOVEMENT,
+        UtilityDimension.SUSTAIN,
+    ),
+    "Swiftmarch": (UtilityDimension.MOVEMENT, UtilityDimension.STAT_CONVERSION),
+    "World Atlas": (
+        UtilityDimension.ECONOMY,
+        UtilityDimension.QUEST,
+        UtilityDimension.ALLY_SUPPORT,
+        UtilityDimension.VISION,
+    ),
+    "Runic Compass": (
+        UtilityDimension.ECONOMY,
+        UtilityDimension.QUEST,
+        UtilityDimension.ALLY_SUPPORT,
+        UtilityDimension.VISION,
+    ),
+    "Tear of the Goddess": (UtilityDimension.PROGRESSION, UtilityDimension.RESOURCE),
+    "Banshee's Veil": (UtilityDimension.SPELL_PROTECTION,),
+    "Edge of Night": (UtilityDimension.SPELL_PROTECTION,),
+    "Zhonya's Hourglass": (UtilityDimension.STASIS,),
+    "Guardian Angel": (UtilityDimension.REVIVE,),
+    "Mercurial Scimitar": (UtilityDimension.CLEANSE, UtilityDimension.MOVEMENT),
+    "Boots of Swiftness": (UtilityDimension.SLOW_RESISTANCE, UtilityDimension.MOVEMENT),
+    "Cosmic Drive": (UtilityDimension.MOVEMENT,),
+    "Force of Nature": (UtilityDimension.MOVEMENT, UtilityDimension.DEFENSE),
+    "Phantom Dancer": (UtilityDimension.MOVEMENT,),
+    "Shurelya's Battlesong": (UtilityDimension.MOVEMENT, UtilityDimension.ALLY_SUPPORT),
+    "Youmuu's Ghostblade": (UtilityDimension.MOVEMENT,),
+    "Rylai's Crystal Scepter": (UtilityDimension.SLOW,),
+    "Serylda's Grudge": (UtilityDimension.SLOW,),
+    "Frozen Heart": (UtilityDimension.ATTACK_SPEED_REDUCTION,),
+    "Randuin's Omen": (UtilityDimension.SLOW, UtilityDimension.CRITICAL_MITIGATION),
+    "Runaan's Hurricane": (
+        UtilityDimension.MULTI_TARGET,
+        UtilityDimension.COPIED_ON_HIT,
+    ),
+    "Titanic Hydra": (UtilityDimension.MULTI_TARGET,),
+    "Profane Hydra": (UtilityDimension.MULTI_TARGET,),
+    "Ravenous Hydra": (UtilityDimension.MULTI_TARGET, UtilityDimension.SUSTAIN),
+    "Stridebreaker": (
+        UtilityDimension.MULTI_TARGET,
+        UtilityDimension.SLOW,
+        UtilityDimension.MOVEMENT,
+    ),
+    "Statikk Shiv": (UtilityDimension.MULTI_TARGET, UtilityDimension.ENERGIZED),
+    "Stormrazor": (UtilityDimension.ENERGIZED, UtilityDimension.MOVEMENT),
+    "Rapid Firecannon": (UtilityDimension.ENERGIZED, UtilityDimension.RANGE),
+    "Umbral Glaive": (UtilityDimension.VISION,),
+    "Horizon Focus": (UtilityDimension.VISION, UtilityDimension.DAMAGE_AMPLIFICATION),
+    "Locket of the Iron Solari": (
+        UtilityDimension.ALLY_SUPPORT,
+        UtilityDimension.SHIELD,
+    ),
+    "Mikael's Blessing": (
+        UtilityDimension.ALLY_SUPPORT,
+        UtilityDimension.CLEANSE,
+        UtilityDimension.SUSTAIN,
+    ),
+    "Redemption": (UtilityDimension.ALLY_SUPPORT, UtilityDimension.SUSTAIN),
+    "The Collector": (UtilityDimension.EXECUTE, UtilityDimension.TAKEDOWN_STATE),
 }
 
 # Concrete GitHub owners for source-backed gaps.  The full-entry audit exposes
@@ -570,7 +619,9 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
         "optimizer_eligible": status
         in {"modeled_effect", "modeled_state", "stats_only"},
         "calculation_eligible": status not in {"blocked", "review_pending"},
-        "outcome_dimensions": list(_UTILITY_DIMENSIONS.get(name, ())),
+        "outcome_dimensions": [
+            dimension.value for dimension in UTILITY_OUTCOMES.get(name, ())
+        ],
         "review_issue_refs": (
             review_issue_refs(name) if status in {"blocked", "review_pending"} else []
         ),
@@ -603,7 +654,9 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
         "name": name,
         "status": status,
         "calculation_eligible": status not in {"blocked", "review_pending"},
-        "outcome_dimensions": list(_UTILITY_DIMENSIONS.get(name, ())),
+        "outcome_dimensions": [
+            dimension.value for dimension in UTILITY_OUTCOMES.get(name, ())
+        ],
         "review_issue_refs": (
             review_issue_refs(name) if status in {"blocked", "review_pending"} else []
         ),
@@ -1654,7 +1707,7 @@ def _target_blocked_claim(item: str) -> Claim:
 
 
 def _utility_claim(item: str) -> Claim:
-    """One ``_UTILITY_DIMENSIONS`` entry and the home of what the model prices.
+    """One ``UTILITY_OUTCOMES`` entry and the home of what the model prices.
 
     A utility claim is about outcome *dimensions*, and the model prices some
     of them and none of others.  ``modeled_effect`` and ``modeled_state`` name
@@ -1663,7 +1716,7 @@ def _utility_claim(item: str) -> Claim:
     that says so rather than pointing at code that is about something else.
     """
     path, home = _UTILITY_HOMES[item]
-    dimensions = tuple(_UTILITY_DIMENSIONS[item])
+    dimensions = tuple(dimension.value for dimension in UTILITY_OUTCOMES[item])
     node = _test_ref("test_a_utility_item_publishes_its_declared_dimensions", item)
     refs = _issue_refs(item, "utility")
     if home == "source":
@@ -1984,7 +2037,7 @@ def _corpus() -> dict[tuple[SubjectKind, str, ClaimLane], Claim]:
         *(_target_modeled_claim(item) for item in _TARGET_MODELED_REASONS),
         *(_target_certified_claim(item) for item in _TARGET_EVENT_CERTIFIED_REASONS),
         *(_target_blocked_claim(item) for item in _TARGET_BLOCKED_REASONS),
-        *(_utility_claim(item) for item in _UTILITY_DIMENSIONS),
+        *(_utility_claim(item) for item in UTILITY_OUTCOMES),
         *(_support_packet_claim(item) for item in _SUPPORT_PACKET_CLAIMS),
         *_RULE_CLAIMS,
     ]
@@ -2262,6 +2315,7 @@ __all__ = [
     "COVERAGE_EVIDENCE",
     "FRONTIER",
     "PRECEDENCE",
+    "UTILITY_OUTCOMES",
     "item_model_coverage",
     "optimizer_candidate_coverage",
     "optimizer_supported_items",

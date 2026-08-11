@@ -5,7 +5,7 @@ import pytest
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
     _TARGET_BLOCKED_REASONS,
-    _UTILITY_DIMENSIONS,
+    UTILITY_OUTCOMES,
     PRECEDENCE,
     item_model_coverage,
     optimizer_candidate_coverage,
@@ -15,6 +15,7 @@ from src.calculator.item_coverage import (
     target_build_coverage,
     target_item_model_coverage,
 )
+from src.calculator.item_behavior import UtilityDimension
 from src.calculator.item_effects import ITEM_EFFECTS
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_source import is_ordinary_sr_item
@@ -518,19 +519,21 @@ def test_utility_coverage_exposes_outcome_dimensions_without_claiming_support(
 
 def test_every_utility_dimension_item_has_explicit_non_pending_coverage():
     """#50 utility labels cannot silently drift into unreviewed coverage."""
-    assert _UTILITY_DIMENSIONS
-    for item_name, dimensions in _UTILITY_DIMENSIONS.items():
+    assert UTILITY_OUTCOMES
+    for item_name, dimensions in UTILITY_OUTCOMES.items():
         coverage = item_model_coverage(get_item_by_name(item_name))
         assert coverage["status"] != "review_pending", item_name
-        assert coverage["outcome_dimensions"] == list(dimensions), item_name
+        assert coverage["outcome_dimensions"] == [
+            dimension.value for dimension in dimensions
+        ], item_name
 
 
 def test_sustain_dimension_never_claims_outgoing_model_support():
     """Healing/ally sustain remains descriptive until recipient accounting is exact."""
     sustain_items = [
         name
-        for name, dimensions in _UTILITY_DIMENSIONS.items()
-        if "sustain" in dimensions
+        for name, dimensions in UTILITY_OUTCOMES.items()
+        if UtilityDimension.SUSTAIN in dimensions
     ]
     assert sustain_items
     for item_name in sustain_items:
@@ -563,8 +566,13 @@ def test_cull_progression_receipt_is_calculation_and_optimizer_eligible():
 
 def test_opening_defense_items_with_blocked_target_state_never_claim_target_support():
     """Spell shields, stasis, revives, and unmodeled shields stay target-blocked."""
-    defense_dimensions = {"spell_protection", "stasis", "revive", "shield"}
-    for item_name, dimensions in _UTILITY_DIMENSIONS.items():
+    defense_dimensions = {
+        UtilityDimension.SPELL_PROTECTION,
+        UtilityDimension.STASIS,
+        UtilityDimension.REVIVE,
+        UtilityDimension.SHIELD,
+    }
+    for item_name, dimensions in UTILITY_OUTCOMES.items():
         if not defense_dimensions.intersection(dimensions):
             continue
         if item_name not in _TARGET_BLOCKED_REASONS:

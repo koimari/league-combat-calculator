@@ -125,11 +125,22 @@ EVIDENCE_REGISTRIES: frozenset[str] = frozenset(
     {"ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS", "ITEM_INPUT_OPTIONS"}
 )
 
-# The measured outcome-dimension set.  It is pinned as a **set** and never as
-# a count: ``item_coverage._UTILITY_DIMENSIONS`` is a 43-key dict over these
-# 29 distinct strings, so either integer is a plausible-looking wrong answer.
-# ``tests/test_coverage_evidence.py`` asserts set equality against that dict,
-# which is what keeps this literal honest without importing it here.
+# The outcome-dimension set, **projected from
+# ``item_behavior.UtilityDimension``** — that enum is the vocabulary's single
+# home and this is one of its two readers.
+#
+# The projection is asserted, not imported, and the difference is ruled rather
+# than convenient.  This module is the load tier: it imports nothing from
+# ``src.calculator`` and every evidence member holds strings and never objects
+# (D-20), and a test over this file's own AST enforces both.  So the enum
+# cannot be read here, and "projection" is discharged the only way it can be —
+# ``tests/test_coverage_evidence.py`` asserts set equality against
+# ``UtilityDimension``'s values, which fails on the commit that adds a member
+# to either side.  Authority sits with the enum; this literal is its shadow.
+#
+# Pinned as a **set** and never as a count: the per-item declaration this used
+# to be measured from maps 43 items onto these distinct strings, so either
+# integer is a plausible-looking wrong answer.
 #
 # Admission rule: a new member arrives in the same commit as a claim carrying
 # a ``PacketSource`` or an ``OptionSchema`` that names the mechanism producing
