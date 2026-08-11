@@ -42,7 +42,7 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, registry_entries, rule_owners
 from ..trigger_stream import CAPABILITIES
-from . import delta_amp
+from . import delta_amp, resistance_shred
 
 
 class InterpreterRegistryError(RuntimeError):
@@ -209,6 +209,10 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
 # receipt-walk half arrives with the amps the coupled walk owns.
 INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
     (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
+    (
+        RuleFamily.RESISTANCE_SHRED,
+        EngineLane.PAIR_ENGINE,
+    ): resistance_shred.PAIR_INTERPRETER,
 }
 
 

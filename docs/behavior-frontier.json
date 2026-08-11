@@ -102,7 +102,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 131
+      "value": 127
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -142,7 +142,6 @@
         "reactive/defense_resolver",
         "reactive/receipt_walk",
         "resistance_shred/compiled_score_walk",
-        "resistance_shred/pair_engine",
         "resistance_shred/receipt_walk",
         "secondary_target/pair_engine",
         "secondary_target/receipt_walk",
@@ -161,7 +160,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 50
+      "value": 49
     }
   },
   "exclusions": {
@@ -268,5 +267,5 @@
     }
   },
   "schema_version": 1,
-  "slice": "3.2"
+  "slice": "3.3"
 }

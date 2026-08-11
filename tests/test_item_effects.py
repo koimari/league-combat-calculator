@@ -844,8 +844,6 @@ class TestResolveDamageEffects:
         assert effects.ability_amp.multiplier(
             {"bonus_mana": 300.0}, include_actives=True
         ) == pytest.approx(1.165)
-        assert effects.armor_reduction is not None
-        assert effects.armor_reduction.average_reduction(10) == pytest.approx(0.24)
         assert effects.execute is not None
         assert effects.execute.threshold == pytest.approx(0.05)
         assert len(effects.conditional_notes) == 2

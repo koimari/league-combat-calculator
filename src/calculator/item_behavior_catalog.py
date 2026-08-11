@@ -41,6 +41,7 @@ from .item_behavior import (
     Always,
     AmpChainSlot,
     Attribution,
+    Compilable,
     Comparison,
     BonusTyping,
     BehaviorRule,
@@ -60,7 +61,10 @@ from .item_behavior import (
     RampPerSecond,
     RampPerStack,
     ReceiptOnly,
+    Resistance,
+    ResistanceShredRule,
     RuleFamily,
+    StackRamp,
     Subject,
     TargetBonusHealthScaled,
     TriggerEvent,
@@ -434,6 +438,18 @@ MULTIPLIER_ORIGIN = Const(1.0, "origin")
 # purpose — so it is declared where a reader can see and challenge it rather
 # than living as a `duration / 2` inside the arithmetic.
 ASSUMED_SECONDS_PER_AMP_STACK = Const(2.0, "unit_scale")
+
+# How many stack-applying ability hits the pair engine assumes precede the
+# auto stream it counts for Black Cleaver's Carve.  A modelling assumption
+# about the rotation's shape, not a wiki number, and it was living as a
+# ``+ 4`` inside the averaging helper where no reader could challenge it.
+ASSUMED_CARVE_LEADING_ABILITY_HITS = Const(4.0, "count")
+
+# The declaration a shred makes when it counts every applying event exactly
+# and assumes nothing preceded the stream.  Spelled rather than defaulted:
+# "no leading stacks" is a claim about the model, and a defaulted zero would
+# be the same silence this phase removes from the other side.
+NO_LEADING_STACKS = Const(0.0, "count")
 
 
 def _declares_secondary(
@@ -960,6 +976,126 @@ def _compile_delta_amp(
     return tuple(rules)
 
 
+def _carve_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Black Cleaver's Carve — the pair engine's averaged reading of it.
+
+    Carve applies a stack on dealing physical damage and the pair engine
+    counts one stream, the auto attacks, assuming the rotation's opening
+    abilities have already applied :data:`ASSUMED_CARVE_LEADING_ABILITY_HITS`
+    of them.  Both halves of that model are now declared:
+    ``accrual=BASIC_ATTACK_HIT`` is the stream it counts and
+    ``leading_stacks`` is what it believes preceded it.
+
+    ``CESARO_APPROX`` is declared, **not changed**.  ``docs/math-foundations.md``
+    §2.3 calls re-tuning the closed-form average a balance change, so this
+    slice's whole intervention is making the model visible: a reader can now
+    see which summation a number came from instead of inferring it from a
+    constant inside an arithmetic helper.  The authority move to
+    coupled-with-preview is H1's and is not taken here.
+    """
+    return BehaviorRule(
+        family=RuleFamily.RESISTANCE_SHRED,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.armor_reduction",
+        payload=ResistanceShredRule(
+            resistance=Resistance.ARMOR,
+            ramp=StackRamp(
+                per_stack=ValueRef(registry, owner, "reduction_per_stack"),
+                max_stacks=ValueRef(registry, owner, "max_stacks"),
+                accrual=TriggerEvent.BASIC_ATTACK_HIT,
+                leading_stacks=ASSUMED_CARVE_LEADING_ABILITY_HITS,
+                model=RampModel.CESARO_APPROX,
+            ),
+            typing=Typing(
+                damage_classes=frozenset({DamageClass.PHYSICAL}),
+                attack_classes=frozenset(AttackClass),
+            ),
+            subject=Subject.TARGET,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the reduction is a sourced per-stack ratio averaged over the "
+            "fight's own hit count; a zero means the fight landed no hits, "
+            "which the rule measured",
+        ),
+    )
+
+
+def _vile_decay_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Bloodletter's Curse's Vile Decay — one stack per magic ability hit.
+
+    Counted exactly rather than averaged: the rotation walks its abilities in
+    order and each magic one applies a stack the ability's own damage then
+    benefits from, so the model is ``EXACT`` and ``leading_stacks`` is zero.
+    "Magic ability" is the rule's ``typing`` — the damage class that applies a
+    stack and the attack class that delivers it — which is where a comparison
+    inside the rotation loop used to live.
+    """
+    return BehaviorRule(
+        family=RuleFamily.RESISTANCE_SHRED,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.mr_reduction",
+        payload=ResistanceShredRule(
+            resistance=Resistance.MAGIC_RESIST,
+            ramp=StackRamp(
+                per_stack=ValueRef(registry, owner, "mr_reduction_per_stack"),
+                max_stacks=ValueRef(registry, owner, "max_stacks"),
+                accrual=TriggerEvent.ABILITY_HIT,
+                leading_stacks=NO_LEADING_STACKS,
+                model=RampModel.EXACT,
+            ),
+            typing=Typing(
+                damage_classes=frozenset({DamageClass.MAGIC}),
+                attack_classes=frozenset({AttackClass.ABILITY}),
+            ),
+            subject=Subject.TARGET,
+        ),
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the reduction is a sourced per-stack ratio at the stack count the "
+            "rotation applied; a zero means no magic ability landed, which the "
+            "rotation walk measured",
+        ),
+    )
+
+
+def _compile_resistance_shred(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile the stacking resistance reduction one registry entry declares.
+
+    Dispatch is on the entry's tag: the tag says which resistance is cut and
+    the value keys hold how deeply, so no item name is a literal here.
+    """
+    del family
+    tag = str(entry.get("type"))
+    rules: list[BehaviorRule] = []
+    if tag == "armor_reduction":
+        rules.append(_carve_rule(owner, registry))
+    if tag == "mr_reduction_stacking":
+        rules.append(_vile_decay_rule(owner, registry))
+    if not rules:
+        raise BehaviorCatalogError(
+            f"{registry}[{owner!r}] carries tag {tag!r} in the resistance-shred "
+            "family and no compiler builds a rule for it; a shred with no "
+            "declaration is an item that quietly cuts nothing"
+        )
+    for rule in rules:
+        validate_rule(rule)
+    return tuple(rules)
+
+
 def _unmigrated(
     family: RuleFamily,
     owner: str,
@@ -994,7 +1130,7 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.ACTIVE_CAST: _unmigrated,
     RuleFamily.SECONDARY_TARGET: _unmigrated,
     RuleFamily.DELTA_AMP: _compile_delta_amp,
-    RuleFamily.RESISTANCE_SHRED: _unmigrated,
+    RuleFamily.RESISTANCE_SHRED: _compile_resistance_shred,
     RuleFamily.CRIT_PROFILE: _unmigrated,
     RuleFamily.DAMAGE_ROUTING: _unmigrated,
     RuleFamily.OPENING_DEFENSE: _unmigrated,
@@ -1008,7 +1144,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 
 # Which numbered slice of this phase replaces each family's stub compiler.
 UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.RESISTANCE_SHRED: "3.3",
     RuleFamily.ON_HIT_STRIKE: "3.4",
     RuleFamily.CHARGED_STRIKE: "3.4",
     RuleFamily.SPELLBLADE: "3.4",
@@ -1329,6 +1464,7 @@ validate_catalog()
 
 __all__ = [
     "ACTION_KIND_FAMILY",
+    "ASSUMED_CARVE_LEADING_ABILITY_HITS",
     "ALLY_DELTA_AMP_KEYS",
     "ALLY_DELTA_AMP_SLOTS",
     "CACHED_ITEM_SOURCE",
@@ -1345,6 +1481,7 @@ __all__ = [
     "KEYSTONE_AMPS",
     "MIGRATED_DELTA_AMP_TAGS",
     "MULTIPLIER_ORIGIN",
+    "NO_LEADING_STACKS",
     "TAG_FAMILY",
     "UNMIGRATED_FAMILIES",
     "behavior_rules",

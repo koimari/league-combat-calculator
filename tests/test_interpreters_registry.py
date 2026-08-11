@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from src.calculator import interpreters
+from src.calculator import item_behavior_catalog as catalog
 from src.calculator.item_behavior import (
     Compilable,
     EngineLane,
@@ -68,10 +69,18 @@ def test_the_compiled_score_walk_gap_is_a_receipt_and_not_a_zero() -> None:
 
 
 def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable() -> None:
-    """The fold fails closed: an absence never becomes a compiled-lane promise."""
-    verdict = interpreters.compilability_for("Black Cleaver")
+    """The fold fails closed: an absence never becomes a compiled-lane promise.
+
+    The subject is *read* from the frontier rather than spelled, because every
+    migration slice declares another owner and a named one would make this
+    test pass by having been retired rather than by holding.
+    """
+    still_engine_code = sorted(catalog.undeclared_owners())
+    assert still_engine_code, "the migration is complete; this test has retired"
+    owner = still_engine_code[0]
+    verdict = interpreters.compilability_for(owner)
     assert isinstance(verdict, ReceiptOnly)
-    assert "Black Cleaver" in verdict.reason
+    assert owner in verdict.reason
 
 
 def test_an_owner_with_no_registry_entry_has_nothing_to_represent() -> None:

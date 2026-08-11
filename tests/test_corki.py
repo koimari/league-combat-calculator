@@ -18,7 +18,8 @@ from src.calculator.damage import (
     calculate_fight_damage,
 )
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.item_effects import resolve_damage_effects
+from src.calculator.interpreters import resistance_shred
+from src.calculator.item_behavior import Resistance
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.resistance import apply_resistance
 
@@ -318,9 +319,14 @@ class TestGatlingGunShred:
             reduced_mr=5.0,
             malignance_mr_reduction=0.0,
             bc_reduction=0.0,
-            mr_reduction_effect=resolve_damage_effects(
-                [get_item_by_name("Bloodletter's Curse")]
-            ).stacking_mr_reduction,
+            mr_shred=resistance_shred.resolve_slot(
+                ["Bloodletter's Curse"],
+                Resistance.MAGIC_RESIST,
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=False,
+            ),
         )
         resists.resolve_magic()
         resists.resolve_armor()

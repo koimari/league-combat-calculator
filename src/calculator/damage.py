@@ -132,8 +132,8 @@ from . import item_effects
 from . import rune_effects
 from . import shield_ledger
 from .ability_spec import DamagePart
-from .interpreters import delta_amp
-from .item_behavior import AmpChainSlot, Isolation, Probe
+from .interpreters import delta_amp, resistance_shred
+from .item_behavior import AmpChainSlot, Isolation, Probe, Resistance
 from .trigger_stream import (
     Stream,
     authored_triggers,
@@ -225,7 +225,7 @@ class Resists:
     reduced_mr: float  # base MR minus Malignance Hatefog reduction
     malignance_mr_reduction: float
     bc_reduction: float  # Black Cleaver % armor reduction
-    mr_reduction_effect: item_effects.StackingReductionEffect | None
+    mr_shred: "resistance_shred.ShredSlot | None"
     # Percent BONUS armor penetration (Last Whisper family, K'Sante All
     # Out) and the target's base/bonus armor split (None = split unknown;
     # the legacy quick-scenario total-pen reading applies).
@@ -2043,6 +2043,33 @@ def _navori_effective_cd(
     return elapsed
 
 
+def _shred_slot(
+    items: Sequence[Mapping[str, Any]],
+    resistance: Resistance,
+    config: FightConfig,
+    *,
+    level: int,
+    is_melee: bool,
+) -> "resistance_shred.ShredSlot | None":
+    """The declared shred this build brings to one of the target's resistances.
+
+    ``None`` means no item the build holds declares a shred of it — an
+    answer, not a zero.  Owners are passed as names because a declaration is
+    keyed by whatever owns it; the engine never spells one.  The fight facts
+    are the build context's required fields: no shred's magnitude reads them
+    today, and passing a placeholder for one would be the silent default the
+    context's requiredness exists to prevent.
+    """
+    return resistance_shred.resolve_slot(
+        [str(item.get("name", "")) for item in items],
+        resistance,
+        level=level,
+        fight_duration_seconds=config.fight_duration_seconds,
+        target_bonus_health=max(0.0, config.target_bonus_health),
+        holder_is_melee=is_melee,
+    )
+
+
 def _resolve_combat_state(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -2110,8 +2137,10 @@ def _resolve_combat_state(
     base_mr = max(config.target_magic_resistance, 0)
     reduced_mr = max(config.target_magic_resistance - malignance_mr_reduction, 0)
 
-    # Stacking MR reduction (Bloodletter's Curse Vile Decay)
-    mr_reduction_effect = damage_effects.stacking_mr_reduction
+    # Stacking MR reduction (Bloodletter's Curse Vile Decay), declared
+    mr_shred = _shred_slot(
+        items, Resistance.MAGIC_RESIST, config, level=level, is_melee=bool(is_melee)
+    )
 
     # Armor penetration: percent pen + lethality (flat)
     armor_pen_percent = champion_stats.get("armor_penetration_percent", 0.0) / 100.0
@@ -2209,10 +2238,12 @@ def _resolve_combat_state(
         terminus_stat_pen = stacking_pen.max_pen
 
     # Stacking armor reduction applies before penetration.
-    armor_reduction = damage_effects.armor_reduction
+    armor_shred = _shred_slot(
+        items, Resistance.ARMOR, config, level=level, is_melee=bool(is_melee)
+    )
     bc_reduction = (
-        armor_reduction.average_reduction(num_auto_attacks)
-        if armor_reduction is not None
+        armor_shred.average_reduction(num_auto_attacks)
+        if armor_shred is not None
         else 0.0
     )
 
@@ -2231,7 +2262,7 @@ def _resolve_combat_state(
         reduced_mr=reduced_mr,
         malignance_mr_reduction=malignance_mr_reduction,
         bc_reduction=bc_reduction,
-        mr_reduction_effect=mr_reduction_effect,
+        mr_shred=mr_shred,
     )
     resists.resolve_magic()
     resists.resolve_armor()
@@ -2570,14 +2601,14 @@ def _ability_mr(resists: Resists, ult_cast: bool, vile_decay_stacks: int) -> flo
     Malignance's Hatefog only applies once R has been cast (``ult_cast``),
     and Bloodletter's Curse deepens the reduction per Vile Decay stack.
     """
-    if resists.mr_reduction_effect is None or vile_decay_stacks <= 0:
+    if resists.mr_shred is None or vile_decay_stacks <= 0:
         return (
             resists.effective_mr_post_ult if ult_cast else resists.effective_mr_pre_ult
         )
     base = resists.reduced_mr if ult_cast else resists.base_mr
     reduced = reduce_resistance(
         base,
-        resists.mr_reduction_effect.reduction_per_stack * vile_decay_stacks * 100.0,
+        resists.mr_shred.reduction_percent(vile_decay_stacks),
     )
     return apply_magic_penetration(
         max(reduced, min(0.0, base)),
@@ -3964,10 +3995,10 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # Bloodletter's Curse: magic damage abilities apply a Vile Decay
         # stack. The ability's own damage benefits from its stack.
         ability_stacks = 0
-        if resists.mr_reduction_effect and damage_type in ("magic", "mixed"):
+        if resists.mr_shred is not None and resists.mr_shred.accrues_on(damage_type):
             vile_decay_stacks = min(
                 vile_decay_stacks + 1,
-                resists.mr_reduction_effect.max_stacks,
+                resists.mr_shred.max_stacks,
             )
             ability_stacks = vile_decay_stacks
         ability_mr = _ability_mr(resists, ult_cast, ability_stacks)
@@ -4319,10 +4350,10 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # Update effective MR for non-ability damage using final Vile Decay stacks.
     # Non-ability damage occurs during/after the full rotation, so use
     # post-ult MR (Malignance reduction active).
-    if resists.mr_reduction_effect and vile_decay_stacks > 0:
+    if resists.mr_shred is not None and vile_decay_stacks > 0:
         mr_with_stacks = reduce_resistance(
             resists.reduced_mr,
-            resists.mr_reduction_effect.reduction_per_stack * vile_decay_stacks * 100.0,
+            resists.mr_shred.reduction_percent(vile_decay_stacks),
         )
         mr_with_stacks = max(mr_with_stacks, min(0.0, resists.reduced_mr))
         resists.effective_mr = apply_magic_penetration(

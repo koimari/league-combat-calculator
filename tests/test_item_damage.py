@@ -25,7 +25,21 @@ from src.calculator.damage import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _calculate_stacking_procs,
 )
+from src.calculator.interpreters import resistance_shred
+from src.calculator.item_behavior import Resistance
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
+
+
+def _mr_shred(*owners: str) -> "resistance_shred.ShredSlot | None":
+    """The magic-resistance shred a build declares, resolved through its rule."""
+    return resistance_shred.resolve_slot(
+        owners,
+        Resistance.MAGIC_RESIST,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=False,
+    )
 
 
 def _build(*names: str) -> list[dict[str, str]]:
@@ -464,18 +478,15 @@ class TestBloodlettersCurseVileDecay:
         return get_item_by_name("Bloodletter's Curse")
 
     def test_stacking_mr_reduction_helper(self) -> None:
-        """The build projection carries a typed stacking-reduction rule."""
-        effect = resolve_damage_effects(
-            [{"name": "Bloodletter's Curse"}]
-        ).stacking_mr_reduction
-        assert effect is not None
-        assert effect.reduction_per_stack == 0.075
-        assert effect.max_stacks == 4
+        """The build declares a stacking magic-resistance shred."""
+        slot = _mr_shred("Bloodletter's Curse")
+        assert slot is not None
+        assert slot.per_stack == 0.075
+        assert slot.max_stacks == 4
 
     def test_no_stacking_mr_reduction_without_item(self) -> None:
-        """Unrelated builds carry no stacking-reduction rule."""
-        effects = resolve_damage_effects([{"name": "Liandry's Torment"}])
-        assert effects.stacking_mr_reduction is None
+        """Unrelated builds declare none, which is an answer and not a zero."""
+        assert _mr_shred("Liandry's Torment") is None
 
     def test_effective_mr_decreases_per_ability(
         self,

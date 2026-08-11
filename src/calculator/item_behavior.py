@@ -601,6 +601,63 @@ def _validate_amp_chain() -> None:
 _validate_amp_chain()
 
 
+class Resistance(Enum):
+    """Which of the target's two resistances a shred reduces.
+
+    True damage has no resistance to reduce, which is why this is a
+    two-member enum rather than a projection of :class:`DamageClass`: the
+    question "what does this shred" and the question "what mitigates this
+    number" have different answer sets, and collapsing them would make a
+    true-damage shred expressible.
+    """
+
+    ARMOR = "armor"
+    MAGIC_RESIST = "magic_resist"
+
+
+@dataclass(frozen=True, slots=True)
+class StackRamp:
+    """A per-stack reduction accrued by a declared event, capped and summed.
+
+    Four axes, because a stacking shred really does answer four separate
+    questions and the engines answered them in four unrelated places: how
+    deep one stack cuts (``per_stack``), how many can be held
+    (``max_stacks``), what applies one (``accrual``), and how the fight's
+    stack history is summed into one number (``model``).
+
+    ``leading_stacks`` is the fifth and is an **assumption**, not a wiki
+    number: an engine that counts only one event stream still has to say what
+    it believes happened before that stream started.  Black Cleaver's pair
+    model assumes four ability hits precede the auto stream, and that belief
+    lived as a ``+ 4`` inside the arithmetic where no reader could challenge
+    it.  A rule that counts every applying event exactly declares zero.
+    """
+
+    per_stack: AnyValueRef
+    max_stacks: AnyValueRef
+    accrual: TriggerEvent
+    leading_stacks: AnyValueRef
+    model: RampModel
+
+
+@dataclass(frozen=True, slots=True)
+class ResistanceShredRule:
+    """One stacking resistance reduction: what it cuts, on what, how deep.
+
+    Reduction is not penetration.  A shred moves the *target's* resistance
+    before penetration is applied and may take it negative, which is why the
+    subject is the target and why this is its own family rather than a
+    magnitude on somebody's damage.  ``typing`` says which damage applies a
+    stack — Vile Decay reads magic damage only — and is the declaration's
+    answer to a comparison that used to live inside the rotation loop.
+    """
+
+    resistance: Resistance
+    ramp: StackRamp
+    typing: Typing
+    subject: Subject
+
+
 @dataclass(frozen=True, slots=True)
 class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     """One amplification slot: which events, when, how much, and to whom.
@@ -627,13 +684,14 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     lane_chain_rank: int
 
 
-RulePayload = DeltaAmpRule
+RulePayload = Union[DeltaAmpRule, ResistanceShredRule]
 
 # Which family each payload type belongs to.  One entry per payload; each
 # migration slice adds its family's payload here, so a rule can never carry
 # a payload its family does not name.
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     DeltaAmpRule: RuleFamily.DELTA_AMP,
+    ResistanceShredRule: RuleFamily.RESISTANCE_SHRED,
 }
 
 
@@ -695,6 +753,9 @@ def validate_rule(rule: BehaviorRule) -> None:
 def _validate_payload(rule: BehaviorRule) -> None:
     """Per-payload structure, kept out of :func:`validate_rule`'s ladder."""
     payload = rule.payload
+    if isinstance(payload, ResistanceShredRule):
+        _validate_shred_payload(rule, payload)
+        return
     if not isinstance(payload, DeltaAmpRule):
         return
     if not isinstance(payload.activation, ACTIVATION_TYPES):
@@ -717,6 +778,31 @@ def _validate_payload(rule: BehaviorRule) -> None:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: lane_chain_rank {payload.lane_chain_rank} names no "
             "slot in AMP_CHAIN_ORDER"
+        )
+
+
+def _validate_shred_payload(rule: BehaviorRule, payload: ResistanceShredRule) -> None:
+    """A shred names a resistance, a ramp and the damage that applies a stack."""
+    if not isinstance(payload.resistance, Resistance):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a shred says which resistance it reduces"
+        )
+    if not isinstance(payload.ramp, StackRamp):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: ramp is not a StackRamp")
+    if not isinstance(payload.ramp.accrual, TriggerEvent):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a shred says what event applies a stack"
+        )
+    if not isinstance(payload.ramp.model, RampModel):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a shred says how its stack history is summed"
+        )
+    if not isinstance(payload.typing, Typing):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+    if payload.subject is not Subject.TARGET:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a resistance shred acts on the target's "
+            "resistances; no other subject has any to reduce"
         )
 
 
@@ -852,9 +938,12 @@ __all__ = [
     "RampPerSecond",
     "RampPerStack",
     "ReceiptOnly",
+    "Resistance",
+    "ResistanceShredRule",
     "RuleFamily",
     "RulePayload",
     "SUBJECT_AUTHORITY",
+    "StackRamp",
     "Subject",
     "TRIGGER_STREAM",
     "TargetBonusHealthScaled",

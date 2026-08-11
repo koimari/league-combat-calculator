@@ -3625,14 +3625,6 @@ class FirstAutoCritEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class StackingReductionEffect:
-    """Per-hit resistance reduction and its stack cap."""
-
-    reduction_per_stack: float
-    max_stacks: int
-
-
-@dataclass(frozen=True, slots=True)
 class ExecuteEffect:
     """Display-only low-health execution threshold."""
 
@@ -3684,36 +3676,6 @@ class BasicAmplifierEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class ArmorReductionEffect:
-    """Average stacking armor reduction for one fight."""
-
-    reduction_per_stack: float
-    max_stacks: int
-
-    def average_reduction(self, num_auto_attacks: int) -> float:
-        """Preserve the engine's established Black Cleaver ramp model.
-
-        APPROXIMATION (documented, not exact): under the engine's ordering
-        convention (4 leading ability hits apply stacks before the auto
-        stream) the exact Cesaro mean of the capped ramp min(k, C) over
-        ``hits`` applications is C - C(C-1)/(2*hits) for hits >= C and
-        (hits+1)/2 below; the constant 0.8*C equals that mean at ~10 autos
-        and deviates up to ~20% at the extremes (long fights understate,
-        short fights overstate). Stack expiry (6 s) cannot rescue the
-        constant because the engine's inter-swing interval is below 6 s for
-        any realistic AS*uptime > 1/6. Kept as-is: it is tuned across the
-        corpus and re-tuning it is a balance change, not a P2 foundation
-        fix (see docs/math-foundations.md section 2.3).
-        """
-        hits = num_auto_attacks + 4
-        if hits >= self.max_stacks:
-            average_stacks = self.max_stacks * 0.8
-        else:
-            average_stacks = hits / 2.0
-        return self.reduction_per_stack * average_stacks
-
-
-@dataclass(frozen=True, slots=True)
 class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
@@ -3740,10 +3702,8 @@ class BuildDamageEffects:
     magic_amp: float = 1.0
     basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
-    armor_reduction: ArmorReductionEffect | None = None
     ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
-    stacking_mr_reduction: StackingReductionEffect | None = None
     cooldown_refund_source: str | None = None
     conditional_notes: tuple[str, ...] = ()
 
@@ -4619,10 +4579,8 @@ def _resolve_damage_effects_uncached(
     magic_amp = 1.0
     basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
-    armor_reduction: ArmorReductionEffect | None = None
     ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
-    stacking_mr_reduction: StackingReductionEffect | None = None
     cooldown_refund_source: str | None = None
     conditional_notes: list[str] = []
 
@@ -4712,12 +4670,6 @@ def _resolve_damage_effects_uncached(
                 item_name,
                 _RequiredValues(item_name, values).number("threshold"),
             )
-        elif effect_type == "mr_reduction_stacking":
-            required = _RequiredValues(item_name, values)
-            stacking_mr_reduction = StackingReductionEffect(
-                required.number("mr_reduction_per_stack"),
-                int(required.number("max_stacks")),
-            )
         elif effect_type == "crit_modifier":
             required = _RequiredValues(item_name, values)
             if "bonus_crit_damage" in values:
@@ -4732,12 +4684,6 @@ def _resolve_damage_effects_uncached(
             continue
         if effect_type == "magic_damage_amp":
             magic_amp += _RequiredValues(item_name, values).number("magic_amp")
-        if effect_type == "armor_reduction":
-            required = _RequiredValues(item_name, values)
-            armor_reduction = ArmorReductionEffect(
-                required.number("reduction_per_stack"),
-                int(required.number("max_stacks")),
-            )
         splash_note = values.get("unmodeled_splash_note")
         if splash_note:
             conditional_notes.append(str(splash_note))
@@ -4815,10 +4761,8 @@ def _resolve_damage_effects_uncached(
         magic_amp=magic_amp,
         basic_amp=basic_amp,
         ability_amp=ability_amp,
-        armor_reduction=armor_reduction,
         ability_amp_source=ability_amp_source,
         execute=execute,
-        stacking_mr_reduction=stacking_mr_reduction,
         cooldown_refund_source=cooldown_refund_source,
         conditional_notes=tuple(conditional_notes),
     )
