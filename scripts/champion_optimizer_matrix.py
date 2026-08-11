@@ -145,6 +145,40 @@ def run_matrix(
     }
 
 
+def build_gate_report(report: dict[str, Any], names: list[str]) -> dict[str, Any]:
+    """Wrap one optimizer matrix in the shared CI gate receipt."""
+    from scripts.gate_receipt import (  # pylint: disable=import-outside-toplevel
+        build_receipt,
+    )
+
+    counts = report["outcome_counts"]
+    passing_outcomes = {"certified", "certified_with_item_scope_gap"}
+    passed_count = sum(int(counts.get(outcome, 0)) for outcome in passing_outcomes)
+    withheld_count = int(counts.get("expected_withholding", 0)) + int(
+        counts.get("partial_or_unexhaustive", 0)
+    )
+    failed_count = len(names) - passed_count
+    return build_receipt(
+        matrix="issue_38_champion_optimizer",
+        passed=bool(report["passed"]),
+        passed_count=passed_count,
+        failed_count=failed_count,
+        total_count=len(names),
+        withheld_count=withheld_count,
+        failures=[
+            {"champion": row["champion"], "outcome": row["outcome"]}
+            for row in report["results"]
+            if row["outcome"] not in passing_outcomes
+        ],
+        extra={
+            "registered_count": len(names),
+            "exercised_count": report["exercised_count"],
+            "all_registered_exercised": report["all_registered_exercised"],
+            "results": report["results"],
+        },
+    )
+
+
 def main() -> int:
     """Run the local all-champion smoke matrix."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -176,34 +210,7 @@ def main() -> int:
     report["registry_size_ok"] = len(names) == report["registry_size_expected"]
     report["passed"] = bool(report["passed"] and report["registry_size_ok"])
 
-    # #139: shared gate receipt envelope (strict boolean passed + counts).
-    from gate_receipt import build_receipt  # pylint: disable=import-outside-toplevel
-
-    counts = report["outcome_counts"]
-    certified = counts.get("certified", 0)
-    withheld = counts.get("expected_withholding", 0) + counts.get(
-        "partial_or_unexhaustive", 0
-    )
-    failed = counts.get("unexpected_failure", 0)
-    report = build_receipt(
-        matrix="issue_38_champion_optimizer",
-        passed=bool(report["passed"]),
-        passed_count=int(certified),
-        failed_count=int(failed),
-        total_count=len(names),
-        withheld_count=int(withheld),
-        failures=[
-            {"champion": row["champion"], "outcome": row["outcome"]}
-            for row in report["results"]
-            if row["outcome"] not in {"certified"}
-        ],
-        extra={
-            "registered_count": len(names),
-            "exercised_count": report["exercised_count"],
-            "all_registered_exercised": report["all_registered_exercised"],
-            "results": report["results"],
-        },
-    )
+    report = build_gate_report(report, names)
 
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))

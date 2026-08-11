@@ -1,6 +1,6 @@
 """Tests for the bounded issue #38 champion optimizer smoke matrix."""
 
-from scripts.champion_optimizer_matrix import run_matrix
+from scripts.champion_optimizer_matrix import build_gate_report, run_matrix
 
 
 def test_partial_and_expected_withholding_fail_the_matrix_and_are_not_certified():
@@ -30,6 +30,14 @@ def test_partial_and_expected_withholding_fail_the_matrix_and_are_not_certified(
         "items": ["Shadowflame"],
         "boots": None,
     }
+    receipt = build_gate_report(report, ["partial", "withheld"])
+    assert receipt["passed"] is False
+    assert receipt["counts"] == {
+        "passed": 0,
+        "failed": 2,
+        "total": 2,
+        "withheld": 2,
+    }
 
 
 def test_item_scope_gap_does_not_withhold_a_complete_champion_package():
@@ -57,6 +65,15 @@ def test_item_scope_gap_does_not_withhold_a_complete_champion_package():
     assert report["outcome_counts"] == {"certified_with_item_scope_gap": 1}
     assert report["results"][0]["candidate_coverage"]["excluded_count"] == 21
     assert report["results"][0]["selection_certification"] != "partial_or_unexhaustive"
+    receipt = build_gate_report(report, ["Aatrox"])
+    assert receipt["passed"] is True
+    assert receipt["counts"] == {
+        "passed": 1,
+        "failed": 0,
+        "total": 1,
+        "withheld": 0,
+    }
+    assert receipt["failures"] == []
 
 
 def test_matrix_requires_every_registered_name_and_elapsed_receipt():
