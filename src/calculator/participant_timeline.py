@@ -48,6 +48,7 @@ from .healing_reduction import (
     champion_grievous_wound_sources,
     healing_reduction_profiles,
 )
+from .interpreters import uncompilable_item_receipt as _uncompilable_item_receipt
 from .interpreters.reactive import thorns_effects
 from .interpreters.sustain import walk_slot as _sustain_walk_slot
 from .interpreters.stat_derivation import (
@@ -88,7 +89,6 @@ from .survival import (
     run_survival_walk,
     support_transition_rank,
     survival_action_from_event,
-    uncompilable_item_receipt as _uncompilable_item_receipt,
 )
 from .work_counters import Rung, WorkCounterSink, record_rung
 
@@ -2299,7 +2299,7 @@ def _context_setup(
         item_receipt = _uncompilable_item_receipt(
             loadout.item_data,
             loadout_stats=loadout.stats,
-            warmog_ticks_compiled=True,
+            threshold_ticks_compiled=True,
         )
         if item_receipt is not None:
             raise UncompilableActionError(

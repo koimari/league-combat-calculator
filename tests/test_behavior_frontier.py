@@ -17,8 +17,8 @@ from scripts import behavior_frontier
 from src.calculator import interpreters
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_coverage
-from src.calculator.item_behavior import ReceiptOnly
-from src.calculator.survival import compile as compile_module
+from src.calculator.interpreters.stat_derivation import declared_stat_derivations
+from src.calculator.item_behavior import ThresholdRegenRule
 
 ROOT = Path(__file__).parents[1]
 RECEIPT_PATH = ROOT / "docs" / "behavior-frontier.json"
@@ -311,87 +311,105 @@ def test_the_scan_finds_a_planted_fallback_and_a_planted_entry(tmp_path) -> None
     assert "fake_champion.py:2" in frontier.forbidden_input_fallbacks[0]
 
 
-def test_the_compiled_walk_derivation_lands_beside_the_hand_set() -> None:
-    """D-98's first half for ``COMPILED_WALK_UNREPRESENTABLE_ITEMS``.
+def test_the_committed_refusal_set_is_what_the_fold_measures() -> None:
+    """The compiled walk's refusals, gated by set equality (D-40).
 
-    The derivation is landed beside the legacy set and its difference is
-    committed, because at 3.8 the two are not set-equal.  The gate is set
-    equality against the receipt in both directions, so a declaration that
-    closes part of the gap is a diff in a committed artifact rather than a
-    number that quietly improved.
+    What the derivation-beside-legacy block became once the flip deleted the
+    legacy.  The receipt records which owners the compiled score walk refuses
+    and which family made it refuse, and both halves are compared to a fresh
+    fold, so a declaration that changes which builds fall back is a diff in a
+    committed artifact rather than a number that quietly improved.
     """
-    receipt = _receipt()["compiled_walk_delta"]
-    measured = behavior_frontier.compiled_walk_delta()
+    receipt = _receipt()["compiled_walk_refusals"]
+    measured = behavior_frontier.compiled_walk_refusals()
 
-    assert set(receipt["legacy"]) == set(measured["legacy"])
-    assert set(receipt["legacy_only"]) == set(measured["legacy_only"])
-    assert set(receipt["derived_only"]) == set(measured["derived_only"])
-    assert set(receipt["derived"]) == set(measured["derived"])
+    assert set(receipt["refused"]) == set(measured["refused"])
+    assert receipt["refused"] == measured["refused"]
+    assert receipt["scope"] == "survival_ledger_transition"
+    assert receipt["symbol"] == "interpreters.compilability_for"
 
 
-def test_the_derivation_and_the_hand_set_agree_item_for_item() -> None:
-    """D-98's precondition for criterion 13, asserted on the symbols.
+def test_the_hand_set_is_gone_and_the_fold_is_what_the_gate_reads() -> None:
+    """Criterion 13, over the source tree and through the gate itself.
 
-    The delta test above compares the *receipt* to a fresh measurement; this
-    one compares the two live symbols directly, over the whole cached item
-    universe rather than over the hand set's own members, so an item the hand
-    set never named cannot be missed by asking only about the names it did.
-
-    Equality here is what makes the flip a substitution rather than a change:
-    every build `uncompilable_item_receipt` withholds today,
-    :func:`interpreters.compilability_for` withholds in the survival-ledger
-    scope, and no build is withheld by one and admitted by the other.  The
-    flip is the commit that deletes the hand set, and criterion 13 requires
-    it to be *preceded* by this assertion — so if this test ever goes red,
-    the flip is the change that has to be reverted, not this file.
+    The retired symbol has zero occurrences in ``src/`` — not as a binding
+    and not as a sentence about one, because a name that survives in prose is
+    how a reader learns to look for something that is not there — and the
+    build-level gate that used to read it now answers from the fold: an owner
+    the fold refuses is refused by the gate, and an owner it does not is not.
+    Both directions, so a gate wired to something else entirely could not
+    pass this by refusing everything.
     """
-    legacy = set(compile_module.COMPILED_WALK_UNREPRESENTABLE_ITEMS)
-    derived = {
-        name
-        for name in behavior_frontier.item_names() | legacy
-        if isinstance(
-            interpreters.compilability_for(name, behavior_frontier.LEDGER_SCOPE),
-            ReceiptOnly,
-        )
-    }
+    retired = "COMPILED_WALK_" + "UNREPRESENTABLE_ITEMS"
+    holders = [
+        path.relative_to(ROOT).as_posix()
+        for path in sorted((ROOT / "src").rglob("*.py"))
+        if retired in path.read_text(encoding="utf-8")
+    ]
+    assert holders == []
 
-    assert derived == legacy
+    refused = set(behavior_frontier.compiled_walk_refusals()["refused"])
+    for name in sorted(behavior_frontier.item_names()):
+        # The declared threshold regeneration is the one conditional answer,
+        # and it is conditional on stats this call does not supply, so it is
+        # asked separately below rather than folded into this equivalence.
+        if name == "Warmog's Armor":
+            continue
+        receipt = interpreters.uncompilable_item_receipt([{"name": name}])
+        assert (receipt is not None) == (name in refused), name
+        if receipt is not None:
+            assert receipt == f"item_mechanic={name}"
 
 
-def test_the_flip_is_blocked_exactly_while_the_two_sets_disagree() -> None:
-    """A gap with no stated cause is the prose this campaign deletes.
+def test_the_conditional_holder_falls_back_only_while_its_ticks_are_live() -> None:
+    """The gate's one conditional, read off the declaration and not a name.
 
-    The blockers are derived from the difference they describe, so this is an
-    equivalence rather than a count: ``flip_blocked_by`` is non-empty **iff**
-    a difference stands, and every member of either direction is named in it.
-    A hand-written blocker could be true of a set the tree had already left —
-    the earlier version of this receipt was, which is why the count heuristic
-    it was checked with is gone.
+    A threshold regeneration's ticks are authored in the event walk once the
+    holder's bonus health passes the declared threshold, so an inactive
+    holder is numerically identical in both walks and must not fall back.
+    The threshold comes from the rule; nothing here names the item that
+    happens to carry it, and the case dies honestly if the declaration does.
     """
-    receipt = _receipt()["compiled_walk_delta"]
-    blockers = receipt["flip_blocked_by"]
-    differing = [*receipt["legacy_only"], *receipt["derived_only"]]
-
-    assert bool(blockers) == bool(differing), (
-        "the receipt says blocked while the sets agree, or clear while they "
-        "differ — the one thing this block may never do"
+    holders = [
+        rule.owner
+        for owner in sorted(catalog.rule_owners())
+        for rule in catalog.behavior_rules(owner)
+        if isinstance(rule.payload, ThresholdRegenRule)
+    ]
+    assert holders, "no declaration carries a threshold regeneration"
+    build = [{"name": holders[0]}]
+    threshold = declared_stat_derivations(holders[:1], ThresholdRegenRule)[0].value(
+        "bonus_health_threshold"
     )
-    joined = " ".join(blockers)
-    for member in differing:
-        assert member in joined, f"{member} differs and no blocker names it"
-    for reason in blockers:
-        assert reason.strip()
+
+    assert interpreters.uncompilable_item_receipt(build) is not None
+    assert (
+        interpreters.uncompilable_item_receipt(
+            build, loadout_stats={"bonus_health": threshold - 1.0}
+        )
+        is None
+    )
+    assert (
+        interpreters.uncompilable_item_receipt(
+            build, loadout_stats={"bonus_health": threshold}
+        )
+        is not None
+    )
+    assert (
+        interpreters.uncompilable_item_receipt(build, threshold_ticks_compiled=True)
+        is None
+    )
 
 
-def test_the_committed_delta_gate_fails_when_the_section_is_deleted() -> None:
-    """R-05: the new check reproduces its own red on demand."""
+def test_the_committed_refusal_gate_fails_when_the_section_is_deleted() -> None:
+    """R-05: the check reproduces its own red on demand."""
     report = behavior_frontier.scan()
     committed = _receipt()
-    committed.pop("compiled_walk_delta")
+    committed.pop("compiled_walk_refusals")
 
     failures = behavior_frontier.check(report, committed)
 
-    assert any("compiled_walk_delta" in failure for failure in failures)
+    assert any("compiled_walk_refusals" in failure for failure in failures)
 
 
 def test_a_member_with_a_compiled_rule_fails_the_ratchet() -> None:

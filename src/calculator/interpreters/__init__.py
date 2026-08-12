@@ -25,9 +25,9 @@ derived front-door check (D-95) is what would notice.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 from ..ability_spec import Authority
 from ..item_behavior import (
@@ -43,9 +43,11 @@ from ..item_behavior import (
     ReceiptScope,
     RuleFamily,
     SUBJECT_AUTHORITY,
+    ThresholdRegenRule,
 )
 from ..item_behavior_catalog import behavior_rules, registry_entries, rule_owners
 from ..trigger_stream import CAPABILITIES
+from .stat_derivation import declared_stat_derivations
 from . import (
     active_cast,
     ally_packet,
@@ -498,9 +500,9 @@ def compilability_for(owner: str, scope: ReceiptScope) -> Compilability:
     own.  A caller that genuinely wants the union asks for each scope and
     says so.
 
-    This is the successor to ``COMPILED_WALK_UNREPRESENTABLE_ITEMS`` — a
-    per-item question needs a per-item answer, which is why the fold lives
-    here rather than being left to each caller.
+    This is the successor to the per-item hand set the compiled walk used to
+    carry — a per-item question needs a per-item answer, which is why the fold
+    lives here rather than being left to each caller.
     """
     rules = behavior_rules(owner)
     if not rules:
@@ -521,6 +523,84 @@ def compilability_for(owner: str, scope: ReceiptScope) -> Compilability:
     if reasons:
         return ReceiptOnly("; ".join(reasons), scope=scope)
     return Compilable()
+
+
+def _threshold_regeneration_thresholds(
+    names: Sequence[str],
+) -> dict[str, float | None]:
+    """Each declared threshold regeneration this build brings, by owner.
+
+    The one *conditional* answer the build-level gate needs: a threshold
+    regeneration's ticks are authored inside the event walk, but only once
+    the holder's bonus health passes the declared threshold, so an inactive
+    holder is numerically identical in both walks and must not fall back.
+    Conditionality is not something ``Compilability`` can express — it is
+    ``Compilable | ReceiptOnly``, per rule and not per build — so it lives
+    here, keyed by the declared shape rather than by the one item that
+    happens to carry it today.
+
+    ``None`` for an owner that declares one whose number cannot be read: a
+    threshold nobody can resolve is a reason to fall back, not a threshold of
+    zero and not a crashed request.  Resolved per owner so one unreadable
+    declaration cannot decide the answer for the rest of the build.
+    """
+    thresholds: dict[str, float | None] = {}
+    for name in sorted(frozenset(names)):
+        try:
+            for slot in declared_stat_derivations([name], ThresholdRegenRule):
+                thresholds[slot.owner] = slot.value("bonus_health_threshold")
+        except (KeyError, TypeError, ValueError):
+            thresholds[name] = None
+    return thresholds
+
+
+def uncompilable_item_receipt(
+    items: Iterable[Mapping[str, Any]],
+    *,
+    loadout_stats: Mapping[str, float] | None = None,
+    threshold_ticks_compiled: bool = False,
+) -> str | None:
+    """Return a named receipt when a build cannot ride the compiled walk.
+
+    :func:`compilability_for` asked of a whole loadout, and the successor to
+    the sixteen-item hand set ``survival/compile.py`` used to carry: those
+    hand-written per-item notes are gone, and every one of them is now the fold
+    over that owner's own rules in the scope the question is about —
+    ``SURVIVAL_LEDGER_TRANSITION``, because what this gate asks is whether the
+    score ledger can stage the state transitions a build's items author, never
+    whether an amp is representable.  It lives here rather than in
+    ``survival/`` because the answer is a declaration and the dependency runs
+    ``interpreters -> survival`` and never back.
+
+    ``loadout_stats`` is the actor's resolved stats, required for a declared
+    threshold regeneration so the check mirrors the receipt walk's own gate;
+    ``None`` fails closed.  ``threshold_ticks_compiled`` is the
+    search-invariant caller's claim that it authors the holder's ticks itself
+    (the roster scan; issue #169), so an active holder stops being a reason to
+    fall back.
+
+    Items are walked in build order and the first refusal wins, which is what
+    keeps the published receipt string identical to the one the hand set
+    produced for the same build.
+    """
+    names = [str(item.get("name", "")) for item in items]
+    conditional = _threshold_regeneration_thresholds(names)
+    for name in names:
+        if name in conditional:
+            threshold = conditional[name]
+            if threshold_ticks_compiled:
+                continue
+            if loadout_stats is None or threshold is None:
+                return f"item_mechanic={name}"
+            if float(loadout_stats.get("bonus_health", 0.0) or 0.0) >= threshold:
+                return f"item_mechanic={name}"
+            continue
+        if isinstance(
+            compilability_for(name, ReceiptScope.SURVIVAL_LEDGER_TRANSITION),
+            ReceiptOnly,
+        ):
+            return f"item_mechanic={name}"
+    return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -694,6 +774,7 @@ __all__ = [
     "ReachabilityReport",
     "compilability_for",
     "declared_pairs",
+    "uncompilable_item_receipt",
     "lanes_for",
     "reachability_report",
     "resolve_defense",

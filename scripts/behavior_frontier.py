@@ -91,7 +91,6 @@ from src.calculator import item_behavior_catalog as catalog  # noqa: E402
 from src.calculator import item_coverage  # noqa: E402
 from src.calculator.data_fetcher import fetch_item_data  # noqa: E402
 from src.calculator.item_behavior import ReceiptOnly, ReceiptScope  # noqa: E402
-from src.calculator.survival import compile as compile_module  # noqa: E402
 
 # The one refusal the hand set answers, so the one the derivation reads.
 LEDGER_SCOPE = ReceiptScope.SURVIVAL_LEDGER_TRANSITION
@@ -363,53 +362,37 @@ def unserved_lane_block() -> dict[str, Any]:
     }
 
 
-def compiled_walk_delta() -> dict[str, Any]:
-    """D-98's derivation, landed beside ``COMPILED_WALK_UNREPRESENTABLE_ITEMS``.
+def compiled_walk_refusals() -> dict[str, Any]:
+    """Which owners the compiled score walk refuses, and which family says so.
 
-    The hand set is the compiled score kernel's per-item capability report;
-    :func:`interpreters.compilability_for` is the per-owner fold that succeeds
-    it (D-43).  This block is the two answers side by side with the difference
-    committed, because at 3.8 they are **not** set-equal and pretending
-    otherwise would be the prose-outruns-code failure inside the instrument
-    that measures it.
+    The successor to this block's own earlier shape.  Until 3.9 it carried a
+    derivation *beside* the hand set ``COMPILED_WALK_UNREPRESENTABLE_ITEMS``
+    with the difference committed, because the two disagreed and pretending
+    otherwise would have been the prose-outruns-code failure inside the
+    instrument that measures it.  They stopped disagreeing, the flip deleted
+    the hand set, and what is left to record is the answer itself.
 
-    ``legacy_only`` is the direction that blocks the flip.  A member here is an
-    item the hand set withholds and the fold would let compile, so flipping
-    today would silently drop a mechanic — the campaign's own incident shape.
-    ``derived_only`` is the safe direction: the fold is more conservative than
-    the hand set, and every member says which family made it so.
+    Read **in one scope** — ``ReceiptScope.SURVIVAL_LEDGER_TRANSITION`` —
+    because that is the question the build-level gate asks: whether the score
+    ledger can stage the state transitions a build's items author, never
+    whether a support template is instantaneous or an amp representable.
+    Folding all three refusals into one verdict was what made this set
+    twenty-eight items long while the hand set held sixteen; the two were
+    never measuring the same thing.
 
-    Both are gated by set equality against the committed receipt rather than
-    by a count, so a declaration that closes one of them shows up as a diff in
-    a committed artifact (D-40).
-
-    Both answers are read **in one scope** —
-    ``ReceiptScope.SURVIVAL_LEDGER_TRANSITION`` — because that is the question
-    the hand set answers: ``uncompilable_item_receipt`` asks a build whether
-    the score ledger can stage the state transitions its items author, and
-    never whether a support template is instantaneous or whether an amp is
-    representable.  Folding all three refusals into one verdict is what made
-    ``derived_only`` twenty-eight items long while the hand set held sixteen;
-    the two sets were never measuring the same thing.
-
-    ``flip_blocked_by`` is **derived** from the two difference directions
-    rather than written out.  The hand-written version named
-    ``stat_derivation`` as a cause and survived the slice that migrated it:
-    the sentence stayed true in its first half and false in its second, inside
-    the block whose whole job is to say why the flip is still blocked.  A
-    blocker computed from the difference it describes cannot rot that way, and
-    it disappears exactly when the flip becomes legal.
+    Gated by set equality against the committed receipt rather than by a
+    count, so a declaration that changes which builds fall back shows up as a
+    diff in a committed artifact (D-40).
     """
-    legacy = frozenset(compile_module.COMPILED_WALK_UNREPRESENTABLE_ITEMS)
-    derived: dict[str, list[str]] = {}
-    for owner in sorted(item_names() | legacy):
+    refusals: dict[str, list[str]] = {}
+    for owner in sorted(item_names()):
         verdict = interpreters.compilability_for(owner, LEDGER_SCOPE)
         if not isinstance(verdict, ReceiptOnly):
             continue
         # The families that made the fold refuse.  An owner with a registry
         # entry and no rule at all refuses for a different reason and gets the
         # empty list, which is the honest rendering of "nothing models it yet".
-        derived[owner] = sorted(
+        refusals[owner] = sorted(
             {
                 rule.family.value
                 for rule in catalog.behavior_rules(owner)
@@ -417,53 +400,13 @@ def compiled_walk_delta() -> dict[str, Any]:
                 and rule.compilability.scope is LEDGER_SCOPE
             }
         )
-    legacy_only = sorted(legacy - set(derived))
-    derived_only = sorted(set(derived) - legacy)
     return {
-        "legacy_symbol": "survival.compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS",
-        "derived_symbol": "interpreters.compilability_for",
-        "derived_scope": LEDGER_SCOPE.value,
-        "legacy": sorted(legacy),
-        "derived": dict(sorted(derived.items())),
-        "legacy_only": legacy_only,
-        "derived_only": derived_only,
-        "flip_blocked_by": _flip_blockers(legacy_only, derived_only),
+        "symbol": "interpreters.compilability_for",
+        "scope": LEDGER_SCOPE.value,
+        "consumed_by": "interpreters.uncompilable_item_receipt",
+        "refused": dict(sorted(refusals.items())),
+        "undeclared_base": _undeclared_base_blocker(),
     }
-
-
-def _flip_blockers(
-    legacy_only: Sequence[str], derived_only: Sequence[str]
-) -> tuple[str, ...]:
-    """Why the one-symbol flip is still illegal, read off the difference.
-
-    One clause per direction, each naming its own members, plus counter 3's
-    if the declaration base is still incomplete.  All three are conditional,
-    so an empty ``flip_blocked_by`` *is* the statement that D-98's flip may
-    land — the receipt cannot say "blocked" while the sets agree, and cannot
-    say "clear" while they do not.
-    """
-    clauses: list[str] = []
-    if legacy_only:
-        clauses.append(
-            "the hand set withholds "
-            + ", ".join(legacy_only)
-            + " and the fold does not: every rule they compile to is Compilable "
-            "in the survival-ledger scope, so flipping today would let a build "
-            "the kernel cannot stage ride the compiled walk — the campaign's "
-            "own incident shape.  Closing them is a migration, not a flip: a "
-            "scoped ReceiptOnly on the rule the walk authors, or a new "
-            "declaration where no rule models the mechanic at all."
-        )
-    if derived_only:
-        clauses.append(
-            "the fold withholds "
-            + ", ".join(derived_only)
-            + " and the hand set does not.  This direction is conservative "
-            "rather than unsafe, but flipping it would fall builds back for a "
-            "reason the build-level gate never owned, so it is a declared "
-            "widening and not a substitution."
-        )
-    return tuple(clauses) + _undeclared_base_blocker()
 
 
 def _undeclared_base_blocker() -> tuple[str, ...]:
@@ -830,35 +773,36 @@ def _unserved_lane_failures(
     return failures
 
 
-def _compiled_walk_delta_failures(
+def _compiled_walk_refusal_failures(
     committed: Mapping[str, Any], fresh: Mapping[str, Any]
 ) -> list[str]:
-    """The derivation-beside-legacy block, gated by set equality (D-40, D-98).
+    """The compiled walk's refusal set, gated by set equality (D-40).
 
     Fails closed: a receipt with the section deleted is a failure and not a
     skipped check, so the gate cannot be disarmed by removing what it reads.
     """
-    recorded = committed.get("compiled_walk_delta")
+    recorded = committed.get("compiled_walk_refusals")
     if not isinstance(recorded, Mapping):
-        failures = [
-            "compiled-walk delta: the committed receipt has no "
-            "compiled_walk_delta section; run --write"
+        return [
+            "compiled-walk refusals: the committed receipt has no "
+            "compiled_walk_refusals section; run --write"
         ]
-        return failures
-    measured = fresh["compiled_walk_delta"]
+    measured = fresh["compiled_walk_refusals"]
     failures = []
-    for key in ("legacy", "legacy_only", "derived_only"):
-        if set(recorded.get(key, ())) != set(measured[key]):
-            failures.append(
-                f"compiled-walk delta: {key} differs from the committed set "
-                f"(committed-only={sorted(set(recorded.get(key, ())) - set(measured[key]))}, "
-                f"measured-only={sorted(set(measured[key]) - set(recorded.get(key, ())))})"
-            )
-    if set(recorded.get("derived", {})) != set(measured["derived"]):
+    if set(recorded.get("refused", {})) != set(measured["refused"]):
         failures.append(
-            "compiled-walk delta: the derived owner set differs from the "
-            "committed one"
+            "compiled-walk refusals: the refused owner set differs from the "
+            "committed one (committed-only="
+            f"{sorted(set(recorded.get('refused', {})) - set(measured['refused']))}, "
+            f"measured-only={sorted(set(measured['refused']) - set(recorded.get('refused', {})))})"
         )
+    for owner, families in sorted(measured["refused"].items()):
+        if list(recorded.get("refused", {}).get(owner, ())) != families:
+            failures.append(
+                f"compiled-walk refusals: {owner} is refused by "
+                f"{families}, and the receipt records "
+                f"{list(recorded.get('refused', {}).get(owner, ()))}"
+            )
     return failures
 
 
@@ -971,7 +915,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
             module: dict(sorted(tally.items()))
             for module, tally in sorted(report.by_module.items())
         },
-        "compiled_walk_delta": compiled_walk_delta(),
+        "compiled_walk_refusals": compiled_walk_refusals(),
         "no_runtime_behavior": no_runtime_behavior_block(),
         "zero_policy_frontier": zero_policy_block(zero_policy_frontier()),
         "h4_tags": {
@@ -1028,7 +972,7 @@ def check(
             )
     failures.extend(_unserved_lane_failures(committed, fresh))
     failures.extend(_zero_policy_failures(committed, fresh))
-    failures.extend(_compiled_walk_delta_failures(committed, fresh))
+    failures.extend(_compiled_walk_refusal_failures(committed, fresh))
     failures.extend(_no_runtime_behavior_failures(committed, fresh))
     return tuple(failures)
 

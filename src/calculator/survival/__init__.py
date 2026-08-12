@@ -46,7 +46,6 @@ from .actions import (
     survival_action_from_event,
 )
 from .compile import (
-    COMPILED_WALK_UNREPRESENTABLE_ITEMS,
     UncompilableActionError,
     WalkCompiler,
     champion_wound_tuple,
@@ -54,7 +53,6 @@ from .compile import (
     heal_trigger_key,
     revive_candidate_actions,
     thorns_return_damage,
-    uncompilable_item_receipt,
     unrepresentable_damage_receipt,
     unrepresentable_heal_receipt,
     unrepresentable_template_receipt,
@@ -82,7 +80,6 @@ __all__ = [
     "ActionKind",
     "BARRIER_GRANT_KINDS",
     "SUPPORT_RANK_KEY",
-    "COMPILED_WALK_UNREPRESENTABLE_ITEMS",
     "ReceiptLedger",
     "ScoreLedger",
     "SurvivalAction",
@@ -114,7 +111,6 @@ __all__ = [
     "support_transition_rank",
     "survival_action_from_event",
     "thorns_return_damage",
-    "uncompilable_item_receipt",
     "unrepresentable_damage_receipt",
     "unrepresentable_heal_receipt",
     "unrepresentable_template_receipt",

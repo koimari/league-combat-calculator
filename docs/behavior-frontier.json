@@ -51,15 +51,13 @@
     "calculator/stats.py": {
       "counter_1": 3
     },
-    "calculator/survival/compile.py": {
-      "counter_1": 18
-    },
     "calculator/trigger_stream.py": {
       "class_c": 38
     }
   },
-  "compiled_walk_delta": {
-    "derived": {
+  "compiled_walk_refusals": {
+    "consumed_by": "interpreters.uncompilable_item_receipt",
+    "refused": {
       "Banshee's Veil": [
         "combat_state"
       ],
@@ -109,30 +107,9 @@
         "combat_state"
       ]
     },
-    "derived_only": [],
-    "derived_scope": "survival_ledger_transition",
-    "derived_symbol": "interpreters.compilability_for",
-    "flip_blocked_by": [],
-    "legacy": [
-      "Banshee's Veil",
-      "Catalyst of Aeons",
-      "Death's Dance",
-      "Doran's Blade",
-      "Doran's Ring",
-      "Doran's Shield",
-      "Eclipse",
-      "Edge of Night",
-      "Fimbulwinter",
-      "Force of Nature",
-      "Guardian Angel",
-      "Immortal Path",
-      "Jak'Sho, The Protean",
-      "Knight's Vow",
-      "Maw of Malmortius",
-      "Verdant Barrier"
-    ],
-    "legacy_only": [],
-    "legacy_symbol": "survival.compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS"
+    "scope": "survival_ledger_transition",
+    "symbol": "interpreters.compilability_for",
+    "undeclared_base": []
   },
   "counters": {
     "counter_1": {
@@ -140,7 +117,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 34
+      "value": 16
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",

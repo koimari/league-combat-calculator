@@ -17,6 +17,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from ..resistance import apply_magic_penetration, apply_resistance
 from .actions import (
     ActionKind,
     SurvivalAction,
@@ -28,7 +29,6 @@ from .actions import (
     participant_order,
     support_transition_rank,
 )
-from ..item_effects import sustain_effect_value
 
 
 class UncompilableActionError(ValueError):
@@ -48,92 +48,6 @@ class UncompilableActionError(ValueError):
         self.receipt = receipt
         self.source = source
         self.invariant = invariant
-
-
-# Item mechanics that never surface as a packet flag but are authored
-# inside the authoritative event walk (or a legacy-only second pass) and
-# would be silently erased by the compiled score kernel.  This is the
-# compiler's capability report, not a dispatch blocklist: the dispatch
-# predicate no longer names items; compilation itself fails closed.
-#
-# Issue #137 Phase 2: with the defense-object dispatch gate gone, the
-# report also covers defense-armed mechanics the score ledger cannot
-# stage: walk-authored recovery/revive/redirect/deferral (Death's Dance,
-# Knight's Vow, Guardian Angel), and state transitions that need
-# per-packet metadata the light score ledger cannot carry (Annul spell
-# shields, Force of Nature / Jak'Sho dynamic-resistance repricing).  The
-# kernel implements all of them for the receipt adapter; the score
-# adapter fails closed until their storage is representable.
-#
-# Warmog's Armor is not listed: its dedicated branch below owns the item
-# (issue #169 — a search-invariant roster holder's Heart ticks compile
-# into the base panel, so only the per-candidate scan still reports it).
-COMPILED_WALK_UNREPRESENTABLE_ITEMS = frozenset(
-    {
-        "Banshee's Veil",  # Annul spell shield needs cast metadata
-        "Catalyst of Aeons",  # Eternity resource-restore second pass is legacy-only
-        "Death's Dance",  # Ignore Pain ticks + Defy authored in the event walk
-        "Doran's Blade",  # Life Draining trigger-gated sustain (conservative)
-        "Doran's Ring",  # Drain tick cadence (conservative)
-        "Doran's Shield",  # Enduring Focus authored in the event walk
-        "Eclipse",  # stack self-shield attached only by the receipt path
-        "Edge of Night",  # Annul spell shield needs cast metadata
-        "Fimbulwinter",  # Awe stat conversion (conservative)
-        "Force of Nature",  # Steadfast reprice needs baseline resistances
-        "Guardian Angel",  # Rebirth candidates authored in the event walk
-        "Immortal Path",  # below-half received-healing multiplier state
-        "Jak'Sho, The Protean",  # Voidborn reprice needs baseline resistances
-        "Knight's Vow",  # Worthy redirect authored by the receipt scheduler
-        "Maw of Malmortius",  # Lifeline omnivamp state transition
-        "Verdant Barrier",  # Annul spell shield needs cast metadata
-    }
-)
-
-
-def uncompilable_item_receipt(
-    items: Iterable[Mapping[str, Any]],
-    *,
-    loadout_stats: Mapping[str, float] | None = None,
-    warmog_ticks_compiled: bool = False,
-) -> str | None:
-    """Return a named receipt when a build cannot ride the compiled walk.
-
-    Item mechanics the score kernel cannot stage either (a) are authored
-    inside the authoritative event walk (Warmog's Heart, Doran's Shield
-    Enduring Focus) or (b) ride a legacy-only receipt pass (Catalyst's
-    Eternity resource restores).  Lifesteal/omnivamp builds are not
-    reported here: compiled heal actions carry ``healing_category``, so
-    the vamp carve-outs (received-healing multiplier exemption, ichor
-    conversion) ride the shared kernel identically (issue #169).
-
-    ``loadout_stats`` is the actor's resolved stats.  It is required for
-    Warmog's Armor so the check mirrors the receipt walk's own gate: the
-    Heart ticks are only authored once the bonus-health threshold is met,
-    so an inactive Warmog is numerically identical in both walks (the
-    legacy ``_has_active_warmog`` precision).  ``None`` fails closed.
-    ``warmog_ticks_compiled`` is the search-invariant caller's claim that
-    it authors the holder's Heart ticks itself (the roster scan; issue
-    #169), so an active Warmog stops being a reason to fall back.
-    """
-    for item in items:
-        name = str(item.get("name", ""))
-        if name == "Warmog's Armor":
-            if warmog_ticks_compiled:
-                continue
-            if loadout_stats is None:
-                return f"item_mechanic={name}"
-            try:
-                threshold = sustain_effect_value(
-                    "Warmog's Armor", "heart_bonus_health_threshold"
-                )
-            except (KeyError, TypeError, ValueError):
-                return f"item_mechanic={name}"
-            if float(loadout_stats.get("bonus_health", 0.0) or 0.0) >= float(threshold):
-                return f"item_mechanic={name}"
-            continue
-        if name in COMPILED_WALK_UNREPRESENTABLE_ITEMS:
-            return f"item_mechanic={name}"
-    return None
 
 
 def unrepresentable_heal_receipt(event: Mapping[str, Any]) -> str | None:
@@ -226,8 +140,6 @@ def thorns_return_damage(profile: Any, wearer: Any, striker: Any) -> float:
     the kernel) because both the receipt scheduler and the compiler price
     strike-backs before the walk runs.
     """
-    from ..resistance import apply_magic_penetration, apply_resistance
-
     if profile.damage_type != "magic":
         raise ValueError(
             f"{profile.item_name} thorns damage type "
@@ -1080,14 +992,12 @@ class WalkCompiler:
 
 
 __all__ = [
-    "COMPILED_WALK_UNREPRESENTABLE_ITEMS",
     "UncompilableActionError",
     "WalkCompiler",
     "champion_wound_tuple",
     "coalesce_darius_q_heals",
     "thorns_return_damage",
     "heal_trigger_key",
-    "uncompilable_item_receipt",
     "unrepresentable_damage_receipt",
     "unrepresentable_heal_receipt",
     "unrepresentable_template_receipt",

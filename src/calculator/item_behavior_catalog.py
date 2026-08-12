@@ -1052,11 +1052,10 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
 
 # Which defences the compiled score kernel cannot stage, with the clause that
 # refuses each.  Partial on purpose — absent means ``Compilable`` — and the
-# membership is the kernel's own capability report
-# (``survival/compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS``) read at mechanic
+# membership is the kernel's own capability report, read at mechanic
 # granularity rather than per item, which is D-43's whole argument: three of
-# that set's sixteen reasons are conservatism notes about a different
-# mechanic of the same item.
+# the sixteen reasons the retired per-item hand set carried were conservatism
+# notes about a different mechanic of the same item.
 COMPILED_KERNEL_CANNOT_STAGE: Mapping[DefenseMechanic, ReceiptOnly] = {
     DefenseMechanic.ANNUL: ReceiptOnly(
         "the compiled score kernel cannot stage an Annul spell shield: "
@@ -1222,10 +1221,9 @@ DEFENSE_RECEIPTS: Mapping[DefenseMechanic, SourceReceipt] = {
 
 # ── the sustain shapes the score ledger cannot stage ──────────────────────
 
-# The hand set ``COMPILED_WALK_UNREPRESENTABLE_ITEMS`` withholds Catalyst of
-# Aeons and all three Doran's items with a per-*item* comment each, and D-43
-# calls two of those comments conservatism notes rather than representability
-# facts.  Read at the granularity the compiler actually has, they are neither
+# The retired per-item hand set withheld Catalyst of Aeons and all three
+# Doran's items with a per-*item* comment each, and D-43 calls two of those
+# comments conservatism notes rather than representability facts.  Read at the granularity the compiler actually has, they are neither
 # per-item nor conservative: each names one **sustain shape** the compiled
 # score ledger has nowhere to put, and each of those shapes has exactly one
 # owner today only because exactly one item carries it.  Keyed by the payload
@@ -3822,8 +3820,8 @@ COMPILED_KERNEL_CANNOT_REDIRECT = ReceiptOnly(
     "the compiled score kernel cannot represent a producer that re-routes "
     "another participant's incoming damage: the redirect is stamped on the "
     "victim's own events by the receipt scheduler, which the score ledger "
-    "does not run (survival/compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS "
-    "records the same fact per item)",
+    "does not run (the retired per-item hand set recorded the same fact "
+    "against the item)",
     scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
 )
 
