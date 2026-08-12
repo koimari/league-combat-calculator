@@ -1298,15 +1298,17 @@ CLASSIFICATION_RECEIPT = (
 )
 EXPECTED_COVERAGE_DIFF = ROOT / "docs" / "receipts" / "expected-coverage-diff-3.8.json"
 
+# The two statuses that refuse rather than classify, read from the module that
+# defines them so the allowlist's eligibility derivation cannot drift from the
+# payload's own.
+_REFUSAL_STATUSES = item_coverage._REFUSAL_STATUSES
+
 # The containers whose entries a rung reads verbatim as its reason text.  The
 # receipt records that text per item, which is what makes a *second*,
 # independent derivation of the shadow set possible: if the rung had fired,
 # the item's published reason would be its container's entry.
 _REASON_CONTAINERS: dict[str, str] = {
     "attacker.no_runtime_behavior": "NO_RUNTIME_BEHAVIOR",
-    "target.modeled_reasons": "_TARGET_MODELED_REASONS",
-    "target.event_certified_reasons": "_TARGET_EVENT_CERTIFIED_REASONS",
-    "target.withheld_reasons": "_TARGET_BLOCKED_REASONS",
 }
 
 # Where the receipt derivation is blind, and why.  It used to hold Gunmetal
@@ -1363,7 +1365,7 @@ SHADOWED_CLAIMS: frozenset[str] = frozenset(
         "item:Zhonya's Hourglass@attacker",
         "rule:attacker.unreviewed_fixture@attacker",
         "rule:attacker.unserved_declared_lane@attacker",
-        "rule:target.attacker_review_pending_passthrough@target",
+        "rule:target.unreviewed_fixture@target",
     }
 )
 
@@ -1583,11 +1585,23 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
     # allowlist and the allowlist must hold no leaf that did not move: an
     # entry for a key that stopped moving is a stale permission.
     allowlist = json.loads(EXPECTED_COVERAGE_DIFF.read_text(encoding="utf-8"))
-    permitted = {
-        f"records.{lane_status.split(':')[0]}.{name}.status"
-        for lane_status, block in allowlist["status_moves"].items()
-        for name in block["items"]
-    }
+    permitted: set[str] = set()
+    for lane_status, block in allowlist["status_moves"].items():
+        lane, move = lane_status.split(":")
+        before, after = move.split("->")
+        # Eligibility and the issue refs beside it are *functions* of the
+        # status, so a move that crosses the refusal line drags them with it.
+        # They are derived from the two status names rather than listed, which
+        # is what keeps the permission exact: an eligibility flag that moved
+        # under a status move that did not cross the line is still unlisted.
+        dragged = ("status",)
+        if (before in _REFUSAL_STATUSES) != (after in _REFUSAL_STATUSES):
+            dragged += ("calculation_eligible", "review_issue_refs")
+        permitted |= {
+            f"records.{lane}.{name}.{leaf}"
+            for name in block["items"]
+            for leaf in dragged
+        }
     permitted |= {
         f"records.{lane}.{name}.reason"
         for lane in ("attacker", "target")
@@ -1689,7 +1703,11 @@ _DYNAMIC_RULES: frozenset[str] = frozenset(
         "attacker.item_input_options_membership",
         "attacker.no_described_effect",
         "attacker.cached_shop_record",
-        "target.attacker_review_pending_passthrough",
+        "target.attacker_refusal_passthrough",
+        "target.unreviewed_fixture",
+        "target.certified_declared_defence",
+        "target.declared_durability",
+        "target.unmigrated_durability",
     }
 )
 
@@ -1836,7 +1854,7 @@ def test_an_unreviewed_cached_record_is_blocked_with_issue_refs(item: str) -> No
     assert coverage.review_issue_refs
 
 
-@pytest.mark.parametrize("item", sorted(item_coverage._TARGET_MODELED_REASONS))
+@pytest.mark.parametrize("item", sorted(item_coverage._TARGET_MODELED_IMPLS))
 def test_a_target_modeled_item_is_admitted_by_the_target_model(item: str) -> None:
     """The passive-target model prices this item rather than withholding it."""
     record = CACHE[item]
@@ -1844,7 +1862,7 @@ def test_a_target_modeled_item_is_admitted_by_the_target_model(item: str) -> Non
     assert item_coverage.target_build_coverage([record])["complete"]
 
 
-@pytest.mark.parametrize("item", sorted(item_coverage._TARGET_EVENT_CERTIFIED_REASONS))
+@pytest.mark.parametrize("item", sorted(item_coverage._TARGET_CERTIFIED_IMPLS))
 def test_a_target_event_certified_item_needs_a_certified_timeline(item: str) -> None:
     """The conditional defense withholds rather than mis-timing its trigger.
 
@@ -1864,13 +1882,28 @@ def test_a_target_event_certified_item_needs_a_certified_timeline(item: str) -> 
     item_coverage.require_certified_target_timeline([record], {"complete": True})
 
 
-@pytest.mark.parametrize("item", sorted(item_coverage._TARGET_BLOCKED_REASONS))
-def test_a_target_blocked_item_stops_the_run(item: str) -> None:
-    """A withheld target mechanic refuses the calculation by name."""
-    record = CACHE[item]
-    assert item_coverage.target_item_model_coverage(record)["status"] == "withheld"
-    with pytest.raises(ValueError, match=re.escape(item)):
-        item_coverage.require_target_item_coverage([record])
+def test_a_target_blocked_item_stops_the_run() -> None:
+    """A withheld target record refuses the calculation by name.
+
+    The population is no longer a table of one: since 3.8's flip the target
+    lane passes the attacker ladder's refusal through, so every cached record
+    whose described passive nothing declares stops a target build rather than
+    being called irrelevant.  Guardian's Horn is the member that used to be
+    named by hand and is checked explicitly; the rest are checked as a set.
+    """
+    refused = [
+        name
+        for name, record in CACHE.items()
+        if item_coverage.target_item_model_coverage(record)["status"] == "withheld"
+    ]
+    assert "Guardian's Horn" in refused
+    for item in refused:
+        record = CACHE[item]
+        assert not item_coverage.target_item_model_coverage(record)[
+            "calculation_eligible"
+        ]
+        with pytest.raises(ValueError, match=re.escape(item)):
+            item_coverage.require_target_item_coverage([record])
 
 
 @pytest.mark.parametrize("item", sorted(item_coverage.UTILITY_OUTCOMES))
@@ -1973,11 +2006,11 @@ def test_the_declared_populations_are_the_measured_ones() -> None:
         for rule in PRECEDENCE
         if rule.rule_id in _DYNAMIC_RULES
     }
-    assert sizes["target.attacker_review_pending_passthrough"] == 0
+    assert sizes["target.unreviewed_fixture"] == 0
     assert all(
         size > 0
         for rule_id, size in sizes.items()
-        if rule_id != "target.attacker_review_pending_passthrough"
+        if rule_id != "target.unreviewed_fixture"
     )
     assert set(sizes) == _DYNAMIC_RULES
 
@@ -1993,9 +2026,8 @@ def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None
     lanes = {
         "_ATTACKER_STATE_HOMES": "attacker",
         "NO_RUNTIME_BEHAVIOR": "attacker",
-        "_TARGET_MODELED_REASONS": "target",
-        "_TARGET_EVENT_CERTIFIED_REASONS": "target",
-        "_TARGET_BLOCKED_REASONS": "target",
+        "_TARGET_MODELED_IMPLS": "target",
+        "_TARGET_CERTIFIED_IMPLS": "target",
         "UTILITY_OUTCOMES": "utility",
     }
     unclaimed: list[str] = []

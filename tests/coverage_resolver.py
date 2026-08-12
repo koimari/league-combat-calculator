@@ -1596,15 +1596,11 @@ def first_matching_rule(
 # The containers a rung may key on whose membership is a hand-maintained list,
 # so every entry is claimable one by one.  Privacy used to be the test, and
 # 3.8 retired it: ``NO_RUNTIME_BEHAVIOR`` is public because the frontier gate
-# reads it, and it is still a list its own module maintains by hand.
-_HAND_CONTAINERS = frozenset(
-    {
-        "NO_RUNTIME_BEHAVIOR",
-        "_TARGET_MODELED_REASONS",
-        "_TARGET_EVENT_CERTIFIED_REASONS",
-        "_TARGET_BLOCKED_REASONS",
-    }
-)
+# reads it, and it is still a list its own module maintains by hand.  It is
+# the only one left — the target lane's three joined it in the same slice that
+# turned that lane's rungs into derivations, and a derivation has no
+# membership to enumerate.
+_HAND_CONTAINERS = frozenset({"NO_RUNTIME_BEHAVIOR"})
 
 
 def _rule_population(rule: Any, ctx: ResolverContext) -> tuple[str, ...]:

@@ -998,33 +998,46 @@ def _derived_target_status(name: str) -> tuple[str, str]:
     )
 
 
+def is_unreviewed_fixture(item: Mapping[str, Any]) -> bool:
+    """Whether *item* is a supplied record the shop does not hold.
+
+    The one question on the target lane that is asked of the caller's record
+    rather than of the cache: a name the shop has never sold, carrying a
+    described passive, is a synthetic or unknown fixture, and answering it
+    ``not_target_relevant`` would be a review nobody performed.  It is a named
+    predicate rather than an inline conjunction so ``PRECEDENCE`` can mirror
+    the rung by reading the same function the ladder branches on.
+    """
+    return not _cached_record(str(item.get("name", ""))) and _has_described_effect(item)
+
+
 def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
-    """Classify one item for use on a passive enemy target."""
+    """Classify one item for use on a passive enemy target, from declarations.
+
+    Three rungs, in this order:
+
+    1. **The attacker ladder's refusal, passed through.**  A cached record
+       whose described passive no rule and no registry entry declares is
+       withheld there, and the same absence is a refusal here: an unreviewed
+       passive may as easily be a defence as an attack, and calling it "no
+       reviewed effect changes durability" claims a review nobody performed.
+    2. **What the item declares**, through :func:`_derived_target_status` — a
+       certified defence, a durability mechanic, or nothing.
+    3. **A record the shop does not hold, carrying a described passive**: a
+       synthetic or unknown fixture, which is ``review_pending``.  Rung 1
+       cannot answer this one — it reads the *cached* record by name and there
+       is none — so the question is asked of the supplied record here.  Both
+       rungs fail closed; they differ only in which record holds the passive.
+    """
     name = str(item.get("name", ""))
-    if name in _TARGET_MODELED_REASONS:
-        status = "modeled"
-        reason = _TARGET_MODELED_REASONS[name]
-    elif name in _TARGET_EVENT_CERTIFIED_REASONS:
-        status = "modeled_event_certified"
-        reason = _TARGET_EVENT_CERTIFIED_REASONS[name]
-    elif name in _TARGET_BLOCKED_REASONS:
-        status = "withheld"
-        reason = _TARGET_BLOCKED_REASONS[name]
-    elif not _cached_record(name) and _has_described_effect(item):
-        # A record the shop does not hold, carrying a described passive: a
-        # synthetic or unknown fixture.  The attacker ladder answers by name
-        # and cannot see a caller-supplied record, so the durability question
-        # is asked here of the record itself rather than passed through — the
-        # rung fails closed either way, and asking it of the argument is what
-        # keeps it reachable at all.
+    refusal = item_model_coverage(name, TARGET_LANES)
+    if refusal.status in _REFUSAL_STATUSES:
+        status, reason = refusal.status, refusal.reason
+    elif is_unreviewed_fixture(item):
         status = "review_pending"
         reason = "This passive or active has not been reviewed for target durability."
     else:
-        status = "not_target_relevant"
-        reason = (
-            "No reviewed effect on this item changes incoming damage or starting "
-            "durability in the passive-target model."
-        )
+        status, reason = _derived_target_status(name)
     return {
         "name": name,
         "status": status,
@@ -1082,7 +1095,7 @@ def require_certified_target_timeline(
         (
             str(item.get("name", ""))
             for item in items
-            if str(item.get("name", "")) in _TARGET_EVENT_CERTIFIED_REASONS
+            if certified_target_mechanics(str(item.get("name", "")))
         ),
         None,
     )
@@ -1450,11 +1463,10 @@ _SHADOWED_CLAIM_REASONS: Mapping[str, str] = {
         "proved on a synthetic declaration and on the emptiness of the "
         "population itself rather than by any real build."
     ),
-    "target.attacker_review_pending_passthrough@target": (
-        "The passthrough fires only for an item the attacker lane calls "
-        "review_pending, and no cached item is; it exists so a synthetic "
-        "fixture cannot be target-relevant while being attacker- "
-        "unreviewed."
+    "target.unreviewed_fixture@target": (
+        "review_pending is reserved for a record the shop does not hold: "
+        "every cached item is in the cache by definition, so no cached "
+        "item reaches this rung and only a supplied fixture can."
     ),
 }
 _SOURCE_REFS: Mapping[str, tuple[str, int]] = {
@@ -1706,6 +1718,11 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
     "World Atlas": ("item_effects.item_state_receipts", "option:shared_riches_gold"),
 }
 
+# The claim population for the target lane's two modelled statuses, and the
+# symbol each item's durability is priced by.  Since 3.8's flip the *status*
+# is derived and this table is the evidence beside it: a resolution test
+# asserts the derived answer and the claim agree for every cached item, so an
+# entry that stopped being modelled fails rather than sitting here unread.
 _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Armored Advance": "defensive_effects.resolve_starting_defenses",
     "Banshee's Veil": "defensive_effects.resolve_starting_defenses",
@@ -1713,9 +1730,17 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Bramble Vest": "interpreters.reactive.thorns_effects",
     "Celestial Opposition": "defensive_effects.resolve_starting_defenses",
     "Chainlaced Crushers": "defensive_effects.resolve_starting_defenses",
+    "Catalyst of Aeons": "interpreters.sustain.sustain_slot",
+    "Cryptbloom": "item_support_effects.derive_item_support_effects",
     "Cull": "item_support_effects.derive_item_support_effects",
+    "Death's Dance": "interpreters.damage_routing.DamageRoutingResolverInterpreter",
+    "Diadem of Songs": "item_support_effects.derive_item_support_effects",
+    "Doran's Blade": "interpreters.sustain.sustain_slot",
+    "Doran's Ring": "interpreters.sustain.sustain_slot",
     "Doran's Shield": "survival.transitions.schedule_doran_shield_recovery",
     "Dusk and Dawn": "damage._add_spellblade_damage",
+    "Echoes of Helia": "item_support_effects.derive_item_support_effects",
+    "Eclipse": "interpreters.cast_proc.cooldown_proc_effect",
     "Edge of Night": "defensive_effects.resolve_starting_defenses",
     "Frozen Heart": "roster_composition.target_overrides",
     "Guardian Angel": "defensive_effects.resolve_starting_defenses",
@@ -1723,11 +1748,12 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Knight's Vow": "item_support_effects.schedule_knights_vow",
     "Locket of the Iron Solari": "item_support_effects.derive_item_support_effects",
     "Mikael's Blessing": "item_support_effects.derive_item_support_effects",
+    "Moonstone Renewer": "item_support_effects.derive_item_support_effects",
     "Plated Steelcaps": "defensive_effects.resolve_starting_defenses",
     "Randuin's Omen": "defensive_effects.resolve_starting_defenses",
     "Redemption": "item_support_effects.derive_item_support_effects",
     "Seeker's Armguard": "defensive_effects.resolve_starting_defenses",
-    "Spectre's Cowl": "stats.get_item_stats",
+    "Solstice Sleigh": "item_support_effects.derive_item_support_effects",
     "Spirit Visage": "defensive_effects.resolve_starting_defenses",
     "Sundered Sky": "damage._add_first_auto_healing",
     "Thornmail": "interpreters.reactive.thorns_effects",
@@ -2138,25 +2164,6 @@ def _target_certified_claim(item: str) -> Claim:
     )
 
 
-def _target_blocked_claim(item: str) -> Claim:
-    """The one withheld target mechanic: a reason and the issue tracking it."""
-    return Claim(
-        subject_kind="item",
-        subject=item,
-        lane="target",
-        status="withheld",
-        evidence=(
-            Absence(
-                reason=_TARGET_BLOCKED_REASONS[item],
-                issue_refs=tuple(review_issue_refs(item)),
-            ),
-        ),
-        dimensions=(),
-        issue_refs=(),
-        unreachable_reason=_unreachable_reason(item, "target"),
-    )
-
-
 def _utility_claim(item: str) -> Claim:
     """One ``UTILITY_OUTCOMES`` entry and the home of what the model prices.
 
@@ -2382,49 +2389,57 @@ _RULE_CLAIMS: tuple[Claim, ...] = (
         "attacker.unreviewed_fixture", "attacker", "review_pending"
     ),
     _rule_claim(
-        "target.modeled_reasons",
-        "target",
-        "modeled",
-        (
-            Symbol(
-                path="defensive_effects.resolve_starting_defenses",
-                role="walk_packet_builder",
-            ),
-            _rung_ref("target.modeled_reasons"),
-        ),
-    ),
-    _rule_claim(
-        "target.event_certified_reasons",
-        "target",
-        "modeled_event_certified",
-        (
-            Symbol(
-                path="interpreters.threshold_defense._lifeline_shield",
-                role="walk_packet_builder",
-            ),
-            Symbol(
-                path="item_coverage.require_certified_target_timeline",
-                role="certification_guard",
-            ),
-            _rung_ref("target.event_certified_reasons"),
-        ),
-    ),
-    _rule_claim(
-        "target.withheld_reasons",
+        "target.attacker_refusal_passthrough",
         "target",
         "withheld",
         (
             Absence(
                 reason=(
-                    "The one withheld target mechanic stops the run by name; the "
-                    "container holds its reason and the umbrella issue tracks it."
+                    "A cached record whose described passive no rule and no "
+                    "registry entry declares is refused on both lanes by one "
+                    "answer; the umbrella issue tracks the review queue."
                 ),
                 issue_refs=(_UMBRELLA_ISSUE,),
             ),
         ),
     ),
-    _unreachable_rung_claim(
-        "target.attacker_review_pending_passthrough", "target", "review_pending"
+    _unreachable_rung_claim("target.unreviewed_fixture", "target", "review_pending"),
+    _rule_claim(
+        "target.certified_declared_defence",
+        "target",
+        "modeled_event_certified",
+        (
+            Symbol(
+                path="item_behavior_catalog.EVENT_CERTIFIED_MECHANICS",
+                role="value_accessor",
+            ),
+            Symbol(
+                path="item_coverage.require_certified_target_timeline",
+                role="certification_guard",
+            ),
+            _rung_ref("target.certified_declared_defence"),
+        ),
+    ),
+    _rule_claim(
+        "target.declared_durability",
+        "target",
+        "modeled",
+        (
+            Symbol(path="item_coverage.target_lane_rules", role="value_accessor"),
+            _rung_ref("target.declared_durability"),
+        ),
+    ),
+    _rule_claim(
+        "target.unmigrated_durability",
+        "target",
+        "modeled",
+        (
+            Symbol(
+                path="participant_timeline._warmog_heart_tick_events",
+                role="walk_packet_builder",
+            ),
+            _rung_ref("target.unmigrated_durability"),
+        ),
     ),
     _rule_claim(
         "target.not_target_relevant",
@@ -2450,9 +2465,8 @@ def _corpus() -> dict[tuple[SubjectKind, str, ClaimLane], Claim]:
         *(_attacker_state_claim(item) for item in _ATTACKER_STATE_HOMES),
         *(_stats_only_claim(item) for item in NO_RUNTIME_BEHAVIOR),
         *(_item_effects_claim(item) for item in _ISSUE_REF_ONLY_ITEMS),
-        *(_target_modeled_claim(item) for item in _TARGET_MODELED_REASONS),
-        *(_target_certified_claim(item) for item in _TARGET_EVENT_CERTIFIED_REASONS),
-        *(_target_blocked_claim(item) for item in _TARGET_BLOCKED_REASONS),
+        *(_target_modeled_claim(item) for item in _TARGET_MODELED_IMPLS),
+        *(_target_certified_claim(item) for item in _TARGET_CERTIFIED_IMPLS),
         *(_utility_claim(item) for item in UTILITY_OUTCOMES),
         *(_support_packet_claim(item) for item in _SUPPORT_PACKET_CLAIMS),
         *_RULE_CLAIMS,
@@ -2629,44 +2643,54 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
         status="review_pending",
     ),
     PrecedenceRule(
-        rule_id="target.modeled_reasons",
-        lane="target",
-        kind="container",
-        keys_on=("item_coverage._TARGET_MODELED_REASONS",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="modeled",
-    ),
-    PrecedenceRule(
-        rule_id="target.event_certified_reasons",
-        lane="target",
-        kind="container",
-        keys_on=("item_coverage._TARGET_EVENT_CERTIFIED_REASONS",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="modeled_event_certified",
-    ),
-    PrecedenceRule(
-        rule_id="target.withheld_reasons",
-        lane="target",
-        kind="container",
-        keys_on=("item_coverage._TARGET_BLOCKED_REASONS",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="withheld",
-    ),
-    PrecedenceRule(
-        rule_id="target.attacker_review_pending_passthrough",
+        rule_id="target.attacker_refusal_passthrough",
         lane="target",
         kind="status_passthrough",
         keys_on=(),
         items=(),
         effect_types=(),
         negated=False,
+        status="withheld",
+    ),
+    PrecedenceRule(
+        rule_id="target.unreviewed_fixture",
+        lane="target",
+        kind="predicate",
+        keys_on=("item_coverage.is_unreviewed_fixture",),
+        items=(),
+        effect_types=(),
+        negated=False,
         status="review_pending",
+    ),
+    PrecedenceRule(
+        rule_id="target.certified_declared_defence",
+        lane="target",
+        kind="derivation",
+        keys_on=("item_coverage.certified_target_mechanics",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="modeled_event_certified",
+    ),
+    PrecedenceRule(
+        rule_id="target.declared_durability",
+        lane="target",
+        kind="derivation",
+        keys_on=("item_coverage.target_lane_rules",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="modeled",
+    ),
+    PrecedenceRule(
+        rule_id="target.unmigrated_durability",
+        lane="target",
+        kind="derivation",
+        keys_on=("item_coverage.unmigrated_target_mechanics",),
+        items=(),
+        effect_types=(),
+        negated=False,
+        status="modeled",
     ),
     PrecedenceRule(
         rule_id="target.not_target_relevant",

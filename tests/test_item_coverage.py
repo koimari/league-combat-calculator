@@ -327,7 +327,10 @@ def test_optimizer_accepts_runaan_with_roster_bolt_model():
         ("Jak'Sho, The Protean", "modeled_event_certified"),
         ("Zhonya's Hourglass", "modeled"),
         ("Seeker's Armguard", "modeled"),
-        ("Spectre's Cowl", "modeled"),
+        # 3.8's flip: Incorporeal was removed in V14.6 and what is left is a
+        # base health-regeneration stat, which `stats` sources and the
+        # durability ladder does not price.
+        ("Spectre's Cowl", "not_target_relevant"),
         ("Immortal Shieldbow", "modeled_event_certified"),
         ("Hexdrinker", "modeled_event_certified"),
         ("Maw of Malmortius", "modeled_event_certified"),
@@ -430,7 +433,8 @@ def test_force_of_nature_target_defense_is_event_certified():
 
     assert coverage["status"] == "modeled_event_certified"
     assert coverage["calculation_eligible"] is True
-    assert "maximum-stack bonus resistance" in coverage["reason"]
+    assert "Steadfast" in coverage["reason"]
+    assert "exactly-timed damage ledger" in coverage["reason"]
     require_target_item_coverage([item])
 
 
@@ -520,7 +524,8 @@ def test_thornmail_is_modeled_as_a_typed_target_reactive_item():
 def test_sundered_sky_is_modeled_as_a_target_heal_with_temporary_health():
     coverage = target_item_model_coverage(get_item_by_name("Sundered Sky"))
     assert coverage["status"] == "modeled"
-    assert "temporary health" in coverage["reason"]
+    assert "Forced Crit" in coverage["reason"]
+    assert "changes what this actor survives" in coverage["reason"]
 
 
 @pytest.mark.parametrize(
@@ -722,7 +727,11 @@ def test_ally_item_packets_are_coupled_and_never_assume_target_cast_timing(item_
     coverage = target_item_model_coverage(get_item_by_name(item_name))
     assert coverage["status"] == "modeled"
     assert coverage["calculation_eligible"] is True
-    assert "explicit" in coverage["reason"]
+    # The receipt names the declared producer rather than the cast: an ally
+    # packet is priced from an explicit active_seconds input, and the passive
+    # target model never invents one.
+    assert coverage["reason"].split()[0].isalpha()
+    assert "changes what this actor survives" in coverage["reason"]
 
 
 @pytest.mark.parametrize("item_name", ["Stridebreaker"])
@@ -866,8 +875,24 @@ def test_the_derived_certified_set_reproduces_the_legacy_table() -> None:
     assert derived == set(item_coverage._TARGET_EVENT_CERTIFIED_REASONS)
 
 
+def _legacy_target_status(name: str) -> str:
+    """What the three hand tables answered, read straight out of them.
+
+    The tables are dead code from the flip until the commit that deletes
+    them, and this reads them directly rather than through a classifier so
+    the delta assertion keeps comparing two different things.
+    """
+    if name in item_coverage._TARGET_MODELED_REASONS:
+        return "modeled"
+    if name in item_coverage._TARGET_EVENT_CERTIFIED_REASONS:
+        return "modeled_event_certified"
+    if name in item_coverage._TARGET_BLOCKED_REASONS:
+        return "withheld"
+    return "not_target_relevant"
+
+
 def test_the_derived_target_ladder_moves_exactly_the_declared_delta() -> None:
-    """R-31's asserted delta, item by item, before the flip reads any of it.
+    """R-31's asserted delta, item by item, against the tables it replaced.
 
     The three moved sets are pinned as sets.  The ninety unavailable records
     are *derived* from the attacker ladder's own refusal rather than typed:
@@ -883,12 +908,8 @@ def test_the_derived_target_ladder_moves_exactly_the_declared_delta() -> None:
     }
     moves: dict[str, set[str]] = {}
     for name in _cached_names():
-        legacy = target_item_model_coverage(get_item_by_name(name))["status"]
-        derived = (
-            item_model_coverage(name, item_coverage.TARGET_LANES).status
-            if name in refused
-            else item_coverage._derived_target_status(name)[0]
-        )
+        legacy = _legacy_target_status(name)
+        derived = target_item_model_coverage(get_item_by_name(name))["status"]
         if legacy != derived:
             moves.setdefault(f"{legacy}->{derived}", set()).add(name)
 
@@ -906,6 +927,7 @@ def test_the_derived_target_ladder_moves_exactly_the_declared_delta() -> None:
         "Solstice Sleigh",
     }
     assert moves["not_target_relevant->withheld"] == refused - {"Guardian's Horn"}
+    assert "Guardian's Horn" in refused
     assert set(moves) == {
         "modeled->not_target_relevant",
         "not_target_relevant->modeled",
@@ -969,3 +991,49 @@ def test_every_unmigrated_target_key_is_a_key_some_entry_carries() -> None:
             if key in entry
         ]
         assert carriers, key
+
+
+def test_the_target_flip_refuses_only_records_no_ordinary_build_can_hold() -> None:
+    """The blast radius of the target lane's new refusal, pinned as a set.
+
+    The flip passes the attacker ladder's refusal through, so a cached record
+    whose described passive nothing declares now stops a target build instead
+    of being called irrelevant.  That is a real refusal and it is bounded
+    here: every record it reaches is one `item_source` already withholds from
+    an ordinary Summoner's Rift build, so no build a request can express loses
+    a calculation.  An ordinary item arriving in this set is a stop.
+    """
+    refused = {
+        name
+        for name, record in (
+            (str(r.get("name", "")), r)
+            for r in fetch_item_data().values()
+            if r.get("name")
+        )
+        if not target_item_model_coverage(record)["calculation_eligible"]
+    }
+    ordinary = {
+        str(record.get("name", ""))
+        for record in fetch_item_data().values()
+        if record.get("name") and is_ordinary_sr_item(record)
+    }
+
+    assert refused
+    assert refused & ordinary == set()
+
+
+def test_the_flip_moved_no_ordinary_item_in_or_out_of_attacker_eligibility() -> None:
+    """The other half of the same bound: the attacker lane's gates are unmoved.
+
+    Both booleans on the attacker payload are functions of the status, and the
+    statuses the flip moved there are all inside the modelled family, so no
+    build gained or lost a candidate.  Asserted over every cached record
+    rather than over the ones the receipt happens to name.
+    """
+    for record in fetch_item_data().values():
+        if not record.get("name"):
+            continue
+        coverage = item_model_coverage(str(record["name"]), ATTACKER_LANES)
+        assert coverage.optimizer_eligible == coverage.calculation_eligible
+        if is_ordinary_sr_item(record):
+            assert coverage.optimizer_eligible, record["name"]
