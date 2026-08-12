@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from src.calculator import interpreters
+from src.calculator import item_coverage
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.item_behavior import (
     Compilable,
@@ -242,3 +243,68 @@ def test_nothing_under_survival_imports_the_interpreter_package() -> None:
                     or "item_behavior_catalog" in alias.name
                 )
     assert offenders == []
+
+
+def _owners_declaring(family: RuleFamily) -> tuple[str, ...]:
+    """Every owner whose declarations include *family*, in a stated order."""
+    return tuple(
+        owner
+        for owner in sorted(catalog.rule_owners())
+        if any(rule.family is family for rule in catalog.behavior_rules(owner))
+    )
+
+
+@pytest.mark.parametrize(
+    "family", sorted(RuleFamily, key=lambda member: member.value), ids=lambda f: f.value
+)
+def test_deleting_a_families_interpreter_withholds_it_rather_than_pricing_zero(
+    family: RuleFamily, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Criterion 11, one case per family: the interpreter *is* the coverage.
+
+    The registry is not a lookup table beside the answer, it is the reason
+    there is an answer at all — so removing one registration has to turn every
+    item declaring that family into a named refusal on that lane, and never
+    into a zero somebody could sum.  Three things are asserted per lane, and
+    the first is what stops the other two passing vacuously: the item is
+    *eligible* before the deletion, refused after it, and the refusal names the
+    exact ``family/lane`` that went missing.
+
+    A family with no declarations yet cannot be tested this way and is not
+    quietly skipped: it must be the one the catalog dates as unmigrated, so
+    this parametrization goes red the day that family is declared without its
+    interpreter, and the day an undeclared family stops being named.
+    """
+    owners = _owners_declaring(family)
+    if not owners:
+        assert family in catalog.UNMIGRATED_FAMILIES, (
+            f"{family.value} declares no rule and no slice is on record to "
+            "migrate it, so nothing states why its interpreter has no subject"
+        )
+        return
+    for lane in sorted(interpreters.lanes_for(family), key=lambda member: member.value):
+        reduced = {
+            key: value
+            for key, value in interpreters.INTERPRETERS.items()
+            if key != (family, lane)
+        }
+        registered = (family, lane) in interpreters.INTERPRETERS
+        needed = frozenset({lane})
+        for owner in owners:
+            before = item_coverage.item_model_coverage(owner, needed)
+            monkeypatch.setattr(item_coverage, "INTERPRETERS", reduced)
+            after = item_coverage.item_model_coverage(owner, needed)
+            monkeypatch.setattr(
+                item_coverage, "INTERPRETERS", interpreters.INTERPRETERS
+            )
+            pair = f"{family.value}/{lane.value}"
+            if registered:
+                assert pair not in before.reason, (
+                    f"{owner} already refuses {pair} with the interpreter "
+                    "present, so its deletion proves nothing here"
+                )
+            assert after.status == "withheld"
+            assert pair in after.reason
+            assert "withheld rather than priced as zero" in after.reason
+            assert not after.optimizer_eligible
+            assert not after.calculation_eligible
