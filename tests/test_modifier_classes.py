@@ -25,12 +25,18 @@ from src.calculator.survival.transitions import (
 ALL_DAMAGE = frozenset(DamageClass)
 ALL_ATTACK = frozenset(AttackClass)
 
+# The owner skip compares roster slots, not participant ids: the holder's own
+# pair engine already priced its half, so a modifier armed by slot 0 is the
+# one packets from slot 0 skip and packets from any other slot pay.
+_MAIN = 0
+_OTHER = 1
+
 
 def _modifier(**overrides):
     """An armed modifier as ``_apply_damage_modifier`` writes it."""
     armed = {
         "source": "Abyssal Mask — Unmake",
-        "owner": "main",
+        "holder": _MAIN,
         "damage_classes": frozenset({DamageClass.MAGIC}),
         "attack_classes": ALL_ATTACK,
     }
@@ -39,8 +45,13 @@ def _modifier(**overrides):
 
 
 def _packet(**overrides):
-    """A damage action as the walk sees it."""
-    fields = {"damage_type": "magic", "is_ability": True}
+    """A damage action as the walk sees it.
+
+    ``attacker`` is the roster slot that delivered the packet: the owner
+    skip is now an index compare, so a packet with no attacker (``-1``)
+    is what "somebody other than the holder" looks like.
+    """
+    fields = {"damage_type": "magic", "is_ability": True, "attacker": _OTHER}
     fields.update(overrides)
     return SurvivalAction(**fields)
 
@@ -65,7 +76,7 @@ class TestPacketClasses:
         """``None`` is honest, and it is in no declared set."""
         action = _packet(damage_type="")
         assert damage_class_of(action) is None
-        assert not _modifier_applies(_modifier(owner=""), action, "ally:Lulu")
+        assert not _modifier_applies(_modifier(holder=-1), action)
 
     @pytest.mark.parametrize(
         "fields,expected",
@@ -142,24 +153,21 @@ class TestOnePredicateDecidesApplicability:
     """The owner skip, the class match and the delivery gate, in one place."""
 
     def test_the_owner_is_skipped_because_the_pair_engine_priced_it(self):
-        assert not _modifier_applies(_modifier(), _packet(), "main")
+        assert not _modifier_applies(_modifier(), _packet(attacker=_MAIN))
 
     def test_every_other_source_is_priced(self):
-        assert _modifier_applies(_modifier(), _packet(), "ally:Lulu")
+        assert _modifier_applies(_modifier(), _packet())
 
     @pytest.mark.parametrize("damage_type", ["physical", "true"])
     def test_a_magic_only_curse_leaves_the_other_classes_alone(self, damage_type):
         """C3's correction, at the predicate: 12% *magic* damage."""
-        assert not _modifier_applies(
-            _modifier(), _packet(damage_type=damage_type), "ally:Lulu"
-        )
+        assert not _modifier_applies(_modifier(), _packet(damage_type=damage_type))
 
     def test_a_from_all_sources_amp_prices_every_class(self):
         for damage_type in ("magic", "physical", "true"):
             assert _modifier_applies(
                 _modifier(damage_classes=ALL_DAMAGE),
                 _packet(damage_type=damage_type),
-                "ally:Lulu",
             )
 
     def test_the_attack_axis_is_live_and_not_decorative(self):
@@ -171,16 +179,60 @@ class TestOnePredicateDecidesApplicability:
             attack_classes=frozenset({AttackClass.BASIC_ATTACK}),
         )
         assert _modifier_applies(
-            basic_only, _packet(is_ability=False, basic_attack=True), "ally:Lulu"
+            basic_only, _packet(is_ability=False, basic_attack=True)
         )
-        assert not _modifier_applies(basic_only, _packet(), "ally:Lulu")
+        assert not _modifier_applies(basic_only, _packet())
 
     def test_the_delivery_gate_still_excludes_what_is_neither(self):
         """Characterized, not corrected: see the sentinel for why it stays."""
         proc = _packet(is_ability=False, source_key="item_burn")
         assert attack_class_of(proc) is AttackClass.OTHER
         assert AttackClass.OTHER in _modifier()["attack_classes"]
-        assert not _modifier_applies(_modifier(), proc, "ally:Lulu")
+        assert not _modifier_applies(_modifier(), proc)
+
+
+class TestTheHolderIsARosterSlot:
+    """S1: the kernel's owner string became an integer slot.
+
+    ``owner: str`` and ``holder: int`` never coexisted and never both went
+    missing -- one commit deleted the first and added the second -- so this
+    suite asserts both halves rather than only the one that is present.
+    """
+
+    def test_the_action_carries_a_holder_slot_and_no_owner_string(self):
+        fields = SurvivalAction._fields
+        assert "holder" in fields
+        assert "owner" not in fields
+        assert SurvivalAction().holder == -1
+
+    def test_a_packet_owner_resolves_to_its_roster_slot(self):
+        """The packet declares a participant id; the kernel stores the index."""
+        action = survival_action_from_event(
+            {"kind": "damage_modifier", "owner": "ally:Lulu"},
+            1.0,
+            0,
+            {"main": _MAIN, "ally:Lulu": _OTHER},
+        )
+        assert action.holder == _OTHER
+
+    def test_an_owner_outside_the_roster_arms_no_skip(self):
+        """Byte-identical to the string compare: an unresolvable id matched
+        nothing then and is ``-1`` now, which the predicate reads as
+        "declares no holder"."""
+        action = survival_action_from_event(
+            {"kind": "damage_modifier", "owner": "enemy:Ghost"},
+            1.0,
+            0,
+            {"main": _MAIN},
+        )
+        assert action.holder == -1
+        assert _modifier_applies(_modifier(holder=action.holder), _packet())
+
+    def test_the_skip_is_an_index_compare_not_an_id_compare(self):
+        """Two slots, one modifier: the arming slot skips, the other pays."""
+        armed = _modifier(holder=_MAIN)
+        assert not _modifier_applies(armed, _packet(attacker=_MAIN))
+        assert _modifier_applies(armed, _packet(attacker=_OTHER))
 
 
 class _LedgerCtx:

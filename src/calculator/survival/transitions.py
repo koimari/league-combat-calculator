@@ -306,6 +306,13 @@ class TransitionContext:
         return self._defense_profiles[subject]
 
     def reductions_for(self, attacker: int) -> tuple[Any, ...]:
+        """One attacker's healing-reduction profiles, empty where it has none.
+
+        Score mode carries no profile list at all (the compiler folds the
+        same data into each action's ``grievous`` field), so an empty tuple
+        is the honest answer for both a missing list and an attacker outside
+        it -- neither is a reduction of zero that some rule computed.
+        """
         if self.reduction_profiles is None or not (
             0 <= attacker < len(self.reduction_profiles)
         ):
@@ -991,7 +998,7 @@ def _apply_damage_modifier(
         "armor_reduction_percent": action.armor_reduction_percent,
         "mr_reduction_percent": action.mr_reduction_percent,
         "resistance_type": action.resistance_type,
-        "owner": action.owner,
+        "holder": action.holder,
         "damage_classes": damage_classes,
         "attack_classes": attack_classes,
     }
@@ -1229,9 +1236,7 @@ def _apply_live_packet_chain(
     return amount
 
 
-def _modifier_applies(
-    modifier: Mapping[str, Any], action: SurvivalAction, source_id: str
-) -> bool:
+def _modifier_applies(modifier: Mapping[str, Any], action: SurvivalAction) -> bool:
     """Whether one armed cross-participant modifier prices this packet.
 
     The one predicate every modifier branch consults — the reduction and
@@ -1246,10 +1251,11 @@ def _modifier_applies(
       true-damage ability, which is what ``damage_classes`` says (D-04);
     * the **delivery gate**: today's walk prices only attacks and spells.
 
-    ``source_id`` is the third argument the phase document's sketch omits:
-    the owner skip compares participant ids and a ``SurvivalAction`` carries
-    its attacker as a roster index, so the id has to arrive from the caller
-    that already resolved it.
+    Both sides of the owner skip are roster indices, so the predicate needs
+    no third argument: the armed modifier carries the slot that armed it and
+    the packet carries the slot that delivered it.  The participant-id
+    string this compared before was resolved by the caller purely because
+    the modifier remembered its holder by name.
 
     The delivery gate and ``attack_classes`` are deliberately *both* here
     and are **not** the same rule.  ``is_attack_or_spell`` is Blue Dream
@@ -1261,8 +1267,8 @@ def _modifier_applies(
     the gate is a second correction and is not made here: the divergence
     ships characterized behind a sentinel (D-04).
     """
-    owner = modifier.get("owner")
-    if owner and owner == source_id:
+    holder = modifier["holder"]
+    if holder >= 0 and holder == action.attacker:
         return False
     if damage_class_of(action) not in modifier["damage_classes"]:
         return False
@@ -1286,13 +1292,8 @@ def _apply_cross_participant_modifiers(
         if float(modifier.get("until", 0.0)) > action.time
     ]
     state["active_damage_modifiers"] = active_modifiers
-    source_id = (
-        ctx.combatants[action.attacker].participant_id
-        if 0 <= action.attacker < len(ctx.combatants)
-        else ""
-    )
     for modifier in list(active_modifiers):
-        if not _modifier_applies(modifier, action, source_id):
+        if not _modifier_applies(modifier, action):
             continue
         resistance_key = str(modifier.get("resistance_type", ""))
         reduction_key = (

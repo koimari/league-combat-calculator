@@ -101,7 +101,7 @@ ARMED_MODIFIER_FIELDS = frozenset(
         "armor_reduction_percent",
         "mr_reduction_percent",
         "resistance_type",
-        "owner",
+        "holder",
         "damage_classes",
         "attack_classes",
     }
@@ -262,7 +262,7 @@ def _armed(**overrides):
         "armor_reduction_percent": 0.0,
         "mr_reduction_percent": 0.0,
         "resistance_type": "",
-        "owner": "main",
+        "holder": 0,
         "damage_classes": frozenset(DamageClass),
         "attack_classes": frozenset(AttackClass),
     }
@@ -273,9 +273,9 @@ def _armed(**overrides):
 class _LedgerCtx:
     """The walk context these sentinels need: a ledger that records nothing.
 
-    ``combatants`` is empty on purpose, so the source id resolves to ``""``
-    and the owner skip cannot fire — these sentinels are about the window,
-    not about who owns it.
+    ``combatants`` is empty on purpose; every packet below carries
+    ``attacker=-1``, so the owner skip cannot fire — these sentinels are
+    about the window, not about who owns it.
     """
 
     class _Ledger:
@@ -471,16 +471,16 @@ class TestIsAttackOrSpellVersusFromAllSources:
 
     def test_other_class_damage_is_declared_but_not_priced(self):
         """The divergence itself, at the one predicate that decides it."""
-        proc = SurvivalAction(damage_type="magic", source_key="item_burn")
+        proc = SurvivalAction(damage_type="magic", source_key="item_burn", attacker=-1)
         assert attack_class_of(proc) is AttackClass.OTHER
         unmake = {
             "source": "Abyssal Mask — Unmake",
-            "owner": "main",
+            "holder": 0,
             "damage_classes": frozenset({DamageClass.MAGIC}),
             "attack_classes": frozenset(AttackClass),
         }
         assert AttackClass.OTHER in unmake["attack_classes"]
-        assert not _modifier_applies(unmake, proc, "ally:Lulu"), (
+        assert not _modifier_applies(unmake, proc), (
             "D-04: the walk now prices AttackClass.OTHER damage for a "
             "from-all-sources modifier.  That is the correction this "
             "sentinel defers, not a free improvement: re-read Phase 0's "
@@ -601,7 +601,7 @@ class TestAbyssalAuraHasNoRangeOrDeathCondition:
             _LedgerCtx(),
             SurvivalAction(
                 source="Abyssal Mask — Unmake",
-                owner="main",
+                holder=0,
                 persistent=True,
                 multiplier=1.12,
                 amount=0.12,

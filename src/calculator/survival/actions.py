@@ -311,7 +311,13 @@ class SurvivalAction(NamedTuple):
     armor_reduction_percent: float = 0.0
     mr_reduction_percent: float = 0.0
     resistance_type: str = ""
-    owner: str = ""
+    # Which roster slot armed this modifier — the field the owner skip reads
+    # (``Authority.SPLIT``'s machine-checked handshake).  A roster *index*,
+    # like ``subject`` and ``attacker``, so the kernel never compares
+    # participant id strings; ``-1`` is "this packet declares no holder", the
+    # integer spelling of the empty owner string it replaces.  ``Provenance``
+    # compiles into this field.
+    holder: int = -1
     # The class restriction a damage-modifier packet declares (D-04).  Both
     # are required of such a packet and empty is banned, which is why the
     # class default is the empty set: a modifier action that reached the
@@ -847,7 +853,13 @@ def survival_action_from_event(
         armor_reduction_percent=float(get("armor_reduction_percent", 0.0) or 0.0),
         mr_reduction_percent=float(get("mr_reduction_percent", 0.0) or 0.0),
         resistance_type=str(get("resistance_type", "")),
-        owner=str(get("owner", "")),
+        # The packet declares its holder as a participant id, because that is
+        # what an item support author knows; the kernel wants the roster slot.
+        # An owner outside this roster resolves to ``-1`` and arms no skip,
+        # which is byte-identical to the string compare it replaces: the id
+        # the packet carries always comes from a combatant, so a miss here
+        # would have been a miss there.
+        holder=index_of.get(str(get("owner", "")), -1),
         damage_classes=_declared_class_set(get("damage_classes"), DamageClass),
         attack_classes=_declared_class_set(get("attack_classes"), AttackClass),
         gold_amount=float(get("gold_amount", 0.0) or 0.0),
