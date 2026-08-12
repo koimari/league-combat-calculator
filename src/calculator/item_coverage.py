@@ -53,6 +53,7 @@ from .item_behavior import (
 )
 from .item_behavior_catalog import (
     EVENT_CERTIFIED_MECHANICS,
+    UNMIGRATED_TARGET_KEYS,
     behavior_rules,
     registry_entries,
 )
@@ -912,6 +913,26 @@ def target_lane_rules(name: str) -> tuple[BehaviorRule, ...]:
     )
 
 
+def unmigrated_target_mechanics(name: str) -> tuple[str, ...]:
+    """The durability mechanics *name* still runs as engine code, not as a rule.
+
+    Folding over rules alone would call two live mechanics irrelevant: an
+    entry whose family is not migrated compiles to nothing while its behaviour
+    is still engine code the target model runs, which is the same distinction
+    :func:`unserved_lanes` makes on the attacker lane between *unmigrated* and
+    *uninterpreted*.  The catalog names the two by the registry key that
+    identifies them and dates each to the slice that declares its mechanic.
+    """
+    return tuple(
+        sorted(
+            reason
+            for _, _, entry in registry_entries(name)
+            for key, reason in UNMIGRATED_TARGET_KEYS.items()
+            if key in entry
+        )
+    )
+
+
 def certified_target_mechanics(name: str) -> tuple[DefenseMechanic, ...]:
     """The declared defences on *name* that need an exactly-timed ledger.
 
@@ -962,6 +983,13 @@ def _derived_target_status(name: str) -> tuple[str, str]:
             "modeled",
             f"{_mechanic_list(priced)} changes what this actor survives, and "
             "every rule behind it has an interpreter on the target lane.",
+        )
+    unmigrated = unmigrated_target_mechanics(name)
+    if unmigrated:
+        return (
+            "modeled",
+            "The passive-target model runs this as engine code rather than as "
+            "a declared rule: " + "; ".join(unmigrated) + ".",
         )
     return (
         "not_target_relevant",

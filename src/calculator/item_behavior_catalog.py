@@ -377,6 +377,29 @@ UNDECLARED_DEFENSE_MECHANICS: Mapping[DefenseMechanic, str] = {
 # — an omission with no table to name it is the silence this phase removes.
 DEFENSE_UNMIGRATED_MECHANICS: Mapping[DefenseMechanic, str] = {}
 
+# The mechanics the passive-target model still runs as engine code, named by
+# the registry key that identifies the entry carrying them.  Both are live —
+# `participant_timeline._warmog_heart_tick_events` schedules the one and
+# `roster_composition.target_overrides` applies the other — and neither
+# compiles to a rule yet, so a target-lane answer folded only over rules would
+# report two modelled mechanics as "nothing here changes durability".  The key
+# and not the item name, and not the tag either: Warmog's Heart and Rabadon's
+# Deathcap share the `stat_conversion` tag and only the keys tell them apart,
+# which is the same discrimination :class:`DefenseShape` makes for a declared
+# defence.  Each entry dies with the slice that declares its mechanic.
+UNMIGRATED_TARGET_KEYS: Mapping[str, str] = {
+    "heart_max_health_ratio_per_tick": (
+        "Warmog's Heart is a live combat-state regeneration the participant "
+        "timeline schedules; its stat_conversion entry compiles to no rule "
+        "until stat_derivation is declared"
+    ),
+    "attack_speed_reduction": (
+        "Winter's Caress is a live enemy-only aura the roster composition "
+        "applies to the opposing swing schedule; its target_attack_speed_aura "
+        "entry compiles to no rule until stat_derivation is declared"
+    ),
+}
+
 # Which defences can only be priced from an *exactly timed* damage ledger,
 # and why each one needs the timestamps.  Every member reads its trigger out
 # of the order damage arrived in — a health threshold the ledger has to cross,

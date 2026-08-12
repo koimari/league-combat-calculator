@@ -5,7 +5,10 @@ import dataclasses
 import pytest
 
 from src.calculator import item_coverage
-from src.calculator.item_behavior_catalog import behavior_rules
+from src.calculator.item_behavior_catalog import (
+    UNMIGRATED_TARGET_KEYS,
+    behavior_rules,
+)
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
@@ -889,11 +892,7 @@ def test_the_derived_target_ladder_moves_exactly_the_declared_delta() -> None:
         if legacy != derived:
             moves.setdefault(f"{legacy}->{derived}", set()).add(name)
 
-    assert moves["modeled->not_target_relevant"] == {
-        "Frozen Heart",
-        "Spectre's Cowl",
-        "Warmog's Armor",
-    }
+    assert moves["modeled->not_target_relevant"] == {"Spectre's Cowl"}
     assert moves["not_target_relevant->modeled"] == {
         "Catalyst of Aeons",
         "Cryptbloom",
@@ -950,3 +949,23 @@ def test_a_declared_defence_agrees_with_the_identifier_it_is_read_from() -> None
             assert item_coverage.declared_defence(rule) is declared, rule.mechanic_id
 
     assert checked
+
+
+def test_every_unmigrated_target_key_is_a_key_some_entry_carries() -> None:
+    """The rename guard on the clause that reads registry keys.
+
+    A key this table names and no entry carries would stop matching in
+    silence, and the two live mechanics behind it would start publishing
+    "nothing this item declares changes durability" while the timeline went on
+    scheduling them — the exact shape of the failure this campaign is named
+    for.  Each key must also select at least one cached item, because a
+    declaration that reaches nothing is a claim about nothing.
+    """
+    for key in UNMIGRATED_TARGET_KEYS:
+        carriers = [
+            name
+            for name in _cached_names()
+            for _, _, entry in item_coverage.registry_entries(name)
+            if key in entry
+        ]
+        assert carriers, key
