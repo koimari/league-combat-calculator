@@ -134,6 +134,7 @@ from . import shield_ledger
 from .ability_spec import AttackClass, DamagePart
 from .interpreters import (
     active_cast,
+    ally_packet,
     cast_proc,
     charged_strike,
     damage_routing,
@@ -155,7 +156,10 @@ from .item_behavior import (
     AmpChainSlot,
     Isolation,
     ManaSpentHealRule,
+    PacketKind,
+    PacketTrigger,
     Probe,
+    Recipients,
     Resistance,
 )
 from .trigger_stream import (
@@ -1758,41 +1762,78 @@ def _event_timeline_coverage(
     return coverage
 
 
-def _fimbulwinter_event_coverage(
+def _control_armed_holder_shields(
+    items: list[dict[str, Any]],
+) -> tuple[ally_packet.AllyPacketSlot, ...]:
+    """Every producer this build declares that the pair engine owes proof of.
+
+    The shape, not the item: a shield the *holder* receives when a control
+    event lands.  All three of those clauses matter, and each excludes a live
+    producer that would otherwise arrive here — Bandlepipes' Fanfare is armed
+    by the same trigger but delivers movement, Imperial Mandate's Command
+    delivers to the triggering enemy, and Knight's Vow's Sacrifice shields the
+    holder off a different trigger entirely.  A pair fight prices a
+    holder-side shield itself, so it is the one that must be able to prove the
+    control event happened; every other producer is delivered by the roster
+    walk, which certifies its own.
+    """
+    return tuple(
+        slot
+        for slots in ally_packet.resolve_slots(
+            [str(item.get("name", "")) for item in items]
+        ).values()
+        for slot in slots
+        if slot.trigger is PacketTrigger.CROWD_CONTROL
+        and slot.emits(PacketKind.SHIELD, Recipients.SELF)
+    )
+
+
+def _control_armed_event_coverage(
     items: list[dict[str, Any]],
     damage_events: list[dict[str, Any]],
-) -> tuple[bool, str]:
-    """Certify the control metadata needed by Fimbulwinter's Everlasting.
+) -> tuple[bool, str, str]:
+    """Certify the control metadata a control-armed holder shield needs.
 
-    Everlasting is not a generic "ability hit" proc.  The Wiki limits it to
-    an immobilize, or a slow for a melee holder, and its shield must land after
-    that authored cast.  A damage event with no reviewed ``cc_kind`` therefore
-    cannot safely prove that the passive did or did not trigger.  Pure
-    auto-attack windows are exact because they contain no candidate ability
-    control event at all.
+    Everlasting — the one such producer declared today — is not a generic
+    "ability hit" proc.  The Wiki limits it to an immobilize, or a slow for a
+    melee holder, and its shield must land after that authored cast.  A damage
+    event with no reviewed ``cc_kind`` therefore cannot safely prove that the
+    passive did or did not trigger.  Pure auto-attack windows are exact
+    because they contain no candidate ability control event at all.
+
+    The refusal names the declaration it came from: the receipt token is the
+    rule's own ``mechanic_id`` and the note is built from the holder and the
+    producer, so a second such producer is reported as itself rather than
+    under the first one's name.
     """
-    if not item_effects.requires_authored_control_event(items):
-        return True, ""
-    # The sixth control-reading site, on the bus (D-34).  ``cc_reviewed`` on
-    # a Trigger is exactly this gate's old disjunction: a row carrying a
-    # vocabulary ``cc_kind`` is reviewed by construction, and the engine
-    # writes the legacy flag only alongside such a kind.  A tuple ledger's
-    # positional rows classify as nothing at all, which is the same silence
-    # the ``isinstance`` filter produced.
-    ability_events = [
-        trigger
-        for trigger in authored_triggers(
-            {"damage_events": damage_events},
-            streams=frozenset({Stream.DAMAGE}),
-            holder="Fimbulwinter",
+    for slot in _control_armed_holder_shields(items):
+        # The sixth control-reading site, on the bus (D-34).  ``cc_reviewed``
+        # on a Trigger is exactly this gate's old disjunction: a row carrying
+        # a vocabulary ``cc_kind`` is reviewed by construction, and the engine
+        # writes the legacy flag only alongside such a kind.  A tuple ledger's
+        # positional rows classify as nothing at all, which is the same
+        # silence the ``isinstance`` filter produced.
+        ability_events = [
+            trigger
+            for trigger in authored_triggers(
+                {"damage_events": damage_events},
+                streams=frozenset({Stream.DAMAGE}),
+                holder=slot.owner,
+            )
+            if trigger.is_ability
+        ]
+        if not ability_events:
+            continue
+        if all(trigger.cc_reviewed for trigger in ability_events):
+            continue
+        return (
+            False,
+            slot.rule.mechanic_id.replace(".", "_"),
+            f"{slot.owner}'s {slot.producer.value.replace('_', ' ').title()} "
+            "needs an authored immobilize/slow marker; the ability packet did "
+            "not certify its crowd-control state.",
         )
-        if trigger.is_ability
-    ]
-    if not ability_events:
-        return True, ""
-    if all(trigger.cc_reviewed for trigger in ability_events):
-        return True, ""
-    return False, "fimbulwinter_everlasting"
+    return True, "", ""
 
 
 @dataclass
@@ -10309,19 +10350,16 @@ def calculate_fight_damage(
         num_auto_attacks=state.num_auto_attacks,
         lean=score_only,
     )
-    fimbulwinter_complete, fimbulwinter_source = _fimbulwinter_event_coverage(
+    control_complete, control_source, control_note = _control_armed_event_coverage(
         items, damage_events
     )
-    if not fimbulwinter_complete:
+    if not control_complete:
         timeline_coverage["complete"] = False
         timeline_coverage["certification"] = "partial_event_order"
         timeline_coverage["coarse_sources"] = sorted(
-            set(timeline_coverage["coarse_sources"]) | {fimbulwinter_source}
+            set(timeline_coverage["coarse_sources"]) | {control_source}
         )
-        timeline_coverage["note"] = (
-            "Fimbulwinter's Everlasting needs an authored immobilize/slow marker; "
-            "the ability packet did not certify its crowd-control state."
-        )
+        timeline_coverage["note"] = control_note
     if (
         config.target_threshold_health_heal > 0
         and shield_outcome["threshold_health_triggered"]

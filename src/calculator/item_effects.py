@@ -3390,15 +3390,6 @@ def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
     return any(item.get("name", "") == item_name for item in items)
 
 
-def requires_authored_control_event(items: Sequence[Mapping[str, Any]]) -> bool:
-    """Return whether a loadout has an item gated by reviewed CC metadata."""
-    return any(
-        ITEM_EFFECTS.get(str(item.get("name", "")), {}).get("everlasting_trigger_kind")
-        == "crowd_control"
-        for item in items
-    )
-
-
 # ---------------------------------------------------------------------------
 # Compiled fight-engine boundary
 # ---------------------------------------------------------------------------

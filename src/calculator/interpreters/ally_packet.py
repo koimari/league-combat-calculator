@@ -37,6 +37,8 @@ from ..item_behavior import (
     KernelField,
     PacketKind,
     PacketSpec,
+    PacketTrigger,
+    Recipients,
     RuleFamily,
 )
 from ..item_behavior_catalog import behavior_rules
@@ -121,6 +123,27 @@ class AllyPacketSlot:
     def producer(self) -> AllyProducer:
         """Which mechanic this slot is."""
         return _payload(self.rule).producer
+
+    @property
+    def trigger(self) -> PacketTrigger:
+        """What arms this producer."""
+        return _payload(self.rule).trigger
+
+    def emits(self, kind: PacketKind, recipients: Recipients) -> bool:
+        """Whether this producer declares a packet of *kind* to *recipients*.
+
+        The question an engine asks when it wants to know whether a mechanic
+        lands inside its own jurisdiction — a shield the *holder* receives is
+        priced by the pair engine, while the same producer's packet to an ally
+        is the roster walk's.  Answered off the declared
+        :class:`~..item_behavior.PacketSpec`s, so a producer that grows or
+        loses a recipient reaches every such reader on the commit its
+        declaration changes.
+        """
+        return any(
+            spec.kind is kind and spec.recipients is recipients
+            for spec in _payload(self.rule).packets
+        )
 
     def value(self, key: str) -> float:
         """One declared number, read live from the registry that owns it."""

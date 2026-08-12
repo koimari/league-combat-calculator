@@ -29,7 +29,7 @@ import pytest
 from src.calculator import damage
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import trigger_stream as ts
-from src.calculator.item_behavior import AllyProducer
+from src.calculator.item_behavior import AllyProducer, RuleFamily
 from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
     IMMOBILIZING_CC_KINDS,
@@ -1635,8 +1635,11 @@ def test_every_registered_view_runs_inside_the_boundary():
 
 
 def _fimbulwinter_gate(rows):
-    """``damage._fimbulwinter_event_coverage`` over one hand-built ledger."""
-    return damage._fimbulwinter_event_coverage([{"name": "Fimbulwinter"}], rows)
+    """``damage._control_armed_event_coverage`` over one hand-built ledger."""
+    complete, source, _note = damage._control_armed_event_coverage(
+        [{"name": "Fimbulwinter"}], rows
+    )
+    return complete, source
 
 
 def _support_actor(participant_id, team, item_names):
@@ -1691,6 +1694,45 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
         'row["cc_kind"] = str(event["cc_kind"])\n'
         '                row["cc_reviewed"] = bool(event.get("cc_reviewed", True))'
     ) in ledger
+
+
+def test_the_certification_gate_selects_its_holder_from_a_declaration():
+    """Who the gate certifies, and what it calls the refusal, are derived (3.9).
+
+    The gate used to ask ``requires_authored_control_event`` — a registry-key
+    read — and then spell ``Fimbulwinter`` twice more: once as the bus holder
+    tag and once inside the note.  It now asks the ally-packet declarations
+    for the shape it actually owes proof of, a shield the holder receives on a
+    control event, and builds both receipts out of the declaration it found.
+
+    So the two producers armed by the *same* trigger that deliver elsewhere
+    are not swept in, and neither receipt can drift from the rule: the coarse
+    source is the rule's own ``mechanic_id`` and the note names the holder and
+    the producer it came from.
+    """
+    unreviewed = [{"is_ability": True, "source_key": "Q"}]
+    complete, source, note = damage._control_armed_event_coverage(
+        [{"name": "Fimbulwinter"}], unreviewed
+    )
+    rule = next(
+        rule
+        for rule in catalog.behavior_rules("Fimbulwinter")
+        if rule.family is RuleFamily.ALLY_PACKET
+    )
+    assert (complete, source) == (False, rule.mechanic_id.replace(".", "_"))
+    assert note == (
+        "Fimbulwinter's Everlasting needs an authored immobilize/slow marker; "
+        "the ability packet did not certify its crowd-control state."
+    )
+    # Same trigger, different recipient and different kind: neither is owed.
+    for other in ("Imperial Mandate", "Bandlepipes"):
+        assert damage._control_armed_event_coverage([{"name": other}], unreviewed) == (
+            True,
+            "",
+            "",
+        )
+    assert damage._control_armed_holder_shields([{"name": "Fimbulwinter"}]) != ()
+    assert damage._control_armed_holder_shields([{"name": "Bandlepipes"}]) == ()
 
 
 def test_the_certification_gate_reads_every_mapping_not_only_a_dict():
@@ -2132,7 +2174,7 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         ts.is_immobilizing_event(row)
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
-        damage._fimbulwinter_event_coverage([{"name": "Fimbulwinter"}], [row])
+        damage._control_armed_event_coverage([{"name": "Fimbulwinter"}], [row])
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         survival_action_from_event(row, 0.0, 0, {"enemy:Aatrox": 0})
     holder = _support_actor("ally:Lulu", "ally", ("Imperial Mandate",))

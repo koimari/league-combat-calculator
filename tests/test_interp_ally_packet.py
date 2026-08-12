@@ -21,6 +21,8 @@ from src.calculator.item_behavior import (
     Compilable,
     EngineLane,
     PacketKind,
+    PacketTrigger,
+    Recipients,
     ReceiptOnly,
     ReceiptScope,
     RuleFamily,
@@ -138,6 +140,50 @@ class TestASlotRefusesWhatItsDeclarationDoesNotCarry:
         ), "the two support-quest stages are the live two-holder case"
         with pytest.raises(ValueError, match="how two of them combine"):
             _producer(slots, AllyProducer.SHARED_RICHES)
+
+
+class TestTheEmissionShapeIsAskableWithoutNamingAnItem:
+    """What arms a producer and who receives it, read off the declaration.
+
+    The pair engine's control-certification gate is the live reader: it owes
+    proof of a control event only for a shield the *holder* receives, and
+    those three clauses are what it asks instead of spelling an item name.
+    Each clause is checked here against a producer that satisfies the other
+    two, because a predicate whose only fixture satisfies all three would
+    pass with any two of them deleted.
+    """
+
+    def test_the_trigger_is_the_declarations_own(self) -> None:
+        assert _slot(AllyProducer.EVERLASTING).trigger is PacketTrigger.CROWD_CONTROL
+        assert _slot(AllyProducer.SACRIFICE).trigger is PacketTrigger.ALLY_DAMAGE_DEALT
+
+    def test_a_declared_packet_shape_answers_yes(self) -> None:
+        assert _slot(AllyProducer.EVERLASTING).emits(PacketKind.SHIELD, Recipients.SELF)
+
+    def test_the_same_kind_to_somebody_else_answers_no(self) -> None:
+        """Command delivers on the same trigger, to the triggering enemy."""
+        command = _slot(AllyProducer.COMMAND)
+        assert command.trigger is PacketTrigger.CROWD_CONTROL
+        assert not command.emits(PacketKind.DAMAGE_MODIFIER, Recipients.SELF)
+        assert command.emits(PacketKind.DAMAGE_MODIFIER, Recipients.TRIGGERING_ENEMY)
+
+    def test_another_kind_to_the_holder_answers_no(self) -> None:
+        """Fanfare is armed by the same trigger and delivers movement."""
+        fanfare = _slot(AllyProducer.FANFARE)
+        assert fanfare.trigger is PacketTrigger.CROWD_CONTROL
+        assert fanfare.emits(PacketKind.MOVEMENT, Recipients.SELF)
+        assert not fanfare.emits(PacketKind.SHIELD, Recipients.SELF)
+
+    def test_only_one_producer_satisfies_all_three_clauses_today(self) -> None:
+        """The gate's live population, derived rather than asserted by name."""
+        armed = tuple(
+            slot
+            for producer in AllyProducer
+            for slot in resolve_slots(catalog.owners_for(producer)).get(producer, ())
+            if slot.trigger is PacketTrigger.CROWD_CONTROL
+            and slot.emits(PacketKind.SHIELD, Recipients.SELF)
+        )
+        assert tuple(slot.producer for slot in armed) == (AllyProducer.EVERLASTING,)
 
 
 class TestDFiftysSecondTargetIsDeclaredNotInferred:
