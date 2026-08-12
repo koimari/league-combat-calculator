@@ -13,7 +13,8 @@
       "class_d": 1
     },
     "calculator/item_coverage.py": {
-      "counter_2": 246
+      "class_c_claim_evidence": 225,
+      "counter_2": 21
     },
     "calculator/item_effects.py": {
       "class_c": 431
@@ -115,7 +116,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.8",
       "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
-      "value": 249
+      "value": 24
     },
     "counter_3": {
       "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
@@ -295,7 +296,39 @@
         "calculator/bis.py": "three name-keyed build-profile claims that ride the same flip",
         "calculator/item_coverage.py": "the hand registries that assert coverage rather than compute it; 3.8 replaces them with a status derived from declarations"
       },
-      "sites": 249
+      "sites": 24
+    },
+    "class_c_claim_evidence_containers": {
+      "amendment": "umbrella criterion 7, Amendment A (2026-08-12): Phase 1's authored claim-evidence corpus and _REVIEW_ISSUE_REFS are Class C, not claim prose; counter 2 is measured net of them",
+      "containers": {
+        "calculator/item_coverage.py": {
+          "_ATTACKER_STATE_HOMES": "the attacker lane's authored claims: where a modelled state actually comes from, resolved against the symbol it names",
+          "_ISSUE_REF_ONLY_ITEMS": "the two items whose only claim carrier is their tracked review, authored so the ref rides a claim instead of being published by nothing",
+          "_REVIEW_ISSUE_REFS": "criterion 14's own blessed survivor: tracked review issues per item, routed onto a claim at import.  An issue reference states no coverage, so it is not the prose counter 2 is named for",
+          "_RULE_CLAIMS": "one claim per precedence rung, for the five rungs whose membership is recomputed from data/ and therefore cannot carry a per-item claim",
+          "_SOURCE_REFS": "the wiki revision each claim's evidence was read from; a claim with no source is the sentence this phase deletes, so the table is mandated rather than retirable",
+          "_SPLIT_MECHANICS": "the evidence member naming the mechanic a split claim's two halves belong to, resolved against the pairing registry",
+          "_SUPPORT_PACKET_CLAIMS": "the support-packet lane's authored claims, each quoting the packet source the totality check reads back",
+          "_TARGET_CERTIFIED_IMPLS": "the target lane's certified half, same shape and same resolution",
+          "_TARGET_MODELED_IMPLS": "the target lane's authored claims, each naming the implementation the resolver resolves it against",
+          "_UTILITY_HOMES": "the utility lane's authored evidence: the module and symbol a utility outcome is delivered by"
+        }
+      },
+      "sites": 225,
+      "sites_by_container": {
+        "calculator/item_coverage.py": {
+          "_ATTACKER_STATE_HOMES": 19,
+          "_ISSUE_REF_ONLY_ITEMS": 3,
+          "_REVIEW_ISSUE_REFS": 22,
+          "_RULE_CLAIMS": 6,
+          "_SOURCE_REFS": 59,
+          "_SPLIT_MECHANICS": 5,
+          "_SUPPORT_PACKET_CLAIMS": 18,
+          "_TARGET_CERTIFIED_IMPLS": 9,
+          "_TARGET_MODELED_IMPLS": 41,
+          "_UTILITY_HOMES": 43
+        }
+      }
     },
     "class_c_declarative_homes": {
       "modules": {
@@ -427,7 +460,7 @@
       "value": 282
     },
     "counter_2": {
-      "cause": "item_coverage grew Phase 1's claim corpus (_SOURCE_REFS, _RULE_CLAIMS and the evidence tables), which is claim prose by this counter's definition and 3.8 retires with the rest",
+      "cause": "item_coverage grew Phase 1's claim corpus (_SOURCE_REFS, _RULE_CLAIMS and the evidence tables), which the prior counted as claim prose; the umbrella's Amendment A (2026-08-12) rules that corpus and _REVIEW_ISSUE_REFS into Class C, so the measurement is net of them and is not comparable to the prior term for term",
       "value": 191
     },
     "counter_3": {
@@ -455,8 +488,8 @@
       "counter_2": {
         "bound": 21,
         "criterion": "criterion 1: claim-prose sites at or below the reviewed NO_RUNTIME_BEHAVIOR reason count",
-        "gap": 228,
-        "measured": 249,
+        "gap": 3,
+        "measured": 24,
         "met": false,
         "owed_to": ""
       },

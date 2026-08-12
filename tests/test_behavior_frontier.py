@@ -10,6 +10,7 @@ escaping it.  The second is the negative the phase document asks for by name:
 dischargeable by creating a fourteenth.
 """
 
+import ast
 import json
 from pathlib import Path
 
@@ -47,6 +48,113 @@ def test_the_exclusion_sets_are_committed_beside_the_counters() -> None:
     assert not committed_c & committed_d
     assert not committed_c & committed_b
     assert not committed_d & committed_b
+
+
+def test_the_claim_evidence_containers_are_committed_beside_the_counter() -> None:
+    """Amendment A's Class C arm is diff-gated exactly like the module sets.
+
+    The umbrella's dated amendment (criterion 7) rules Phase 1's authored
+    claim-evidence corpus and ``_REVIEW_ISSUE_REFS`` out of counter 2.  An
+    exclusion that big has to be a diff in a committed artifact, per container
+    and not merely per module, or the counter can be driven to its target by
+    editing the tool.
+    """
+    block = _receipt()["exclusions"]["class_c_claim_evidence_containers"]
+    declared = behavior_frontier.CLASS_C_CLAIM_EVIDENCE_CONTAINERS
+    assert set(block["containers"]) == set(declared)
+    for module, containers in declared.items():
+        assert set(block["containers"][module]) == set(containers)
+        # Only a Class B module may carry one: elsewhere it would excuse
+        # counter 1, which is the escape hatch the receipt exists to close.
+        assert module in behavior_frontier.CLASS_B_CLAIM_PROSE
+        for name, reason in containers.items():
+            assert len(reason.strip()) > 20, name
+    assert "Amendment A" in block["amendment"]
+
+
+def test_every_excluded_container_binds_something_in_its_module() -> None:
+    """A stale exclusion excuses nothing and reads as though it did."""
+    for (
+        module,
+        containers,
+    ) in behavior_frontier.CLASS_C_CLAIM_EVIDENCE_CONTAINERS.items():
+        source = (ROOT / "src" / module).read_text(encoding="utf-8")
+        bound = set(behavior_frontier.top_level_bindings(ast.parse(source)).values())
+        assert set(containers) <= bound, module
+
+
+def test_counter_two_is_measured_net_of_the_committed_exclusions() -> None:
+    """The netting is arithmetic over the receipt, not a number in prose.
+
+    Gross minus the committed containers is the counter, and what survives is
+    the population the amendment deliberately left counted.
+    """
+    report = behavior_frontier.scan()
+    per_container = report.claim_evidence_by_container["calculator/item_coverage.py"]
+    assert set(per_container) == set(
+        behavior_frontier.CLASS_C_CLAIM_EVIDENCE_CONTAINERS[
+            "calculator/item_coverage.py"
+        ]
+    )
+    gross = report.counter_2 + report.class_c_claim_evidence_sites
+    assert report.class_c_claim_evidence_sites == sum(per_container.values())
+    assert report.counter_2 == gross - report.class_c_claim_evidence_sites
+    # NO_RUNTIME_BEHAVIOR is the bound, so it stays counted: excluding it would
+    # make the target compare a number with itself removed.
+    assert report.by_module["calculator/item_coverage.py"]["counter_2"] == len(
+        item_coverage.NO_RUNTIME_BEHAVIOR
+    )
+
+
+def test_a_container_exclusion_outside_class_b_is_refused() -> None:
+    """R-05: the arm's red, on the clause that keeps it off counter 1."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    fresh = json.loads(json.dumps(committed))
+    fresh["exclusions"]["class_c_claim_evidence_containers"]["containers"][
+        "calculator/damage.py"
+    ] = {"SOMETHING": "a reason"}
+    committed["exclusions"]["class_c_claim_evidence_containers"]["containers"][
+        "calculator/damage.py"
+    ] = {"SOMETHING": "a reason"}
+
+    failures = behavior_frontier._claim_evidence_failures(  # noqa: SLF001
+        committed, fresh
+    )
+
+    assert any("is not a Class B module" in failure for failure in failures)
+
+
+def test_a_moved_container_exclusion_fails_the_gate() -> None:
+    """R-05: dropping one from the receipt is a diff, not a quiet improvement."""
+    receipt = _receipt()
+    receipt["exclusions"]["class_c_claim_evidence_containers"]["containers"][
+        "calculator/item_coverage.py"
+    ].pop("_SOURCE_REFS")
+    failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
+    assert any("_SOURCE_REFS" in failure for failure in failures)
+
+    receipt = _receipt()
+    receipt["exclusions"].pop("class_c_claim_evidence_containers")
+    failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
+    assert any("no claim-evidence exclusion section" in failure for failure in failures)
+
+
+def test_a_site_outside_an_excluded_container_still_counts(tmp_path: Path) -> None:
+    """The arm is per container, so the same module still feeds counter 2."""
+    fresh = tmp_path / "src"
+    (fresh / "calculator").mkdir(parents=True)
+    (fresh / "calculator" / "item_coverage.py").write_text(
+        '_SOURCE_REFS = {"Black Cleaver": ("url", 1)}\n'
+        'SOMETHING_ELSE = {"Eclipse": "a claim nobody derived"}\n',
+        encoding="utf-8",
+    )
+    report = behavior_frontier.scan(fresh)
+    assert report.counter_2 == 1
+    assert report.class_c_claim_evidence_sites == 1
+    assert report.claim_evidence_by_container == {
+        "calculator/item_coverage.py": {"_SOURCE_REFS": 1}
+    }
 
 
 def test_every_excluded_module_carries_a_reason() -> None:

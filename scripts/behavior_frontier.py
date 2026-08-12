@@ -32,6 +32,17 @@ module it appears in, into exactly one of four classes:
     tables, and Phase 2's capability registry.  A declaration keyed by an
     item name is the *destination* of this migration, not its subject.
 
+    Class C has a second, narrower arm the umbrella's **Amendment A**
+    (2026-08-12) added: a committed set of **containers** inside a Class B
+    module — Phase 1's authored claim-evidence corpus and
+    ``_REVIEW_ISSUE_REFS``.  They are typed declarations the resolution tier
+    resolves against the codebase on every ``pytest`` run, which is the
+    cannot-drift-silently property counter 2 exists to enforce, so they are
+    not the prose it is named for.  The arm is keyed by container rather than
+    by module because the module holds both populations, and it is consulted
+    only inside Class B, because a per-symbol exclusion reaching counter 1
+    would be an escape hatch on the counter this receipt drives to zero.
+
 ``Class B`` — claim prose
     Committed module set; its sites are **counter 2**.  These are the hand
     registries that assert coverage rather than compute it.
@@ -186,6 +197,69 @@ CLASS_B_CLAIM_PROSE: Mapping[str, str] = {
     ),
 }
 
+# The second arm of Class C, added by the umbrella's dated **Amendment A**
+# (2026-08-12, criterion 7).  Class C above is a module set, and that
+# granularity could not express the measured contradiction: a Class B module
+# holds both the claim prose this counter is named for *and* Phase 1's
+# authored claim-evidence corpus, which is neither prose nor retirable.
+# Deriving the corpus from the registries it describes would make Phase 1's
+# resolution check agree with them by construction — the failure that module
+# exists to catch — and Phase 1 mandates the corpus, so it can only be
+# excluded.  ``_REVIEW_ISSUE_REFS`` joins it as the second blessed survivor of
+# Phase 3's criterion 14: an issue reference is not a coverage claim.
+#
+# Keyed by module and then by the **top-level binding** the site sits inside,
+# so the exclusion is as narrow as the argument for it.  Only Class B modules
+# may appear — a container key elsewhere would quietly excuse counter 1, which
+# is the escape hatch this whole receipt exists to close.
+CLASS_C_CLAIM_EVIDENCE_CONTAINERS: Mapping[str, Mapping[str, str]] = {
+    "calculator/item_coverage.py": {
+        "_SOURCE_REFS": (
+            "the wiki revision each claim's evidence was read from; a claim "
+            "with no source is the sentence this phase deletes, so the table "
+            "is mandated rather than retirable"
+        ),
+        "_ATTACKER_STATE_HOMES": (
+            "the attacker lane's authored claims: where a modelled state "
+            "actually comes from, resolved against the symbol it names"
+        ),
+        "_ISSUE_REF_ONLY_ITEMS": (
+            "the two items whose only claim carrier is their tracked review, "
+            "authored so the ref rides a claim instead of being published by "
+            "nothing"
+        ),
+        "_TARGET_MODELED_IMPLS": (
+            "the target lane's authored claims, each naming the implementation "
+            "the resolver resolves it against"
+        ),
+        "_TARGET_CERTIFIED_IMPLS": (
+            "the target lane's certified half, same shape and same resolution"
+        ),
+        "_SUPPORT_PACKET_CLAIMS": (
+            "the support-packet lane's authored claims, each quoting the packet "
+            "source the totality check reads back"
+        ),
+        "_UTILITY_HOMES": (
+            "the utility lane's authored evidence: the module and symbol a "
+            "utility outcome is delivered by"
+        ),
+        "_SPLIT_MECHANICS": (
+            "the evidence member naming the mechanic a split claim's two halves "
+            "belong to, resolved against the pairing registry"
+        ),
+        "_RULE_CLAIMS": (
+            "one claim per precedence rung, for the five rungs whose membership "
+            "is recomputed from data/ and therefore cannot carry a per-item "
+            "claim"
+        ),
+        "_REVIEW_ISSUE_REFS": (
+            "criterion 14's own blessed survivor: tracked review issues per "
+            "item, routed onto a claim at import.  An issue reference states no "
+            "coverage, so it is not the prose counter 2 is named for"
+        ),
+    },
+}
+
 # The prior counts this instrument replaces, carried beside the measurement
 # with the cause of each divergence.  A prior is never a gate (runbook R-07);
 # it is here so a reader can see what moved and why.
@@ -202,8 +276,10 @@ PRIORS: Mapping[str, Mapping[str, Any]] = {
         "value": 191,
         "cause": (
             "item_coverage grew Phase 1's claim corpus (_SOURCE_REFS, "
-            "_RULE_CLAIMS and the evidence tables), which is claim prose by "
-            "this counter's definition and 3.8 retires with the rest"
+            "_RULE_CLAIMS and the evidence tables), which the prior counted as "
+            "claim prose; the umbrella's Amendment A (2026-08-12) rules that "
+            "corpus and _REVIEW_ISSUE_REFS into Class C, so the measurement is "
+            "net of them and is not comparable to the prior term for term"
         ),
     },
     "counter_3": {"value": 142, "cause": "unchanged"},
@@ -227,6 +303,7 @@ class Site:
     line: int
     name: str
     klass: str
+    container: str = ""
 
 
 @dataclass(slots=True)
@@ -239,8 +316,10 @@ class FrontierReport:
     counter_4: int = 0
     by_module: dict[str, dict[str, int]] = field(default_factory=dict)
     class_c_sites: int = 0
+    class_c_claim_evidence_sites: int = 0
     class_d_sites: int = 0
     uninterpreted: tuple[str, ...] = ()
+    claim_evidence_by_container: dict[str, dict[str, int]] = field(default_factory=dict)
 
     def counters(self) -> dict[str, int]:
         """The four numbers, keyed the way the receipt keys them."""
@@ -261,38 +340,76 @@ def item_names() -> frozenset[str]:
     )
 
 
-def classify(module: str) -> str:
-    """Which class a module's item-name sites belong to.
+def classify(module: str, container: str = "") -> str:
+    """Which class an item-name site belongs to, by module and container.
 
     The default is ``counter_1``: strictest wins, so a module nobody has
     argued about counts against the migration rather than silently out of it.
+
+    *container* is the top-level binding the site sits inside, and it is
+    consulted **only** inside a Class B module (Amendment A).  A container
+    exclusion that could reach counter 1 would be a per-symbol escape hatch on
+    the counter this receipt exists to drive to zero.
     """
     if module in CLASS_D_NON_BEHAVIOURAL:
         return "class_d"
     if module in CLASS_C_DECLARATIVE_HOMES:
         return "class_c"
     if module in CLASS_B_CLAIM_PROSE:
+        if container in CLASS_C_CLAIM_EVIDENCE_CONTAINERS.get(module, {}):
+            return "class_c_claim_evidence"
         return "counter_2"
     return "counter_1"
 
 
+def top_level_bindings(tree: ast.Module) -> dict[int, str]:
+    """Node id to the top-level binding whose value the node sits inside.
+
+    Only module-level assignments, because that is the granularity a
+    container exclusion is argued at: ``_SOURCE_REFS`` is a declaration a
+    reader can go and look at, while "the third dict in this function" is not.
+    """
+    owners: dict[int, str] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign):
+            targets = [
+                target.id
+                for target in statement.targets
+                if isinstance(target, ast.Name)
+            ]
+        elif isinstance(statement, ast.AnnAssign) and isinstance(
+            statement.target, ast.Name
+        ):
+            targets = [statement.target.id]
+        else:
+            continue
+        if not targets:
+            continue
+        for node in ast.walk(statement):
+            owners[id(node)] = targets[0]
+    return owners
+
+
 def name_sites(root: Path, names: frozenset[str]) -> tuple[Site, ...]:
-    """Every item-name string literal under *root*, classified by module."""
+    """Every item-name string literal under *root*, classified in place."""
     sites: list[Site] = []
     for path in sorted(root.rglob("*.py")):
         module = path.relative_to(root).as_posix()
         tree = ast.parse(path.read_text(encoding="utf-8"))
+        owners = top_level_bindings(tree)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Constant):
                 continue
             if not isinstance(node.value, str) or node.value not in names:
                 continue
+            container = owners.get(id(node), "")
             sites.append(
                 Site(
                     module=module,
                     line=node.lineno,
                     name=node.value,
-                    klass=classify(module),
+                    klass=classify(module, container),
+                    container=container,
                 )
             )
     return tuple(sites)
@@ -310,6 +427,10 @@ def scan(root: Path = SRC_ROOT) -> FrontierReport:
             report.counter_2 += 1
         elif site.klass == "class_c":
             report.class_c_sites += 1
+        elif site.klass == "class_c_claim_evidence":
+            report.class_c_claim_evidence_sites += 1
+            per_module = report.claim_evidence_by_container.setdefault(site.module, {})
+            per_module[site.container] = per_module.get(site.container, 0) + 1
         else:
             report.class_d_sites += 1
     report.counter_3 = catalog.undeclared_entry_count()
@@ -925,6 +1046,64 @@ def _unserved_lane_failures(
     return failures
 
 
+def _claim_evidence_failures(
+    committed: Mapping[str, Any], fresh: Mapping[str, Any]
+) -> list[str]:
+    """Amendment A's exclusion arm, gated the way Class C and D are (D-40).
+
+    Four clauses.  Set equality against the receipt makes an edit a diff in a
+    committed artifact.  A container key in a module that is not Class B would
+    excuse counter 1 rather than counter 2, so it is refused outright.  A
+    container that binds nothing in its module is a stale exclusion — it
+    excludes no site and reads as though it does, which is the prose-outruns-
+    code shape this phase deletes.  And the section may not be deleted: a gate
+    that skips what it cannot find is not a gate.
+    """
+    recorded = committed.get("exclusions", {}).get("class_c_claim_evidence_containers")
+    if not isinstance(recorded, Mapping):
+        return [
+            "class_c_claim_evidence_containers: the committed receipt has no "
+            "claim-evidence exclusion section; run --write"
+        ]
+    failures: list[str] = []
+    declared = fresh["exclusions"]["class_c_claim_evidence_containers"]["containers"]
+    committed_containers = recorded.get("containers", {})
+    if set(committed_containers) != set(declared):
+        failures.append(
+            "class_c_claim_evidence_containers: committed modules differ from "
+            f"the declared ones (committed-only="
+            f"{sorted(set(committed_containers) - set(declared))}, declared-only="
+            f"{sorted(set(declared) - set(committed_containers))})"
+        )
+    for module, containers in sorted(declared.items()):
+        was = set(committed_containers.get(module, {}))
+        if was != set(containers):
+            failures.append(
+                f"class_c_claim_evidence_containers: {module}'s committed "
+                f"container set differs from the declared one (committed-only="
+                f"{sorted(was - set(containers))}, declared-only="
+                f"{sorted(set(containers) - was)})"
+            )
+        if module not in CLASS_B_CLAIM_PROSE:
+            failures.append(
+                f"class_c_claim_evidence_containers: {module} is not a Class B "
+                "module, so a container exclusion there would excuse counter 1"
+            )
+            continue
+        path = SRC_ROOT / module
+        bound = set(
+            top_level_bindings(ast.parse(path.read_text(encoding="utf-8"))).values()
+        )
+        stale = sorted(set(containers) - bound)
+        if stale:
+            failures.append(
+                f"class_c_claim_evidence_containers: {stale} are excluded in "
+                f"{module} and bind nothing there — a stale exclusion reads as "
+                "though it excused something"
+            )
+    return failures
+
+
 def _compiled_walk_refusal_failures(
     committed: Mapping[str, Any], fresh: Mapping[str, Any]
 ) -> list[str]:
@@ -1058,6 +1237,26 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
                 "sites": report.class_d_sites,
                 "modules": dict(sorted(CLASS_D_NON_BEHAVIOURAL.items())),
             },
+            "class_c_claim_evidence_containers": {
+                "sites": report.class_c_claim_evidence_sites,
+                "amendment": (
+                    "umbrella criterion 7, Amendment A (2026-08-12): Phase 1's "
+                    "authored claim-evidence corpus and _REVIEW_ISSUE_REFS are "
+                    "Class C, not claim prose; counter 2 is measured net of them"
+                ),
+                "containers": {
+                    module: dict(sorted(containers.items()))
+                    for module, containers in sorted(
+                        CLASS_C_CLAIM_EVIDENCE_CONTAINERS.items()
+                    )
+                },
+                "sites_by_container": {
+                    module: dict(sorted(tally.items()))
+                    for module, tally in sorted(
+                        report.claim_evidence_by_container.items()
+                    )
+                },
+            },
             "class_b_claim_prose": {
                 "sites": report.counter_2,
                 "modules": dict(sorted(CLASS_B_CLAIM_PROSE.items())),
@@ -1123,6 +1322,7 @@ def check(
                 f"(committed-only={sorted(recorded_modules - fresh_modules)}, "
                 f"declared-only={sorted(fresh_modules - recorded_modules)})"
             )
+    failures.extend(_claim_evidence_failures(committed, fresh))
     failures.extend(_target_failures(committed, fresh))
     failures.extend(_unserved_lane_failures(committed, fresh))
     failures.extend(_zero_policy_failures(committed, fresh))
