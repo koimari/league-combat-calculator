@@ -152,7 +152,7 @@ from .interpreters import (
 # effect in five functions, and a module shadowed by a local is a bug waiting
 # for somebody to add a read above the assignment.
 from .interpreters.spellblade import resolve_slot as resolve_spellblade_slot
-from .interpreters.sustain import declared_sustain
+from .interpreters.sustain import declared_sustain, saturating_stat_percent
 from .item_behavior import (
     ActiveWindowCastEconomyRule,
     AmpChainSlot,
@@ -163,6 +163,7 @@ from .item_behavior import (
     Probe,
     Recipients,
     Resistance,
+    SustainStat,
 )
 from .trigger_stream import (
     Stream,
@@ -2213,20 +2214,21 @@ def _resolve_combat_state(
     fight_duration_seconds = config.fight_duration_seconds
     auto_attack_uptime = config.auto_attack_uptime
     is_melee = champion_stats.get("is_melee", True)
-    if item_effects.has_item(items, "Riftmaker"):
-        max_stack_omnivamp = item_effects.riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=fight_duration_seconds,
-            is_melee=bool(is_melee),
+    saturated_omnivamp = saturating_stat_percent(
+        [str(item.get("name", "")) for item in items],
+        SustainStat.OMNIVAMP_PERCENT,
+        fight_duration_seconds=fight_duration_seconds,
+        holder_is_melee=bool(is_melee),
+    )
+    if saturated_omnivamp > 0.0:
+        # The stat bundle carries whatever the resolved block already holds.
+        # A grant a ramp arms is a fight-state transition rather than a stat,
+        # so add it to a private copy before any healing path or score-only
+        # fast-path decision reads the resolved stats.
+        champion_stats = dict(champion_stats)
+        champion_stats["omnivamp_percent"] = (
+            champion_stats.get("omnivamp_percent", 0.0) + saturated_omnivamp
         )
-        if max_stack_omnivamp > 0.0:
-            # The stat bundle carries Riftmaker's base omnivamp.  The
-            # max-stack branch is a fight-state transition, so add the
-            # parser-owned bonus to a private copy before any healing path
-            # or score-only fast-path decision reads the resolved stats.
-            champion_stats = dict(champion_stats)
-            champion_stats["omnivamp_percent"] = (
-                champion_stats.get("omnivamp_percent", 0.0) + max_stack_omnivamp
-            )
     level = int(champion_stats.get("level", 1))
     damage_effects = item_effects.resolve_damage_effects(items)
     # The declared families this build brings.  Resolved before the

@@ -28,6 +28,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from .. import item_effects
 from ..item_behavior import (
     BehaviorRule,
     BuildContext,
@@ -37,6 +38,7 @@ from ..item_behavior import (
     DefenseSubject,
     EngineLane,
     KernelField,
+    MeleeRangedSplit,
     ReceivedHealingRule,
     RuleFamily,
     SUSTAIN_PAYLOAD_REFERENCES,
@@ -348,6 +350,53 @@ def stat_grants(owners: Sequence[str], stat: SustainStat) -> tuple[BehaviorRule,
     )
 
 
+def saturating_stat_percent(
+    owners: Sequence[str],
+    stat: SustainStat,
+    *,
+    fight_duration_seconds: float,
+    holder_is_melee: bool,
+) -> float:
+    """What this build's ramp-armed grants of *stat* pay a fight this long.
+
+    The grants with an ``arms_at`` are exactly the ones the resolved stat
+    block does **not** carry: they are a fight state, so the engines add them
+    to a private copy once the fight is long enough.  Filtering on the
+    declared axis rather than on a holder's name is what keeps that fold from
+    double-counting the grants the block already holds — and a second such
+    item would be summed here rather than needing a second call site.
+
+    Zero is a measured answer: every held ramp was asked and none of them had
+    time to top out.
+    """
+    total = 0.0
+    for rule in stat_grants(owners, stat):
+        payload = rule.payload
+        if not isinstance(payload, SustainStatRule) or payload.arms_at is None:
+            continue
+        per_second, maximum = resolve_flat(
+            (payload.arms_at.per_second, payload.arms_at.maximum)
+        )
+        total += item_effects.saturated_grant(
+            _split_share(payload.percent, holder_is_melee),
+            per_second=per_second,
+            maximum=maximum,
+            elapsed_seconds=fight_duration_seconds,
+        )
+    return total
+
+
+def _split_share(percent: object, holder_is_melee: bool) -> float:
+    """One grant's share, choosing the holder's own range class where split."""
+    chosen = (
+        (percent.melee if holder_is_melee else percent.ranged)
+        if isinstance(percent, MeleeRangedSplit)
+        else percent
+    )
+    (share,) = resolve_flat((chosen,))
+    return share
+
+
 __all__ = [
     "PAIR_INTERPRETER",
     "RECEIVED_HEALING_MULTIPLIER_FIELD",
@@ -360,6 +409,7 @@ __all__ = [
     "WALK_INTERPRETER",
     "declared_sustain",
     "received_healing_multiplier",
+    "saturating_stat_percent",
     "stat_grants",
     "sustain_rules",
     "sustain_slot",

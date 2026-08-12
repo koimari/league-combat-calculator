@@ -108,6 +108,7 @@ from .item_behavior import (
     RampModel,
     RampPerSecond,
     RampPerStack,
+    RampSaturation,
     ReactiveRule,
     ReceiptOnly,
     ReceiptScope,
@@ -1411,6 +1412,11 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         # because neither tag says a word about it.
         "seething_attack_speed_per_stack": RuleFamily.CHARGED_STRIKE,
         "attack_refund_base": RuleFamily.CHARGED_STRIKE,
+        # The omnivamp Void Corruption's own ramp arms, hung on the entry
+        # whose tag names the amplifier that ramp pays.  The grant is a
+        # fight state rather than a stat, which is why it is a second
+        # mechanic on one entry and not a second entry.
+        "max_stack_omnivamp": RuleFamily.SUSTAIN,
         "max_mana_to_ad_ratio": RuleFamily.STAT_DERIVATION,
         "ultimate_haste": RuleFamily.STAT_DERIVATION,
         # The casting trade an amp entry's own active window makes.  The tag
@@ -3711,6 +3717,34 @@ SUSTAIN_STAT_KEYS: Mapping[str, SustainStat] = {
     "stat_override_omnivamp_percent": SustainStat.OMNIVAMP_PERCENT,
 }
 
+
+class SaturatingGrantSchema(NamedTuple):
+    """A vampirism grant the stat block does not carry until a ramp tops out.
+
+    Keyed by its own signature key, so the table says which registry *shape*
+    arms on saturation and never which item does.  ``ranged_key`` is the
+    melee/ranged pair every such grant has had so far; the two ramp keys are
+    the ones the sibling amplifier on the same entry is already declared
+    from, which is why the arming time is never a third number to source.
+    """
+
+    stat: SustainStat
+    ranged_key: str
+    per_second_key: str
+    maximum_key: str
+
+
+# The one saturating grant the registry states: Void Corruption's omnivamp,
+# hung on an entry tagged for the amplifier its own ramp pays.
+SATURATING_SUSTAIN_STATS: Mapping[str, SaturatingGrantSchema] = {
+    "max_stack_omnivamp": SaturatingGrantSchema(
+        SustainStat.OMNIVAMP_PERCENT,
+        "max_stack_omnivamp_ranged",
+        "amp_per_second",
+        "amp_max",
+    ),
+}
+
 # The prefix that makes a stat grant a *correction* to the cached stat block
 # rather than a second source of it.  One spelling, read here and by
 # ``item_effects.override_item_stat``, so the two cannot disagree about what
@@ -3790,12 +3824,56 @@ def _sustain_stat_rules(
                 stat=stat,
                 percent=ValueRef(registry, owner, key),
                 overrides_cached_stat=key.startswith(STAT_OVERRIDE_PREFIX),
+                arms_at=None,
                 subject=Subject.HOLDER,
             ),
         )
         for key, stat in SUSTAIN_STAT_KEYS.items()
         if key in schema
     ]
+
+
+def _saturating_stat_rules(
+    owner: str, registry: ValueRegistry, schema: frozenset[str]
+) -> list[BehaviorRule]:
+    """Every vampirism grant one entry arms on a ramp, in table order."""
+    rules: list[BehaviorRule] = []
+    for key, spec in SATURATING_SUSTAIN_STATS.items():
+        if key not in schema:
+            continue
+        missing = sorted(
+            named
+            for named in (spec.ranged_key, spec.per_second_key, spec.maximum_key)
+            if named not in schema
+        )
+        if missing:
+            raise BehaviorCatalogError(
+                f"{registry}[{owner!r}] carries the saturating grant {key!r} and "
+                f"is missing {missing}; the grant and the ramp that arms it are "
+                "claimed together, because a grant nothing arms would be paid "
+                "from the first tick"
+            )
+        rules.append(
+            _sustain_rule(
+                owner,
+                registry,
+                f"{spec.stat.value}_on_saturation",
+                SustainStatRule(
+                    stat=spec.stat,
+                    percent=MeleeRangedSplit(
+                        melee=ValueRef(registry, owner, key),
+                        ranged=ValueRef(registry, owner, spec.ranged_key),
+                    ),
+                    overrides_cached_stat=False,
+                    arms_at=RampSaturation(
+                        per_second=ValueRef(registry, owner, spec.per_second_key),
+                        maximum=ValueRef(registry, owner, spec.maximum_key),
+                    ),
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    return rules
 
 
 def _compile_sustain(
@@ -3831,6 +3909,7 @@ def _sustain_rule_list(
 ) -> list[BehaviorRule]:
     """The four keyed sustain shapes one entry declares, in declaration order."""
     rules = _sustain_stat_rules(owner, registry, schema)
+    rules.extend(_saturating_stat_rules(owner, registry, schema))
     if ON_HIT_HEAL_KEY in schema:
         rules.append(
             _sustain_rule(

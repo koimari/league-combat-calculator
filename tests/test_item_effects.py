@@ -44,7 +44,7 @@ from src.calculator.item_effects import (
     passive_attack_speed_bonus,
     permanent_ap_multiplier,
     riftmaker_bonus_ap,
-    riftmaker_max_stack_omnivamp,
+    saturated_grant,
     hubris_eminence_bonus_ad,
     axiom_arc_ultimate_refund_fraction,
     essence_reaver_mana_restore_per_proc,
@@ -527,24 +527,36 @@ class TestResolveDamageEffects:
         with pytest.raises(KeyError, match="bonus_health_to_ap_ratio"):
             riftmaker_bonus_ap(bonus_health=500)
 
-    def test_riftmaker_max_stack_omnivamp_uses_four_second_boundary(self) -> None:
-        assert riftmaker_max_stack_omnivamp(fight_duration_seconds=3.99) == 0.0
-        assert riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=4.0
-        ) == pytest.approx(10.0)
-        assert riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=4.0, is_melee=False
-        ) == pytest.approx(6.0)
-
-    def test_riftmaker_max_stack_omnivamp_fails_closed_when_missing(
-        self, monkeypatch: pytest.MonkeyPatch
+    def test_a_ramps_grant_is_paid_only_once_the_ramp_can_have_topped_out(
+        self,
     ) -> None:
-        broken = dict(ITEM_EFFECTS["Riftmaker"])
-        broken.pop("max_stack_omnivamp")
-        monkeypatch.setitem(ITEM_EFFECTS, "Riftmaker", broken)
+        """Riftmaker's 2%/s ramp caps at 8%, so the grant arms at four seconds."""
+        per_second = ITEM_EFFECTS["Riftmaker"]["amp_per_second"]
+        maximum = ITEM_EFFECTS["Riftmaker"]["amp_max"]
+        melee = ITEM_EFFECTS["Riftmaker"]["max_stack_omnivamp"]
+        assert (
+            saturated_grant(
+                melee,
+                per_second=per_second,
+                maximum=maximum,
+                elapsed_seconds=3.99,
+            )
+            == 0.0
+        )
+        assert saturated_grant(
+            melee, per_second=per_second, maximum=maximum, elapsed_seconds=4.0
+        ) == pytest.approx(melee)
 
-        with pytest.raises(KeyError, match="max_stack_omnivamp"):
-            riftmaker_max_stack_omnivamp(fight_duration_seconds=5.0)
+    def test_a_ramp_with_no_rate_or_no_ceiling_arms_nothing(self) -> None:
+        """A refusal, not a division: neither shape can honestly saturate."""
+        assert (
+            saturated_grant(10.0, per_second=0.0, maximum=0.08, elapsed_seconds=99.0)
+            == 0.0
+        )
+        assert (
+            saturated_grant(10.0, per_second=0.02, maximum=0.0, elapsed_seconds=99.0)
+            == 0.0
+        )
 
     def test_hubris_eminence_uses_sourced_base_and_stack_ad(self) -> None:
         assert hubris_eminence_bonus_ad(stacks=4) == pytest.approx(24)

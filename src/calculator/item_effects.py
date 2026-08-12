@@ -1189,10 +1189,14 @@ def item_state_receipts(
             ),
             max_stack_at=max_stack_time,
             omnivamp_at=max_stack_time,
-            omnivamp_percent=riftmaker_max_stack_omnivamp(
-                fight_duration_seconds=fight_duration_seconds,
-                is_melee=is_melee,
-                item_name="Riftmaker",
+            omnivamp_percent=saturated_grant(
+                required_effect_value(
+                    "Riftmaker",
+                    "max_stack_omnivamp" if is_melee else "max_stack_omnivamp_ranged",
+                ),
+                per_second=per_second,
+                maximum=max_amp,
+                elapsed_seconds=fight_duration_seconds,
             ),
         )
 
@@ -4527,34 +4531,37 @@ def riftmaker_bonus_ap(*, bonus_health: float, item_name: str = "Riftmaker") -> 
     return max(0.0, float(bonus_health)) * ratio
 
 
-def riftmaker_max_stack_omnivamp(
-    *,
-    fight_duration_seconds: float,
-    is_melee: bool = True,
-    item_name: str = "Riftmaker",
-) -> float:
-    """Return Void Corruption's max-stack omnivamp after its sourced ramp.
+# How far past a ramp's own saturation time a fight has to reach before the
+# grant it arms is paid.  A ramp that tops out at exactly the fight's length
+# has topped out, and float division is what would otherwise decide that.
+_SATURATION_EPSILON = 1e-9
 
-    Riftmaker gains one 2% damage stack per second, up to four stacks.  The
-    fight timeline starts in combat, so a continuous fight reaches the
-    max-stack omnivamp branch at four seconds; shorter fights receive none.
+
+def saturated_grant(
+    granted: float,
+    *,
+    per_second: float,
+    maximum: float,
+    elapsed_seconds: float,
+) -> float:
+    """What a grant armed by a per-second ramp pays a fight this long.
+
+    Four numbers and no item name: the caller says which ramp and which
+    grant, and this says whether the ramp had time to top out.  It is the one
+    home of that question — the declared grant's interpreter resolves its own
+    references and asks here, and the registry's published state row asks the
+    same thing about the same entry, so the two can never answer differently.
+
+    A ramp with no rate or no ceiling arms nothing.  That is a refusal rather
+    than a division: a zero rate never saturates, and a zero ceiling would
+    saturate instantly and pay a grant whose sibling amplifier pays nothing.
     """
-    if item_name not in ITEM_EFFECTS:
-        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
-    per_second = required_effect_value(item_name, "amp_per_second")
-    max_amp = required_effect_value(item_name, "amp_max")
-    max_omnivamp = required_effect_value(
-        item_name,
-        "max_stack_omnivamp" if is_melee else "max_stack_omnivamp_ranged",
-    )
-    if per_second <= 0.0 or max_amp <= 0.0:
+    if per_second <= 0.0 or maximum <= 0.0:
         return 0.0
-    max_stack_seconds = max_amp / per_second
-    return (
-        float(max_omnivamp)
-        if fight_duration_seconds + 1e-9 >= max_stack_seconds
-        else 0.0
-    )
+    saturation_seconds = maximum / per_second
+    if elapsed_seconds + _SATURATION_EPSILON < saturation_seconds:
+        return 0.0
+    return float(granted)
 
 
 def hubris_eminence_bonus_ad(

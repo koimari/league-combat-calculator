@@ -34,12 +34,13 @@ from src.calculator.interpreters.sustain import (
     sustain_slot,
     walk_slot,
 )
-from src.calculator.value_ref import LevelValueRef
+from src.calculator.value_ref import LevelValueRef, ValueRef
 from src.calculator.item_behavior import (
     BelowHalfHealingRule,
     DefenseMechanic,
     EngineLane,
     ManaSpentHealRule,
+    MeleeRangedSplit,
     OnHitHealRule,
     PostMitigationHealRule,
     ReceiptOnly,
@@ -433,3 +434,132 @@ def test_the_below_half_rule_is_receipt_only_in_the_ledger_scope() -> None:
         compilability_for(BELOW_HALF_HOLDER, ReceiptScope.SURVIVAL_LEDGER_TRANSITION),
         ReceiptOnly,
     )
+
+
+# ── the grant a ramp arms ─────────────────────────────────────────────────
+#
+# The ninth shape and the last of this family the engines reached by name:
+# `damage.py` asked `has_item(items, "Riftmaker")` before adding Void
+# Corruption's omnivamp to a private copy of the resolved stats, and
+# `pipeline.py` spelled the same name again to decide whether the light
+# tuple ledger was adequate.  Both now ask the declarations which of the
+# build's grants the *stat block does not already carry*.
+
+SATURATING_HOLDER = "Riftmaker"
+
+
+def _saturating_rule():
+    """Riftmaker's ramp-armed omnivamp declaration."""
+    (rule,) = [
+        rule
+        for rule in catalog.behavior_rules(SATURATING_HOLDER)
+        if isinstance(rule.payload, SustainStatRule)
+    ]
+    return rule
+
+
+def test_the_ramp_armed_grant_is_declared_with_the_ramp_that_arms_it() -> None:
+    """The arming time is never sourced: it is the ramp's own two numbers."""
+    payload = _saturating_rule().payload
+    assert payload.stat is SustainStat.OMNIVAMP_PERCENT
+    assert payload.overrides_cached_stat is False
+    assert payload.arms_at.per_second == ValueRef(
+        "ITEM_EFFECTS", SATURATING_HOLDER, "amp_per_second"
+    )
+    assert payload.arms_at.maximum == ValueRef(
+        "ITEM_EFFECTS", SATURATING_HOLDER, "amp_max"
+    )
+    assert payload.percent == MeleeRangedSplit(
+        melee=ValueRef("ITEM_EFFECTS", SATURATING_HOLDER, "max_stack_omnivamp"),
+        ranged=ValueRef("ITEM_EFFECTS", SATURATING_HOLDER, "max_stack_omnivamp_ranged"),
+    )
+
+
+def test_an_ordinary_grant_declares_no_ramp_rather_than_an_instant_one() -> None:
+    """``None`` says the stat block already holds it, from the first tick."""
+    ordinary = [
+        rule.payload
+        for owner in ("Vampiric Scepter", "Doran's Blade")
+        for rule in catalog.behavior_rules(owner)
+        if isinstance(rule.payload, SustainStatRule)
+    ]
+    assert ordinary
+    assert all(payload.arms_at is None for payload in ordinary)
+
+
+def test_the_grant_pays_only_a_fight_long_enough_to_saturate_the_ramp() -> None:
+    """2% per second to an 8% ceiling is four seconds, melee and ranged."""
+    entry = item_effects.ITEM_EFFECTS[SATURATING_HOLDER]
+    for is_melee, key in (
+        (True, "max_stack_omnivamp"),
+        (False, "max_stack_omnivamp_ranged"),
+    ):
+        assert (
+            sustain.saturating_stat_percent(
+                [SATURATING_HOLDER],
+                SustainStat.OMNIVAMP_PERCENT,
+                fight_duration_seconds=3.99,
+                holder_is_melee=is_melee,
+            )
+            == 0.0
+        )
+        assert sustain.saturating_stat_percent(
+            [SATURATING_HOLDER],
+            SustainStat.OMNIVAMP_PERCENT,
+            fight_duration_seconds=4.0,
+            holder_is_melee=is_melee,
+        ) == pytest.approx(entry[key])
+
+
+def test_the_grants_the_stat_block_already_holds_are_not_summed_again() -> None:
+    """Filtering on the declared axis is what stops the fold double-counting."""
+    assert (
+        sustain.saturating_stat_percent(
+            ["Vampiric Scepter", "Doran's Blade"],
+            SustainStat.OMNIVAMP_PERCENT,
+            fight_duration_seconds=30.0,
+            holder_is_melee=True,
+        )
+        == 0.0
+    )
+    assert (
+        sustain.saturating_stat_percent(
+            [SATURATING_HOLDER],
+            SustainStat.LIFESTEAL_PERCENT,
+            fight_duration_seconds=30.0,
+            holder_is_melee=True,
+        )
+        == 0.0
+    )
+
+
+def test_a_moved_ramp_number_moves_the_moment_the_grant_arms(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The refresh proof's shape: the declaration holds references, not floats."""
+    patched = dict(item_effects.ITEM_EFFECTS[SATURATING_HOLDER])
+    patched["amp_max"] = 0.02
+    monkeypatch.setitem(item_effects.ITEM_EFFECTS, SATURATING_HOLDER, patched)
+    assert sustain.saturating_stat_percent(
+        [SATURATING_HOLDER],
+        SustainStat.OMNIVAMP_PERCENT,
+        fight_duration_seconds=1.0,
+        holder_is_melee=True,
+    ) == pytest.approx(patched["max_stack_omnivamp"])
+
+
+def test_a_grant_missing_the_ramp_that_arms_it_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The grant and its ramp are claimed together or the parse dropped one."""
+    patched = {
+        key: value
+        for key, value in item_effects.ITEM_EFFECTS[SATURATING_HOLDER].items()
+        if key != "amp_max"
+    }
+    monkeypatch.setitem(item_effects.ITEM_EFFECTS, SATURATING_HOLDER, patched)
+    monkeypatch.setattr(
+        catalog, "_schema_keys", lambda owner, registry, entry: frozenset(entry)
+    )
+    with pytest.raises(catalog.BehaviorCatalogError, match="amp_max"):
+        catalog.behavior_rules(SATURATING_HOLDER)

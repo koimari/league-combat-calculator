@@ -12,14 +12,11 @@
     "calculator/champions/viego.py": {
       "class_d": 1
     },
-    "calculator/damage.py": {
-      "counter_1": 1
-    },
     "calculator/item_coverage.py": {
       "counter_2": 268
     },
     "calculator/item_effects.py": {
-      "class_c": 427
+      "class_c": 426
     },
     "calculator/item_outcomes.py": {
       "class_c": 43
@@ -32,9 +29,6 @@
     },
     "calculator/passive_parser.py": {
       "class_c": 92
-    },
-    "calculator/pipeline.py": {
-      "counter_1": 1
     },
     "calculator/role_quests.py": {
       "class_c": 21
@@ -117,7 +111,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 5
+      "value": 3
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -321,7 +315,7 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 657
+      "sites": 656
     },
     "class_d_non_behavioural": {
       "modules": {

@@ -1516,6 +1516,21 @@ class SustainStat(Enum):
 
 
 @dataclass(frozen=True, slots=True)
+class RampSaturation:
+    """A per-second ramp, named by the two numbers that say when it tops out.
+
+    Declared as the ramp rather than as the saturation *time* because the
+    time is not a number the registry states: it is ``maximum / per_second``,
+    and a declaration holding the quotient would be holding a number nobody
+    sourced.  What arms on saturation is the sibling grant this record hangs
+    off, never the ramp itself.
+    """
+
+    per_second: AnyValueRef
+    maximum: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
 class SustainStatRule:
     """A sourced vampirism percentage the build's stat fold sums.
 
@@ -1525,11 +1540,24 @@ class SustainStatRule:
     rather than adding to it.  Declaring which of the two a grant is keeps
     "the wiki stat is wrong and here is the right one" from looking like
     "here is a second source of life steal".
+
+    ``arms_at`` is the third thing a grant can be, and it is the reason this
+    payload has three states rather than two: a grant the *stat block does
+    not carry at all* until a ramp elsewhere on the same entry saturates.
+    Riftmaker's Void Corruption is the live case — the omnivamp is a fight
+    state, not a stat, which is why the engine adds it to a private copy of
+    the resolved block partway through resolving the fight.  ``None`` is the
+    declared absence: the grant is in the block from the first tick.
+
+    ``percent`` may be a :class:`MeleeRangedSplit` because a saturating grant
+    pays a melee holder more than a ranged one, and the choice is made once
+    per build from a stat rather than per event.
     """
 
     stat: SustainStat
-    percent: AnyValueRef
+    percent: AnyValueRef | MeleeRangedSplit
     overrides_cached_stat: bool
+    arms_at: RampSaturation | None
     subject: Subject
 
 
@@ -3214,12 +3242,13 @@ def _validate_sustain(rule: BehaviorRule, payload: RulePayload) -> None:
             "and declares no other subject; a heal aimed elsewhere is an ally "
             "packet"
         )
-    if isinstance(payload, SustainStatRule) and not isinstance(
-        payload.stat, SustainStat
-    ):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a stat grant says which vampirism stat it feeds"
-        )
+    if isinstance(payload, SustainStatRule):
+        if not isinstance(payload.stat, SustainStat):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a stat grant says which vampirism stat it feeds"
+            )
+        _validate_saturating_grant(rule, payload)
+        return
     _validate_refs(
         rule,
         {
@@ -3227,6 +3256,28 @@ def _validate_sustain(rule: BehaviorRule, payload: RulePayload) -> None:
             for name in SUSTAIN_PAYLOAD_REFERENCES[type(payload)]
         },
     )
+
+
+def _validate_saturating_grant(rule: BehaviorRule, payload: SustainStatRule) -> None:
+    """A vampirism grant's share is sourced, and so is the ramp that arms it."""
+    if isinstance(payload.percent, MeleeRangedSplit):
+        _validate_refs(
+            rule,
+            {
+                "percent.melee": payload.percent.melee,
+                "percent.ranged": payload.percent.ranged,
+            },
+        )
+    else:
+        _validate_refs(rule, {"percent": payload.percent})
+    if payload.arms_at is not None:
+        _validate_refs(
+            rule,
+            {
+                "arms_at.per_second": payload.arms_at.per_second,
+                "arms_at.maximum": payload.arms_at.maximum,
+            },
+        )
 
 
 def _validate_damage_routing(
@@ -3594,6 +3645,7 @@ __all__ = [
     "RampModel",
     "RampPerSecond",
     "RampPerStack",
+    "RampSaturation",
     "ReactiveRule",
     "ReceiptOnly",
     "ReceiptScope",

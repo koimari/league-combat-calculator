@@ -30,12 +30,13 @@ from .damage import (
     split_by_damage_type,
 )
 from . import item_effects
-from .interpreters import periodic, spellblade
+from .interpreters import periodic, spellblade, sustain
 from .interpreters.sustain import declared_sustain
 from .item_behavior import (
     ManaSpentHealRule,
     PostMitigationHealRule,
     ResourceDrainRule,
+    SustainStat,
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
@@ -517,21 +518,24 @@ def _has_omnivamp_stat(stats: Mapping[str, Any]) -> bool:
     return math.isfinite(float(value)) and float(value) > 0.0
 
 
-def _has_riftmaker_max_stack_omnivamp(
+def _saturated_omnivamp_percent(
     items: list[dict[str, Any]],
     fight_duration_seconds: float,
     *,
     is_melee: bool = True,
-) -> bool:
-    """Return whether the fight reaches Riftmaker's conditional heal state."""
-    if not any(item.get("name") == "Riftmaker" for item in items):
-        return False
-    return (
-        item_effects.riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=fight_duration_seconds,
-            is_melee=is_melee,
-        )
-        > 0.0
+) -> float:
+    """The omnivamp this fight's length arms that the stat block does not hold.
+
+    A ramp-armed grant is a fight state rather than a stat, so it decides two
+    things this module owns: whether the light tuple ledger is adequate, and
+    what the published effective stats say.  Both read the declaration, so a
+    second such item is answered here instead of needing a second predicate.
+    """
+    return sustain.saturating_stat_percent(
+        [str(item.get("name", "")) for item in items],
+        SustainStat.OMNIVAMP_PERCENT,
+        fight_duration_seconds=fight_duration_seconds,
+        holder_is_melee=is_melee,
     )
 
 
@@ -1132,7 +1136,7 @@ def run_fight(
         and not _has_item_health_regen(fight_stats)
         and not _has_lifesteal_stat(fight_stats)
         and not _has_omnivamp_stat(fight_stats)
-        and not _has_riftmaker_max_stack_omnivamp(
+        and not _saturated_omnivamp_percent(
             items,
             params.fight_duration_seconds,
             is_melee=bool(fight_stats.get("is_melee", True)),
@@ -1229,17 +1233,15 @@ def run_fight(
             "Auto attacks withheld: calculated uptime is unavailable for one or "
             "more cast-time sources."
         )
-    if _has_riftmaker_max_stack_omnivamp(
+    saturated_omnivamp = _saturated_omnivamp_percent(
         items,
         params.fight_duration_seconds,
         is_melee=bool(fight_stats.get("is_melee", True)),
-    ):
+    )
+    if saturated_omnivamp:
         result["champion_stats"] = dict(fight_stats)
-        result["champion_stats"]["omnivamp_percent"] = result["champion_stats"].get(
-            "omnivamp_percent", 0.0
-        ) + item_effects.riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=params.fight_duration_seconds,
-            is_melee=bool(fight_stats.get("is_melee", True)),
+        result["champion_stats"]["omnivamp_percent"] = (
+            result["champion_stats"].get("omnivamp_percent", 0.0) + saturated_omnivamp
         )
     if tuple_ledger:
         # The predicate above IS derive_self_healing's dispatch gate, so
