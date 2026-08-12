@@ -596,6 +596,31 @@ def test_counter_four_carries_the_reason_for_every_gap_it_counts() -> None:
         assert row["retires_at"].strip(), f"{pair} carries no retiring stage"
 
 
+def test_every_gap_row_carries_its_route_into_the_committed_artifact() -> None:
+    """The route is content, so it rides the receipt a reader meets.
+
+    ``interpreters`` checks a route against its own registry at import; this
+    is the other reader — the committed artifact — because a route that
+    changed with no diff anywhere would be a claim about which engine
+    produces a number, moved silently.
+    """
+    dated = _receipt()["counters"]["counter_4"]["receipts"]["dated"]
+    for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items():
+        recorded = dated[f"{family.value}/{lane.value}"]
+        assert recorded["via"] == [route.value for route in row.via]
+        assert recorded["via"], f"{family.value}/{lane.value} records no route"
+
+
+def test_a_moved_route_fails_the_gate() -> None:
+    """R-05's red for the route clause, at the artifact rather than at import."""
+    receipt = _receipt()
+    receipt["counters"]["counter_4"]["receipts"]["dated"]["on_hit_strike/receipt_walk"][
+        "via"
+    ] = ["defense_resolver"]
+    failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
+    assert any("routed through" in failure for failure in failures)
+
+
 def test_a_receipt_missing_the_unserved_lane_section_fails_closed() -> None:
     """Deleting what a gate reads must fail it, never skip it."""
     receipt = _receipt()

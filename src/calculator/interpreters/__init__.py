@@ -344,10 +344,18 @@ class UnservedLane:
     here nor a per-rule ``ReceiptOnly`` on the compiled lane, and equally
     refuses a row here that no declaration reaches (D-92 — a set pinned at a
     state the tree has left is born stale).
+
+    ``via`` is that route as a **declaration** rather than as a sentence.
+    ``reason`` says in prose which interpreter the number comes from instead;
+    ``via`` names the same lanes as data, and the gate below checks them
+    against the registry.  Without it the route is unverified prose beside a
+    verified count — coverage claimed and nothing checking the claim against
+    code, which is failure four of the incident this campaign exists to end.
     """
 
     reason: str
     retires_at: str
+    via: tuple[EngineLane, ...]
 
 
 # The four routes a declared family's number reaches an engine by when that
@@ -395,7 +403,11 @@ _ONE_KERNEL = "Phase 4 S3 — one kernel, five views"
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     **{
-        (family, lane): UnservedLane(reason=_PACKET_FED, retires_at=_ONE_KERNEL)
+        (family, lane): UnservedLane(
+            reason=_PACKET_FED,
+            retires_at=_ONE_KERNEL,
+            via=(EngineLane.PAIR_ENGINE,),
+        )
         for family in (
             RuleFamily.ON_HIT_STRIKE,
             RuleFamily.CHARGED_STRIKE,
@@ -410,16 +422,24 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
         for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
-        reason=_PACKET_FED, retires_at=_ONE_KERNEL
+        reason=_PACKET_FED,
+        retires_at=_ONE_KERNEL,
+        via=(EngineLane.PAIR_ENGINE,),
     ),
     # Sustain's receipt half is no longer a gap — the walk reads its two
     # walk-paid shapes through the registered walk interpreter — so only the
     # compiled lane has a row, packet-fed like the strikes.
     (RuleFamily.SUSTAIN, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
-        reason=_PACKET_FED, retires_at=_ONE_KERNEL
+        reason=_PACKET_FED,
+        retires_at=_ONE_KERNEL,
+        via=(EngineLane.PAIR_ENGINE,),
     ),
     **{
-        (family, lane): UnservedLane(reason=_RESOLVER_FED, retires_at=_ONE_KERNEL)
+        (family, lane): UnservedLane(
+            reason=_RESOLVER_FED,
+            retires_at=_ONE_KERNEL,
+            via=(EngineLane.DEFENSE_RESOLVER,),
+        )
         for family in (
             RuleFamily.OPENING_DEFENSE,
             RuleFamily.THRESHOLD_DEFENSE,
@@ -430,15 +450,22 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     # Reactive's receipt half is no longer a gap — the coupled timeline
     # compiles the strike-back declaration at its own boundary through the
     # registered walk interpreter — so only the compiled lane has a row, and
-    # its route is that boundary rather than the resolver's.
+    # its route is that boundary rather than the resolver's.  Both halves are
+    # named, because the reason names both.
     (RuleFamily.REACTIVE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
-        reason=_PROFILE_FED, retires_at=_ONE_KERNEL
+        reason=_PROFILE_FED,
+        retires_at=_ONE_KERNEL,
+        via=(EngineLane.DEFENSE_RESOLVER, EngineLane.RECEIPT_WALK),
     ),
     (RuleFamily.ALLY_PACKET, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
-        reason=_TEMPLATE_FED, retires_at=_ONE_KERNEL
+        reason=_TEMPLATE_FED,
+        retires_at=_ONE_KERNEL,
+        via=(EngineLane.RECEIPT_WALK,),
     ),
     (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): UnservedLane(
-        reason=_PAIR_PRICED_OR_PACKET_FED, retires_at=_ONE_KERNEL
+        reason=_PAIR_PRICED_OR_PACKET_FED,
+        retires_at=_ONE_KERNEL,
+        via=(EngineLane.PAIR_ENGINE,),
     ),
 }
 
@@ -889,11 +916,60 @@ def _validate_unserved_lanes(owners: frozenset[str]) -> tuple[str, ...]:
     return tuple(failures)
 
 
+def _validate_unserved_routes() -> tuple[str, ...]:
+    """Every dated row's route is a lane the registry actually serves.
+
+    A row says the number arrives by another of its family's lanes.  That is
+    the whole excuse for the gap, and until it is checked it is a sentence: a
+    route naming a lane no interpreter serves reads exactly like a route
+    naming one that does, which is how the pair-engine half of Command came to
+    be documented and absent.  Three clauses, structural over the table
+    itself, so a row is refused whether or not a declaration reaches it:
+
+    * a row with no route claims nothing and excuses nothing;
+    * a route lane the family does not declare is a lane that owes it no
+      answer, so it cannot be where the answer comes from;
+    * a route lane no interpreter serves is the failure this exists to catch,
+      and a row routed to its own lane is that failure written in a circle.
+    """
+    failures: list[str] = []
+    for (family, lane), row in sorted(
+        UNSERVED_LANE_RECEIPTS.items(),
+        key=lambda item: (item[0][0].value, item[0][1].value),
+    ):
+        pair = f"{family.value}/{lane.value}"
+        if not row.via:
+            failures.append(
+                f"UNSERVED_LANE_RECEIPTS[{pair}] names no route, so its reason "
+                "is a sentence and the gap is excused by nothing"
+            )
+            continue
+        declared = lanes_for(family)
+        for route in row.via:
+            if route is lane:
+                failures.append(
+                    f"UNSERVED_LANE_RECEIPTS[{pair}] routes the lane to itself"
+                )
+            elif route not in declared:
+                failures.append(
+                    f"UNSERVED_LANE_RECEIPTS[{pair}] routes to {route.value}, "
+                    f"which {family.value} does not declare"
+                )
+            elif (family, route) not in INTERPRETERS:
+                failures.append(
+                    f"UNSERVED_LANE_RECEIPTS[{pair}] routes to {route.value}, "
+                    "which no interpreter serves — the route is a claim about "
+                    "a number nobody produces"
+                )
+    return tuple(failures)
+
+
 def validate_registrations() -> None:
     """Totality, authority agreement and no orphan branch — or raise."""
     owners = rule_owners()
     failures = list(_validate_registry_keys())
     failures.extend(_validate_unserved_lanes(owners))
+    failures.extend(_validate_unserved_routes())
     failures.extend(_validate_authority_agreement(owners))
     failures.extend(reachability_report(owners).orphan_branches)
     if failures:

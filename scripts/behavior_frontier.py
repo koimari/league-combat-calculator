@@ -472,8 +472,10 @@ def unserved_lane_block() -> dict[str, Any]:
 
     Two populations, because they are excused by two different things and
     collapsing them would hide which.  ``dated`` are the rows
-    ``interpreters.UNSERVED_LANE_RECEIPTS`` carries — a route and a retiring
-    stage each.  ``per_rule_receipted`` are the compiled-lane gaps no row
+    ``interpreters.UNSERVED_LANE_RECEIPTS`` carries — a reason, a retiring
+    stage and a ``via`` route each, the last being the lanes whose registered
+    interpreters produce the number instead, checked against the registry at
+    import and diff-gated here.  ``per_rule_receipted`` are the compiled-lane gaps no row
     names because every declaration reaching them carries its own
     ``ReceiptOnly``, which is the stronger form: ``delta_amp`` is that whole
     population today (D-101).
@@ -486,6 +488,7 @@ def unserved_lane_block() -> dict[str, Any]:
         f"{family.value}/{lane.value}": {
             "reason": row.reason,
             "retires_at": row.retires_at,
+            "via": [route.value for route in row.via],
         }
         for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items()
     }
@@ -1224,6 +1227,30 @@ def _unserved_lane_failures(
                 f"counter 4: the committed {key} set differs from the tree's "
                 f"(committed-only={sorted(set(recorded.get(key, ())) - set(measured[key]))}, "
                 f"measured-only={sorted(set(measured[key]) - set(recorded.get(key, ())))})"
+            )
+    failures.extend(_route_failures(recorded.get("dated", {}), measured["dated"]))
+    return failures
+
+
+def _route_failures(
+    recorded: Mapping[str, Any], measured: Mapping[str, Any]
+) -> list[str]:
+    """The route each dated row claims, diff-gated like every other content.
+
+    The key set alone would let a row silently change which interpreter it
+    says produces its number — the one part of the row that is a claim about
+    code rather than about a schedule.  ``interpreters`` checks the route
+    against its registry at import; this checks it against the committed
+    artifact, so moving a route is a diff a reader meets (D-40).
+    """
+    failures: list[str] = []
+    for key in sorted(set(recorded) & set(measured)):
+        was = list(recorded[key].get("via", ()))
+        now = list(measured[key].get("via", ()))
+        if was != now:
+            failures.append(
+                f"counter 4: {key} is recorded as routed through {was} and the "
+                f"tree routes it through {now}"
             )
     return failures
 

@@ -405,6 +405,10 @@ def test_a_dated_gap_receipt_no_declaration_reaches_is_refused(
     A gap table nobody prunes is the hand-maintained exception list this
     campaign deletes everywhere else, so a row for a pair some interpreter
     already serves is a failure rather than a harmless leftover.
+
+    The planted row is otherwise impeccable — ``sustain`` really is served on
+    both the lane the row names and the lane it routes to — so the only thing
+    wrong with it is that nobody needs it, which is what the gate must see.
     """
     monkeypatch.setattr(
         interpreters,
@@ -412,17 +416,23 @@ def test_a_dated_gap_receipt_no_declaration_reaches_is_refused(
         dict(interpreters.UNSERVED_LANE_RECEIPTS)
         | {
             (
-                RuleFamily.ON_HIT_STRIKE,
-                EngineLane.PAIR_ENGINE,
+                RuleFamily.SUSTAIN,
+                EngineLane.DEFENSE_RESOLVER,
             ): interpreters.UnservedLane(
-                reason="a lane that is in fact served", retires_at="never"
+                reason="a lane that is in fact served",
+                retires_at="never",
+                via=(EngineLane.PAIR_ENGINE,),
             )
         },
     )
     with pytest.raises(
         interpreters.InterpreterRegistryError, match="receipt for nothing"
-    ):
+    ) as raised:
         interpreters.validate_registrations()
+    assert "routes to" not in str(raised.value), (
+        "the planted row's route is sound, so the only complaint must be that "
+        "the row itself is unnecessary"
+    )
 
 
 def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
@@ -524,6 +534,65 @@ def test_every_dated_gap_row_says_what_retires_it() -> None:
         assert row.reason.strip(), f"{family.value}/{lane.value} has no reason"
         assert row.retires_at.strip(), f"{family.value}/{lane.value} has no date"
         assert (family, lane) not in interpreters.INTERPRETERS
+
+
+def test_every_dated_gap_row_routes_to_a_lane_the_registry_serves() -> None:
+    """Criterion 4's other half: the fallback receipt is *tested*, not stated.
+
+    A row's whole excuse is that the number arrives by another of its
+    family's lanes.  Stated in prose, that excuse reads identically whether
+    the lane it names is served or empty — the pair-engine half of Command
+    was documented and absent, and nothing noticed.  ``via`` is the claim as
+    data and this is the check: every route lane is one the family declares
+    and one an interpreter serves, and no row routes to itself.
+    """
+    for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items():
+        pair = f"{family.value}/{lane.value}"
+        assert row.via, f"{pair} names no route"
+        for route in row.via:
+            assert route is not lane, f"{pair} routes to itself"
+            assert route in interpreters.lanes_for(family), f"{pair} -> {route.value}"
+            assert (
+                family,
+                route,
+            ) in interpreters.INTERPRETERS, f"{pair} routes through an unserved lane"
+
+
+@pytest.mark.parametrize(
+    ("via", "complaint"),
+    [
+        ((), "names no route"),
+        ((EngineLane.RECEIPT_WALK,), "which no interpreter serves"),
+        ((EngineLane.STAT_RESOLVER,), "does not declare"),
+        ((EngineLane.COMPILED_SCORE_WALK,), "routes the lane to itself"),
+    ],
+    ids=("empty", "unserved", "undeclared", "circular"),
+)
+def test_a_route_the_registry_does_not_serve_is_refused(
+    via, complaint: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """R-05's red for the route clause, one shape per way a route can lie.
+
+    ``on_hit_strike``'s compiled lane is the subject because its real route —
+    the pair engine — is the one every packet-fed row stands on, so each
+    substitution below is that row with its one true sentence replaced by a
+    plausible false one.
+    """
+    pair = (RuleFamily.ON_HIT_STRIKE, EngineLane.COMPILED_SCORE_WALK)
+    monkeypatch.setattr(
+        interpreters,
+        "UNSERVED_LANE_RECEIPTS",
+        dict(interpreters.UNSERVED_LANE_RECEIPTS)
+        | {
+            pair: interpreters.UnservedLane(
+                reason=interpreters.UNSERVED_LANE_RECEIPTS[pair].reason,
+                retires_at=interpreters.UNSERVED_LANE_RECEIPTS[pair].retires_at,
+                via=via,
+            )
+        },
+    )
+    with pytest.raises(interpreters.InterpreterRegistryError, match=complaint):
+        interpreters.validate_registrations()
 
 
 def test_no_gap_row_is_dated_at_a_counter_this_phase_has_retired() -> None:
