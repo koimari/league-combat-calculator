@@ -26,6 +26,7 @@ from src.calculator.participant_timeline import (
     build_participant_timeline,
 )
 from src.calculator.survival import (
+    EVENT_SLOTS,
     SUPPORT_RANK_KEY,
     ActionKind,
     ScoreLedger,
@@ -4318,7 +4319,7 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
         temporary_health_duration=2.0,
         source_key="heal",
         source="Sundered Sky (Lightshield Strike)",
-        event_id="heal",
+        event_slot=EVENT_SLOTS.slot("heal"),
         sequence=0,
     )
     states = build_states(combatants, (0.0,) * len(combatants))

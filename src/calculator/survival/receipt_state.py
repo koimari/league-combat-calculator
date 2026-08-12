@@ -14,6 +14,7 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any
 
 from .actions import (
+    NO_SLOT,
     SurvivalAction,
     TransitionRank,
     action_key,
@@ -301,7 +302,7 @@ class ReceiptLedger:
     ) -> None:
         self.annotating = annotating
         self.records_annotations = annotating
-        self.damage_event_status: dict[str, str] = {}
+        self.damage_event_status: dict[int, str] = {}
         self.actions = actions
         self.current_index = -1
         self.index_of = index_of
@@ -353,17 +354,17 @@ class ReceiptLedger:
     def trigger_applied(self, action: SurvivalAction) -> bool:
         """Whether the action's trigger packet was applied (no trigger
         passes; a skipped trigger fails closed, never silently applies)."""
-        if action.trigger_event_id is None:
+        if action.trigger_slot == NO_SLOT:
             return True
-        return self.damage_event_status.get(action.trigger_event_id) == "applied"
+        return self.damage_event_status.get(action.trigger_slot) == "applied"
 
     def mark_applied(self, action: SurvivalAction) -> None:
-        if action.event_id is not None:
-            self.damage_event_status[action.event_id] = "applied"
+        if action.event_slot != NO_SLOT:
+            self.damage_event_status[action.event_slot] = "applied"
 
     def mark_blocked(self, action: SurvivalAction) -> None:
-        if action.event_id is not None:
-            self.damage_event_status[action.event_id] = "blocked"
+        if action.event_slot != NO_SLOT:
+            self.damage_event_status[action.event_slot] = "blocked"
 
     # -- walk-authored scheduling -------------------------------------------
     def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None:

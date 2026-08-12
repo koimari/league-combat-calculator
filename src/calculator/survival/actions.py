@@ -18,6 +18,7 @@ from __future__ import annotations
 from enum import Enum, IntEnum
 from collections.abc import Iterable, Mapping
 import math
+from threading import Lock
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
@@ -220,6 +221,96 @@ _DAMAGE_KINDS = frozenset(
 
 
 # ---------------------------------------------------------------------------
+# Event reference slots — the kernel's four references, as integers
+# ---------------------------------------------------------------------------
+
+
+# "This action names no such reference."  The integer spelling of the ``None``
+# the four ``str | None`` reference fields carried before Phase 4 S1, and the
+# same sentinel ``subject``/``attacker``/``trigger``/``holder`` already use.
+NO_SLOT = -1
+
+
+class EventSlots:
+    """The one text-to-integer registry for the walk's event references.
+
+    Four kernel fields used to be event-id *strings*: the packet's own id,
+    its trigger's, its deferral batch's and its Defy trigger's.  Every use of
+    them is an identity question -- is this the packet that trigger applied?
+    is this batch cleared? -- answered by string comparison inside the hot
+    loop, and answered on strings the walk also has to rebuild by hand when
+    it authors a derived id.
+
+    A slot is a dense integer standing for exactly one id string.  Identity
+    becomes an int compare, the sets and dicts the walk keys by a reference
+    become int-keyed, and :meth:`text` gives the string back at the one place
+    that still authors a derived id.
+
+    **The registry is process-wide, deliberately.**  Actions outlive the call
+    that built them: a pair packet's typed actions ride the packet cache, a
+    signature panel's compiled actions ride the search context, and both are
+    replayed inside walks built later.  A per-call registry would give two
+    such actions slots from two different numberings inside one walk -- two
+    different events answering to one integer, with no symptom.  One
+    numbering for the process makes that unrepresentable.
+
+    Growth is bounded rather than merely slow: every id is assembled from a
+    closed vocabulary (roster slots ``main``/``ally:n``/``enemy:n``, mechanic
+    labels, item names, source keys) and a small ordinal, so the distinct set
+    converges instead of scaling with traffic.  Nothing is ever evicted,
+    because a slot handed to a cached action must keep meaning the same event
+    for as long as that action can be walked.
+    """
+
+    __slots__ = ("_by_text", "_texts", "_lock")
+
+    def __init__(self) -> None:
+        self._by_text: dict[str, int] = {}
+        self._texts: list[str] = []
+        self._lock = Lock()
+
+    def slot(self, text: str) -> int:
+        """The slot standing for *text*, assigning one on first sight.
+
+        The hit path takes no lock -- a dict read is atomic and the mapping
+        is append-only -- and the miss path re-checks under one, so two
+        threads cannot hand two slots to one string.
+        """
+        known = self._by_text.get(text)
+        if known is not None:
+            return known
+        with self._lock:
+            known = self._by_text.get(text)
+            if known is None:
+                known = len(self._texts)
+                self._texts.append(text)
+                self._by_text[text] = known
+            return known
+
+    def text(self, slot: int) -> str:
+        """The id string one slot stands for; ``""`` for :data:`NO_SLOT`.
+
+        The empty string is what every caller of this already wrote for a
+        missing reference (``action.event_id or ""``), so the sentinel maps
+        to it rather than to ``None``.  Any other unknown slot is a
+        numbering bug and raises through the list index.
+        """
+        if slot == NO_SLOT:
+            return ""
+        return self._texts[slot]
+
+    def __len__(self) -> int:
+        """How many distinct event ids this process has interned."""
+        return len(self._texts)
+
+
+# The one registry.  A second instance would be a second numbering, which is
+# the failure the class docstring exists to prevent, so consumers reference
+# this name rather than constructing their own.
+EVENT_SLOTS = EventSlots()
+
+
+# ---------------------------------------------------------------------------
 # The typed action
 # ---------------------------------------------------------------------------
 
@@ -249,7 +340,10 @@ class SurvivalAction(NamedTuple):
     # Ledger linkage
     aidx: int = -1
     trigger: int = -1
-    trigger_event_id: str | None = None
+    # The four event references, as slots into EVENT_SLOTS (NO_SLOT for
+    # "names none").  They were ``str | None`` id fields until Phase 4 S1;
+    # every consumer compared them for identity, which is what a slot is.
+    trigger_slot: int = NO_SLOT
     event: dict | None = None
     # Damage fields
     amount: float = 0.0
@@ -262,7 +356,7 @@ class SurvivalAction(NamedTuple):
     execute_threshold_ratio: float = 0.0
     execute_source: str = ""
     deferred: bool = False
-    deferred_batch_id: str | None = None
+    deferred_batch_slot: int = NO_SLOT
     redirected: bool = False
     redirect_holder_health_ratio: float = 0.0
     redirect_original_damage: float = 0.0
@@ -273,7 +367,7 @@ class SurvivalAction(NamedTuple):
     ability_instance: Any = None
     source_key: str = ""
     source: str = ""
-    event_id: str | None = None
+    event_slot: int = NO_SLOT
     sequence: Any = None
     # The packet applied immobilizing crowd control — the trigger bus's
     # answer over the shared ``ability_spec.IMMOBILIZING_CC_KINDS``
@@ -294,7 +388,7 @@ class SurvivalAction(NamedTuple):
     overheal_to_shield: bool = False
     overheal_shield_cap: float = 0.0
     overheal_shield_duration: float = 0.0
-    defy_trigger_id: str | None = None
+    defy_trigger_slot: int = NO_SLOT
     # Timed / state kinds
     duration: float = 0.0
     health_ratio: float = 0.0
@@ -459,7 +553,7 @@ _I_GRIEVOUS = _INDEX("grievous")
 _I_WOUND = _INDEX("wound")
 _I_SOURCE_KEY = _INDEX("source_key")
 _I_SOURCE = _INDEX("source")
-_I_EVENT_ID = _INDEX("event_id")
+_I_EVENT_SLOT = _INDEX("event_slot")
 _I_SEQUENCE = _INDEX("sequence")
 
 
@@ -478,7 +572,7 @@ def compiled_damage_action(
     wound: tuple | None,
     source_key: str,
     source: str,
-    event_id: str,
+    event_slot: int,
     sequence: Any,
 ) -> SurvivalAction:
     """Build a compiler damage action without keyword-default parsing.
@@ -505,7 +599,7 @@ def compiled_damage_action(
     row[_I_WOUND] = wound
     row[_I_SOURCE_KEY] = source_key
     row[_I_SOURCE] = source
-    row[_I_EVENT_ID] = event_id
+    row[_I_EVENT_SLOT] = event_slot
     row[_I_SEQUENCE] = sequence
     return tuple.__new__(SurvivalAction, row)
 
@@ -753,7 +847,10 @@ def survival_action_from_event(
     time_value = float(get("time", 0.0))
     trigger_id = get("_trigger_event_id")
     batch_id = get("_deferred_batch_id")
-    defy_id = get("_defy_trigger_id")
+    # The one reference the *walk* authors rather than reads: ``trigger_defy``
+    # stamps the slot it already holds, so this key carries a slot and the
+    # other three carry the id text a pre-walk author wrote.
+    defy_slot = get("_defy_trigger_slot")
     baseline_armor = get("_baseline_effective_armor")
     baseline_mr = get("_baseline_effective_mr")
     cc_kind = str(get("cc_kind", ""))
@@ -772,7 +869,7 @@ def survival_action_from_event(
         attacker=attacker_index,
         aidx=aidx,
         trigger=-1,
-        trigger_event_id=str(trigger_id) if trigger_id else None,
+        trigger_slot=EVENT_SLOTS.slot(str(trigger_id)) if trigger_id else NO_SLOT,
         event=event,
         amount=max(0.0, float(get("damage", get("amount", 0.0)) or 0.0)),
         damage_type=str(get("damage_type", "")),
@@ -792,7 +889,7 @@ def survival_action_from_event(
         # the stale literal this migration removes.
         execute_source=str(get("execute_source", "")),
         deferred=bool(deferred_raw),
-        deferred_batch_id=str(batch_id) if batch_id else None,
+        deferred_batch_slot=(EVENT_SLOTS.slot(str(batch_id)) if batch_id else NO_SLOT),
         redirected=bool(redirected_raw),
         redirect_holder_health_ratio=max(
             0.0, float(get("redirect_holder_health_ratio", 0.0) or 0.0)
@@ -806,7 +903,12 @@ def survival_action_from_event(
         ability_instance=get("ability_instance"),
         source_key=str(get("source_key", "")),
         source=str(get("source", get("source_key", ""))),
-        event_id=str(event_id) if event_id is not None else None,
+        # ``is not None`` rather than a truth test, deliberately: an event
+        # carrying an empty id string had one, and the walk keyed its applied
+        # status by that empty string.  It gets a slot of its own.
+        event_slot=(
+            EVENT_SLOTS.slot(str(event_id)) if event_id is not None else NO_SLOT
+        ),
         sequence=get("sequence"),
         # The bus answers "is this an immobilize?" for every consumer; the
         # walk used to answer it again, and the fourth re-typing is what
@@ -839,7 +941,7 @@ def survival_action_from_event(
         overheal_shield_duration=max(
             0.0, float(get("overheal_shield_duration", 0.0) or 0.0)
         ),
-        defy_trigger_id=str(defy_id) if defy_id else None,
+        defy_trigger_slot=int(defy_slot) if defy_slot is not None else NO_SLOT,
         duration=max(0.0, float(get("duration", 0.0) or 0.0)),
         health_ratio=max(0.0, float(get("health_ratio", 0.0) or 0.0)),
         bonus_attack_speed_percent=float(get("bonus_attack_speed_percent", 0.0) or 0.0),
@@ -873,6 +975,9 @@ def survival_action_from_event(
 # both into one ``amount`` field; this alias documents that convention.
 __all__ = [
     "ActionKind",
+    "EVENT_SLOTS",
+    "EventSlots",
+    "NO_SLOT",
     "SUPPORT_RANK_KEY",
     "SurvivalAction",
     "TransitionRank",

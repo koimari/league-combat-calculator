@@ -66,6 +66,7 @@ from .resistance import (
 )
 from .survival import (
     BARRIER_GRANT_KINDS,
+    EVENT_SLOTS,
     SUPPORT_RANK_KEY,
     ActionKind,
     ReceiptLedger,
@@ -1952,9 +1953,13 @@ def _simulate_survival(
                     "_deferred_total": full_amount * deferred_fraction,
                 }
                 tick_amount = full_amount * deferred_fraction / deferred_ticks
+                # The batch is the parent packet's own identity, so the
+                # ledger of open batches is keyed by its slot -- the same
+                # integer the deferred clones' ``_deferred_batch_id`` resolves
+                # to when the walk builds their actions.
                 batch_id = str(event.get("_event_id", ""))
                 target_state = states[target_id]
-                target_state["deferred_batches"][batch_id] = (
+                target_state["deferred_batches"][EVENT_SLOTS.slot(batch_id)] = (
                     full_amount * deferred_fraction
                 )
                 target_state["damage_deferral_pending"] += (
@@ -2127,7 +2132,7 @@ def _simulate_survival(
     # parent's event id — the clone's ``_trigger_event_id`` — so the shared
     # walk can cancel it beside the direct share.
     redirect_children_actions = {
-        str(child.event["_trigger_event_id"]): child
+        EVENT_SLOTS.slot(str(child.event["_trigger_event_id"])): child
         for child in actions
         if child.redirected
         and child.event is not None
@@ -2907,7 +2912,7 @@ def _score_with_search_context(
                     amount=float(amount),
                     source_key=str(source),
                     source=str(source),
-                    event_id=event_id,
+                    event_slot=EVENT_SLOTS.slot(event_id),
                 )
             )
 

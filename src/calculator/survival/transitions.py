@@ -48,6 +48,8 @@ from typing import Any, NamedTuple
 
 from .actions import (
     DAMAGE_PHASE,
+    EVENT_SLOTS,
+    NO_SLOT,
     RECOVERY_PHASE,
     ActionKind,
     SurvivalAction,
@@ -253,9 +255,12 @@ class TransitionContext:
     regeneration_windows: Sequence[RegenerationWindow | None]
     venom_profiles: list[tuple[float, float] | None] | None = None
     reduction_profiles: list[tuple[Any, ...]] | None = None
-    redirect_children: MutableMapping[str, Any] = field(default_factory=dict)
-    redirect_gate_checked: set[str] = field(default_factory=set)
-    redirect_cancelled: set[str] = field(default_factory=set)
+    # Keyed by event slot (Phase 4 S1): ``redirect_children`` maps a parent
+    # packet's slot to the redirected child action, and the two sets hold the
+    # slots the holder-health gate has judged and cancelled.
+    redirect_children: MutableMapping[int, Any] = field(default_factory=dict)
+    redirect_gate_checked: set[int] = field(default_factory=set)
+    redirect_cancelled: set[int] = field(default_factory=set)
     # Derived per-walk speed fields (issue #171).  The ledger capability
     # flags let the kernel skip building kwargs a no-op adapter would drop
     # (missing attributes conservatively keep full observation), and
@@ -641,7 +646,7 @@ def schedule_regeneration_recovery(
     total = total_cap * min(1.0, missing_ratio / missing_cap)
     if total <= 0.0:
         return
-    trigger_id = action.event_id or ""
+    trigger_id = EVENT_SLOTS.text(action.event_slot)
     ticks = max(1, int(round(duration_value / tick)))
     for tick_index in range(1, ticks + 1):
         heal_event = {
@@ -711,7 +716,7 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
         holder_state["defy_triggered"] = True
         holder_state["defy_trigger_time"] = float(event_time)
         holder_state["defy_triggered_damage_ids"].update(
-            record["event_id"] for record in matching
+            record["event_slot"] for record in matching
         )
         cleared = sum(holder_state["deferred_batches"].values())
         holder_state["damage_deferral_cleared"] += cleared
@@ -731,7 +736,7 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
         if duration_value <= 0.0 or ticks <= 0 or heal_ratio <= 0.0 or bonus_ad <= 0.0:
             continue
         total_heal = bonus_ad * heal_ratio
-        trigger_id = matching[-1]["event_id"]
+        trigger_slot = matching[-1]["event_slot"]
         for tick in range(1, ticks + 1):
             heal_event = {
                 "time": float(event_time) + duration_value * tick / ticks,
@@ -745,7 +750,7 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
                     f"{holder.participant_id}:defy:{target_id}:"
                     f"{round(float(event_time), 9)}:{tick}"
                 ),
-                "_defy_trigger_id": trigger_id,
+                "_defy_trigger_slot": trigger_slot,
                 "_defy_target_id": target_id,
                 "_defy_window": window,
                 "sequence": tick - 1,
@@ -788,8 +793,13 @@ def schedule_maw_omnivamp_heal(
         "healing_category": "vamp",
         "attacker": attacker_id,
         "target": attacker_id,
-        "_event_id": f"{action.event_id}:maw-omnivamp",
-        "_trigger_event_id": action.event_id,
+        # ``EVENT_SLOTS.text`` where the parent id used to be interpolated
+        # directly.  Every damage packet that can reach this branch carries an
+        # id (the receipt composition stamps one on every engine row), so the
+        # string is unchanged; a packet without one used to interpolate the
+        # word ``None`` here and now contributes nothing.
+        "_event_id": f"{EVENT_SLOTS.text(action.event_slot)}:maw-omnivamp",
+        "_trigger_event_id": EVENT_SLOTS.text(action.event_slot),
         "sequence": int(action.sequence or 0) + 1,
     }
     ctx.ledger.schedule_heal(heal_event, attacker_id)
@@ -1155,7 +1165,7 @@ def _apply_heal(
             ),
         )
     ctx.ledger.write(action, applied_amount=round(received, 6))
-    if action.defy_trigger_id is not None:
+    if action.defy_trigger_slot != NO_SLOT:
         state["defy_heal_received"] += received
 
 
@@ -1410,22 +1420,22 @@ def _apply_damage(
     the four fields it cannot carry: trigger, live formula, Grievous pack,
     wound."""
     event_time = action.time
-    event_id = action.event_id
+    event_slot = action.event_slot
     ledger = ctx.ledger
     pools = state["pools"]
     amount = _apply_live_packet_chain(ctx, action, state)
     ledger.mark_applied(action)
     if action.deferred:
-        batch_id = str(action.deferred_batch_id or "")
-        if batch_id in state["deferred_batches"]:
-            state["deferred_batches"][batch_id] = max(
-                0.0, state["deferred_batches"][batch_id] - amount
+        batch_slot = action.deferred_batch_slot
+        if batch_slot in state["deferred_batches"]:
+            state["deferred_batches"][batch_slot] = max(
+                0.0, state["deferred_batches"][batch_slot] - amount
             )
             state["damage_deferral_pending"] = max(
                 0.0, state["damage_deferral_pending"] - amount
             )
-            if state["deferred_batches"][batch_id] <= 1e-9:
-                del state["deferred_batches"][batch_id]
+            if state["deferred_batches"][batch_slot] <= 1e-9:
+                del state["deferred_batches"][batch_slot]
     original_amount = amount
     if action.kind is not ActionKind.PLAIN_DAMAGE:
         raw_formula = action.raw_formula
@@ -1545,7 +1555,7 @@ def _apply_damage(
             {
                 "target": ctx.combatants[action.subject].participant_id,
                 "time": float(event_time),
-                "event_id": str(event_id or ""),
+                "event_slot": event_slot,
             }
         )
     # An execution is an authored terminal transition.  Both its threshold
@@ -1738,13 +1748,13 @@ def run_survival_walk(
             _apply_spell_shield(ctx, action, state)
             continue
         if (
-            action.defy_trigger_id is not None
-            and str(action.defy_trigger_id) not in state["defy_triggered_damage_ids"]
+            action.defy_trigger_slot != NO_SLOT
+            and action.defy_trigger_slot not in state["defy_triggered_damage_ids"]
         ):
             ledger.skip(action, "defy_not_triggered")
             continue
         if (
-            action.trigger >= 0 or action.trigger_event_id is not None
+            action.trigger >= 0 or action.trigger_slot != NO_SLOT
         ) and not ledger.trigger_applied(action):
             # An effect whose trigger packet was skipped (its target or
             # attacker was already dead) must not survive on its own —
@@ -1756,7 +1766,7 @@ def run_survival_walk(
             )
             continue
         if action.redirect_cancelled or (
-            action.event_id is not None and action.event_id in ctx.redirect_cancelled
+            action.event_slot != NO_SLOT and action.event_slot in ctx.redirect_cancelled
         ):
             ledger.skip(
                 action,
@@ -1770,10 +1780,10 @@ def run_survival_walk(
         # the holder is already at or below the threshold, cancel that child
         # and restore the unredirected packet on the Worthy target.
         if ctx.redirect_children and not action.redirected:
-            child = ctx.redirect_children.get(str(action.event_id or ""))
+            child = ctx.redirect_children.get(action.event_slot)
             if child is not None and (
-                action.event_id is None
-                or action.event_id not in ctx.redirect_gate_checked
+                action.event_slot == NO_SLOT
+                or action.event_slot not in ctx.redirect_gate_checked
             ):
                 holder_state = states[child.subject]
                 holder_ready = bool(holder_state) and (
@@ -1787,12 +1797,12 @@ def run_survival_walk(
                         + 1e-9
                     )
                 )
-                if action.event_id is not None:
-                    ctx.redirect_gate_checked.add(action.event_id)
-                    ctx.redirect_gate_checked.add(str(child.event_id or ""))
+                if action.event_slot != NO_SLOT:
+                    ctx.redirect_gate_checked.add(action.event_slot)
+                    ctx.redirect_gate_checked.add(child.event_slot)
                 if not holder_ready:
-                    if child.event_id is not None:
-                        ctx.redirect_cancelled.add(child.event_id)
+                    if child.event_slot != NO_SLOT:
+                        ctx.redirect_cancelled.add(child.event_slot)
                     ctx.ledger.write(child, damage=0.0)
                     ctx.ledger.write(child, skipped_reason="holder_health_gate")
                     restored = max(0.0, action.redirect_original_damage)
@@ -1822,8 +1832,8 @@ def run_survival_walk(
             continue
         if (
             action.deferred
-            and action.deferred_batch_id is not None
-            and str(action.deferred_batch_id) in state["cleared_deferred_batches"]
+            and action.deferred_batch_slot != NO_SLOT
+            and action.deferred_batch_slot in state["cleared_deferred_batches"]
         ):
             ledger.skip(action, "defy_cleared_deferred_damage", damage_phase=True)
             continue

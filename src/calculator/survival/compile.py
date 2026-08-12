@@ -19,6 +19,7 @@ from typing import Any
 
 from ..resistance import apply_magic_penetration, apply_resistance
 from .actions import (
+    EVENT_SLOTS,
     ActionKind,
     SurvivalAction,
     TransitionRank,
@@ -415,7 +416,7 @@ class WalkCompiler:
                     reactive=False,
                     source_key=str(event.get("source_key", "")),
                     source=str(event.get("source", event.get("source_key", ""))),
-                    event_id=str(event.get("_event_id", "")),
+                    event_slot=EVENT_SLOTS.slot(str(event.get("_event_id", ""))),
                     sequence=event.get("sequence"),
                 )
             )
@@ -511,7 +512,7 @@ class WalkCompiler:
                     ),
                     source_key=str(event.get("source_key", "")),
                     source=str(event.get("source", event.get("source_key", ""))),
-                    event_id=str(event.get("_event_id", "")),
+                    event_slot=EVENT_SLOTS.slot(str(event.get("_event_id", ""))),
                     sequence=event.get("sequence"),
                 )
             )
@@ -549,6 +550,11 @@ class WalkCompiler:
         built here from the same sourced packets instead.
         """
         order_a, order_b = participant_order(attacker_id)
+        # The event-id *string* stays in the sort key (position 6) and the
+        # action carries only its slot, so both loops below intern once per
+        # row.  Bound to a local because these two loops build tens of
+        # thousands of actions per request.
+        slot_of = EVENT_SLOTS.slot
         actions_append = self.actions.append
         order_append = self.damage_order[attacker_i].append
         strikes_append = self.auto_strikes_into[defender_i].append
@@ -619,7 +625,7 @@ class WalkCompiler:
                         wound,
                         source_key,
                         source_key,
-                        event_id,
+                        slot_of(event_id),
                         key[3],
                     )
                 )
@@ -710,7 +716,7 @@ class WalkCompiler:
                     wound,
                     source_key,
                     source,
-                    event_id,
+                    slot_of(event_id),
                     sequence,
                 )
             )
@@ -818,7 +824,7 @@ class WalkCompiler:
                     ),
                     source_key=str(event.get("source_key", "")),
                     source=str(event.get("source", event.get("source_key", ""))),
-                    event_id=heal_event_id,
+                    event_slot=slot_of(heal_event_id),
                     sequence=event.get("sequence"),
                 )
             )
@@ -903,7 +909,7 @@ class WalkCompiler:
                     healing_category=str(template.get("healing_category", "")),
                     source_key=str(template.get("source_key", "")),
                     source=str(template.get("source", "")),
-                    event_id=str(template.get("_event_id", "")),
+                    event_slot=EVENT_SLOTS.slot(str(template.get("_event_id", ""))),
                     sequence=template.get("sequence"),
                 )
             )
@@ -983,7 +989,7 @@ class WalkCompiler:
                         reactive=True,
                         source_key=f"thorns_{profile.item_name}",
                         source=f"{profile.item_name} (Thorns)",
-                        event_id=sort_key[6],
+                        event_slot=EVENT_SLOTS.slot(sort_key[6]),
                         sequence=strike_sequence,
                     )
                 )

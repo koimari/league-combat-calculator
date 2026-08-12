@@ -24,7 +24,10 @@ layer and the public schema now author against instead of writing floats.
 ``BARRIER_GRANT_KINDS`` is additionally a rename: it was ``_BARRIER_GRANT_KINDS``
 until the published support ordering needed the kernel's one spelling of it.
 ``legacy_phase`` is temporary by design and leaves this list in Phase 4,
-when the sort key consumes the rank itself.  0A.8 shrank it by one: the
+when the sort key consumes the rank itself.  Phase 4 S1 grew it by one,
+``EVENT_SLOTS``: the four ``str | None`` reference fields became integer
+slots, and the composition that authors packets outside this package has to
+resolve an id string to the same slot the kernel will compare.  0A.8 shrank it by one: the
 export was a second dispatch ladder over the same kinds, with zero
 callers, and a declared API is exactly where such a thing survives long
 enough to drift from the loop that is actually run.
@@ -32,6 +35,7 @@ enough to drift from the loop that is actually run.
 
 from .actions import (
     BARRIER_GRANT_KINDS,
+    EVENT_SLOTS,
     SUPPORT_RANK_KEY,
     ActionKind,
     SurvivalAction,
@@ -79,6 +83,7 @@ from .transitions import (
 __all__ = [
     "ActionKind",
     "BARRIER_GRANT_KINDS",
+    "EVENT_SLOTS",
     "SUPPORT_RANK_KEY",
     "ReceiptLedger",
     "ScoreLedger",

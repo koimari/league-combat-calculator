@@ -693,6 +693,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
 
     from src.calculator.participant_timeline import Combatant
     from src.calculator.survival import (
+        EVENT_SLOTS,
         ActionKind,
         ReceiptLedger,
         ScoreLedger,
@@ -731,7 +732,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
             damage_type="physical",
             source_key="auto_attacks",
             source="auto_attacks",
-            event_id="hit",
+            event_slot=EVENT_SLOTS.slot("hit"),
             sequence=0,
         ),
         SurvivalAction(
@@ -745,7 +746,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
             amount=50.0,
             source_key="heal",
             source="heal",
-            event_id="heal",
+            event_slot=EVENT_SLOTS.slot("heal"),
             sequence=0,
         ),
     ]
@@ -800,6 +801,7 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
     the tree today is excluded by one of the other three receipts.
     """
     from src.calculator.survival import (
+        EVENT_SLOTS,
         SUPPORT_RANK_KEY,
         TransitionRank,
         WalkCompiler,
@@ -828,7 +830,9 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
 
     compiler = WalkCompiler()
     compiler.add_support_templates([declared, plain], 0, {"main": 0})
-    by_event = {action.event_id: action for action in compiler.actions}
+    by_event = {
+        EVENT_SLOTS.text(action.event_slot): action for action in compiler.actions
+    }
 
     for template in (declared, plain):
         expected = legacy_phase(support_transition_rank(template))
