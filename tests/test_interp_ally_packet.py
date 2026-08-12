@@ -236,6 +236,31 @@ class TestWhatIsNotMigratedYetIsNamedRatherThanZeroed:
             catalog.ALLY_PACKET_UNMIGRATED_PRODUCERS
         )
 
+    @staticmethod
+    def _promises_naming_no_slice(promises) -> tuple[str, ...]:
+        """Which promises fail to date themselves — () is the pass state."""
+        return tuple(
+            producer.name
+            for producer, reason in promises.items()
+            if not reason.startswith("3.6")
+        )
+
     def test_every_remaining_producer_names_the_commit_that_retires_it(self) -> None:
-        for reason in catalog.ALLY_PACKET_UNMIGRATED_PRODUCERS.values():
-            assert reason.startswith("3.6")
+        """Empty since 3.6 finished, so this holds over nothing today.
+
+        Which is why the check is a function with the red below beside it: a
+        bare loop over an empty mapping asserts nothing while contributing a
+        green node, and a promise table that survives its own emptiness needs
+        a guard that survives it too.
+        """
+        assert (
+            self._promises_naming_no_slice(catalog.ALLY_PACKET_UNMIGRATED_PRODUCERS)
+            == ()
+        )
+
+    def test_a_producer_promise_that_dates_itself_to_nothing_is_caught(self) -> None:
+        """R-05's red for the guard above — the assertion that is live today."""
+        producer = next(iter(AllyProducer))
+        assert self._promises_naming_no_slice({producer: "some later slice"}) == (
+            producer.name,
+        )

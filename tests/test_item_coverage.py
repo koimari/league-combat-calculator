@@ -954,24 +954,50 @@ def test_an_owner_the_migration_has_not_reached_still_publishes_as_modelled() ->
         assert status in {"modeled", "modeled_state", "modeled_effect"}, owner
 
 
+def _registry_keys_no_cached_entry_carries(keys) -> tuple[str, ...]:
+    """Which of *keys* no cached registry entry carries — () is the pass state."""
+    return tuple(
+        key
+        for key in keys
+        if not any(
+            key in entry
+            for name in _cached_names()
+            for _, _, entry in item_coverage.registry_entries(name)
+        )
+    )
+
+
 def test_every_unmigrated_target_key_is_a_key_some_entry_carries() -> None:
     """The rename guard on the clause that reads registry keys.
 
     A key this table names and no entry carries would stop matching in
-    silence, and the two live mechanics behind it would start publishing
-    "nothing this item declares changes durability" while the timeline went on
+    silence, and the live mechanics behind it would start publishing "nothing
+    this item declares changes durability" while the timeline went on
     scheduling them — the exact shape of the failure this campaign is named
     for.  Each key must also select at least one cached item, because a
     declaration that reaches nothing is a claim about nothing.
+
+    :data:`UNMIGRATED_TARGET_KEYS` is **empty** since the stat-derivation
+    migration, so this assertion is over nothing today.  That is why the
+    check is a function with an R-05 red beside it rather than a bare loop:
+    a loop over an empty mapping asserts nothing while contributing a green
+    node, which is this campaign's own failure shape wearing a test's
+    clothes.  The table survives its own emptiness deliberately — the shape
+    is what dates a future refusal — so its guard has to survive it too.
     """
-    for key in UNMIGRATED_TARGET_KEYS:
-        carriers = [
-            name
-            for name in _cached_names()
-            for _, _, entry in item_coverage.registry_entries(name)
-            if key in entry
-        ]
-        assert carriers, key
+    assert _registry_keys_no_cached_entry_carries(UNMIGRATED_TARGET_KEYS) == ()
+
+
+def test_a_target_key_no_registry_entry_carries_is_caught() -> None:
+    """R-05's red for the guard above, on a key nothing can carry.
+
+    This is the assertion that is *live* while the table is empty: it proves
+    the check can fail, which is the one thing a vacuous loop could never
+    say about itself.
+    """
+    assert _registry_keys_no_cached_entry_carries(
+        {"a_key_no_registry_entry_carries": "a renamed durability key"}
+    ) == ("a_key_no_registry_entry_carries",)
 
 
 def test_the_target_flip_refuses_only_records_no_ordinary_build_can_hold() -> None:
