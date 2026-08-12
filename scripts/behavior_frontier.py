@@ -198,10 +198,14 @@ CLASS_B_CLAIM_PROSE: Mapping[str, str] = {
         "the hand registries that assert coverage rather than compute it; 3.8 "
         "replaces them with a status derived from declarations"
     ),
-    "calculator/bis.py": (
-        "three name-keyed build-profile claims that ride the same flip"
-    ),
 }
+# ``calculator/bis.py`` was the second member until its three certification
+# claims became `interpreters.survival_ledger_certifications`.  It leaves the
+# set rather than staying as a zero-site entry, because Class B is an argument
+# about a module and the argument no longer holds: the module now falls into
+# the default class, so a name site added there tomorrow counts against
+# counter 1 — the strictest class — instead of the class this receipt is
+# allowed to carry sites in.
 
 # The second arm of Class C, added by the umbrella's dated **Amendment A**
 # (2026-08-12, criterion 7).  Class C above is a module set, and that

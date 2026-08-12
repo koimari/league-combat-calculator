@@ -559,18 +559,37 @@ def test_the_walk_lane_serves_the_family_that_authors_its_own_recoveries() -> No
     ) not in interpreters.UNSERVED_LANE_RECEIPTS
 
 
-def test_the_survival_ledger_derivation_equals_the_hand_certification() -> None:
-    """D-98's asserted delta, before the flip that deletes the hand table.
+def test_the_hand_certification_is_gone_and_the_fold_is_what_bis_publishes() -> None:
+    """The other half of D-98: the retired table has zero occurrences in ``src/``.
 
-    ``bis.BIS_CERTIFIED_DEFENSIVE_EFFECTS`` is three item names typed beside
-    three sentences.  :func:`interpreters.survival_ledger_certifications` asks
-    the declarations the same question.  This test is the whole content of the
-    derivation-beside-legacy step: the two agree on membership *now*, so the
-    one-symbol flip that follows is a deletion rather than a change of answer.
+    Not as a binding and not as a sentence about one — a name surviving in
+    prose is how a reader learns to look for something that is not there.  The
+    published receipt is asserted against the fold in both directions, so a
+    payload wired to something else entirely could not pass this by certifying
+    nothing.
     """
+    retired = "BIS_CERTIFIED_" + "DEFENSIVE_EFFECTS"
+    holders = [
+        path.relative_to(SRC_ROOT).as_posix()
+        for path in sorted(SRC_ROOT.rglob("*.py"))
+        if retired in path.read_text(encoding="utf-8")
+    ]
+    assert holders == []
+
     derived = interpreters.survival_ledger_certifications()
-    assert set(derived) == set(bis.BIS_CERTIFIED_DEFENSIVE_EFFECTS)
+    assert set(derived) == {"Eclipse", "Death's Dance", "Sundered Sky"}
     assert all(note.strip() for note in derived.values())
+    for owner, note in derived.items():
+        receipt = bis.bis_defensive_effect_receipt(owner, {})
+        assert receipt["status"] == "certified"
+        assert receipt["note"] == note
+    uncertified = sorted(set(catalog.rule_owners()) - set(derived))
+    assert uncertified
+    for owner in uncertified:
+        assert (
+            bis.bis_defensive_effect_receipt(owner, {})["status"]
+            == "no_special_defensive_effect"
+        )
 
 
 def test_each_certification_names_the_declaration_it_was_read_from() -> None:

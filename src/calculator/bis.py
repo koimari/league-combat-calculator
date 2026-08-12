@@ -11,6 +11,10 @@ from dataclasses import replace
 import math
 from collections.abc import Mapping
 
+from .interpreters import (
+    survival_ledger_certifications,
+    survival_ledger_note,
+)
 from .item_effects import validate_item_input_options
 from .loadout_rules import (
     required_boots_tier,
@@ -239,34 +243,26 @@ BIS_OBJECTIVES: dict[str, dict[str, str]] = {
     },
 }
 
-BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
-    "Eclipse": (
-        "Ever Rising Moon's two-hit trigger creates a timestamped self shield "
-        "with its sourced melee/ranged amount and two-second expiry."
-    ),
-    "Death's Dance": (
-        "Ignore Pain splits post-mitigation physical/magic damage into sourced "
-        "true-damage ticks; Defy clears the remaining store and heals on a "
-        "qualifying takedown."
-    ),
-    "Sundered Sky": (
-        "Lightshield Strike's first-hit heal is timestamped and included in "
-        "the participant survival/eHP ledger; any sourced temporary-health "
-        "overheal is applied through the same ordered heal event."
-    ),
-}
-
 # Retained as an explicit API field for clients that display the audit
-# contract.  A non-empty entry means the candidate is withheld; CP6 now
-# certifies Eclipse and Death's Dance through the ordered event walk.
+# contract.  A non-empty entry means the candidate is withheld; the certified
+# half beside it is read from the declarations by
+# `interpreters.survival_ledger_certifications`, so nothing here says which
+# items are certified.
 BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {}
 
 
 def bis_defensive_effect_receipt(
     item_name: str, survival: Mapping[str, object]
 ) -> dict[str, object]:
-    """Describe why a defensive item did or did not affect candidate eHP."""
-    certified_note = BIS_CERTIFIED_DEFENSIVE_EFFECTS.get(item_name)
+    """Describe why a defensive item did or did not affect candidate eHP.
+
+    The certification is the declaration's, not this module's: an item is
+    certified exactly when one of its rules declares a contribution to its
+    holder's survival ledger — a proc's self shield, a routing rule's
+    deferral, a forced strike's heal — which is what the effective health
+    below was computed over.
+    """
+    certified_note = survival_ledger_note(item_name)
     if certified_note is None:
         return {"status": "no_special_defensive_effect", "sources": []}
     return {
@@ -776,7 +772,7 @@ def bis_payload(data: Mapping[str, object]) -> dict:
     return {
         "objective": objective_meta,
         "defensive_effects": {
-            "certified": BIS_CERTIFIED_DEFENSIVE_EFFECTS,
+            "certified": dict(survival_ledger_certifications()),
             "withheld": BIS_UNMODELED_DEFENSIVE_EFFECTS,
         },
         "subject_team": subject_team,

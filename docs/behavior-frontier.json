@@ -3,9 +3,6 @@
     "app.py": {
       "class_d": 1
     },
-    "calculator/bis.py": {
-      "counter_2": 3
-    },
     "calculator/champions/janna.py": {
       "class_d": 1
     },
@@ -116,7 +113,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.8",
       "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
-      "value": 24
+      "value": 21
     },
     "counter_3": {
       "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
@@ -371,10 +368,9 @@
   "exclusions": {
     "class_b_claim_prose": {
       "modules": {
-        "calculator/bis.py": "three name-keyed build-profile claims that ride the same flip",
         "calculator/item_coverage.py": "the hand registries that assert coverage rather than compute it; 3.8 replaces them with a status derived from declarations"
       },
-      "sites": 24
+      "sites": 21
     },
     "class_c_claim_evidence_containers": {
       "amendment": "umbrella criterion 7, Amendment A (2026-08-12): Phase 1's authored claim-evidence corpus and _REVIEW_ISSUE_REFS are Class C, not claim prose; counter 2 is measured net of them",
@@ -566,9 +562,9 @@
       "counter_2": {
         "bound": 21,
         "criterion": "criterion 1: claim-prose sites at or below the reviewed NO_RUNTIME_BEHAVIOR reason count",
-        "gap": 3,
-        "measured": 24,
-        "met": false,
+        "gap": 0,
+        "measured": 21,
+        "met": true,
         "owed_to": ""
       },
       "counter_3": {
