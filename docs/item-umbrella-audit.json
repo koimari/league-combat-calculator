@@ -34,7 +34,7 @@
         "calculation_eligible": true,
         "name": "Abyssal Mask",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -56,7 +56,7 @@
         "calculation_eligible": true,
         "name": "Actualizer",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -78,7 +78,7 @@
         "calculation_eligible": true,
         "name": "Aether Wisp",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -100,7 +100,7 @@
         "calculation_eligible": true,
         "name": "Amplifying Tome",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -122,7 +122,7 @@
         "calculation_eligible": true,
         "name": "Archangel's Staff",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -144,7 +144,7 @@
         "calculation_eligible": true,
         "name": "Ardent Censer",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -166,7 +166,7 @@
         "calculation_eligible": true,
         "name": "Armored Advance",
         "outcome_dimensions": [],
-        "reason": "Noxian Endurance grants a typed five-second physical shield after an authored champion physical-damage event; Plating reduces basic damage.",
+        "reason": "Noxian Endurance changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -194,7 +194,7 @@
           "progression",
           "resource"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -216,7 +216,7 @@
         "calculation_eligible": true,
         "name": "B. F. Sword",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -238,7 +238,7 @@
         "calculation_eligible": true,
         "name": "Bami's Cinder",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -260,7 +260,7 @@
         "calculation_eligible": true,
         "name": "Bandleglass Mirror",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -288,7 +288,7 @@
           "ally_support",
           "stat_buff"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -314,7 +314,7 @@
         "outcome_dimensions": [
           "spell_protection"
         ],
-        "reason": "Annul is ready at the opening and consumes every packet belonging to the first source-backed Q/W/E/R cast; auto attacks and later casts land.",
+        "reason": "Annul changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -336,7 +336,7 @@
         "calculation_eligible": true,
         "name": "Bastionbreaker",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -358,7 +358,7 @@
         "calculation_eligible": true,
         "name": "Berserker's Greaves",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -380,7 +380,7 @@
         "calculation_eligible": true,
         "name": "Black Cleaver",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -402,7 +402,7 @@
         "calculation_eligible": true,
         "name": "Blackfire Torch",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -424,7 +424,7 @@
         "calculation_eligible": true,
         "name": "Blade of the Ruined King",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -446,7 +446,7 @@
         "calculation_eligible": true,
         "name": "Blasting Wand",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -468,7 +468,7 @@
         "calculation_eligible": true,
         "name": "Blighting Jewel",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -490,7 +490,7 @@
         "calculation_eligible": true,
         "name": "Bloodletter's Curse",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -512,7 +512,7 @@
         "calculation_eligible": true,
         "name": "Bloodsong",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -534,7 +534,7 @@
         "calculation_eligible": true,
         "name": "Bloodthirster",
         "outcome_dimensions": [],
-        "reason": "Ichorshield converts certified lifesteal excess into a persistent general shield capped by the sourced level maximum; an explicit starting state is accepted when supplied.",
+        "reason": "Ichorshield changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -556,7 +556,7 @@
         "calculation_eligible": true,
         "name": "Boots",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -584,7 +584,7 @@
           "slow_resistance",
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -606,7 +606,7 @@
         "calculation_eligible": true,
         "name": "Bramble Vest",
         "outcome_dimensions": [],
-        "reason": "Thorns' reactive damage and Grievous Wounds are scheduled from the attacker's modeled basic-attack events in the coupled timeline.",
+        "reason": "Thorns changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -628,9 +628,9 @@
         "calculation_eligible": true,
         "name": "Catalyst of Aeons",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Mana Spent Heal changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -650,7 +650,7 @@
         "calculation_eligible": true,
         "name": "Caulfield's Warhammer",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -672,7 +672,7 @@
         "calculation_eligible": true,
         "name": "Celestial Opposition",
         "outcome_dimensions": [],
-        "reason": "Blessing of the Mountain applies the sourced 35% champion-damage reduction and its two-second linger in the ordered ledger.",
+        "reason": "Blessing Of The Mountain changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -694,7 +694,7 @@
         "calculation_eligible": true,
         "name": "Chain Vest",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -716,7 +716,7 @@
         "calculation_eligible": true,
         "name": "Chainlaced Crushers",
         "outcome_dimensions": [],
-        "reason": "Noxian Persistence grants a typed five-second magic shield after an authored champion magic-damage event.",
+        "reason": "Noxian Persistence changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -738,7 +738,7 @@
         "calculation_eligible": true,
         "name": "Chempunk Chainsword",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -760,7 +760,7 @@
         "calculation_eligible": true,
         "name": "Cloak of Agility",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -782,7 +782,7 @@
         "calculation_eligible": true,
         "name": "Cloth Armor",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -804,7 +804,7 @@
         "calculation_eligible": true,
         "name": "Control Ward",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -830,7 +830,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -852,7 +852,7 @@
         "calculation_eligible": true,
         "name": "Crimson Lucidity",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -874,9 +874,9 @@
         "calculation_eligible": true,
         "name": "Cryptbloom",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Life From Death changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -896,7 +896,7 @@
         "calculation_eligible": true,
         "name": "Crystalline Bracer",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -926,7 +926,7 @@
           "progression",
           "on_hit"
         ],
-        "reason": "Reap's 3-health champion on-hit heal is replayed for the target actor; its minion progression and gold payout remain optimizer-only gaps.",
+        "reason": "On Hit Heal changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -948,7 +948,7 @@
         "calculation_eligible": true,
         "name": "Dagger",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -970,7 +970,7 @@
         "calculation_eligible": true,
         "name": "Dark Seal",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -992,7 +992,7 @@
         "calculation_eligible": true,
         "name": "Dawncore",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1014,7 +1014,7 @@
         "calculation_eligible": true,
         "name": "Dead Man's Plate",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1036,9 +1036,9 @@
         "calculation_eligible": true,
         "name": "Death's Dance",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Ignore Pain changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -1058,9 +1058,9 @@
         "calculation_eligible": true,
         "name": "Diadem of Songs",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Consonance changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -1080,9 +1080,9 @@
         "calculation_eligible": true,
         "name": "Doran's Blade",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Post Mitigation Heal changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -1102,7 +1102,7 @@
         "calculation_eligible": true,
         "name": "Doran's Bow",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1124,7 +1124,7 @@
         "calculation_eligible": true,
         "name": "Doran's Helm",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1146,9 +1146,9 @@
         "calculation_eligible": true,
         "name": "Doran's Ring",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Resource Drain changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -1168,7 +1168,7 @@
         "calculation_eligible": true,
         "name": "Doran's Shield",
         "outcome_dimensions": [],
-        "reason": "Enduring Focus's sourced missing-health regeneration is replayed after incoming champion damage.",
+        "reason": "Regeneration Window changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -1190,7 +1190,7 @@
         "calculation_eligible": true,
         "name": "Dream Maker",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1212,7 +1212,7 @@
         "calculation_eligible": true,
         "name": "Dusk and Dawn",
         "outcome_dimensions": [],
-        "reason": "Spellblade's self-heal is replayed from each certified empowered attack in the target actor's own participant timeline.",
+        "reason": "Spellblade changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -1234,9 +1234,9 @@
         "calculation_eligible": true,
         "name": "Echoes of Helia",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Soul Siphon changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -1256,9 +1256,9 @@
         "calculation_eligible": true,
         "name": "Eclipse",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Proc changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -1282,7 +1282,7 @@
         "outcome_dimensions": [
           "spell_protection"
         ],
-        "reason": "Annul is ready at the opening and consumes every packet belonging to the first source-backed Q/W/E/R cast; auto attacks and later casts land.",
+        "reason": "Annul changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -1304,7 +1304,7 @@
         "calculation_eligible": true,
         "name": "Elixir of Iron",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1326,7 +1326,7 @@
         "calculation_eligible": true,
         "name": "Elixir of Sorcery",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1348,7 +1348,7 @@
         "calculation_eligible": true,
         "name": "Elixir of Wrath",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1370,7 +1370,7 @@
         "calculation_eligible": true,
         "name": "Endless Hunger",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1392,7 +1392,7 @@
         "calculation_eligible": true,
         "name": "Essence Reaver",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1414,7 +1414,7 @@
         "calculation_eligible": true,
         "name": "Executioner's Calling",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1436,7 +1436,7 @@
         "calculation_eligible": true,
         "name": "Experimental Hexplate",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1458,7 +1458,7 @@
         "calculation_eligible": true,
         "name": "Faerie Charm",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1480,7 +1480,7 @@
         "calculation_eligible": true,
         "name": "Fated Ashes",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1502,7 +1502,7 @@
         "calculation_eligible": true,
         "name": "Fiendhunter Bolts",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1524,7 +1524,7 @@
         "calculation_eligible": true,
         "name": "Fiendish Codex",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1546,7 +1546,7 @@
         "calculation_eligible": true,
         "name": "Fimbulwinter",
         "outcome_dimensions": [],
-        "reason": "Everlasting's 100 + 4.5% current-mana shield (1.8x with more than one nearby enemy) is scheduled after an authored immobilize, or a slow for a melee holder; the 20%-maximum-mana gate and eight-second cooldown are enforced, and unreviewed control packets are withheld.",
+        "reason": "Everlasting is scheduled from the exactly-timed damage ledger \u2014 the shield is scheduled after an authored immobilize, or a slow for a melee holder, so the moment it arrives is an event and not a fight constant \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -1568,7 +1568,7 @@
         "calculation_eligible": true,
         "name": "Forbidden Idol",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1596,7 +1596,7 @@
           "movement",
           "defense"
         ],
-        "reason": "Steadfast stacks are scheduled from exact incoming champion magic-damage events, including expiry and the maximum-stack bonus resistance.",
+        "reason": "Steadfast is scheduled from the exactly-timed damage ledger \u2014 stacks accrue from exact incoming champion magic-damage events and expire on their own window, so the resistance at any instant is a function of when the damage landed \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -1622,7 +1622,7 @@
         "outcome_dimensions": [
           "attack_speed_reduction"
         ],
-        "reason": "Winter's Caress applies its sourced 20% total attack-speed cripple to the opposing participant's authored swing schedule when the selected roster pair is assumed within the enemy-only 700-unit aura.",
+        "reason": "The passive-target model runs this as engine code rather than as a declared rule: Winter's Caress is a live enemy-only aura the roster composition applies to the opposing swing schedule; its target_attack_speed_aura entry compiles to no rule until stat_derivation is declared.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -1644,7 +1644,7 @@
         "calculation_eligible": true,
         "name": "Giant's Belt",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1666,7 +1666,7 @@
         "calculation_eligible": true,
         "name": "Glacial Buckler",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1688,7 +1688,7 @@
         "calculation_eligible": true,
         "name": "Glowing Mote",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1710,7 +1710,7 @@
         "calculation_eligible": true,
         "name": "Gluttonous Greaves",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1736,7 +1736,7 @@
         "outcome_dimensions": [
           "revive"
         ],
-        "reason": "Rebirth restores 50% base health four seconds after the first lethal packet; the coupled survival ledger applies it once when the event falls inside the selected window.",
+        "reason": "Rebirth changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -1758,7 +1758,7 @@
         "calculation_eligible": true,
         "name": "Guinsoo's Rageblade",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1784,7 +1784,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1806,7 +1806,7 @@
         "calculation_eligible": true,
         "name": "Gustwalker Hatchling",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1828,7 +1828,7 @@
         "calculation_eligible": true,
         "name": "Haunting Guise",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1850,7 +1850,7 @@
         "calculation_eligible": true,
         "name": "Health Potion",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1872,7 +1872,7 @@
         "calculation_eligible": true,
         "name": "Hearthbound Axe",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1900,7 +1900,7 @@
           "progression",
           "health_state"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1922,7 +1922,7 @@
         "calculation_eligible": true,
         "name": "Hexdrinker",
         "outcome_dimensions": [],
-        "reason": "Lifeline's level-scaled 30%-health magic shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "reason": "Lifeline Hexdrinker is scheduled from the exactly-timed damage ledger \u2014 the Lifeline fires on a health threshold the ordered ledger has to cross \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -1944,7 +1944,7 @@
         "calculation_eligible": true,
         "name": "Hexoptics C44",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1966,7 +1966,7 @@
         "calculation_eligible": true,
         "name": "Hextech Alternator",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -1988,7 +1988,7 @@
         "calculation_eligible": true,
         "name": "Hextech Gunblade",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2010,7 +2010,7 @@
         "calculation_eligible": true,
         "name": "Hextech Rocketbelt",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2032,7 +2032,7 @@
         "calculation_eligible": true,
         "name": "Hollow Radiance",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2060,7 +2060,7 @@
           "vision",
           "damage_amplification"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2088,7 +2088,7 @@
           "progression",
           "stat_conversion"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2110,7 +2110,7 @@
         "calculation_eligible": true,
         "name": "Hullbreaker",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2132,7 +2132,7 @@
         "calculation_eligible": true,
         "name": "Iceborn Gauntlet",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2154,7 +2154,7 @@
         "calculation_eligible": true,
         "name": "Immortal Path",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2176,7 +2176,7 @@
         "calculation_eligible": true,
         "name": "Immortal Shieldbow",
         "outcome_dimensions": [],
-        "reason": "Lifeline's level-scaled 30%-health shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "reason": "Lifeline Shieldbow is scheduled from the exactly-timed damage ledger \u2014 the Lifeline fires on a health threshold the ordered ledger has to cross \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -2198,7 +2198,7 @@
         "calculation_eligible": true,
         "name": "Imperial Mandate",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2220,7 +2220,7 @@
         "calculation_eligible": true,
         "name": "Infinity Edge",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2242,7 +2242,7 @@
         "calculation_eligible": true,
         "name": "Ionian Boots of Lucidity",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2264,7 +2264,7 @@
         "calculation_eligible": true,
         "name": "Jak'Sho, The Protean",
         "outcome_dimensions": [],
-        "reason": "Voidborn Resilience's one-stack-per-second combat state is scheduled from the exact event ledger and multiplies bonus resistances at max.",
+        "reason": "Voidborn Resilience is scheduled from the exactly-timed damage ledger \u2014 one stack per second of combat, multiplying bonus resistances at the maximum, so the multiplier at any instant is a function of the clock \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -2286,7 +2286,7 @@
         "calculation_eligible": true,
         "name": "Kaenic Rookern",
         "outcome_dimensions": [],
-        "reason": "Magebane's ready maximum-health magic shield is modelled.",
+        "reason": "Magebane changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -2308,7 +2308,7 @@
         "calculation_eligible": true,
         "name": "Kindlegem",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2330,7 +2330,7 @@
         "calculation_eligible": true,
         "name": "Knight's Vow",
         "outcome_dimensions": [],
-        "reason": "Pledge redirects 14% of eligible pre-mitigation physical or magic damage to the explicitly selected Worthy holder, and Sacrifice heals the holder from post-mitigation Worthy damage while its sourced range and health gates are active.",
+        "reason": "Sacrifice changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -2352,7 +2352,7 @@
         "calculation_eligible": true,
         "name": "Kraken Slayer",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2374,7 +2374,7 @@
         "calculation_eligible": true,
         "name": "Last Whisper",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2396,7 +2396,7 @@
         "calculation_eligible": true,
         "name": "Liandry's Torment",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2418,7 +2418,7 @@
         "calculation_eligible": true,
         "name": "Lich Bane",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2446,7 +2446,7 @@
           "ally_support",
           "shield"
         ],
-        "reason": "Devotion is represented by the shared participant support ledger: an explicit active_seconds input emits the sourced shield to the holder and selected teammates. Passive target calculations do not assume the active and therefore remain safe when no roster target is authored.",
+        "reason": "Devotion changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -2468,7 +2468,7 @@
         "calculation_eligible": true,
         "name": "Long Sword",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2490,7 +2490,7 @@
         "calculation_eligible": true,
         "name": "Lord Dominik's Regards",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2512,7 +2512,7 @@
         "calculation_eligible": true,
         "name": "Lost Chapter",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2534,7 +2534,7 @@
         "calculation_eligible": true,
         "name": "Luden's Echo",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2556,7 +2556,7 @@
         "calculation_eligible": true,
         "name": "Malignance",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2578,7 +2578,7 @@
         "calculation_eligible": true,
         "name": "Manamune",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2600,7 +2600,7 @@
         "calculation_eligible": true,
         "name": "Maw of Malmortius",
         "outcome_dimensions": [],
-        "reason": "Lifeline's bonus-AD-scaled 30%-health magic shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "reason": "Lifeline Maw is scheduled from the exactly-timed damage ledger \u2014 the Lifeline fires on a health threshold the ordered ledger has to cross, and its omnivamp runs for a sourced window afterwards \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -2628,7 +2628,7 @@
           "progression",
           "stat_conversion"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2656,7 +2656,7 @@
           "cleanse",
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2678,7 +2678,7 @@
         "calculation_eligible": true,
         "name": "Mercury's Treads",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2708,7 +2708,7 @@
           "cleanse",
           "sustain"
         ],
-        "reason": "Purify is represented by the shared participant support ledger: an explicit active_seconds input emits the sourced cleanse/heal to the selected teammate. Passive target calculations do not invent a cast.",
+        "reason": "Purify changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -2730,9 +2730,9 @@
         "calculation_eligible": true,
         "name": "Moonstone Renewer",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Starlit Grace changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -2752,7 +2752,7 @@
         "calculation_eligible": true,
         "name": "Morellonomicon",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2774,7 +2774,7 @@
         "calculation_eligible": true,
         "name": "Mortal Reminder",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2796,7 +2796,7 @@
         "calculation_eligible": true,
         "name": "Mosstomper Seedling",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2818,7 +2818,7 @@
         "calculation_eligible": true,
         "name": "Muramana",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2840,7 +2840,7 @@
         "calculation_eligible": true,
         "name": "Nashor's Tooth",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2862,7 +2862,7 @@
         "calculation_eligible": true,
         "name": "Navori Flickerblade",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2884,7 +2884,7 @@
         "calculation_eligible": true,
         "name": "Needlessly Large Rod",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2906,7 +2906,7 @@
         "calculation_eligible": true,
         "name": "Negatron Cloak",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2928,7 +2928,7 @@
         "calculation_eligible": true,
         "name": "Noonquiver",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2950,7 +2950,7 @@
         "calculation_eligible": true,
         "name": "Null-Magic Mantle",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2972,7 +2972,7 @@
         "calculation_eligible": true,
         "name": "Oblivion Orb",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -2994,7 +2994,7 @@
         "calculation_eligible": true,
         "name": "Overlord's Bloodmail",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3020,7 +3020,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3046,7 +3046,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3068,7 +3068,7 @@
         "calculation_eligible": true,
         "name": "Pickaxe",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3090,7 +3090,7 @@
         "calculation_eligible": true,
         "name": "Plated Steelcaps",
         "outcome_dimensions": [],
-        "reason": "Plating's 10% non-true basic-damage reduction is modelled.",
+        "reason": "Plating changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -3116,7 +3116,7 @@
         "outcome_dimensions": [
           "multi_target"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3138,7 +3138,7 @@
         "calculation_eligible": true,
         "name": "Protoplasm Harness",
         "outcome_dimensions": [],
-        "reason": "Lifeline's level-scaled temporary health and resist-scaled healing are modeled when every damage event is event-certified. The calculation fails closed if damage reaches the unsourced temporary-health expiry boundary.",
+        "reason": "Lifeline Protoplasm is scheduled from the exactly-timed damage ledger \u2014 the Lifeline fires on a health threshold the ordered ledger has to cross, and its temporary health expires on a sourced window \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -3160,7 +3160,7 @@
         "calculation_eligible": true,
         "name": "Quicksilver Sash",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3182,7 +3182,7 @@
         "calculation_eligible": true,
         "name": "Rabadon's Deathcap",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3210,7 +3210,7 @@
           "slow",
           "critical_mitigation"
         ],
-        "reason": "Resilience's 30% incoming critical-strike damage reduction is modelled.",
+        "reason": "Resilience changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -3238,7 +3238,7 @@
           "energized",
           "range"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3266,7 +3266,7 @@
           "multi_target",
           "sustain"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3288,7 +3288,7 @@
         "calculation_eligible": true,
         "name": "Rectrix",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3310,7 +3310,7 @@
         "calculation_eligible": true,
         "name": "Recurve Bow",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3338,7 +3338,7 @@
           "ally_support",
           "sustain"
         ],
-        "reason": "Intervention is represented by the shared participant support ledger: an explicit active_seconds input schedules its delayed ally heal and enemy true-damage area packet for the selected roster. Passive target calculations do not invent the active.",
+        "reason": "Intervention changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -3360,7 +3360,7 @@
         "calculation_eligible": true,
         "name": "Refillable Potion",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3382,7 +3382,7 @@
         "calculation_eligible": true,
         "name": "Rejuvenation Bead",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3404,7 +3404,7 @@
         "calculation_eligible": true,
         "name": "Riftmaker",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3434,7 +3434,7 @@
           "health_state",
           "resource"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3456,7 +3456,7 @@
         "calculation_eligible": true,
         "name": "Ruby Crystal",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3484,7 +3484,7 @@
           "multi_target",
           "copied_on_hit"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3516,7 +3516,7 @@
           "ally_support",
           "vision"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3542,7 +3542,7 @@
         "outcome_dimensions": [
           "slow"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3564,7 +3564,7 @@
         "calculation_eligible": true,
         "name": "Sapphire Crystal",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3586,7 +3586,7 @@
         "calculation_eligible": true,
         "name": "Scorchclaw Pup",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3608,7 +3608,7 @@
         "calculation_eligible": true,
         "name": "Scout's Slingshot",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3619,7 +3619,7 @@
         "name": "Seeker's Armguard",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3630,7 +3630,7 @@
         "calculation_eligible": true,
         "name": "Seeker's Armguard",
         "outcome_dimensions": [],
-        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "reason": "Time Stop changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -3652,7 +3652,7 @@
         "calculation_eligible": true,
         "name": "Seraph's Embrace",
         "outcome_dimensions": [],
-        "reason": "Lifeline's maximum-mana-scaled 30%-health shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "reason": "Lifeline Seraph is scheduled from the exactly-timed damage ledger \u2014 the Lifeline fires on a health threshold the ordered ledger has to cross \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -3674,7 +3674,7 @@
         "calculation_eligible": true,
         "name": "Serpent's Fang",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3696,7 +3696,7 @@
         "calculation_eligible": true,
         "name": "Serrated Dirk",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3722,7 +3722,7 @@
         "outcome_dimensions": [
           "slow"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3744,7 +3744,7 @@
         "calculation_eligible": true,
         "name": "Shadowflame",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3766,7 +3766,7 @@
         "calculation_eligible": true,
         "name": "Shattered Armguard",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3788,7 +3788,7 @@
         "calculation_eligible": true,
         "name": "Sheen",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3816,7 +3816,7 @@
           "movement",
           "ally_support"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3846,9 +3846,9 @@
           "movement",
           "sustain"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Going Sledding changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -3868,7 +3868,7 @@
         "calculation_eligible": true,
         "name": "Sorcerer's Shoes",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3890,7 +3890,7 @@
         "calculation_eligible": true,
         "name": "Spear of Shojin",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3912,9 +3912,9 @@
         "calculation_eligible": true,
         "name": "Spectre's Cowl",
         "outcome_dimensions": [],
-        "reason": "The current full Wiki entry confirms that Incorporeal was removed in V14.6; the remaining target-relevant behavior is its sourced base health-regeneration stat, with no post-damage passive to schedule.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
-        "status": "modeled"
+        "status": "not_target_relevant"
       }
     },
     {
@@ -3934,7 +3934,7 @@
         "calculation_eligible": true,
         "name": "Spellslinger's Shoes",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -3956,7 +3956,7 @@
         "calculation_eligible": true,
         "name": "Spirit Visage",
         "outcome_dimensions": [],
-        "reason": "Boundless Vitality amplifies modeled healing, shields, and regeneration received in the participant ledger.",
+        "reason": "Boundless Vitality changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -3978,7 +3978,7 @@
         "calculation_eligible": true,
         "name": "Staff of Flowing Water",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4006,7 +4006,7 @@
           "multi_target",
           "energized"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4028,7 +4028,7 @@
         "calculation_eligible": true,
         "name": "Steel Sigil",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4050,7 +4050,7 @@
         "calculation_eligible": true,
         "name": "Sterak's Gage",
         "outcome_dimensions": [],
-        "reason": "Lifeline's bonus-health-scaled 30%-health shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "reason": "Lifeline Sterak is scheduled from the exactly-timed damage ledger \u2014 the Lifeline fires on a health threshold the ordered ledger has to cross \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -4078,7 +4078,7 @@
           "energized",
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4100,7 +4100,7 @@
         "calculation_eligible": true,
         "name": "Stormsurge",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4130,7 +4130,7 @@
           "slow",
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4152,7 +4152,7 @@
         "calculation_eligible": true,
         "name": "Sundered Sky",
         "outcome_dimensions": [],
-        "reason": "Lightshield Strike's base-AD plus missing-health heal is replayed on the first attack; excess healing becomes sourced 8-second temporary health in the participant ledger.",
+        "reason": "Forced Crit changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -4174,7 +4174,7 @@
         "calculation_eligible": true,
         "name": "Sunfire Aegis",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4202,7 +4202,7 @@
           "movement",
           "stat_conversion"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4230,7 +4230,7 @@
           "progression",
           "resource"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4252,7 +4252,7 @@
         "calculation_eligible": true,
         "name": "Terminus",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4274,7 +4274,7 @@
         "calculation_eligible": true,
         "name": "The Brutalizer",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4302,7 +4302,7 @@
           "execute",
           "takedown_state"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4324,7 +4324,7 @@
         "calculation_eligible": true,
         "name": "Thornmail",
         "outcome_dimensions": [],
-        "reason": "Thornmail's 20 magic damage plus 10% wearer bonus-armor Thorns and Grievous Wounds are scheduled from modeled basic-attack events.",
+        "reason": "Thorns changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -4346,7 +4346,7 @@
         "calculation_eligible": true,
         "name": "Tiamat",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4372,7 +4372,7 @@
         "outcome_dimensions": [
           "multi_target"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4394,7 +4394,7 @@
         "calculation_eligible": true,
         "name": "Trinity Force",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4416,7 +4416,7 @@
         "calculation_eligible": true,
         "name": "Tunneler",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4442,7 +4442,7 @@
         "outcome_dimensions": [
           "vision"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4464,7 +4464,7 @@
         "calculation_eligible": true,
         "name": "Unending Despair",
         "outcome_dimensions": [],
-        "reason": "Anguish's every-four-second magic pulse and 250% post-mitigation self-heal are scheduled on the certified participant ledger for the selected enemy targets assumed within its 650-unit area.",
+        "reason": "Fixed Interval changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -4486,7 +4486,7 @@
         "calculation_eligible": true,
         "name": "Vampiric Scepter",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4508,7 +4508,7 @@
         "calculation_eligible": true,
         "name": "Verdant Barrier",
         "outcome_dimensions": [],
-        "reason": "Annul is ready at the opening and consumes every packet belonging to the first source-backed Q/W/E/R cast; auto attacks and later casts land.",
+        "reason": "Annul changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -4530,7 +4530,7 @@
         "calculation_eligible": true,
         "name": "Void Staff",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4552,7 +4552,7 @@
         "calculation_eligible": true,
         "name": "Voltaic Cyclosword",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4574,7 +4574,7 @@
         "calculation_eligible": true,
         "name": "Warden's Mail",
         "outcome_dimensions": [],
-        "reason": "Rock Solid's post-mitigation 15 reduction, capped at 20%, is modelled.",
+        "reason": "Rock Solid changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -4596,7 +4596,7 @@
         "calculation_eligible": true,
         "name": "Warmog's Armor",
         "outcome_dimensions": [],
-        "reason": "Warmog's Vitality modifies item health; combat regeneration stays inactive while the target is taking damage.",
+        "reason": "The passive-target model runs this as engine code rather than as a declared rule: Warmog's Heart is a live combat-state regeneration the participant timeline schedules; its stat_conversion entry compiles to no rule until stat_derivation is declared.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -4618,7 +4618,7 @@
         "calculation_eligible": true,
         "name": "Whispering Circlet",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4640,7 +4640,7 @@
         "calculation_eligible": true,
         "name": "Winged Moonplate",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4662,7 +4662,7 @@
         "calculation_eligible": true,
         "name": "Winter's Approach",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4684,7 +4684,7 @@
         "calculation_eligible": true,
         "name": "Wit's End",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4716,7 +4716,7 @@
           "ally_support",
           "vision"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4742,7 +4742,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4764,7 +4764,7 @@
         "calculation_eligible": true,
         "name": "Yun Tal Wildarrows",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4786,7 +4786,7 @@
         "calculation_eligible": true,
         "name": "Zaz'Zak's Realmspike",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4808,7 +4808,7 @@
         "calculation_eligible": true,
         "name": "Zeal",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4830,7 +4830,7 @@
         "calculation_eligible": true,
         "name": "Zeke's Convergence",
         "outcome_dimensions": [],
-        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
         "review_issue_refs": [],
         "status": "not_target_relevant"
       }
@@ -4843,7 +4843,7 @@
         "outcome_dimensions": [
           "stasis"
         ],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -4856,7 +4856,7 @@
         "outcome_dimensions": [
           "stasis"
         ],
-        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "reason": "Time Stop changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
