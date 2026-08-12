@@ -39,6 +39,7 @@ from src.calculator.coverage_evidence import (
     UTILITY_DIMENSIONS,
     Absence,
     Claim,
+    CoverageClaimError,
     EffectKey,
     EffectTag,
     OptionSchema,
@@ -2131,6 +2132,51 @@ def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None
             for claim in COVERAGE_EVIDENCE.values()
         }
     )
+
+
+def test_the_issue_ref_carrier_is_derived_from_the_item_s_own_claim_lanes() -> None:
+    """Which claim carries a review's issues is assembly, not evidence.
+
+    The hand table that answered this per item is gone: the lanes are ranked
+    once and the item's own lanes are read off the containers ``_corpus``
+    builds from.  This asserts the derivation against the corpus that came out
+    of it — every tracked item's refs sit on the first ranked lane it has a
+    claim on, and on no other.
+    """
+    misrouted: list[str] = []
+    for item, refs in item_coverage._REVIEW_ISSUE_REFS.items():
+        lanes = {
+            key[2] for key in COVERAGE_EVIDENCE if key[0] == "item" and key[1] == item
+        }
+        expected = next(
+            lane for lane, _ in item_coverage._CLAIM_LANE_SOURCES if lane in lanes
+        )
+        carrying = sorted(
+            key[2]
+            for key, claim in COVERAGE_EVIDENCE.items()
+            if key[1] == item and claim.issue_refs == tuple(refs)
+        )
+        if carrying != [expected]:
+            misrouted.append(f"{item}: {carrying} carry refs, expected [{expected}]")
+    assert misrouted == []
+
+
+def test_a_tracked_review_on_no_claim_lane_stops_the_corpus(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """R-05's red for the routing check, reproducible on demand.
+
+    A ref routed nowhere would be published by ``review_issue_refs`` and
+    carried by no claim — a tracked gap with no receipt.  The load tier
+    refuses it rather than letting the corpus assemble around it.
+    """
+    monkeypatch.setattr(
+        item_coverage,
+        "_REVIEW_ISSUE_REFS",
+        {**item_coverage._REVIEW_ISSUE_REFS, "Elixir of Iron": (40,)},
+    )
+    with pytest.raises(CoverageClaimError, match="Elixir of Iron"):
+        item_coverage._validate_issue_ref_routing()
 
 
 def test_claim_status_is_a_pinned_expectation_the_classifier_agrees_with() -> None:

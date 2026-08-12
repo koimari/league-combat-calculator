@@ -13,7 +13,7 @@
       "class_d": 1
     },
     "calculator/item_coverage.py": {
-      "counter_2": 268
+      "counter_2": 246
     },
     "calculator/item_effects.py": {
       "class_c": 431
@@ -115,7 +115,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.8",
       "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
-      "value": 271
+      "value": 249
     },
     "counter_3": {
       "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
@@ -295,7 +295,7 @@
         "calculator/bis.py": "three name-keyed build-profile claims that ride the same flip",
         "calculator/item_coverage.py": "the hand registries that assert coverage rather than compute it; 3.8 replaces them with a status derived from declarations"
       },
-      "sites": 271
+      "sites": 249
     },
     "class_c_declarative_homes": {
       "modules": {

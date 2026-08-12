@@ -25,6 +25,7 @@ from .coverage_evidence import (
     Claim,
     ClaimLane,
     ClaimStatus,
+    CoverageClaimError,
     EffectKey,
     Evidence,
     OptionSchema,
@@ -1431,35 +1432,6 @@ _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
     "Youmuu's Ghostblade": ("", "source"),
     "Zhonya's Hourglass": ("defensive_effects.resolve_starting_defenses", "effects"),
 }
-# Which lane's claim carries an item's tracked review issues.  ``review_issue_refs``
-# publishes one list per item and a claim's ``issue_refs`` has to be that list, so
-# exactly one claim per item may carry it; this names which.  A negative claim
-# carries its refs on its ``Absence`` instead, which is why no lane below is one.
-_ISSUE_REF_LANES: Mapping[str, ClaimLane] = {
-    "Actualizer": "attacker",
-    "Archangel's Staff": "attacker",
-    "Ardent Censer": "attacker",
-    "Axiom Arc": "attacker",
-    "Bandlepipes": "attacker",
-    "Catalyst of Aeons": "attacker",
-    "Doran's Helm": "attacker",
-    "Endless Hunger": "attacker",
-    "Fimbulwinter": "attacker",
-    "Hubris": "attacker",
-    "Immortal Path": "attacker",
-    "Imperial Mandate": "attacker",
-    "Locket of the Iron Solari": "target",
-    "Manamune": "attacker",
-    "Mikael's Blessing": "target",
-    "Redemption": "target",
-    "Runaan's Hurricane": "utility",
-    "Stridebreaker": "utility",
-    "Voltaic Cyclosword": "attacker",
-    "Whispering Circlet": "attacker",
-    "Winter's Approach": "attacker",
-    "Zeke's Convergence": "attacker",
-}
-
 # The walk packets an item emits, the builder that emits them, and one focused
 # test that exercises the behaviour.  A packet whose source the builder composes
 # with an f-string is written the way the builder renders it -- ``{} — Ward``,
@@ -1589,6 +1561,51 @@ _SPLIT_MECHANICS: Mapping[str, str] = {
     "Imperial Mandate": "imperial_mandate.command",
 }
 
+# Which of an item's claims carries its tracked review issues.
+# ``review_issue_refs`` publishes one list per item and a claim's
+# ``issue_refs`` has to be that list, so exactly one claim per item may carry
+# it.  *Which* one is **assembly, not evidence**: the choice asserts nothing
+# about the tree, which is why it may be derived where the evidence beside it
+# may not (``_corpus``).  So the lanes are ranked once here and the item's own
+# lanes are read off the very containers ``_corpus`` builds its claims from —
+# the same source, in the same order — which makes "exactly one carrier"
+# structural rather than an answer maintained per item.  A negative claim
+# carries its refs on its ``Absence`` instead, so no lane below is one.
+_CLAIM_LANE_SOURCES: tuple[tuple[ClaimLane, tuple[Mapping[str, Any], ...]], ...] = (
+    ("attacker", (_ATTACKER_STATE_HOMES, NO_RUNTIME_BEHAVIOR, _ISSUE_REF_ONLY_ITEMS)),
+    ("target", (_TARGET_MODELED_IMPLS, _TARGET_CERTIFIED_IMPLS)),
+    ("support_packet", (_SUPPORT_PACKET_CLAIMS,)),
+    ("utility", (UTILITY_OUTCOMES,)),
+)
+
+
+def _issue_ref_lane(item: str) -> ClaimLane | None:
+    """The one lane whose claim about *item* carries its review issues."""
+    for lane, containers in _CLAIM_LANE_SOURCES:
+        if any(item in container for container in containers):
+            return lane
+    return None
+
+
+def _validate_issue_ref_routing() -> None:
+    """Every tracked review rides a claim, or the module does not import.
+
+    The hand table this replaced could route a ref to a lane the item had no
+    claim on, and the ref would then be published by ``review_issue_refs`` and
+    carried by nothing — a tracked gap with no receipt, which is the shape the
+    corpus exists to make impossible.  Structural, so it belongs in the load
+    tier (D-20): a set check over two module-level tables, no import and no
+    ``data/`` read.
+    """
+    unrouted = sorted(
+        item for item in _REVIEW_ISSUE_REFS if _issue_ref_lane(item) is None
+    )
+    if unrouted:
+        raise CoverageClaimError(
+            f"{unrouted} carry tracked review issues and no claim on any lane, "
+            "so review_issue_refs would publish a ref no claim carries"
+        )
+
 
 def _test_ref(function: str, subject: str) -> TestRef:
     """The parametrized node in the claim suite that exercises *subject*.
@@ -1623,8 +1640,8 @@ def _state_home(item: str, home: str) -> Evidence:
 
 
 def _issue_refs(item: str, lane: ClaimLane) -> tuple[int, ...]:
-    """The tracked review issues, on the one lane declared to carry them."""
-    if _ISSUE_REF_LANES.get(item) != lane:
+    """The tracked review issues, on the one lane derived to carry them."""
+    if item not in _REVIEW_ISSUE_REFS or _issue_ref_lane(item) != lane:
         return ()
     return tuple(_REVIEW_ISSUE_REFS[item])
 
@@ -2039,6 +2056,7 @@ def _corpus() -> dict[tuple[SubjectKind, str, ClaimLane], Claim]:
     would agree with them by construction, which is the failure this module
     exists to catch -- and only the assembly is mechanical.
     """
+    _validate_issue_ref_routing()
     claims = [
         *(_attacker_state_claim(item) for item in _ATTACKER_STATE_HOMES),
         *(_stats_only_claim(item) for item in NO_RUNTIME_BEHAVIOR),
