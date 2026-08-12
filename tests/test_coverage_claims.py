@@ -52,6 +52,7 @@ from src.calculator.coverage_evidence import (
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator import item_behavior_catalog
 from src.calculator import item_coverage
+from src.calculator import item_outcomes
 from src.calculator.item_coverage import (
     COVERAGE_EVIDENCE,
     FRONTIER,
@@ -1892,11 +1893,11 @@ def test_a_target_blocked_item_stops_the_run() -> None:
             item_coverage.require_target_item_coverage([record])
 
 
-@pytest.mark.parametrize("item", sorted(item_coverage.UTILITY_OUTCOMES))
+@pytest.mark.parametrize("item", sorted(item_outcomes.UTILITY_OUTCOMES))
 def test_a_utility_item_publishes_its_declared_dimensions(item: str) -> None:
     """The product-facing dimensions reach both public payloads, unchanged."""
     record = CACHE[item]
-    declared = [dimension.value for dimension in item_coverage.UTILITY_OUTCOMES[item]]
+    declared = [dimension.value for dimension in item_outcomes.UTILITY_OUTCOMES[item]]
     assert _attacker(item).as_payload()["outcome_dimensions"] == declared
     assert (
         item_coverage.target_item_model_coverage(record)["outcome_dimensions"]
@@ -2147,13 +2148,13 @@ def test_every_declared_dimension_is_a_member_of_the_closed_set() -> None:
     """Criterion 12: set equality, and every claim's dimensions inside it."""
     measured = {
         dimension.value
-        for dimensions in item_coverage.UTILITY_OUTCOMES.values()
+        for dimensions in item_outcomes.UTILITY_OUTCOMES.values()
         for dimension in dimensions
     }
     assert UTILITY_DIMENSIONS == measured
     for claim in COVERAGE_EVIDENCE.values():
         assert set(claim.dimensions) <= UTILITY_DIMENSIONS
-    for item, dimensions in item_coverage.UTILITY_OUTCOMES.items():
+    for item, dimensions in item_outcomes.UTILITY_OUTCOMES.items():
         claim = COVERAGE_EVIDENCE[("item", item, "utility")]
         assert claim.dimensions == tuple(dimension.value for dimension in dimensions)
 

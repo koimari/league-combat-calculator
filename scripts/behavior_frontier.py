@@ -141,6 +141,13 @@ CLASS_C_DECLARATIVE_HOMES: Mapping[str, str] = {
         "availability from the cached source data; the name is the identity of "
         "the row being decided, per CLAUDE.md rule 6"
     ),
+    "calculator/item_outcomes.py": (
+        "the reviewed outcome-dimension declaration and nothing else — one "
+        "mapping, no function, no branch, asserted by "
+        "tests/test_item_outcomes.py.  Twenty of its items compile to no rule "
+        "at all, so what an item changes about a fight besides the damage "
+        "number is a product fact whose key is the item it is about"
+    ),
     "calculator/role_quests.py": (
         "quest-item declarations keyed by the item that carries the quest"
     ),

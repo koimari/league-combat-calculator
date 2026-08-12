@@ -12,7 +12,6 @@ from src.calculator.item_behavior_catalog import (
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
-    UTILITY_OUTCOMES,
     PRECEDENCE,
     gated_state_reason,
     item_model_coverage,
@@ -24,6 +23,7 @@ from src.calculator.item_coverage import (
     target_item_model_coverage,
 )
 from src.calculator.item_behavior import UtilityDimension
+from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_effects import ITEM_EFFECTS
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_source import is_ordinary_sr_item

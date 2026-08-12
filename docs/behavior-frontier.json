@@ -19,10 +19,13 @@
       "counter_1": 13
     },
     "calculator/item_coverage.py": {
-      "counter_2": 309
+      "counter_2": 266
     },
     "calculator/item_effects.py": {
       "class_c": 440
+    },
+    "calculator/item_outcomes.py": {
+      "class_c": 43
     },
     "calculator/item_source.py": {
       "class_c": 8
@@ -302,7 +305,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.8",
       "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
-      "value": 312
+      "value": 269
     },
     "counter_3": {
       "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
@@ -361,18 +364,19 @@
         "calculator/bis.py": "three name-keyed build-profile claims that ride the same flip",
         "calculator/item_coverage.py": "the hand registries that assert coverage rather than compute it; 3.8 replaces them with a status derived from declarations"
       },
-      "sites": 312
+      "sites": 269
     },
     "class_c_declarative_homes": {
       "modules": {
         "calculator/item_effects.py": "the number registries themselves \u2014 ITEM_EFFECTS, ALLY_ITEM_EFFECTS and the static effect tables. An item name is the key of the home this phase reads through",
+        "calculator/item_outcomes.py": "the reviewed outcome-dimension declaration and nothing else \u2014 one mapping, no function, no branch, asserted by tests/test_item_outcomes.py.  Twenty of its items compile to no rule at all, so what an item changes about a fight besides the damage number is a product fact whose key is the item it is about",
         "calculator/item_source.py": "availability from the cached source data; the name is the identity of the row being decided, per CLAUDE.md rule 6",
         "calculator/loadout_rules.py": "build legality \u2014 uniques, boots and slot rules keyed by the item they constrain",
         "calculator/passive_parser.py": "the wiki-text parser's per-item parse configuration; the names decide how a page is read, not how a fight is priced",
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 627
+      "sites": 670
     },
     "class_d_non_behavioural": {
       "modules": {

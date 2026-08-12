@@ -219,7 +219,7 @@ def test_the_kernel_contract_carries_no_program_type() -> None:
 def test_the_utility_vocabulary_is_the_single_home_both_readers_project() -> None:
     """The flip's other side: two readers, one home, asserted in both directions.
 
-    ``item_coverage.UTILITY_OUTCOMES`` now holds ``UtilityDimension`` members
+    ``item_outcomes.UTILITY_OUTCOMES`` now holds ``UtilityDimension`` members
     rather than open strings, and Phase 1's
     ``coverage_evidence.UTILITY_DIMENSIONS`` is asserted equal to this enum's
     values rather than to whatever the per-item declaration happens to
@@ -232,13 +232,13 @@ def test_the_utility_vocabulary_is_the_single_home_both_readers_project() -> Non
     # Imported here rather than at module scope: the leaf-ness test above
     # asserts ``item_behavior`` itself imports nothing but ``value_ref`` and
     # ``ability_spec``, and these two readers depend on it, not the reverse.
-    from src.calculator import item_coverage
+    from src.calculator import item_outcomes
     from src.calculator.coverage_evidence import UTILITY_DIMENSIONS
 
     declared = {dimension.value for dimension in UtilityDimension}
     assigned = {
         dimension
-        for dimensions in item_coverage.UTILITY_OUTCOMES.values()
+        for dimensions in item_outcomes.UTILITY_OUTCOMES.values()
         for dimension in dimensions
     }
 

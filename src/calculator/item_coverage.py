@@ -58,6 +58,7 @@ from .item_behavior_catalog import (
     registry_entries,
 )
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
+from .item_outcomes import UTILITY_OUTCOMES
 
 ItemCoverageStatus = Literal[
     "modeled_effect",
@@ -188,6 +189,23 @@ class ItemCoverage:
 # both are read out of a registry rather than asserted in prose here.
 
 
+# Three containers stood here — ``_TARGET_MODELED_REASONS``,
+# ``_TARGET_EVENT_CERTIFIED_REASONS`` and ``_TARGET_BLOCKED_REASONS``: thirty-
+# nine reviewed sentences answering "what does this item do to the actor
+# wearing it" by looking the actor's item up by name.  The ladder above now
+# asks the declarations, the certification is a property of the mechanic in
+# the catalog, and the refusal is the attacker lane's own.  What the sentences
+# carried that a declaration cannot — which symbol prices each item — is the
+# evidence beside the claim, in ``_TARGET_MODELED_IMPLS`` and
+# ``_TARGET_CERTIFIED_IMPLS`` below, where it is checked against the derived
+# population rather than trusted.
+
+# ``_UTILITY_DIMENSIONS`` stood here too, and its contents are the one thing
+# the collapse did not delete: a per-item outcome label no declaration can
+# derive.  It is ``item_outcomes.UTILITY_OUTCOMES`` now — a declaration in a
+# home of declarations, read by the payload builder below.
+
+
 # The one reviewed registry that survives the flip, and the reason it has to:
 # "we read the cached page and there is no runtime behaviour" is a fact about
 # an *absence*, and no declaration can carry an absence.  Every other container
@@ -244,115 +262,6 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Youmuu's Ghostblade": "Haunt and Wraith Step grant movement speed.",
 }
 
-
-# Three containers stood here — ``_TARGET_MODELED_REASONS``,
-# ``_TARGET_EVENT_CERTIFIED_REASONS`` and ``_TARGET_BLOCKED_REASONS``: thirty-
-# nine reviewed sentences answering "what does this item do to the actor
-# wearing it" by looking the actor's item up by name.  The ladder above now
-# asks the declarations, the certification is a property of the mechanic in
-# the catalog, and the refusal is the attacker lane's own.  What the sentences
-# carried that a declaration cannot — which symbol prices each item — is the
-# evidence beside the claim, in ``_TARGET_MODELED_IMPLS`` and
-# ``_TARGET_CERTIFIED_IMPLS`` below, where it is checked against the derived
-# population rather than trusted.
-
-# What each item changes about a fight besides the damage number.  The labels
-# are deliberately descriptive: they do not claim a combat formula is
-# implemented, and an item whose coverage is withheld stays withheld rather
-# than being silently presented as a stat-only one.
-#
-# The *vocabulary* is not declared here — it is
-# :class:`~.item_behavior.UtilityDimension`, the single home both this payload
-# and Phase 1's claim table read.  What is declared here is the per-item
-# assignment, which no rule can derive: twenty of these items compile to no
-# ``BehaviorRule`` at all (a revive, a stasis, a spell shield), so their
-# outcome is a reviewed product fact rather than a consequence of a
-# declaration.  Typed members instead of open strings is the difference the
-# flip makes: a misspelling is now an ``AttributeError`` at import.
-UTILITY_OUTCOMES: Mapping[str, tuple[UtilityDimension, ...]] = {
-    "Bandlepipes": (UtilityDimension.ALLY_SUPPORT, UtilityDimension.STAT_BUFF),
-    "Gunmetal Greaves": (UtilityDimension.MOVEMENT,),
-    "Cull": (
-        UtilityDimension.ECONOMY,
-        UtilityDimension.PROGRESSION,
-        UtilityDimension.ON_HIT,
-    ),
-    "Phage": (UtilityDimension.MOVEMENT,),
-    "Heartsteel": (UtilityDimension.PROGRESSION, UtilityDimension.HEALTH_STATE),
-    "Hubris": (UtilityDimension.PROGRESSION, UtilityDimension.STAT_CONVERSION),
-    "Axiom Arc": (UtilityDimension.PROGRESSION, UtilityDimension.RESOURCE),
-    "Mejai's Soulstealer": (
-        UtilityDimension.PROGRESSION,
-        UtilityDimension.STAT_CONVERSION,
-    ),
-    "Rod of Ages": (
-        UtilityDimension.PROGRESSION,
-        UtilityDimension.HEALTH_STATE,
-        UtilityDimension.RESOURCE,
-    ),
-    "Solstice Sleigh": (
-        UtilityDimension.ALLY_SUPPORT,
-        UtilityDimension.MOVEMENT,
-        UtilityDimension.SUSTAIN,
-    ),
-    "Swiftmarch": (UtilityDimension.MOVEMENT, UtilityDimension.STAT_CONVERSION),
-    "World Atlas": (
-        UtilityDimension.ECONOMY,
-        UtilityDimension.QUEST,
-        UtilityDimension.ALLY_SUPPORT,
-        UtilityDimension.VISION,
-    ),
-    "Runic Compass": (
-        UtilityDimension.ECONOMY,
-        UtilityDimension.QUEST,
-        UtilityDimension.ALLY_SUPPORT,
-        UtilityDimension.VISION,
-    ),
-    "Tear of the Goddess": (UtilityDimension.PROGRESSION, UtilityDimension.RESOURCE),
-    "Banshee's Veil": (UtilityDimension.SPELL_PROTECTION,),
-    "Edge of Night": (UtilityDimension.SPELL_PROTECTION,),
-    "Zhonya's Hourglass": (UtilityDimension.STASIS,),
-    "Guardian Angel": (UtilityDimension.REVIVE,),
-    "Mercurial Scimitar": (UtilityDimension.CLEANSE, UtilityDimension.MOVEMENT),
-    "Boots of Swiftness": (UtilityDimension.SLOW_RESISTANCE, UtilityDimension.MOVEMENT),
-    "Cosmic Drive": (UtilityDimension.MOVEMENT,),
-    "Force of Nature": (UtilityDimension.MOVEMENT, UtilityDimension.DEFENSE),
-    "Phantom Dancer": (UtilityDimension.MOVEMENT,),
-    "Shurelya's Battlesong": (UtilityDimension.MOVEMENT, UtilityDimension.ALLY_SUPPORT),
-    "Youmuu's Ghostblade": (UtilityDimension.MOVEMENT,),
-    "Rylai's Crystal Scepter": (UtilityDimension.SLOW,),
-    "Serylda's Grudge": (UtilityDimension.SLOW,),
-    "Frozen Heart": (UtilityDimension.ATTACK_SPEED_REDUCTION,),
-    "Randuin's Omen": (UtilityDimension.SLOW, UtilityDimension.CRITICAL_MITIGATION),
-    "Runaan's Hurricane": (
-        UtilityDimension.MULTI_TARGET,
-        UtilityDimension.COPIED_ON_HIT,
-    ),
-    "Titanic Hydra": (UtilityDimension.MULTI_TARGET,),
-    "Profane Hydra": (UtilityDimension.MULTI_TARGET,),
-    "Ravenous Hydra": (UtilityDimension.MULTI_TARGET, UtilityDimension.SUSTAIN),
-    "Stridebreaker": (
-        UtilityDimension.MULTI_TARGET,
-        UtilityDimension.SLOW,
-        UtilityDimension.MOVEMENT,
-    ),
-    "Statikk Shiv": (UtilityDimension.MULTI_TARGET, UtilityDimension.ENERGIZED),
-    "Stormrazor": (UtilityDimension.ENERGIZED, UtilityDimension.MOVEMENT),
-    "Rapid Firecannon": (UtilityDimension.ENERGIZED, UtilityDimension.RANGE),
-    "Umbral Glaive": (UtilityDimension.VISION,),
-    "Horizon Focus": (UtilityDimension.VISION, UtilityDimension.DAMAGE_AMPLIFICATION),
-    "Locket of the Iron Solari": (
-        UtilityDimension.ALLY_SUPPORT,
-        UtilityDimension.SHIELD,
-    ),
-    "Mikael's Blessing": (
-        UtilityDimension.ALLY_SUPPORT,
-        UtilityDimension.CLEANSE,
-        UtilityDimension.SUSTAIN,
-    ),
-    "Redemption": (UtilityDimension.ALLY_SUPPORT, UtilityDimension.SUSTAIN),
-    "The Collector": (UtilityDimension.EXECUTE, UtilityDimension.TAKEDOWN_STATE),
-}
 
 # Concrete GitHub owners for source-backed gaps.  The full-entry audit exposes
 # these references beside every withheld effect so a page review cannot end
@@ -2310,7 +2219,6 @@ __all__ = [
     "NO_RUNTIME_BEHAVIOR",
     "SCORING_LANES",
     "PRECEDENCE",
-    "UTILITY_OUTCOMES",
     "item_model_coverage",
     "optimizer_candidate_coverage",
     "optimizer_supported_items",
