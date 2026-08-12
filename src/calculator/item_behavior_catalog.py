@@ -4772,9 +4772,20 @@ def declared_owners() -> frozenset[str]:
 def undeclared_owners() -> frozenset[str]:
     """Registry owners whose behaviour is still engine code, not a declaration.
 
-    Counter 3's population and ``item_coverage``'s ``review_pending`` read the
-    same set, so the frontier's number and the public coverage answer cannot
-    drift apart.
+    This is counter 3's population and it is **not** ``item_coverage``'s
+    ``review_pending`` set — an earlier version of this sentence said the two
+    read the same set, and they do not.  All nineteen members publish as
+    modelled today (eighteen ``modeled_state``, one ``modeled_effect``),
+    because ``item_coverage._declared_families`` counts a registry *entry* as
+    a declaration alongside a compiled rule.  That is deliberate and is the
+    difference between *unmigrated* and *uninterpreted*: an entry whose family
+    no slice has declared yet is behaviour the engines still run, and calling
+    it unmodelled would be a refusal the migration invented rather than one the
+    model earned.
+
+    So the frontier's number and the public coverage answer are two different
+    questions on purpose — "has this entry been declared?" and "does the model
+    run it?" — and the day they are the same set is the day counter 3 is zero.
     """
     return registry_owners() - declared_owners()
 
