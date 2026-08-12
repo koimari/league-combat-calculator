@@ -353,6 +353,139 @@
         "threshold_defense/receipt_walk"
       ],
       "provenance": "VERIFIED",
+      "receipts": {
+        "dated": {
+          "active_cast/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "active_cast/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "ally_packet/compiled_score_walk": {
+            "reason": "the compiled kernel stages support templates from the packets item_support_effects emits, not from the declaration; the packet kinds it cannot stage are refused per rule by compilability_for",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "cast_proc/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "cast_proc/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "charged_strike/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "charged_strike/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "combat_state/compiled_score_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "combat_state/receipt_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "crit_profile/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "crit_profile/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "damage_routing/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "damage_routing/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "delta_amp/receipt_walk": {
+            "reason": "the walk authors this family itself and still reads its numbers out of the registry by item name (survival/transitions.py, survival/receipt_state.py), so the walk-lane interpreter arrives with those sites \u2014 they are counter 1's remainder, not a route",
+            "retires_at": "3.9 residue \u2014 counter 1's remaining name-dispatch sites"
+          },
+          "on_hit_strike/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "on_hit_strike/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "opening_defense/compiled_score_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "opening_defense/receipt_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "periodic/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "periodic/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "reactive/compiled_score_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "reactive/receipt_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "resistance_shred/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "resistance_shred/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "secondary_target/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "spellblade/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "spellblade/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "sustain/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "sustain/receipt_walk": {
+            "reason": "the walk authors this family itself and still reads its numbers out of the registry by item name (survival/transitions.py, survival/receipt_state.py), so the walk-lane interpreter arrives with those sites \u2014 they are counter 1's remainder, not a route",
+            "retires_at": "3.9 residue \u2014 counter 1's remaining name-dispatch sites"
+          },
+          "threshold_defense/compiled_score_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "threshold_defense/receipt_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          }
+        },
+        "gate": "interpreters.validate_registrations refuses an unserved lane that is in neither population, and refuses a dated row no declaration reaches (D-92)",
+        "per_rule_receipted": [
+          "delta_amp/compiled_score_walk"
+        ],
+        "unreceipted": []
+      },
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
       "value": 34
@@ -511,7 +644,7 @@
     }
   },
   "schema_version": 2,
-  "slice": "3.8",
+  "slice": "3.9",
   "zero_policy_frontier": {
     "declared_default": "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry and simple_damage and overridable per call (D-24)",
     "forbidden_input_fallbacks": [],

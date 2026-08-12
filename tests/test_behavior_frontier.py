@@ -384,3 +384,46 @@ def test_no_reviewed_nothing_member_compiles_a_rule() -> None:
 
     assert block["members"]
     assert block["declaring"] == []
+
+
+def test_counter_four_carries_the_reason_for_every_gap_it_counts() -> None:
+    """The number and its content, in the artifact a reader meets.
+
+    Counter 4 was a bare integer: thirty-four unserved lanes with no statement
+    anywhere of why any one was acceptable.  Every gap a declaration reaches
+    is now either a dated row naming the route its number arrives by, or a
+    compiled lane refused by that rule's own ``ReceiptOnly`` — and
+    ``unreceipted`` is empty because ``validate_registrations`` refuses to
+    import a tree holding a gap in neither population, which is asserted here
+    by the second route rather than assumed from the first.
+    """
+    receipts = behavior_frontier.build_receipt(behavior_frontier.scan())["counters"][
+        "counter_4"
+    ]["receipts"]
+    assert receipts["unreceipted"] == []
+    assert receipts["per_rule_receipted"] == ["delta_amp/compiled_score_walk"]
+    assert set(receipts["dated"]) == {
+        f"{family.value}/{lane.value}"
+        for family, lane in interpreters.UNSERVED_LANE_RECEIPTS
+    }
+    for pair, row in receipts["dated"].items():
+        assert row["reason"].strip(), f"{pair} carries no reason"
+        assert row["retires_at"].strip(), f"{pair} carries no retiring stage"
+
+
+def test_a_receipt_missing_the_unserved_lane_section_fails_closed() -> None:
+    """Deleting what a gate reads must fail it, never skip it."""
+    receipt = _receipt()
+    receipt["counters"]["counter_4"].pop("receipts")
+    failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
+    assert any("no unserved-lane receipts" in failure for failure in failures)
+
+
+def test_a_moved_gap_receipt_is_a_diff_in_the_committed_artifact() -> None:
+    """D-40: the content is set-equality gated, exactly like the exclusions."""
+    receipt = _receipt()
+    receipt["counters"]["counter_4"]["receipts"]["dated"].pop(
+        "on_hit_strike/receipt_walk"
+    )
+    failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
+    assert any("committed dated set differs" in failure for failure in failures)

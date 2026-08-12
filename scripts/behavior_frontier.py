@@ -50,7 +50,14 @@ not owners: six owners hold one of each and each entry is its own obligation.
 ``Counter 4`` is declared ``(family, lane)`` pairs with no registered
 interpreter, read from ``interpreters``' own declared lane table.  A pair is
 "declared" by that table, not by what happens to be registered — otherwise an
-empty registry would report full coverage.
+empty registry would report full coverage.  Its *content* is carried beside
+the number: every gap a declaration reaches is either a dated row in
+``interpreters.UNSERVED_LANE_RECEIPTS`` — the route the number arrives by
+instead, plus the stage that retires the row — or a compiled lane refused by
+that rule's own ``ReceiptOnly``.  The receipt records both, so a reader meets
+the reason where they meet the count and the gate diffs it by set equality;
+the import-time gate in ``interpreters`` is what makes an *unreceipted* gap
+impossible in the first place.
 
 Counters 5-7 are Phase 4's and live in ``docs/migration-frontier.json``;
 nothing here reports them.
@@ -302,6 +309,55 @@ def scan(root: Path = SRC_ROOT) -> FrontierReport:
         f"{family.value}/{lane.value}" for family, lane in pairs
     )
     return report
+
+
+def unserved_lane_block() -> dict[str, Any]:
+    """Counter 4's content: why each declared lane has no interpreter.
+
+    Two populations, because they are excused by two different things and
+    collapsing them would hide which.  ``dated`` are the rows
+    ``interpreters.UNSERVED_LANE_RECEIPTS`` carries — a route and a retiring
+    stage each.  ``per_rule_receipted`` are the compiled-lane gaps no row
+    names because every declaration reaching them carries its own
+    ``ReceiptOnly``, which is the stronger form: ``delta_amp`` is that whole
+    population today (D-101).
+
+    A gap in neither cannot exist — ``validate_registrations`` refuses to
+    import a tree holding one — so an empty ``unreceipted`` here is a
+    consequence of the import gate rather than a claim this script makes.
+    """
+    dated = {
+        f"{family.value}/{lane.value}": {
+            "reason": row.reason,
+            "retires_at": row.retires_at,
+        }
+        for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items()
+    }
+    per_rule: set[str] = set()
+    unreceipted: set[str] = set()
+    for owner in sorted(catalog.rule_owners()):
+        for rule in catalog.behavior_rules(owner):
+            for lane in interpreters.lanes_for(rule.family):
+                pair = (rule.family, lane)
+                key = f"{rule.family.value}/{lane.value}"
+                if pair in interpreters.INTERPRETERS or key in dated:
+                    continue
+                if lane.value == "compiled_score_walk" and isinstance(
+                    rule.compilability, ReceiptOnly
+                ):
+                    per_rule.add(key)
+                else:  # pragma: no cover - the import gate forbids this state
+                    unreceipted.add(key)
+    return {
+        "dated": dict(sorted(dated.items())),
+        "per_rule_receipted": sorted(per_rule),
+        "unreceipted": sorted(unreceipted),
+        "gate": (
+            "interpreters.validate_registrations refuses an unserved lane that "
+            "is in neither population, and refuses a dated row no declaration "
+            "reaches (D-92)"
+        ),
+    }
 
 
 def compiled_walk_delta() -> dict[str, Any]:
@@ -677,6 +733,41 @@ def _zero_policy_failures(
     return failures
 
 
+def _unserved_lane_failures(
+    committed: Mapping[str, Any], fresh: Mapping[str, Any]
+) -> list[str]:
+    """Counter 4's content, gated by set equality like its exclusions (D-40).
+
+    Fails closed on a receipt with the section missing, because a gate that
+    skips what it cannot find is the shape this campaign removes.  The
+    ``unreceipted`` population is asserted empty here as well as at import:
+    the two checks read the same tree by two routes, and a green count with a
+    non-empty list would mean the import gate had been bypassed.
+    """
+    recorded = committed.get("counters", {}).get("counter_4", {}).get("receipts")
+    measured = fresh["counters"]["counter_4"]["receipts"]
+    if not isinstance(recorded, Mapping):
+        return [
+            "counter 4: the committed receipt records no unserved-lane "
+            "receipts; run --write"
+        ]
+    failures: list[str] = []
+    if measured["unreceipted"]:
+        failures.append(
+            "counter 4: "
+            f"{measured['unreceipted']} are declared, unserved and named by no "
+            "receipt at all"
+        )
+    for key in ("dated", "per_rule_receipted"):
+        if set(recorded.get(key, ())) != set(measured[key]):
+            failures.append(
+                f"counter 4: the committed {key} set differs from the tree's "
+                f"(committed-only={sorted(set(recorded.get(key, ())) - set(measured[key]))}, "
+                f"measured-only={sorted(set(measured[key]) - set(recorded.get(key, ())))})"
+            )
+    return failures
+
+
 def _compiled_walk_delta_failures(
     committed: Mapping[str, Any], fresh: Mapping[str, Any]
 ) -> list[str]:
@@ -767,7 +858,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
     """The committed frontier artifact."""
     return {
         "schema_version": SCHEMA_VERSION,
-        "slice": "3.8",
+        "slice": "3.9",
         "counters": {
             "counter_1": {
                 "counts": "runtime item-name dispatch sites",
@@ -797,6 +888,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
                 "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
                 "retires_at": "3.9",
                 "pairs": list(report.uninterpreted),
+                "receipts": unserved_lane_block(),
             },
         },
         "exclusions": {
@@ -872,6 +964,7 @@ def check(
                 f"(committed-only={sorted(recorded_modules - fresh_modules)}, "
                 f"declared-only={sorted(fresh_modules - recorded_modules)})"
             )
+    failures.extend(_unserved_lane_failures(committed, fresh))
     failures.extend(_zero_policy_failures(committed, fresh))
     failures.extend(_compiled_walk_delta_failures(committed, fresh))
     failures.extend(_no_runtime_behavior_failures(committed, fresh))
