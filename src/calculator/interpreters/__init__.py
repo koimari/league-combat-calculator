@@ -60,6 +60,7 @@ from . import (
     resistance_shred,
     secondary_target,
     spellblade,
+    stat_derivation,
     sustain,
     threshold_defense,
 )
@@ -268,6 +269,14 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.PAIR_ENGINE,
     ): damage_routing.PAIR_INTERPRETER,
     (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
+    (
+        RuleFamily.STAT_DERIVATION,
+        EngineLane.PAIR_ENGINE,
+    ): stat_derivation.PAIR_INTERPRETER,
+    (
+        RuleFamily.STAT_DERIVATION,
+        EngineLane.STAT_RESOLVER,
+    ): stat_derivation.RESOLVER_INTERPRETER,
     (
         RuleFamily.ON_HIT_STRIKE,
         EngineLane.PAIR_ENGINE,

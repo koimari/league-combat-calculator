@@ -45,39 +45,43 @@ from .item_behavior import (
     AttackCooldownRefundRule,
     Attribution,
     Basis,
-    Compilability,
-    Compilable,
-    Comparison,
-    BonusTyping,
     BehaviorRule,
+    BonusTyping,
     BuildContext,
+    chain_rank,
+    ChainTargets,
     ChargedSplash,
     CombatStateRule,
+    Comparison,
+    Compilability,
+    Compilable,
     CooldownProcRule,
     CritDamageBonusRule,
-    DamageDeferralRule,
     CritOccurrence,
+    DamageDeferralRule,
     DamageFormula,
-    DEFENSE_FIELD_COMBINE,
     DamageThreshold,
+    DEFENSE_FIELD_COMBINE,
     DefenseExclusivity,
     DefenseField,
     DefenseMechanic,
     DefenseOption,
     DeltaAmpRule,
-    ExcludeTrigger,
-    ExecuteRule,
-    Fixed,
-    ForcedCritHeal,
-    ForcedCritRule,
-    ChainTargets,
+    DerivedStat,
     EmpoweredAutoBuffRule,
     EmpoweredHitRule,
     EnergizedCharge,
+    ExcludeTrigger,
+    ExecuteRule,
+    Fixed,
+    FlatStatGrantRule,
+    ForcedCritHeal,
+    ForcedCritRule,
     Isolation,
     LevelSteppedRate,
     LivePredicate,
     Magnitude,
+    ManaflowRule,
     ManaSpentHealRule,
     MeleeRangedSplit,
     NoFloor,
@@ -96,47 +100,54 @@ from .item_behavior import (
     PostMitigationHealRule,
     Probe,
     ProcTrigger,
-    Recipients,
-    RULE_FAMILY_COUNT,
     RampModel,
     RampPerSecond,
     RampPerStack,
     ReactiveRule,
     ReceiptOnly,
     ReceivedHealingRule,
+    Recipients,
     RegenerationRule,
     RepeatingStrikeRule,
     Resistance,
     ResistanceShredRule,
     ResourceDrainRule,
+    RULE_FAMILY_COUNT,
     RuleFamily,
     Scaling,
     SecondaryTargetRule,
     SelfShield,
     ShapedChargeRule,
-    ShieldBypassRule,
     ShieldAbsorbs,
+    ShieldBypassRule,
     SpellbladeRule,
+    StackedStatRule,
     StackGate,
     StackRamp,
+    StatAuraRule,
+    StatAvailability,
+    StatBasis,
+    StatConversionRule,
+    StatMultiplierRule,
     Subject,
     SustainStat,
     SustainStatRule,
-    Term,
     TargetBonusHealthScaled,
     TemporaryLethality,
+    Term,
     ThresholdDefenseRule,
+    ThresholdRegenRule,
     TimesMissingHealth,
     TimesValue,
     TriggerEvent,
     TriggerWindow,
     Typing,
     UltimateProcRule,
+    UltimateRefundRule,
+    validate_rule,
     WindowBoundary,
     WindowMerge,
     ZeroPolicy,
-    chain_rank,
-    validate_rule,
 )
 from .survival.actions import ActionKind
 from .value_ref import (
@@ -231,9 +242,10 @@ H4_SELF_REFERENTIAL_TAGS: frozenset[str] = frozenset(
 
 H4_TAG_REASONS: Mapping[str, str] = {
     "conditional_attack_speed": (
-        "dead: read nowhere in src/. Yun Tal Wildarrows' crit-gated attack "
-        "speed is a derived stat, so STAT_DERIVATION is where a rule for it "
-        "would land the day one is written"
+        "was dead — read nowhere in src/ — until the stat-derivation "
+        "migration declared Yun Tal Wildarrows' crit stacks and its "
+        "assumed-active attack speed as STAT_DERIVATION, which is the family "
+        "this tag always named. H4's decision on the tag stands"
     ),
     "shield_reduction": (
         "was dead — read nowhere in src/ — until 3.7 declared Serpent's Fang's "
@@ -248,8 +260,10 @@ H4_TAG_REASONS: Mapping[str, str] = {
         "kept is still H4's, the human's"
     ),
     "target_attack_speed_aura": (
-        "dead: read nowhere in src/. Frozen Heart's aura derives a stat on "
-        "everyone in range"
+        "was dead — read nowhere in src/ — until the stat-derivation "
+        "migration gave Winter's Caress a STAT_DERIVATION aura declaration, "
+        "which is the family this tag always named. H4's decision on the tag "
+        "stands"
     ),
     "defensive_start": (
         "was self-referential — read only by item_coverage's own claim while "
@@ -258,9 +272,10 @@ H4_TAG_REASONS: Mapping[str, str] = {
         "OPENING_DEFENSE declaration. H4's decision on the tag stands"
     ),
     "stat_conversion": (
-        "self-referential: read only by item_coverage's own claim, while the "
-        "behaviour is reached by item name in stats. The mechanic derives one "
-        "stat from another"
+        "was self-referential — read only by item_coverage's own claim while "
+        "the behaviour was reached by item name in item_effects' stat fold — "
+        "until the stat-derivation migration gave every entry carrying it a "
+        "STAT_DERIVATION declaration. H4's decision on the tag stands"
     ),
     "sustain": (
         "was self-referential — read only by item_coverage's own claim while "
@@ -378,28 +393,16 @@ UNDECLARED_DEFENSE_MECHANICS: Mapping[DefenseMechanic, str] = {
 # — an omission with no table to name it is the silence this phase removes.
 DEFENSE_UNMIGRATED_MECHANICS: Mapping[DefenseMechanic, str] = {}
 
-# The mechanics the passive-target model still runs as engine code, named by
-# the registry key that identifies the entry carrying them.  Both are live —
-# `participant_timeline._warmog_heart_tick_events` schedules the one and
-# `roster_composition.target_overrides` applies the other — and neither
-# compiles to a rule yet, so a target-lane answer folded only over rules would
-# report two modelled mechanics as "nothing here changes durability".  The key
-# and not the item name, and not the tag either: Warmog's Heart and Rabadon's
-# Deathcap share the `stat_conversion` tag and only the keys tell them apart,
-# which is the same discrimination :class:`DefenseShape` makes for a declared
-# defence.  Each entry dies with the slice that declares its mechanic.
-UNMIGRATED_TARGET_KEYS: Mapping[str, str] = {
-    "heart_max_health_ratio_per_tick": (
-        "Warmog's Heart is a live combat-state regeneration the participant "
-        "timeline schedules; its stat_conversion entry compiles to no rule "
-        "until stat_derivation is declared"
-    ),
-    "attack_speed_reduction": (
-        "Winter's Caress is a live enemy-only aura the roster composition "
-        "applies to the opposing swing schedule; its target_attack_speed_aura "
-        "entry compiles to no rule until stat_derivation is declared"
-    ),
-}
+# The mechanics the passive-target model runs as engine code rather than as a
+# rule, named by the registry key that identifies the entry carrying them.
+# Empty since the stat-derivation migration: Warmog's Heart is now a
+# ``ThresholdRegenRule`` and Winter's Caress a ``StatAuraRule``, so the target
+# lane folds over declarations alone and the two promises this table carried
+# are kept rather than restated.  Kept rather than deleted for the same reason
+# as :data:`DEFENSE_UNMIGRATED_MECHANICS`: the *shape* is what dates a future
+# refusal, and an omission with no table to name it is the silence this phase
+# removes.
+UNMIGRATED_TARGET_KEYS: Mapping[str, str] = {}
 
 # Which defences can only be priced from an *exactly timed* damage ledger,
 # and why each one needs the timestamps.  Every member reads its trigger out
@@ -1312,6 +1315,15 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         "spell_shield_ready": RuleFamily.COMBAT_STATE,
         "stasis_duration": RuleFamily.COMBAT_STATE,
         "reactive_shield_base": RuleFamily.REACTIVE,
+        # A stat derivation hung on an entry whose tag names a different
+        # family.  Muramana's Awe is filed under its on-hit record and three
+        # ultimate-haste grants under their proc records, and every one of
+        # them is folded into the stat block by
+        # ``item_effects.resolve_stat_effects`` — so without these two keys a
+        # live conversion would compile to nothing while its number kept
+        # moving builds.
+        "max_mana_to_ad_ratio": RuleFamily.STAT_DERIVATION,
+        "ultimate_haste": RuleFamily.STAT_DERIVATION,
     },
     "ALLY_ITEM_EFFECTS": {
         key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)
@@ -4617,6 +4629,618 @@ def _compile_reactive(
     return _compile_defense(family, owner, registry, entry)
 
 
+# ── stat derivation (3.7 residual) ────────────────────────────────────────
+#
+# Eight shapes the build's stat block is made of, told apart by the value
+# keys of the entry that carries them — the same device the defence, sustain
+# and ally families use, and for the same reason: four tags land in this
+# family and one of them (``stat_conversion``) covers eighteen entries whose
+# only common property is that they end up in the stat block.
+#
+# What this migration makes visible is ``availability``.  Three of these
+# grants are conditional buffs the resolver folds in *whole* because it has
+# no event to arm them from — ``item_effects.passive_attack_speed_bonus``
+# says so in a docstring and nothing checked it — and five more exist only
+# when the request's item options say so.  Those are now fields.
+
+
+class StatConversionSchema(NamedTuple):
+    """What one conversion key means: from which stat, into which, and how.
+
+    ``ranged_key`` is the second half of a rate the registry pays melee and
+    ranged holders differently; ``basis_unit_key`` the size of one unit of
+    the basis where the rate is stated per unit rather than per point; and
+    ``flat_base_key`` the part of the grant that does not scale.  Each is
+    ``None`` where the conversion genuinely has none, which is a different
+    claim from a key that resolves to zero.
+    """
+
+    basis: StatBasis
+    granted: DerivedStat
+    ranged_key: str | None
+    basis_unit_key: str | None
+    flat_base_key: str | None
+
+
+STAT_CONVERSIONS: Mapping[str, StatConversionSchema] = {
+    "bonus_mana_to_ap_ratio": StatConversionSchema(
+        StatBasis.BONUS_MANA, DerivedStat.ABILITY_POWER, None, None, None
+    ),
+    "max_mana_to_ad_ratio": StatConversionSchema(
+        StatBasis.MAX_MANA, DerivedStat.ATTACK_DAMAGE, None, None, None
+    ),
+    "bonus_mana_to_health_ratio": StatConversionSchema(
+        StatBasis.BONUS_MANA, DerivedStat.HEALTH, None, None, None
+    ),
+    "bonus_mana_to_heal_shield_power_ratio": StatConversionSchema(
+        StatBasis.BONUS_MANA, DerivedStat.HEAL_AND_SHIELD_POWER, None, None, None
+    ),
+    "bonus_health_to_ad_ratio": StatConversionSchema(
+        StatBasis.BONUS_HEALTH, DerivedStat.ATTACK_DAMAGE, None, None, None
+    ),
+    "base_ad_to_bonus_ad_ratio": StatConversionSchema(
+        StatBasis.BASE_ATTACK_DAMAGE, DerivedStat.ATTACK_DAMAGE, None, None, None
+    ),
+    "adaptive_force_per_total_move_speed": StatConversionSchema(
+        StatBasis.TOTAL_MOVE_SPEED, DerivedStat.ADAPTIVE_FORCE, None, None, None
+    ),
+    "ap_per_mana_regen_unit": StatConversionSchema(
+        StatBasis.BONUS_MANA_REGEN_PERCENT,
+        DerivedStat.ABILITY_POWER,
+        None,
+        "mana_regen_threshold_percent",
+        None,
+    ),
+    "famine_bonus_ad_to_ability_haste_melee": StatConversionSchema(
+        StatBasis.BONUS_ATTACK_DAMAGE,
+        DerivedStat.ABILITY_HASTE,
+        "famine_bonus_ad_to_ability_haste_ranged",
+        None,
+        "famine_base_ability_haste",
+    ),
+}
+
+# Which keys state a share by which a total stat is increased, and of what.
+STAT_MULTIPLIERS: Mapping[str, DerivedStat] = {
+    "ap_percent_increase": DerivedStat.ABILITY_POWER,
+    "item_bonus_health_ratio": DerivedStat.HEALTH,
+}
+
+# The charge ledger, whole or not at all, plus the optional transform pair.
+MANAFLOW_KEYS = (
+    "manaflow_charge_interval",
+    "manaflow_bonus_mana_per_trigger",
+    "manaflow_bonus_mana_per_champion",
+    "manaflow_bonus_mana_max",
+)
+MANAFLOW_TRANSFORM_KEYS = ("manaflow_max_charges", "manaflow_transform_bonus_mana")
+
+
+class StackedStatSchema(NamedTuple):
+    """One per-stack key's meaning, with both ceilings it may declare."""
+
+    granted: DerivedStat
+    ranged_key: str | None
+    max_stacks_key: str | None
+    max_stacks_ranged_key: str | None
+    cap_key: str | None
+    flat_base_key: str | None
+    duration_key: str | None
+    level_gain_key: str | None
+    availability: StatAvailability
+
+
+STACKED_STATS: Mapping[str, StackedStatSchema] = {
+    "timeless_bonus_ap_per_stack": StackedStatSchema(
+        DerivedStat.ABILITY_POWER,
+        None,
+        "timeless_max_stacks",
+        None,
+        None,
+        None,
+        None,
+        "timeless_level_gain_at_max",
+        StatAvailability.BUILD_OPTION,
+    ),
+    "timeless_bonus_health_per_stack": StackedStatSchema(
+        DerivedStat.HEALTH,
+        None,
+        "timeless_max_stacks",
+        None,
+        None,
+        None,
+        None,
+        "timeless_level_gain_at_max",
+        StatAvailability.BUILD_OPTION,
+    ),
+    "timeless_bonus_mana_per_stack": StackedStatSchema(
+        DerivedStat.MANA,
+        None,
+        "timeless_max_stacks",
+        None,
+        None,
+        None,
+        None,
+        "timeless_level_gain_at_max",
+        StatAvailability.BUILD_OPTION,
+    ),
+    "eminence_ad_per_stack": StackedStatSchema(
+        DerivedStat.ATTACK_DAMAGE,
+        None,
+        None,
+        None,
+        None,
+        "eminence_base_ad",
+        "eminence_duration",
+        None,
+        StatAvailability.BUILD_OPTION,
+    ),
+    "crit_chance_per_stack_melee": StackedStatSchema(
+        DerivedStat.CRITICAL_STRIKE_CHANCE,
+        "crit_chance_per_stack_ranged",
+        "crit_stack_max_melee",
+        "crit_stack_max_ranged",
+        "crit_chance_cap",
+        None,
+        None,
+        None,
+        StatAvailability.BUILD_OPTION,
+    ),
+}
+
+
+class FlatStatGrantSchema(NamedTuple):
+    """One flat grant's meaning, including whether anything arms it."""
+
+    granted: DerivedStat
+    ranged_key: str | None
+    duration_key: str | None
+    cooldown_key: str | None
+    window_key: str | None
+    availability: StatAvailability
+
+
+FLAT_STAT_GRANTS: Mapping[str, FlatStatGrantSchema] = {
+    "ultimate_haste": FlatStatGrantSchema(
+        DerivedStat.ULTIMATE_HASTE, None, None, None, None, StatAvailability.ALWAYS
+    ),
+    # Two items carry this pair and the resolver folds both in whole: one
+    # grants it from an ultimate cast and the other to everyone nearby.  The
+    # ally-side half of the second is its own declaration; this is the
+    # holder-side half both of them have.
+    "bonus_attack_speed_melee": FlatStatGrantSchema(
+        DerivedStat.ATTACK_SPEED_PERCENT,
+        "bonus_attack_speed_ranged",
+        "duration",
+        "cooldown",
+        None,
+        StatAvailability.ASSUMED_ACTIVE,
+    ),
+    "bonus_attack_speed_percent": FlatStatGrantSchema(
+        DerivedStat.ATTACK_SPEED_PERCENT,
+        None,
+        "duration",
+        "cooldown",
+        None,
+        StatAvailability.ASSUMED_ACTIVE,
+    ),
+    "rapids_bonus_ap": FlatStatGrantSchema(
+        DerivedStat.ABILITY_POWER,
+        None,
+        None,
+        None,
+        None,
+        StatAvailability.ASSUMED_ACTIVE,
+    ),
+    "feast_omnivamp_percent": FlatStatGrantSchema(
+        DerivedStat.OMNIVAMP_PERCENT,
+        None,
+        "feast_duration",
+        None,
+        "feast_trigger_window",
+        StatAvailability.BUILD_OPTION,
+    ),
+}
+
+# The remaining three shapes, each carried by exactly one entry today and
+# each keyed by its own signature key rather than by the item that has it.
+STAT_AURA_KEYS = ("attack_speed_reduction", "range_units")
+THRESHOLD_REGEN_KEYS = (
+    "heart_bonus_health_threshold",
+    "heart_max_health_ratio_per_tick",
+    "heart_tick_interval",
+    "heart_champion_damage_cooldown",
+    "heart_nonchampion_damage_cooldown",
+)
+ULTIMATE_REFUND_KEYS = (
+    "ultimate_refund_base_ratio",
+    "ultimate_refund_per_lethality_ratio",
+    "ultimate_refund_trigger_window",
+)
+
+# Entries this family's tags claim whose *whole* mechanic another family
+# already declares, keyed by the signature key that proves it.  The same
+# device the defence table uses for Everlasting: a second declaration would
+# be two homes for one mechanic, and an entry that silently compiled nothing
+# would be indistinguishable from one nobody had looked at.
+STAT_DERIVATION_DECLARED_ELSEWHERE: Mapping[str, str] = {
+    "rage_duration": (
+        "declared as the ally packet that grants the move speed; Rage is a "
+        "movement buff the packet ledger carries and not a number the stat "
+        "block holds"
+    ),
+    "support_quest_threshold": (
+        "declared as the ally packet that pays the shared gold and the ward "
+        "charges; neither is a stat the build's block holds"
+    ),
+    "health_threshold": (
+        "declared as the threshold defence the resolver builds, together with "
+        "the omnivamp its own Lifeline grants"
+    ),
+}
+
+# Mechanics carried by an entry this family declares, which belong to another
+# family and are therefore *not* declared here — each dated, so a refusal
+# that outlives its slice is visible rather than absorbed.  The same record
+# ``DELTA_AMP_UNMIGRATED_TAGS`` keeps for a partly-migrated family, at the
+# granularity a mechanic-on-a-declared-entry needs.
+STAT_DERIVATION_DEFERRED_MECHANICS: Mapping[str, str] = {
+    "helping_hand_minion_damage": (
+        "3.9 residue — Helping Hand is flat damage against minions, an "
+        "on_hit_strike shape; declaring it here would be another family's "
+        "work under this slice's zero-diff claim"
+    ),
+    "retribution_missing_health_min": (
+        "3.9 residue — Retribution scales damage dealt by missing health, "
+        "which is a delta_amp magnitude and not a stat the block holds"
+    ),
+    "attack_refund_base": (
+        "3.9 residue — Flurry refunds a share of the attack's own cooldown "
+        "per crit, which is the crit_profile family's cooldown-refund shape"
+    ),
+}
+
+_SOURCED_STAT_ZERO = ZeroPolicy(
+    Disposition.MEASURED,
+    "every rate is a sourced registry number; a zero means the registry "
+    "states the derivation grants nothing, which the rule read rather than "
+    "defaulted",
+)
+
+
+def _stat_rule(
+    owner: str,
+    registry: ValueRegistry,
+    mechanic: str,
+    payload: Any,
+) -> BehaviorRule:
+    """One stat-derivation declaration, with the citation its entry resolves to.
+
+    Every rule of the family is ``Compilable``: the stat block is resolved
+    before any damage exists and the compiled kernel reads the resolved
+    block, so there is nothing here for it to fail to represent.
+    """
+    return BehaviorRule(
+        family=RuleFamily.STAT_DERIVATION,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.{mechanic}",
+        payload=payload,
+        compilability=Compilable(),
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=_SOURCED_STAT_ZERO,
+    )
+
+
+def _split_or_ref(
+    owner: str,
+    registry: ValueRegistry,
+    melee_key: str,
+    ranged_key: str | None,
+) -> ValueRef | MeleeRangedSplit:
+    """One rate, as a melee/ranged pair where the registry states two."""
+    if ranged_key is None:
+        return ValueRef(registry, owner, melee_key)
+    return MeleeRangedSplit(
+        melee=ValueRef(registry, owner, melee_key),
+        ranged=ValueRef(registry, owner, ranged_key),
+    )
+
+
+def _stat_conversion_rules(
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+    schema: frozenset[str],
+) -> list[BehaviorRule]:
+    """Every stat one entry derives from another, in table order."""
+    return [
+        _stat_rule(
+            owner,
+            registry,
+            f"{spec.granted.value}_from_{spec.basis.value}",
+            StatConversionRule(
+                basis=spec.basis,
+                granted=spec.granted,
+                ratio=_split_or_ref(owner, registry, key, spec.ranged_key),
+                basis_unit=(
+                    None
+                    if spec.basis_unit_key is None
+                    else ValueRef(registry, owner, spec.basis_unit_key)
+                ),
+                flat_base=(
+                    None
+                    if spec.flat_base_key is None
+                    else ValueRef(registry, owner, spec.flat_base_key)
+                ),
+                availability=StatAvailability.ALWAYS,
+                subject=Subject.HOLDER,
+            ),
+        )
+        for key, spec in STAT_CONVERSIONS.items()
+        if key in schema
+    ]
+
+
+def _stacked_stat_rules(
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+    schema: frozenset[str],
+) -> list[BehaviorRule]:
+    """Every stat one entry grows per stack, in table order.
+
+    ``grants_level_at_max`` is the one structural flag in the family and is
+    read off the entry as a :class:`Const` rather than a :class:`ValueRef`:
+    the registry states it as a boolean, and a reference into a non-numeric
+    key raises.  It is still live — the rules are recompiled from the
+    registry on every call, so a refresh moves it like everything else.
+    """
+    return [
+        _stat_rule(
+            owner,
+            registry,
+            f"{spec.granted.value}_per_stack",
+            StackedStatRule(
+                granted=spec.granted,
+                per_stack=_split_or_ref(owner, registry, key, spec.ranged_key),
+                max_stacks=(
+                    None
+                    if spec.max_stacks_key is None
+                    else _split_or_ref(
+                        owner, registry, spec.max_stacks_key, spec.max_stacks_ranged_key
+                    )
+                ),
+                cap=(
+                    None
+                    if spec.cap_key is None
+                    else ValueRef(registry, owner, spec.cap_key)
+                ),
+                flat_base=(
+                    None
+                    if spec.flat_base_key is None
+                    else ValueRef(registry, owner, spec.flat_base_key)
+                ),
+                duration=(
+                    None
+                    if spec.duration_key is None
+                    else ValueRef(registry, owner, spec.duration_key)
+                ),
+                grants_level_at_max=(
+                    None
+                    if spec.level_gain_key is None
+                    else Const(
+                        1.0 if bool(entry.get(spec.level_gain_key)) else 0.0, "flag"
+                    )
+                ),
+                availability=spec.availability,
+                subject=Subject.HOLDER,
+            ),
+        )
+        for key, spec in STACKED_STATS.items()
+        if key in schema
+    ]
+
+
+def _flat_stat_grant_rules(
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+    schema: frozenset[str],
+) -> list[BehaviorRule]:
+    """Every flat stat one entry grants, in table order."""
+    return [
+        _stat_rule(
+            owner,
+            registry,
+            f"{spec.granted.value}_grant",
+            FlatStatGrantRule(
+                granted=spec.granted,
+                amount=_split_or_ref(owner, registry, key, spec.ranged_key),
+                duration=(
+                    None
+                    if spec.duration_key is None
+                    else _optional_ref(owner, registry, entry, spec.duration_key)
+                ),
+                cooldown=(
+                    None
+                    if spec.cooldown_key is None
+                    else _optional_ref(owner, registry, entry, spec.cooldown_key)
+                ),
+                trigger_window=(
+                    None
+                    if spec.window_key is None
+                    else ValueRef(registry, owner, spec.window_key)
+                ),
+                availability=spec.availability,
+                subject=Subject.HOLDER,
+            ),
+        )
+        for key, spec in FLAT_STAT_GRANTS.items()
+        if key in schema
+    ]
+
+
+def _manaflow_rule(
+    owner: str, registry: ValueRegistry, schema: frozenset[str]
+) -> BehaviorRule:
+    """The charge ledger, with its transform pair declared whole or absent."""
+    interval, per_trigger, per_champion, ceiling = MANAFLOW_KEYS
+    missing = sorted(key for key in MANAFLOW_KEYS if key not in schema)
+    if missing:
+        raise BehaviorCatalogError(
+            f"{registry}[{owner!r}] carries a manaflow ledger missing {missing}; "
+            "a charge ledger is claimed whole or not at all, because half of "
+            "one is a parse that dropped a key rather than a weaker item"
+        )
+    charges_key, transform_key = MANAFLOW_TRANSFORM_KEYS
+    return _stat_rule(
+        owner,
+        registry,
+        "mana_charge",
+        ManaflowRule(
+            granted=DerivedStat.MANA,
+            charge_interval=ValueRef(registry, owner, interval),
+            bonus_mana_per_trigger=ValueRef(registry, owner, per_trigger),
+            bonus_mana_per_champion=ValueRef(registry, owner, per_champion),
+            bonus_mana_max=ValueRef(registry, owner, ceiling),
+            max_charges=(
+                ValueRef(registry, owner, charges_key)
+                if charges_key in schema
+                else None
+            ),
+            transform_bonus_mana=(
+                ValueRef(registry, owner, transform_key)
+                if transform_key in schema
+                else None
+            ),
+            availability=StatAvailability.BUILD_OPTION,
+            subject=Subject.HOLDER,
+        ),
+    )
+
+
+def _keyed_stat_rules(
+    owner: str, registry: ValueRegistry, schema: frozenset[str]
+) -> list[BehaviorRule]:
+    """The three single-carrier shapes, each claimed by its own key group."""
+    rules: list[BehaviorRule] = []
+    if MANAFLOW_KEYS[0] in schema:
+        rules.append(_manaflow_rule(owner, registry, schema))
+    reduction_key, radius_key = STAT_AURA_KEYS
+    if reduction_key in schema:
+        rules.append(
+            _stat_rule(
+                owner,
+                registry,
+                f"{DerivedStat.ATTACK_SPEED_PERCENT.value}_aura",
+                StatAuraRule(
+                    granted=DerivedStat.ATTACK_SPEED_PERCENT,
+                    reduction=ValueRef(registry, owner, reduction_key),
+                    radius=ValueRef(registry, owner, radius_key),
+                    availability=StatAvailability.ALWAYS,
+                    subject=Subject.TARGET,
+                ),
+            )
+        )
+    if THRESHOLD_REGEN_KEYS[1] in schema:
+        threshold, share, tick, champion_cooldown, other_cooldown = THRESHOLD_REGEN_KEYS
+        rules.append(
+            _stat_rule(
+                owner,
+                registry,
+                "threshold_regeneration",
+                ThresholdRegenRule(
+                    granted=DerivedStat.HEALTH_REGEN,
+                    bonus_health_threshold=ValueRef(registry, owner, threshold),
+                    share_of_max_health=ValueRef(registry, owner, share),
+                    tick_interval=ValueRef(registry, owner, tick),
+                    champion_damage_cooldown=ValueRef(
+                        registry, owner, champion_cooldown
+                    ),
+                    nonchampion_damage_cooldown=ValueRef(
+                        registry, owner, other_cooldown
+                    ),
+                    availability=StatAvailability.ALWAYS,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    if ULTIMATE_REFUND_KEYS[0] in schema:
+        base, per_lethality, window = ULTIMATE_REFUND_KEYS
+        rules.append(
+            _stat_rule(
+                owner,
+                registry,
+                "ultimate_refund",
+                UltimateRefundRule(
+                    base_ratio=ValueRef(registry, owner, base),
+                    per_lethality_ratio=ValueRef(registry, owner, per_lethality),
+                    trigger_window=ValueRef(registry, owner, window),
+                    availability=StatAvailability.ALWAYS,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    return rules
+
+
+def _compile_stat_derivation(
+    family: RuleFamily,
+    owner: str,
+    registry: ValueRegistry,
+    entry: Mapping[str, Any],
+) -> tuple[BehaviorRule, ...]:
+    """Compile every stat one registry entry derives, grants or reduces.
+
+    A fan-out rather than a ladder: one entry routinely carries two or three
+    of these — Archangel's converts bonus mana *and* runs a charge ledger,
+    and Warmog's multiplies bonus health *and* regenerates from it.  An entry
+    this family's tags claim that compiles nothing is a stop unless
+    :data:`STAT_DERIVATION_DECLARED_ELSEWHERE` says which family already owns
+    its whole mechanic, so "this item derives no stat" is never something the
+    compiler concludes by silence.
+    """
+    del family
+    schema = _schema_keys(owner, registry, entry)
+    rules = _stat_conversion_rules(owner, registry, entry, schema)
+    rules.extend(
+        _stat_rule(
+            owner,
+            registry,
+            f"{granted.value}_multiplier",
+            StatMultiplierRule(
+                granted=granted,
+                share=ValueRef(registry, owner, key),
+                availability=StatAvailability.ALWAYS,
+                subject=Subject.HOLDER,
+            ),
+        )
+        for key, granted in STAT_MULTIPLIERS.items()
+        if key in schema
+    )
+    rules.extend(_stacked_stat_rules(owner, registry, entry, schema))
+    rules.extend(_flat_stat_grant_rules(owner, registry, entry, schema))
+    rules.extend(_keyed_stat_rules(owner, registry, schema))
+    if not rules:
+        elsewhere = sorted(
+            reason
+            for key, reason in STAT_DERIVATION_DECLARED_ELSEWHERE.items()
+            if key in schema
+        )
+        if not elsewhere:
+            raise BehaviorCatalogError(
+                f"{registry}[{owner!r}] is tagged into the stat-derivation "
+                "family and carries none of its signature keys; a derivation "
+                "that derives nothing is a parse that failed, not an item with "
+                "no behaviour"
+            )
+    for rule in rules:
+        validate_rule(rule)
+    return tuple(rules)
+
+
 def _unmigrated(
     family: RuleFamily,
     owner: str,
@@ -4659,14 +5283,16 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.COMBAT_STATE: _compile_combat_state,
     RuleFamily.REACTIVE: _compile_reactive,
     RuleFamily.SUSTAIN: _compile_sustain,
-    RuleFamily.STAT_DERIVATION: _unmigrated,
+    RuleFamily.STAT_DERIVATION: _compile_stat_derivation,
     RuleFamily.ALLY_PACKET: _compile_ally_packet,
 }
 
 # Which numbered slice of this phase replaces each family's stub compiler.
-UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {
-    RuleFamily.STAT_DERIVATION: "3.7",
-}
+# Empty since the stat-derivation migration: every family compiles.  Kept
+# rather than deleted because the *shape* is what dates a future refusal —
+# an omission with no table to name it is the silence this phase removes,
+# and :func:`validate_catalog` asserts it names exactly the stubbed families.
+UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {}
 
 
 # ── compilation ───────────────────────────────────────────────────────────

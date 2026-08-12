@@ -1297,7 +1297,14 @@ def test_the_live_survey_reports_only_real_and_unimported_modules() -> None:
 CLASSIFICATION_RECEIPT = (
     ROOT / "docs" / "receipts" / "item-coverage-classification.json"
 )
-EXPECTED_COVERAGE_DIFF = ROOT / "docs" / "receipts" / "expected-coverage-diff-3.8.json"
+# Every slice's allowlist, not one slice's: R-36 makes the file per slice, so
+# the gate reads the union of the live permission blocks.  Found by glob and
+# never listed, so a slice that adds a receipt without touching this file is
+# still gated, and a re-capture that empties a block tightens the gate on the
+# commit that lands it.
+EXPECTED_COVERAGE_DIFFS = sorted(
+    (ROOT / "docs" / "receipts").glob("expected-coverage-diff-*.json")
+)
 
 # The two statuses that refuse rather than classify, read from the module that
 # defines them so the allowlist's eligibility derivation cannot drift from the
@@ -1324,12 +1331,13 @@ _REASON_COLLISIONS: frozenset[str] = frozenset()
 
 # The shadowed set, pinned as a **set** and never as a count: two independent
 # reproductions of it once disagreed by one, and a wrong integer is a second
-# thing to maintain.  Twenty-nine claims are filed against a container an
-# earlier rung already decided; four rungs are live code no cached item
-# enters.  Shrinking it is a real event — it means the chain reordered.
+# thing to maintain.  Three rungs are live code no cached item enters, and
+# **no item claim is shadowed at all** since the stat-derivation migration took
+# Frozen Heart out of the reviewed-nothing container: no reviewed sentence in
+# this tree is now dead prose behind an earlier rung.  Shrinking it is a real
+# event — it means the chain reordered.
 SHADOWED_CLAIMS: frozenset[str] = frozenset(
     {
-        "item:Frozen Heart@attacker",
         "rule:attacker.unreviewed_fixture@attacker",
         "rule:attacker.unserved_declared_lane@attacker",
         "rule:target.unreviewed_fixture@target",
@@ -1456,26 +1464,32 @@ def test_the_receipt_derives_the_same_shadowed_items_independently() -> None:
     )
 
 
-def test_a_shadowed_item_is_shadowed_for_a_reason_that_names_both_rungs() -> None:
+def test_a_shadowed_claim_is_shadowed_for_a_reason_that_names_both_rungs() -> None:
     """The record is a receipt, not a flag: it says what decides instead.
 
-    The exemplar used to be Banshee's Veil, one of the thirty-four entries
-    whose membership the re-review retired.  Frozen Heart is the one left: it
-    holds a registry entry the state rung answers from, so the reviewed-nothing
-    container never speaks for it — and unlike the thirty-four, its entry
-    compiles to no rule, so the reviewed sentence beside it is still true.
+    The exemplar used to be Banshee's Veil, then Frozen Heart — and neither is
+    here now, because the stat-derivation migration gave Winter's Caress a
+    declaration and the reviewed-nothing container stopped claiming an item
+    whose entry compiles a rule.  The property is asserted over whatever the
+    report holds rather than over one name: every shadowed claim names the
+    rung that decides instead of it, and **no item claim is shadowed at all**,
+    which is the stronger statement the exemplar was standing in for.
     """
     report = coverage_resolver.shadow_report(
         PRECEDENCE, cached_items(), ctx=live_context()
     )
-    heart = next(
-        shadowed
+    assert report
+    for shadowed in report:
+        assert shadowed.rule_id
+        assert shadowed.reason.strip()
+        # A rung nobody reaches names no outranking rung — nothing decides
+        # *instead* of it, it is simply unreachable — and its reason says so.
+        assert shadowed.outranked_by or "no cached item reaches" in shadowed.reason
+    assert [
+        shadowed.claim_key
         for shadowed in report
-        if shadowed.claim_key == "item:Frozen Heart@attacker"
-    )
-    assert heart.rule_id == "attacker.no_runtime_behavior"
-    assert heart.outranked_by == "attacker.declared_state"
-    assert "before" in heart.reason
+        if shadowed.claim_key.startswith("item:")
+    ] == []
 
 
 # The eight registries the collapse retired.  This is the one place in the tree
@@ -1643,9 +1657,14 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
     # semantic commit (R-32, R-36, D-97).  Every moved leaf must be in the
     # allowlist and the allowlist must hold no leaf that did not move: an
     # entry for a key that stopped moving is a stale permission.
-    allowlist = json.loads(EXPECTED_COVERAGE_DIFF.read_text(encoding="utf-8"))
+    assert EXPECTED_COVERAGE_DIFFS
+    allowlists = [
+        json.loads(path.read_text(encoding="utf-8")) for path in EXPECTED_COVERAGE_DIFFS
+    ]
     permitted: set[str] = set()
-    for lane_status, block in allowlist["status_moves"].items():
+    for lane_status, block in (
+        item for allowlist in allowlists for item in allowlist["status_moves"].items()
+    ):
         lane, move = lane_status.split(":")
         before, after = move.split("->")
         # Eligibility and the issue refs beside it are *functions* of the
@@ -1663,6 +1682,7 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
         }
     permitted |= {
         f"records.{lane}.{name}.reason"
+        for allowlist in allowlists
         for lane in ("attacker", "target")
         for name in allowlist["reason_moves"]["items"]
     }
@@ -1673,8 +1693,8 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
     # receipt is re-captured, exactly as the coupled-golden allowlist does.
     # Equality here would make the re-capture commit red by construction.
     assert moved_paths - permitted == set(), "a coverage record moved unlisted"
-    assert len(moved) <= allowlist["total_leaves"]
-    assert allowlist["unclassified"] == []
+    assert len(moved) <= sum(allowlist["total_leaves"] for allowlist in allowlists)
+    assert all(allowlist["unclassified"] == [] for allowlist in allowlists)
 
 
 def test_the_capture_gate_names_the_record_that_moved() -> None:
@@ -1750,7 +1770,7 @@ def _audit_entry(item: str) -> dict:
     )
 
 
-# The five rungs whose membership is recomputed from ``data/`` on every call.
+# The rungs whose membership is recomputed from ``data/`` on every call.
 # They are the reason a claim's subject may be a rule at all: nobody can
 # enumerate them at authoring time, so the claim declares the predicate and the
 # resolver enumerates the population and demands every member be backed.
@@ -1766,7 +1786,6 @@ _DYNAMIC_RULES: frozenset[str] = frozenset(
         "target.unreviewed_fixture",
         "target.certified_declared_defence",
         "target.declared_durability",
-        "target.unmigrated_durability",
     }
 )
 

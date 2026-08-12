@@ -1466,6 +1466,244 @@ class ReceivedHealingRule:
     values: tuple[AnyValueRef, ...]
 
 
+# ── stat derivation ───────────────────────────────────────────────────────
+#
+# Eight shapes that all answer one question — what does this item put in the
+# build's stat block, and where does the number come from — and share no
+# arithmetic.  A stat derived from another stat by a sourced ratio, a
+# percentage multiplier on a total, the mana a charge ledger accrues, a stat
+# that grows per stack, a flat grant that is conditional on something the
+# resolver cannot see, an aura that reduces a stat on the enemy, a
+# regeneration a bonus-health threshold unlocks, and an ultimate cooldown
+# refund bought with lethality.
+#
+# They are one family because they are all resolved *before any damage
+# exists*: the stat resolver folds them into the block every engine then
+# reads, which is why this family's lanes are the resolver and the pair
+# engine and not either walk.
+
+
+class DerivedStat(Enum):
+    """The stat a derivation produces.
+
+    Named after the field of the build's stat block it feeds, so a reader
+    can follow a declaration to the number it moves without a translation
+    table in between.
+    """
+
+    ABILITY_POWER = "ability_power"
+    ATTACK_DAMAGE = "attack_damage"
+    HEALTH = "health"
+    HEALTH_REGEN = "health_regen"
+    MANA = "mana"
+    HEAL_AND_SHIELD_POWER = "heal_and_shield_power"
+    ADAPTIVE_FORCE = "adaptive_force"
+    ABILITY_HASTE = "ability_haste"
+    ULTIMATE_HASTE = "ultimate_haste"
+    ATTACK_SPEED_PERCENT = "attack_speed_percent"
+    CRITICAL_STRIKE_CHANCE = "critical_strike_chance"
+    OMNIVAMP_PERCENT = "omnivamp_percent"
+
+
+class StatBasis(Enum):
+    """The stat a conversion reads.
+
+    Closed, and deliberately finer than :class:`DerivedStat`: a conversion
+    that read "mana" would not say whether it means the bonus mana Awe
+    converts or the maximum mana Muramana does, and those two are different
+    numbers on every build that owns a mana item.
+    """
+
+    BONUS_MANA = "bonus_mana"
+    MAX_MANA = "max_mana"
+    BONUS_HEALTH = "bonus_health"
+    BASE_ATTACK_DAMAGE = "base_attack_damage"
+    BONUS_ATTACK_DAMAGE = "bonus_attack_damage"
+    BONUS_MANA_REGEN_PERCENT = "bonus_mana_regen_percent"
+    TOTAL_MOVE_SPEED = "total_move_speed"
+
+
+class StatAvailability(Enum):
+    """When a granted stat is in the block the engines read.
+
+    The family's honesty axis, and the reason this migration is worth
+    making: three of these grants are conditional buffs that the stat
+    resolver folds in **whole**, because it has no event to arm them from —
+    ``item_effects.passive_attack_speed_bonus`` calls them "assumed-active"
+    in a docstring, and a docstring is exactly the kind of claim this
+    campaign converts into a field.  Two more exist only when the request's
+    item options say the window is open, which is a different thing again
+    from an unconditional grant.
+    """
+
+    ALWAYS = "always"
+    ASSUMED_ACTIVE = "assumed_active"
+    BUILD_OPTION = "build_option"
+
+
+@dataclass(frozen=True, slots=True)
+class StatConversionRule:
+    """One stat derived from another by a sourced ratio.
+
+    ``basis_unit`` is the size of one unit of the basis where the registry
+    states the rate per unit rather than per point — Dawncore pays its AP per
+    100% of base mana regeneration, and folding that 100 into the ratio would
+    make a patch that changed the unit unreadable.  ``flat_base`` is the part
+    of the grant that does not scale at all.  Both are declared absences
+    rather than zeros where the conversion has neither.
+    """
+
+    basis: StatBasis
+    granted: DerivedStat
+    ratio: AnyValueRef | MeleeRangedSplit
+    basis_unit: AnyValueRef | None
+    flat_base: AnyValueRef | None
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class StatMultiplierRule:
+    """A sourced share by which a total stat is increased.
+
+    Distinct from a conversion because the basis *is* the granted stat: what
+    Rabadon's does to ability power cannot be said as "so much AP per unit of
+    something else" without inventing a basis the item does not have.
+    """
+
+    granted: DerivedStat
+    share: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ManaflowRule:
+    """The charge ledger that accrues permanent bonus mana.
+
+    Five items carry it and two of them stop there; the other three also
+    transform at a maximum, which is why ``max_charges`` and
+    ``transform_bonus_mana`` are one optional pair and not two independent
+    references.  A record carrying one of them and not the other is a broken
+    parse, refused at compile time rather than declared as a weaker ledger.
+    """
+
+    granted: DerivedStat
+    charge_interval: AnyValueRef
+    bonus_mana_per_trigger: AnyValueRef
+    bonus_mana_per_champion: AnyValueRef
+    bonus_mana_max: AnyValueRef
+    max_charges: AnyValueRef | None
+    transform_bonus_mana: AnyValueRef | None
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class StackedStatRule:
+    """A stat that grows per stack, with the ceiling the registry states.
+
+    ``max_stacks`` and ``cap`` are two different ceilings and both exist:
+    Yun Tal's crit conversion is bounded by a stack count *and* by a share of
+    critical strike chance, and a declaration carrying only one of them would
+    over-pay every ranged holder.  ``flat_base`` is the part granted at zero
+    stacks and ``duration`` the window a stack survives, both declared
+    absences where the mechanic has neither.
+    """
+
+    granted: DerivedStat
+    per_stack: AnyValueRef | MeleeRangedSplit
+    max_stacks: AnyValueRef | MeleeRangedSplit | None
+    cap: AnyValueRef | None
+    flat_base: AnyValueRef | None
+    duration: AnyValueRef | None
+    grants_level_at_max: AnyValueRef | None
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class FlatStatGrantRule:
+    """A sourced amount of one stat, granted whole.
+
+    The shape whose ``availability`` carries the weight: the same record
+    describes Hexplate's unconditional ultimate haste and the attack speed
+    the resolver folds in on an assumption, and the field is what keeps
+    those two apart in a payload that is otherwise identical.
+    """
+
+    granted: DerivedStat
+    amount: AnyValueRef | MeleeRangedSplit
+    duration: AnyValueRef | None
+    cooldown: AnyValueRef | None
+    trigger_window: AnyValueRef | None
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class StatAuraRule:
+    """A stat reduced on everyone inside a sourced radius.
+
+    The one member of the family whose subject is not the holder, and the
+    reason ``subject`` is a field rather than an assumption: the number lands
+    on the enemy and the *benefit* lands on the holder, which is what makes
+    it a durability mechanic on the target lane.
+    """
+
+    granted: DerivedStat
+    reduction: AnyValueRef
+    radius: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ThresholdRegenRule:
+    """A regeneration a bonus-health threshold unlocks and damage suspends.
+
+    Five references because the mechanic answers five questions: how much
+    bonus health arms it, what share of maximum health a tick pays, how often
+    it ticks, and how long champion and non-champion damage hold it shut.
+    Two cooldowns and not one: they are different numbers and a single
+    "damage cooldown" would silently pick one.
+    """
+
+    granted: DerivedStat
+    bonus_health_threshold: AnyValueRef
+    share_of_max_health: AnyValueRef
+    tick_interval: AnyValueRef
+    champion_damage_cooldown: AnyValueRef
+    nonchampion_damage_cooldown: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class UltimateRefundRule:
+    """A share of the ultimate's cooldown refunded, bought with lethality.
+
+    A derived stat rather than a proc: the number it produces is a property
+    of the build's lethality, resolved once before the fight, and the window
+    is the takedown window the refund is paid inside.
+    """
+
+    base_ratio: AnyValueRef
+    per_lethality_ratio: AnyValueRef
+    trigger_window: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
+# Which granted stats make an item's holder harder to kill.  Read by
+# ``item_coverage`` to decide whether a stat derivation belongs on the
+# passive-target lane, so "does this change durability" is answered by the
+# declaration rather than by an item name.
+DURABILITY_STATS: frozenset[DerivedStat] = frozenset(
+    {DerivedStat.HEALTH, DerivedStat.HEALTH_REGEN}
+)
+
+
 # ── defence ───────────────────────────────────────────────────────────────
 
 
@@ -2006,6 +2244,14 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ManaSpentHealRule: RuleFamily.SUSTAIN,
     RegenerationRule: RuleFamily.SUSTAIN,
     ReceivedHealingRule: RuleFamily.SUSTAIN,
+    StatConversionRule: RuleFamily.STAT_DERIVATION,
+    StatMultiplierRule: RuleFamily.STAT_DERIVATION,
+    ManaflowRule: RuleFamily.STAT_DERIVATION,
+    StackedStatRule: RuleFamily.STAT_DERIVATION,
+    FlatStatGrantRule: RuleFamily.STAT_DERIVATION,
+    StatAuraRule: RuleFamily.STAT_DERIVATION,
+    ThresholdRegenRule: RuleFamily.STAT_DERIVATION,
+    UltimateRefundRule: RuleFamily.STAT_DERIVATION,
     OpeningDefenseRule: RuleFamily.OPENING_DEFENSE,
     ThresholdDefenseRule: RuleFamily.THRESHOLD_DEFENSE,
     CombatStateRule: RuleFamily.COMBAT_STATE,
@@ -2155,6 +2401,9 @@ def _validate_payload(rule: BehaviorRule) -> None:
         return
     if isinstance(payload, SUSTAIN_VALUE_PAYLOADS):
         _validate_sustain(rule, payload)
+        return
+    if isinstance(payload, STAT_DERIVATION_PAYLOADS):
+        _validate_stat_derivation(rule, payload)
         return
     if isinstance(payload, ExecuteRule):
         _validate_damage_routing(rule, payload)
@@ -2558,6 +2807,131 @@ SUSTAIN_PAYLOAD_REFERENCES: dict[type, tuple[str, ...]] = {
 SUSTAIN_VALUE_PAYLOADS: tuple[type, ...] = tuple(SUSTAIN_PAYLOAD_REFERENCES)
 
 
+# Which references each stat-derivation payload must carry, and which it may
+# declare absent.  Two tables rather than eight validator branches: every one
+# of them answers "are all my numbers references", and the only thing that
+# differs is which fields to ask for and which may honestly be ``None``.
+STAT_DERIVATION_REQUIRED_REFERENCES: dict[type, tuple[str, ...]] = {
+    StatConversionRule: ("ratio",),
+    StatMultiplierRule: ("share",),
+    ManaflowRule: (
+        "charge_interval",
+        "bonus_mana_per_trigger",
+        "bonus_mana_per_champion",
+        "bonus_mana_max",
+    ),
+    StackedStatRule: ("per_stack",),
+    FlatStatGrantRule: ("amount",),
+    StatAuraRule: ("reduction", "radius"),
+    ThresholdRegenRule: (
+        "bonus_health_threshold",
+        "share_of_max_health",
+        "tick_interval",
+        "champion_damage_cooldown",
+        "nonchampion_damage_cooldown",
+    ),
+    UltimateRefundRule: (
+        "base_ratio",
+        "per_lethality_ratio",
+        "trigger_window",
+    ),
+}
+
+STAT_DERIVATION_OPTIONAL_REFERENCES: dict[type, tuple[str, ...]] = {
+    StatConversionRule: ("basis_unit", "flat_base"),
+    StatMultiplierRule: (),
+    ManaflowRule: ("max_charges", "transform_bonus_mana"),
+    StackedStatRule: (
+        "max_stacks",
+        "cap",
+        "flat_base",
+        "duration",
+        "grants_level_at_max",
+    ),
+    FlatStatGrantRule: ("duration", "cooldown", "trigger_window"),
+    StatAuraRule: (),
+    ThresholdRegenRule: (),
+    UltimateRefundRule: (),
+}
+
+STAT_DERIVATION_PAYLOADS: tuple[type, ...] = tuple(STAT_DERIVATION_REQUIRED_REFERENCES)
+
+# The one payload of the family whose number lands on somebody else.  Named
+# rather than judged, so "an aura is the exception" is a constant a reader
+# can check instead of a branch that grew.
+STAT_DERIVATION_TARGET_PAYLOADS: tuple[type, ...] = (StatAuraRule,)
+
+# The one payload that grants no stat at all: an ultimate cooldown refund
+# moves a cooldown, and naming a DerivedStat for it would invent a stat the
+# block does not hold.  Named for the same reason as the row above.
+STAT_DERIVATION_UNGRANTED_PAYLOADS: tuple[type, ...] = (UltimateRefundRule,)
+
+
+def _validate_stat_reference(
+    rule: BehaviorRule, name: str, value: object, *, optional: bool
+) -> None:
+    """One stat-derivation number: a reference, a melee/ranged pair, or absent.
+
+    The split is admitted everywhere in this family because four of its
+    numbers really are paid at two rates — a melee holder converts more bonus
+    AD into haste and stacks crit faster — and both halves are checked, so a
+    schema that supplied one and defaulted the other is refused rather than
+    pricing a whole class of holders at zero.
+    """
+    if optional and value is None:
+        return
+    if isinstance(value, MeleeRangedSplit):
+        _validate_refs(
+            rule, {f"{name}.melee": value.melee, f"{name}.ranged": value.ranged}
+        )
+        return
+    _validate_refs(rule, {name: value}, optional=optional)
+
+
+def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
+    """A stat derivation says which stat, from where, and how it is available."""
+    if not isinstance(payload.availability, StatAvailability):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a stat derivation declares when the stat is "
+            "in the block the engines read; an undeclared availability is the "
+            "assumed-active claim this family exists to make visible"
+        )
+    expected = (
+        Subject.TARGET
+        if isinstance(payload, STAT_DERIVATION_TARGET_PAYLOADS)
+        else Subject.HOLDER
+    )
+    if payload.subject is not expected:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a stat derivation acts on {expected.value}; "
+            "only an aura reduces a stat on somebody else"
+        )
+    if isinstance(payload, StatConversionRule) and not isinstance(
+        payload.basis, StatBasis
+    ):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a conversion names the stat it reads"
+        )
+    if not isinstance(payload, STAT_DERIVATION_UNGRANTED_PAYLOADS) and not isinstance(
+        getattr(payload, "granted", None), DerivedStat
+    ):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a stat derivation names the stat it grants"
+        )
+    if isinstance(payload, ManaflowRule) and (
+        (payload.max_charges is None) != (payload.transform_bonus_mana is None)
+    ):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a manaflow ledger that transforms declares "
+            "both its charge ceiling and the mana the transform grants; one "
+            "without the other is a parse that dropped a key"
+        )
+    for name in STAT_DERIVATION_REQUIRED_REFERENCES[type(payload)]:
+        _validate_stat_reference(rule, name, getattr(payload, name), optional=False)
+    for name in STAT_DERIVATION_OPTIONAL_REFERENCES[type(payload)]:
+        _validate_stat_reference(rule, name, getattr(payload, name), optional=True)
+
+
 def _validate_sustain(rule: BehaviorRule, payload: RulePayload) -> None:
     """A sustain rule heals its holder and reads only sourced numbers."""
     if payload.subject is not Subject.HOLDER:
@@ -2821,6 +3195,7 @@ __all__ = [
     "CritOccurrence",
     "DEFENSE_FIELD_COMBINE",
     "DEFENSE_PAYLOAD_TYPES",
+    "DURABILITY_STATS",
     "DamageDeferralRule",
     "DamageFormula",
     "DamageThreshold",
@@ -2832,6 +3207,7 @@ __all__ = [
     "DefenseOutcome",
     "DefenseSubject",
     "DeltaAmpRule",
+    "DerivedStat",
     "EmpoweredAutoBuffRule",
     "EmpoweredHitRule",
     "EnergizedCharge",
@@ -2840,6 +3216,7 @@ __all__ = [
     "ExecuteRule",
     "FLOOR_TYPES",
     "Fixed",
+    "FlatStatGrantRule",
     "Floor",
     "ForcedCritHeal",
     "ForcedCritRule",
@@ -2850,6 +3227,7 @@ __all__ = [
     "MAGNITUDE_TYPES",
     "Magnitude",
     "ManaSpentHealRule",
+    "ManaflowRule",
     "MeleeRangedSplit",
     "NEvents",
     "NextEventOnly",
@@ -2888,6 +3266,11 @@ __all__ = [
     "RuleFamily",
     "RulePayload",
     "SCALING_TYPES",
+    "STAT_DERIVATION_OPTIONAL_REFERENCES",
+    "STAT_DERIVATION_PAYLOADS",
+    "STAT_DERIVATION_REQUIRED_REFERENCES",
+    "STAT_DERIVATION_TARGET_PAYLOADS",
+    "STAT_DERIVATION_UNGRANTED_PAYLOADS",
     "SUBJECT_AUTHORITY",
     "SUSTAIN_PAYLOAD_REFERENCES",
     "SUSTAIN_VALUE_PAYLOADS",
@@ -2900,6 +3283,12 @@ __all__ = [
     "SpellbladeRule",
     "StackGate",
     "StackRamp",
+    "StackedStatRule",
+    "StatAuraRule",
+    "StatAvailability",
+    "StatBasis",
+    "StatConversionRule",
+    "StatMultiplierRule",
     "Subject",
     "SustainStat",
     "SustainStatRule",
@@ -2908,12 +3297,14 @@ __all__ = [
     "TemporaryLethality",
     "Term",
     "ThresholdDefenseRule",
+    "ThresholdRegenRule",
     "TimesMissingHealth",
     "TimesValue",
     "TriggerEvent",
     "TriggerWindow",
     "Typing",
     "UltimateProcRule",
+    "UltimateRefundRule",
     "UtilityDimension",
     "WindowBoundary",
     "WindowMerge",

@@ -1,0 +1,44 @@
+{
+  "numeric_change": "none",
+  "numeric_change_proof": "A coverage record carries no measured number, and no gate moves here: every status in the two moves below is outside `item_coverage._REFUSAL_STATUSES`, so `calculation_eligible` and `review_issue_refs` are unchanged for every moved record and the allowlist grants no eligibility permission at all.  The pair and coupled baselines are asserted zero-diff on this commit: the declarations are read by no engine yet — `item_effects.resolve_stat_effects` still owns the stat fold — so nothing a fight computes changes.",
+  "reason_moves": {
+    "count": 9,
+    "items": [
+      "Fiendhunter Bolts",
+      "Fimbulwinter",
+      "Frozen Heart",
+      "Malignance",
+      "Muramana",
+      "Rod of Ages",
+      "Warmog's Armor",
+      "Winter's Approach",
+      "Zeke's Convergence"
+    ],
+    "reason": "The reason beside each moved status, plus three target-lane reasons whose status did not move.  Warmog's Armor and Frozen Heart leave the `UNMIGRATED_TARGET_KEYS` branch (\"the passive-target model runs this as engine code\") for the declared-durability branch, naming `Health Multiplier, Threshold Regeneration` and `Attack Speed Percent Aura`; Fimbulwinter's certified-defence reason gains its new `health_from_bonus_mana` rule in the mechanic list."
+  },
+  "receipt": "docs/receipts/item-coverage-classification.json",
+  "rule": "R-36's allowlist: a semantic commit lands against the committed classification receipt and enumerates every key it moves here, and the receipt is re-captured in its own commit, never inside a semantic one (R-32, D-97).  This slice retires the stat_derivation stub, so every move below is an item whose entry compiled to nothing before it and compiles a rule now.",
+  "slice": "3.7-residual-a",
+  "status_moves": {
+    "attacker:modeled_effect->modeled_state": {
+      "count": 4,
+      "items": [
+        "Fiendhunter Bolts",
+        "Malignance",
+        "Muramana",
+        "Zeke's Convergence"
+      ],
+      "reason": "Four entries whose tag names another family carry a stat-derivation mechanic in a value key, and `SECONDARY_KEY_FAMILY` now routes it: Muramana's Awe (`max_mana_to_ad_ratio`, filed under its on-hit record) and three `ultimate_haste` grants filed under proc records.  Every one of them is real and live — `item_effects.resolve_stat_effects` sums `ultimate_haste` over every ITEM_EFFECTS entry and `muramana_bonus_ad` pays Awe — so before this slice each was a number moving builds with no declaration behind it.  Acquiring a state family moves them one rung up 3.8's ladder, which answers `modeled_state` before `modeled_effect` whenever a state or ally family is declared; that ordering is 3.8's and is not re-opened here.  Both statuses are outside `_REFUSAL_STATUSES`, so no eligibility gate and no issue ref moves with them."
+    },
+    "target:not_target_relevant->modeled": {
+      "count": 2,
+      "items": [
+        "Rod of Ages",
+        "Winter's Approach"
+      ],
+      "reason": "Both now declare a stat derivation granting health — Rod of Ages `health_per_stack` (Timeless, from its item option) and Winter's Approach `health_from_bonus_mana` (Awe) — and health is one of `item_behavior.DURABILITY_STATS`, so the passive-target model prices them.  It always did: `item_effects.resolve_stat_effects` folds both into the target's stat block through `mana_to_health_bonus` and `input_option_stat_bonuses`.  What moved is that the ladder can now say so from a declaration instead of answering `not_target_relevant` because no rule existed to read.  Both statuses are calculation-eligible."
+    }
+  },
+  "total_leaves": 15,
+  "unclassified": []
+}

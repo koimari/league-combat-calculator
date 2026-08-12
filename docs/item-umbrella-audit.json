@@ -1491,9 +1491,9 @@
         "name": "Fiendhunter Bolts",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Fiendhunter Bolts",
@@ -1546,7 +1546,7 @@
         "calculation_eligible": true,
         "name": "Fimbulwinter",
         "outcome_dimensions": [],
-        "reason": "Everlasting is scheduled from the exactly-timed damage ledger \u2014 the shield is scheduled after an authored immobilize, or a slow for a melee holder, so the moment it arrives is an event and not a fight constant \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
+        "reason": "Everlasting, Health From Bonus Mana is scheduled from the exactly-timed damage ledger \u2014 the shield is scheduled after an authored immobilize, or a slow for a melee holder, so the moment it arrives is an event and not a fight constant \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       }
@@ -1622,7 +1622,7 @@
         "outcome_dimensions": [
           "attack_speed_reduction"
         ],
-        "reason": "The passive-target model runs this as engine code rather than as a declared rule: Winter's Caress is a live enemy-only aura the roster composition applies to the opposing swing schedule; its target_attack_speed_aura entry compiles to no rule until stat_derivation is declared.",
+        "reason": "Attack Speed Percent Aura changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -2545,9 +2545,9 @@
         "name": "Malignance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Malignance",
@@ -2807,9 +2807,9 @@
         "name": "Muramana",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Muramana",
@@ -3434,9 +3434,9 @@
           "health_state",
           "resource"
         ],
-        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
+        "reason": "Health Per Stack changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -4596,7 +4596,7 @@
         "calculation_eligible": true,
         "name": "Warmog's Armor",
         "outcome_dimensions": [],
-        "reason": "The passive-target model runs this as engine code rather than as a declared rule: Warmog's Heart is a live combat-state regeneration the participant timeline schedules; its stat_conversion entry compiles to no rule until stat_derivation is declared.",
+        "reason": "Health Multiplier, Threshold Regeneration changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       }
@@ -4662,9 +4662,9 @@
         "calculation_eligible": true,
         "name": "Winter's Approach",
         "outcome_dimensions": [],
-        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
+        "reason": "Health From Bonus Mana changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {
@@ -4819,9 +4819,9 @@
         "name": "Zeke's Convergence",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Zeke's Convergence",

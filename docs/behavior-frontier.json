@@ -19,7 +19,7 @@
       "counter_1": 13
     },
     "calculator/item_coverage.py": {
-      "counter_2": 266
+      "counter_2": 267
     },
     "calculator/item_effects.py": {
       "class_c": 440
@@ -82,11 +82,9 @@
         "ally_packet"
       ],
       "Actualizer": [],
-      "Archangel's Staff": [],
       "Ardent Censer": [
         "ally_packet"
       ],
-      "Axiom Arc": [],
       "Bandlepipes": [
         "ally_packet"
       ],
@@ -109,7 +107,6 @@
       "Cull": [
         "ally_packet"
       ],
-      "Dawncore": [],
       "Death's Dance": [
         "damage_routing"
       ],
@@ -119,15 +116,12 @@
       "Edge of Night": [
         "combat_state"
       ],
-      "Endless Hunger": [],
-      "Experimental Hexplate": [],
       "Fimbulwinter": [
         "ally_packet"
       ],
       "Force of Nature": [
         "combat_state"
       ],
-      "Frozen Heart": [],
       "Guardian Angel": [
         "threshold_defense"
       ],
@@ -138,7 +132,6 @@
       "Horizon Focus": [
         "delta_amp"
       ],
-      "Hubris": [],
       "Immortal Path": [
         "delta_amp"
       ],
@@ -161,22 +154,18 @@
       "Lord Dominik's Regards": [
         "delta_amp"
       ],
-      "Manamune": [],
       "Maw of Malmortius": [
         "threshold_defense"
       ],
       "Moonstone Renewer": [
         "ally_packet"
       ],
-      "Overlord's Bloodmail": [],
       "Phage": [
         "ally_packet"
       ],
-      "Rabadon's Deathcap": [],
       "Riftmaker": [
         "delta_amp"
       ],
-      "Rod of Ages": [],
       "Runic Compass": [
         "ally_packet"
       ],
@@ -198,51 +187,34 @@
       "Stridebreaker": [
         "ally_packet"
       ],
-      "Swiftmarch": [],
-      "Tear of the Goddess": [],
       "Verdant Barrier": [
         "combat_state"
       ],
-      "Warmog's Armor": [],
-      "Whispering Circlet": [],
-      "Winter's Approach": [],
       "World Atlas": [
         "ally_packet"
-      ],
-      "Yun Tal Wildarrows": []
+      ]
     },
     "derived_only": [
       "Abyssal Mask",
       "Actualizer",
-      "Archangel's Staff",
       "Ardent Censer",
-      "Axiom Arc",
       "Bandlepipes",
       "Black Cleaver",
       "Bloodletter's Curse",
       "Bloodsong",
       "Cryptbloom",
       "Cull",
-      "Dawncore",
       "Dream Maker",
-      "Endless Hunger",
-      "Experimental Hexplate",
-      "Frozen Heart",
       "Haunting Guise",
       "Hexoptics C44",
       "Horizon Focus",
-      "Hubris",
       "Imperial Mandate",
       "Liandry's Torment",
       "Locket of the Iron Solari",
       "Lord Dominik's Regards",
-      "Manamune",
       "Moonstone Renewer",
-      "Overlord's Bloodmail",
       "Phage",
-      "Rabadon's Deathcap",
       "Riftmaker",
-      "Rod of Ages",
       "Runic Compass",
       "Shadowflame",
       "Shurelya's Battlesong",
@@ -250,13 +222,7 @@
       "Spear of Shojin",
       "Staff of Flowing Water",
       "Stridebreaker",
-      "Swiftmarch",
-      "Tear of the Goddess",
-      "Warmog's Armor",
-      "Whispering Circlet",
-      "Winter's Approach",
-      "World Atlas",
-      "Yun Tal Wildarrows"
+      "World Atlas"
     ],
     "derived_symbol": "interpreters.compilability_for",
     "flip_blocked_by": [
@@ -305,14 +271,14 @@
       "provenance": "VERIFIED",
       "retires_at": "3.8",
       "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
-      "value": 269
+      "value": 270
     },
     "counter_3": {
       "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 19
+      "value": 2
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -345,8 +311,6 @@
         "secondary_target/receipt_walk",
         "spellblade/compiled_score_walk",
         "spellblade/receipt_walk",
-        "stat_derivation/pair_engine",
-        "stat_derivation/stat_resolver",
         "sustain/compiled_score_walk",
         "sustain/receipt_walk",
         "threshold_defense/compiled_score_walk",
@@ -488,7 +452,7 @@
       },
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 34
+      "value": 32
     }
   },
   "exclusions": {
@@ -497,7 +461,7 @@
         "calculator/bis.py": "three name-keyed build-profile claims that ride the same flip",
         "calculator/item_coverage.py": "the hand registries that assert coverage rather than compute it; 3.8 replaces them with a status derived from declarations"
       },
-      "sites": 269
+      "sites": 270
     },
     "class_c_declarative_homes": {
       "modules": {
@@ -543,12 +507,12 @@
       "target_threshold_shield": "threshold_defense"
     },
     "reasons": {
-      "conditional_attack_speed": "dead: read nowhere in src/. Yun Tal Wildarrows' crit-gated attack speed is a derived stat, so STAT_DERIVATION is where a rule for it would land the day one is written",
+      "conditional_attack_speed": "was dead \u2014 read nowhere in src/ \u2014 until the stat-derivation migration declared Yun Tal Wildarrows' crit stacks and its assumed-active attack speed as STAT_DERIVATION, which is the family this tag always named. H4's decision on the tag stands",
       "defensive_start": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name in defensive_effects \u2014 until 3.5 made it a real dispatch: every entry carrying it now compiles an OPENING_DEFENSE declaration. H4's decision on the tag stands",
       "shield_reduction": "was dead \u2014 read nowhere in src/ \u2014 until 3.7 declared Serpent's Fang's venom as DAMAGE_ROUTING: the share of the target's shielding a strike passes through is a routing rule and not a defence the holder owns, and it now reaches a real dispatch. H4's decision on the tag stands",
-      "stat_conversion": "self-referential: read only by item_coverage's own claim, while the behaviour is reached by item name in stats. The mechanic derives one stat from another",
+      "stat_conversion": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name in item_effects' stat fold \u2014 until the stat-derivation migration gave every entry carrying it a STAT_DERIVATION declaration. H4's decision on the tag stands",
       "sustain": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name \u2014 until 3.7 gave every entry carrying it a SUSTAIN declaration, which is the family this tag always named. H4's decision on the tag stands",
-      "target_attack_speed_aura": "dead: read nowhere in src/. Frozen Heart's aura derives a stat on everyone in range",
+      "target_attack_speed_aura": "was dead \u2014 read nowhere in src/ \u2014 until the stat-derivation migration gave Winter's Caress a STAT_DERIVATION aura declaration, which is the family this tag always named. H4's decision on the tag stands",
       "target_mitigation": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name \u2014 until 3.5 declared Plated Steelcaps-class mitigation as OPENING_DEFENSE. H4's decision on the tag stands",
       "target_state": "was dead \u2014 read nowhere in src/ \u2014 until 3.5 gave Force of Nature's and Jak'Sho's stack ledgers a COMBAT_STATE declaration, which is the family this tag always named. Whether the *tag* is then deleted or kept is still H4's, the human's",
       "target_threshold_health": "was self-referential \u2014 read only by item_coverage's own claim \u2014 until 3.5 declared Protoplasm Harness's temporary health as THRESHOLD_DEFENSE. H4's decision on the tag stands",
@@ -573,7 +537,6 @@
       "Crimson Lucidity",
       "Doran's Helm",
       "Executioner's Calling",
-      "Frozen Heart",
       "Gluttonous Greaves",
       "Gustwalker Hatchling",
       "Ionian Boots of Lucidity",
@@ -599,7 +562,6 @@
       "Crimson Lucidity",
       "Doran's Helm",
       "Executioner's Calling",
-      "Frozen Heart",
       "Gluttonous Greaves",
       "Gustwalker Hatchling",
       "Ionian Boots of Lucidity",

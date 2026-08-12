@@ -42,18 +42,19 @@ from .coverage_evidence import (
 from .data_fetcher import get_item_by_name
 from .interpreters import INTERPRETERS, lanes_for
 from .item_behavior import (
+    DURABILITY_STATS,
     BehaviorRule,
     DefenseExclusivity,
     DefenseMechanic,
     EngineLane,
     PacketKind,
     RuleFamily,
+    Subject,
     SustainStatRule,
     UtilityDimension,
 )
 from .item_behavior_catalog import (
     EVENT_CERTIFIED_MECHANICS,
-    UNMIGRATED_TARGET_KEYS,
     behavior_rules,
     registry_entries,
 )
@@ -300,7 +301,6 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Chempunk Chainsword": "Hackshorn applies sourced three-second Grievous Wounds in the coupled "
     "timeline; it does not add direct damage.",
     "Cosmic Drive": "Spelldance grants movement speed, not direct damage.",
-    "Frozen Heart": "Winter's Caress reduces enemy attack speed.",
     "Gluttonous Greaves": "Slay grants omnivamp, not outgoing damage.",
     "Morellonomicon": "Grievous Wounds reduces recipient healing in the coupled timeline; it "
     "does not add direct damage.",
@@ -629,16 +629,19 @@ def declared_defence(rule: BehaviorRule) -> DefenseMechanic | None:
 def _prices_holder_durability(rule: BehaviorRule) -> bool:
     """Whether *rule* changes what the actor holding it can survive.
 
-    Four shapes, each read off the declaration and none off a name:
+    Five shapes, each read off the declaration and none off a name:
 
     1. it declares a :class:`~.item_behavior.DefenseMechanic` — the defence
        resolver's own closed vocabulary, and the target lane is that lane;
     2. it is a ``sustain`` rule that schedules a heal rather than granting a
        vampirism stat, because a stat is priced by the stat fold and only a
        scheduled heal enters the durability ledger;
-    3. its payload declares a holder heal or shield beside its own damage —
+    3. it is a ``stat_derivation`` rule granting one of
+       :data:`~.item_behavior.DURABILITY_STATS`, or an aura whose subject is
+       the enemy — the holder's benefit of a stat reduced on somebody else;
+    4. its payload declares a holder heal or shield beside its own damage —
        the strike families whose hit pays health back;
-    4. it emits a cross-participant packet that heals, shields or grants
+    5. it emits a cross-participant packet that heals, shields or grants
        temporary health, or that redirects incoming damage away from its
        recipient.
     """
@@ -646,6 +649,11 @@ def _prices_holder_durability(rule: BehaviorRule) -> bool:
         return True
     payload = rule.payload
     if rule.family is RuleFamily.SUSTAIN and not isinstance(payload, SustainStatRule):
+        return True
+    if rule.family is RuleFamily.STAT_DERIVATION and (
+        getattr(payload, "granted", None) in DURABILITY_STATS
+        or getattr(payload, "subject", None) is Subject.TARGET
+    ):
         return True
     if any(
         getattr(payload, field, None) is not None for field in _HOLDER_SURVIVAL_FIELDS
@@ -663,26 +671,6 @@ def target_lane_rules(name: str) -> tuple[BehaviorRule, ...]:
     """Every rule *name* declares that the passive-target model prices."""
     return tuple(
         rule for rule in behavior_rules(name) if _prices_holder_durability(rule)
-    )
-
-
-def unmigrated_target_mechanics(name: str) -> tuple[str, ...]:
-    """The durability mechanics *name* still runs as engine code, not as a rule.
-
-    Folding over rules alone would call two live mechanics irrelevant: an
-    entry whose family is not migrated compiles to nothing while its behaviour
-    is still engine code the target model runs, which is the same distinction
-    :func:`unserved_lanes` makes on the attacker lane between *unmigrated* and
-    *uninterpreted*.  The catalog names the two by the registry key that
-    identifies them and dates each to the slice that declares its mechanic.
-    """
-    return tuple(
-        sorted(
-            reason
-            for _, _, entry in registry_entries(name)
-            for key, reason in UNMIGRATED_TARGET_KEYS.items()
-            if key in entry
-        )
     )
 
 
@@ -736,13 +724,6 @@ def _derived_target_status(name: str) -> tuple[str, str]:
             "modeled",
             f"{_mechanic_list(priced)} changes what this actor survives, and "
             "every rule behind it has an interpreter on the target lane.",
-        )
-    unmigrated = unmigrated_target_mechanics(name)
-    if unmigrated:
-        return (
-            "modeled",
-            "The passive-target model runs this as engine code rather than as "
-            "a declared rule: " + "; ".join(unmigrated) + ".",
         )
     return (
         "not_target_relevant",
@@ -992,29 +973,30 @@ def require_calculation_item_coverage(
 # The umbrella issue every unrouted review gap falls back to.
 _UMBRELLA_ISSUE = 40
 
-# The two H4 reasons, written once.  Ten of the thirty-eight declared effect
-# tags have no live handler branch, and which four are dead and which six are
-# read only by this module's own claim is umbrella decision H4's to settle —
-# so they sit on the frontier naming it rather than carrying an ``EffectTag``
-# member that would have to name a handler that does not exist.
-_H4_DEAD_TAG = (
-    "Read nowhere in src/: blocked on umbrella decision H4, which owns whether "
-    "the tag is deleted or given a handler. Tracked by #40."
-)
-_H4_SELF_REFERENTIAL_TAG = (
-    "Read only by this module's own coverage claim while the behaviour is "
-    "reached by item name: blocked on umbrella decision H4. Tracked by #40."
-)
+# The two H4 reasons stood here, one for each half of the ten tags no engine
+# dispatched on.  The stat-derivation migration gave the last three of them a
+# real dispatch, so the frontier holds no ``tag:`` claim at all and neither
+# reason has a claim left to carry.  Whether the *tags* are then deleted or
+# kept is still umbrella decision H4's, the human's — the record of which four
+# were dead and which six self-referential is
+# ``item_behavior_catalog.H4_DEAD_TAGS`` / ``H4_SELF_REFERENTIAL_TAGS``, with a
+# reason each, which is where H4 reads its population.
 
 # Two items appear in ``_REVIEW_ISSUE_REFS`` and in no other container.  Their
 # refs still need exactly one claim to carry them, so they get the claim their
 # rung implies — ``ITEM_EFFECTS`` membership — rather than a home invented for
 # the purpose.
-_ISSUE_REF_ONLY_ITEMS: tuple[str, ...] = (
-    "Catalyst of Aeons",
-    "Voltaic Cyclosword",
-    "Zeke's Convergence",
-)
+# The status is pinned per item rather than shared, because the rung an
+# ``ITEM_EFFECTS`` member lands on depends on what it declares: Zeke's
+# Convergence also grants ultimate haste, which is a stat derivation, and the
+# ladder answers ``modeled_state`` before ``modeled_effect`` for a state
+# family.  A shared constant here would have made that a test failure with no
+# way to record the true answer.
+_ISSUE_REF_ONLY_ITEMS: Mapping[str, ItemCoverageStatus] = {
+    "Catalyst of Aeons": "modeled_effect",
+    "Voltaic Cyclosword": "modeled_effect",
+    "Zeke's Convergence": "modeled_state",
+}
 
 # Why an earlier rung means no cached item can reach a claim, keyed
 # ``<subject>@<lane>``.  Twenty-nine container entries are decided above their
@@ -1024,9 +1006,6 @@ _ISSUE_REF_ONLY_ITEMS: tuple[str, ...] = (
 # ways.  A claim that is dead prose in a live-looking home is what this field
 # exists to make visible, so no entry may be blank.
 _SHADOWED_CLAIM_REASONS: Mapping[str, str] = {
-    "Frozen Heart@attacker": "Its declared state family answers it before the reviewed-nothing "
-    "container is reached, so the container never speaks for it and "
-    "no request can reach this claim.",
     "attacker.unreviewed_fixture@attacker": "review_pending is reserved for synthetic and unknown fixtures: "
     "every cached shop record carries an id or an icon and is "
     "withheld by the rung above, so no cached item reaches this one.",
@@ -1312,6 +1291,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Eclipse": "interpreters.cast_proc.cooldown_proc_effect",
     "Edge of Night": "defensive_effects.resolve_starting_defenses",
     "Frozen Heart": "roster_composition.target_overrides",
+    "Rod of Ages": "item_effects.input_option_stat_bonuses",
     "Guardian Angel": "defensive_effects.resolve_starting_defenses",
     "Kaenic Rookern": "defensive_effects.resolve_starting_defenses",
     "Knight's Vow": "item_support_effects.schedule_knights_vow",
@@ -1330,6 +1310,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Verdant Barrier": "defensive_effects.resolve_starting_defenses",
     "Warden's Mail": "defensive_effects.resolve_starting_defenses",
     "Warmog's Armor": "participant_timeline._warmog_heart_tick_events",
+    "Winter's Approach": "item_effects.mana_to_health_bonus",
     "Zhonya's Hourglass": "defensive_effects.resolve_starting_defenses",
 }
 
@@ -1676,13 +1657,29 @@ def _item_effects_claim(item: str) -> Claim:
         subject_kind="item",
         subject=item,
         lane="attacker",
-        status="modeled_effect",
+        status=_ISSUE_REF_ONLY_ITEMS[item],
         evidence=(
             Symbol(
                 path="item_effects._resolve_damage_effects_uncached", role="tag_handler"
             ),
             _test_ref(
                 "test_an_item_effects_member_names_a_dispatched_or_frontiered_tag", item
+            ),
+            # A state answer is the stricter claim and carries both the
+            # accessor that folds the state in and the registry key it reads:
+            # an item lands on that rung because it declares a stat
+            # derivation, and ``resolve_stat_effects`` sums ``ultimate_haste``
+            # into the build's block from that key.
+            *(
+                (
+                    Symbol(
+                        path="item_effects.resolve_stat_effects",
+                        role="value_accessor",
+                    ),
+                    EffectKey(registry="ITEM_EFFECTS", item=item, key="ultimate_haste"),
+                )
+                if _ISSUE_REF_ONLY_ITEMS[item] == "modeled_state"
+                else ()
             ),
         ),
         dimensions=(),
@@ -1999,18 +1996,6 @@ _RULE_CLAIMS: tuple[Claim, ...] = (
         ),
     ),
     _rule_claim(
-        "target.unmigrated_durability",
-        "target",
-        "modeled",
-        (
-            Symbol(
-                path="participant_timeline._warmog_heart_tick_events",
-                role="walk_packet_builder",
-            ),
-            _rung_ref("target.unmigrated_durability"),
-        ),
-    ),
-    _rule_claim(
         "target.not_target_relevant",
         "target",
         "not_target_relevant",
@@ -2097,9 +2082,6 @@ FRONTIER: Mapping[str, str] = {
         "exercised by no focused test; #48 tracks the support-item authoring "
         "debt."
     ),
-    "tag:conditional_attack_speed": _H4_DEAD_TAG,
-    "tag:target_attack_speed_aura": _H4_DEAD_TAG,
-    "tag:stat_conversion": _H4_SELF_REFERENTIAL_TAG,
 }
 
 validate_claim_table(COVERAGE_EVIDENCE)
@@ -2246,16 +2228,6 @@ PRECEDENCE: tuple[PrecedenceRule, ...] = (
         lane="target",
         kind="derivation",
         keys_on=("item_coverage.target_lane_rules",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="modeled",
-    ),
-    PrecedenceRule(
-        rule_id="target.unmigrated_durability",
-        lane="target",
-        kind="derivation",
-        keys_on=("item_coverage.unmigrated_target_mechanics",),
         items=(),
         effect_types=(),
         negated=False,

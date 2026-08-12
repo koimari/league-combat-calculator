@@ -189,7 +189,7 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
     ("item_name", "expected_status"),
     [
         ("Runaan's Hurricane", "modeled_effect"),
-        ("Zeke's Convergence", "modeled_effect"),
+        ("Zeke's Convergence", "modeled_state"),
         ("Immortal Path", "modeled_state"),
         ("Mejai's Soulstealer", "modeled_state"),
         ("Rabadon's Deathcap", "modeled_state"),

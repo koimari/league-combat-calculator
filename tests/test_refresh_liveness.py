@@ -62,6 +62,13 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "{{as|24 '''bonus''' physical damage}}",
         24.0,
     ),
+    RuleFamily.STAT_DERIVATION: (
+        "Rabadon's Deathcap",
+        "ap_percent_increase",
+        "Increase your {{as|ability power}} by 30%.",
+        "Increase your {{as|ability power}} by 45%.",
+        0.45,
+    ),
     RuleFamily.SECONDARY_TARGET: (
         "Runaan's Hurricane",
         "secondary_ad_ratio",
