@@ -2326,6 +2326,7 @@ def validate_rule(rule: BehaviorRule) -> None:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: zero_policy is required and has no default (D-24)"
         )
+    _validate_policy_types(rule)
     _validate_payload(rule)
 
 
@@ -3018,36 +3019,96 @@ POLICY_IDENTIFIER_FIELDS: frozenset[str] = frozenset(
 )
 
 
-def _flatten_policy(value: object, out: list[object]) -> None:
-    """Append *value* and, unless it is a reference, everything inside it."""
-    out.append(value)
-    if is_value_reference(value) or not is_dataclass(value) or isinstance(value, type):
+class PolicyWalk(NamedTuple):
+    """One rule's policy surface: the values it holds and the fields it skipped.
+
+    ``sites`` pairs every policy value with the dotted field path it sits at,
+    so a violation can name the field rather than only its type.
+    ``identifiers`` records every ``(declaring type, field)`` the walk skipped
+    as an identifier or a citation — the exception population *as taken*,
+    which is a different and stronger thing than the exception population as
+    listed: a payload that grew a field called ``reason`` would take the
+    exception silently, and pinning what was taken is what sees it.
+    """
+
+    sites: tuple[tuple[str, object], ...]
+    identifiers: tuple[tuple[str, str], ...]
+
+
+def _walk_policy(
+    value: object,
+    path: str,
+    sites: list[tuple[str, object]],
+    identifiers: list[tuple[str, str]],
+) -> None:
+    """Descend into *value*, recording every policy value beneath it.
+
+    A value reference is a leaf: its own fields are the registry, owner and
+    key that *name* a number rather than describing one.  Containers are
+    walked member by member — a ``frozenset[str]`` policy axis is an open
+    string set wearing a collection's clothes — and every other non-dataclass
+    is a leaf the caller has already recorded.
+    """
+    if is_value_reference(value):
+        return
+    if isinstance(value, (tuple, list, frozenset, set)):
+        for member in value:
+            sites.append((f"{path}[]", member))
+            _walk_policy(member, f"{path}[]", sites, identifiers)
+        return
+    if not is_dataclass(value) or isinstance(value, type):
         return
     for spec in dataclass_fields(value):
+        child = getattr(value, spec.name)
+        site = f"{path}.{spec.name}" if path else spec.name
         if spec.name in POLICY_IDENTIFIER_FIELDS:
+            identifiers.append((type(value).__name__, spec.name))
             continue
-        _flatten_policy(getattr(value, spec.name), out)
+        sites.append((site, child))
+        _walk_policy(child, site, sites, identifiers)
+
+
+def policy_walk(rule: BehaviorRule) -> PolicyWalk:
+    """Every policy value of *rule*, with the identifier fields it skipped.
+
+    Criterion 6 is asserted over this: no policy field may be a callable, a
+    ``dict``, ``Any`` or an open string.  It starts at the rule itself, so it
+    reaches *every* field of the rule rather than its surface — including
+    ``owner`` and ``mechanic_id``, which are skipped by name and therefore
+    make :data:`POLICY_IDENTIFIER_FIELDS`' membership real rather than
+    aspirational.  That constant is what "named in the assertion" means: the
+    exception is a list somebody can read, not a waiver somebody makes when
+    the criterion first bites.
+    """
+    sites: list[tuple[str, object]] = []
+    identifiers: list[tuple[str, str]] = []
+    _walk_policy(rule, "", sites, identifiers)
+    return PolicyWalk(tuple(sites), tuple(identifiers))
 
 
 def policy_values(rule: BehaviorRule) -> tuple[object, ...]:
-    """Every policy value the rule carries, flattened for reflective checks.
+    """Every policy value the rule carries, flattened for reflective checks."""
+    return tuple(value for _site, value in policy_walk(rule).sites)
 
-    Criterion 6 is asserted over this: no policy field may be a callable, a
-    ``dict``, ``Any`` or an open string.  It reaches *every* field of the
-    rule, recursing through the frozen policy records and stopping at a
-    value reference — whose own fields are the registry, owner and key that
-    name a number rather than describing one.  The identifiers and citations
-    are skipped by :data:`POLICY_IDENTIFIER_FIELDS`, which is what "named in
-    the assertion" means: the exception is a list somebody can read, not a
-    waiver somebody makes when the criterion first bites.
+
+def _validate_policy_types(rule: BehaviorRule) -> None:
+    """Criterion 6 as a load-tier refusal, run on every rule that compiles.
+
+    Structural in D-20's sense — it reads the declaration's own shape and
+    nothing else — and it is here rather than only in a test because a
+    property asserted over today's declarations is not a mechanism: the
+    families this phase has yet to migrate would each be a new chance to put
+    a ``dict`` on a policy axis, and the compiler that built it is where that
+    has to stop.
     """
-    values: list[object] = []
-    _flatten_policy(rule.family, values)
-    _flatten_policy(rule.compilability, values)
-    _flatten_policy(rule.payload, values)
-    _flatten_policy(rule.receipt, values)
-    _flatten_policy(rule.zero_policy, values)
-    return tuple(values)
+    for site, value in policy_walk(rule).sites:
+        if callable(value) or isinstance(value, (dict, str)):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: policy field {site} holds a "
+                f"{type(value).__name__}; every policy axis is a closed union "
+                "or a ValueRef, and the identifier and citation fields are the "
+                f"named exceptions {sorted(POLICY_IDENTIFIER_FIELDS)}"
+            )
 
 
 def is_value_reference(value: object) -> bool:
@@ -3246,6 +3307,7 @@ __all__ = [
     "PeriodicRule",
     "Persist",
     "Persistence",
+    "PolicyWalk",
     "Pool",
     "PostMitigationHealRule",
     "Probe",
@@ -3312,5 +3374,6 @@ __all__ = [
     "chain_rank",
     "is_value_reference",
     "policy_values",
+    "policy_walk",
     "validate_rule",
 ]

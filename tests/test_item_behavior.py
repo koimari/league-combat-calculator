@@ -11,6 +11,7 @@ a second vocabulary.
 """
 
 import ast
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -43,8 +44,10 @@ from src.calculator.item_behavior import (
     ZeroPolicy,
     is_value_reference,
     policy_values,
+    policy_walk,
     validate_rule,
 )
+from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
 from src.calculator.trigger_stream import Stream
 from src.calculator.value_ref import Const, SourceReceipt
 
@@ -185,11 +188,108 @@ def test_no_policy_field_is_a_callable_dict_or_open_string() -> None:
         assert not isinstance(value, str)
 
 
+def test_every_compiled_rule_of_every_owner_holds_no_open_policy_field() -> None:
+    """Criterion 6's *breadth*: every field of every rule the catalog compiles.
+
+    The test above is depth over one hand-made rule and proves the walk
+    reaches inside a payload; it says nothing about the declarations that
+    actually ship.  This one is the population — every owner
+    ``rule_owners()`` names, items and keystones alike, so a family migrated
+    tomorrow is covered by the criterion the day it compiles rather than the
+    day somebody remembers to extend a fixture.
+    """
+    checked = 0
+    for owner in sorted(rule_owners()):
+        for rule in behavior_rules(owner):
+            checked += 1
+            for site, value in policy_walk(rule).sites:
+                assert not callable(value), f"{rule.mechanic_id}: {site}"
+                assert not isinstance(value, dict), f"{rule.mechanic_id}: {site}"
+                assert not isinstance(value, str), f"{rule.mechanic_id}: {site}"
+
+    assert checked > 100, "the catalog compiled almost nothing, so this proves little"
+
+
 def test_the_criterion_six_exceptions_are_named_not_judged() -> None:
     """The identifiers and citations are a list a reader can check."""
     assert POLICY_IDENTIFIER_FIELDS == frozenset(
         {"owner", "mechanic_id", "reason", "url", "revision_id", "revision_timestamp"}
     )
+
+
+def test_the_exceptions_taken_across_the_catalog_are_the_exceptions_named() -> None:
+    """Which fields the walk actually skipped, pinned as ``(type, field)`` pairs.
+
+    :data:`POLICY_IDENTIFIER_FIELDS` is a set of *names*, so it exempts a
+    field called ``reason`` wherever one appears.  A payload that grew such a
+    field would take the exception in silence — an open string admitted by a
+    criterion written to forbid open strings.  Pinning the pairs the walk
+    took over the whole catalog is what sees it: a new one is a diff here,
+    with the type that introduced it named.
+    """
+    taken = {
+        pair
+        for owner in rule_owners()
+        for rule in behavior_rules(owner)
+        for pair in policy_walk(rule).identifiers
+    }
+    assert taken == {
+        ("BehaviorRule", "owner"),
+        ("BehaviorRule", "mechanic_id"),
+        ("ReceiptOnly", "reason"),
+        ("SourceReceipt", "url"),
+        ("SourceReceipt", "revision_id"),
+        ("SourceReceipt", "revision_timestamp"),
+        ("ZeroPolicy", "reason"),
+    }
+    assert {field for _type, field in taken} <= POLICY_IDENTIFIER_FIELDS
+
+
+def test_a_rule_with_an_open_string_policy_field_does_not_compile() -> None:
+    """R-05's red for criterion 6, through ``validate_rule``'s own ladder.
+
+    The criterion is a *mechanism* rather than a property of today's
+    declarations: the compiler that builds a rule refuses it, so a family
+    migrated later cannot put a ``dict`` or a bare string on a policy axis
+    and discover it in review.  ``dataclasses.replace`` is the seam — the
+    payload is frozen, and the point is a value that reached construction.
+    """
+    rule = _rule()
+    open_string = replace(rule, payload=replace(rule.payload, pool="all events"))
+    with pytest.raises(BehaviorRuleError, match="payload.pool holds a str"):
+        validate_rule(open_string)
+
+    a_dict = replace(rule, payload=replace(rule.payload, attribution={"holder": 1.0}))
+    with pytest.raises(BehaviorRuleError, match="payload.attribution holds a dict"):
+        validate_rule(a_dict)
+
+    a_callable = replace(rule, payload=replace(rule.payload, magnitude=lambda: 0.07))
+    with pytest.raises(BehaviorRuleError, match="payload.magnitude holds a function"):
+        validate_rule(a_callable)
+
+
+def test_the_open_string_refusal_reaches_inside_a_collection() -> None:
+    """A ``frozenset[str]`` is an open string axis wearing a container.
+
+    The walk descends into tuples and sets for exactly this reason: the
+    typing axis holds frozensets of enum members, and a refactor that
+    replaced the enum with its ``.value`` would otherwise pass a criterion
+    written to forbid it.
+    """
+    rule = _rule()
+    assert "payload.typing.damage_classes[]" in [
+        site for site, _value in policy_walk(rule).sites
+    ]
+
+    stringly = replace(
+        rule,
+        payload=replace(
+            rule.payload,
+            typing=Typing(frozenset({"magic"}), frozenset({"ability"})),  # type: ignore[arg-type]
+        ),
+    )
+    with pytest.raises(BehaviorRuleError, match=r"damage_classes\[\] holds a str"):
+        validate_rule(stringly)
 
 
 def test_every_magnitude_in_a_declaration_is_a_reference() -> None:
