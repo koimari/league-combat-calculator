@@ -368,7 +368,7 @@
   "exclusions": {
     "class_b_claim_prose": {
       "modules": {
-        "calculator/item_coverage.py": "the hand registries that assert coverage rather than compute it; 3.8 replaces them with a status derived from declarations"
+        "calculator/item_coverage.py": "the reviewed no-runtime-behaviour set NO_RUNTIME_BEHAVIOR, the one name-keyed container 3.8's collapse left standing here: 'we looked and there is nothing' is a fact no declaration can carry, so it is reviewed prose by construction and criterion 2 keeps it as a non-increasing ratchet rather than retiring it.  Its members are counter 2's whole population *and* the count counter 2 is bounded by, which is what makes 'at or below the reviewed reason count' the end state rather than zero"
       },
       "sites": 21
     },

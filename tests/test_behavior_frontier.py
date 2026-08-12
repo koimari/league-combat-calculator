@@ -106,6 +106,28 @@ def test_counter_two_is_measured_net_of_the_committed_exclusions() -> None:
     )
 
 
+def test_the_surviving_counter_two_population_is_the_reviewed_set_itself() -> None:
+    """The Class B description, checked against the tree instead of trusted.
+
+    The receipt says item_coverage is Class B because one name-keyed container
+    survived 3.8's collapse there.  That is a claim about which binding every
+    remaining site sits in, and the tally beside it — a count — cannot see the
+    difference between twenty-one reviewed members and twenty-one sites that
+    regrew somewhere else in the module.  A class description no gate can
+    contradict is the prose this counter is named for, living inside the
+    instrument that measures it.
+    """
+    sites = [
+        site
+        for site in behavior_frontier.name_sites(
+            behavior_frontier.SRC_ROOT, behavior_frontier.item_names()
+        )
+        if site.klass == "counter_2"
+    ]
+    assert {site.container for site in sites} == {"NO_RUNTIME_BEHAVIOR"}
+    assert {site.name for site in sites} == set(item_coverage.NO_RUNTIME_BEHAVIOR)
+
+
 def test_a_container_exclusion_outside_class_b_is_refused() -> None:
     """R-05: the arm's red, on the clause that keeps it off counter 1."""
     report = behavior_frontier.scan()

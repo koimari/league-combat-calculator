@@ -195,10 +195,25 @@ CLASS_C_DECLARATIVE_HOMES: Mapping[str, str] = {
 
 CLASS_B_CLAIM_PROSE: Mapping[str, str] = {
     "calculator/item_coverage.py": (
-        "the hand registries that assert coverage rather than compute it; 3.8 "
-        "replaces them with a status derived from declarations"
+        "the reviewed no-runtime-behaviour set NO_RUNTIME_BEHAVIOR, the one "
+        "name-keyed container 3.8's collapse left standing here: 'we looked "
+        "and there is nothing' is a fact no declaration can carry, so it is "
+        "reviewed prose by construction and criterion 2 keeps it as a "
+        "non-increasing ratchet rather than retiring it.  Its members are "
+        "counter 2's whole population *and* the count counter 2 is bounded "
+        "by, which is what makes 'at or below the reviewed reason count' the "
+        "end state rather than zero"
     ),
 }
+# The class was argued for a module that asserted coverage in hand registries
+# instead of computing it, and that argument retired with 3.8: the classifier
+# now reads declarations and the eight derived registries are gone.  What is
+# written above is the argument that replaced it, not a refreshed spelling of
+# the old one — a class description outliving its own module is the
+# prose-outruns-code shape this counter exists to measure, and it may not
+# survive inside the instrument measuring it.  Excluding the survivor instead
+# would read as tidier and would be worse: counter 2 would measure nothing and
+# its bound would bound nothing.
 # ``calculator/bis.py`` was the second member until its three certification
 # claims became `interpreters.survival_ledger_certifications`.  It leaves the
 # set rather than staying as a zero-site entry, because Class B is an argument
