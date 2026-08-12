@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from src.calculator.ability_spec import Authority
+from src.calculator import bis
 from src.calculator import interpreters
 from src.calculator import item_coverage
 from src.calculator import item_behavior_catalog as catalog
@@ -26,6 +27,7 @@ from src.calculator.item_behavior import (
     ReceiptScope,
     RuleFamily,
     SUBJECT_AUTHORITY,
+    Subject,
 )
 from src.calculator.item_behavior_catalog import registry_owners
 
@@ -555,3 +557,64 @@ def test_the_walk_lane_serves_the_family_that_authors_its_own_recoveries() -> No
         RuleFamily.SUSTAIN,
         EngineLane.RECEIPT_WALK,
     ) not in interpreters.UNSERVED_LANE_RECEIPTS
+
+
+def test_the_survival_ledger_derivation_equals_the_hand_certification() -> None:
+    """D-98's asserted delta, before the flip that deletes the hand table.
+
+    ``bis.BIS_CERTIFIED_DEFENSIVE_EFFECTS`` is three item names typed beside
+    three sentences.  :func:`interpreters.survival_ledger_certifications` asks
+    the declarations the same question.  This test is the whole content of the
+    derivation-beside-legacy step: the two agree on membership *now*, so the
+    one-symbol flip that follows is a deletion rather than a change of answer.
+    """
+    derived = interpreters.survival_ledger_certifications()
+    assert set(derived) == set(bis.BIS_CERTIFIED_DEFENSIVE_EFFECTS)
+    assert all(note.strip() for note in derived.values())
+
+
+def test_each_certification_names_the_declaration_it_was_read_from() -> None:
+    """A derived note cites its mechanic, so the receipt points at the rule."""
+    for owner, note in interpreters.survival_ledger_certifications().items():
+        entries = interpreters.survival_ledger_entries(owner)
+        assert entries
+        for entry in entries:
+            assert entry.mechanic_id in note
+            assert entry.owner == owner
+
+
+def test_a_declaration_that_drops_its_ledger_component_stops_certifying() -> None:
+    """The sensitivity that a name-keyed table structurally cannot have.
+
+    Eclipse is certified because its proc declares a ``self_shield``.  Take the
+    shield out of the declaration and the classifier says so — which is what
+    makes the published certification an observation rather than a claim.
+    """
+    (rule,) = [
+        candidate
+        for candidate in catalog.behavior_rules("Eclipse")
+        if interpreters.survival_ledger_contribution(candidate) is not None
+    ]
+    assert (
+        interpreters.survival_ledger_contribution(rule)
+        is interpreters.SurvivalLedgerContribution.SELF_SHIELD
+    )
+    shieldless = dataclasses.replace(
+        rule, payload=dataclasses.replace(rule.payload, self_shield=None)
+    )
+    assert interpreters.survival_ledger_contribution(shieldless) is None
+
+
+def test_a_forced_strike_that_heals_somebody_else_is_not_a_holder_ledger_entry() -> (
+    None
+):
+    """The subject clause: this fold answers about the *holder's* ledger."""
+    (rule,) = [
+        candidate
+        for candidate in catalog.behavior_rules("Sundered Sky")
+        if interpreters.survival_ledger_contribution(candidate) is not None
+    ]
+    elsewhere = dataclasses.replace(
+        rule, payload=dataclasses.replace(rule.payload, subject=Subject.TARGET)
+    )
+    assert interpreters.survival_ledger_contribution(elsewhere) is None

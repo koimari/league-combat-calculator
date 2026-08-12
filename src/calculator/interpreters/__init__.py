@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Protocol
 
 from ..ability_spec import Authority
@@ -35,14 +36,18 @@ from ..item_behavior import (
     BuildContext,
     Compilability,
     Compilable,
+    CooldownProcRule,
+    DamageDeferralRule,
     DefenseOutcome,
     DefenseSubject,
     EngineLane,
+    ForcedCritRule,
     KernelField,
     ReceiptOnly,
     ReceiptScope,
     RuleFamily,
     SUBJECT_AUTHORITY,
+    Subject,
     ThresholdRegenRule,
 )
 from ..item_behavior_catalog import behavior_rules, registry_entries, rule_owners
@@ -615,6 +620,126 @@ def uncompilable_item_receipt(
         ):
             return f"item_mechanic={name}"
     return None
+
+
+class SurvivalLedgerContribution(Enum):
+    """How a declaration puts health back into its own holder's ledger.
+
+    Three shapes, one per family that carries the mechanic as an *optional
+    component* of a rule whose main subject is something else: a proc that
+    also shields, a routing rule that repays what it deferred, and a forced
+    strike that also heals.  None of the three is a defence family, which is
+    why "does this candidate's defensive effect sit inside the effective
+    health the ordered event walk produced" could not be read off a family and
+    was answered by a hand-written table of item names instead.
+
+    The enum is closed because the question is closed.  A fourth shape is a
+    declaration somebody adds here, in the same commit as the payload field it
+    reads — which is the difference between a derivation and a list of names
+    that goes on saying what it said after the code underneath it moves.
+    """
+
+    SELF_SHIELD = "self_shield"
+    DEFERRED_DAMAGE = "deferred_damage"
+    STRIKE_HEAL = "strike_heal"
+
+
+_LEDGER_CONTRIBUTION_NOTES: Mapping[SurvivalLedgerContribution, str] = {
+    SurvivalLedgerContribution.SELF_SHIELD: (
+        "{mechanic} declares a self shield on its proc; the ordered event walk "
+        "stamps the shield, with its sourced amount and its declared expiry, "
+        "into the holder's survival ledger."
+    ),
+    SurvivalLedgerContribution.DEFERRED_DAMAGE: (
+        "{mechanic} declares post-mitigation damage stored and repaid as "
+        "declared ticks; the ledger carries the deferral and its recovery "
+        "rather than reducing the hit, so effective health counts both."
+    ),
+    SurvivalLedgerContribution.STRIKE_HEAL: (
+        "{mechanic} declares a heal on its forced strike; the ordered event "
+        "walk stamps the heal, and any declared temporary health it overflows "
+        "into, onto the holder's survival ledger."
+    ),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class SurvivalLedgerEntry:
+    """One declared contribution to its holder's own survival ledger."""
+
+    owner: str
+    mechanic_id: str
+    contribution: SurvivalLedgerContribution
+
+    @property
+    def note(self) -> str:
+        """The published sentence, keyed by shape and filled by declaration."""
+        return _LEDGER_CONTRIBUTION_NOTES[self.contribution].format(
+            mechanic=self.mechanic_id
+        )
+
+
+def survival_ledger_contribution(
+    rule: BehaviorRule,
+) -> SurvivalLedgerContribution | None:
+    """Which ledger shape *rule* declares, or ``None`` for a rule that declares none.
+
+    Read from the payload's own declared-absence idiom rather than from the
+    family: ``self_shield`` and ``heal`` are ``None`` on the procs and forced
+    strikes that do not pay one, and a routing deferral is the whole rule.  A
+    forced-strike heal counts only when the rule's subject is its holder — the
+    ledger this answers about is the holder's.
+    """
+    payload = rule.payload
+    if isinstance(payload, CooldownProcRule) and payload.self_shield is not None:
+        return SurvivalLedgerContribution.SELF_SHIELD
+    if isinstance(payload, DamageDeferralRule):
+        return SurvivalLedgerContribution.DEFERRED_DAMAGE
+    if (
+        isinstance(payload, ForcedCritRule)
+        and payload.heal is not None
+        and payload.subject is Subject.HOLDER
+    ):
+        return SurvivalLedgerContribution.STRIKE_HEAL
+    return None
+
+
+def survival_ledger_entries(owner: str) -> tuple[SurvivalLedgerEntry, ...]:
+    """Every declared contribution *owner* makes to its holder's ledger."""
+    return tuple(
+        SurvivalLedgerEntry(owner, rule.mechanic_id, contribution)
+        for rule in behavior_rules(owner)
+        if (contribution := survival_ledger_contribution(rule)) is not None
+    )
+
+
+def survival_ledger_note(owner: str) -> str | None:
+    """*owner*'s certification sentence, or ``None`` when it declares none.
+
+    ``None`` is the honest answer for an item with no such declaration, and it
+    is what tells a caller to publish "no special defensive effect" instead of
+    a certification nothing backs.
+    """
+    entries = survival_ledger_entries(owner)
+    if not entries:
+        return None
+    return " ".join(entry.note for entry in entries)
+
+
+def survival_ledger_certifications() -> Mapping[str, str]:
+    """Every owner whose declaration is inside the effective health BIS ranks.
+
+    The successor to the hand-written certification table the BIS receipt used
+    to carry: same question, asked of the declarations instead of asserted
+    beside them, so an item that stops declaring its shield stops being
+    certified on the same commit rather than on the day somebody re-reads the
+    prose.
+    """
+    return {
+        owner: note
+        for owner in sorted(rule_owners())
+        if (note := survival_ledger_note(owner)) is not None
+    }
 
 
 @dataclass(frozen=True, slots=True)
