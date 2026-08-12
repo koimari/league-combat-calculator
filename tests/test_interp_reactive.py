@@ -18,7 +18,13 @@ import pytest
 
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.interpreters import INTERPRETERS, resolve_defense
-from src.calculator.interpreters.reactive import RESOLVER_INTERPRETER, thorns_effects
+from src.calculator.interpreters.defense_state import DefenseInterpretationError
+from src.calculator.interpreters.reactive import (
+    RESOLVER_INTERPRETER,
+    THORNS_FIELDS,
+    WALK_INTERPRETER,
+    thorns_effects,
+)
 from src.calculator.item_behavior import (
     BehaviorRule,
     DefenseMechanic,
@@ -27,6 +33,22 @@ from src.calculator.item_behavior import (
     RuleFamily,
     TriggerEvent,
 )
+
+
+def _ctx(owner: str):
+    """A build context the walk boundary could not actually supply.
+
+    Every reference a strike-back declares is flat, so the interpreter reads
+    none of this; it is here because ``compile`` takes a context and a test
+    that passed one carrying real fight facts would imply the walk has them.
+    """
+    return catalog.build_context(
+        owner,
+        18,
+        fight_duration_seconds=0.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
 
 
 def _subject(**stats: float) -> DefenseSubject:
@@ -166,3 +188,52 @@ def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(
         resolve_defense(
             _rule("Armored Advance", DefenseMechanic.NOXIAN_ENDURANCE), _subject()
         )
+
+
+# ── the walk lane: the strike-back the coupled timeline compiles itself ────
+
+
+def test_the_family_is_registered_on_the_walk_that_pays_the_strike_back() -> None:
+    """Thorns is not staged from resolved state, so the walk owes an answer.
+
+    ``participant_timeline`` compiles one profile per roster actor from this
+    family's declaration and schedules a strike-back event from it; that is a
+    walk-lane interpretation, and until this registration the lane was a gap
+    whose dated receipt said the walks stage what the resolver built.
+    """
+    assert (
+        INTERPRETERS[(RuleFamily.REACTIVE, EngineLane.RECEIPT_WALK)] is WALK_INTERPRETER
+    )
+
+
+def test_the_walk_lane_compiles_the_three_numbers_a_strike_back_declares() -> None:
+    """Every field is the declaration's own, stamped with the lane it serves."""
+    rule = _rule("Thornmail", DefenseMechanic.THORNS)
+    fields = WALK_INTERPRETER.compile(rule, _ctx(rule.owner))
+    assert [field.name for field in fields] == list(THORNS_FIELDS)
+    assert all(field.lane is EngineLane.RECEIPT_WALK for field in fields)
+    assert all(field.rule_id == rule.mechanic_id for field in fields)
+
+
+def test_the_accessor_and_the_interpreter_share_one_arithmetic_home() -> None:
+    """The timeline's packet is the interpreter's fields, not a second sum.
+
+    Two producers of one number is the incident's own shape, so what is
+    asserted is identity of the values rather than that both merely run.
+    """
+    rule = _rule("Thornmail", DefenseMechanic.THORNS)
+    fields = {
+        field.name: float(field.value)
+        for field in WALK_INTERPRETER.compile(rule, _ctx(rule.owner))
+    }
+    (packet,) = thorns_effects(_build("Thornmail"))
+    assert packet.damage == fields["base"]
+    assert packet.bonus_armor_ratio == fields["bonus_armor_ratio"]
+    assert packet.grievous_duration == fields["grievous_duration"]
+
+
+def test_the_walk_lane_refuses_a_reactive_shield_rather_than_pricing_it_twice() -> None:
+    """The shields reach the walk as resolved state; asking here is a stop."""
+    rule = _rule("Armored Advance", DefenseMechanic.NOXIAN_ENDURANCE)
+    with pytest.raises(DefenseInterpretationError, match="price it twice"):
+        WALK_INTERPRETER.compile(rule, _ctx(rule.owner))

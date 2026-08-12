@@ -47,6 +47,12 @@ _REACTIVE_SHIELDS = frozenset(
     {DefenseMechanic.NOXIAN_ENDURANCE, DefenseMechanic.NOXIAN_PERSISTENCE}
 )
 
+# The three sourced numbers a Thorns declaration strikes back with, named
+# after the reference each was declared under.  The walk reads them as its own
+# lane's fields, so a reader can tell a number the coupled timeline compiled
+# from one the defensive resolver granted.
+THORNS_FIELDS: tuple[str, ...] = ("base", "bonus_armor_ratio", "grievous_duration")
+
 
 class ReactiveResolverInterpreter:  # pylint: disable=too-few-public-methods
     """The defensive resolver's answer for the ``reactive`` family."""
@@ -72,7 +78,67 @@ class ReactiveResolverInterpreter:  # pylint: disable=too-few-public-methods
         )
 
 
+class ReactiveWalkInterpreter:  # pylint: disable=too-few-public-methods
+    """The receipt walk's answer for the one reactive mechanic it pays itself.
+
+    Thorns is not staged from resolved defensive state: it writes none, and
+    the coupled timeline compiles the declaration at its own boundary — one
+    profile per roster actor, per fight — before scheduling a strike-back
+    event against whoever swung.  That is a walk-lane interpretation and it
+    has been one since the family was migrated; what it lacked was a
+    registration saying so, which left the lane counted as a gap whose dated
+    receipt said the walks stage the resolver's work.  They do for the two
+    reactive shields and they do not for this.
+
+    Field for field this is :func:`thorns_effects`' own arithmetic, shared
+    through :func:`_thorns_fields`, so the registered interpreter and the
+    accessor the timeline calls cannot answer differently — the same single
+    arithmetic home the sustain family's walk half keeps.
+    """
+
+    FAMILY = RuleFamily.REACTIVE
+    LANES = frozenset({EngineLane.RECEIPT_WALK})
+
+    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
+        """One Thorns declaration's numbers, on the lane that pays them.
+
+        ``ctx`` is unread: every reference a strike-back declares is flat, and
+        the boundary that builds a walk has no level to resolve a ramp
+        against.
+        """
+        del ctx
+        return _thorns_fields(rule, EngineLane.RECEIPT_WALK)
+
+
 RESOLVER_INTERPRETER = ReactiveResolverInterpreter()
+WALK_INTERPRETER = ReactiveWalkInterpreter()
+
+
+def _thorns_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...]:
+    """One strike-back declaration's sourced numbers, or a named stop.
+
+    A reactive rule that is not Thorns is refused rather than compiled to an
+    empty tuple: the two Noxian shields reach the walk as the resolved state
+    the defensive resolver granted, so asking this lane for one would be a
+    second producer of a number that already has one.
+    """
+    slot = DefenseSlot(rule)
+    if slot.mechanic is not DefenseMechanic.THORNS:
+        raise DefenseInterpretationError(
+            f"{rule.mechanic_id} declares reactive and is not a strike-back; "
+            "the walk stages a reactive shield as the resolved state the "
+            "defensive resolver granted, and compiling one here would price it "
+            "twice"
+        )
+    return tuple(
+        KernelField(
+            name=name,
+            value=slot.value(name),
+            lane=lane,
+            rule_id=rule.mechanic_id,
+        )
+        for name in THORNS_FIELDS
+    )
 
 
 def _reactive_shield(slot: DefenseSlot, subject: DefenseSubject) -> DefenseOutcome:
@@ -128,17 +194,19 @@ def thorns_effects(items: Sequence[Mapping[str, object]]) -> tuple[ThornsEffect,
         for rule in behavior_rules(owner):
             if rule.family is not RuleFamily.REACTIVE:
                 continue
-            slot = DefenseSlot(rule)
-            if slot.mechanic is not DefenseMechanic.THORNS:
+            if DefenseSlot(rule).mechanic is not DefenseMechanic.THORNS:
                 continue
-            damage_class = defense_state.payload(rule).damage_class
+            values = {
+                field.name: field.value
+                for field in _thorns_fields(rule, EngineLane.RECEIPT_WALK)
+            }
             compiled.append(
                 ThornsEffect(
                     item_name=owner,
-                    damage_type=damage_class.value,
-                    damage=slot.value("base"),
-                    bonus_armor_ratio=slot.value("bonus_armor_ratio"),
-                    grievous_duration=slot.value("grievous_duration"),
+                    damage_type=defense_state.payload(rule).damage_class.value,
+                    damage=float(values["base"]),
+                    bonus_armor_ratio=float(values["bonus_armor_ratio"]),
+                    grievous_duration=float(values["grievous_duration"]),
                 )
             )
     return tuple(compiled)
@@ -148,6 +216,9 @@ __all__ = [
     "REACTIVE_SHIELD_NOTE",
     "REACTIVE_SHIELD_SOURCE",
     "RESOLVER_INTERPRETER",
+    "THORNS_FIELDS",
+    "WALK_INTERPRETER",
     "ReactiveResolverInterpreter",
+    "ReactiveWalkInterpreter",
     "thorns_effects",
 ]

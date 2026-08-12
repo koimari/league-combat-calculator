@@ -149,7 +149,6 @@
         "periodic/compiled_score_walk",
         "periodic/receipt_walk",
         "reactive/compiled_score_walk",
-        "reactive/receipt_walk",
         "resistance_shred/compiled_score_walk",
         "resistance_shred/receipt_walk",
         "secondary_target/receipt_walk",
@@ -243,11 +242,7 @@
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "reactive/compiled_score_walk": {
-            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
-            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
-          },
-          "reactive/receipt_walk": {
-            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "reason": "the two reactive shields reach the compiled ledger as the resolved defensive state the resolver granted, and the strike-back reaches it as the profile participant_timeline compiled through this family's walk interpreter \u2014 survival/compile.py prices it against the striker's own resistances \u2014 so neither half arrives as the rule",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "resistance_shred/compiled_score_walk": {
@@ -291,7 +286,7 @@
       },
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 31
+      "value": 30
     }
   },
   "exclusions": {

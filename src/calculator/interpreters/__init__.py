@@ -297,6 +297,7 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         RuleFamily.REACTIVE,
         EngineLane.DEFENSE_RESOLVER,
     ): reactive.RESOLVER_INTERPRETER,
+    (RuleFamily.REACTIVE, EngineLane.RECEIPT_WALK): reactive.WALK_INTERPRETER,
     (
         RuleFamily.RESISTANCE_SHRED,
         EngineLane.PAIR_ENGINE,
@@ -366,6 +367,13 @@ _TEMPLATE_FED = (
     "item_support_effects emits, not from the declaration; the packet kinds "
     "it cannot stage are refused per rule by compilability_for"
 )
+_PROFILE_FED = (
+    "the two reactive shields reach the compiled ledger as the resolved "
+    "defensive state the resolver granted, and the strike-back reaches it as "
+    "the profile participant_timeline compiled through this family's walk "
+    "interpreter — survival/compile.py prices it against the striker's own "
+    "resistances — so neither half arrives as the rule"
+)
 _PAIR_PRICED_OR_PACKET_FED = (
     "the walk never reads an amp declaration: a holder-side amp reaches it "
     "already priced, inside the pair engine's damage rows, and a "
@@ -411,10 +419,16 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.OPENING_DEFENSE,
             RuleFamily.THRESHOLD_DEFENSE,
             RuleFamily.COMBAT_STATE,
-            RuleFamily.REACTIVE,
         )
         for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
     },
+    # Reactive's receipt half is no longer a gap — the coupled timeline
+    # compiles the strike-back declaration at its own boundary through the
+    # registered walk interpreter — so only the compiled lane has a row, and
+    # its route is that boundary rather than the resolver's.
+    (RuleFamily.REACTIVE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
+        reason=_PROFILE_FED, retires_at=_ONE_KERNEL
+    ),
     (RuleFamily.ALLY_PACKET, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         reason=_TEMPLATE_FED, retires_at=_ONE_KERNEL
     ),
