@@ -476,6 +476,8 @@ def cached_source_receipt(owner: str, stamp: str) -> SourceReceipt:
     owner's name and a stamp the caller supplies, and it reads no registry.
     Every declaration in the catalog resolves one, so the percent-encoding
     was being redone hundreds of thousands of times per optimizer request.
+    Unbounded, and bounded in practice by its callers the same way
+    :func:`_mechanic_slug` is: both arguments come from the registries.
     """
     return SourceReceipt(
         url=f"{_WIKI}/{quote(owner.replace(' ', '_'))}",
@@ -1714,7 +1716,11 @@ def _mechanic_slug(owner: str) -> str:
     """An owner's identifier spelling, matching Phase 2's mechanic ids.
 
     Cached on the name alone — it is a pure string transform reading no
-    registry, and every rule the catalog compiles builds one.
+    registry, and every rule the catalog compiles builds one.  The cache is
+    unbounded and outside ``data_version()``'s reach, so nothing clears it;
+    that is safe because the keyspace is bounded by the callers rather than
+    by the type — every argument is a registry or keystone owner name — and
+    a caller passing arbitrary strings would be growing it without limit.
 
     Lower case, apostrophes dropped rather than transliterated, every other
     run of non-alphanumerics collapsed to one underscore — which is how
@@ -5352,6 +5358,15 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     entry objects in the value — because ``refresh_item_effects()`` rebuilds
     the registry without writing a cache file, so the counter alone would
     serve a shape compiled from entries that no longer exist.
+
+    The re-check is by entry **object identity**, and that is the memo's one
+    blind spot: mutating a live entry *in place*
+    (``ITEM_EFFECTS['X']['k'] = v``) leaves the same object in the registry,
+    so the memo keeps serving rules compiled from its old contents until
+    ``data_version()`` moves.  Replacing the entry — which is what a refresh
+    does, and what ``monkeypatch.setitem`` on the registry does — is seen
+    immediately.  Stated because it is a real narrowing: before the memo, an
+    in-place edit was picked up on the next call.
     """
     entries = registry_entries(owner) + keystone_entries(owner)
     sources = tuple(entry for _registry, _family, entry in entries)
