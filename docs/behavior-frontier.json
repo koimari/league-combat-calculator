@@ -30,9 +30,6 @@
     "calculator/loadout_rules.py": {
       "class_c": 28
     },
-    "calculator/optimizer.py": {
-      "counter_1": 1
-    },
     "calculator/passive_parser.py": {
       "class_c": 92
     },
@@ -150,7 +147,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 44
+      "value": 43
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",

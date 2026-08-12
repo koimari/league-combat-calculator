@@ -123,6 +123,11 @@ DATA_VERSION_KEYED_MEMOS: dict[str, str] = {
     "calculator.economy._ITEM_BY_ID_MEMO": (
         "the id-keyed view of the item cache the optimizer prices plans through"
     ),
+    "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_OWNER_MEMO": (
+        "which item declares the temporary-health Lifeline, derived from the "
+        "catalog the cache generation counts; read inside two fight loops, so "
+        "the derivation is memoized rather than re-scanned per candidate"
+    ),
     "calculator.pipeline._CAST_ORDER_PARAMS_MEMO": (
         "derived cast-order params; the order was resolved from cached ability data"
     ),

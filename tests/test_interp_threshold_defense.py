@@ -13,9 +13,20 @@ from __future__ import annotations
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.interpreters.defense_state import declared_defenses
+from dataclasses import replace
+
+from src.calculator.interpreters.defense_state import (
+    DefenseInterpretationError,
+    declared_defenses,
+)
 from src.calculator.interpreters import INTERPRETERS, resolve_defense
-from src.calculator.interpreters.threshold_defense import RESOLVER_INTERPRETER
+from src.calculator.interpreters.threshold_defense import (
+    RESOLVER_INTERPRETER,
+    THRESHOLD_HEALTH_MECHANIC,
+    ThresholdExpiryWithheld,
+    threshold_health_coverage_source,
+    threshold_health_owner,
+)
 from src.calculator.item_behavior import (
     BehaviorRule,
     DefenseExclusivity,
@@ -190,3 +201,67 @@ def test_a_missing_typing_key_fails_loud_with_item_and_key() -> None:
             catalog.behavior_rules("Immortal Shieldbow")
     finally:
         item_effects.ITEM_EFFECTS["Immortal Shieldbow"] = original
+
+
+# ── the mechanic's owner, derived rather than spelled (3.9) ───────────────
+
+
+def test_the_temporary_health_lifelines_owner_comes_from_the_declaration() -> None:
+    """The name two engines put in a receipt is read off the catalog.
+
+    The pair engine sees a defender's resolved numbers and never its items,
+    so both readers of this mechanic — the fight's coverage downgrade and
+    the optimizer's candidate rejection — used to spell the item.  Asserted
+    against the catalog rather than a literal, so the day another item grows
+    the mechanic this stops rather than names the wrong one.
+    """
+    declared = {
+        rule.owner
+        for owner in catalog.declared_owners()
+        for rule in catalog.behavior_rules(owner)
+        if getattr(rule.payload, "mechanic", None) is THRESHOLD_HEALTH_MECHANIC
+    }
+
+    assert threshold_health_owner() in declared
+    assert threshold_health_coverage_source() == f"target_{threshold_health_owner()}"
+
+
+def test_the_expiry_refusal_carries_the_owner_and_the_coverage_source() -> None:
+    """The refusal is a type; its consumer no longer greps a sentence."""
+    withheld = ThresholdExpiryWithheld()
+
+    assert isinstance(withheld, ValueError)
+    assert withheld.owner == threshold_health_owner()
+    assert withheld.coverage_source == threshold_health_coverage_source()
+    assert "temporary-health expiry" in str(withheld)
+
+
+def test_two_declared_temporary_health_lifelines_stop_rather_than_guess(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """R-05's red: the pools that raise carry no owner, so two is a stop.
+
+    One item declares the mechanic today, so the second is planted.  A
+    receipt naming the wrong holder is worse than a refusal, which is why
+    the derivation refuses instead of taking the first sorted name.
+    """
+    from src.calculator.interpreters import threshold_defense
+
+    real = threshold_defense.behavior_rules
+    twin = tuple(
+        replace(rule, owner="Cytoplasm Harness")
+        for rule in real(threshold_health_owner())
+    )
+    monkeypatch.setattr(
+        threshold_defense,
+        "behavior_rules",
+        lambda owner: twin if owner == "Recurve Bow" else real(owner),
+    )
+    # A throwaway memo rather than a cleared one: this generation's answer is
+    # already memoized by the reads above and a hit would never reach the
+    # derivation, while clearing the real dict would leave the planted twin's
+    # verdict reachable by whatever runs next.
+    monkeypatch.setattr(threshold_defense, "_THRESHOLD_HEALTH_OWNER_MEMO", {})
+
+    with pytest.raises(DefenseInterpretationError, match="carry no owner"):
+        threshold_health_owner()

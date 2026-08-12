@@ -23,6 +23,7 @@ Two properties are checked here and neither is a convention:
 from __future__ import annotations
 
 import ast
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -333,6 +334,9 @@ def test_the_unbounded_memo_set_is_the_keyed_set_minus_the_bounded_ones() -> Non
         "calculator.economy._ITEM_BY_ID_MEMO",
         "calculator.pipeline._CAST_ORDER_PARAMS_MEMO",
         "calculator.survival.receipt_state._STATE_PROTO_MEMO",
+        # One entry per mechanic per generation, and one mechanic declared,
+        # so the generation prefix costs it nothing either.
+        "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_OWNER_MEMO",
     }
 
 
@@ -353,3 +357,38 @@ def test_cast_order_params_memo_key_carries_the_version() -> None:
     """The derived cast-order params memo keys on the generation as well."""
     source = (SRC_ROOT / "calculator" / "pipeline.py").read_text(encoding="utf-8")
     assert "key = (data_version(), id(params), tuple(declared_order))" in source
+
+
+def test_threshold_health_owner_memo_recomputes_after_a_version_bump(
+    bumped_version, monkeypatch
+) -> None:
+    """Which item declares the temporary-health Lifeline follows the cache.
+
+    The derivation is a scan over the catalog, so it is memoized — and a memo
+    over a declaration is exactly the thing that must move when the registry
+    behind the declaration is rebuilt.  The catalog is redirected rather than
+    the registry mutated, because that is the shape identity keying cannot
+    see either.
+    """
+    from src.calculator.interpreters import threshold_defense
+
+    # A throwaway memo: this test writes an answer under a generation the
+    # process has not reached yet, and a later real bump would otherwise
+    # arrive at a key already holding the planted name.
+    monkeypatch.setattr(threshold_defense, "_THRESHOLD_HEALTH_OWNER_MEMO", {})
+    real = threshold_defense.behavior_rules
+    assert threshold_defense.threshold_health_owner() == "Protoplasm Harness"
+
+    renamed = tuple(
+        replace(rule, owner="Cytoplasm Harness") for rule in real("Protoplasm Harness")
+    )
+    monkeypatch.setattr(
+        threshold_defense,
+        "behavior_rules",
+        lambda owner: renamed if owner == "Protoplasm Harness" else real(owner),
+    )
+    assert (
+        threshold_defense.threshold_health_owner() == "Protoplasm Harness"
+    ), "memo should hold"
+    bumped_version()
+    assert threshold_defense.threshold_health_owner() == "Cytoplasm Harness"

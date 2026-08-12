@@ -3,6 +3,7 @@
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.interpreters.threshold_defense import ThresholdExpiryWithheld
 from src.calculator.loadout_rules import exclusivity_groups
 from src.calculator.optimizer import (
     _evaluate_build,
@@ -282,16 +283,19 @@ def test_coupled_equal_damage_uses_event_health_only_as_tie_break(monkeypatch):
 
 
 def test_coupled_candidate_with_fail_closed_protoplasm_is_skipped(monkeypatch):
-    """One unsupported target-state candidate must not abort the search."""
+    """One unsupported target-state candidate must not abort the search.
+
+    The fake raises the engine's own refusal type.  It used to raise a
+    hand-written sentence that no longer appeared anywhere in ``src/`` — the
+    search was caught by a substring of a message the engine had stopped
+    producing, which is the shape where a rewording quietly turns candidate
+    rejection into an aborted request.
+    """
 
     def fake_timeline(*_args, **kwargs):
         items = kwargs.get("items") or _args[2]
-        if any(item["name"] == "Protoplasm Harness" for item in items):
-            raise ValueError(
-                "This damage package scales from target maximum health and "
-                "cannot yet be certified against Protoplasm Harness's "
-                "temporary maximum-health change."
-            )
+        if any(item["name"] == ThresholdExpiryWithheld().owner for item in items):
+            raise ThresholdExpiryWithheld()
         return {
             "breakdown": [{"participant_id": "main", "total_damage": 10.0}],
             "participants": [

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ..data_registry import data_version, store_for_generation
 from ..item_behavior import (
     BehaviorRule,
     BuildContext,
@@ -29,6 +30,7 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
 )
+from ..item_behavior_catalog import behavior_rules, declared_owners
 from . import defense_state
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
@@ -64,6 +66,83 @@ NOTES: Mapping[DefenseMechanic, str] = {
 # every other state source in the resolver, and it differs because the wiki
 # names the mechanic in parentheses rather than after a dash.
 REBIRTH_SOURCE = "{owner} (Rebirth)"
+
+# The one threshold defence that answers with health rather than a shield,
+# and therefore the one whose *expiry* the sources do not document.  The
+# fight engine reaches for this mechanic by name below; the item behind it
+# is whatever declares it.
+THRESHOLD_HEALTH_MECHANIC = DefenseMechanic.LIFELINE_PROTOPLASM
+
+# What the engines publish as the coarse coverage source when a fight's
+# certification turns on that mechanic.
+COVERAGE_SOURCE = "target_{owner}"
+
+_THRESHOLD_HEALTH_OWNER_MEMO: dict[tuple[int, str], str] = {}
+
+
+def threshold_health_owner() -> str:
+    """Which item declares the temporary-health Lifeline, per the catalog.
+
+    The pair engine sees a defender's *numbers*, never its items, so the two
+    engines that must name this mechanic in a receipt — the fight's coverage
+    downgrade and the optimizer's candidate rejection — had no build to ask
+    and spelled the item instead.  The declaration is the thing that knows,
+    and asking it is what makes the name follow the item that grows the
+    mechanic rather than the commit somebody remembers the receipt.
+
+    Exactly one holder, because the drip that raises is armed from resolved
+    pools that carry no owner: with two declarations nothing on that path
+    could say which one armed it, and a receipt naming the wrong item is
+    worse than a stop.  Memoized per cache generation (D-49), because both
+    readers are inside fight loops.
+    """
+    key = (data_version(), THRESHOLD_HEALTH_MECHANIC.value)
+    memoized = _THRESHOLD_HEALTH_OWNER_MEMO.get(key)
+    if memoized is not None:
+        return memoized
+    owners = tuple(
+        sorted(
+            rule.owner
+            for owner in declared_owners()
+            for rule in behavior_rules(owner)
+            if rule.family is RuleFamily.THRESHOLD_DEFENSE
+            and defense_state.payload(rule).mechanic is THRESHOLD_HEALTH_MECHANIC
+        )
+    )
+    if len(owners) != 1:
+        raise DefenseInterpretationError(
+            f"{list(owners)} declare {THRESHOLD_HEALTH_MECHANIC.value} and the "
+            "resolved pools the fight arms it from carry no owner, so nothing "
+            "on that path can say which one a receipt should name"
+        )
+    store_for_generation(_THRESHOLD_HEALTH_OWNER_MEMO, key, owners[0])
+    return owners[0]
+
+
+def threshold_health_coverage_source() -> str:
+    """The coarse coverage source naming the temporary-health Lifeline."""
+    return COVERAGE_SOURCE.format(owner=threshold_health_owner())
+
+
+class ThresholdExpiryWithheld(ValueError):
+    """A fight ran past the temporary-health Lifeline's expiry.
+
+    Coverage refuses this fight rather than pricing it: the sources do not
+    document what happens to current health when the temporary maximum
+    lapses.  A type rather than a sentence, because its one consumer used to
+    identify it by searching the message for an item name — which swallowed
+    every unrelated failure that happened to mention the item, and would
+    have started aborting whole searches the day somebody reworded it.
+    """
+
+    def __init__(self) -> None:
+        self.owner = threshold_health_owner()
+        self.coverage_source = threshold_health_coverage_source()
+        super().__init__(
+            f"{self.owner} cannot be certified for damage at or after "
+            "its temporary-health expiry: the current-health removal rule "
+            "is not documented by the sourced Wiki data."
+        )
 
 
 class ThresholdDefenseResolverInterpreter:  # pylint: disable=too-few-public-methods
@@ -187,11 +266,16 @@ def _rebirth(slot: DefenseSlot, subject: DefenseSubject) -> DefenseOutcome:
 
 
 __all__ = [
+    "COVERAGE_SOURCE",
     "LIFELINE_NOTE",
     "MAGIC_QUALIFIER",
     "MAW_OMNIVAMP_NOTE",
     "NOTES",
     "REBIRTH_SOURCE",
     "RESOLVER_INTERPRETER",
+    "THRESHOLD_HEALTH_MECHANIC",
     "ThresholdDefenseResolverInterpreter",
+    "ThresholdExpiryWithheld",
+    "threshold_health_coverage_source",
+    "threshold_health_owner",
 ]

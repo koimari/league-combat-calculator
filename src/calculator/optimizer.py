@@ -27,6 +27,7 @@ from .item_coverage import (
     optimizer_supported_items,
     require_optimizer_item_coverage,
 )
+from .interpreters.threshold_defense import ThresholdExpiryWithheld
 from .item_source import is_ordinary_sr_item
 from .loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
@@ -119,10 +120,10 @@ def _get_occupied_groups(items: list[dict[str, Any]]) -> set[str]:
 
 def _conflicts_with_build(
     candidate_name: str,
-    occupied_groups: set[str],
+    occupied: set[str],
 ) -> bool:
     """Return True if *candidate_name* would violate an exclusivity group."""
-    return conflicts_with_groups(candidate_name, occupied_groups)
+    return conflicts_with_groups(candidate_name, occupied)
 
 
 def _evaluate_build(
@@ -291,26 +292,27 @@ def _evaluate_build_uncached(
                 # because pair fights strip those.
                 reuse_main_stats=not base_params.ally_stat_bonuses,
             )
-        except ValueError as exc:
-            # A candidate can introduce a target-state interaction that is
-            # deliberately fail-closed by the fight engine (for example,
-            # Protoplasm's temporary maximum-health expiry combined with an
-            # enemy max-health ability).  That makes this candidate ineligible
-            # for this exact search; it must not abort every other legal build.
-            # Keep unrelated validation errors visible to the API caller.
-            if "Protoplasm Harness" not in str(exc):
-                raise
+        except ThresholdExpiryWithheld as exc:
+            # A candidate can introduce a target-state interaction the fight
+            # engine deliberately fails closed on: the temporary maximum-health
+            # expiry combined with an enemy max-health ability.  That makes
+            # this candidate ineligible for this exact search; it must not
+            # abort every other legal build.  Caught by *type* — the refusal
+            # used to be identified by searching the message for an item name,
+            # which swallowed unrelated failures mentioning that item and kept
+            # a reworded sentence one commit away from aborting the search.
+            # Every other validation error stays visible to the API caller.
             if timeline_audit is not None:
                 coverage = {
                     "complete": False,
                     "certification": "partial_candidate_event_order",
                     "exact_sources": [],
-                    "coarse_sources": ["target_Protoplasm Harness"],
+                    "coarse_sources": [exc.coverage_source],
                     "note": "Candidate rejected by a target-state interaction.",
                 }
                 timeline_audit["evaluations"] += 1
                 timeline_audit["partial_evaluations"] += 1
-                timeline_audit["coarse_sources"].add("target_Protoplasm Harness")
+                timeline_audit["coarse_sources"].add(exc.coverage_source)
                 timeline_audit.setdefault("withheld_builds", {})[
                     _build_receipt_key(items)
                 ] = _public_build_receipt(
@@ -657,7 +659,7 @@ def _greedy_fill(
             current.append(seed_item)
 
     used_names = {i["name"] for i in current}
-    occupied_groups = _get_occupied_groups(current)
+    build_groups = _get_occupied_groups(current)
 
     while len(current) < len(locked_legendaries) + slots_to_fill:
         best_score = -1.0
@@ -668,7 +670,7 @@ def _greedy_fill(
             if name in used_names:
                 continue
             # Enforce exclusivity groups
-            if _conflicts_with_build(name, occupied_groups):
+            if _conflicts_with_build(name, build_groups):
                 continue
 
             trial_items = current + [candidate]
@@ -689,7 +691,7 @@ def _greedy_fill(
             break
         current.append(best_item)
         used_names.add(best_item["name"])
-        occupied_groups.update(ITEM_TO_EXCLUSIVITY_GROUPS.get(best_item["name"], ()))
+        build_groups.update(ITEM_TO_EXCLUSIVITY_GROUPS.get(best_item["name"], ()))
 
     # Fill boots if needed
     if fill_boots and boots_pool:

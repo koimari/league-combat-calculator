@@ -142,6 +142,7 @@ from .interpreters import (
     on_hit_strike,
     resistance_shred,
     secondary_target,
+    threshold_defense,
 )
 
 # The spellblade interpreter is reached through its one entry point rather
@@ -1835,11 +1836,7 @@ class _ThresholdHealDrip:
             return
         expiry = self.trigger_time + self.duration
         if event_time >= expiry - 1e-9:
-            raise ValueError(
-                "Protoplasm Harness cannot be certified for damage at or after "
-                "its temporary-health expiry: the current-health removal rule "
-                "is not documented by the sourced Wiki data."
-            )
+            raise threshold_defense.ThresholdExpiryWithheld()
         elapsed = max(0.0, event_time - self.last_time)
         if (
             pools.health > 0
@@ -10314,11 +10311,13 @@ def calculate_fight_damage(
         timeline_coverage["complete"] = False
         timeline_coverage["certification"] = "partial_event_order"
         timeline_coverage["coarse_sources"] = sorted(
-            set(timeline_coverage["coarse_sources"]) | {"target_Protoplasm Harness"}
+            set(timeline_coverage["coarse_sources"])
+            | {threshold_defense.threshold_health_coverage_source()}
         )
         timeline_coverage["note"] = (
-            "Protoplasm Harness's sourced total healing is spread over five "
-            "seconds; its internal heal tick cadence is not source-certified."
+            f"{threshold_defense.threshold_health_owner()}'s sourced total "
+            "healing is spread over five seconds; its internal heal tick "
+            "cadence is not source-certified."
         )
     return {
         "breakdown": state.breakdown,
