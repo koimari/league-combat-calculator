@@ -33,7 +33,7 @@ with the rule union.
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, Union
 
@@ -444,6 +444,31 @@ def resolve(reference: AnyValueRef, level: int | None = None) -> float:
     return _resolve(reference, level)
 
 
+def resolve_flat(references: Sequence[AnyValueRef]) -> tuple[float, ...]:
+    """Read references that need no level, or refuse naming the one that does.
+
+    Some readers genuinely have no level and no fight to hand — a heal
+    authored from a finished damage list, a regen tick schedule built before
+    any walk runs.  :func:`resolve` would accept ``level=None`` and let a
+    level ramp raise deep inside its own arithmetic, or worse answer with an
+    end of the ramp; this refuses up front and says which reference it could
+    not read, so a caller learns it needs a context instead of receiving a
+    number nobody asked for.
+
+    That distinction is the point: "this declaration is level-independent"
+    is a fact about the declaration, and checking it here is what lets two
+    families share one fight-free accessor instead of each writing its own.
+    """
+    for reference in references:
+        if not isinstance(reference, ValueRef):
+            raise ValueRefError(
+                f"{reference!r} needs a level or a fight fact and this reader "
+                "has neither; read it through an accessor that is handed a "
+                "build context"
+            )
+    return tuple(reference.get() for reference in references)
+
+
 __all__ = [
     "AnyValueRef",
     "Const",
@@ -465,4 +490,5 @@ __all__ = [
     "ValueRegistry",
     "receipt_for",
     "resolve",
+    "resolve_flat",
 ]

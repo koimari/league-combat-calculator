@@ -18,14 +18,19 @@ import pytest
 
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
+from dataclasses import replace
+
 from src.calculator.interpreters import INTERPRETERS
+from src.calculator.interpreters import stat_derivation
 from src.calculator.interpreters.stat_derivation import (
     PAIR_INTERPRETER,
     RESOLVER_INTERPRETER,
     StatDerivationInterpretationError,
+    declared_stat_derivations,
     stat_derivation_rules,
     stat_slots,
 )
+from src.calculator.value_ref import LevelValueRef
 from src.calculator.item_behavior import (
     DURABILITY_STATS,
     DerivedStat,
@@ -321,3 +326,66 @@ def test_the_interpreter_refuses_a_payload_of_another_family() -> None:
                 holder_is_melee=True,
             ),
         )
+
+
+# ── the fight-free accessor (3.9) ─────────────────────────────────────────
+
+
+def test_a_threshold_regeneration_resolves_without_inventing_a_fight() -> None:
+    """The shape the participant timeline authors its regen ticks from.
+
+    It runs before any walk, so it has no level and no target; every number
+    is asserted against the registry key the retired
+    ``sustain_effect_value("<item>", key)`` branch read, because reproducing
+    those exactly is the migration's whole claim.
+    """
+    slots = declared_stat_derivations(["Warmog's Armor"], ThresholdRegenRule)
+    assert len(slots) == 1
+    slot = slots[0]
+    assert slot.owner == "Warmog's Armor"
+    for field, key in (
+        ("bonus_health_threshold", "heart_bonus_health_threshold"),
+        ("share_of_max_health", "heart_max_health_ratio_per_tick"),
+        ("tick_interval", "heart_tick_interval"),
+        ("champion_damage_cooldown", "heart_champion_damage_cooldown"),
+    ):
+        assert slot.value(field) == item_effects.sustain_effect_value(
+            "Warmog's Armor", key
+        )
+
+
+def test_a_build_declaring_no_threshold_regeneration_answers_empty() -> None:
+    """No holder regenerates on a threshold, so no rule ran."""
+    assert declared_stat_derivations(["Boots"], ThresholdRegenRule) == ()
+
+
+def test_a_level_ramped_derivation_is_refused_rather_than_guessed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """R-05's red, and the reason the two families share one check.
+
+    ``value_ref.resolve_flat`` is what decides "level-independent", so this
+    refusal and the sustain family's are the same refusal — a ramp reaching
+    a fight-free reader is a stop naming the accessor that has a context.
+    """
+    rule = next(
+        rule for rule in stat_derivation_rules(["Warmog's Armor"], ThresholdRegenRule)
+    )
+    ramped = replace(
+        rule,
+        payload=replace(
+            rule.payload,
+            tick_interval=LevelValueRef(
+                "ITEM_EFFECTS",
+                rule.owner,
+                "heart_tick_interval",
+                "heart_tick_interval",
+                "linear_1_18",
+            ),
+        ),
+    )
+    monkeypatch.setattr(
+        stat_derivation, "stat_derivation_rules", lambda owners, kind: (ramped,)
+    )
+    with pytest.raises(StatDerivationInterpretationError, match="fight fact"):
+        declared_stat_derivations(["Warmog's Armor"], ThresholdRegenRule)

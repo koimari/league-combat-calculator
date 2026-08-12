@@ -40,7 +40,7 @@ from ..item_behavior import (
     SustainStatRule,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import ValueRef, resolve
+from ..value_ref import ValueRefError, resolve, resolve_flat
 from . import defense_state
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
@@ -247,23 +247,24 @@ def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot |
     rule = rules[0]
     payload = rule.payload
     names = SUSTAIN_PAYLOAD_REFERENCES[type(payload)]
-    references = [getattr(payload, name) for name in names]
-    if not all(isinstance(reference, ValueRef) for reference in references):
+    try:
+        values = resolve_flat([getattr(payload, name) for name in names])
+    except ValueRefError as exc:
         raise SustainInterpretationError(
             f"{rule.mechanic_id} declares a reference that needs a level or a "
             "fight fact, and this accessor has neither; read it through "
             "sustain_slot, which is handed the context it resolves against"
-        )
+        ) from exc
     return SustainSlot(
         rule=rule,
         fields=tuple(
             KernelField(
                 name=name,
-                value=reference.get(),
+                value=value,
                 lane=EngineLane.PAIR_ENGINE,
                 rule_id=rule.mechanic_id,
             )
-            for name, reference in zip(names, references)
+            for name, value in zip(names, values)
         ),
     )
 

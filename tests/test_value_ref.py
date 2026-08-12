@@ -23,6 +23,7 @@ from src.calculator.value_ref import (
     ValueRefError,
     receipt_for,
     resolve,
+    resolve_flat,
 )
 
 
@@ -223,3 +224,41 @@ def test_an_unsourced_owner_raises_rather_than_returning_a_blank_receipt() -> No
     """No rule is declared against a number nobody can point at."""
     with pytest.raises(UnsourcedDeclarationError):
         receipt_for("ITEM_EFFECTS", "No Such Item")
+
+
+def test_resolve_flat_reads_level_independent_references() -> None:
+    """The primitive two families share for their fight-free accessors."""
+    assert resolve_flat(()) == ()
+    assert resolve_flat(
+        [
+            ValueRef("ITEM_EFFECTS", "Warmog's Armor", "heart_tick_interval"),
+            ValueRef("ITEM_EFFECTS", "Warmog's Armor", "heart_bonus_health_threshold"),
+        ]
+    ) == (
+        item_effects.sustain_effect_value("Warmog's Armor", "heart_tick_interval"),
+        item_effects.sustain_effect_value(
+            "Warmog's Armor", "heart_bonus_health_threshold"
+        ),
+    )
+
+
+def test_resolve_flat_refuses_a_reference_that_needs_a_level() -> None:
+    """It refuses up front rather than answering with an end of the ramp.
+
+    ``resolve`` would take ``level=None`` and let the ramp fail inside its
+    own arithmetic — or, for a shape that tolerated it, hand back a number
+    nobody asked for.  Deciding it here is what makes "this declaration is
+    level-independent" one fact with one home.
+    """
+    with pytest.raises(ValueRefError, match="fight fact"):
+        resolve_flat(
+            [
+                LevelValueRef(
+                    "ITEM_EFFECTS",
+                    "Warmog's Armor",
+                    "heart_tick_interval",
+                    "heart_tick_interval",
+                    "linear_1_18",
+                )
+            ]
+        )

@@ -39,7 +39,7 @@ from ..item_behavior import (
     StatAvailability,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import resolve
+from ..value_ref import ValueRefError, resolve, resolve_flat
 
 
 class StatDerivationInterpretationError(ValueError):
@@ -199,6 +199,59 @@ def stat_slots(
     )
 
 
+def declared_stat_derivations(
+    owners: Sequence[str], payload_type: type
+) -> tuple[StatSlot, ...]:
+    """This build's derivations of one shape, from flat references alone.
+
+    The companion to :func:`stat_slots`, and the twin of the sustain family's
+    ``declared_sustain``: for the readers that author from a build and a
+    duration before any fight context exists.  Both refuse a reference
+    needing a level or a fight fact rather than inventing one — the shared
+    check is ``value_ref.resolve_flat``, so "level-independent" is decided in
+    one place for both families instead of twice.
+
+    A tuple like :func:`stat_slots`, and for the same reason: two holders of
+    one derivation both grant, so refusing a second would invent a
+    restriction the game does not have.
+    """
+    slots: list[StatSlot] = []
+    for rule in stat_derivation_rules(owners, payload_type):
+        payload = rule.payload
+        names = tuple(
+            name
+            for name in (
+                STAT_DERIVATION_REQUIRED_REFERENCES[type(payload)]
+                + STAT_DERIVATION_OPTIONAL_REFERENCES[type(payload)]
+            )
+            if getattr(payload, name) is not None
+        )
+        try:
+            values = resolve_flat([getattr(payload, name) for name in names])
+        except ValueRefError as exc:
+            raise StatDerivationInterpretationError(
+                f"{rule.mechanic_id} declares a reference that needs a level "
+                "or a fight fact, and this accessor has neither; read it "
+                "through stat_slots, which is handed the context it resolves "
+                "against"
+            ) from exc
+        slots.append(
+            StatSlot(
+                rule=rule,
+                fields=tuple(
+                    KernelField(
+                        name=name,
+                        value=value,
+                        lane=EngineLane.STAT_RESOLVER,
+                        rule_id=rule.mechanic_id,
+                    )
+                    for name, value in zip(names, values)
+                ),
+            )
+        )
+    return tuple(slots)
+
+
 __all__ = [
     "PAIR_INTERPRETER",
     "RESOLVER_INTERPRETER",
@@ -206,6 +259,7 @@ __all__ = [
     "StatDerivationPairInterpreter",
     "StatDerivationResolverInterpreter",
     "StatSlot",
+    "declared_stat_derivations",
     "stat_derivation_rules",
     "stat_slots",
 ]

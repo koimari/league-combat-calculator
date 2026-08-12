@@ -36,9 +36,6 @@
     "calculator/optimizer.py": {
       "counter_1": 1
     },
-    "calculator/participant_timeline.py": {
-      "counter_1": 5
-    },
     "calculator/passive_parser.py": {
       "class_c": 92
     },
@@ -159,7 +156,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 53
+      "value": 48
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",

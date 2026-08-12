@@ -49,10 +49,13 @@ from .healing_reduction import (
     healing_reduction_profiles,
 )
 from .interpreters.reactive import thorns_effects
+from .interpreters.stat_derivation import (
+    declared_stat_derivations as _declared_stat_derivations,
+)
+from .item_behavior import ThresholdRegenRule
 from .item_effects import (
     ThornsEffect,
     serpents_fang_venom,
-    sustain_effect_value,
 )
 from .resistance import (
     apply_armor_penetration,
@@ -398,27 +401,41 @@ def _packet_typed_actions(
 def _warmog_heart_tick_events(
     combatant: Combatant, duration: float
 ) -> list[dict[str, Any]]:
-    """Author an active Warmog's Heart holder's regen tick events.
+    """Author an active threshold-regeneration holder's tick events.
 
-    Warmog's Heart is a live combat-state gate.  Each tick's amount is based
-    on the current maximum health at the moment it lands, while the no-damage
-    window is checked inside the survival walk against the last applied
-    incoming packet.  The 2,000 bonus-health threshold is sourced from the
-    item's full Wiki entry and is intentionally not guessed for an
+    A threshold regeneration is a live combat-state gate.  Each tick's amount
+    is based on the current maximum health at the moment it lands, while the
+    no-damage window is checked inside the survival walk against the last
+    applied incoming packet.  The bonus-health threshold that arms it is a
+    declared, sourced number and is intentionally not guessed for an
     unqualified loadout.  Both walks author through this one function: the
     receipt composition schedules the events per call, and the compiled base
     panel converts them into typed actions once per search (issue #169).
+
+    Read through the declaration rather than by item name, so the shape is
+    what decides — a second item growing a threshold regeneration is
+    authored here on the commit its declaration lands, not on the commit
+    somebody remembers this branch.
     """
-    if not any(
-        str(item.get("name", "")) == "Warmog's Armor" for item in combatant.items
+    slots = _declared_stat_derivations(
+        sorted({str(item.get("name", "")) for item in combatant.items}),
+        ThresholdRegenRule,
+    )
+    if not slots:
+        return []
+    if len(slots) > 1:
+        raise ValueError(
+            f"{[slot.owner for slot in slots]} all declare a threshold "
+            "regeneration and nothing declares how two of them tick together"
+        )
+    slot = slots[0]
+    if float(combatant.stats.get("bonus_health", 0.0)) < slot.value(
+        "bonus_health_threshold"
     ):
         return []
-    threshold = sustain_effect_value("Warmog's Armor", "heart_bonus_health_threshold")
-    if float(combatant.stats.get("bonus_health", 0.0)) < threshold:
-        return []
-    ratio = sustain_effect_value("Warmog's Armor", "heart_max_health_ratio_per_tick")
-    tick = sustain_effect_value("Warmog's Armor", "heart_tick_interval")
-    gate = sustain_effect_value("Warmog's Armor", "heart_champion_damage_cooldown")
+    ratio = slot.value("share_of_max_health")
+    tick = slot.value("tick_interval")
+    gate = slot.value("champion_damage_cooldown")
     if ratio <= 0.0 or tick <= 0.0:
         return []
     events: list[dict[str, Any]] = []
@@ -434,7 +451,7 @@ def _warmog_heart_tick_events(
                         maximum_health * ratio
                     )
                 ),
-                "source": "Warmog's Armor (Warmog's Heart)",
+                "source": f"{slot.owner} (Warmog's Heart)",
                 "kind": "regen",
                 "actor_wide": True,
                 "requires_damage_free_seconds": gate,
