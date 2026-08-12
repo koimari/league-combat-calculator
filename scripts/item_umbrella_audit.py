@@ -11,6 +11,10 @@ Usage::
     .venv/bin/python scripts/item_umbrella_audit.py
     .venv/bin/python scripts/item_umbrella_audit.py --json
     .venv/bin/python scripts/item_umbrella_audit.py --output docs/item-umbrella-audit.json
+    .venv/bin/python scripts/item_umbrella_audit.py --check
+
+``--check`` compares the committed receipt against a fresh run and names every
+field that drifted; ``--output`` is how a slice that moved one refreshes it.
 """
 
 from __future__ import annotations
@@ -42,11 +46,56 @@ from src.calculator.optimizer import (
     get_selectable_items,
 )
 
+RECEIPT_PATH = ROOT / "docs" / "item-umbrella-audit.json"
+
+# How a field present on one side of a comparison only is rendered.
+ABSENT = "<absent>"
+
 
 def _names(items: list[Mapping[str, Any]]) -> set[str]:
     """Return stable item names from a runtime pool."""
 
     return {str(item.get("name", "")) for item in items if item.get("name")}
+
+
+def _keyed_by_item(receipt: Mapping[str, Any]) -> dict[str, Any]:
+    """The receipt with its entry list re-keyed by item name.
+
+    Comparison is by name and never by list position: the entries are sorted
+    by name today, so a cache that gains an item would otherwise report every
+    entry after it as moved and bury the one field that actually changed.
+    """
+
+    keyed = dict(receipt)
+    keyed["entries"] = {
+        str(entry.get("name", "")): entry for entry in receipt.get("entries", [])
+    }
+    return keyed
+
+
+def receipt_diff(
+    committed: Mapping[str, Any], fresh: Mapping[str, Any]
+) -> tuple[tuple[str, Any, Any], ...]:
+    """Every ``(path, committed, fresh)`` where two audit receipts disagree.
+
+    The committed receipt is a coverage answer for 209 items, refreshed by
+    hand; nothing regenerates it and, before this function existed, nothing
+    compared it to a fresh run either — so a coverage change moved the runtime
+    answer and left the published one behind with every gate green.  This is
+    the comparison that makes that visible, and ``--check`` and the test in
+    ``tests/test_item_umbrella_audit.py`` are its two callers.
+    """
+
+    def walk(old: Any, new: Any, path: str) -> list[tuple[str, Any, Any]]:
+        if isinstance(old, Mapping) and isinstance(new, Mapping):
+            found: list[tuple[str, Any, Any]] = []
+            for key in sorted(set(old) | set(new)):
+                child = f"{path}.{key}" if path else str(key)
+                found.extend(walk(old.get(key, ABSENT), new.get(key, ABSENT), child))
+            return found
+        return [] if old == new else [(path, old, new)]
+
+    return tuple(walk(_keyed_by_item(committed), _keyed_by_item(fresh), ""))
 
 
 def run_audit() -> dict[str, Any]:
@@ -193,13 +242,37 @@ def run_audit() -> dict[str, Any]:
     return report
 
 
+def check_committed_receipt() -> int:
+    """Report every field where the committed receipt and a fresh run disagree."""
+
+    committed = json.loads(RECEIPT_PATH.read_text(encoding="utf-8"))
+    drift = receipt_diff(committed, run_audit())
+    for path, old, new in drift:
+        print(f"{path}: {old!r} -> {new!r}")
+    if drift:
+        print(
+            f"FAIL: {len(drift)} field(s) drifted vs {RECEIPT_PATH.name}; refresh it "
+            f"with --output docs/{RECEIPT_PATH.name} in the commit that moved them"
+        )
+        return 1
+    print(f"OK: {RECEIPT_PATH.name} is what a fresh audit produces")
+    return 0
+
+
 def main() -> int:
     """Run the audit and return a shell-friendly status code."""
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="emit the full receipt")
     parser.add_argument("--output", type=Path, help="write the full receipt to a file")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="compare the committed receipt against a fresh run",
+    )
     args = parser.parse_args()
+    if args.check:
+        return check_committed_receipt()
     receipt = run_audit()
     encoded = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
     if args.output:
