@@ -418,6 +418,20 @@
       "captured_at_commit": "ac1ba4e",
       "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
       "why": "R-28 gives every Phase 4 stage its own wall baseline, captured at the stage's first commit and written here before its second; R-32's carve-out makes wall{stage} a lane-written key in a receipt-only commit, so this commit touches no src/. The ceiling is R-28's +10%, recorded so no reader recomputes it."
+    },
+    "P4-S2": {
+      "scenario": "cassiopeia_5champ",
+      "best_of_3_ms": 3325.2,
+      "repeats_ms": [
+        3365.8,
+        3358.2,
+        3325.2
+      ],
+      "ratchet_ceiling_ms": 3657.7,
+      "provenance": "VERIFIED",
+      "captured_at_commit": "c0e0f4e",
+      "command": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --single-routing --scenario cassiopeia_5champ --repeats 3 --json",
+      "why": "S2's own R-28 baseline, captured on the S1 tip before S2's first src/ edit. Measured beside S1's 3318.4 ms: the 0.2% spread between the two captures is repeat noise on one machine, not a stage regression, which is why each stage reads its own row rather than the phase's first."
     }
   },
   "tests": {
