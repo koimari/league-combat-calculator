@@ -377,6 +377,54 @@ UNDECLARED_DEFENSE_MECHANICS: Mapping[DefenseMechanic, str] = {
 # — an omission with no table to name it is the silence this phase removes.
 DEFENSE_UNMIGRATED_MECHANICS: Mapping[DefenseMechanic, str] = {}
 
+# Which defences can only be priced from an *exactly timed* damage ledger,
+# and why each one needs the timestamps.  Every member reads its trigger out
+# of the order damage arrived in — a health threshold the ledger has to cross,
+# a stack the ledger has to accrue, or an authored control event — so a coarse
+# timeline would fire it at the wrong moment rather than not at all, which is
+# the one failure a number cannot disclose.  Pricing them against an
+# uncertified timed fight is refused (``item_coverage`` withholds the run).
+#
+# Keyed by the mechanic and never by the item that carries it: six of the nine
+# are the same Lifeline shape on six different items, and a per-item list
+# would have to be re-reviewed every time a seventh item took a Lifeline.
+EVENT_CERTIFIED_MECHANICS: Mapping[DefenseMechanic, str] = {
+    DefenseMechanic.LIFELINE_PROTOPLASM: (
+        "the Lifeline fires on a health threshold the ordered ledger has to "
+        "cross, and its temporary health expires on a sourced window"
+    ),
+    DefenseMechanic.LIFELINE_HEXDRINKER: (
+        "the Lifeline fires on a health threshold the ordered ledger has to " "cross"
+    ),
+    DefenseMechanic.LIFELINE_SHIELDBOW: (
+        "the Lifeline fires on a health threshold the ordered ledger has to " "cross"
+    ),
+    DefenseMechanic.LIFELINE_MAW: (
+        "the Lifeline fires on a health threshold the ordered ledger has to "
+        "cross, and its omnivamp runs for a sourced window afterwards"
+    ),
+    DefenseMechanic.LIFELINE_SERAPH: (
+        "the Lifeline fires on a health threshold the ordered ledger has to " "cross"
+    ),
+    DefenseMechanic.LIFELINE_STERAK: (
+        "the Lifeline fires on a health threshold the ordered ledger has to " "cross"
+    ),
+    DefenseMechanic.EVERLASTING: (
+        "the shield is scheduled after an authored immobilize, or a slow for a "
+        "melee holder, so the moment it arrives is an event and not a fight "
+        "constant"
+    ),
+    DefenseMechanic.STEADFAST: (
+        "stacks accrue from exact incoming champion magic-damage events and "
+        "expire on their own window, so the resistance at any instant is a "
+        "function of when the damage landed"
+    ),
+    DefenseMechanic.VOIDBORN_RESILIENCE: (
+        "one stack per second of combat, multiplying bonus resistances at the "
+        "maximum, so the multiplier at any instant is a function of the clock"
+    ),
+}
+
 
 # ── citations ─────────────────────────────────────────────────────────────
 
@@ -4822,6 +4870,42 @@ def _validate_defense_source_closure(
         )
 
 
+def _validate_event_certification(
+    certified: Mapping[DefenseMechanic, str] | None = None,
+) -> None:
+    """Every certification names a known mechanic *and* says why (seam: R-05).
+
+    Two clauses.  The first is structural: the certification is a property
+    *of* a declared defence, so a member no declaration and no citation names
+    would be a refusal filed against nothing.  The second is the one that can
+    go red on demand and the one worth having — a mechanic certified with no
+    stated reason withholds a whole calculation on the strength of a blank
+    string, which is the unexplained refusal this campaign removes rather than
+    a new one it adds.
+    """
+    claimed = EVENT_CERTIFIED_MECHANICS if certified is None else certified
+    known = frozenset(DEFENSE_DECLARATIONS) | frozenset(UNDECLARED_DEFENSE_MECHANICS)
+    unknown = sorted(
+        str(getattr(mechanic, "value", mechanic))
+        for mechanic in frozenset(claimed) - known
+    )
+    if unknown:
+        raise BehaviorCatalogError(
+            "every event-certified mechanic is one this catalog declares or "
+            f"cites; unknown={unknown}"
+        )
+    unexplained = sorted(
+        str(getattr(mechanic, "value", mechanic))
+        for mechanic, reason in claimed.items()
+        if not str(reason).strip()
+    )
+    if unexplained:
+        raise BehaviorCatalogError(
+            "an event-certified mechanic withholds a calculation, so each one "
+            f"states why its timing cannot be inferred; unexplained={unexplained}"
+        )
+
+
 def _validate_defense_migration() -> None:
     """Every defence is declared here or carries the slice that retires it.
 
@@ -5044,6 +5128,7 @@ def validate_catalog() -> None:
     _validate_h4_closure()
     _validate_action_kind_closure()
     _validate_defense_source_closure()
+    _validate_event_certification()
     _validate_defense_migration()
     _validate_defense_receipts()
     _validate_compilers()
@@ -5078,6 +5163,7 @@ __all__ = [
     "DEFENSE_RECEIPTS",
     "DEFENSE_SOURCE_FAMILY",
     "DEFENSE_UNMIGRATED_MECHANICS",
+    "EVENT_CERTIFIED_MECHANICS",
     "UNDECLARED_DEFENSE_MECHANICS",
     "DefenseDeclaration",
     "DefenseShape",

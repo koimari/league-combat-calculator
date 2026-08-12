@@ -269,3 +269,27 @@ def test_the_build_context_carries_the_data_version() -> None:
     assert context.data_version == data_registry.data_version()
     assert context.owner == "Black Cleaver"
     assert context.level == 18
+
+
+def test_an_unexplained_certified_mechanic_fails_the_catalog() -> None:
+    """R-05's red for the certification closure, through the validator's seam.
+
+    A certified mechanic withholds a whole calculation when the timeline is
+    coarse.  Certifying one with a blank reason would make that refusal
+    unexplainable to the caller it refuses, which is the failure this campaign
+    exists to remove rather than a new one it may introduce.
+    """
+    with pytest.raises(catalog.BehaviorCatalogError, match="unexplained"):
+        catalog._validate_event_certification(  # pylint: disable=protected-access
+            {DefenseMechanic.LIFELINE_MAW: ""}
+        )
+
+
+def test_every_certified_mechanic_is_one_the_catalog_declares() -> None:
+    """The live set passes the closure the seam above reproduces red."""
+    catalog._validate_event_certification()  # pylint: disable=protected-access
+    assert catalog.EVENT_CERTIFIED_MECHANICS
+    assert all(
+        isinstance(mechanic, DefenseMechanic)
+        for mechanic in catalog.EVENT_CERTIFIED_MECHANICS
+    )

@@ -1,6 +1,11 @@
 """Fail-closed item-mechanic coverage for BIS search."""
 
+import dataclasses
+
 import pytest
+
+from src.calculator import item_coverage
+from src.calculator.item_behavior_catalog import behavior_rules
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
@@ -820,3 +825,128 @@ def test_calculation_item_coverage_accepts_runaan_secondary_bolt_model():
     require_calculation_item_coverage(
         [get_item_by_name("Runaan's Hurricane")], participant="Attacker"
     )
+
+
+# ── the target lane's derivation, beside the three tables ─────────────────
+#
+# 3.8's second half replaces ``_TARGET_MODELED_REASONS``,
+# ``_TARGET_EVENT_CERTIFIED_REASONS`` and ``_TARGET_BLOCKED_REASONS`` with a
+# status computed from declarations.  The derivation lands here first, read by
+# nothing, with its delta against the three tables asserted (runbook R-31):
+# the flip that follows is then a change whose every moved record was named
+# one commit earlier.
+
+
+def _cached_names():
+    """Every cached item name, read through the caching layer."""
+    return sorted(
+        str(record.get("name", ""))
+        for record in fetch_item_data().values()
+        if record.get("name")
+    )
+
+
+def test_the_derived_certified_set_reproduces_the_legacy_table() -> None:
+    """The nine event-certified items, derived from the mechanic declaration.
+
+    Set equality and not a count: the certified population is the one half of
+    the target lane that is load-bearing rather than cosmetic — it decides
+    whether an uncertified timed fight is refused — so the derivation has to
+    reproduce it exactly before anything reads it.
+    """
+    derived = {
+        name
+        for name in _cached_names()
+        if item_coverage.certified_target_mechanics(name)
+    }
+
+    assert derived == set(item_coverage._TARGET_EVENT_CERTIFIED_REASONS)
+
+
+def test_the_derived_target_ladder_moves_exactly_the_declared_delta() -> None:
+    """R-31's asserted delta, item by item, before the flip reads any of it.
+
+    The three moved sets are pinned as sets.  The ninety unavailable records
+    are *derived* from the attacker ladder's own refusal rather than typed:
+    they are the legacy and turret records the shop cannot sell, which the
+    attacker lane already withholds and the target lane still calls "no
+    reviewed effect changes durability" — a review nobody performed.
+    """
+    refused = {
+        name
+        for name in _cached_names()
+        if item_model_coverage(name, item_coverage.TARGET_LANES).status
+        in ("withheld", "review_pending")
+    }
+    moves: dict[str, set[str]] = {}
+    for name in _cached_names():
+        legacy = target_item_model_coverage(get_item_by_name(name))["status"]
+        derived = (
+            item_model_coverage(name, item_coverage.TARGET_LANES).status
+            if name in refused
+            else item_coverage._derived_target_status(name)[0]
+        )
+        if legacy != derived:
+            moves.setdefault(f"{legacy}->{derived}", set()).add(name)
+
+    assert moves["modeled->not_target_relevant"] == {
+        "Frozen Heart",
+        "Spectre's Cowl",
+        "Warmog's Armor",
+    }
+    assert moves["not_target_relevant->modeled"] == {
+        "Catalyst of Aeons",
+        "Cryptbloom",
+        "Death's Dance",
+        "Diadem of Songs",
+        "Doran's Blade",
+        "Doran's Ring",
+        "Echoes of Helia",
+        "Eclipse",
+        "Moonstone Renewer",
+        "Solstice Sleigh",
+    }
+    assert moves["not_target_relevant->withheld"] == refused - {"Guardian's Horn"}
+    assert set(moves) == {
+        "modeled->not_target_relevant",
+        "not_target_relevant->modeled",
+        "not_target_relevant->withheld",
+    }
+
+
+def test_every_holder_survival_field_is_a_field_of_a_declared_payload() -> None:
+    """The rename guard on the one clause that reads payload field names.
+
+    A field this set names and no payload declares would silently stop
+    matching, which is exactly the shape of failure the campaign exists to
+    remove: the clause would go on returning ``False`` and the item would go
+    on publishing ``not_target_relevant``.
+    """
+    declared = {
+        field.name
+        for name in _cached_names()
+        for rule in behavior_rules(name)
+        for field in dataclasses.fields(rule.payload)
+    }
+
+    assert item_coverage._HOLDER_SURVIVAL_FIELDS <= declared
+
+
+def test_a_declared_defence_agrees_with_the_identifier_it_is_read_from() -> None:
+    """``declared_defence`` reads the identifier; the payload is the check.
+
+    Wherever a payload carries its own ``mechanic``, the two spellings must be
+    the same mechanic — otherwise the identifier is a second vocabulary and
+    the target lane would be reading a different defence than the resolver
+    builds.
+    """
+    checked = 0
+    for name in _cached_names():
+        for rule in behavior_rules(name):
+            declared = getattr(rule.payload, "mechanic", None)
+            if declared is None:
+                continue
+            checked += 1
+            assert item_coverage.declared_defence(rule) is declared, rule.mechanic_id
+
+    assert checked

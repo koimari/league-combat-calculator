@@ -42,12 +42,20 @@ from .coverage_evidence import (
 from .data_fetcher import get_item_by_name
 from .interpreters import INTERPRETERS, lanes_for
 from .item_behavior import (
+    BehaviorRule,
     DefenseExclusivity,
+    DefenseMechanic,
     EngineLane,
+    PacketKind,
     RuleFamily,
+    SustainStatRule,
     UtilityDimension,
 )
-from .item_behavior_catalog import behavior_rules, registry_entries
+from .item_behavior_catalog import (
+    EVENT_CERTIFIED_MECHANICS,
+    behavior_rules,
+    registry_entries,
+)
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 
 ItemCoverageStatus = Literal[
@@ -90,10 +98,31 @@ _STATE_FAMILIES: frozenset[RuleFamily] = frozenset(
 # depends on is the whole of ``withheld``, and a caller that never runs the
 # compiled score walk must not be told its items are withheld because that
 # lane has no interpreter yet.
+#
+# The three constants are three different questions, and they are meant to be:
+#
+# * ``ATTACKER_LANES`` — "can the pair engine price this item's outgoing
+#   damage?"  It is what the shop and boots payloads publish, because the
+#   browser asks what an item *is*, not what one search would do with it.
+# * ``SCORING_LANES`` — "can BIS rank a build holding it?"  Ranking runs the
+#   defence resolver too, so eligibility is the stricter question and the
+#   refusals it produces are the ones that exclude a candidate.
+# * ``TARGET_LANES`` — "can the passive-target model price what this item does
+#   to the actor wearing it?"  That is the defence resolver's lane alone: a
+#   target neither attacks nor casts in this model.
+#
+# The consequence is stated rather than left to be discovered: the day a
+# family loses its defence-resolver interpreter, an item reads ``modeled_*``
+# in the shop payload and is ``withheld`` from the optimizer in the same
+# request.  That is the honest pair of answers to two different questions —
+# the shop is not claiming the optimizer will score it — and it is latent
+# today because ``unserved_lanes`` is empty for every cached item on every
+# lane (asserted, not assumed).
 ATTACKER_LANES: frozenset[EngineLane] = frozenset({EngineLane.PAIR_ENGINE})
 SCORING_LANES: frozenset[EngineLane] = ATTACKER_LANES | frozenset(
     {EngineLane.DEFENSE_RESOLVER}
 )
+TARGET_LANES: frozenset[EngineLane] = frozenset({EngineLane.DEFENSE_RESOLVER})
 
 
 @dataclass(frozen=True, slots=True)
@@ -797,6 +826,147 @@ def item_model_coverage(name: str, needed: frozenset[EngineLane]) -> ItemCoverag
             tuple(review_issue_refs(name)) if status in _REFUSAL_STATUSES else ()
         ),
         needed=needed,
+    )
+
+
+# ── the target lane, derived ──────────────────────────────────────────────
+
+# A packet whose kind is one of these changes what its recipient survives;
+# every other kind is a stat buff, a movement effect, vision or an economy
+# payout, and none of those is durability.
+_DURABILITY_PACKET_KINDS: frozenset[PacketKind] = frozenset(
+    {PacketKind.HEAL, PacketKind.SHIELD, PacketKind.TEMPORARY_HEALTH}
+)
+
+# The payload fields a strike declares when its own hit heals or shields the
+# holder.  Named fields rather than a substring test on field names: the
+# ``self_shield`` on a cast proc and the ``heal`` on a forced crit *are* the
+# mechanism, and a test asserts every name here is a field of some declared
+# payload class, so a rename fails loudly rather than quietly emptying it.
+_HOLDER_SURVIVAL_FIELDS: frozenset[str] = frozenset(
+    {
+        "heal",
+        "self_heal_share",
+        "self_heal_ap_ratio",
+        "self_heal_bonus_health_ratio",
+        "self_shield",
+    }
+)
+
+
+def declared_defence(rule: BehaviorRule) -> DefenseMechanic | None:
+    """The defence a rule declares, or ``None`` when it declares none.
+
+    Every compiler builds ``mechanic_id`` as ``<owner slug>.<mechanic>``, so
+    the suffix is the mechanic's own name; a suffix that names a
+    :class:`~.item_behavior.DefenseMechanic` member is a defence the resolver
+    builds.  Read off the identifier rather than off ``payload.mechanic``
+    because one defence — Fimbulwinter's Everlasting — is declared as the ally
+    packet that grants the shield and carries no ``mechanic`` field, and a
+    reader that missed it would silently drop the item from the target lane.
+    A test pins that the two agree wherever the payload has both.
+    """
+    try:
+        return DefenseMechanic(rule.mechanic_id.rsplit(".", 1)[-1])
+    except ValueError:
+        return None
+
+
+def _prices_holder_durability(rule: BehaviorRule) -> bool:
+    """Whether *rule* changes what the actor holding it can survive.
+
+    Four shapes, each read off the declaration and none off a name:
+
+    1. it declares a :class:`~.item_behavior.DefenseMechanic` — the defence
+       resolver's own closed vocabulary, and the target lane is that lane;
+    2. it is a ``sustain`` rule that schedules a heal rather than granting a
+       vampirism stat, because a stat is priced by the stat fold and only a
+       scheduled heal enters the durability ledger;
+    3. its payload declares a holder heal or shield beside its own damage —
+       the strike families whose hit pays health back;
+    4. it emits a cross-participant packet that heals, shields or grants
+       temporary health, or that redirects incoming damage away from its
+       recipient.
+    """
+    if declared_defence(rule) is not None:
+        return True
+    payload = rule.payload
+    if rule.family is RuleFamily.SUSTAIN and not isinstance(payload, SustainStatRule):
+        return True
+    if any(
+        getattr(payload, field, None) is not None for field in _HOLDER_SURVIVAL_FIELDS
+    ):
+        return True
+    if getattr(payload, "redirects_incoming_damage", False):
+        return True
+    return any(
+        spec.kind in _DURABILITY_PACKET_KINDS
+        for spec in getattr(payload, "packets", ()) or ()
+    )
+
+
+def target_lane_rules(name: str) -> tuple[BehaviorRule, ...]:
+    """Every rule *name* declares that the passive-target model prices."""
+    return tuple(
+        rule for rule in behavior_rules(name) if _prices_holder_durability(rule)
+    )
+
+
+def certified_target_mechanics(name: str) -> tuple[DefenseMechanic, ...]:
+    """The declared defences on *name* that need an exactly-timed ledger.
+
+    The catalog declares the property per mechanic and this reads it, so the
+    six Lifelines are one declaration rather than six reviewed sentences and a
+    seventh item taking a Lifeline is certified the day it is declared.
+    """
+    return tuple(
+        mechanic
+        for rule in behavior_rules(name)
+        if (mechanic := declared_defence(rule)) in EVENT_CERTIFIED_MECHANICS
+        and mechanic is not None
+    )
+
+
+def _mechanic_list(rules: tuple[BehaviorRule, ...]) -> str:
+    """The declared mechanics behind an answer, named as the wiki names them.
+
+    The mechanic's own name and never the item's: the receipt says *what* is
+    priced, and the item is already the subject of the sentence around it.
+    """
+    return ", ".join(
+        sorted(
+            {
+                rule.mechanic_id.rsplit(".", 1)[-1].replace("_", " ").title()
+                for rule in rules
+            }
+        )
+    )
+
+
+def _derived_target_status(name: str) -> tuple[str, str]:
+    """The target-lane status of an item whose behaviour is declared."""
+    certified = certified_target_mechanics(name)
+    priced = target_lane_rules(name)
+    if certified:
+        return (
+            "modeled_event_certified",
+            f"{_mechanic_list(priced)} is scheduled from the exactly-timed "
+            f"damage ledger — "
+            + "; ".join(
+                sorted(EVENT_CERTIFIED_MECHANICS[mechanic] for mechanic in certified)
+            )
+            + " — so an uncertified timed fight is withheld rather than mis-timed.",
+        )
+    if priced:
+        return (
+            "modeled",
+            f"{_mechanic_list(priced)} changes what this actor survives, and "
+            "every rule behind it has an interpreter on the target lane.",
+        )
+    return (
+        "not_target_relevant",
+        "Nothing this item declares changes incoming damage, durability or "
+        "combat healing in the passive-target model.",
     )
 
 
