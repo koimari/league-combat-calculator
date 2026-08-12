@@ -64,13 +64,25 @@ CLASSIFIERS: Mapping[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "target": target_item_model_coverage,
 }
 
-# The dotted name each lane's answer comes from.  Written out rather than read
-# off ``__name__``: the attacker lane is a lambda that supplies the lane set
-# ``item_model_coverage`` now requires, and a receipt recording "<lambda>" as
-# its producer would name nothing a reader could look up.
+# The function behind each lane's classifier, and the one source of the name
+# the receipt records as its producer.
+#
+# The attacker entry in ``CLASSIFIERS`` above is a lambda — it supplies the
+# lane set ``item_model_coverage`` requires since 3.8 — so reading
+# ``CLASSIFIERS[lane].__name__`` would write "<lambda>" into the receipt's
+# provenance, naming nothing a reader could look up.  The answer is to name the
+# wrapped function here and still *derive* the string from it: hand-writing the
+# two names would make a rename of ``item_model_coverage`` leave the receipt
+# citing a symbol that no longer exists, which is a declared fact standing
+# where a derived one used to be — the direction this campaign reverses
+# everywhere else.  A test asserts both names resolve on the module.
+CLASSIFIER_FUNCTIONS: Mapping[str, Callable[..., Any]] = {
+    "attacker": item_model_coverage,
+    "target": target_item_model_coverage,
+}
+
 CLASSIFIER_NAMES: Mapping[str, str] = {
-    "attacker": "item_model_coverage",
-    "target": "target_item_model_coverage",
+    lane: function.__name__ for lane, function in CLASSIFIER_FUNCTIONS.items()
 }
 
 # Metadata keys ``compare`` ignores: ``git_head`` moves every commit and the

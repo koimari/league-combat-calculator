@@ -2596,3 +2596,26 @@ def test_the_mutation_suite_is_nine_mutations_that_write_nothing() -> None:
         path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
         for path in MUTATED_FILES
     } == before
+
+
+def test_the_receipt_names_a_producer_a_reader_can_look_up() -> None:
+    """The receipt's provenance is derived from the functions, not typed.
+
+    ``metadata.classifiers`` used to be read off ``classify.__name__`` and
+    became a hand-written map when the attacker lane turned into a lambda that
+    supplies the lane set.  A hand-written producer name survives the rename of
+    the thing it names: the receipt would go on citing a symbol nothing
+    defines, and every gate over it would stay green.  The names come off the
+    wrapped functions again, and this asserts what that buys — each one
+    resolves to a callable on the module the receipt says it is on.
+    """
+    receipt = json.loads(CLASSIFICATION_RECEIPT.read_text(encoding="utf-8"))
+    recorded = receipt["metadata"]["classifiers"]
+
+    assert set(recorded) == set(capture_coverage_classification.CLASSIFIERS)
+    assert set(capture_coverage_classification.CLASSIFIER_NAMES) == set(recorded)
+    for lane, dotted in recorded.items():
+        module, _, symbol = dotted.rpartition(".")
+        assert module == "src.calculator.item_coverage", lane
+        assert callable(getattr(item_coverage, symbol)), dotted
+        assert symbol == capture_coverage_classification.CLASSIFIER_NAMES[lane]
