@@ -27,7 +27,13 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator import data_registry, economy, stats, support_effects
+from src.calculator import (
+    data_registry,
+    economy,
+    item_behavior_catalog,
+    stats,
+    support_effects,
+)
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src"
 
@@ -98,9 +104,29 @@ def test_declared_tables_partition_every_memo_in_the_tree() -> None:
     assert scan_memos() == declared
 
 
+# The seven non-rotation survivors D-49 names, by name rather than by count.
+# A count agrees with itself after a swap, and this population *grows*: a memo
+# a later slice creates over item-derived values is required by D-49's own
+# rule — "keyed on by every item-derived memo" — to join the table, so a
+# length assertion would turn obeying the decision into a failure.  What
+# cannot happen is one of these seven leaving.
+D49_SURVIVORS: frozenset[str] = frozenset(
+    {
+        "calculator.economy._ITEM_BY_ID_MEMO",
+        "calculator.pipeline._CAST_ORDER_PARAMS_MEMO",
+        "calculator.stats._ITEM_STATS_MEMO",
+        "calculator.stats._ITEM_STATS_VALIDATION_MEMO",
+        "calculator.support_effects._SUPPORT_ATTRS_MEMO",
+        "calculator.support_effects._SUPPORT_PROFILE_MEMO",
+        "calculator.survival.receipt_state._STATE_PROTO_MEMO",
+    }
+)
+
+
 def test_the_phase_keys_seven_and_phase_five_keys_the_two_rotation_memos() -> None:
-    """The split D-49 rules, as a number rather than as prose."""
-    assert len(data_registry.DATA_VERSION_KEYED_MEMOS) == 7
+    """The split D-49 rules, as the two populations rather than as prose."""
+    assert D49_SURVIVORS <= set(data_registry.DATA_VERSION_KEYED_MEMOS)
+    assert len(D49_SURVIVORS) == 7
     assert len(data_registry.ROTATION_MEMOS) == 2
 
 
@@ -194,6 +220,10 @@ def test_support_profile_memo_recomputes_after_a_version_bump(bumped_version) ->
 
 
 UNBOUNDED_KEYED_MEMOS = {
+    "calculator.item_behavior_catalog._BEHAVIOR_RULES_MEMO": (
+        item_behavior_catalog,
+        "_BEHAVIOR_RULES_MEMO",
+    ),
     "calculator.stats._ITEM_STATS_MEMO": (stats, "_ITEM_STATS_MEMO"),
     "calculator.stats._ITEM_STATS_VALIDATION_MEMO": (
         stats,
@@ -212,7 +242,7 @@ UNBOUNDED_KEYED_MEMOS = {
 
 ``_CAST_ORDER_PARAMS_MEMO`` and ``_STATE_PROTO_MEMO`` clear wholesale at 512
 entries and ``_ITEM_BY_ID_MEMO`` is rebuilt rather than appended to, so the
-generation prefix costs them nothing.  These four grow without limit, which
+generation prefix costs them nothing.  These five grow without limit, which
 is why their writes go through ``store_for_generation``.
 """
 
@@ -254,10 +284,16 @@ def test_a_superseded_generation_is_evicted_rather_than_retained(
     ability = {"effects": [{"leveling": [{"attribute": "Damage"}]}]}
 
     def touch_every_memo() -> None:
+        item_behavior_catalog.behavior_rules("Recurve Bow")
         stats.get_item_stats(item)
         support_effects._has_support_attributes(champion)
         support_effects._support_profile(ability)
 
+    # The catalog memo is written by every test that reads a declaration, so
+    # it arrives here already full of this generation's entries.  Cleared so
+    # that "one touch, one entry" is true of every member and the comparison
+    # below measures eviction rather than the session's history.
+    item_behavior_catalog._BEHAVIOR_RULES_MEMO.clear()  # noqa: SLF001
     touch_every_memo()
     before = {
         name: len(getattr(module, attribute))

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any, Callable, NamedTuple
 from urllib.parse import quote
 
@@ -463,8 +464,16 @@ CACHED_RUNE_SOURCE = "cached data/runes.json (patch 16.15)"
 _WIKI = "https://wiki.leagueoflegends.com/en-us"
 
 
+@lru_cache(maxsize=None)
 def cached_source_receipt(owner: str, stamp: str) -> SourceReceipt:
-    """The cache-backed citation for an owner whose entry carries none."""
+    """The cache-backed citation for an owner whose entry carries none.
+
+    Cached on its two arguments and on nothing else, which is what makes the
+    cache safe without a data version: the receipt is a URL built from the
+    owner's name and a stamp the caller supplies, and it reads no registry.
+    Every declaration in the catalog resolves one, so the percent-encoding
+    was being redone hundreds of thousands of times per optimizer request.
+    """
     return SourceReceipt(
         url=f"{_WIKI}/{quote(owner.replace(' ', '_'))}",
         revision_id=0,
@@ -1688,8 +1697,12 @@ def _declares_secondary(
     )
 
 
+@lru_cache(maxsize=None)
 def _mechanic_slug(owner: str) -> str:
     """An owner's identifier spelling, matching Phase 2's mechanic ids.
+
+    Cached on the name alone — it is a pure string transform reading no
+    registry, and every rule the catalog compiles builds one.
 
     Lower case, apostrophes dropped rather than transliterated, every other
     run of non-alphanumerics collapsed to one underscore — which is how
@@ -4683,21 +4696,51 @@ def registry_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any],
     return tuple(found)
 
 
+# One owner's compiled rules, keyed by cache generation and owner, holding
+# the registry entries they were compiled from (D-49).  Never memoized
+# *across* a generation, which is the property the catalog owes: the key
+# carries ``data_version()`` and the value carries the entry objects, so a
+# refresh that rebuilds the registry without bumping the counter still misses
+# — ``refresh_item_effects()`` replaces every entry dict, and holding the old
+# ones is also what makes an identity check safe from a recycled ``id()``.
+_BEHAVIOR_RULES_MEMO: dict[
+    tuple[int, str],
+    tuple[tuple[Any, ...], tuple[BehaviorRule, ...]],
+] = {}
+
+
 def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
-    """Compile *owner*'s declarations fresh from the live registries.
+    """Compile *owner*'s declarations from the live registries.
 
     An owner with no registry entry has no rules and that is an *answer*:
     the item declares no behaviour at all, which is the stats-only case.  An
     owner **with** an entry whose family is not yet migrated also returns no
     rules, and that is a *refusal* — a different thing with the same shape,
     which is why :func:`undeclared_owners` names it and the frontier counts
-    it.  Never memoized: ``refresh_item_effects()`` must move the answer.
+    it.
+
+    Memoized within one cache generation and never across one (D-49): the
+    optimizer asks this question a quarter of a million times per request and
+    the answer can only change when the registries do.  Both halves of "can
+    only change" are checked — the generation counter in the key and the
+    entry objects in the value — because ``refresh_item_effects()`` rebuilds
+    the registry without writing a cache file, so the counter alone would
+    serve a shape compiled from entries that no longer exist.
     """
+    entries = registry_entries(owner) + keystone_entries(owner)
+    sources = tuple(entry for _registry, _family, entry in entries)
+    key = (data_registry.data_version(), owner)
+    cached = _BEHAVIOR_RULES_MEMO.get(key)
+    if cached is not None and len(cached[0]) == len(sources):
+        if all(before is now for before, now in zip(cached[0], sources)):
+            return cached[1]
     rules: list[BehaviorRule] = []
-    for registry, family, entry in registry_entries(owner) + keystone_entries(owner):
+    for registry, family, entry in entries:
         for claimed in entry_families(registry, family, entry):
             rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
-    return tuple(rules)
+    compiled = tuple(rules)
+    data_registry.store_for_generation(_BEHAVIOR_RULES_MEMO, key, (sources, compiled))
+    return compiled
 
 
 def keystone_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:

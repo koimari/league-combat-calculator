@@ -114,6 +114,12 @@ def store_for_generation(
 # collapsing the last two would hide a real gap behind a reasoned exemption.
 
 DATA_VERSION_KEYED_MEMOS: dict[str, str] = {
+    "calculator.item_behavior_catalog._BEHAVIOR_RULES_MEMO": (
+        "one owner's compiled BehaviorRules; every number in them is read out "
+        "of a registry the cache generation counts, and the entry objects are "
+        "held beside the key so a refresh that rebuilds them without writing "
+        "a file misses too"
+    ),
     "calculator.economy._ITEM_BY_ID_MEMO": (
         "the id-keyed view of the item cache the optimizer prices plans through"
     ),
