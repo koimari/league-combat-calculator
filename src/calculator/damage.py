@@ -150,7 +150,14 @@ from .interpreters import (
 # effect in five functions, and a module shadowed by a local is a bug waiting
 # for somebody to add a read above the assignment.
 from .interpreters.spellblade import resolve_slot as resolve_spellblade_slot
-from .item_behavior import AmpChainSlot, Isolation, Probe, Resistance
+from .interpreters.sustain import declared_sustain
+from .item_behavior import (
+    AmpChainSlot,
+    Isolation,
+    ManaSpentHealRule,
+    Probe,
+    Resistance,
+)
 from .trigger_stream import (
     Stream,
     authored_triggers,
@@ -3616,11 +3623,22 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         (cast_time, 1, order_index, ordinal, "cast", key, 0.0)
         for cast_time, order_index, ordinal, key in events
     ]
-    # Catalyst's damage-taken restoration is an external, timestamped input
-    # from the coupled participant ledger.  It is ordered before casts at the
-    # same timestamp, matching the sourced hit -> resource update -> input
+    # The damage-taken restoration is an external, timestamped input from the
+    # coupled participant ledger.  It is ordered before casts at the same
+    # timestamp, matching the sourced hit -> resource update -> input
     # sequence.  Malformed rows are ignored here; the producer is required to
     # fail closed before constructing this typed tuple.
+    #
+    # The key slot of a restore row is the producer, read off the same
+    # declaration the ledger built the row from
+    # (``roster_composition.resource_restores``) rather than spelled.  Empty
+    # where this build declares none, which is the case where the rows came
+    # from a caller staging them directly.
+    restore_slot = declared_sustain(
+        sorted({str(item.get("name", "")) for item in state.items}),
+        ManaSpentHealRule,
+    )
+    restore_producer = "" if restore_slot is None else restore_slot.owner
     for restore_index, (restore_time, restore_amount) in enumerate(
         state.resource_restore_events
     ):
@@ -3644,7 +3662,7 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
                 -1,
                 restore_index,
                 "restore",
-                "Catalyst of Aeons",
+                restore_producer,
                 restore_amount,
             ),
         )

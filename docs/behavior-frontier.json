@@ -13,7 +13,7 @@
       "class_d": 1
     },
     "calculator/damage.py": {
-      "counter_1": 13
+      "counter_1": 12
     },
     "calculator/item_coverage.py": {
       "counter_2": 267
@@ -144,7 +144,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 37
+      "value": 36
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
