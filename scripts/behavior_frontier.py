@@ -70,6 +70,12 @@ the reason where they meet the count and the gate diffs it by set equality;
 the import-time gate in ``interpreters`` is what makes an *unreceipted* gap
 impossible in the first place.
 
+Counter 4 additionally carries **deferral rows** (umbrella criterion 7,
+Amendment B): gaps Phase 3 cannot close because only Phase 4's S3 can, each
+row naming the gap, its reason and that stage.  The lane targets are measured
+net of them, which is the difference between a phase that says what it did
+not do and one whose exit criterion is quietly false.
+
 Counters 5-7 are Phase 4's and live in ``docs/migration-frontier.json``;
 nothing here reports them.
 
@@ -576,6 +582,43 @@ def _undeclared_base_blocker() -> tuple[str, ...]:
 # Counter 4's target is per lane, so the two lanes it names are two targets.
 COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
+# ── counter 4's deferrals (umbrella criterion 7, Amendment B, 2026-08-12) ──
+#
+# Fourteen declared ``(family, lane)`` pairs on the receipt walk have no
+# interpreter and cannot get one in this phase: their numbers arrive through
+# the pair engine's timed rows today, and only Phase 4's S3 — one kernel, five
+# views, with the ``OutcomeLedger`` and its end-of-walk projection — can move
+# them.  Phase 3 cannot drive them to zero, and a phase exit that pretends
+# otherwise is the undischarged criterion behind a green gate this block was
+# built to stop.
+#
+# So they are **deferred, in writing, one row each**: the gap, the reason its
+# number is not a silence (read from the tree, never restated here) and the
+# stage that retires it.  The Phase-3 exit target is 0 *net of these rows* and
+# Phase 4's exit re-asserts them retired.  A deferral is a promise with a
+# creditor, which is why the gate refuses a row naming a gap the tree no
+# longer holds, a row the tree's own receipt does not date to the recorded
+# stage, and a gap deferred with no dated row behind it at all.
+COUNTER_4_DEFERRALS: Mapping[str, str] = {
+    f"{family}/receipt_walk": "Phase 4 S3 — one kernel, five views"
+    for family in (
+        "active_cast",
+        "cast_proc",
+        "charged_strike",
+        "combat_state",
+        "crit_profile",
+        "damage_routing",
+        "delta_amp",
+        "on_hit_strike",
+        "opening_defense",
+        "periodic",
+        "resistance_shred",
+        "secondary_target",
+        "spellblade",
+        "threshold_defense",
+    )
+}
+
 TARGET_CRITERIA: Mapping[str, str] = {
     "counter_1": "criterion 1: runtime item-name dispatch reaches zero",
     "counter_2": (
@@ -622,9 +665,114 @@ def _lane_owed_to(lane: str) -> str:
     return "; ".join(stages)
 
 
+def deferral_block() -> dict[str, Any]:
+    """Counter 4's committed deferrals: the gap, its reason and its creditor.
+
+    The reason and the retiring stage are read from
+    ``interpreters.UNSERVED_LANE_RECEIPTS``, so a row re-dated in the tree
+    re-dates here rather than saying two things in two places; what this
+    module owns is the *decision* to defer, which is the part a receipt has to
+    carry because no code implies it.
+    """
+    rows: dict[str, dict[str, str]] = {}
+    for key, stage in sorted(COUNTER_4_DEFERRALS.items()):
+        row = next(
+            (
+                receipt
+                for (
+                    family,
+                    lane,
+                ), receipt in interpreters.UNSERVED_LANE_RECEIPTS.items()
+                if f"{family.value}/{lane.value}" == key
+            ),
+            None,
+        )
+        rows[key] = {
+            "recorded_stage": stage,
+            "reason": row.reason if row is not None else "",
+            "retires_at": row.retires_at if row is not None else "",
+        }
+    return {
+        "rule": (
+            "umbrella criterion 7, Amendment B (2026-08-12): a declared "
+            "(family, lane) gap Phase 3 cannot close is deferred in writing to "
+            "the stage that can.  The Phase-3 exit target is 0 net of these "
+            "rows; Phase 4's exit re-asserts them retired.  A row naming a gap "
+            "the tree no longer holds, or a stage the tree's own receipt does "
+            "not say, fails the gate"
+        ),
+        "rows": rows,
+        "by_lane": _deferrals_by_lane(),
+    }
+
+
+def _deferrals_by_lane() -> dict[str, int]:
+    """How many deferral rows each lane carries."""
+    tally: dict[str, int] = {}
+    for key in COUNTER_4_DEFERRALS:
+        lane = key.split("/", 1)[1]
+        tally[lane] = tally.get(lane, 0) + 1
+    return tally
+
+
+def _deferral_failures(
+    committed: Mapping[str, Any], fresh: Mapping[str, Any]
+) -> list[str]:
+    """Amendment B's rows, gated by set equality and against the tree (D-40).
+
+    Fails closed on a missing section.  Three substantive clauses: the
+    committed rows equal the declared ones, every deferred gap is still an
+    open gap in the tree, and every deferred gap is dated by the tree's own
+    unserved-lane receipt to exactly the stage the deferral records.  Without
+    the last two a deferral would outlive the gap it excused, which is a
+    counter driven to its target by a row nobody re-read.
+    """
+    recorded = committed.get("counters", {}).get("counter_4", {}).get("deferrals")
+    if not isinstance(recorded, Mapping):
+        return [
+            "counter 4: the committed receipt records no deferral rows; run --write"
+        ]
+    failures: list[str] = []
+    declared = fresh["counters"]["counter_4"]["deferrals"]["rows"]
+    if set(recorded.get("rows", {})) != set(declared):
+        failures.append(
+            "counter 4: the committed deferral set differs from the declared "
+            f"one (committed-only="
+            f"{sorted(set(recorded.get('rows', {})) - set(declared))}, "
+            f"declared-only={sorted(set(declared) - set(recorded.get('rows', {})))})"
+        )
+    open_gaps = set(fresh["counters"]["counter_4"]["pairs"])
+    dated = fresh["counters"]["counter_4"]["receipts"]["dated"]
+    for key, row in sorted(declared.items()):
+        if key not in open_gaps:
+            failures.append(
+                f"counter 4: {key} is deferred and is not an open gap — a "
+                "deferral that outlives its gap excuses a counter nobody re-read"
+            )
+            continue
+        if key not in dated:
+            failures.append(
+                f"counter 4: {key} is deferred and no unserved-lane receipt "
+                "dates it; a deferral needs the tree's own reason behind it"
+            )
+        elif row["retires_at"] != row["recorded_stage"]:
+            failures.append(
+                f"counter 4: {key} is deferred to {row['recorded_stage']!r} and "
+                f"the tree's receipt says {row['retires_at']!r}"
+            )
+    return failures
+
+
 def target_block(report: FrontierReport) -> dict[str, Any]:
-    """Each counter's target, the bound it resolves to, and the gap left."""
+    """Each counter's target, the bound it resolves to, and the gap left.
+
+    Counter 4's two lane targets are measured **net of the committed deferral
+    rows** (Amendment B): the gross gap and the deferred count ride the entry
+    beside the net one, so the netting is arithmetic a reader can check rather
+    than a smaller number with no derivation.
+    """
     by_lane = _uninterpreted_by_lane()
+    deferred = _deferrals_by_lane()
     measured: dict[str, tuple[int, int, str]] = {
         "counter_1": (0, report.counter_1, ""),
         # The bound is the reviewed set's live size, so reviewing an item in
@@ -632,15 +780,29 @@ def target_block(report: FrontierReport) -> dict[str, Any]:
         "counter_2": (len(item_coverage.NO_RUNTIME_BEHAVIOR), report.counter_2, ""),
         "counter_3": (0, report.counter_3, ""),
         **{
-            f"counter_4/{lane}": (0, by_lane.get(lane, 0), _lane_owed_to(lane))
+            f"counter_4/{lane}": (
+                0,
+                by_lane.get(lane, 0) - deferred.get(lane, 0),
+                _lane_owed_to(lane),
+            )
             for lane in COUNTER_4_TARGET_LANES
         },
+    }
+    netting = {
+        f"counter_4/{lane}": {
+            "gross": by_lane.get(lane, 0),
+            "deferred": deferred.get(lane, 0),
+        }
+        for lane in COUNTER_4_TARGET_LANES
     }
     return {
         "rule": (
             "a target's gap may not grow, a met target may not stay recorded "
             "outstanding, and a target the receipt has lost is a failure; the "
-            "block records targets and never amends one"
+            "block records targets and never amends one.  Counter 4's lane "
+            "targets are measured net of the committed deferral rows "
+            "(Amendment B), and the gross and deferred halves ride the entry "
+            "so the netting is checkable arithmetic"
         ),
         "targets": {
             key: {
@@ -650,6 +812,7 @@ def target_block(report: FrontierReport) -> dict[str, Any]:
                 "gap": max(value - bound, 0),
                 "met": value <= bound,
                 "owed_to": owed,
+                **netting.get(key, {}),
             }
             for key, (bound, value, owed) in sorted(measured.items())
         },
@@ -1226,6 +1389,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
                 "retires_at": "3.9",
                 "pairs": list(report.uninterpreted),
                 "receipts": unserved_lane_block(),
+                "deferrals": deferral_block(),
             },
         },
         "exclusions": {
@@ -1325,6 +1489,7 @@ def check(
     failures.extend(_claim_evidence_failures(committed, fresh))
     failures.extend(_target_failures(committed, fresh))
     failures.extend(_unserved_lane_failures(committed, fresh))
+    failures.extend(_deferral_failures(committed, fresh))
     failures.extend(_zero_policy_failures(committed, fresh))
     failures.extend(_compiled_walk_refusal_failures(committed, fresh))
     failures.extend(_no_runtime_behavior_failures(committed, fresh))
@@ -1359,6 +1524,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                     f"behavior frontier: {key} is {entry['gap']} above its "
                     f"target of {entry['bound']} — "
                     f"{entry['owed_to'] or 'no receipt in the tree names who retires it'}"
+                )
+            elif entry.get("deferred"):
+                print(
+                    f"behavior frontier: {key} is met net of "
+                    f"{entry['deferred']} committed deferral row(s) of "
+                    f"{entry['gross']} — {entry['owed_to']}"
                 )
         return 0
     if not args.json and not args.write:

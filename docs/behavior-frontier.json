@@ -127,6 +127,84 @@
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
+      "deferrals": {
+        "by_lane": {
+          "receipt_walk": 14
+        },
+        "rows": {
+          "active_cast/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "cast_proc/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "charged_strike/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "combat_state/receipt_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "crit_profile/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "damage_routing/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "delta_amp/receipt_walk": {
+            "reason": "the walk never reads an amp declaration: a holder-side amp reaches it already priced, inside the pair engine's damage rows, and a cross-participant one reaches it as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "on_hit_strike/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "opening_defense/receipt_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "periodic/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "resistance_shred/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "secondary_target/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "spellblade/receipt_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          },
+          "threshold_defense/receipt_walk": {
+            "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
+            "recorded_stage": "Phase 4 S3 \u2014 one kernel, five views",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
+          }
+        },
+        "rule": "umbrella criterion 7, Amendment B (2026-08-12): a declared (family, lane) gap Phase 3 cannot close is deferred in writing to the stage that can.  The Phase-3 exit target is 0 net of these rows; Phase 4's exit re-asserts them retired.  A row naming a gap the tree no longer holds, or a stage the tree's own receipt does not say, fails the gate"
+      },
       "pairs": [
         "active_cast/compiled_score_walk",
         "active_cast/receipt_walk",
@@ -475,7 +553,7 @@
   "schema_version": 2,
   "slice": "3.9",
   "targets": {
-    "rule": "a target's gap may not grow, a met target may not stay recorded outstanding, and a target the receipt has lost is a failure; the block records targets and never amends one",
+    "rule": "a target's gap may not grow, a met target may not stay recorded outstanding, and a target the receipt has lost is a failure; the block records targets and never amends one.  Counter 4's lane targets are measured net of the committed deferral rows (Amendment B), and the gross and deferred halves ride the entry so the netting is checkable arithmetic",
     "targets": {
       "counter_1": {
         "bound": 0,
@@ -504,7 +582,9 @@
       "counter_4/pair_engine": {
         "bound": 0,
         "criterion": "criterion 4: no declared family is uninterpreted on the pair engine",
+        "deferred": 0,
         "gap": 0,
+        "gross": 0,
         "measured": 0,
         "met": true,
         "owed_to": ""
@@ -512,9 +592,11 @@
       "counter_4/receipt_walk": {
         "bound": 0,
         "criterion": "criterion 4: no declared family is uninterpreted on the receipt walk",
-        "gap": 14,
-        "measured": 14,
-        "met": false,
+        "deferred": 14,
+        "gap": 0,
+        "gross": 14,
+        "measured": 0,
+        "met": true,
         "owed_to": "Phase 4 S3 \u2014 one kernel, five views"
       }
     }

@@ -592,6 +592,92 @@ def test_a_moved_gap_receipt_is_a_diff_in_the_committed_artifact() -> None:
     assert any("committed dated set differs" in failure for failure in failures)
 
 
+def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
+    """Amendment B: every deferred gap names its reason and its creditor.
+
+    The umbrella's dated amendment (criterion 7) rules the receipt-walk gaps
+    that only Phase 4's S3 can retire into committed deferral rows, and makes
+    the Phase-3 exit target 0 net of them.  A deferral is a promise with a
+    creditor, so each row carries the tree's own reason and the stage that
+    owes it — never a stage this module invented.
+    """
+    block = _receipt()["counters"]["counter_4"]["deferrals"]
+    assert set(block["rows"]) == set(behavior_frontier.COUNTER_4_DEFERRALS)
+    open_gaps = {
+        f"{family.value}/{lane.value}"
+        for family, lane in interpreters.uninterpreted_pairs()
+    }
+    for key, row in block["rows"].items():
+        assert key in open_gaps, key
+        assert row["reason"].strip(), key
+        assert row["recorded_stage"] == row["retires_at"], key
+        assert "Phase 4 S3" in row["recorded_stage"], key
+    # Every deferral is on the receipt walk; the pair engine defers nothing,
+    # which is why criterion 4's pair-engine half is discharged outright.
+    assert set(block["by_lane"]) == {"receipt_walk"}
+
+
+def test_counter_four_targets_are_measured_net_of_the_deferrals() -> None:
+    """The netting is arithmetic on the entry, not a smaller bare number."""
+    targets = _receipt()["targets"]["targets"]
+    for lane in behavior_frontier.COUNTER_4_TARGET_LANES:
+        entry = targets[f"counter_4/{lane}"]
+        assert entry["measured"] == entry["gross"] - entry["deferred"]
+        assert entry["met"], lane
+    assert targets["counter_4/receipt_walk"]["deferred"] == len(
+        behavior_frontier.COUNTER_4_DEFERRALS
+    )
+    assert targets["counter_4/pair_engine"]["gross"] == 0
+
+
+def test_a_deferral_that_outlives_its_gap_fails_the_gate() -> None:
+    """R-05: the red for the clause that stops a stale row excusing a counter."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    fresh = json.loads(json.dumps(committed))
+    stale = "no_such_family/receipt_walk"
+    fresh["counters"]["counter_4"]["deferrals"]["rows"][stale] = {
+        "recorded_stage": "Phase 4 S3 — one kernel, five views",
+        "reason": "invented",
+        "retires_at": "Phase 4 S3 — one kernel, five views",
+    }
+    committed["counters"]["counter_4"]["deferrals"]["rows"][stale] = fresh["counters"][
+        "counter_4"
+    ]["deferrals"]["rows"][stale]
+
+    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+
+    assert any("is not an open gap" in failure for failure in failures)
+
+
+def test_a_deferral_dated_against_the_tree_fails_the_gate() -> None:
+    """A stage the tree's own receipt does not say is not a creditor."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    fresh = json.loads(json.dumps(committed))
+    row = fresh["counters"]["counter_4"]["deferrals"]["rows"][
+        "on_hit_strike/receipt_walk"
+    ]
+    row["recorded_stage"] = "some stage nobody scheduled"
+
+    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+
+    assert any("the tree's receipt says" in failure for failure in failures)
+
+
+def test_a_moved_or_missing_deferral_set_fails_the_gate() -> None:
+    """D-40: the rows are diff-gated exactly like the exclusions are."""
+    receipt = _receipt()
+    receipt["counters"]["counter_4"]["deferrals"]["rows"].pop("delta_amp/receipt_walk")
+    failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
+    assert any("committed deferral set differs" in failure for failure in failures)
+
+    receipt = _receipt()
+    receipt["counters"]["counter_4"].pop("deferrals")
+    failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
+    assert any("no deferral rows" in failure for failure in failures)
+
+
 def test_every_counter_carries_its_target_and_the_gap_left_to_it() -> None:
     """The gate compares a counter to its target, not only to the receipt.
 
