@@ -843,16 +843,9 @@ class TestResolveDamageEffects:
         buff = _charged_strikes("Fiendhunter Bolts").empowered_auto_buff
         assert buff is not None
         assert buff.empowered_auto_count == 3
-        assert effects.basic_amp is not None
-        assert effects.basic_amp.item_name == "Hexoptics C44"
-        assert effects.ability_amp_source == "Actualizer"
-        assert effects.basic_amp.multiplier(is_melee=False) == pytest.approx(1.10)
-        assert effects.basic_amp.multiplier(is_melee=True) == pytest.approx(1.02)
+        # The two per-part amps left this registry for their declarations at
+        # 3.7-r2; ``tests/test_interp_delta_amp.py`` owns their numbers now.
         assert effects.magic_amp == pytest.approx(1.12)
-        assert effects.ability_amp is not None
-        assert effects.ability_amp.multiplier(
-            {"bonus_mana": 300.0}, include_actives=True
-        ) == pytest.approx(1.165)
         assert effects.execute is not None
         assert effects.execute.threshold == pytest.approx(0.05)
         assert len(effects.conditional_notes) == 2
@@ -1321,40 +1314,6 @@ class TestRefreshItemEffects:
         item_effects.ITEM_EFFECTS["Removed Item"] = {"type": "on_hit"}
         refresh_item_effects()
         assert "Removed Item" not in ITEM_EFFECTS
-
-
-class TestActualizerAbilityDamageAmp:
-    """Tests for Actualizer ability damage amplification."""
-
-    def test_amp_no_bonus_mana(self) -> None:
-        items = [{"name": "Actualizer"}]
-        stats = {"bonus_mana": 0.0}
-        # 15% base amp, no bonus mana
-        effect = resolve_damage_effects(items).ability_amp
-        assert effect is not None
-        result = effect.multiplier(stats, include_actives=True)
-        assert abs(result - 1.15) < 0.001
-
-    def test_amp_with_300_bonus_mana(self) -> None:
-        items = [{"name": "Actualizer"}]
-        stats = {"bonus_mana": 300.0}
-        # 15% + 0.5% * 3 = 16.5%
-        effect = resolve_damage_effects(items).ability_amp
-        assert effect is not None
-        result = effect.multiplier(stats, include_actives=True)
-        assert abs(result - 1.165) < 0.001
-
-    def test_amp_disabled_when_actives_off(self) -> None:
-        items = [{"name": "Actualizer"}]
-        stats = {"bonus_mana": 300.0}
-        effect = resolve_damage_effects(items).ability_amp
-        assert effect is not None
-        result = effect.multiplier(stats, include_actives=False)
-        assert result == 1.0
-
-    def test_no_actualizer(self) -> None:
-        items = [{"name": "Liandry's Torment"}]
-        assert resolve_damage_effects(items).ability_amp is None
 
 
 class TestShieldReductionFraction:

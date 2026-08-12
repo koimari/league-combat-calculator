@@ -22,17 +22,24 @@ than relaxing this one: until its flip, every amp rule carries
 ``ReceiptOnly`` and the compiled lane is a named refusal.  The receipt-walk
 half of the family arrives with the amps the coupled walk actually owns.
 
+Two registry schemas amplify each part they price rather than the running
+total, so they are not in the chain at all: :class:`PartAmp` is their
+resolved form, and the engine asks for one by the attack class it is about
+to price rather than by an item's name.
+
 Everything the engine takes from a declaration comes through
 :meth:`DeltaAmpPairInterpreter.compile` — the fraction, the window bounds —
-and everything it *asks* of one comes through :class:`AmpSlot`.  A question a
-rule does not answer raises; it never resolves to a zero.
+and everything it *asks* of one comes through :class:`AmpSlot` or
+:class:`PartAmp`.  A question a rule does not answer raises; it never
+resolves to a zero.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
+from ..ability_spec import AttackClass
 from ..item_behavior import (
     AbsoluteWindow,
     AfterTrigger,
@@ -50,11 +57,13 @@ from ..item_behavior import (
     LivePredicate,
     Magnitude,
     MeleeRangedSplit,
+    PartAmpRule,
     Probe,
     RampModel,
     RampPerSecond,
     RampPerStack,
     RuleFamily,
+    StatScaled,
     TargetBonusHealthScaled,
     TriggerWindow,
     WindowBoundary,
@@ -69,6 +78,8 @@ from ..value_ref import resolve
 # chain's, and folding fractions is what keeps two holders additive.  The two
 # window bounds appear only for a rule whose activation declares them.
 AMP_FRACTION_FIELD = "amp_fraction"
+AMP_BASE_FRACTION_FIELD = "amp_base_fraction"
+AMP_PER_HUNDRED_STAT_FIELD = "amp_fraction_per_hundred_stat"
 WINDOW_START_FIELD = "window_start"
 WINDOW_END_FIELD = "window_end"
 WINDOW_DURATION_FIELD = "window_duration"
@@ -97,6 +108,14 @@ def magnitude_fraction(magnitude: Magnitude, ctx: BuildContext) -> float:
         return _ramp_per_stack(magnitude, ctx)
     if isinstance(magnitude, MeleeRangedSplit):
         return _melee_ranged_split(magnitude, ctx)
+    if isinstance(magnitude, StatScaled):
+        raise DeltaAmpInterpretationError(
+            f"{ctx.owner} scales with the holder's {magnitude.stat.value}, "
+            "which is not a build fact this context carries; its base and "
+            f"rate compile to the {AMP_BASE_FRACTION_FIELD!r} and "
+            f"{AMP_PER_HUNDRED_STAT_FIELD!r} fields and PartAmp.fraction "
+            "takes the reading"
+        )
     raise DeltaAmpInterpretationError(
         f"{type(magnitude).__name__} has no delta-amp arithmetic yet; the "
         "slice that declares a rule with it owns the branch"
@@ -172,6 +191,31 @@ def _ramp_per_stack(magnitude: RampPerStack, ctx: BuildContext) -> float:
     return per_stack * stacks
 
 
+def _magnitude_fields(
+    magnitude: Magnitude,
+    ctx: BuildContext,
+    field: "Callable[[str, float], KernelField]",
+) -> tuple[KernelField, ...]:
+    """The compiled numbers a magnitude contributes — one field, or two.
+
+    Every shape but :class:`StatScaled` resolves to a single fraction here.
+    A stat-scaled one cannot: half of it is a reading of the holder's stat
+    block, which this context deliberately does not carry, so its two sourced
+    halves compile separately and :meth:`PartAmp.fraction` folds them with
+    the reading.  Splitting the field rather than defaulting the stat is what
+    keeps "the holder had no bonus mana" and "nobody asked for the stat"
+    different answers.
+    """
+    if isinstance(magnitude, StatScaled):
+        return (
+            field(AMP_BASE_FRACTION_FIELD, resolve(magnitude.base, ctx.level)),
+            field(
+                AMP_PER_HUNDRED_STAT_FIELD, resolve(magnitude.per_hundred, ctx.level)
+            ),
+        )
+    return (field(AMP_FRACTION_FIELD, magnitude_fraction(magnitude, ctx)),)
+
+
 class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
     """The pair engine's answer for the ``delta_amp`` family."""
 
@@ -187,7 +231,7 @@ class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
         would be a second reader of the same declaration.
         """
         payload = rule.payload
-        if not isinstance(payload, DeltaAmpRule):
+        if not isinstance(payload, (DeltaAmpRule, PartAmpRule)):
             raise DeltaAmpInterpretationError(
                 f"{rule.mechanic_id} is not a delta-amp rule"
             )
@@ -200,7 +244,7 @@ class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
                 rule_id=rule.mechanic_id,
             )
 
-        fields = [field(AMP_FRACTION_FIELD, magnitude_fraction(payload.magnitude, ctx))]
+        fields = list(_magnitude_fields(payload.magnitude, ctx, field))
         if isinstance(payload.activation, AbsoluteWindow):
             fields.append(
                 field(WINDOW_START_FIELD, resolve(payload.activation.start, ctx.level))
@@ -488,6 +532,146 @@ class AmpSlot:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class PartAmp:
+    """A per-part amplifier, resolved for one build.
+
+    The chain's :class:`AmpSlot` answers "what does the running total get
+    multiplied by at position *n*".  This answers a different question — "what
+    does each part I am allowed to price get multiplied by" — and it is a
+    separate type because the two must never be summed into one another's
+    fold.  Everything else is deliberately the same shape: rules and their
+    compiled fields in build order, and the engine's own ``1.0 + sum`` fold.
+    """
+
+    attack_class: AttackClass
+    rules: tuple[BehaviorRule, ...]
+    fields: tuple[tuple[KernelField, ...], ...]
+
+    def _value(self, name: str, index: int) -> float:
+        """One compiled field of one holder's rule, or a stop."""
+        for field in self.fields[index]:
+            if field.name == name:
+                return float(field.value)
+        raise DeltaAmpInterpretationError(
+            f"{self.rules[index].mechanic_id} compiles no {name!r} field; the "
+            "engine asked its declaration a question it does not answer"
+        )
+
+    def _terms(
+        self, index: int, holder_stats: "Mapping[str, float]"
+    ) -> tuple[float, ...]:
+        """One holder's fraction, as the shares its magnitude is made of.
+
+        Shares rather than one number because addition is not associative:
+        the registry compiled a stat-scaled amp as ``1 + base + rate x`` and
+        folding its two halves before the ``1`` lands on a different float.
+        Every other magnitude has exactly one share, for which the two
+        spellings coincide.
+
+        A stat-scaled magnitude is read here rather than at build time, and
+        the reading is *required*: a holder stat the caller did not supply is
+        a caller that does not know what it is holding, which is a
+        programming error and never a zero-mana Actualizer.
+        """
+        magnitude = self.rules[index].payload.magnitude
+        if not isinstance(magnitude, StatScaled):
+            return (self._value(AMP_FRACTION_FIELD, index),)
+        if magnitude.stat.value not in holder_stats:
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} scales with the holder's "
+                f"{magnitude.stat.value}, which the caller did not supply; a "
+                "missing stat is an unanswered question, not a zero"
+            )
+        reading = float(holder_stats[magnitude.stat.value])
+        return (
+            self._value(AMP_BASE_FRACTION_FIELD, index),
+            self._value(AMP_PER_HUNDRED_STAT_FIELD, index) * (reading / 100.0),
+        )
+
+    def fractions(self, holder_stats: "Mapping[str, float]") -> tuple[float, ...]:
+        """Each holder's sourced fraction, in build order."""
+        return tuple(
+            sum(self._terms(index, holder_stats)) for index in range(len(self.rules))
+        )
+
+    def multiplier(self, holder_stats: "Mapping[str, float]") -> float:
+        """What the engine multiplies each priced part by.
+
+        One running sum from ``1.0`` over every holder's shares, in build
+        order — the association the registry's own compiled multipliers used,
+        which is what lets this migration claim no number moved rather than
+        no number moved much.  Holders are additive with each other for the
+        same reason the chain's occupants are; no registry entry puts two
+        items in one attack class today, so the fold is stated rather than
+        inferred from the one occupant every build has.
+        """
+        total = 1.0
+        for index in range(len(self.rules)):
+            for term in self._terms(index, holder_stats):
+                total += term
+        return total
+
+    @property
+    def owner(self) -> str:
+        """The holder the amp's breakdown row is filed under."""
+        return self.rules[0].owner
+
+
+def part_amp_rules(
+    owners: Sequence[str], attack_class: AttackClass
+) -> tuple[BehaviorRule, ...]:
+    """Every per-part amp *owners* bring that prices *attack_class*.
+
+    The selector is the damage the engine is about to price, not an item
+    name: "what amplifies a basic attack" is a question the declaration
+    answers through ``typing.attack_classes``, and asking it that way is what
+    takes the two item names out of the engine.
+    """
+    return tuple(
+        rule
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.DELTA_AMP
+        and isinstance(rule.payload, PartAmpRule)
+        and attack_class in rule.payload.typing.attack_classes
+    )
+
+
+def resolve_part_amp(
+    owners: Sequence[str],
+    attack_class: AttackClass,
+    *,
+    level: int,
+    fight_duration_seconds: float,
+    target_bonus_health: float,
+    holder_is_melee: bool,
+) -> PartAmp | None:
+    """The per-part amp for one attack class, or ``None`` if nobody has it.
+
+    ``None`` is an answer and not a zero, exactly as it is for a chain slot:
+    no holder declares a per-part amp for this damage, so no rule ran and
+    there is no multiplier to report.
+    """
+    rules = part_amp_rules(owners, attack_class)
+    if not rules:
+        return None
+    compiled = tuple(
+        PAIR_INTERPRETER.compile(
+            rule,
+            build_context(
+                rule.owner,
+                level,
+                fight_duration_seconds=fight_duration_seconds,
+                target_bonus_health=target_bonus_health,
+                holder_is_melee=holder_is_melee,
+            ),
+        )
+        for rule in rules
+    )
+    return PartAmp(attack_class=attack_class, rules=rules, fields=compiled)
+
+
 def slot_rules(owners: Sequence[str], slot: AmpChainSlot) -> tuple[BehaviorRule, ...]:
     """Every declared rule *owners* bring to one chain slot, in build order.
 
@@ -543,7 +727,9 @@ def resolve_slot(
 
 
 __all__ = [
+    "AMP_BASE_FRACTION_FIELD",
     "AMP_FRACTION_FIELD",
+    "AMP_PER_HUNDRED_STAT_FIELD",
     "LIVE_THRESHOLD_FIELD",
     "WINDOW_DURATION_FIELD",
     "WINDOW_END_FIELD",
@@ -552,7 +738,10 @@ __all__ = [
     "DeltaAmpInterpretationError",
     "DeltaAmpPairInterpreter",
     "PAIR_INTERPRETER",
+    "PartAmp",
     "magnitude_fraction",
+    "part_amp_rules",
+    "resolve_part_amp",
     "resolve_slot",
     "slot_rules",
 ]

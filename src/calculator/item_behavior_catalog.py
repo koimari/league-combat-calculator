@@ -74,6 +74,7 @@ from .item_behavior import (
     ExcludeTrigger,
     ExecuteRule,
     Fixed,
+    HolderStat,
     FlatStatGrantRule,
     ForcedCritHeal,
     ForcedCritRule,
@@ -94,6 +95,7 @@ from .item_behavior import (
     PacketTrigger,
     PeriodicCadence,
     PeriodicRule,
+    PartAmpRule,
     Persist,
     Persistence,
     Pool,
@@ -129,6 +131,7 @@ from .item_behavior import (
     StatBasis,
     StatConversionRule,
     StatMultiplierRule,
+    StatScaled,
     Subject,
     SustainStat,
     SustainStatRule,
@@ -1242,18 +1245,16 @@ Compiler = Callable[
 # it per tag, or the family's disappearance from UNMIGRATED_FAMILIES would
 # quietly retire promises nobody kept.
 MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset(
-    {"damage_amp", "hypershot_amp", "magic_true_crit"}
+    {
+        "ability_damage_amp",
+        "basic_damage_amp",
+        "damage_amp",
+        "hypershot_amp",
+        "magic_true_crit",
+    }
 )
 
 DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
-    "ability_damage_amp": (
-        "3.7 — Actualizer's ability amp is applied per ability and per proc "
-        "inside the rotation, so it occupies no chain slot"
-    ),
-    "basic_damage_amp": (
-        "3.7 — Hexoptics C44 amplifies each basic attack where it is priced, "
-        "so it occupies no chain slot"
-    ),
     "magic_damage_amp": (
         "3.7 — Abyssal Mask's magic amp is applied by _mitigate on the "
         "defender's side, so it occupies no chain slot"
@@ -1748,6 +1749,125 @@ def _all_damage_typing() -> Typing:
     )
 
 
+def _part_amp_typing(attack_class: AttackClass) -> Typing:
+    """Every damage class, delivered by one attack class.
+
+    A per-part amp restricts *how* the damage arrived and not what mitigates
+    it: Actualizer pays on an ability's physical, magic and true shares
+    alike.  Both axes are still enumerated, because D-04 bans the empty set
+    on either.
+    """
+    return Typing(
+        damage_classes=frozenset(DamageClass),
+        attack_classes=frozenset({attack_class}),
+    )
+
+
+def _ability_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Actualizer's Mana Made Real: every ability, while the active is up.
+
+    The magnitude is a sourced base plus a sourced rate per 100 bonus mana,
+    and the stat is *named* rather than resolved here — the holder's stat
+    block is not a build fact, so the reading arrives at use.  The declared
+    window is the sourced duration; how much of it a scenario authors is the
+    item's own input option, which clips to exactly this number.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.ability_part_amp",
+        payload=PartAmpRule(
+            pool=Pool.ALL_EVENTS,
+            activation=AbsoluteWindow(
+                start=Const(0.0, "count"),
+                end=ValueRef(registry, owner, "mana_made_real_duration"),
+            ),
+            consumption=Persist(),
+            magnitude=StatScaled(
+                base=ValueRef(registry, owner, "base_amp"),
+                per_hundred=ValueRef(registry, owner, "amp_per_100_bonus_mana"),
+                stat=HolderStat.BONUS_MANA,
+            ),
+            attribution=Attribution.HOLDER,
+            typing=_part_amp_typing(AttackClass.ABILITY),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
+            subject=Subject.HOLDER,
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the amp is a sourced base plus a sourced rate on the holder's "
+            "own bonus mana; a zero means the holder bought no mana, which "
+            "the rule measured",
+        ),
+    )
+
+
+def _basic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Hexoptics C44's Magnification: every basic-damage part, all fight.
+
+    The range split is the fight's one modelling assumption and it is
+    declared rather than computed: a ranged holder is assumed to attack from
+    the full Magnification distance and earns the whole amp, a melee holder
+    from the sourced assumed distance and earns the amp scaled by the ratio
+    of the two — a derivation over sourced numbers, so a patch that re-tunes
+    either moves the fight without touching this declaration.
+    """
+    max_amp = ValueRef(registry, owner, "max_amp")
+    max_distance = ValueRef(registry, owner, "max_distance")
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.basic_part_amp",
+        payload=PartAmpRule(
+            pool=Pool.ALL_EVENTS,
+            activation=Always(),
+            consumption=Persist(),
+            magnitude=MeleeRangedSplit(
+                melee=DerivedValueRef(
+                    "MUL",
+                    (
+                        max_amp,
+                        DerivedValueRef(
+                            "RATIO",
+                            (
+                                DerivedValueRef(
+                                    "MIN",
+                                    (
+                                        ValueRef(
+                                            registry, owner, "melee_assumed_distance"
+                                        ),
+                                        max_distance,
+                                    ),
+                                ),
+                                max_distance,
+                            ),
+                        ),
+                    ),
+                ),
+                ranged=max_amp,
+            ),
+            attribution=Attribution.HOLDER,
+            typing=_part_amp_typing(AttackClass.BASIC_ATTACK),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
+            subject=Subject.HOLDER,
+        ),
+        compilability=COMPILED_KERNEL_CANNOT_AMP,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the amp is a sourced ratio scaled by the declared range "
+            "assumption; a zero would mean the registry holds zero, which is "
+            "a measurement",
+        ),
+    )
+
+
 def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """Horizon Focus's Hypershot: everything except the cast that armed it.
 
@@ -2219,6 +2339,10 @@ def _compile_delta_amp(
         rules.extend(_compile_ally_delta_amp(owner, registry, entry))
     else:
         tag = str(entry.get("type"))
+        if tag == "ability_damage_amp":
+            rules.append(_ability_part_amp_rule(owner, registry))
+        if tag == "basic_damage_amp":
+            rules.append(_basic_part_amp_rule(owner, registry))
         if tag == "hypershot_amp":
             rules.append(_hypershot_rule(owner, registry))
         if tag == "magic_true_crit":

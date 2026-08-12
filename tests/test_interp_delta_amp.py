@@ -15,6 +15,8 @@ import dataclasses
 import pytest
 
 from src.calculator import interpreters
+from src.calculator import item_effects as item_effects_module
+from src.calculator.ability_spec import AttackClass
 from src.calculator.interpreters import delta_amp
 from src.calculator.item_behavior import (
     AMP_CHAIN_ORDER,
@@ -571,3 +573,130 @@ def test_the_compiled_lane_is_declared_empty_rather_than_absent() -> None:
         verdict = interpreters.compilability_for(holder)
         assert isinstance(verdict, ReceiptOnly)
         assert COMPILED_KERNEL_CANNOT_AMP.reason in verdict.reason
+
+
+# ── the two per-part amps (3.7-r2) ────────────────────────────────────────
+
+
+def _part_amp(*owners: str, melee: bool, attack_class: AttackClass):
+    """Resolve one attack class's per-part amp for a build."""
+    return delta_amp.resolve_part_amp(
+        owners,
+        attack_class,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=melee,
+    )
+
+
+def test_no_holder_of_a_per_part_amp_is_none_and_not_a_zero() -> None:
+    """A build declaring no per-part amp gets ``None``, never a 0.0 fraction."""
+    assert _part_amp(melee=True, attack_class=AttackClass.ABILITY) is None
+    assert (
+        _part_amp(
+            "Liandry's Torment", melee=True, attack_class=AttackClass.BASIC_ATTACK
+        )
+        is None
+    )
+
+
+def test_the_ability_amp_is_the_registry_base_plus_its_bonus_mana_rate() -> None:
+    """Actualizer's declared magnitude, against the registry's own numbers.
+
+    Read from ``ITEM_EFFECTS`` rather than typed, so a patch that re-tunes
+    either number moves the expectation with the declaration instead of
+    turning this test red for being right.
+    """
+    entry = ITEM_EFFECTS["Actualizer"]
+    amp = _part_amp("Actualizer", melee=True, attack_class=AttackClass.ABILITY)
+    assert amp is not None
+    assert amp.owner == "Actualizer"
+    assert amp.multiplier({"bonus_mana": 0.0}) == pytest.approx(1.0 + entry["base_amp"])
+    assert amp.multiplier({"bonus_mana": 300.0}) == pytest.approx(
+        1.0 + entry["base_amp"] + entry["amp_per_100_bonus_mana"] * 3.0
+    )
+
+
+def test_the_ability_amp_refuses_a_stat_reading_nobody_supplied() -> None:
+    """A missing holder stat is an unanswered question, never a zero.
+
+    The magnitude names the stat it scales with; a caller that omits it does
+    not know what it is holding, and paying the base amp alone would be a
+    number the model did not compute wearing a number it did.
+    """
+    amp = _part_amp("Actualizer", melee=True, attack_class=AttackClass.ABILITY)
+    assert amp is not None
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="bonus_mana"):
+        amp.multiplier({})
+
+
+def test_a_stat_scaled_magnitude_has_no_build_time_fraction() -> None:
+    """``magnitude_fraction`` refuses the one shape it cannot answer alone."""
+    rule = behavior_rules("Actualizer")[0]
+    ctx = build_context(
+        "Actualizer",
+        18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="bonus_mana"):
+        delta_amp.magnitude_fraction(rule.payload.magnitude, ctx)
+    names = {field.name for field in delta_amp.PAIR_INTERPRETER.compile(rule, ctx)}
+    assert delta_amp.AMP_BASE_FRACTION_FIELD in names
+    assert delta_amp.AMP_PER_HUNDRED_STAT_FIELD in names
+    assert delta_amp.AMP_FRACTION_FIELD not in names
+
+
+def test_the_basic_amp_declares_its_range_assumption_as_a_derivation() -> None:
+    """Hexoptics C44's melee share is the sourced distance ratio, not a literal."""
+    entry = ITEM_EFFECTS["Hexoptics C44"]
+    ranged = _part_amp(
+        "Hexoptics C44", melee=False, attack_class=AttackClass.BASIC_ATTACK
+    )
+    melee = _part_amp(
+        "Hexoptics C44", melee=True, attack_class=AttackClass.BASIC_ATTACK
+    )
+    assert ranged is not None and melee is not None
+    assert ranged.multiplier({}) == pytest.approx(1.0 + entry["max_amp"])
+    assert melee.multiplier({}) == pytest.approx(
+        1.0
+        + entry["max_amp"]
+        * (
+            min(entry["melee_assumed_distance"], entry["max_distance"])
+            / entry["max_distance"]
+        )
+    )
+
+
+def test_a_per_part_amp_is_selected_by_the_damage_it_prices() -> None:
+    """The engine asks by attack class; neither item's name is a selector.
+
+    Actualizer prices abilities and Hexoptics basic attacks, and a build
+    holding both must never hand one's multiplier to the other's damage.
+    """
+    build = ("Actualizer", "Hexoptics C44")
+    ability = _part_amp(*build, melee=True, attack_class=AttackClass.ABILITY)
+    basic = _part_amp(*build, melee=True, attack_class=AttackClass.BASIC_ATTACK)
+    assert ability is not None and basic is not None
+    assert [rule.owner for rule in ability.rules] == ["Actualizer"]
+    assert [rule.owner for rule in basic.rules] == ["Hexoptics C44"]
+    assert _part_amp(*build, melee=True, attack_class=AttackClass.OTHER) is None
+
+
+def test_the_registry_no_longer_holds_a_per_part_amp_of_its_own() -> None:
+    """Counter 3's two survivors are declarations now, not registry effects.
+
+    The migration is only real if the old compiled effects are *gone*: a
+    second producer of one multiplier is the shape this campaign exists to
+    kill, and an accessor left behind is a second producer waiting for a
+    caller.
+    """
+    assert not hasattr(item_effects_module, "AbilityAmplifierEffect")
+    assert not hasattr(item_effects_module, "BasicAmplifierEffect")
+    effects = item_effects_module.resolve_damage_effects(
+        [{"name": "Actualizer"}, {"name": "Hexoptics C44"}]
+    )
+    assert not hasattr(effects, "ability_amp")
+    assert not hasattr(effects, "basic_amp")

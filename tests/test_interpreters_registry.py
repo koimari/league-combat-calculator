@@ -77,19 +77,30 @@ def test_the_compiled_score_walk_gap_is_a_receipt_and_not_a_zero() -> None:
     assert "compiled score kernel" in verdict.reason
 
 
-def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable() -> None:
+def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The fold fails closed: an absence never becomes a compiled-lane promise.
 
-    The subject is *read* from the frontier rather than spelled, because every
-    migration slice declares another owner and a named one would make this
-    test pass by having been retired rather than by holding.
+    Counter 3 reached zero at 3.7-r2, so no real owner takes this branch any
+    more and the frontier can no longer supply a subject.  The branch is
+    still live and still load-bearing — the next registry tag anybody adds
+    lands in it before its declaration does — so it is driven synthetically
+    (D-26): an owner the registries know, with its rule set emptied.  A test
+    that retired itself the moment the population emptied would leave the
+    fail-closed branch unproven exactly when nothing else covers it.
     """
-    still_engine_code = sorted(catalog.undeclared_owners())
-    assert still_engine_code, "the migration is complete; this test has retired"
-    owner = still_engine_code[0]
+    owner = "Actualizer"
+    assert catalog.registry_entries(owner), "the subject must have a registry entry"
+    assert catalog.behavior_rules(owner), "the subject must be a declared owner"
+    monkeypatch.setattr(interpreters, "behavior_rules", lambda name: ())
     verdict = interpreters.compilability_for(owner)
     assert isinstance(verdict, ReceiptOnly)
     assert owner in verdict.reason
+    assert not catalog.undeclared_owners(), (
+        "counter 3 is back above zero; the live population, not this "
+        "synthetic subject, is what that regression should be read from"
+    )
 
 
 def test_an_owner_with_no_registry_entry_has_nothing_to_represent() -> None:

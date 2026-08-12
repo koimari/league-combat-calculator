@@ -469,12 +469,43 @@ class MeleeRangedSplit:
     ranged: AnyValueRef
 
 
+class HolderStat(Enum):
+    """A resolved stat of the holder a magnitude may scale with.
+
+    Closed, and spelled the way the stat resolver spells it, so a magnitude
+    naming one is asking for a stat that exists rather than for a key that
+    silently resolves to nothing.  It is *not* :class:`Probe`: a probe reads
+    a live pool mid-simulation and cannot be compiled, while a holder stat is
+    fixed before the first event and is simply not a registry number.
+    """
+
+    BONUS_MANA = "bonus_mana"
+
+
+@dataclass(frozen=True, slots=True)
+class StatScaled:
+    """A sourced base fraction plus a sourced rate per 100 units of a stat.
+
+    Actualizer's Mana Made Real is 15% ability damage plus 0.5% per 100 bonus
+    mana: two sourced numbers and one build fact that is neither a registry
+    value nor a fight configuration.  The stat is *named* rather than
+    resolved here — the reading is handed in at use, the same asymmetry
+    :class:`LivePredicate` carries for a live pool — because an interpreter
+    that resolved the holder's stat block would be a second stat resolver.
+    """
+
+    base: AnyValueRef
+    per_hundred: AnyValueRef
+    stat: HolderStat
+
+
 Magnitude = Union[
     Fixed,
     RampPerSecond,
     TargetBonusHealthScaled,
     RampPerStack,
     MeleeRangedSplit,
+    StatScaled,
 ]
 
 MAGNITUDE_TYPES: tuple[type, ...] = (
@@ -483,6 +514,7 @@ MAGNITUDE_TYPES: tuple[type, ...] = (
     TargetBonusHealthScaled,
     RampPerStack,
     MeleeRangedSplit,
+    StatScaled,
 )
 
 
@@ -1180,6 +1212,34 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     bonus_typing: BonusTyping
     subject: Subject
     lane_chain_rank: int
+
+
+@dataclass(frozen=True, slots=True)
+class PartAmpRule:  # pylint: disable=too-many-instance-attributes
+    """An amplifier that multiplies each part it prices, not the fight's total.
+
+    The seven :class:`AmpChainSlot` positions all act on one running total,
+    in an order that is part of every mixed build's number.  Two registry
+    schemas are not in that chain at all: Actualizer amplifies each ability's
+    own damage where the rotation prices it, and Hexoptics C44 amplifies each
+    basic-damage part where the auto-attack path prices it.  Giving them a
+    chain rank would claim an ordering against the chain that they do not
+    have, so they carry the same eight policy axes with the rank deliberately
+    absent — the one field whose meaning is "which position of the chain".
+
+    ``typing.attack_classes`` is what tells the two apart and is how the
+    engine asks for one: "the amplifier that prices basic attacks" is a
+    question about damage, not about an item's name.
+    """
+
+    pool: Pool
+    activation: Activation
+    consumption: Consumption
+    magnitude: Magnitude
+    attribution: Attribution
+    typing: Typing
+    bonus_typing: BonusTyping
+    subject: Subject
 
 
 # ── the critical-strike profile ───────────────────────────────────────────
@@ -2191,6 +2251,7 @@ RulePayload = Union[
     SpellbladeRule,
     AllyPacketRule,
     DeltaAmpRule,
+    PartAmpRule,
     OnHitStrikeRule,
     ResistanceShredRule,
     SecondaryTargetRule,
@@ -2228,6 +2289,7 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     SpellbladeRule: RuleFamily.SPELLBLADE,
     AllyPacketRule: RuleFamily.ALLY_PACKET,
     DeltaAmpRule: RuleFamily.DELTA_AMP,
+    PartAmpRule: RuleFamily.DELTA_AMP,
     OnHitStrikeRule: RuleFamily.ON_HIT_STRIKE,
     ResistanceShredRule: RuleFamily.RESISTANCE_SHRED,
     SecondaryTargetRule: RuleFamily.SECONDARY_TARGET,
@@ -3281,6 +3343,7 @@ __all__ = [
     "Floor",
     "ForcedCritHeal",
     "ForcedCritRule",
+    "HolderStat",
     "Isolation",
     "KernelField",
     "LevelSteppedRate",
@@ -3303,6 +3366,7 @@ __all__ = [
     "PacketKind",
     "PacketSpec",
     "PacketTrigger",
+    "PartAmpRule",
     "PeriodicCadence",
     "PeriodicRule",
     "Persist",
@@ -3351,6 +3415,7 @@ __all__ = [
     "StatBasis",
     "StatConversionRule",
     "StatMultiplierRule",
+    "StatScaled",
     "Subject",
     "SustainStat",
     "SustainStatRule",

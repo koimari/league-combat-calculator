@@ -131,7 +131,7 @@ from typing import Any, Callable
 from . import item_effects
 from . import rune_effects
 from . import shield_ledger
-from .ability_spec import DamagePart
+from .ability_spec import AttackClass, DamagePart
 from .interpreters import (
     active_cast,
     cast_proc,
@@ -510,8 +510,14 @@ class FightState:
     # ── Resolved combat numbers ───────────────────────────────────────────
     resists: Resists
     magic_amp: float  # Abyssal Mask
-    ability_amp: float  # Actualizer
-    basic_amp: float  # Hexoptics C44
+    # The two per-part amps, resolved from their declarations: the
+    # multiplier each part they price is worth, and the holder whose
+    # breakdown row reports it.  ``""`` is the no-holder answer and is only
+    # ever paired with a multiplier of exactly 1.0.
+    ability_amp: float
+    ability_amp_owner: str
+    basic_amp: float
+    basic_amp_owner: str
     # ── Attack timing ─────────────────────────────────────────────────────
     attack_speed: float
     attack_speed_ratio: float
@@ -2107,6 +2113,41 @@ def _shred_slot(
     )
 
 
+def _part_amp(
+    owners: Sequence[str],
+    attack_class: AttackClass,
+    *,
+    armed: bool,
+    level: int,
+    fight_duration_seconds: float,
+    target_bonus_health: float,
+    holder_is_melee: bool,
+    holder_stats: Mapping[str, float],
+) -> tuple[float, str]:
+    """The per-part amp for one attack class: its multiplier and its holder.
+
+    ``armed`` is the scenario's answer to whether the amp's activation is up
+    at all — an item active nobody triggered amplifies nothing — and an
+    unarmed build, or one holding no such amp, gets ``(1.0, "")``: a
+    multiplier that changes no number, and no holder to file a row under.
+    That pairing is deliberate, so a breakdown row can never be attributed to
+    an item whose amp did not run.
+    """
+    if not armed:
+        return 1.0, ""
+    amp = delta_amp.resolve_part_amp(
+        owners,
+        attack_class,
+        level=level,
+        fight_duration_seconds=fight_duration_seconds,
+        target_bonus_health=target_bonus_health,
+        holder_is_melee=holder_is_melee,
+    )
+    if amp is None:
+        return 1.0, ""
+    return amp.multiplier(holder_stats), amp.owner
+
+
 def _resolve_combat_state(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -2175,6 +2216,33 @@ def _resolve_combat_state(
         )
         if actualizer_active_until > 0.0 and item_effects.has_item(items, "Actualizer")
         else 1.0
+    )
+
+    # The two per-part amps, read off their declarations.  The engine asks by
+    # the attack class it is about to price — "what amplifies an ability",
+    # "what amplifies a basic attack" — because that is the question the
+    # declaration's typing answers, and asking it that way is what keeps the
+    # two item names out of this module.  The ability amp rides an item
+    # active, so it is armed only for a scenario that authored the window.
+    ability_part_amp = _part_amp(
+        owners,
+        AttackClass.ABILITY,
+        armed=actualizer_active_until > 0.0,
+        level=level,
+        fight_duration_seconds=fight_duration_seconds,
+        target_bonus_health=max(0.0, config.target_bonus_health),
+        holder_is_melee=bool(is_melee),
+        holder_stats=champion_stats,
+    )
+    basic_part_amp = _part_amp(
+        owners,
+        AttackClass.BASIC_ATTACK,
+        armed=True,
+        level=level,
+        fight_duration_seconds=fight_duration_seconds,
+        target_bonus_health=max(0.0, config.target_bonus_health),
+        holder_is_melee=bool(is_melee),
+        holder_stats=champion_stats,
     )
 
     magic_pen_flat = champion_stats.get("magic_penetration_flat", 0.0)
@@ -2397,20 +2465,10 @@ def _resolve_combat_state(
         roster_target_count=max(1, int(config.roster_target_count)),
         resists=resists,
         magic_amp=damage_effects.magic_amp,
-        ability_amp=(
-            damage_effects.ability_amp.multiplier(
-                champion_stats,
-                config.include_actives,
-                active=actualizer_active_until > 0.0,
-            )
-            if damage_effects.ability_amp is not None
-            else 1.0
-        ),
-        basic_amp=(
-            damage_effects.basic_amp.multiplier(is_melee)
-            if damage_effects.basic_amp is not None
-            else 1.0
-        ),
+        ability_amp=ability_part_amp[0],
+        ability_amp_owner=ability_part_amp[1],
+        basic_amp=basic_part_amp[0],
+        basic_amp_owner=basic_part_amp[1],
         attack_speed=attack_speed,
         attack_speed_ratio=as_ratio,
         num_auto_attacks=num_auto_attacks,
@@ -5749,8 +5807,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
     # Add basic damage amp breakdown entry (informational — already applied)
     if basic_amp > 1.0:
-        amp_effect = state.damage_effects.basic_amp
-        amp_name = amp_effect.item_name if amp_effect is not None else "Basic Damage"
+        amp_name = state.basic_amp_owner or "Basic Damage"
         basic_amp_bonus = (
             (auto_total + fiendhunter_true_total + passive_true_total)
             * (basic_amp - 1.0)
@@ -9542,7 +9599,7 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
         # The amplified damage = base * amp, so the amp contribution is
         # base * (amp - 1) / amp  (since base already includes the amp).
         actualizer_bonus = amped_base * (state.ability_amp - 1.0) / state.ability_amp
-        amp_name = state.damage_effects.ability_amp_source or "Ability Damage"
+        amp_name = state.ability_amp_owner or "Ability Damage"
         breakdown[f"ability_amp_{amp_name}"] = {
             "name": f"Damage Amplification ({amp_name})",
             "multiplier": state.ability_amp,

@@ -3686,24 +3686,10 @@ class TestUmbralGlaiveNightstalker:
 class TestHexopticsC44BasicDamageAmp:
     """Tests for Hexoptics C44 Magnification basic damage amplification."""
 
-    def test_ranged_amp_with_item(self) -> None:
-        """Ranged champs are assumed at max distance: full 10% amp."""
-        items = [{"name": "Hexoptics C44"}]
-        effect = resolve_damage_effects(items).basic_amp
-        assert effect is not None
-        assert effect.multiplier(is_melee=False) == pytest.approx(1.10)
-
-    def test_melee_amp_with_item(self) -> None:
-        """Melee champs are assumed at ~100 units: 2% amp, not 10%."""
-        items = [{"name": "Hexoptics C44"}]
-        effect = resolve_damage_effects(items).basic_amp
-        assert effect is not None
-        assert effect.multiplier(is_melee=True) == pytest.approx(1.02)
-
-    def test_no_amp_without_item(self) -> None:
-        """Without Hexoptics C44, there is no basic amp effect."""
-        items = [{"name": "Infinity Edge"}]
-        assert resolve_damage_effects(items).basic_amp is None
+    # The amp itself left this registry for its declaration at 3.7-r2;
+    # ``tests/test_interp_delta_amp.py`` owns the melee/ranged multipliers
+    # and the no-holder answer.  What stays here is the end-to-end fight
+    # assertion below, which is the thing no interpreter test can make.
 
     def test_parsed_values_from_json(self) -> None:
         """Verify parser extracts correct values from item JSON data."""

@@ -3670,49 +3670,6 @@ class ExecuteEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class AbilityAmplifierEffect:
-    """Ability-only amplifier derived from champion bonus mana."""
-
-    item_name: str
-    base_amp: float
-    amp_per_100_bonus_mana: float
-
-    def multiplier(
-        self,
-        champion_stats: Mapping[str, float],
-        include_actives: bool,
-        active: bool = True,
-    ) -> float:
-        """Return the active multiplier for this champion state."""
-        if not include_actives or not active:
-            return 1.0
-        bonus_mana = champion_stats.get("bonus_mana", 0.0)
-        return 1.0 + self.base_amp + self.amp_per_100_bonus_mana * (bonus_mana / 100.0)
-
-
-@dataclass(frozen=True, slots=True)
-class BasicAmplifierEffect:
-    """Distance-scaled basic damage amplifier (Hexoptics C44 Magnification)."""
-
-    item_name: str
-    max_amp: float
-    max_distance: float
-    melee_assumed_distance: float
-
-    def multiplier(self, is_melee: bool) -> float:
-        """Return the amp multiplier under the fight's range assumption.
-
-        Ranged champions are assumed to attack from max Magnification
-        distance (full amp); melee champions attack from roughly
-        ``melee_assumed_distance`` units, scaling the amp down linearly.
-        """
-        if is_melee:
-            distance = min(self.melee_assumed_distance, self.max_distance)
-            return 1.0 + self.max_amp * (distance / self.max_distance)
-        return 1.0 + self.max_amp
-
-
-@dataclass(frozen=True, slots=True)
 class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
@@ -3725,9 +3682,6 @@ class BuildDamageEffects:
     crit_damage_bonus: float = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
     magic_amp: float = 1.0
-    basic_amp: BasicAmplifierEffect | None = None
-    ability_amp: AbilityAmplifierEffect | None = None
-    ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
     cooldown_refund_source: str | None = None
     conditional_notes: tuple[str, ...] = ()
@@ -3987,9 +3941,6 @@ def _resolve_damage_effects_uncached(
     crit_damage_bonus = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
     magic_amp = 1.0
-    basic_amp: BasicAmplifierEffect | None = None
-    ability_amp: AbilityAmplifierEffect | None = None
-    ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
     cooldown_refund_source: str | None = None
     conditional_notes: list[str] = []
@@ -4029,22 +3980,6 @@ def _resolve_damage_effects_uncached(
                 f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
                 "bonus AS) is applied from time 0."
             )
-        elif effect_type == "basic_damage_amp":
-            required = _RequiredValues(item_name, values)
-            basic_amp = BasicAmplifierEffect(
-                item_name=item_name,
-                max_amp=required.number("max_amp"),
-                max_distance=required.number("max_distance"),
-                melee_assumed_distance=required.number("melee_assumed_distance"),
-            )
-        elif effect_type == "ability_damage_amp":
-            required = _RequiredValues(item_name, values)
-            ability_amp = AbilityAmplifierEffect(
-                item_name,
-                required.number("base_amp"),
-                required.number("amp_per_100_bonus_mana"),
-            )
-            ability_amp_source = item_name
         elif effect_type == "execute":
             execute = ExecuteEffect(
                 item_name,
@@ -4127,9 +4062,6 @@ def _resolve_damage_effects_uncached(
         crit_damage_bonus=crit_damage_bonus,
         first_auto_crit=first_auto_crit,
         magic_amp=magic_amp,
-        basic_amp=basic_amp,
-        ability_amp=ability_amp,
-        ability_amp_source=ability_amp_source,
         execute=execute,
         cooldown_refund_source=cooldown_refund_source,
         conditional_notes=tuple(conditional_notes),
