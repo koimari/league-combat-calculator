@@ -9,8 +9,11 @@ shield, a pair of boots — so their outcome is a reviewed product fact, and
 Boots of Swiftness declares nothing anywhere in the tree while still being an
 item whose whole point is movement.
 
-It was ``item_coverage._UTILITY_DIMENSIONS``, one of the ten hand registries
-3.8 collapsed to two, and it is the one whose contents survived the collapse.
+It was a hand-keyed table in ``item_coverage`` — one of the ten registries 3.8
+collapsed to two — and it is the one whose contents survived the collapse.  Its
+old name is deliberately not spelled here: the eight retired names are named
+only by the absence gate that proves they are gone
+(``tests/test_coverage_claims.py``), which scans this package for them.
 Keeping it beside the classifier would have made the collapse a rename; moving
 it here makes it what it always was — a declaration the classifier reads,
 sitting in a home whose whole content is declarations, with an item name for a

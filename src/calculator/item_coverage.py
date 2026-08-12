@@ -173,26 +173,34 @@ class ItemCoverage:
         }
 
 
-# Three containers stood here — ``_BLOCKED_REASONS``,
-# ``_CALCULATION_ALLOWED_BLOCKED`` and ``_PARTIAL_BLOCKED_REASONS``.  All three
-# were empty, and the commit before this one asserted that emptiness and pinned
-# the two ``PRECEDENCE`` rungs they gated.  An empty container makes ``name in``
-# false for every name that exists and every name that could, so those rungs
-# decided nothing and the eligibility term added nothing: deleting them moves no
-# answer.  A withheld item now has one producer — a cached record whose passive
-# is unreviewed — instead of three that could disagree with each other.
+# The eight retired registries are named in exactly one place in this tree, and
+# these tombstones are deliberately not it: the absence gate that proves none of
+# them survived — ``tests/test_coverage_claims.py``'s
+# ``test_the_eight_retired_registries_have_no_occurrences_left`` — scans this
+# package for whole identifiers, and prose that spells one is an occurrence it
+# has to report.  Grepping a retired name lands on that assertion, which is the
+# right destination for it; what stood where is described here instead.
 
-# ``_STATEFUL_MODELED_ITEMS`` stood here: twenty-one sentences saying an item's
-# state was represented, checked by nothing.  It is gone.  ``modeled_state`` is
-# now what the declared families say — an ally packet or a stat derivation is
-# state the shared ledger schedules — or what ``ITEM_INPUT_OPTIONS`` says, and
-# both are read out of a registry rather than asserted in prose here.
+# Three blocked-reason containers stood here — two dicts and a bare frozenset,
+# the ones 3.8's first commit pinned.  All three were empty, and that commit
+# asserted the emptiness and pinned the two ``PRECEDENCE`` rungs they gated.  An
+# empty container makes ``name in`` false for every name that exists and every
+# name that could, so those rungs decided nothing and the eligibility term added
+# nothing: deleting them moves no answer.  A withheld item now has one producer
+# — a cached record whose passive is unreviewed — instead of three that could
+# disagree with each other.
+
+# A stateful-items set stood here: twenty-one sentences saying an item's state
+# was represented, checked by nothing.  It is gone.  ``modeled_state`` is now
+# what the declared families say — an ally packet or a stat derivation is state
+# the shared ledger schedules — or what ``ITEM_INPUT_OPTIONS`` says, and both
+# are read out of a registry rather than asserted in prose here.
 
 
-# Three containers stood here — ``_TARGET_MODELED_REASONS``,
-# ``_TARGET_EVENT_CERTIFIED_REASONS`` and ``_TARGET_BLOCKED_REASONS``: thirty-
-# nine reviewed sentences answering "what does this item do to the actor
-# wearing it" by looking the actor's item up by name.  The ladder above now
+# Three target-lane containers stood here — modelled reasons, event-certified
+# reasons and blocked reasons: thirty-nine reviewed sentences answering "what
+# does this item do to the actor wearing it" by looking the actor's item up by
+# name.  The ladder above now
 # asks the declarations, the certification is a property of the mechanic in
 # the catalog, and the refusal is the attacker lane's own.  What the sentences
 # carried that a declaration cannot — which symbol prices each item — is the
@@ -200,8 +208,8 @@ class ItemCoverage:
 # ``_TARGET_CERTIFIED_IMPLS`` below, where it is checked against the derived
 # population rather than trusted.
 
-# ``_UTILITY_DIMENSIONS`` stood here too, and its contents are the one thing
-# the collapse did not delete: a per-item outcome label no declaration can
+# The per-item outcome-dimension table stood here too, and its contents are the
+# one thing the collapse did not delete: an outcome label no declaration can
 # derive.  It is ``item_outcomes.UTILITY_OUTCOMES`` now — a declaration in a
 # home of declarations, read by the payload builder below.
 
