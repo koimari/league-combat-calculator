@@ -2198,6 +2198,15 @@
               "R",
               "W"
             ],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "E",
               "Q",
@@ -2558,6 +2567,15 @@
               "R",
               "W"
             ],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "E",
               "Q",
@@ -6641,6 +6659,15 @@
               "R"
             ],
             "consume": [],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "Q",
               "W",
@@ -8400,6 +8427,15 @@
               "R"
             ],
             "consume": [],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "Q",
               "W",
@@ -10435,6 +10471,15 @@
               "R",
               "W"
             ],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "E",
               "Q",
@@ -11132,6 +11177,15 @@
               "W"
             ],
             "consume": [],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "E",
               "R",
@@ -11823,6 +11877,15 @@
               "W"
             ],
             "consume": [],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "E",
               "R",
@@ -12487,6 +12550,15 @@
               "W"
             ],
             "consume": [],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "E",
               "R",
@@ -12577,7 +12649,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -12767,7 +12839,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -13093,7 +13165,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -13188,7 +13260,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -13567,6 +13639,15 @@
               "R"
             ],
             "consume": [],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "Q",
               "Q2",
@@ -13654,7 +13735,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -13844,7 +13925,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -14170,7 +14251,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -14265,7 +14346,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -14599,6 +14680,15 @@
               "R"
             ],
             "consume": [],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "Q",
               "W",
@@ -14684,7 +14774,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -14874,7 +14964,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -15200,7 +15290,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -15295,7 +15385,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -15674,6 +15764,15 @@
               "R"
             ],
             "consume": [],
+            "dependencies": {
+              "active": [],
+              "confirmed_by_inference": [],
+              "conflicts": [],
+              "inactive": [],
+              "latent": [],
+              "suppressed": [],
+              "unconsulted": []
+            },
             "order": [
               "Q",
               "Q2",
@@ -15761,7 +15860,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -15951,7 +16050,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -16277,7 +16376,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -16372,7 +16471,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -16743,7 +16842,12 @@
           "resource_spent": 530.0,
           "rotation": {
             "aoe": {
-              "E": 5
+              "E": 5,
+              "Q": 5,
+              "Q2": 5,
+              "R": 1,
+              "W": 5,
+              "passive": 1
             },
             "cast_order": [
               "Q",
@@ -16753,8 +16857,29 @@
               "R"
             ],
             "consume": [
-              "E"
+              "E",
+              "Q2",
+              "R",
+              "W"
             ],
+            "dependencies": {
+              "active": [
+                "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+                "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]"
+              ],
+              "confirmed_by_inference": [],
+              "conflicts": [
+                "E -> Q (cc_setup) opposes E requires Q \u2014 covered by the declaration's own suppression"
+              ],
+              "inactive": [],
+              "latent": [
+                "E -> Q2 (cc_setup) is latent: No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_f3_rotation_all.py claimed while silently passing, moved where the audit can see it (D-84)."
+              ],
+              "suppressed": [
+                "E -> Q (cc_setup) suppressed by E requires Q: The detector reads E's cc_kind and fans a cc_setup edge out to every castable damage row, Q among them, which would place E first. E's stun is the sphere's consumer, never its setup; the inference has the mechanic the wrong way round."
+              ],
+              "unconsulted": []
+            },
             "order": [
               "Q",
               "Q2",
@@ -16765,15 +16890,21 @@
               "W",
               "Q"
             ],
-            "rationale": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target \u2014 the sphere is E's setup, the standard QE stun combo. E follows immediately so the stun (and CC-triggered item passives such as Imperial Mandate's Command) covers W and R's burst. Q2 is Q's second charge and mirrors Q's cast times.",
+            "rationale": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] Q2 is the recast of Q \u2014 Q2 is Q's recast (recast_of atom) E applies cc_kind crowd control \u2014 setup before W E applies cc_kind crowd control \u2014 setup before R Remaining abilities are ranked by per-rank DPS at the fight's stats (total_raw / effective cooldown, AoE-weighted) \u2014 the ranking is consistent across the level/build reference matrix. Derived order: Q \u2192 Q2 \u2192 E \u2192 W \u2192 R.",
             "setup": [
-              "Q"
+              "E",
+              "Q",
+              "Q2"
             ],
             "sources": [
-              "E cc_kind='stun' authored in the module (sphere-collision stun; see the module's QE-combo assumption)",
-              "Q 'Magic Damage' \u2014 the sphere E scatters",
-              "Q2 recast_of Q (40+ splinter second charge)",
-              "R 'Magic Damage' per sphere closes the burst"
+              "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+              "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+              "Q2 is the recast of Q \u2014 Q2 is Q's recast (recast_of atom)",
+              "E applies cc_kind crowd control \u2014 setup before W",
+              "E applies cc_kind crowd control \u2014 setup before R",
+              "option splinters (self_state, slot P)",
+              "option r_spheres (self_state, slot R)",
+              "free slots ranked by per-rank DPS (total_raw / effective cooldown) \u2014 consistent across the L1/L18 x no-items/magic/physical/spellblade matrix"
             ]
           },
           "self_healing": 0.0,
@@ -16847,7 +16978,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -17037,7 +17168,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -17363,7 +17494,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -17458,7 +17589,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -17785,18 +17916,43 @@
           "resource_spent": 530.0,
           "rotation": {
             "aoe": {
-              "E": 5
+              "E": 5,
+              "Q": 5,
+              "Q2": 5,
+              "R": 1,
+              "W": 5,
+              "passive": 1
             },
             "cast_order": [
               "Q",
-              "Q2",
               "E",
               "W",
               "R"
             ],
             "consume": [
-              "E"
+              "E",
+              "Q2",
+              "R",
+              "W"
             ],
+            "dependencies": {
+              "active": [
+                "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+                "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]"
+              ],
+              "confirmed_by_inference": [],
+              "conflicts": [
+                "E -> Q (cc_setup) opposes E requires Q \u2014 covered by the declaration's own suppression"
+              ],
+              "inactive": [],
+              "latent": [
+                "E -> Q2 (cc_setup) is latent: No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_f3_rotation_all.py claimed while silently passing, moved where the audit can see it (D-84)."
+              ],
+              "suppressed": [
+                "E -> Q (cc_setup) suppressed by E requires Q: The detector reads E's cc_kind and fans a cc_setup edge out to every castable damage row, Q among them, which would place E first. E's stun is the sphere's consumer, never its setup; the inference has the mechanic the wrong way round."
+              ],
+              "unconsulted": []
+            },
             "order": [
               "Q",
               "E",
@@ -17806,15 +17962,21 @@
               "W",
               "Q"
             ],
-            "rationale": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target \u2014 the sphere is E's setup, the standard QE stun combo. E follows immediately so the stun (and CC-triggered item passives such as Imperial Mandate's Command) covers W and R's burst. Q2 is Q's second charge and mirrors Q's cast times.",
+            "rationale": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] Q2 is the recast of Q \u2014 Q2 is Q's recast (recast_of atom) E applies cc_kind crowd control \u2014 setup before W E applies cc_kind crowd control \u2014 setup before R Remaining abilities are ranked by per-rank DPS at the fight's stats (total_raw / effective cooldown, AoE-weighted) \u2014 the ranking is consistent across the level/build reference matrix. Derived order: Q \u2192 Q2 \u2192 E \u2192 W \u2192 R.",
             "setup": [
-              "Q"
+              "E",
+              "Q",
+              "Q2"
             ],
             "sources": [
-              "E cc_kind='stun' authored in the module (sphere-collision stun; see the module's QE-combo assumption)",
-              "Q 'Magic Damage' \u2014 the sphere E scatters",
-              "Q2 recast_of Q (40+ splinter second charge)",
-              "R 'Magic Damage' per sphere closes the burst"
+              "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+              "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+              "Q2 is the recast of Q \u2014 Q2 is Q's recast (recast_of atom)",
+              "E applies cc_kind crowd control \u2014 setup before W",
+              "E applies cc_kind crowd control \u2014 setup before R",
+              "option splinters (self_state, slot P)",
+              "option r_spheres (self_state, slot R)",
+              "free slots ranked by per-rank DPS (total_raw / effective cooldown) \u2014 consistent across the L1/L18 x no-items/magic/physical/spellblade matrix"
             ]
           },
           "self_healing": 0.0,
@@ -17887,7 +18049,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -18077,7 +18239,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -18403,7 +18565,7 @@
                   "spell_protection"
                 ],
                 "name": "Banshee's Veil",
-                "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                 "status": "stats_only"
               },
               {
@@ -18498,7 +18660,7 @@
                     "spell_protection"
                   ],
                   "name": "Banshee's Veil",
-                  "reason": "The represented mechanic changes defense, not outgoing TDD.",
+                  "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
                   "status": "stats_only"
                 },
                 {
@@ -18869,7 +19031,12 @@
           "resource_spent": 530.0,
           "rotation": {
             "aoe": {
-              "E": 5
+              "E": 5,
+              "Q": 5,
+              "Q2": 5,
+              "R": 1,
+              "W": 5,
+              "passive": 1
             },
             "cast_order": [
               "Q",
@@ -18879,8 +19046,29 @@
               "R"
             ],
             "consume": [
-              "E"
+              "E",
+              "Q2",
+              "R",
+              "W"
             ],
+            "dependencies": {
+              "active": [
+                "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+                "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]"
+              ],
+              "confirmed_by_inference": [],
+              "conflicts": [
+                "E -> Q (cc_setup) opposes E requires Q \u2014 covered by the declaration's own suppression"
+              ],
+              "inactive": [],
+              "latent": [
+                "E -> Q2 (cc_setup) is latent: No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_f3_rotation_all.py claimed while silently passing, moved where the audit can see it (D-84)."
+              ],
+              "suppressed": [
+                "E -> Q (cc_setup) suppressed by E requires Q: The detector reads E's cc_kind and fans a cc_setup edge out to every castable damage row, Q among them, which would place E first. E's stun is the sphere's consumer, never its setup; the inference has the mechanic the wrong way round."
+              ],
+              "unconsulted": []
+            },
             "order": [
               "Q",
               "Q2",
@@ -18891,15 +19079,21 @@
               "W",
               "Q"
             ],
-            "rationale": "Q (Dark Sphere) lands first because E (Scatter the Weak) stuns only by scattering a sphere into the target \u2014 the sphere is E's setup, the standard QE stun combo. E follows immediately so the stun (and CC-triggered item passives such as Imperial Mandate's Command) covers W and R's burst. Q2 is Q's second charge and mirrors Q's cast times.",
+            "rationale": "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662] Q2 is the recast of Q \u2014 Q2 is Q's recast (recast_of atom) E applies cc_kind crowd control \u2014 setup before W E applies cc_kind crowd control \u2014 setup before R Remaining abilities are ranked by per-rank DPS at the fight's stats (total_raw / effective cooldown, AoE-weighted) \u2014 the ranking is consistent across the level/build reference matrix. Derived order: Q \u2192 Q2 \u2192 E \u2192 W \u2192 R.",
             "setup": [
-              "Q"
+              "E",
+              "Q",
+              "Q2"
             ],
             "sources": [
-              "E cc_kind='stun' authored in the module (sphere-collision stun; see the module's QE-combo assumption)",
-              "Q 'Magic Damage' \u2014 the sphere E scatters",
-              "Q2 recast_of Q (40+ splinter second charge)",
-              "R 'Magic Damage' per sphere closes the burst"
+              "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+              "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
+              "Q2 is the recast of Q \u2014 Q2 is Q's recast (recast_of atom)",
+              "E applies cc_kind crowd control \u2014 setup before W",
+              "E applies cc_kind crowd control \u2014 setup before R",
+              "option splinters (self_state, slot P)",
+              "option r_spheres (self_state, slot R)",
+              "free slots ranked by per-rank DPS (total_raw / effective cooldown) \u2014 consistent across the L1/L18 x no-items/magic/physical/spellblade matrix"
             ]
           },
           "self_healing": 0.0,
@@ -18936,15 +19130,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 13,
-      "leaves": 14200,
-      "numeric_leaves": 8334,
+      "leaves": 14256,
+      "numeric_leaves": 8349,
       "sections": "coupled_scenarios"
     },
-    "git_head": "1483b46eed79e661902be95f3180fb301148b17c",
+    "git_head": "ab655cc0b036395643a2251ec1e8b552021f7d4a",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 13,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "8cac3f5f5927137b5ca07725fa9298e6948650aa"
+    "src_tree_sha": "b2d419a6eabb30fa49c8f3da5616d774fea2bf86"
   }
 }
