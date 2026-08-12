@@ -4307,9 +4307,18 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
         )
     ]
     action = SurvivalAction(
-        sort_key=(0.0, 1.0, 0, 0, 0, "target", "heal", "Sundered Sky"),
+        sort_key=(
+            0.0,
+            TransitionRank.DEBUFF_ARM,
+            0,
+            0,
+            0,
+            "target",
+            "heal",
+            "Sundered Sky",
+        ),
         time=0.0,
-        phase=1.0,
+        phase=TransitionRank.RECOVERY,
         kind=ActionKind.HEAL,
         subject=0,
         attacker=0,
@@ -4562,7 +4571,7 @@ def test_packet_typed_actions_match_fresh_conversion():
                 continue
             fresh = survival_action_from_event(
                 template,
-                0.0,
+                TransitionRank.DAMAGE,
                 index_of[str(template["target"])],
                 index_of,
                 subject_id=str(template["target"]),
@@ -4575,7 +4584,7 @@ def test_packet_typed_actions_match_fresh_conversion():
                 continue
             fresh = survival_action_from_event(
                 template,
-                1.0,
+                TransitionRank.RECOVERY,
                 index_of[str(template["attacker"])],
                 index_of,
                 subject_id=str(template["attacker"]),

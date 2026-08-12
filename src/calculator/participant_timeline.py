@@ -84,7 +84,6 @@ from .survival import (
     build_states,
     coalesce_darius_q_heals,
     finalize_states,
-    legacy_phase,
     resolve_grievous as _grievous_pack,
     revive_candidate_actions,
     run_survival_walk,
@@ -263,7 +262,7 @@ def _pair_packet(
             enriched[baseline_key] = baseline
         enriched["_sk"] = _action_key(
             float(event.get("time", 0.0)),
-            legacy_phase(TransitionRank.DAMAGE),
+            TransitionRank.DAMAGE,
             defender_id,
             enriched,
         )
@@ -322,7 +321,7 @@ def _pair_packet(
             enriched_heal["trigger_target"] = defender_id
         enriched_heal["_sk"] = _action_key(
             float(event.get("time", 0.0)),
-            legacy_phase(TransitionRank.RECOVERY),
+            TransitionRank.RECOVERY,
             attacker_id,
             enriched_heal,
         )
@@ -380,7 +379,7 @@ def _packet_typed_actions(
             continue
         by_template[id(template)] = survival_action_from_event(
             template,
-            legacy_phase(TransitionRank.DAMAGE),
+            TransitionRank.DAMAGE,
             subject,
             index_of,
             subject_id=subject_id,
@@ -392,7 +391,7 @@ def _packet_typed_actions(
             continue
         by_template[id(template)] = survival_action_from_event(
             template,
-            legacy_phase(TransitionRank.RECOVERY),
+            TransitionRank.RECOVERY,
             subject,
             index_of,
             subject_id=subject_id,
@@ -1869,7 +1868,7 @@ def _simulate_survival(
                     )
                 redirected["_sk"] = _action_key(
                     float(redirected.get("time", 0.0)),
-                    legacy_phase(TransitionRank.REACTIVE),
+                    TransitionRank.REACTIVE,
                     redirect_target,
                     redirected,
                 )
@@ -1981,7 +1980,7 @@ def _simulate_survival(
                     }
                     deferred["_sk"] = _action_key(
                         float(deferred.get("time", 0.0)),
-                        legacy_phase(TransitionRank.DAMAGE),
+                        TransitionRank.DAMAGE,
                         target_id,
                         deferred,
                     )
@@ -2071,11 +2070,10 @@ def _simulate_survival(
                 # but do not schedule the same object a second time here.
                 continue
             arm_rank = support_transition_rank(event)
-            arm_phase = legacy_phase(arm_rank)
             actions.append(
                 survival_action_from_event(
                     event,
-                    arm_phase,
+                    arm_rank,
                     index_of[participant_id],
                     index_of,
                     subject_id=participant_id,
@@ -2096,7 +2094,7 @@ def _simulate_survival(
             if cached is not None:
                 actions.append(cached._replace(event=event))
                 continue
-            phase = legacy_phase(
+            phase = (
                 TransitionRank.REACTIVE
                 if event.get("_reactive")
                 else TransitionRank.DAMAGE
@@ -2120,7 +2118,7 @@ def _simulate_survival(
             actions.append(
                 survival_action_from_event(
                     event,
-                    legacy_phase(TransitionRank.RECOVERY),
+                    TransitionRank.RECOVERY,
                     subject,
                     index_of,
                     subject_id=participant_id,
@@ -2236,7 +2234,7 @@ class CoupledSearchContext:
         self.main_champion_wounds: dict[str, Any] | None = None
 
 
-class _SignaturePanel:
+class _SignaturePanel:  # pylint: disable=too-few-public-methods
     """The invariant walk actions for one main defensive signature.
 
     ``sig`` holds only the fights into this signature (enemies into the
@@ -2504,7 +2502,7 @@ def _context_setup(
             base.actions.append(
                 survival_action_from_event(
                     event,
-                    legacy_phase(TransitionRank.RECOVERY),
+                    TransitionRank.RECOVERY,
                     actor_i,
                     context.index_of,
                     subject_id=actor.participant_id,
@@ -2896,7 +2894,7 @@ def _score_with_search_context(
             event_id = f"main:grey:{source}:{index}"
             sort_key = _action_key(
                 float(heal_time),
-                legacy_phase(TransitionRank.RECOVERY),
+                TransitionRank.RECOVERY,
                 "main",
                 {"attacker": "main", "_event_id": event_id, "source": source},
             )
@@ -2904,7 +2902,7 @@ def _score_with_search_context(
                 SurvivalAction(
                     sort_key=sort_key,
                     time=float(heal_time),
-                    phase=legacy_phase(TransitionRank.RECOVERY),
+                    phase=TransitionRank.RECOVERY,
                     kind=ActionKind.HEAL,
                     subject=0,
                     attacker=0,
@@ -3047,7 +3045,7 @@ def _score_with_search_context(
     }
 
 
-def _published_support_phase(event: Mapping[str, Any]) -> float:
+def _published_support_phase(event: Mapping[str, Any]) -> TransitionRank:
     """Where one support packet sits in the *published* support list.
 
     Deliberately not :func:`support_transition_rank`.  This orders the
@@ -3061,7 +3059,7 @@ def _published_support_phase(event: Mapping[str, Any]) -> float:
     all this stage does about it: closing it moves published output, which
     is a correction, not a rename.
     """
-    return legacy_phase(
+    return (
         TransitionRank.BARRIER_GRANT
         if event.get("kind") in BARRIER_GRANT_KINDS
         else TransitionRank.RECOVERY
@@ -3565,7 +3563,7 @@ def build_participant_timeline(
             }
             heal_event["_sk"] = _action_key(
                 float(heal_time),
-                legacy_phase(TransitionRank.RECOVERY),
+                TransitionRank.RECOVERY,
                 "main",
                 heal_event,
             )
@@ -3753,7 +3751,7 @@ def build_participant_timeline(
         key=lambda event: event.get("_sk")
         or _action_key(
             float(event.get("time", 0.0)),
-            legacy_phase(
+            (
                 TransitionRank.REACTIVE
                 if event.get("_reactive")
                 else TransitionRank.DAMAGE
@@ -3767,7 +3765,7 @@ def build_participant_timeline(
         key=lambda event: event.get("_sk")
         or _action_key(
             float(event.get("time", 0.0)),
-            legacy_phase(TransitionRank.RECOVERY),
+            TransitionRank.RECOVERY,
             str(event.get("attacker", "")),
             event,
         ),

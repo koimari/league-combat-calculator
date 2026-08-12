@@ -699,6 +699,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
         ScoreLedger,
         SurvivalAction,
         TransitionContext,
+        TransitionRank,
         assemble_survival_rows,
         build_states,
         finalize_states,
@@ -721,9 +722,9 @@ def test_receipt_and_score_adapters_share_one_kernel():
     )
     actions = [
         SurvivalAction(
-            sort_key=(0.0, 0.0, 0, 0, 0, "target", "hit", "auto"),
+            sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, 0, "target", "hit", "auto"),
             time=0.0,
-            phase=0.0,
+            phase=TransitionRank.DAMAGE,
             kind=ActionKind.PLAIN_DAMAGE,
             subject=0,
             attacker=0,
@@ -736,9 +737,18 @@ def test_receipt_and_score_adapters_share_one_kernel():
             sequence=0,
         ),
         SurvivalAction(
-            sort_key=(1.0, 1.0, 0, 0, 0, "target", "heal", "heal"),
+            sort_key=(
+                1.0,
+                TransitionRank.DEBUFF_ARM,
+                0,
+                0,
+                0,
+                "target",
+                "heal",
+                "heal",
+            ),
             time=1.0,
-            phase=1.0,
+            phase=TransitionRank.RECOVERY,
             kind=ActionKind.HEAL,
             subject=0,
             attacker=0,
@@ -805,9 +815,9 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
         SUPPORT_RANK_KEY,
         TransitionRank,
         WalkCompiler,
-        legacy_phase,
         support_transition_rank,
     )
+    from src.calculator.survival.actions import ordering_slot
     from src.calculator.survival.compile import unrepresentable_template_receipt
 
     declared = {
@@ -835,14 +845,14 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
     }
 
     for template in (declared, plain):
-        expected = legacy_phase(support_transition_rank(template))
+        expected = support_transition_rank(template)
         action = by_event[template["_event_id"]]
-        assert action.phase == expected
-        assert action.sort_key[1] == expected
+        assert action.phase is expected
+        assert action.sort_key[1] is ordering_slot(expected)
 
     # The declaration is what separates them: same kind, different arming.
-    assert by_event["declared:late"].phase == legacy_phase(TransitionRank.LATE_BARRIER)
-    assert by_event["plain:barrier"].phase == legacy_phase(TransitionRank.BARRIER_GRANT)
+    assert by_event["declared:late"].phase is TransitionRank.LATE_BARRIER
+    assert by_event["plain:barrier"].phase is TransitionRank.BARRIER_GRANT
 
 
 # ---------------------------------------------------------------------------

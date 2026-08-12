@@ -18,7 +18,6 @@ from .actions import (
     SurvivalAction,
     TransitionRank,
     action_key,
-    legacy_phase,
     survival_action_from_event,
 )
 from .transitions import participant_pools
@@ -372,7 +371,7 @@ class ReceiptLedger:
         beside the current action (receipt adapter observation)."""
         heal_event["_sk"] = action_key(
             float(heal_event.get("time", 0.0)),
-            legacy_phase(TransitionRank.RECOVERY),
+            TransitionRank.RECOVERY,
             recipient_id,
             heal_event,
         )
@@ -382,7 +381,7 @@ class ReceiptLedger:
                 self.healing[recipient_id] = self.expanded_healing[recipient_id]
         action = survival_action_from_event(
             heal_event,
-            legacy_phase(TransitionRank.RECOVERY),
+            TransitionRank.RECOVERY,
             self.index_of[recipient_id],
             self.index_of,
             subject_id=recipient_id,

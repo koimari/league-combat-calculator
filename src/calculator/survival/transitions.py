@@ -47,12 +47,11 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
 from .actions import (
-    DAMAGE_PHASE,
     EVENT_SLOTS,
     NO_SLOT,
-    RECOVERY_PHASE,
     ActionKind,
     SurvivalAction,
+    TransitionRank,
     attack_class_of,
     damage_class_of,
     declared_modifier_classes,
@@ -1217,7 +1216,7 @@ def _apply_live_packet_chain(
     # champion-hit window.
     if (
         state["incoming_damage_multiplier"] < 1.0
-        and action.phase >= DAMAGE_PHASE
+        and action.phase >= TransitionRank.DAMAGE
         and 0 <= attacker < len(ctx.combatants)
         and attacker != action.subject
         and not action.reactive
@@ -1710,7 +1709,9 @@ def run_survival_walk(
             # The shared ledger is bounded by the authored fight window.  A
             # post-window revive, heal, or damage tick must remain visible in
             # the receipt but cannot alter terminal state or totals.
-            ledger.skip(action, "outside_window", damage_phase=phase >= DAMAGE_PHASE)
+            ledger.skip(
+                action, "outside_window", damage_phase=phase >= TransitionRank.DAMAGE
+            )
             continue
 
         pools = state["pools"]
@@ -1761,8 +1762,15 @@ def run_survival_walk(
             # neither a recovery tick nor a reactive strike-back.  An action
             # with no trigger linkage at all passes both adapters trivially,
             # so the ledger is only consulted when a link exists.
+            #
+            # ``DEBUFF_ARM`` is the recovery *slot*, not the recovery rank:
+            # the three ranks that shared the deleted 1.0 float fold onto the
+            # first of them, so "before recovery" is the same set of ranks it
+            # has always been (see ``actions.ordering_slot``).
             ledger.skip(
-                action, "trigger_event_skipped", damage_phase=phase < RECOVERY_PHASE
+                action,
+                "trigger_event_skipped",
+                damage_phase=phase < TransitionRank.DEBUFF_ARM,
             )
             continue
         if action.redirect_cancelled or (
@@ -1771,7 +1779,7 @@ def run_survival_walk(
             ledger.skip(
                 action,
                 "redirect_gate",
-                damage_phase=phase < RECOVERY_PHASE,
+                damage_phase=phase < TransitionRank.DEBUFF_ARM,
                 preserve_reason=True,
             )
             continue
@@ -1837,7 +1845,7 @@ def run_survival_walk(
         ):
             ledger.skip(action, "defy_cleared_deferred_damage", damage_phase=True)
             continue
-        if phase >= DAMAGE_PHASE and (
+        if phase >= TransitionRank.DAMAGE and (
             state["stasis_until"] > event_time
             or state["invulnerable_until"] > event_time
             or state["untargetable_until"] > event_time
@@ -1845,7 +1853,7 @@ def run_survival_walk(
             ledger.skip(action, "target_state_blocked", damage_phase=True)
             continue
         if (
-            phase >= DAMAGE_PHASE
+            phase >= TransitionRank.DAMAGE
             and action.is_ability
             and state["spell_shield_until"] > event_time
         ):
@@ -1869,7 +1877,7 @@ def run_survival_walk(
                 ledger.skip(action, "spell_shield", damage_phase=True)
                 continue
         if (
-            phase >= DAMAGE_PHASE
+            phase >= TransitionRank.DAMAGE
             and 0 <= action.attacker < len(states)
             and not action.reactive
             and (
@@ -1910,7 +1918,7 @@ def run_survival_walk(
             _apply_live_packet_chain(ctx, action, state)
             _apply_heal(ctx, action, state)
             continue
-        if phase < DAMAGE_PHASE:
+        if phase < TransitionRank.DAMAGE:
             # Pre-damage residue: the authoritative walk's branch for ranks
             # arming before damage ends with a bare continue (no state
             # change, no annotations).

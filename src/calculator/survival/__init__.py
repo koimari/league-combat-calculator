@@ -23,8 +23,12 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 layer and the public schema now author against instead of writing floats.
 ``BARRIER_GRANT_KINDS`` is additionally a rename: it was ``_BARRIER_GRANT_KINDS``
 until the published support ordering needed the kernel's one spelling of it.
-``legacy_phase`` is temporary by design and leaves this list in Phase 4,
-when the sort key consumes the rank itself.  Phase 4 S1 grew it by one,
+``legacy_phase`` was temporary by design and left this list at Phase 4 S2,
+when the sort key started carrying a ``TransitionRank`` and the float
+projection was deleted; the fold two groups of ranks still share
+(``actions.ordering_slot``) is kernel-internal and deliberately not
+re-exported, because no packet author outside this package orders anything.
+Phase 4 S1 grew it by one,
 ``EVENT_SLOTS``: the four ``str | None`` reference fields became integer
 slots, and the composition that authors packets outside this package has to
 resolve an id string to the same slot the kernel will compare.  0A.8 shrank it by one: the
@@ -43,7 +47,6 @@ from .actions import (
     action_key,
     classify_event_kind,
     event_sequence,
-    legacy_phase,
     participant_order,
     public_phase,
     support_transition_rank,
@@ -107,7 +110,6 @@ __all__ = [
     "expire_temporary_health",
     "finalize_states",
     "heal_trigger_key",
-    "legacy_phase",
     "participant_pools",
     "participant_order",
     "public_phase",

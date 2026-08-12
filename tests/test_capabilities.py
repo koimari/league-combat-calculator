@@ -144,8 +144,9 @@ def test_the_ladder_declares_terminal_last_and_only_as_a_published_name() -> Non
         if getattr(node.value, "id", "") == "TransitionRank"
         if node.attr == "TERMINAL"
     ]
-    # One key in the legacy-float table, one in the published-name table.
-    assert len(mentions) == 2
+    # One key, in the published-name table.  It was two until Phase 4 S2
+    # deleted the float projection whose table held the other.
+    assert len(mentions) == 1
     assert list(TransitionRank)[-1] is TransitionRank.TERMINAL
 
 

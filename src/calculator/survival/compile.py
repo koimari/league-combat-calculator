@@ -26,7 +26,7 @@ from .actions import (
     action_key,
     compiled_damage_action,
     event_sequence,
-    legacy_phase,
+    ordering_slot,
     participant_order,
     support_transition_rank,
 )
@@ -230,12 +230,12 @@ def revive_candidate_actions(
                 SurvivalAction(
                     sort_key=action_key(
                         candidate_time,
-                        legacy_phase(TransitionRank.DAMAGE),
+                        TransitionRank.DAMAGE,
                         actor.participant_id,
                         candidate,
                     ),
                     time=candidate_time,
-                    phase=legacy_phase(TransitionRank.DAMAGE),
+                    phase=TransitionRank.DAMAGE,
                     kind=ActionKind.REVIVE,
                     subject=actor_index,
                     attacker=-1,
@@ -398,7 +398,11 @@ class WalkCompiler:
                 SurvivalAction(
                     sort_key=event["_sk"],
                     time=time_value,
-                    phase=float(event["_sk"][1]),
+                    # ``_pair_packet`` authored this key at the damage rank
+                    # (``participant_timeline``); the action names the rank
+                    # rather than reading the ordering slot back out of the
+                    # key, which is a fold and not a phase.
+                    phase=TransitionRank.DAMAGE,
                     kind=(
                         ActionKind.PLAIN_DAMAGE
                         if live_formula is None and grievous is None and wound is None
@@ -490,7 +494,9 @@ class WalkCompiler:
                 SurvivalAction(
                     sort_key=event["_sk"],
                     time=time_value,
-                    phase=float(event["_sk"][1]),
+                    # As above: the packet's heals were keyed at the recovery
+                    # rank, so that is the rank this action carries.
+                    phase=TransitionRank.RECOVERY,
                     kind=ActionKind.HEAL,
                     subject=attacker_i,
                     attacker=attacker_i,
@@ -559,12 +565,15 @@ class WalkCompiler:
         order_append = self.damage_order[attacker_i].append
         strikes_append = self.auto_strikes_into[defender_i].append
         # Engine damage arms at the damage rank, on both the tuple ledger and
-        # the dict one.  Named once per call rather than per action: these
-        # two loops build tens of thousands of sort keys per request, and the
-        # alternative — a bare 0.0 in tuple position 1 — is a phase nobody
-        # can grep for, which is exactly how both branches escaped the first
-        # migration pass.
-        damage_phase = legacy_phase(TransitionRank.DAMAGE)
+        # the dict one.  These two inline tuples are ``action_key``'s output
+        # written by hand, so element 1 is that function's element 1: the
+        # rank's ordering slot, which for ``DAMAGE`` is the rank itself.
+        # Named once per call rather than per action: these two loops build
+        # tens of thousands of sort keys per request, and the alternative — a
+        # bare ordinal in tuple position 1 — is a phase nobody can grep for,
+        # which is exactly how both branches escaped the first migration
+        # pass.
+        damage_phase = ordering_slot(TransitionRank.DAMAGE)
         known_ids = len(id_strings)
         aidx = self.next_aidx
         if result.get("damage_events_tuple"):
@@ -793,7 +802,7 @@ class WalkCompiler:
                 SurvivalAction(
                     sort_key=(
                         time_value,
-                        legacy_phase(TransitionRank.RECOVERY),
+                        ordering_slot(TransitionRank.RECOVERY),
                         event_sequence(event),
                         order_a,
                         order_b,
@@ -802,7 +811,7 @@ class WalkCompiler:
                         str(event.get("source", event.get("source_key", ""))),
                     ),
                     time=time_value,
-                    phase=legacy_phase(TransitionRank.RECOVERY),
+                    phase=TransitionRank.RECOVERY,
                     kind=ActionKind.HEAL,
                     subject=attacker_i,
                     attacker=attacker_i,
@@ -886,13 +895,15 @@ class WalkCompiler:
             # RECOVERY``, so for the kinds ``unrepresentable_template_receipt``
             # rejects — everything but ``shield`` and ``heal`` — the rank
             # moved: ``temporary_health`` to ``BARRIER_GRANT`` and
-            # ``stasis`` to ``STATE_GRANT`` (both float moves, 1.0 to -1.0
-            # and -2.0), ``stat_buff``/``damage_modifier`` to
-            # ``DEBUFF_ARM`` and ``movement``/``cleanse``/... to
-            # ``UTILITY_ARM`` (rank moves at the same 1.0).  Admitting a
-            # kind to compilation therefore lands two behaviour changes,
-            # not one: read this line before widening that receipt.
-            priority = legacy_phase(support_transition_rank(template))
+            # ``stasis`` to ``STATE_GRANT`` (both ordering moves, out of the
+            # recovery slot and ahead of the damage), ``stat_buff``/
+            # ``damage_modifier`` to ``DEBUFF_ARM`` and
+            # ``movement``/``cleanse``/... to ``UTILITY_ARM`` (rank moves
+            # inside one ordering slot, inert until S6 splits it).
+            # Admitting a kind to compilation therefore lands two behaviour
+            # changes, not one: read this line before widening that
+            # receipt.
+            priority = support_transition_rank(template)
             aidx = self.next_aidx
             self.next_aidx += 1
             time_value = float(template.get("time", 0.0))
@@ -955,7 +966,7 @@ class WalkCompiler:
                 self.next_aidx += 1
                 sort_key = (
                     strike_time,
-                    legacy_phase(TransitionRank.REACTIVE),
+                    ordering_slot(TransitionRank.REACTIVE),
                     strike_sequence,
                     *wearer_order,
                     striker.participant_id,
@@ -969,7 +980,7 @@ class WalkCompiler:
                     SurvivalAction(
                         sort_key=sort_key,
                         time=strike_time,
-                        phase=legacy_phase(TransitionRank.REACTIVE),
+                        phase=TransitionRank.REACTIVE,
                         kind=ActionKind.DAMAGE,
                         subject=striker_i,
                         attacker=wearer_i,

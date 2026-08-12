@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from enum import Enum, IntEnum
 from collections.abc import Iterable, Mapping
-import math
 from threading import Lock
 from typing import Any, NamedTuple
 
@@ -33,31 +32,31 @@ class TransitionRank(IntEnum):
     """When a transition resolves, relative to everything at its timestamp.
 
     Dense ordinals in ordering order: a lower rank resolves first.  This is
-    the campaign's single phase vocabulary; the walk still sorts on the
-    float :func:`legacy_phase` projects, so the names below say what each
-    float *meant* without changing what it *is*.
+    the campaign's single phase vocabulary, and since Phase 4 S2 it is also
+    the only one: the float projection that stood between these names and
+    the walk is deleted, so a ``phase`` is a member of this enum everywhere
+    one is written, sorted, compared or dispatched on.
 
     ``TERMINAL`` has no producer.  It exists so the published phase list
     keeps ``death_or_terminal_cutoff`` (a name the ledger publishes but no
-    transition emits) and is declared last so ``legacy_phase`` stays
-    non-decreasing while projecting it to ``math.inf``.
+    transition emits) and is declared last because it resolves after
+    everything else at its timestamp.
 
-    ``AURA_ARM`` is the one rank whose float no producer wrote before C4.
-    A persistent aura is *already in force* when the fight opens — Abyssal
-    Mask's Unmake curses every enemy in range from the first frame — so it
-    must resolve before the damage at its own timestamp, not after it like
-    a debuff some trigger armed.  ``DEBUFF_ARM`` (1.0) put it after, which
-    made the opening exchange the one exchange the aura did not price.
+    ``AURA_ARM`` is the one rank no producer wrote before C4.  A persistent
+    aura is *already in force* when the fight opens — Abyssal Mask's Unmake
+    curses every enemy in range from the first frame — so it must resolve
+    before the damage at its own timestamp, not after it like a debuff some
+    trigger armed.  ``DEBUFF_ARM`` put it after, which made the opening
+    exchange the one exchange the aura did not price.
 
-    **Declaration order says more than the float does.**  ``DEBUFF_ARM``,
-    ``RECOVERY`` and ``UTILITY_ARM`` all project to 1.0, so their relative
-    order changes nothing while ``legacy_phase`` is what the sort key
-    consumes.  Ordering them 6 < 7 < 8 is nonetheless a decision — debuff
-    arming resolves before healing, and both before utility — and it
-    becomes the live tie-break the moment Phase 4 sorts on the rank
-    itself.  ``LATE_BARRIER`` before ``REACTIVE`` is the same kind of
-    currently-inert declaration at 0.5.  If either ordering is wrong, it
-    is wrong here and not at the call sites.
+    **Two groups still resolve as one.**  ``LATE_BARRIER``/``REACTIVE`` and
+    ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` rode one float apiece before
+    S2 and ride one :func:`ordering_slot` apiece after it, so their relative
+    declaration order still changes nothing.  Ordering them 4 < 5 and
+    6 < 7 < 8 is nonetheless a decision — debuff arming resolves before
+    healing, and both before utility — and it becomes the live tie-break the
+    moment Phase 4 S6 splits the groups.  If either ordering is wrong, it is
+    wrong here and not at the call sites.
     """
 
     STATE_GRANT = 0
@@ -72,51 +71,40 @@ class TransitionRank(IntEnum):
     TERMINAL = 9
 
 
-# The projection is deliberately many-to-one: several ranks share a float
-# because the float never carried the distinction.  ``LATE_BARRIER`` is a
-# barrier an authored packet places *after* damage (Eclipse's self-shield,
-# Fimbulwinter's Everlasting), which is why it is not ``BARRIER_GRANT``.
-_LEGACY_PHASES: dict[TransitionRank, float] = {
-    TransitionRank.STATE_GRANT: -2.0,
-    TransitionRank.BARRIER_GRANT: -1.0,
-    TransitionRank.AURA_ARM: -0.5,
-    TransitionRank.DAMAGE: 0.0,
-    TransitionRank.LATE_BARRIER: 0.5,
-    TransitionRank.REACTIVE: 0.5,
-    TransitionRank.DEBUFF_ARM: 1.0,
-    TransitionRank.RECOVERY: 1.0,
-    TransitionRank.UTILITY_ARM: 1.0,
-    TransitionRank.TERMINAL: math.inf,
+# Two groups of ranks resolve as one, and this is the whole of what the
+# deleted float ladder meant that the ordinals do not.  That ladder gave
+# ``LATE_BARRIER`` and ``REACTIVE`` one number (0.5) and ``DEBUFF_ARM``,
+# ``RECOVERY`` and ``UTILITY_ARM`` another (1.0), so each group folds onto
+# its first member wherever the walk *orders* or *classifies* by rank.
+# ``LATE_BARRIER`` is a barrier an authored packet places *after* damage
+# (Eclipse's self-shield, Fimbulwinter's Everlasting), which is why it is
+# not ``BARRIER_GRANT``.
+#
+# Every other read of a rank is fold-invariant by construction: the kernel's
+# comparisons are thresholds at a group boundary, and no group straddles
+# one.  Splitting these two groups reorders same-timestamp debuffs against
+# recoveries, which is a behaviour change with a stage of its own — Phase 4
+# S6 — and deleting this fold is that stage's whole content.
+_ORDERING_SLOTS: dict[TransitionRank, TransitionRank] = {
+    TransitionRank.REACTIVE: TransitionRank.LATE_BARRIER,
+    TransitionRank.RECOVERY: TransitionRank.DEBUFF_ARM,
+    TransitionRank.UTILITY_ARM: TransitionRank.DEBUFF_ARM,
 }
 
 
-def legacy_phase(rank: TransitionRank) -> float:
-    """The float ``phase`` one rank projects to, for today's sort keys.
+def ordering_slot(rank: TransitionRank) -> TransitionRank:
+    """The rank a transition sorts and classifies *as*.
 
-    Total over the enum and non-decreasing over declaration order, with no
-    member exempted: a rank added without a float raises here rather than
-    falling through to a guessed number.  Deleted in Phase 4, when the sort
-    key consumes the rank itself.
+    Identity for every rank that resolves alone, and the group's first
+    member for the two that do not.  The fold cannot develop a hole the way
+    a total table could: a rank absent from :data:`_ORDERING_SLOTS` resolves
+    as itself, which is what a rank sharing its slot with nothing means.
     """
-    try:
-        return _LEGACY_PHASES[rank]
-    except KeyError:
-        raise KeyError(f"TransitionRank.{rank.name} declares no legacy phase") from None
-
-
-# The read side of the projection.  The walk still receives a float and
-# still branches on where that float sits relative to three boundaries;
-# resolving them here once means a comparison names the rank it is asking
-# about instead of restating a number, and means the hot walk pays a module
-# attribute rather than a dict lookup per action.  Deleted with
-# ``legacy_phase`` in Phase 4, when the walk compares ranks directly.
-BARRIER_GRANT_PHASE = legacy_phase(TransitionRank.BARRIER_GRANT)
-DAMAGE_PHASE = legacy_phase(TransitionRank.DAMAGE)
-RECOVERY_PHASE = legacy_phase(TransitionRank.RECOVERY)
+    return _ORDERING_SLOTS.get(rank, rank)
 
 
 # The published phase a rank belongs to.  Many-to-one for a different reason
-# than ``legacy_phase``: the public contract names the *kind* of transition,
+# than ``ordering_slot``: the public contract names the *kind* of transition,
 # so a late barrier is still a barrier, and arming a debuff or a utility
 # effect is still a state transition.
 #
@@ -323,8 +311,8 @@ class SurvivalAction(NamedTuple):
     timeline serializes); score-mode actions leave it ``None`` so the
     kernel never annotates what the optimizer does not read.
 
-    ``phase`` defaults to the damage rank rather than to a bare zero.
-    That default is not a formality: ``compiled_damage_action``
+    ``phase`` is a :class:`TransitionRank`, and it defaults to the damage
+    rank.  That default is not a formality: ``compiled_damage_action``
     deliberately assigns no phase, so it is where every compiled damage
     action in the hot path gets its phase from — the widest phase slot in
     the tree, not the narrowest.
@@ -333,7 +321,7 @@ class SurvivalAction(NamedTuple):
     # Ordering / routing
     sort_key: tuple = ()
     time: float = 0.0
-    phase: float = DAMAGE_PHASE
+    phase: TransitionRank = TransitionRank.DAMAGE
     kind: ActionKind = ActionKind.DAMAGE
     subject: int = -1
     attacker: int = -1
@@ -580,7 +568,7 @@ def compiled_damage_action(
     Exactly ``SurvivalAction(**those sixteen fields)``: every other field
     keeps its class default, ``reactive=False`` and the phase included.
     The phase is the load-bearing one — this function has no ``_I_PHASE``
-    because the class default *is* ``DAMAGE_PHASE``, which is what the
+    because the class default *is* ``TransitionRank.DAMAGE``, which is what the
     compiler would pass for a damage packet anyway.  Read the rank at
     :class:`SurvivalAction`, not here.
     """
@@ -606,7 +594,7 @@ def compiled_damage_action(
 
 def action_key(
     event_time: float,
-    phase: float,
+    phase: TransitionRank,
     participant_id: str,
     event: Mapping[str, Any],
 ) -> tuple[Any, ...]:
@@ -615,6 +603,10 @@ def action_key(
     This is the survival walk's total order.  Pair packets precompute it per
     event (``_sk``) because the walk re-sorts the same roster events for
     every optimizer candidate.
+
+    Element 1 is the rank's :func:`ordering_slot`, not the rank: two groups
+    of ranks resolve together, and folding them here is what keeps the two
+    inline sort tuples in ``compile.py`` comparable with this one.
 
     The ``_event_id`` component is a dead tie-break for engine damage
     events: ``sequence`` is unique per pair fight, and events from
@@ -626,7 +618,7 @@ def action_key(
     source_id = event.get("attacker", participant_id)
     return (
         float(event_time),
-        float(phase),
+        ordering_slot(phase),
         event_sequence(event),
         *participant_order(source_id),
         str(participant_id),
@@ -739,7 +731,7 @@ _STANDALONE_KINDS = {
 
 def _classify_prefetched(
     event: Mapping[str, Any],
-    phase: float,
+    phase: TransitionRank,
     kind: str,
     execute_ratio_raw: Any,
     deferred_raw: Any,
@@ -752,17 +744,20 @@ def _classify_prefetched(
     standalone = _STANDALONE_KINDS.get(kind)
     if standalone is not None:
         return standalone
-    if phase == BARRIER_GRANT_PHASE and kind == "temporary_health":
+    if phase is TransitionRank.BARRIER_GRANT and kind == "temporary_health":
         return ActionKind.TEMP_HEALTH
-    if phase == BARRIER_GRANT_PHASE and kind in _HEAL_KINDS:
+    if phase is TransitionRank.BARRIER_GRANT and kind in _HEAL_KINDS:
         return _classify_heal(event)
-    if phase == RECOVERY_PHASE:
+    if ordering_slot(phase) is TransitionRank.DEBUFF_ARM:
         # The authoritative walk's recovery branch heals every remaining
         # packet unconditionally (the kind gate exists only at
         # ``BARRIER_GRANT``); engine self-heals may carry arbitrary kind
-        # strings such as ``champion_ability``.
+        # strings such as ``champion_ability``.  The slot, not the rank: a
+        # debuff or utility arming reaches this branch too, because the
+        # float the three shared could not tell them apart, and telling
+        # them apart is S6's correction and not this classifier's.
         return _classify_heal(event)
-    if phase < DAMAGE_PHASE:
+    if phase < TransitionRank.DAMAGE:
         # Kinds arming before damage but outside the enumerated support
         # transitions are silent no-ops in the authoritative walk; every
         # kind authored today is classified above.
@@ -780,7 +775,7 @@ def _classify_prefetched(
     return ActionKind.DAMAGE
 
 
-def classify_event_kind(event: Mapping[str, Any], phase: float) -> ActionKind:
+def classify_event_kind(event: Mapping[str, Any], phase: TransitionRank) -> ActionKind:
     """Map one receipt event (dict + phase) to its typed action kind.
 
     Mirrors the authoritative walk's dispatch precedence exactly: revive,
@@ -805,7 +800,7 @@ def classify_event_kind(event: Mapping[str, Any], phase: float) -> ActionKind:
 
 def survival_action_from_event(
     event: Mapping[str, Any],
-    phase: float,
+    phase: TransitionRank,
     subject_index: int,
     index_of: Mapping[str, int],
     *,
@@ -987,7 +982,7 @@ __all__ = [
     "damage_class_of",
     "declared_modifier_classes",
     "event_sequence",
-    "legacy_phase",
+    "ordering_slot",
     "participant_order",
     "public_phase",
     "support_transition_rank",

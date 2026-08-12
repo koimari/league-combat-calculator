@@ -28,7 +28,7 @@ from src.calculator.item_support_effects import (
 )
 from src.calculator.survival.actions import (
     TransitionRank,
-    legacy_phase,
+    ordering_slot,
     public_phase,
     support_transition_rank,
 )
@@ -42,12 +42,12 @@ class TestTheAuraRank:
     """The one new member of the ladder, and where it sits."""
 
     def test_the_aura_arms_between_the_barriers_and_the_damage(self):
-        assert legacy_phase(TransitionRank.AURA_ARM) == -0.5
         assert (
-            legacy_phase(TransitionRank.BARRIER_GRANT)
-            < legacy_phase(TransitionRank.AURA_ARM)
-            < legacy_phase(TransitionRank.DAMAGE)
+            TransitionRank.BARRIER_GRANT
+            < TransitionRank.AURA_ARM
+            < TransitionRank.DAMAGE
         )
+        assert ordering_slot(TransitionRank.AURA_ARM) is TransitionRank.AURA_ARM
 
     def test_the_kind_ladder_still_calls_an_untriggered_modifier_a_debuff(self):
         """AURA_ARM is reached by declaration, never by the kind alone.

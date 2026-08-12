@@ -1,14 +1,18 @@
-"""The one ordered transition vocabulary and its legacy float projection.
+"""The one ordered transition vocabulary, and the collapse it still carries.
 
-``TransitionRank`` names what the walk's float ``phase`` always meant.  At
-this stage the names are the only thing that is new: ``legacy_phase`` is a
-byte-identical projection back onto today's floats, so these tests pin the
-projection's *shape* (total, many-to-one, non-decreasing) rather than any
-number the walk produces.
+``TransitionRank`` names what the walk's float ``phase`` always meant.  0A
+introduced the names beside a byte-identical float projection; Phase 4 S2
+deleted the projection, so a phase is a member of this enum everywhere the
+tree writes, sorts, compares or dispatches on one.
+
+What the float said that the ordinals do not is a *collapse*: two groups of
+ranks shared one number and therefore resolved together.  ``ordering_slot``
+is that collapse, named, and these tests pin its shape — which groups, and
+that every other read of a rank is invariant under it — because splitting
+the groups is a behaviour change with a stage of its own (Phase 4 S6).
 """
 
 import ast
-import math
 from pathlib import Path
 from typing import Iterable, Mapping, NamedTuple, Sequence
 
@@ -20,8 +24,10 @@ from src.calculator.survival.actions import (
     ActionKind,
     SurvivalAction,
     TransitionRank,
+    action_key,
+    classify_event_kind,
     compiled_damage_action,
-    legacy_phase,
+    ordering_slot,
     support_transition_rank,
 )
 
@@ -36,63 +42,79 @@ def _population() -> tuple[Path, ...]:
     return (*sorted(SURVIVAL.glob("*.py")), TIMELINE)
 
 
-def test_legacy_phase_is_total_over_the_enum() -> None:
-    """Every rank projects to a float — no member falls through a hole."""
-    assert [legacy_phase(rank) for rank in TransitionRank] == [
-        -2.0,
-        -1.0,
-        -0.5,
-        0.0,
-        0.5,
-        0.5,
-        1.0,
-        1.0,
-        1.0,
-        math.inf,
-    ]
+def test_the_ordering_fold_is_total_and_closed() -> None:
+    """Every rank has a slot, and no rank can fall through a hole.
+
+    The fold is a partial table read through a default of *itself*, so a
+    member added without an entry orders as itself — which is what a rank
+    sharing its slot with nothing means.  A total table would instead need
+    an entry per member and would grow a hole the day one was forgotten.
+    """
+    slots = {rank: ordering_slot(rank) for rank in TransitionRank}
+    assert set(slots) == set(TransitionRank)
+    assert all(isinstance(slot, TransitionRank) for slot in slots.values())
+    assert set(actions_module._ORDERING_SLOTS) < set(TransitionRank)
 
 
-def test_legacy_phase_is_non_decreasing_over_declaration_order() -> None:
-    """Declaration order is ordering order, with no member exempted."""
-    floats = [legacy_phase(rank) for rank in TransitionRank]
-    assert floats == sorted(floats)
-    assert list(TransitionRank) == sorted(TransitionRank, key=int)
+def test_the_two_collapsed_groups_are_exactly_the_shared_floats() -> None:
+    """Nine producing ranks resolve in six ordering slots (D-06).
 
-
-def test_terminal_is_declared_last_and_projects_to_infinity() -> None:
-    """The one producer-less rank keeps the ladder monotonic."""
-    assert list(TransitionRank)[-1] is TransitionRank.TERMINAL
-    assert legacy_phase(TransitionRank.TERMINAL) == math.inf
-
-
-def test_the_projection_is_many_to_one_at_this_stage() -> None:
-    """Nine producing names collapse onto six distinct floats (D-06).
-
-    Eight onto five at 0A; C4's ``AURA_ARM`` is the ninth name and the
-    sixth float, and it is the only member whose float no producer wrote
-    before it existed.
+    The float ladder S2 deleted gave ``LATE_BARRIER``/``REACTIVE`` one
+    number and ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` another; those
+    two groups, and no others, still resolve together.
     """
     producing = [rank for rank in TransitionRank if rank is not TransitionRank.TERMINAL]
     assert len(producing) == 9
-    assert len({legacy_phase(rank) for rank in producing}) == 6
-    assert legacy_phase(TransitionRank.AURA_ARM) == -0.5
-    assert legacy_phase(TransitionRank.LATE_BARRIER) == legacy_phase(
-        TransitionRank.REACTIVE
-    )
+    assert len({ordering_slot(rank) for rank in producing}) == 6
+    assert ordering_slot(TransitionRank.REACTIVE) is TransitionRank.LATE_BARRIER
     assert (
-        legacy_phase(TransitionRank.DEBUFF_ARM)
-        == legacy_phase(TransitionRank.RECOVERY)
-        == legacy_phase(TransitionRank.UTILITY_ARM)
+        ordering_slot(TransitionRank.RECOVERY)
+        is ordering_slot(TransitionRank.UTILITY_ARM)
+        is TransitionRank.DEBUFF_ARM
     )
+    alone = set(producing) - {
+        TransitionRank.REACTIVE,
+        TransitionRank.RECOVERY,
+        TransitionRank.UTILITY_ARM,
+    }
+    assert all(ordering_slot(rank) is rank for rank in alone)
 
 
-def test_a_rank_without_a_float_raises_rather_than_guessing(monkeypatch) -> None:
-    """An unprojected member fails loudly instead of taking a default."""
-    projected = dict(actions_module._LEGACY_PHASES)
-    del projected[TransitionRank.RECOVERY]
-    monkeypatch.setattr(actions_module, "_LEGACY_PHASES", projected)
-    with pytest.raises(KeyError, match="RECOVERY"):
-        legacy_phase(TransitionRank.RECOVERY)
+def test_the_fold_never_moves_a_rank_across_a_kernel_threshold() -> None:
+    """Why only two reads consult the fold and the rest need not.
+
+    The kernel compares a phase against ``DAMAGE`` and against the recovery
+    slot.  A group that straddled either boundary would make every one of
+    those comparisons fold-sensitive; none does, and this is the assertion
+    that says so rather than a comment claiming it.
+    """
+    for rank in TransitionRank:
+        for threshold in (TransitionRank.DAMAGE, TransitionRank.DEBUFF_ARM):
+            assert (rank < threshold) == (ordering_slot(rank) < threshold)
+
+
+def test_terminal_is_declared_last_and_produced_by_nothing() -> None:
+    """The one producer-less rank still closes the ladder."""
+    assert list(TransitionRank)[-1] is TransitionRank.TERMINAL
+    assert list(TransitionRank) == sorted(TransitionRank, key=int)
+    assert ordering_slot(TransitionRank.TERMINAL) is TransitionRank.TERMINAL
+
+
+def test_the_sort_key_carries_the_slot_and_not_the_rank() -> None:
+    """Element 1 of the walk's total order is the fold's output.
+
+    A heal and a debuff armed at one timestamp compare equal on the phase
+    component and fall through to the tie-breaks after it, exactly as they
+    did when both rode 1.0.  S6 is where that stops being true.
+    """
+    event = {"sequence": 0, "attacker": "main", "_event_id": "e", "source": "s"}
+    heal = action_key(1.0, TransitionRank.RECOVERY, "main", event)
+    debuff = action_key(1.0, TransitionRank.DEBUFF_ARM, "main", event)
+    assert heal[1] is TransitionRank.DEBUFF_ARM
+    assert heal == debuff
+    assert action_key(1.0, TransitionRank.DAMAGE, "main", event)[1] is (
+        TransitionRank.DAMAGE
+    )
 
 
 # --- The phase slot: every way a float can still reach one ------------------
@@ -197,9 +219,9 @@ def _callee_name(node: ast.expr) -> str:
 def _holds_number(node: ast.AST) -> bool:
     """Whether an expression carries a numeric literal as a *value*.
 
-    Subscript indices are skipped: ``float(event["_sk"][1])`` reads the
-    phase back out of a sort key that was itself built from a rank, so its
-    ``1`` is a tuple position and not a phase anybody chose.
+    Subscript indices are skipped: the ``1`` in ``event["_sk"][1]`` is a
+    tuple position, not a phase anybody chose, and a guard that cannot tell
+    the two apart reports a sort-key read as an offending float.
     """
     if isinstance(node, ast.Constant):
         return isinstance(node.value, (int, float)) and not isinstance(node.value, bool)
@@ -302,6 +324,13 @@ def phase_literals(
     return sorted(offenders)
 
 
+def _folds_to_slot(node: ast.expr, bound: Mapping[str, list[ast.expr]]) -> bool:
+    """Whether a sort-key element 1 is ``ordering_slot(...)``, name-resolved."""
+    if isinstance(node, ast.Name):
+        return any(_folds_to_slot(value, bound) for value in bound.get(node.id, ()))
+    return isinstance(node, ast.Call) and _callee_name(node.func) == "ordering_slot"
+
+
 def _population_rules(paths: Iterable[Path]) -> _SlotRules:
     """The slot positions and name bindings the whole population declares."""
     return _slot_rules([ast.parse(path.read_text(encoding="utf-8")) for path in paths])
@@ -357,7 +386,7 @@ def test_the_compiled_hot_path_arms_at_the_damage_rank() -> None:
     damage somewhere the receipt walk does not.
     """
     action = compiled_damage_action(
-        (0.0, legacy_phase(TransitionRank.DAMAGE), 0),
+        (0.0, TransitionRank.DAMAGE, 0),
         0.0,
         ActionKind.PLAIN_DAMAGE,
         0,
@@ -374,8 +403,8 @@ def test_the_compiled_hot_path_arms_at_the_damage_rank() -> None:
         "event:1",
         0,
     )
-    assert action.phase == legacy_phase(TransitionRank.DAMAGE)
-    assert SurvivalAction().phase == legacy_phase(TransitionRank.DAMAGE)
+    assert action.phase is TransitionRank.DAMAGE
+    assert SurvivalAction().phase is TransitionRank.DAMAGE
 
 
 def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
@@ -448,19 +477,97 @@ def test_support_kinds_classify_to_their_ladder_rank() -> None:
         assert support_transition_rank({"kind": kind}) is rank
 
 
-def test_the_classified_ladder_reproduces_the_floats_it_replaced() -> None:
-    """The three legacy branches — -2.0, -1.0 and the 1.0 fall-through."""
-    assert legacy_phase(support_transition_rank({"kind": "stasis"})) == -2.0
-    assert legacy_phase(support_transition_rank({"kind": "shield"})) == -1.0
+def test_the_float_projection_is_deleted_from_the_tree() -> None:
+    """``legacy_phase`` is gone, not merely unused (criterion 7).
+
+    An AST scan rather than a text one: the survival package's docstring
+    still tells the story of a name that left its ``__all__``, and a
+    grep-shaped guard would have to be weakened to admit that sentence —
+    which is how a guard stops being able to fail.
+    """
+    offenders: list[tuple[str, int]] = []
+    for path in sorted((ROOT / "src").rglob("*.py")):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            spellings = (
+                getattr(node, "id", ""),
+                getattr(node, "attr", ""),
+                getattr(node, "name", ""),
+                getattr(node, "asname", ""),
+            )
+            if "legacy_phase" in spellings:
+                offenders.append((path.name, getattr(node, "lineno", 0)))
+    assert offenders == []
+    assert not hasattr(actions_module, "legacy_phase")
+
+
+def test_the_action_carries_a_rank_and_not_a_float() -> None:
+    """The phase field's type is the vocabulary, not a number.
+
+    ``SurvivalAction`` is a NamedTuple under ``from __future__ import
+    annotations``, so the annotation is the deferred source text — which is
+    exactly what a reader greps for when asking what a phase *is*.
+    """
+    annotation = SurvivalAction.__annotations__["phase"]
+    assert getattr(annotation, "__forward_arg__", annotation) == "TransitionRank"
+    assert isinstance(SurvivalAction().phase, TransitionRank)
+
+
+def test_the_inline_sort_tuples_fold_the_way_action_key_does() -> None:
+    """The hand-written sort keys consume the same fold.
+
+    ``compile.py`` writes ``action_key``'s output by hand for its two hot
+    loops, so element 1 must be an ``ordering_slot(...)`` — directly or
+    through one bound name.  A bare rank there would sort a reactive
+    strike-back after a late barrier that ``action_key`` ties, and only the
+    compiled-vs-receipt equivalence suite could ever see it.
+    """
+    compile_py = SURVIVAL / "compile.py"
+    rules = _population_rules(_population())
+    tuples = _sort_key_tuples(ast.parse(compile_py.read_text(encoding="utf-8")), rules)
+    assert len(tuples) == 4
+    for tup, slot in tuples:
+        assert _folds_to_slot(tup.elts[1], rules.bound), (slot, tup.elts[1].lineno)
+
+
+def test_an_arming_rank_still_classifies_as_a_recovery() -> None:
+    """The 1.0 fall-through, preserved: the slot decides, not the rank.
+
+    Every rank that shared the deleted 1.0 float still reaches the recovery
+    branch, and a rank one slot earlier still reaches the damage path.
+    This is the behaviour S6 changes, pinned here so that stage has to move
+    a test rather than move a number quietly.
+    """
+    event = {"kind": "champion_ability", "amount": 10.0}
+    for rank in (
+        TransitionRank.DEBUFF_ARM,
+        TransitionRank.RECOVERY,
+        TransitionRank.UTILITY_ARM,
+    ):
+        assert classify_event_kind(event, rank) is ActionKind.HEAL
+    assert classify_event_kind(event, TransitionRank.LATE_BARRIER) is (
+        ActionKind.PLAIN_DAMAGE
+    )
+
+
+def test_the_classified_ladder_reproduces_the_slots_it_replaced() -> None:
+    """The three legacy branches — -2.0, -1.0 and the 1.0 fall-through.
+
+    The fall-through is the load-bearing one: an unlisted kind still arms
+    in the recovery slot, which is what the open ``else 1.0`` did.
+    """
+    assert support_transition_rank({"kind": "stasis"}) is TransitionRank.STATE_GRANT
+    assert support_transition_rank({"kind": "shield"}) is TransitionRank.BARRIER_GRANT
     for kind in ("heal", "damage_modifier", "movement", "anything_unlisted"):
-        assert legacy_phase(support_transition_rank({"kind": kind})) == 1.0
+        assert ordering_slot(support_transition_rank({"kind": kind})) is (
+            TransitionRank.DEBUFF_ARM
+        )
 
 
 def test_a_packet_may_declare_a_rank_but_not_an_ordering() -> None:
     """The declaration overrides the kind, and only enum members are legal."""
     late = {"kind": "shield", SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER}
     assert support_transition_rank(late) is TransitionRank.LATE_BARRIER
-    assert legacy_phase(support_transition_rank(late)) == 0.5
+    assert ordering_slot(support_transition_rank(late)) is (TransitionRank.LATE_BARRIER)
     with pytest.raises(ValueError):
         support_transition_rank({"kind": "shield", SUPPORT_RANK_KEY: 0.5})
 
