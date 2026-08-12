@@ -3,9 +3,6 @@
     "app.py": {
       "class_d": 1
     },
-    "calculator/ally_effects.py": {
-      "counter_1": 2
-    },
     "calculator/bis.py": {
       "counter_2": 3
     },
@@ -153,7 +150,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 46
+      "value": 44
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",

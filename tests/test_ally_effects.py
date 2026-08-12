@@ -72,10 +72,41 @@ def test_staff_rapids_missing_passive_fails_closed():
         resolve_ally_stat_effects((item,))
 
 
-def test_staff_rapids_missing_typed_ap_value_fails_closed(monkeypatch):
-    broken = dict(item_effects.ITEM_EFFECTS["Staff of Flowing Water"])
-    broken.pop("rapids_bonus_ap")
-    monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Staff of Flowing Water", broken)
+def test_staff_rapids_missing_declared_value_fails_closed(monkeypatch):
+    """A key the declaration needs is gone, so the buff stops rather than vanishes.
 
-    with pytest.raises(KeyError, match="rapids_bonus_ap"):
+    Re-pointed from ``ITEM_EFFECTS['rapids_bonus_ap']`` when this path moved
+    onto ``staff_of_flowing_water.rapids``, whose references are
+    ``ALLY_ITEM_EFFECTS``' — the same three the walk's ``stat_buff`` emitter
+    reads.  A missing key means the catalog compiles no producer at all, and
+    the presence check is what turns that into a named refusal instead of a
+    silently absent ally buff.
+    """
+    broken = dict(item_effects.ALLY_ITEM_EFFECTS["Staff of Flowing Water"])
+    broken.pop("bonus_ability_power")
+    monkeypatch.setitem(
+        item_effects.ALLY_ITEM_EFFECTS, "Staff of Flowing Water", broken
+    )
+
+    with pytest.raises(ValueError, match="no rapids producer is declared"):
         resolve_ally_stat_effects((_staff(),))
+
+
+def test_a_cached_record_that_outran_the_declaration_is_a_named_stop():
+    """Patch day's divergence stops instead of becoming a number one engine sees.
+
+    Before this path read the declaration, the cached ability haste *was* the
+    number here while the walk's packet used the declared one — so a wiki
+    bump moved one surface and not the other, with no symptom.  Now the two
+    read one registry and the record they cite is checked against it.
+    """
+    item = _staff()
+    item["passives"][0]["stats"]["abilityHaste"]["flat"] = 20.0
+
+    with pytest.raises(ValueError, match="bonus_ability_haste=15.0"):
+        resolve_ally_stat_effects((item,))
+
+
+def test_an_ally_producer_of_another_shape_does_not_reach_this_path():
+    """Redemption declares an ally packet and grants the attacker no stats."""
+    assert resolve_ally_stat_effects((get_item_by_name("Redemption"),)) == ()
