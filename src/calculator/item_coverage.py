@@ -200,85 +200,48 @@ class ItemCoverage:
 # counter 3's target could be reached by reviewing the backlog into silence.
 # Each entry was reviewed against the cached Wiki passive/active description at
 # the revision ``_SOURCE_REFS`` records for it.
+#
+# **No member may compile a ``BehaviorRule``**, and that is asserted rather
+# than intended.  A compiled rule *is* declared runtime behaviour, so an item
+# holding one and sitting here would assert two contradictory things at once —
+# which is what thirty-four of these entries did when the set was renamed from
+# ``_REVIEWED_STATS_ONLY``.  That name said "stats only on the outgoing-damage
+# lane", which is a smaller claim and was true of all of them; this name says
+# there is nothing to run, which was false of Frozen Heart's aura, of Spirit
+# Visage's healing multiplier, and of thirty-two more.  The rename widened the
+# claim without re-reviewing it, the widened members were unreachable (the
+# defence and state rungs answer them first), and an unreachable false claim
+# is exactly the shape this campaign exists to remove.  The set is now the
+# twenty-two the review actually covers: an item with a described passive, no
+# rule and no registry entry, where "we looked and there is nothing to model"
+# is the only thing that can be said.
 NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
-    "Banshee's Veil": "Annul is defensive spell protection.",
-    "Doran's Ring": (
-        "Drain restores mana first and converts to a sourced health packet only "
-        "when the actor cannot gain mana; Helping Hand is minion-only."
-    ),
-    "Doran's Helm": (
-        "Helping Hand's 5 bonus physical damage is restricted to minions; the "
-        "full Wiki entry has no champion-facing sustain branch."
-    ),
-    "Doran's Shield": (
-        "Enduring Focus's sourced missing-health regeneration is replayed after "
-        "incoming champion damage; Helping Hand is minion-only."
-    ),
+    "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions; the "
+    "full Wiki entry has no champion-facing sustain branch.",
     "Scorchclaw Pup": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Gustwalker Hatchling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Mosstomper Seedling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Refillable Potion": "Potion charges restore the holder's health; they add no outgoing target damage.",
-    "Seeker's Armguard": "Time Stop is defensive stasis.",
     "Executioner's Calling": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Oblivion Orb": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Quicksilver Sash": "Quicksilver is defensive cleanse.",
     "Lost Chapter": "Enlighten restores mana on level-up; it adds no direct damage.",
-    "Verdant Barrier": "Annul is defensive spell protection.",
-    "Armored Advance": "Plating and Noxian Endurance are defensive effects.",
-    "Bloodthirster": "Ichorshield is a defensive shield.",
-    "Celestial Opposition": "Blessing of the Mountain is defensive mitigation.",
-    "Chempunk Chainsword": (
-        "Hackshorn applies sourced three-second Grievous Wounds in the coupled "
-        "timeline; it does not add direct damage."
-    ),
+    "Chempunk Chainsword": "Hackshorn applies sourced three-second Grievous Wounds in the coupled "
+    "timeline; it does not add direct damage.",
     "Cosmic Drive": "Spelldance grants movement speed, not direct damage.",
-    "Gunmetal Greaves": (
-        "Noxian Gait's Riot-only movement branch remains explicitly out of scope "
-        "because its magnitude and spacing input are not sourced; the boot's "
-        "attack-speed and life-steal stats are still applied."
-    ),
-    "Cryptbloom": "Life From Death is a post-takedown heal.",
-    "Death's Dance": "Ignore Pain and Defy change incoming damage and healing.",
-    "Diadem of Songs": "Harmony and Consonance change healing, not outgoing damage.",
-    "Dream Maker": "Dream Maker affects an ally, not the item holder's TDD.",
-    "Echoes of Helia": "Soul Siphon stores damage only to heal an ally.",
-    "Edge of Night": "Annul is defensive spell protection.",
-    "Force of Nature": "Steadfast grants defensive stats and movement speed.",
     "Frozen Heart": "Winter's Caress reduces enemy attack speed.",
-    "Guardian Angel": "Rebirth is a defensive revive.",
     "Gluttonous Greaves": "Slay grants omnivamp, not outgoing damage.",
-    "Immortal Shieldbow": "Lifeline is a defensive shield.",
-    "Jak'Sho, The Protean": "Voidborn Resilience changes defensive resistances.",
-    "Kaenic Rookern": "Magebane is a defensive magic shield.",
-    "Chainlaced Crushers": "Noxian Persistence is a defensive magic shield.",
-    "Knight's Vow": "Sacrifice and Pledge redirect damage and heal the holder.",
-    "Locket of the Iron Solari": "Devotion shields allies.",
-    "Maw of Malmortius": "Lifeline is a defensive shield.",
-    "Mercurial Scimitar": "Quicksilver cleanses crowd control and grants movement speed.",
-    "Mikael's Blessing": "Purify cleanses and heals an ally.",
-    "Moonstone Renewer": "Starlit Grace chains healing or shielding.",
-    "Morellonomicon": (
-        "Grievous Wounds reduces recipient healing in the coupled timeline; it "
-        "does not add direct damage."
-    ),
-    "Mortal Reminder": (
-        "Grievous Wounds reduces recipient healing in the coupled timeline; it "
-        "does not add direct damage."
-    ),
+    "Morellonomicon": "Grievous Wounds reduces recipient healing in the coupled timeline; it "
+    "does not add direct damage.",
+    "Mortal Reminder": "Grievous Wounds reduces recipient healing in the coupled timeline; it "
+    "does not add direct damage.",
     "Phantom Dancer": "Spectral Waltz grants ghosting.",
-    "Plated Steelcaps": "Plating reduces incoming basic damage.",
-    "Protoplasm Harness": "Lifeline is an incoming-damage defensive trigger.",
-    "Randuin's Omen": "Resilience and Humility reduce incoming damage.",
     "Rylai's Crystal Scepter": "Rimefrost slows without adding direct damage.",
     "Crimson Lucidity": "Its passives grant summoner haste and movement speed.",
     "Serylda's Grudge": "Bitter Cold slows without adding direct damage.",
-    "Shurelya's Battlesong": "Inspiring Speech grants movement speed.",
-    "Solstice Sleigh": "Going Sledding heals and grants movement speed.",
-    "Spirit Visage": "Boundless Vitality increases healing and shielding received.",
     "Boots of Swiftness": "Fleetfooted grants slow resistance.",
     "Ionian Boots of Lucidity": "Ionian Insight grants summoner spell haste.",
     "Youmuu's Ghostblade": "Haunt and Wraith Step grant movement speed.",
-    "Zhonya's Hourglass": "Time Stop is defensive stasis.",
 }
 
 
@@ -1088,214 +1051,19 @@ _ISSUE_REF_ONLY_ITEMS: tuple[str, ...] = (
 # ways.  A claim that is dead prose in a live-looking home is what this field
 # exists to make visible, so no entry may be blank.
 _SHADOWED_CLAIM_REASONS: Mapping[str, str] = {
-    "Armored Advance@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Banshee's Veil@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Bloodthirster@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Celestial Opposition@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Chainlaced Crushers@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Cryptbloom@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Death's Dance@attacker": (
-        "Its own declaration answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Diadem of Songs@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Doran's Ring@attacker": (
-        "Its own declaration answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Doran's Shield@attacker": (
-        "Its own declaration answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Dream Maker@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Echoes of Helia@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Edge of Night@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Force of Nature@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Frozen Heart@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Guardian Angel@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Gunmetal Greaves@attacker": (
-        "Its own declaration answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Immortal Shieldbow@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Jak'Sho, The Protean@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Kaenic Rookern@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Knight's Vow@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Locket of the Iron Solari@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Maw of Malmortius@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Mercurial Scimitar@attacker": (
-        "Its own declaration answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Mikael's Blessing@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Moonstone Renewer@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Plated Steelcaps@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Protoplasm Harness@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Randuin's Omen@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Seeker's Armguard@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Shurelya's Battlesong@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Solstice Sleigh@attacker": (
-        "Its declared state family answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Spirit Visage@attacker": (
-        "Its own declaration answers it before the reviewed-nothing "
-        "container is reached, so the container never speaks for it and "
-        "no request can reach this claim."
-    ),
-    "Verdant Barrier@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "Zhonya's Hourglass@attacker": (
-        "Every family this item declares is a defence, so the defence "
-        "rung answers it before the reviewed-nothing container is "
-        "reached; the container never speaks for it and no request can "
-        "reach this claim."
-    ),
-    "attacker.unreviewed_fixture@attacker": (
-        "review_pending is reserved for synthetic and unknown fixtures: "
-        "every cached shop record carries an id or an icon and is "
-        "withheld by the rung above, so no cached item reaches this one."
-    ),
-    "attacker.unserved_declared_lane@attacker": (
-        "No cached item declares a family whose interpreter is missing on "
-        "the attacker lane, so nothing reaches this rung; the branch is "
-        "proved on a synthetic declaration and on the emptiness of the "
-        "population itself rather than by any real build."
-    ),
-    "target.unreviewed_fixture@target": (
-        "review_pending is reserved for a record the shop does not hold: "
-        "every cached item is in the cache by definition, so no cached "
-        "item reaches this rung and only a supplied fixture can."
-    ),
+    "Frozen Heart@attacker": "Its declared state family answers it before the reviewed-nothing "
+    "container is reached, so the container never speaks for it and "
+    "no request can reach this claim.",
+    "attacker.unreviewed_fixture@attacker": "review_pending is reserved for synthetic and unknown fixtures: "
+    "every cached shop record carries an id or an icon and is "
+    "withheld by the rung above, so no cached item reaches this one.",
+    "attacker.unserved_declared_lane@attacker": "No cached item declares a family whose interpreter is missing on "
+    "the attacker lane, so nothing reaches this rung; the branch is "
+    "proved on a synthetic declaration and on the emptiness of the "
+    "population itself rather than by any real build.",
+    "target.unreviewed_fixture@target": "review_pending is reserved for a record the shop does not hold: "
+    "every cached item is in the cache by definition, so no cached "
+    "item reaches this rung and only a supplied fixture can.",
 }
 _SOURCE_REFS: Mapping[str, tuple[str, int]] = {
     "Abyssal Mask": ("https://wiki.leagueoflegends.com/en-us/Abyssal_Mask", 3984960),

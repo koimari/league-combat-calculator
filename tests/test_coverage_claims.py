@@ -1328,41 +1328,7 @@ _REASON_COLLISIONS: frozenset[str] = frozenset()
 # enters.  Shrinking it is a real event — it means the chain reordered.
 SHADOWED_CLAIMS: frozenset[str] = frozenset(
     {
-        "item:Armored Advance@attacker",
-        "item:Banshee's Veil@attacker",
-        "item:Bloodthirster@attacker",
-        "item:Celestial Opposition@attacker",
-        "item:Chainlaced Crushers@attacker",
-        "item:Cryptbloom@attacker",
-        "item:Death's Dance@attacker",
-        "item:Diadem of Songs@attacker",
-        "item:Doran's Ring@attacker",
-        "item:Doran's Shield@attacker",
-        "item:Dream Maker@attacker",
-        "item:Echoes of Helia@attacker",
-        "item:Edge of Night@attacker",
-        "item:Force of Nature@attacker",
         "item:Frozen Heart@attacker",
-        "item:Guardian Angel@attacker",
-        "item:Gunmetal Greaves@attacker",
-        "item:Immortal Shieldbow@attacker",
-        "item:Jak'Sho, The Protean@attacker",
-        "item:Kaenic Rookern@attacker",
-        "item:Knight's Vow@attacker",
-        "item:Locket of the Iron Solari@attacker",
-        "item:Maw of Malmortius@attacker",
-        "item:Mercurial Scimitar@attacker",
-        "item:Mikael's Blessing@attacker",
-        "item:Moonstone Renewer@attacker",
-        "item:Plated Steelcaps@attacker",
-        "item:Protoplasm Harness@attacker",
-        "item:Randuin's Omen@attacker",
-        "item:Seeker's Armguard@attacker",
-        "item:Shurelya's Battlesong@attacker",
-        "item:Solstice Sleigh@attacker",
-        "item:Spirit Visage@attacker",
-        "item:Verdant Barrier@attacker",
-        "item:Zhonya's Hourglass@attacker",
         "rule:attacker.unreviewed_fixture@attacker",
         "rule:attacker.unserved_declared_lane@attacker",
         "rule:target.unreviewed_fixture@target",
@@ -1490,18 +1456,25 @@ def test_the_receipt_derives_the_same_shadowed_items_independently() -> None:
 
 
 def test_a_shadowed_item_is_shadowed_for_a_reason_that_names_both_rungs() -> None:
-    """The record is a receipt, not a flag: it says what decides instead."""
+    """The record is a receipt, not a flag: it says what decides instead.
+
+    The exemplar used to be Banshee's Veil, one of the thirty-four entries
+    whose membership the re-review retired.  Frozen Heart is the one left: it
+    holds a registry entry the state rung answers from, so the reviewed-nothing
+    container never speaks for it — and unlike the thirty-four, its entry
+    compiles to no rule, so the reviewed sentence beside it is still true.
+    """
     report = coverage_resolver.shadow_report(
         PRECEDENCE, cached_items(), ctx=live_context()
     )
-    veil = next(
+    heart = next(
         shadowed
         for shadowed in report
-        if shadowed.claim_key == "item:Banshee's Veil@attacker"
+        if shadowed.claim_key == "item:Frozen Heart@attacker"
     )
-    assert veil.rule_id == "attacker.no_runtime_behavior"
-    assert veil.outranked_by == "attacker.declared_defence_only"
-    assert "before" in veil.reason
+    assert heart.rule_id == "attacker.no_runtime_behavior"
+    assert heart.outranked_by == "attacker.declared_state"
+    assert "before" in heart.reason
 
 
 def test_the_eight_retired_registries_have_no_occurrences_left() -> None:

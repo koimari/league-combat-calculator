@@ -385,6 +385,7 @@ def no_runtime_behavior_block() -> dict[str, Any]:
             for name in members
             if name in item_coverage._SOURCE_REFS  # noqa: SLF001
         ),
+        "declaring": sorted(name for name in members if catalog.behavior_rules(name)),
         "ratchet_ceiling": NO_RUNTIME_BEHAVIOR_CEILING,
         "ceiling_source": (
             "the size of item_coverage._REVIEWED_STATS_ONLY measured before "
@@ -706,11 +707,16 @@ def _no_runtime_behavior_failures(
 ) -> list[str]:
     """The reviewed-nothing ratchet: set-equal, bounded, and every member sourced.
 
-    Three checks and not one.  Set equality against the receipt makes an edit
+    Four checks and not one.  Set equality against the receipt makes an edit
     a diff in a committed artifact (D-40); the ceiling makes the set
-    non-increasing from what the migration inherited; and requiring a
+    non-increasing from what the migration inherited; requiring a
     ``SourceReceipt`` per member is what stops "we reviewed it" from being the
-    same unbacked sentence this phase deletes everywhere else.
+    same unbacked sentence this phase deletes everywhere else; and no member
+    may compile a ``BehaviorRule``, because a compiled rule *is* declared
+    runtime behaviour and an item asserting both says two contradictory
+    things.  The fourth is what keeps the ratchet's ceiling meaningful: a set
+    that may hold items with live rules bounds a population far larger than
+    the one that can reach the rung it gates.
     """
     failures: list[str] = []
     recorded = committed.get("no_runtime_behavior")
@@ -732,6 +738,13 @@ def _no_runtime_behavior_failures(
         failures.append(
             f"NO_RUNTIME_BEHAVIOR holds {len(measured['members'])} members, "
             f"above its ratchet ceiling of {NO_RUNTIME_BEHAVIOR_CEILING}"
+        )
+    declaring = sorted(measured.get("declaring", ()))
+    if declaring:
+        failures.append(
+            f"NO_RUNTIME_BEHAVIOR: {declaring} compile a BehaviorRule — a "
+            "declared rule is runtime behaviour, so the reviewed absence "
+            "beside it is false"
         )
     unsourced = sorted(set(measured["members"]) - set(measured["sourced"]))
     if unsourced:

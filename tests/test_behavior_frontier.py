@@ -355,3 +355,32 @@ def test_the_committed_delta_gate_fails_when_the_section_is_deleted() -> None:
     failures = behavior_frontier.check(report, committed)
 
     assert any("compiled_walk_delta" in failure for failure in failures)
+
+
+def test_a_member_with_a_compiled_rule_fails_the_ratchet() -> None:
+    """R-05's red for the fourth clause, through the check's own seam.
+
+    A reviewed absence beside a compiled rule is two contradictory claims about
+    one item, and it is also how the ratchet's ceiling stops meaning anything:
+    thirty-four members held live rules when the set was renamed from
+    ``_REVIEWED_STATS_ONLY``, so the ceiling bounded a population two and a
+    half times larger than the one that can reach the rung it gates.
+    """
+    report = behavior_frontier.scan()
+    fresh = behavior_frontier.build_receipt(report)
+    committed = json.loads(json.dumps(fresh))
+    fresh["no_runtime_behavior"]["declaring"] = ["Spirit Visage"]
+
+    failures = behavior_frontier._no_runtime_behavior_failures(  # noqa: SLF001
+        committed, fresh
+    )
+
+    assert any("compile a BehaviorRule" in failure for failure in failures)
+
+
+def test_no_reviewed_nothing_member_compiles_a_rule() -> None:
+    """The live set passes the clause the seam above reproduces red."""
+    block = behavior_frontier.no_runtime_behavior_block()
+
+    assert block["members"]
+    assert block["declaring"] == []
