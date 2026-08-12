@@ -477,3 +477,65 @@ def test_the_two_halves_carry_two_scoped_refusals() -> None:
         RuleFamily.DELTA_AMP: ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER,
         RuleFamily.SUSTAIN: ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
     }
+
+
+# ── a dropped signature key is a stop, not an un-declaration ──────────────
+#
+# A secondary family is claimed by one key on an entry whose tag names a
+# different family.  Looked for in the live entry, a parse that dropped that
+# one key would take the whole mechanic out of the catalog — and a mechanic
+# nothing declares is priced as nothing by every lane at once, silently,
+# which is the failure this campaign is named after.  The schema is the
+# authority, so the family is still claimed and the missing key raises.
+
+SECONDARY_SIGNATURE_KEYS = (
+    ("Riftmaker", "max_stack_omnivamp", RuleFamily.SUSTAIN),
+    (
+        "Guinsoo's Rageblade",
+        "seething_attack_speed_per_stack",
+        RuleFamily.CHARGED_STRIKE,
+    ),
+    ("Yun Tal Wildarrows", "attack_refund_base", RuleFamily.CHARGED_STRIKE),
+)
+
+
+@pytest.mark.parametrize("owner,key,family", SECONDARY_SIGNATURE_KEYS)
+def test_a_dropped_secondary_signature_key_still_claims_its_family(
+    monkeypatch: pytest.MonkeyPatch, owner: str, key: str, family: RuleFamily
+) -> None:
+    """The claim comes off the schema, so the parse cannot withdraw it."""
+    entry = {name: value for name, value in ITEM_EFFECTS[owner].items() if name != key}
+    monkeypatch.setitem(ITEM_EFFECTS, owner, entry)
+    (_registry, primary, live), *_ = catalog.registry_entries(owner)
+    assert family in catalog.entry_families("ITEM_EFFECTS", primary, live, owner)
+
+
+@pytest.mark.parametrize("owner,key,family", SECONDARY_SIGNATURE_KEYS)
+def test_a_dropped_secondary_signature_key_raises_naming_item_and_key(
+    monkeypatch: pytest.MonkeyPatch, owner: str, key: str, family: RuleFamily
+) -> None:
+    """Rule 5's fail-loud contract, reached through the declaration."""
+    entry = {name: value for name, value in ITEM_EFFECTS[owner].items() if name != key}
+    monkeypatch.setitem(ITEM_EFFECTS, owner, entry)
+    (rule,) = [rule for rule in catalog.behavior_rules(owner) if rule.family is family]
+    with pytest.raises(KeyError, match=key):
+        for reference in _declared_references(rule.payload):
+            reference.get()
+
+
+def _declared_references(payload: object) -> list:
+    """Every ``ValueRef`` one payload holds, one level of record deep."""
+    from dataclasses import fields, is_dataclass
+
+    from src.calculator.value_ref import ValueRef
+
+    found: list = []
+    if not is_dataclass(payload):
+        return found
+    for field in fields(payload):
+        value = getattr(payload, field.name)
+        if isinstance(value, ValueRef):
+            found.append(value)
+        else:
+            found.extend(_declared_references(value))
+    return found

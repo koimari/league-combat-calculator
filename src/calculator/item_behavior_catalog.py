@@ -5855,7 +5855,7 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
             return cached[1]
     rules: list[BehaviorRule] = []
     for registry, family, entry in entries:
-        for claimed in entry_families(registry, family, entry):
+        for claimed in entry_families(registry, family, entry, owner):
             rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
     compiled = tuple(rules)
     data_registry.store_for_generation(_BEHAVIOR_RULES_MEMO, key, (sources, compiled))
@@ -5889,7 +5889,10 @@ def rule_owners() -> frozenset[str]:
 
 
 def entry_families(
-    registry: ValueRegistry, family: RuleFamily, entry: Mapping[str, Any]
+    registry: ValueRegistry,
+    family: RuleFamily,
+    entry: Mapping[str, Any],
+    owner: str,
 ) -> tuple[RuleFamily, ...]:
     """Every family one entry declares: its tag's, plus any a value key adds.
 
@@ -5898,11 +5901,22 @@ def entry_families(
     3's population is unchanged — it is a second mechanic hung on one entry,
     which is a thing the registry really does and a thing a tag alone cannot
     express.
+
+    The signature key is looked for in the entry's **schema**, never in what
+    the parse happens to have produced, for the reason
+    ``item_effects.entry_schema_keys`` exists: read live, a parse that dropped
+    the key would silently un-declare the whole mechanic, and a mechanic that
+    stops being declared is priced as nothing by every lane at once.  Read
+    from the schema the family is still claimed, its compiler still builds
+    the references, and the missing key raises naming the item and the key —
+    which is the fail-closed contract every *other* key of these declarations
+    already had.
     """
+    keys = _schema_keys(owner, registry, entry)
     extra = tuple(
         declared
         for key, declared in SECONDARY_KEY_FAMILY[registry].items()
-        if key in entry and declared is not family
+        if key in keys and declared is not family
     )
     return (family, *dict.fromkeys(extra))
 
