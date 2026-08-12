@@ -107,6 +107,7 @@ from .item_behavior import (
     RampPerStack,
     ReactiveRule,
     ReceiptOnly,
+    ReceiptScope,
     ReceivedHealingRule,
     Recipients,
     RegenerationRule,
@@ -1059,31 +1060,37 @@ COMPILED_KERNEL_CANNOT_STAGE: Mapping[DefenseMechanic, ReceiptOnly] = {
     DefenseMechanic.ANNUL: ReceiptOnly(
         "the compiled score kernel cannot stage an Annul spell shield: "
         "consuming one needs the per-packet cast metadata the light score "
-        "ledger does not carry"
+        "ledger does not carry",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
     ),
     DefenseMechanic.REBIRTH: ReceiptOnly(
         "the compiled score kernel cannot stage a resurrection: Rebirth's "
         "candidates are authored inside the event walk, after the score "
-        "ledger has been built"
+        "ledger has been built",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
     ),
     DefenseMechanic.STEADFAST: ReceiptOnly(
         "the compiled score kernel cannot stage a dynamic-resistance reprice: "
         "Steadfast's stacks are priced against baseline resistances the score "
-        "ledger does not keep"
+        "ledger does not keep",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
     ),
     DefenseMechanic.VOIDBORN_RESILIENCE: ReceiptOnly(
         "the compiled score kernel cannot stage a dynamic-resistance reprice: "
         "Voidborn Resilience multiplies baseline resistances the score ledger "
-        "does not keep"
+        "does not keep",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
     ),
     DefenseMechanic.LIFELINE_MAW: ReceiptOnly(
         "the compiled score kernel cannot stage the Lifeline omnivamp state "
         "transition: the temporary stat is granted by an authored threshold "
-        "event"
+        "event",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
     ),
     DefenseMechanic.IGNORE_PAIN: ReceiptOnly(
         "the compiled score kernel cannot stage deferred damage: Ignore Pain's "
-        "ticks and Defy's clearance are authored inside the event walk"
+        "ticks and Defy's clearance are authored inside the event walk",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
     ),
 }
 
@@ -1229,7 +1236,8 @@ COMPILED_KERNEL_CANNOT_AMP = ReceiptOnly(
     "modifier: unrepresentable_template_receipt returns support_kind=<kind> "
     "for anything but shield/heal and add_support_templates raises on it "
     "(D-101; H5 is SCOPED and lands as its own stage after Phase 4's S7, so "
-    "this is the standing answer until that stage's flip)"
+    "this is the standing answer until that stage's flip)",
+    scope=ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER,
 )
 
 
@@ -3729,7 +3737,8 @@ COMPILED_KERNEL_CANNOT_REDIRECT = ReceiptOnly(
     "another participant's incoming damage: the redirect is stamped on the "
     "victim's own events by the receipt scheduler, which the score ledger "
     "does not run (survival/compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS "
-    "records the same fact per item)"
+    "records the same fact per item)",
+    scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
 )
 
 
@@ -4418,13 +4427,15 @@ def _ally_compilability(declaration: AllyPacketDeclaration) -> Compilability:
         return ReceiptOnly(
             "the compiled score kernel stages only shield and heal support "
             "templates: unrepresentable_template_receipt returns "
-            f"support_kind=<kind> for {unstageable}"
+            f"support_kind=<kind> for {unstageable}",
+            scope=ReceiptScope.SUPPORT_TEMPLATE_SHAPE,
         )
     if declaration.persistence is not Persistence.SINGLE_MOMENT:
         return ReceiptOnly(
             "the compiled score kernel stages only instantaneous support "
             "templates: unrepresentable_template_receipt returns "
-            "support_duration=<d> for a shield or heal that stays in force"
+            "support_duration=<d> for a shield or heal that stays in force",
+            scope=ReceiptScope.SUPPORT_TEMPLATE_SHAPE,
         )
     return Compilable()
 

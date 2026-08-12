@@ -78,48 +78,14 @@
   },
   "compiled_walk_delta": {
     "derived": {
-      "Abyssal Mask": [
-        "ally_packet"
-      ],
-      "Actualizer": [
-        "delta_amp"
-      ],
-      "Ardent Censer": [
-        "ally_packet"
-      ],
-      "Bandlepipes": [
-        "ally_packet"
-      ],
       "Banshee's Veil": [
         "combat_state"
-      ],
-      "Black Cleaver": [
-        "ally_packet"
-      ],
-      "Bloodletter's Curse": [
-        "ally_packet"
-      ],
-      "Bloodsong": [
-        "ally_packet",
-        "delta_amp"
-      ],
-      "Cryptbloom": [
-        "ally_packet"
-      ],
-      "Cull": [
-        "ally_packet"
       ],
       "Death's Dance": [
         "damage_routing"
       ],
-      "Dream Maker": [
-        "ally_packet"
-      ],
       "Edge of Night": [
         "combat_state"
-      ],
-      "Fimbulwinter": [
-        "ally_packet"
       ],
       "Force of Nature": [
         "combat_state"
@@ -127,112 +93,24 @@
       "Guardian Angel": [
         "threshold_defense"
       ],
-      "Haunting Guise": [
-        "delta_amp"
-      ],
-      "Hexoptics C44": [
-        "delta_amp"
-      ],
-      "Horizon Focus": [
-        "delta_amp"
-      ],
-      "Immortal Path": [
-        "delta_amp"
-      ],
-      "Imperial Mandate": [
-        "ally_packet",
-        "delta_amp"
-      ],
       "Jak'Sho, The Protean": [
         "combat_state"
       ],
       "Knight's Vow": [
         "ally_packet"
       ],
-      "Liandry's Torment": [
-        "delta_amp"
-      ],
-      "Locket of the Iron Solari": [
-        "ally_packet"
-      ],
-      "Lord Dominik's Regards": [
-        "delta_amp"
-      ],
       "Maw of Malmortius": [
         "threshold_defense"
       ],
-      "Moonstone Renewer": [
-        "ally_packet"
-      ],
-      "Phage": [
-        "ally_packet"
-      ],
-      "Riftmaker": [
-        "delta_amp"
-      ],
-      "Runic Compass": [
-        "ally_packet"
-      ],
-      "Shadowflame": [
-        "delta_amp"
-      ],
-      "Shurelya's Battlesong": [
-        "ally_packet"
-      ],
-      "Solstice Sleigh": [
-        "ally_packet"
-      ],
-      "Spear of Shojin": [
-        "delta_amp"
-      ],
-      "Staff of Flowing Water": [
-        "ally_packet"
-      ],
-      "Stridebreaker": [
-        "ally_packet"
-      ],
       "Verdant Barrier": [
         "combat_state"
-      ],
-      "World Atlas": [
-        "ally_packet"
       ]
     },
-    "derived_only": [
-      "Abyssal Mask",
-      "Actualizer",
-      "Ardent Censer",
-      "Bandlepipes",
-      "Black Cleaver",
-      "Bloodletter's Curse",
-      "Bloodsong",
-      "Cryptbloom",
-      "Cull",
-      "Dream Maker",
-      "Haunting Guise",
-      "Hexoptics C44",
-      "Horizon Focus",
-      "Imperial Mandate",
-      "Liandry's Torment",
-      "Locket of the Iron Solari",
-      "Lord Dominik's Regards",
-      "Moonstone Renewer",
-      "Phage",
-      "Riftmaker",
-      "Runic Compass",
-      "Shadowflame",
-      "Shurelya's Battlesong",
-      "Solstice Sleigh",
-      "Spear of Shojin",
-      "Staff of Flowing Water",
-      "Stridebreaker",
-      "World Atlas"
-    ],
+    "derived_only": [],
+    "derived_scope": "survival_ledger_transition",
     "derived_symbol": "interpreters.compilability_for",
     "flip_blocked_by": [
-      "Compilability is a two-member union with one free-text reason, so no declared axis separates 'the compiled survival ledger cannot stage this transition' from 'the compiled score kernel cannot represent this damage modifier' (D-101) or from 'this support template is not instantaneous'.  compilability_for folds all three, and the hand set answers only the first.",
-      "Immortal Path and Eclipse are in the hand set for a survival state no BehaviorRule declares at all \u2014 a below-half received-healing multiplier and a stack self-shield \u2014 so no fold over declarations can reproduce them.",
-      "Catalyst of Aeons and the three Doran's items compile to rules that are all Compilable; their hand-set reasons are the conservatism notes D-43 names, and turning them into declarations is a migration, not a flip."
+      "the hand set withholds Catalyst of Aeons, Doran's Blade, Doran's Ring, Doran's Shield, Eclipse, Fimbulwinter, Immortal Path and the fold does not: every rule they compile to is Compilable in the survival-ledger scope, so flipping today would let a build the kernel cannot stage ride the compiled walk \u2014 the campaign's own incident shape.  Closing them is a migration, not a flip: a scoped ReceiptOnly on the rule the walk authors, or a new declaration where no rule models the mechanic at all."
     ],
     "legacy": [
       "Banshee's Veil",
@@ -257,7 +135,9 @@
       "Doran's Blade",
       "Doran's Ring",
       "Doran's Shield",
-      "Eclipse"
+      "Eclipse",
+      "Fimbulwinter",
+      "Immortal Path"
     ],
     "legacy_symbol": "survival.compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS"
   },

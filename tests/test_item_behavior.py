@@ -34,6 +34,7 @@ from src.calculator.item_behavior import (
     Pool,
     RULE_FAMILY_COUNT,
     ReceiptOnly,
+    ReceiptScope,
     RuleFamily,
     SUBJECT_AUTHORITY,
     Subject,
@@ -54,6 +55,9 @@ from src.calculator.value_ref import Const, SourceReceipt
 MODULE_PATH = Path(__file__).parents[1] / "src" / "calculator" / "item_behavior.py"
 
 RECEIPT = SourceReceipt("https://example.test/Item", 1, "2026-01-01T00:00:00Z")
+
+# One refusal, said once: a reason and the closed scope it belongs to.
+_AMP_REFUSAL = ("the kernel cannot amp", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER)
 
 
 def _rule(**overrides: object) -> BehaviorRule:
@@ -173,14 +177,14 @@ def test_an_undeclared_payload_type_is_refused() -> None:
 
 def test_a_receipt_only_rule_states_its_cause() -> None:
     """A fallback with no reason is the silence this phase removes."""
-    validate_rule(_rule(compilability=ReceiptOnly("the kernel cannot amp")))
+    validate_rule(_rule(compilability=ReceiptOnly(*_AMP_REFUSAL)))
     with pytest.raises(BehaviorRuleError, match="reason"):
-        ReceiptOnly("  ")
+        ReceiptOnly("  ", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER)
 
 
 def test_no_policy_field_is_a_callable_dict_or_open_string() -> None:
     """Criterion 6, reaching every field of the rule rather than its surface."""
-    values = policy_values(_rule(compilability=ReceiptOnly("the kernel cannot amp")))
+    values = policy_values(_rule(compilability=ReceiptOnly(*_AMP_REFUSAL)))
     assert len(values) > 10
     for value in values:
         assert not callable(value)

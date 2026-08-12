@@ -16,7 +16,12 @@ from pathlib import Path
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.item_behavior import DefenseMechanic, RuleFamily
+from src.calculator.item_behavior import (
+    DefenseMechanic,
+    ReceiptOnly,
+    ReceiptScope,
+    RuleFamily,
+)
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_EFFECTS,
@@ -293,3 +298,47 @@ def test_every_certified_mechanic_is_one_the_catalog_declares() -> None:
         isinstance(mechanic, DefenseMechanic)
         for mechanic in catalog.EVENT_CERTIFIED_MECHANICS
     )
+
+
+# ── the refusal scope axis ────────────────────────────────────────────────
+
+
+def _live_refusals() -> tuple[ReceiptOnly, ...]:
+    """Every ``ReceiptOnly`` the live catalog compiles, in owner order."""
+    return tuple(
+        rule.compilability
+        for owner in sorted(catalog.rule_owners())
+        for rule in catalog.behavior_rules(owner)
+        if isinstance(rule.compilability, ReceiptOnly)
+    )
+
+
+def test_every_refusal_scope_is_reached_by_a_live_declaration() -> None:
+    """D-51's orphan-branch direction, applied to the refusal axis.
+
+    A scope no declaration carries is a member that means nothing — the
+    reader learns a distinction the tree does not make, which is how the
+    single free-text reason came to stand for three unrelated refusals in the
+    first place.  All three members are live today: the ledger scope carries
+    the defences the walk authors, the template scope the support kinds the
+    kernel stages nothing of, and the amp scope D-101's population.
+    """
+    reached = {refusal.scope for refusal in _live_refusals()}
+    assert reached == set(ReceiptScope)
+
+
+def test_the_amp_refusal_is_the_population_h5s_stage_flips() -> None:
+    """The scope earns its own member by being a set a later flip can name.
+
+    H5 is SCOPED and its stage flips ``delta_amp`` to ``Compilable`` — and
+    nothing else.  If the amp scope held any other family, that flip would
+    silently take a mechanic nobody scoped with it.
+    """
+    families = {
+        rule.family
+        for owner in sorted(catalog.rule_owners())
+        for rule in catalog.behavior_rules(owner)
+        if isinstance(rule.compilability, ReceiptOnly)
+        and rule.compilability.scope is ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
+    }
+    assert families == {RuleFamily.DELTA_AMP}

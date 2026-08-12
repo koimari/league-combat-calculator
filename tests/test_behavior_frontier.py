@@ -327,22 +327,28 @@ def test_the_compiled_walk_derivation_lands_beside_the_hand_set() -> None:
     assert set(receipt["derived"]) == set(measured["derived"])
 
 
-def test_the_flip_is_blocked_and_the_receipt_says_by_what() -> None:
+def test_the_flip_is_blocked_exactly_while_the_two_sets_disagree() -> None:
     """A gap with no stated cause is the prose this campaign deletes.
 
-    ``legacy_only`` is the direction that forbids the one-symbol flip: each
-    member is an item the hand set withholds and the fold would let compile,
-    so flipping while it is non-empty would silently drop a mechanic.  While
-    it is non-empty the receipt owes a reason per blocker.
+    The blockers are derived from the difference they describe, so this is an
+    equivalence rather than a count: ``flip_blocked_by`` is non-empty **iff**
+    a difference stands, and every member of either direction is named in it.
+    A hand-written blocker could be true of a set the tree had already left —
+    the earlier version of this receipt was, which is why the count heuristic
+    it was checked with is gone.
     """
     receipt = _receipt()["compiled_walk_delta"]
+    blockers = receipt["flip_blocked_by"]
+    differing = [*receipt["legacy_only"], *receipt["derived_only"]]
 
-    assert receipt["legacy_only"], (
-        "legacy_only is empty — the flip is no longer blocked from this "
-        "direction and this test is the one that should say so"
+    assert bool(blockers) == bool(differing), (
+        "the receipt says blocked while the sets agree, or clear while they "
+        "differ — the one thing this block may never do"
     )
-    assert len(receipt["flip_blocked_by"]) >= len(receipt["legacy_only"]) // 3
-    for reason in receipt["flip_blocked_by"]:
+    joined = " ".join(blockers)
+    for member in differing:
+        assert member in joined, f"{member} differs and no blocker names it"
+    for reason in blockers:
         assert reason.strip()
 
 

@@ -164,6 +164,42 @@ class UtilityDimension(Enum):
 # ── compilability (D-43) ──────────────────────────────────────────────────
 
 
+class ReceiptScope(Enum):
+    """*Which* of the compiled kernel's refusals a :class:`ReceiptOnly` is.
+
+    "The compiled kernel cannot represent this" is three unrelated facts
+    wearing one sentence, and folding them together is what made the
+    per-owner answer unusable: an owner refused because its support template
+    is a movement buff was indistinguishable from one refused because the
+    score ledger cannot stage a spell shield, so the fold could answer only
+    the union and no caller could ask about its own gate.  Each member below
+    names one fail-closed clause in ``survival/compile.py`` and the
+    population it refuses.
+
+    ``SURVIVAL_LEDGER_TRANSITION``
+        The compiled score ledger cannot *stage a state transition* the
+        receipt walk authors — a consumed spell shield, a resurrection, a
+        resistance reprice, deferred damage, a redirect.  This is the
+        question ``uncompilable_item_receipt`` asks of a whole build, so it
+        is the scope whose owners a build-level gate reads.
+
+    ``SUPPORT_TEMPLATE_SHAPE``
+        The template is a support packet the kernel stages nothing of:
+        ``unrepresentable_template_receipt`` admits instantaneous shields and
+        heals and refuses every other kind and every duration.
+
+    ``SCORE_KERNEL_DAMAGE_MODIFIER``
+        D-101 — a timed, typed damage modifier, which the kernel has no
+        representation for at all.  It is its own member because it is the
+        exact population H5's post-S7 stage flips to ``Compilable``, and a
+        flip needs a set it can name.
+    """
+
+    SURVIVAL_LEDGER_TRANSITION = "survival_ledger_transition"
+    SUPPORT_TEMPLATE_SHAPE = "support_template_shape"
+    SCORE_KERNEL_DAMAGE_MODIFIER = "score_kernel_damage_modifier"
+
+
 @dataclass(frozen=True, slots=True)
 class Compilable:
     """The compiled score kernel can represent this rule."""
@@ -175,9 +211,13 @@ class ReceiptOnly:
 
     ``reason`` is a citation, not policy: it is the sentence a fallback
     receipt prints when a build holding this rule declines to compile.
+    ``scope`` is the policy half — the closed axis saying which of the
+    kernel's refusals this is, so a caller can ask about its own gate
+    instead of receiving the union of three.
     """
 
     reason: str
+    scope: ReceiptScope
 
     def __post_init__(self) -> None:
         """A fallback with no stated cause is the silence this phase removes."""
@@ -3382,6 +3422,7 @@ __all__ = [
     "RampPerStack",
     "ReactiveRule",
     "ReceiptOnly",
+    "ReceiptScope",
     "ReceivedHealingRule",
     "Recipients",
     "RegenerationRule",

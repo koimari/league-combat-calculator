@@ -90,8 +90,11 @@ from src.calculator import interpreters  # noqa: E402
 from src.calculator import item_behavior_catalog as catalog  # noqa: E402
 from src.calculator import item_coverage  # noqa: E402
 from src.calculator.data_fetcher import fetch_item_data  # noqa: E402
-from src.calculator.item_behavior import ReceiptOnly  # noqa: E402
+from src.calculator.item_behavior import ReceiptOnly, ReceiptScope  # noqa: E402
 from src.calculator.survival import compile as compile_module  # noqa: E402
+
+# The one refusal the hand set answers, so the one the derivation reads.
+LEDGER_SCOPE = ReceiptScope.SURVIVAL_LEDGER_TRANSITION
 
 RECEIPT_PATH = ROOT / "docs" / "behavior-frontier.json"
 SRC_ROOT = ROOT / "src"
@@ -380,18 +383,28 @@ def compiled_walk_delta() -> dict[str, Any]:
     by a count, so a declaration that closes one of them shows up as a diff in
     a committed artifact (D-40).
 
-    ``flip_blocked_by``'s last clause is **derived** from the live undeclared
-    population rather than written out.  The hand-written version named
-    ``stat_derivation`` as the cause, and survived the slice that migrated
-    it: the sentence stayed true in its first half and false in its second,
-    inside the block whose whole job is to say why the flip is still blocked.
-    A blocker that names its cause from the counter it cites cannot rot that
-    way.
+    Both answers are read **in one scope** —
+    ``ReceiptScope.SURVIVAL_LEDGER_TRANSITION`` — because that is the question
+    the hand set answers: ``uncompilable_item_receipt`` asks a build whether
+    the score ledger can stage the state transitions its items author, and
+    never whether a support template is instantaneous or whether an amp is
+    representable.  Folding all three refusals into one verdict is what made
+    ``derived_only`` twenty-eight items long while the hand set held sixteen;
+    the two sets were never measuring the same thing.
+
+    ``flip_blocked_by`` is **derived** from the two difference directions
+    rather than written out.  The hand-written version named
+    ``stat_derivation`` as a cause and survived the slice that migrated it:
+    the sentence stayed true in its first half and false in its second, inside
+    the block whose whole job is to say why the flip is still blocked.  A
+    blocker computed from the difference it describes cannot rot that way, and
+    it disappears exactly when the flip becomes legal.
     """
     legacy = frozenset(compile_module.COMPILED_WALK_UNREPRESENTABLE_ITEMS)
     derived: dict[str, list[str]] = {}
     for owner in sorted(item_names() | legacy):
-        if not isinstance(interpreters.compilability_for(owner), ReceiptOnly):
+        verdict = interpreters.compilability_for(owner, LEDGER_SCOPE)
+        if not isinstance(verdict, ReceiptOnly):
             continue
         # The families that made the fold refuse.  An owner with a registry
         # entry and no rule at all refuses for a different reason and gets the
@@ -401,33 +414,56 @@ def compiled_walk_delta() -> dict[str, Any]:
                 rule.family.value
                 for rule in catalog.behavior_rules(owner)
                 if isinstance(rule.compilability, ReceiptOnly)
+                and rule.compilability.scope is LEDGER_SCOPE
             }
         )
+    legacy_only = sorted(legacy - set(derived))
+    derived_only = sorted(set(derived) - legacy)
     return {
         "legacy_symbol": "survival.compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS",
         "derived_symbol": "interpreters.compilability_for",
+        "derived_scope": LEDGER_SCOPE.value,
         "legacy": sorted(legacy),
         "derived": dict(sorted(derived.items())),
-        "legacy_only": sorted(legacy - set(derived)),
-        "derived_only": sorted(set(derived) - legacy),
-        "flip_blocked_by": [
-            "Compilability is a two-member union with one free-text reason, so "
-            "no declared axis separates 'the compiled survival ledger cannot "
-            "stage this transition' from 'the compiled score kernel cannot "
-            "represent this damage modifier' (D-101) or from 'this support "
-            "template is not instantaneous'.  compilability_for folds all "
-            "three, and the hand set answers only the first.",
-            "Immortal Path and Eclipse are in the hand set for a survival "
-            "state no BehaviorRule declares at all — a below-half "
-            "received-healing multiplier and a stack self-shield — so no fold "
-            "over declarations can reproduce them.",
-            "Catalyst of Aeons and the three Doran's items compile to rules "
-            "that are all Compilable; their hand-set reasons are the "
-            "conservatism notes D-43 names, and turning them into "
-            "declarations is a migration, not a flip.",
-            *_undeclared_base_blocker(),
-        ],
+        "legacy_only": legacy_only,
+        "derived_only": derived_only,
+        "flip_blocked_by": _flip_blockers(legacy_only, derived_only),
     }
+
+
+def _flip_blockers(
+    legacy_only: Sequence[str], derived_only: Sequence[str]
+) -> tuple[str, ...]:
+    """Why the one-symbol flip is still illegal, read off the difference.
+
+    One clause per direction, each naming its own members, plus counter 3's
+    if the declaration base is still incomplete.  All three are conditional,
+    so an empty ``flip_blocked_by`` *is* the statement that D-98's flip may
+    land — the receipt cannot say "blocked" while the sets agree, and cannot
+    say "clear" while they do not.
+    """
+    clauses: list[str] = []
+    if legacy_only:
+        clauses.append(
+            "the hand set withholds "
+            + ", ".join(legacy_only)
+            + " and the fold does not: every rule they compile to is Compilable "
+            "in the survival-ledger scope, so flipping today would let a build "
+            "the kernel cannot stage ride the compiled walk — the campaign's "
+            "own incident shape.  Closing them is a migration, not a flip: a "
+            "scoped ReceiptOnly on the rule the walk authors, or a new "
+            "declaration where no rule models the mechanic at all."
+        )
+    if derived_only:
+        clauses.append(
+            "the fold withholds "
+            + ", ".join(derived_only)
+            + " and the hand set does not.  This direction is conservative "
+            "rather than unsafe, but flipping it would fall builds back for a "
+            "reason the build-level gate never owned, so it is a declared "
+            "widening and not a substitution."
+        )
+    return tuple(clauses) + _undeclared_base_blocker()
 
 
 def _undeclared_base_blocker() -> tuple[str, ...]:

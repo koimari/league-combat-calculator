@@ -32,6 +32,7 @@ from src.calculator.item_behavior import (
     RampPerSecond,
     RampPerStack,
     ReceiptOnly,
+    ReceiptScope,
     RuleFamily,
     TargetBonusHealthScaled,
     WindowBoundary,
@@ -570,7 +571,9 @@ def test_the_compiled_lane_is_declared_empty_rather_than_absent() -> None:
         }
     )
     for holder in holders:
-        verdict = interpreters.compilability_for(holder)
+        verdict = interpreters.compilability_for(
+            holder, ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
+        )
         assert isinstance(verdict, ReceiptOnly)
         assert COMPILED_KERNEL_CANNOT_AMP.reason in verdict.reason
 

@@ -44,6 +44,7 @@ from src.calculator.item_behavior import (
     Compilable,
     EngineLane,
     ReceiptOnly,
+    ReceiptScope,
     RuleFamily,
     Subject,
 )
@@ -236,13 +237,18 @@ def test_the_compiled_walk_matches_or_receipts_every_declaration(declared) -> No
     kernel would be indistinguishable from an item nobody looked at.
     """
     amp, aura, lifeline = declared
-    assert isinstance(interpreters.compilability_for(lifeline), Compilable)
+    for scope in ReceiptScope:
+        assert isinstance(interpreters.compilability_for(lifeline, scope), Compilable)
 
-    amp_verdict = interpreters.compilability_for(amp)
+    amp_verdict = interpreters.compilability_for(
+        amp, ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
+    )
     assert isinstance(amp_verdict, ReceiptOnly)
     assert amp_verdict.reason == catalog.COMPILED_KERNEL_CANNOT_AMP.reason
 
-    aura_verdict = interpreters.compilability_for(aura)
+    aura_verdict = interpreters.compilability_for(
+        aura, ReceiptScope.SUPPORT_TEMPLATE_SHAPE
+    )
     assert isinstance(aura_verdict, ReceiptOnly)
     assert "compiled score kernel" in aura_verdict.reason
     assert "damage_modifier" in aura_verdict.reason

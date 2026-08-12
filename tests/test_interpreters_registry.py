@@ -23,6 +23,7 @@ from src.calculator.item_behavior import (
     Compilable,
     EngineLane,
     ReceiptOnly,
+    ReceiptScope,
     RuleFamily,
     SUBJECT_AUTHORITY,
 )
@@ -72,9 +73,20 @@ def test_the_compiled_score_walk_gap_is_a_receipt_and_not_a_zero() -> None:
         RuleFamily.DELTA_AMP,
         EngineLane.COMPILED_SCORE_WALK,
     ) in interpreters.uninterpreted_pairs()
-    verdict = interpreters.compilability_for("Horizon Focus")
+    verdict = interpreters.compilability_for(
+        "Horizon Focus", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
+    )
     assert isinstance(verdict, ReceiptOnly)
     assert "compiled score kernel" in verdict.reason
+    # ...and the amp refusal answers only its own scope: asking the
+    # build-level gate's question about an amp holder must not fall a build
+    # back for a refusal that gate does not own.
+    assert isinstance(
+        interpreters.compilability_for(
+            "Horizon Focus", ReceiptScope.SURVIVAL_LEDGER_TRANSITION
+        ),
+        Compilable,
+    )
 
 
 def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
@@ -94,9 +106,11 @@ def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
     assert catalog.registry_entries(owner), "the subject must have a registry entry"
     assert catalog.behavior_rules(owner), "the subject must be a declared owner"
     monkeypatch.setattr(interpreters, "behavior_rules", lambda name: ())
-    verdict = interpreters.compilability_for(owner)
-    assert isinstance(verdict, ReceiptOnly)
-    assert owner in verdict.reason
+    for scope in ReceiptScope:
+        verdict = interpreters.compilability_for(owner, scope)
+        assert isinstance(verdict, ReceiptOnly)
+        assert owner in verdict.reason
+        assert verdict.scope is scope
     assert not catalog.undeclared_owners(), (
         "counter 3 is back above zero; the live population, not this "
         "synthetic subject, is what that regression should be read from"
@@ -105,7 +119,8 @@ def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
 
 def test_an_owner_with_no_registry_entry_has_nothing_to_represent() -> None:
     """Stats-only items are compilable because there is no behaviour to compile."""
-    assert isinstance(interpreters.compilability_for("Boots"), Compilable)
+    for scope in ReceiptScope:
+        assert isinstance(interpreters.compilability_for("Boots", scope), Compilable)
 
 
 def test_the_fold_concatenates_receipt_only_reasons_in_declaration_order(
@@ -122,13 +137,19 @@ def test_the_fold_concatenates_receipt_only_reasons_in_declaration_order(
         "behavior_rules",
         lambda owner: (
             _Rule(Compilable()),
-            _Rule(ReceiptOnly("first")),
-            _Rule(ReceiptOnly("second")),
+            _Rule(ReceiptOnly("first", ReceiptScope.SURVIVAL_LEDGER_TRANSITION)),
+            _Rule(ReceiptOnly("second", ReceiptScope.SURVIVAL_LEDGER_TRANSITION)),
+            _Rule(ReceiptOnly("other scope", ReceiptScope.SUPPORT_TEMPLATE_SHAPE)),
         ),
     )
-    verdict = interpreters.compilability_for("Anything")
+    verdict = interpreters.compilability_for(
+        "Anything", ReceiptScope.SURVIVAL_LEDGER_TRANSITION
+    )
     assert isinstance(verdict, ReceiptOnly)
     assert verdict.reason == "first; second"
+    # The fourth rule refuses too, and in a scope nobody asked about; folding
+    # it in is precisely the conflation the scope axis exists to end.
+    assert "other scope" not in verdict.reason
 
 
 def test_all_compilable_folds_to_compilable(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -141,7 +162,12 @@ def test_all_compilable_folds_to_compilable(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(
         interpreters, "behavior_rules", lambda owner: (_Rule(Compilable()),)
     )
-    assert isinstance(interpreters.compilability_for("Anything"), Compilable)
+    assert isinstance(
+        interpreters.compilability_for(
+            "Anything", ReceiptScope.SURVIVAL_LEDGER_TRANSITION
+        ),
+        Compilable,
+    )
 
 
 def test_no_registered_interpreter_is_an_orphan_branch() -> None:
@@ -415,7 +441,12 @@ def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
 
     _only_rule(
         monkeypatch,
-        _StubRule(RuleFamily.DELTA_AMP, ReceiptOnly("the kernel cannot amp")),
+        _StubRule(
+            RuleFamily.DELTA_AMP,
+            ReceiptOnly(
+                "the kernel cannot amp", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
+            ),
+        ),
     )
     # The registry is narrowed with the declaration set: every other
     # registration would otherwise be an orphan branch of this one-rule tree,

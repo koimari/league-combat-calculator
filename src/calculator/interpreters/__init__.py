@@ -3,7 +3,8 @@
 A declared behaviour is only worth something if some engine runs it.  This
 package is where that is decided and, more importantly, where *not* deciding
 it becomes visible: :func:`compilability_for` refuses to call an owner
-compilable while any of its rules is receipt-only, and
+compilable, for the refusal it is asked about, while any of its rules is
+receipt-only in that scope, and
 :func:`reachability_report` names both a declaration no interpreter reaches
 and an interpreter branch no declaration reaches (D-51).  Both directions
 have live motivating cases, which is why neither is dropped as theoretical.
@@ -39,6 +40,7 @@ from ..item_behavior import (
     EngineLane,
     KernelField,
     ReceiptOnly,
+    ReceiptScope,
     RuleFamily,
     SUBJECT_AUTHORITY,
 )
@@ -480,15 +482,24 @@ def uninterpreted_pairs() -> tuple[tuple[RuleFamily, EngineLane], ...]:
     )
 
 
-def compilability_for(owner: str) -> Compilability:
-    """One owner's compiled-lane answer, folded from its rules (D-43).
+def compilability_for(owner: str, scope: ReceiptScope) -> Compilability:
+    """One owner's answer for one of the kernel's refusals, folded (D-43).
 
     ``ReceiptOnly`` wins and its reasons concatenate in declaration order;
     ``Compilable`` only when every rule is.  An owner the registries know but
-    no rule declares is **not** compilable: its behaviour is still engine
-    code, so claiming the kernel can represent it would be a promise made by
-    an absence.  An owner no registry knows has nothing to represent and is
-    compilable.
+    no rule declares is **not** compilable under any scope: its behaviour is
+    still engine code, so claiming the kernel can represent it would be a
+    promise made by an absence.  An owner no registry knows has nothing to
+    represent and is compilable.
+
+    ``scope`` is required rather than defaulted, and that is the whole point
+    of the parameter.  The kernel refuses three unrelated things
+    (:class:`~..item_behavior.ReceiptScope`), and a fold over all three
+    answers a question no gate asks: the build-level gate wants the owners
+    whose *state transitions* it cannot stage, and reading it the amp
+    holders as well would fall a build back for a reason that gate does not
+    own.  A caller that genuinely wants the union asks for each scope and
+    says so.
 
     This is the successor to ``COMPILED_WALK_UNREPRESENTABLE_ITEMS`` — a
     per-item question needs a per-item answer, which is why the fold lives
@@ -500,16 +511,18 @@ def compilability_for(owner: str) -> Compilability:
             return ReceiptOnly(
                 f"{owner}: the registry declares behaviour that no BehaviorRule "
                 "models yet, so the compiled kernel has nothing to represent it "
-                "with (Phase 3 migration frontier)"
+                "with (Phase 3 migration frontier)",
+                scope=scope,
             )
         return Compilable()
     reasons = [
         rule.compilability.reason
         for rule in rules
         if isinstance(rule.compilability, ReceiptOnly)
+        and rule.compilability.scope is scope
     ]
     if reasons:
-        return ReceiptOnly("; ".join(reasons))
+        return ReceiptOnly("; ".join(reasons), scope=scope)
     return Compilable()
 
 
