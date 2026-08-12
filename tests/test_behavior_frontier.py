@@ -17,6 +17,8 @@ from scripts import behavior_frontier
 from src.calculator import interpreters
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_coverage
+from src.calculator.item_behavior import ReceiptOnly
+from src.calculator.survival import compile as compile_module
 
 ROOT = Path(__file__).parents[1]
 RECEIPT_PATH = ROOT / "docs" / "behavior-frontier.json"
@@ -325,6 +327,35 @@ def test_the_compiled_walk_derivation_lands_beside_the_hand_set() -> None:
     assert set(receipt["legacy_only"]) == set(measured["legacy_only"])
     assert set(receipt["derived_only"]) == set(measured["derived_only"])
     assert set(receipt["derived"]) == set(measured["derived"])
+
+
+def test_the_derivation_and_the_hand_set_agree_item_for_item() -> None:
+    """D-98's precondition for criterion 13, asserted on the symbols.
+
+    The delta test above compares the *receipt* to a fresh measurement; this
+    one compares the two live symbols directly, over the whole cached item
+    universe rather than over the hand set's own members, so an item the hand
+    set never named cannot be missed by asking only about the names it did.
+
+    Equality here is what makes the flip a substitution rather than a change:
+    every build `uncompilable_item_receipt` withholds today,
+    :func:`interpreters.compilability_for` withholds in the survival-ledger
+    scope, and no build is withheld by one and admitted by the other.  The
+    flip is the commit that deletes the hand set, and criterion 13 requires
+    it to be *preceded* by this assertion — so if this test ever goes red,
+    the flip is the change that has to be reverted, not this file.
+    """
+    legacy = set(compile_module.COMPILED_WALK_UNREPRESENTABLE_ITEMS)
+    derived = {
+        name
+        for name in behavior_frontier.item_names() | legacy
+        if isinstance(
+            interpreters.compilability_for(name, behavior_frontier.LEDGER_SCOPE),
+            ReceiptOnly,
+        )
+    }
+
+    assert derived == legacy
 
 
 def test_the_flip_is_blocked_exactly_while_the_two_sets_disagree() -> None:
