@@ -1,0 +1,570 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZyraE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 1150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraEAbility/ZyraE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "ZyraRKnockUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "duration": 1.0,
+   "cc_type": "knockup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stranglethorns",
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Airborne"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraRAbility/ZyraRKnockUp"
+   ],
+   "evidence": "wiki: R thicket knocks up enemies within for 1 second after the 2s delay; binary: BuffData ZyraRKnockUp"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZyraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZyraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZyraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZyraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ZyraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZyraE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 1150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraEAbility/ZyraE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZyraE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 1150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraEAbility/ZyraE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZyraEPlantAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Grasping Roots"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraEAbility/ZyraEPlantAttack"
+   ],
+   "evidence": "wiki: Vine Lasher attacks enemies; binary: SpellObject ZyraEPlantAttack (plant auto attack)"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZyraEPlantAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Grasping Roots"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraEAbility/ZyraEPlantAttack2"
+   ],
+   "evidence": "wiki: Vine Lasher attack variant; binary: SpellObject ZyraEPlantAttack2"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZyraQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.5,
+   "cooldown_rank_max": 5.0,
+   "range": 800.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraQAbility/ZyraQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZyraQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.5,
+   "cooldown_rank_max": 5.0,
+   "range": 800.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraQAbility/ZyraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZyraQPlantMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Deadly Spines"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraQAbility/ZyraQPlantMissile"
+   ],
+   "evidence": "wiki: Thorn Spitter shoots enemies; binary: SpellObject ZyraQPlantMissile (plant auto attack)"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZyraQPlantMissileOnSpawn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Deadly Spines"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraQAbility/ZyraQPlantMissileOnSpawn"
+   ],
+   "evidence": "wiki: Thorn Spitter fires on spawn; binary: SpellObject ZyraQPlantMissileOnSpawn"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZyraR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 90.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraRAbility/ZyraR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZyraR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 90.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraRAbility/ZyraR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZyraEPlant",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "duration": 8.0,
+   "summon": "vine_lasher"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Grasping Roots"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraEAbility/ZyraEPlant"
+   ],
+   "evidence": "wiki: if Grasping Roots hits a Seed it sprouts a Vine Lasher that lasts 8 seconds; binary: BuffData ZyraEPlant"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZyraPlantEnrage",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "max_health_bonus": 0.5,
+   "size_bonus": 0.25,
+   "flurry": true
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stranglethorns"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraPlantEnrage"
+   ],
+   "evidence": "wiki: plants hit by the thicket become enraged (+50% max health, +25% size, two shots per attack); binary: BuffData ZyraPlantEnrage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZyraQPlant",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "duration": 8.0,
+   "summon": "thorn_spitter"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Deadly Spines"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraQAbility/ZyraQPlant"
+   ],
+   "evidence": "wiki: if Deadly Spines hits a Seed it sprouts a Thorn Spitter that lasts 8 seconds; binary: BuffData ZyraQPlant"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZyraSeedTrapVision",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 675.0,
+   "damage_type": null,
+   "affects_type_flags": 7183
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraWAbility/ZyraSeedTrapVision"
+   ],
+   "evidence": "name:trap"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZyraW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 850.0,
+   "damage_type": null,
+   "affects_type_flags": 1028
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraWAbility/ZyraW"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "zyra Passive (Plant)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Deadly Spines",
+    "Grasping Roots"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraPAbility/ZyraP"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki: Seeds sprout into plants (Thorn Spitter / Vine Lasher) lasting 8s; binary: ZyraP passive spell"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "zyra Passive (Seed)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Garden of Thorns"
+   ],
+   "binary": [
+    "Characters/Zyra/Spells/ZyraPAbility/ZyraP"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki: passive periodically spawns Seeds nearby (last 30s, grant sight); binary: ZyraP passive spell"
+  }
+ }
+]
