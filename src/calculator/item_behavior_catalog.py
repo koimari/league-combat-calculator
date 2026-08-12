@@ -1197,8 +1197,13 @@ DEFENSE_RECEIPTS: Mapping[DefenseMechanic, SourceReceipt] = {
 
 # ── the compiled-kernel refusal every amp carries (D-101) ─────────────────
 
-# H5 is descoped by the umbrella, so no ``delta_amp`` rule is compilable and
-# every amp holder falls back to the receipt walk with this reason printed.
+# The umbrella records H5 as **SCOPED**: the compiled kernel is to be taught
+# timed, typed damage modifiers, as its own stage after Phase 4's S7 with its
+# own equivalence fixture.  Scoping it adds that later stage; it does not
+# relax this one.  Until that stage's flip lands — a one-symbol commit under
+# D-98 — no ``delta_amp`` rule is compilable and every amp holder falls back
+# to the receipt walk with this reason printed.
+#
 # It is one constant because it is one fact about the kernel, not a per-item
 # judgement — and a per-item copy is how sixteen conservatism notes ended up
 # indistinguishable from sixteen representability facts.
@@ -1206,7 +1211,8 @@ COMPILED_KERNEL_CANNOT_AMP = ReceiptOnly(
     "the compiled score kernel cannot represent a timed, typed damage "
     "modifier: unrepresentable_template_receipt returns support_kind=<kind> "
     "for anything but shield/heal and add_support_templates raises on it "
-    "(D-101; H5 descoped, so this is the standing answer)"
+    "(D-101; H5 is SCOPED and lands as its own stage after Phase 4's S7, so "
+    "this is the standing answer until that stage's flip)"
 )
 
 

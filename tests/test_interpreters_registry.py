@@ -58,7 +58,12 @@ def test_counter_four_is_the_gap_between_the_table_and_the_registry() -> None:
 
 
 def test_the_compiled_score_walk_gap_is_a_receipt_and_not_a_zero() -> None:
-    """H5 is descoped, so an amp's compiled lane is a named refusal (D-101)."""
+    """An amp's compiled lane is a named refusal until H5's stage flips it.
+
+    H5 is SCOPED, and the extension it scopes is a stage of its own after
+    Phase 4's S7; before that stage's flip the kernel still raises, so the
+    lane is a receipt rather than a zero (D-101).
+    """
     assert (
         RuleFamily.DELTA_AMP,
         EngineLane.COMPILED_SCORE_WALK,

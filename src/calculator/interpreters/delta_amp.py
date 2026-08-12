@@ -15,10 +15,12 @@ accident of style — the three spellings land on different floats once a slot
 has two occupants, and the whole point of shipping Hypershot first is that a
 moved number means the kernel is wrong rather than the mechanic.
 
-Nothing here is a compiled-kernel lane: H5 is descoped, so every amp rule
-carries ``ReceiptOnly`` and this interpreter serves ``PAIR_ENGINE`` only.
-The receipt-walk half of the family arrives with the amps the coupled walk
-actually owns.
+Nothing here is a compiled-kernel lane.  The umbrella records H5 as SCOPED —
+the kernel *is* to be taught timed, typed damage modifiers — but that lands
+as its own stage after Phase 4's S7, and scoping it adds that stage rather
+than relaxing this one: until its flip, every amp rule carries
+``ReceiptOnly`` and the compiled lane is a named refusal.  The receipt-walk
+half of the family arrives with the amps the coupled walk actually owns.
 
 Everything the engine takes from a declaration comes through
 :meth:`DeltaAmpPairInterpreter.compile` — the fraction, the window bounds —

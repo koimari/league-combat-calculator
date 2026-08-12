@@ -233,8 +233,10 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
 # The registry itself.  One entry per family per lane, filled by the slice
 # that migrates it; every remaining gap is counted by the frontier's counter
 # 4 rather than being an absence nobody measures.  ``delta_amp`` serves the
-# pair engine only — H5 is descoped, so no amp is compilable, and the
-# receipt-walk half arrives with the amps the coupled walk owns.
+# pair engine only — H5 is SCOPED, but the compiled-kernel extension it scopes
+# lands as its own stage after Phase 4's S7, so until that stage's flip no amp
+# is compilable — and the receipt-walk half arrives with the amps the coupled
+# walk owns.
 INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
     (
         RuleFamily.ACTIVE_CAST,

@@ -14,6 +14,7 @@ import dataclasses
 
 import pytest
 
+from src.calculator import interpreters
 from src.calculator.interpreters import delta_amp
 from src.calculator.item_behavior import (
     AMP_CHAIN_ORDER,
@@ -28,6 +29,7 @@ from src.calculator.item_behavior import (
     RampModel,
     RampPerSecond,
     RampPerStack,
+    ReceiptOnly,
     RuleFamily,
     TargetBonusHealthScaled,
     WindowBoundary,
@@ -36,6 +38,8 @@ from src.calculator.item_behavior import (
 )
 from src.calculator.item_behavior_catalog import (
     BehaviorCatalogError,
+    COMPILED_KERNEL_CANNOT_AMP,
+    KEYSTONE_AMPS,
     behavior_rules,
     build_context,
     rule_owners,
@@ -509,3 +513,61 @@ def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
             delta_amp.AMP_FRACTION_FIELD,
             delta_amp.LIVE_THRESHOLD_FIELD,
         }
+
+
+def test_every_amp_declares_the_compiled_kernel_refusal_in_both_h5_branches() -> None:
+    """Phase 3 criterion 16, discharged by the declaration and never by absence.
+
+    The umbrella records H5 as SCOPED, and scoping it **adds** a stage after
+    Phase 4's S7 rather than relaxing this phase: until that stage's
+    one-symbol flip lands, every ``delta_amp`` rule — item and keystone alike
+    — is ``ReceiptOnly`` carrying the one compiled-kernel reason.  So the
+    assertion is identity against that single constant, not a substring
+    match: a per-rule copy of the sentence would read the same and would be
+    the sixteen-conservatism-notes failure again, and a rule that quietly
+    became ``Compilable`` while the kernel still raises would be a compiled
+    lane claimed by an absence.
+    """
+    amps = [
+        rule
+        for owner in sorted(rule_owners())
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.DELTA_AMP
+    ]
+    assert amps, "no delta_amp rule is declared, so this criterion proves nothing"
+    assert {rule.owner for rule in amps} >= set(KEYSTONE_AMPS), (
+        "the keystone amps are delta_amp declarations too (CLAUDE.md rule 5); "
+        "a criterion read over items only would miss two runtime amp producers"
+    )
+    for rule in amps:
+        assert (
+            rule.compilability is COMPILED_KERNEL_CANNOT_AMP
+        ), f"{rule.mechanic_id} does not carry the one compiled-kernel refusal"
+    assert "H5 is SCOPED" in COMPILED_KERNEL_CANNOT_AMP.reason
+    assert "descoped" not in COMPILED_KERNEL_CANNOT_AMP.reason
+
+
+def test_the_compiled_lane_is_declared_empty_rather_than_absent() -> None:
+    """ "Declared empty, fallback receipted" — the phase's compiled-lane claim.
+
+    Two halves, because either alone is the unstated absence the criterion
+    forbids: no interpreter serves ``delta_amp`` on the compiled lane, *and*
+    every amp holder's per-owner fold answers ``ReceiptOnly`` with that
+    reason rather than falling silent.
+    """
+    assert (
+        RuleFamily.DELTA_AMP,
+        EngineLane.COMPILED_SCORE_WALK,
+    ) not in interpreters.INTERPRETERS
+    holders = sorted(
+        {
+            rule.owner
+            for owner in rule_owners()
+            for rule in behavior_rules(owner)
+            if rule.family is RuleFamily.DELTA_AMP
+        }
+    )
+    for holder in holders:
+        verdict = interpreters.compilability_for(holder)
+        assert isinstance(verdict, ReceiptOnly)
+        assert COMPILED_KERNEL_CANNOT_AMP.reason in verdict.reason
