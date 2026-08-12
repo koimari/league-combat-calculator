@@ -10,10 +10,12 @@ reaches.
 """
 
 import ast
+import dataclasses
 from pathlib import Path
 
 import pytest
 
+from src.calculator.ability_spec import Authority
 from src.calculator import interpreters
 from src.calculator import item_coverage
 from src.calculator import item_behavior_catalog as catalog
@@ -22,6 +24,7 @@ from src.calculator.item_behavior import (
     EngineLane,
     ReceiptOnly,
     RuleFamily,
+    SUBJECT_AUTHORITY,
 )
 from src.calculator.item_behavior_catalog import registry_owners
 
@@ -308,3 +311,172 @@ def test_deleting_a_families_interpreter_withholds_it_rather_than_pricing_zero(
             assert "withheld rather than priced as zero" in after.reason
             assert not after.optimizer_eligible
             assert not after.calculation_eligible
+
+
+class _StubRule:  # pylint: disable=too-few-public-methods
+    """A declaration with just the fields the registration gates read."""
+
+    def __init__(self, family: RuleFamily, compilability) -> None:
+        self.family = family
+        self.compilability = compilability
+        self.mechanic_id = f"stub.{family.value}"
+        self.owner = "Stub"
+        self.payload = None
+
+
+def _only_rule(monkeypatch: pytest.MonkeyPatch, rule) -> None:
+    """Make the whole tree consist of one declaration."""
+    monkeypatch.setattr(interpreters, "rule_owners", lambda: frozenset({"Stub"}))
+    monkeypatch.setattr(interpreters, "behavior_rules", lambda owner: (rule,))
+
+
+def test_an_unserved_lane_with_no_receipt_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Criterion 12's first clause: a declared family with no interpreter.
+
+    Deleting a registration does not merely change a counter — it makes every
+    declaration of that family unpriced on that lane, and the gate refuses to
+    import a tree in that state unless something *names* the gap.  Without
+    this, counter 4 is the only witness a missing interpreter has, and a
+    counter is a number nobody has to read.
+    """
+    monkeypatch.setattr(
+        interpreters,
+        "INTERPRETERS",
+        {
+            key: value
+            for key, value in interpreters.INTERPRETERS.items()
+            if key != (RuleFamily.ON_HIT_STRIKE, EngineLane.PAIR_ENGINE)
+        },
+    )
+    with pytest.raises(
+        interpreters.InterpreterRegistryError, match="unreceipted zero"
+    ) as raised:
+        interpreters.validate_registrations()
+    assert "on_hit_strike" in str(raised.value)
+    assert "pair_engine" in str(raised.value)
+
+
+def test_a_dated_gap_receipt_no_declaration_reaches_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The reverse direction: a receipt for a lane that is served (D-92).
+
+    A gap table nobody prunes is the hand-maintained exception list this
+    campaign deletes everywhere else, so a row for a pair some interpreter
+    already serves is a failure rather than a harmless leftover.
+    """
+    monkeypatch.setattr(
+        interpreters,
+        "UNSERVED_LANE_RECEIPTS",
+        dict(interpreters.UNSERVED_LANE_RECEIPTS)
+        | {
+            (
+                RuleFamily.ON_HIT_STRIKE,
+                EngineLane.PAIR_ENGINE,
+            ): interpreters.UnservedLane(
+                reason="a lane that is in fact served", retires_at="never"
+            )
+        },
+    )
+    with pytest.raises(
+        interpreters.InterpreterRegistryError, match="receipt for nothing"
+    ):
+        interpreters.validate_registrations()
+
+
+def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The per-rule form, which is the one every amp carries (D-101).
+
+    Both halves are asserted on one stub: the same family and lane passes with
+    a ``ReceiptOnly`` compilability and raises with a ``Compilable`` one, so
+    what is being tested is the receipt and not the pair.  ``delta_amp``'s
+    compiled lane is deliberately absent from the dated table for exactly this
+    reason, and that absence is asserted here rather than left to be noticed.
+    """
+    assert (
+        RuleFamily.DELTA_AMP,
+        EngineLane.COMPILED_SCORE_WALK,
+    ) not in interpreters.UNSERVED_LANE_RECEIPTS
+
+    _only_rule(
+        monkeypatch,
+        _StubRule(RuleFamily.DELTA_AMP, ReceiptOnly("the kernel cannot amp")),
+    )
+    # The registry is narrowed with the declaration set: every other
+    # registration would otherwise be an orphan branch of this one-rule tree,
+    # which is a true report about a fixture and not the thing under test.
+    monkeypatch.setattr(
+        interpreters,
+        "INTERPRETERS",
+        {
+            (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): interpreters.INTERPRETERS[
+                (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE)
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        interpreters,
+        "UNSERVED_LANE_RECEIPTS",
+        {
+            (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): (
+                interpreters.UNSERVED_LANE_RECEIPTS[
+                    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK)
+                ]
+            )
+        },
+    )
+    interpreters.validate_registrations()
+
+    _only_rule(monkeypatch, _StubRule(RuleFamily.DELTA_AMP, Compilable()))
+    with pytest.raises(interpreters.InterpreterRegistryError, match="unreceipted zero"):
+        interpreters.validate_registrations()
+
+
+def test_a_subject_its_authority_cannot_see_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Criterion 12's third clause, and the incident's own shape.
+
+    A rule acting on any roster attacker under a ``PAIR_ONLY`` authority is a
+    mechanic whose owning engine cannot see the input its rule reads — which
+    is failure mode C of the incident, stated as a declaration.  The subject
+    is read off a live rule rather than invented, so the case dies if the
+    roster-scoped subjects ever stop existing.
+    """
+    roster_scoped = [
+        rule
+        for owner in sorted(catalog.rule_owners())
+        for rule in catalog.behavior_rules(owner)
+        if getattr(rule.payload, "subject", None) is not None
+        and Authority.PAIR_ONLY
+        not in SUBJECT_AUTHORITY[rule.payload.subject]  # type: ignore[index]
+    ]
+    assert roster_scoped, "no declaration acts on a roster-scoped subject"
+    rule = roster_scoped[0]
+    capability = interpreters.CAPABILITIES[rule.mechanic_id]
+    monkeypatch.setattr(
+        interpreters,
+        "CAPABILITIES",
+        dict(interpreters.CAPABILITIES)
+        | {
+            rule.mechanic_id: dataclasses.replace(
+                capability, authority=Authority.PAIR_ONLY
+            )
+        },
+    )
+    with pytest.raises(
+        interpreters.InterpreterRegistryError, match="which cannot see it"
+    ):
+        interpreters.validate_registrations()
+
+
+def test_every_dated_gap_row_says_what_retires_it() -> None:
+    """A gap with no date is the silence the table exists to replace."""
+    for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items():
+        assert row.reason.strip(), f"{family.value}/{lane.value} has no reason"
+        assert row.retires_at.strip(), f"{family.value}/{lane.value} has no date"
+        assert (family, lane) not in interpreters.INTERPRETERS

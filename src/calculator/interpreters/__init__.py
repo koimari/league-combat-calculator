@@ -308,6 +308,112 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
 }
 
 
+@dataclass(frozen=True, slots=True)
+class UnservedLane:
+    """Why a declared ``(family, lane)`` has no interpreter, and what closes it.
+
+    Counter 4 is the *size* of the gap between the lane table and the
+    registry; this is the gap's content.  Every entry is a lane that some
+    declaration reaches and no interpreter serves, with the engine's own
+    reason for it and the slice or stage that retires the row — so the
+    absence is dated evidence rather than a number nobody can read back.
+
+    A row is not a permit to price zero.  It is a claim that the lane's
+    number arrives by another route, and the row says which route; the
+    registrations gate below refuses any unserved lane that has neither a row
+    here nor a per-rule ``ReceiptOnly`` on the compiled lane, and equally
+    refuses a row here that no declaration reaches (D-92 — a set pinned at a
+    state the tree has left is born stale).
+    """
+
+    reason: str
+    retires_at: str
+
+
+# The three routes a declared family's number reaches an engine by when that
+# engine has no interpreter of its own, written once and shared by the rows
+# that stand on them.  One sentence per route rather than per pair: thirty
+# copies of one fact is how sixteen conservatism notes became indistinguishable
+# from sixteen representability facts.
+_PACKET_FED = (
+    "both walks consume this family as the pair engine's timed rows — "
+    "participant_timeline._pair_run_fight prices the pair and "
+    "survival/compile.py stages the resulting packets — so the declaration "
+    "reaches them through the pair interpreter rather than through one of "
+    "its own"
+)
+_RESOLVER_FED = (
+    "the walks stage what the defence resolver already built, so the "
+    "declaration reaches them through the resolver interpreter; a walk-lane "
+    "interpreter here would be a second producer of one number"
+)
+_TEMPLATE_FED = (
+    "the compiled kernel stages support templates from the packets "
+    "item_support_effects emits, not from the declaration; the packet kinds "
+    "it cannot stage are refused per rule by compilability_for"
+)
+_WALK_AUTHORED_BY_NAME = (
+    "the walk authors this family itself and still reads its numbers out of "
+    "the registry by item name (survival/transitions.py, "
+    "survival/receipt_state.py), so the walk-lane interpreter arrives with "
+    "those sites — they are counter 1's remainder, not a route"
+)
+
+# One row per unserved pair a declaration reaches.  ``delta_amp`` on the
+# compiled lane is deliberately absent: every amp rule carries its own
+# ``ReceiptOnly`` (D-101), which is the stronger, per-rule form of this
+# receipt, and a row here would be the stale duplicate of it.
+_ONE_KERNEL = "Phase 4 S3 — one kernel, five views"
+_COUNTER_ONE = "3.9 residue — counter 1's remaining name-dispatch sites"
+
+UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
+    **{
+        (family, lane): UnservedLane(reason=_PACKET_FED, retires_at=_ONE_KERNEL)
+        for family in (
+            RuleFamily.ON_HIT_STRIKE,
+            RuleFamily.CHARGED_STRIKE,
+            RuleFamily.SPELLBLADE,
+            RuleFamily.CAST_PROC,
+            RuleFamily.PERIODIC,
+            RuleFamily.ACTIVE_CAST,
+            RuleFamily.RESISTANCE_SHRED,
+            RuleFamily.CRIT_PROFILE,
+            RuleFamily.DAMAGE_ROUTING,
+        )
+        for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
+    },
+    (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
+        reason=_PACKET_FED, retires_at=_ONE_KERNEL
+    ),
+    # Sustain is the split case, and it is written out rather than folded into
+    # either loop: its compiled half is packet-fed like the strikes, and its
+    # receipt half is the walk authoring Enduring Focus by item name.  One row
+    # per lane, each saying the true thing about that lane.
+    (RuleFamily.SUSTAIN, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
+        reason=_PACKET_FED, retires_at=_ONE_KERNEL
+    ),
+    (RuleFamily.SUSTAIN, EngineLane.RECEIPT_WALK): UnservedLane(
+        reason=_WALK_AUTHORED_BY_NAME, retires_at=_COUNTER_ONE
+    ),
+    **{
+        (family, lane): UnservedLane(reason=_RESOLVER_FED, retires_at=_ONE_KERNEL)
+        for family in (
+            RuleFamily.OPENING_DEFENSE,
+            RuleFamily.THRESHOLD_DEFENSE,
+            RuleFamily.COMBAT_STATE,
+            RuleFamily.REACTIVE,
+        )
+        for lane in (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK)
+    },
+    (RuleFamily.ALLY_PACKET, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
+        reason=_TEMPLATE_FED, retires_at=_ONE_KERNEL
+    ),
+    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): UnservedLane(
+        reason=_WALK_AUTHORED_BY_NAME, retires_at=_COUNTER_ONE
+    ),
+}
+
+
 # The four families the defensive resolver builds.  Derived from the lane
 # table rather than listed, so a family that stopped owing the resolver an
 # answer would leave this set on the same commit.
@@ -495,10 +601,61 @@ def _validate_authority_agreement(owners: frozenset[str]) -> tuple[str, ...]:
     return tuple(failures)
 
 
+def _validate_unserved_lanes(owners: frozenset[str]) -> tuple[str, ...]:
+    """Every declared lane is served, receipted per rule, or dated — or a stop.
+
+    This is the totality half of the gate, and it is the half that decides
+    whether counter 4 is a measurement or an alibi.  A declaration whose lane
+    has no interpreter is priced by nobody; the only honest states are
+
+    * the compiled lane, refused by that rule's own ``ReceiptOnly`` — the
+      per-rule form, which is what every ``delta_amp`` carries (D-101); or
+    * a dated row in :data:`UNSERVED_LANE_RECEIPTS` naming the route the
+      number arrives by instead.
+
+    Anything else raises rather than reaching a payload as a zero.  The
+    reverse direction is checked with it: a row no declaration reaches is
+    stale and fails, so the table cannot become the graveyard that a
+    hand-maintained exception list turns into (D-92).
+    """
+    failures: list[str] = []
+    reached: set[tuple[RuleFamily, EngineLane]] = set()
+    for owner in sorted(owners):
+        for rule in behavior_rules(owner):
+            for lane in lanes_for(rule.family):
+                pair = (rule.family, lane)
+                if pair in INTERPRETERS:
+                    continue
+                if lane is EngineLane.COMPILED_SCORE_WALK and isinstance(
+                    rule.compilability, ReceiptOnly
+                ):
+                    continue
+                if pair in UNSERVED_LANE_RECEIPTS:
+                    reached.add(pair)
+                    continue
+                failures.append(
+                    f"{rule.mechanic_id} declares {rule.family.value} and no "
+                    f"interpreter serves lane {lane.value}; neither the rule's "
+                    "own compilability nor UNSERVED_LANE_RECEIPTS names the "
+                    "gap, so its contribution would be an unreceipted zero"
+                )
+    failures.extend(
+        f"UNSERVED_LANE_RECEIPTS names {family.value}/{lane.value}, which no "
+        "declaration reaches — a dated gap for a lane nobody asks about is a "
+        "receipt for nothing"
+        for family, lane in sorted(
+            set(UNSERVED_LANE_RECEIPTS) - reached,
+            key=lambda pair: (pair[0].value, pair[1].value),
+        )
+    )
+    return tuple(failures)
+
+
 def validate_registrations() -> None:
     """Totality, authority agreement and no orphan branch — or raise."""
     owners = rule_owners()
     failures = list(_validate_registry_keys())
+    failures.extend(_validate_unserved_lanes(owners))
     failures.extend(_validate_authority_agreement(owners))
     failures.extend(reachability_report(owners).orphan_branches)
     if failures:
@@ -511,6 +668,8 @@ validate_registrations()
 __all__ = [
     "DEFENSE_FAMILIES",
     "INTERPRETERS",
+    "UNSERVED_LANE_RECEIPTS",
+    "UnservedLane",
     "Interpreter",
     "InterpreterRegistryError",
     "ReachabilityReport",
