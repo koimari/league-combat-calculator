@@ -482,3 +482,86 @@ def test_a_moved_gap_receipt_is_a_diff_in_the_committed_artifact() -> None:
     )
     failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
     assert any("committed dated set differs" in failure for failure in failures)
+
+
+def test_every_counter_carries_its_target_and_the_gap_left_to_it() -> None:
+    """The gate compares a counter to its target, not only to the receipt.
+
+    Criterion 1's second clause and criterion 4 were dischargeable-looking on
+    a green ``--check`` because nothing in it read a target at all.  The block
+    records the bound each target resolves to, derived rather than typed.
+    """
+    targets = _receipt()["targets"]["targets"]
+    assert set(targets) == {
+        "counter_1",
+        "counter_2",
+        "counter_3",
+        "counter_4/pair_engine",
+        "counter_4/receipt_walk",
+    }
+    assert targets["counter_2"]["bound"] == len(item_coverage.NO_RUNTIME_BEHAVIOR)
+    for key, entry in targets.items():
+        assert entry["criterion"], key
+        assert entry["met"] == (entry["measured"] <= entry["bound"]), key
+        assert entry["gap"] == max(entry["measured"] - entry["bound"], 0), key
+
+
+def test_an_outstanding_target_names_what_the_tree_says_retires_it() -> None:
+    """``owed_to`` is read from the tree's own receipts, never written here.
+
+    Empty is a legal answer and an honest one — it says no receipt in the tree
+    schedules the remainder, which is a fact worth committing rather than a
+    blank filled in with a guess.
+    """
+    targets = _receipt()["targets"]["targets"]
+    assert targets["counter_4/receipt_walk"]["owed_to"] == "; ".join(
+        sorted(
+            {
+                row.retires_at
+                for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items()
+                if lane.value == "receipt_walk"
+                and (family, lane) not in interpreters.INTERPRETERS
+            }
+        )
+    )
+
+
+def test_a_counter_drifting_away_from_its_target_fails_the_gate() -> None:
+    """R-05's red for the target ratchet: the gap may shrink and never grow."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    committed["targets"]["targets"]["counter_2"]["measured"] -= 1
+    failures = behavior_frontier.check(report, committed)
+    assert any("counter_2 moved away from its target" in f for f in failures)
+
+
+def test_a_met_target_recorded_outstanding_fails_the_gate() -> None:
+    """A target the tree has reached may not stay recorded as owed."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    committed["targets"]["targets"]["counter_1"]["met"] = False
+    failures = behavior_frontier.check(report, committed)
+    assert any("counter_1 is met=True in the tree" in f for f in failures)
+
+
+def test_a_moved_bound_is_a_deliberate_diff_in_the_artifact() -> None:
+    """Reviewing an item into NO_RUNTIME_BEHAVIOR moves counter 2's target."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    committed["targets"]["targets"]["counter_2"]["bound"] += 1
+    failures = behavior_frontier.check(report, committed)
+    assert any("counter_2's bound moved" in f for f in failures)
+
+
+def test_a_receipt_missing_the_targets_section_fails_closed() -> None:
+    """Deleting what the target gate reads must fail it, never skip it."""
+    report = behavior_frontier.scan()
+    committed = behavior_frontier.build_receipt(report)
+    del committed["targets"]
+    failures = behavior_frontier.check(report, committed)
+    assert any("no targets section" in f for f in failures)
+
+    committed = behavior_frontier.build_receipt(report)
+    del committed["targets"]["targets"]["counter_3"]
+    failures = behavior_frontier.check(report, committed)
+    assert any("counter_3 is not in the committed receipt" in f for f in failures)

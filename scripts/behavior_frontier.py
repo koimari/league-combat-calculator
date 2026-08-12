@@ -62,6 +62,14 @@ impossible in the first place.
 Counters 5-7 are Phase 4's and live in ``docs/migration-frontier.json``;
 nothing here reports them.
 
+Beside the counters the receipt carries the **targets** block: for each
+counter the bound its exit criterion resolves to, the measured value, and the
+gap.  ``--check`` compares the tree against the receipt *and* each counter
+against its own target, ratcheting every gap so a counter cannot drift away
+from a target it has not reached — the check the earlier gate had no clause
+for, which let two exit criteria stand undischarged behind a green run.  It
+records targets and never amends one.
+
 Usage::
 
     python scripts/behavior_frontier.py            # human summary
@@ -426,6 +434,143 @@ def _undeclared_base_blocker() -> tuple[str, ...]:
         "entry no family declares, so the declaration base this fold reads is "
         "knowingly incomplete.",
     )
+
+
+# ── the exit targets, and how far each counter still is from its own ─────
+#
+# ``--check`` compared the receipt against the tree and never a counter
+# against its **target**, so a phase exit criterion could stand undischarged
+# behind a green gate — a gate blind to the thing it is named for, which is
+# this campaign's own failure shape wearing the campaign's badge.
+#
+# What follows is a **ratchet on the gap, never a ruling about the target**.
+# It moves no target, relaxes none and dates none.  Per target it records the
+# bound the target resolves to (derived, never typed), the measured value,
+# whether the tree meets it, and who the *tree* says owes the remainder — an
+# empty owner where nothing in the tree names one, because "nobody here says
+# who finishes this" is a fact worth committing rather than a blank to fill
+# in with a guess.  The gate then refuses a gap that grew, a verdict that
+# disagrees with the tree, and a target the receipt has lost.
+
+# Counter 4's target is per lane, so the two lanes it names are two targets.
+COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
+
+TARGET_CRITERIA: Mapping[str, str] = {
+    "counter_1": "criterion 1: runtime item-name dispatch reaches zero",
+    "counter_2": (
+        "criterion 1: claim-prose sites at or below the reviewed "
+        "NO_RUNTIME_BEHAVIOR reason count"
+    ),
+    "counter_3": (
+        "criterion 2: every registry entry declares a rule or a reviewed "
+        "NO_RUNTIME_BEHAVIOR"
+    ),
+    "counter_4/pair_engine": (
+        "criterion 4: no declared family is uninterpreted on the pair engine"
+    ),
+    "counter_4/receipt_walk": (
+        "criterion 4: no declared family is uninterpreted on the receipt walk"
+    ),
+}
+
+
+def _uninterpreted_by_lane() -> dict[str, int]:
+    """How many declared pairs each lane owes an interpreter for."""
+    tally: dict[str, int] = {}
+    for _family, lane in interpreters.uninterpreted_pairs():
+        tally[lane.value] = tally.get(lane.value, 0) + 1
+    return tally
+
+
+def _lane_owed_to(lane: str) -> str:
+    """What the tree's own receipts say retires *lane*'s remaining gaps.
+
+    Read from ``UNSERVED_LANE_RECEIPTS`` rather than written here, so a row
+    re-dated in ``interpreters`` re-dates this without a second edit.  Several
+    distinct answers are joined rather than collapsed; no answer at all is the
+    empty string, which is the honest rendering of a gap nothing schedules.
+    """
+    stages = sorted(
+        {
+            row.retires_at
+            for (_family, pair_lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items()
+            if pair_lane.value == lane
+            and (_family, pair_lane) not in interpreters.INTERPRETERS
+        }
+    )
+    return "; ".join(stages)
+
+
+def target_block(report: FrontierReport) -> dict[str, Any]:
+    """Each counter's target, the bound it resolves to, and the gap left."""
+    by_lane = _uninterpreted_by_lane()
+    measured: dict[str, tuple[int, int, str]] = {
+        "counter_1": (0, report.counter_1, ""),
+        # The bound is the reviewed set's live size, so reviewing an item in
+        # or out moves the target the same commit it moves the set.
+        "counter_2": (len(item_coverage.NO_RUNTIME_BEHAVIOR), report.counter_2, ""),
+        "counter_3": (0, report.counter_3, ""),
+        **{
+            f"counter_4/{lane}": (0, by_lane.get(lane, 0), _lane_owed_to(lane))
+            for lane in COUNTER_4_TARGET_LANES
+        },
+    }
+    return {
+        "rule": (
+            "a target's gap may not grow, a met target may not stay recorded "
+            "outstanding, and a target the receipt has lost is a failure; the "
+            "block records targets and never amends one"
+        ),
+        "targets": {
+            key: {
+                "criterion": TARGET_CRITERIA[key],
+                "bound": bound,
+                "measured": value,
+                "gap": max(value - bound, 0),
+                "met": value <= bound,
+                "owed_to": owed,
+            }
+            for key, (bound, value, owed) in sorted(measured.items())
+        },
+    }
+
+
+def _target_failures(
+    committed: Mapping[str, Any], fresh: Mapping[str, Any]
+) -> list[str]:
+    """The target ratchet: no growth, no disagreement, no lost target."""
+    recorded_block = committed.get("targets")
+    if not isinstance(recorded_block, Mapping):
+        return ["targets: the committed receipt has no targets section; run --write"]
+    recorded = recorded_block.get("targets", {})
+    fresh_targets = fresh["targets"]["targets"]
+    failures: list[str] = []
+    lost = sorted(set(recorded) - set(fresh_targets))
+    if lost:
+        failures.append(f"targets: the tree no longer measures {lost}")
+    for key, entry in sorted(fresh_targets.items()):
+        was = recorded.get(key)
+        if not isinstance(was, Mapping):
+            failures.append(f"targets: {key} is not in the committed receipt")
+            continue
+        if entry["measured"] > was.get("measured", 0):
+            failures.append(
+                f"targets: {key} moved away from its target "
+                f"({was.get('measured')} -> {entry['measured']}, bound "
+                f"{entry['bound']})"
+            )
+        if entry["met"] != was.get("met"):
+            failures.append(
+                f"targets: {key} is met={entry['met']} in the tree and "
+                f"met={was.get('met')} in the receipt"
+            )
+        if entry["bound"] != was.get("bound"):
+            failures.append(
+                f"targets: {key}'s bound moved from {was.get('bound')} to "
+                f"{entry['bound']}; a target's bound changes deliberately or "
+                "not at all"
+            )
+    return failures
 
 
 # The pre-phase size of the reviewed no-modelled-effect claim, measured on the
@@ -922,6 +1067,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
             module: dict(sorted(tally.items()))
             for module, tally in sorted(report.by_module.items())
         },
+        "targets": target_block(report),
         "compiled_walk_refusals": compiled_walk_refusals(),
         "no_runtime_behavior": no_runtime_behavior_block(),
         "zero_policy_frontier": zero_policy_block(zero_policy_frontier()),
@@ -977,6 +1123,7 @@ def check(
                 f"(committed-only={sorted(recorded_modules - fresh_modules)}, "
                 f"declared-only={sorted(fresh_modules - recorded_modules)})"
             )
+    failures.extend(_target_failures(committed, fresh))
     failures.extend(_unserved_lane_failures(committed, fresh))
     failures.extend(_zero_policy_failures(committed, fresh))
     failures.extend(_compiled_walk_refusal_failures(committed, fresh))
@@ -1006,6 +1153,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         if failures:
             return 1
         print(f"behavior frontier: {json.dumps(report.counters())}")
+        for key, entry in sorted(receipt["targets"]["targets"].items()):
+            if not entry["met"]:
+                print(
+                    f"behavior frontier: {key} is {entry['gap']} above its "
+                    f"target of {entry['bound']} — "
+                    f"{entry['owed_to'] or 'no receipt in the tree names who retires it'}"
+                )
         return 0
     if not args.json and not args.write:
         print(json.dumps(report.counters()))

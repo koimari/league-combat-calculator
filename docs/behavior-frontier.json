@@ -441,6 +441,51 @@
   },
   "schema_version": 2,
   "slice": "3.9",
+  "targets": {
+    "rule": "a target's gap may not grow, a met target may not stay recorded outstanding, and a target the receipt has lost is a failure; the block records targets and never amends one",
+    "targets": {
+      "counter_1": {
+        "bound": 0,
+        "criterion": "criterion 1: runtime item-name dispatch reaches zero",
+        "gap": 0,
+        "measured": 0,
+        "met": true,
+        "owed_to": ""
+      },
+      "counter_2": {
+        "bound": 21,
+        "criterion": "criterion 1: claim-prose sites at or below the reviewed NO_RUNTIME_BEHAVIOR reason count",
+        "gap": 228,
+        "measured": 249,
+        "met": false,
+        "owed_to": ""
+      },
+      "counter_3": {
+        "bound": 0,
+        "criterion": "criterion 2: every registry entry declares a rule or a reviewed NO_RUNTIME_BEHAVIOR",
+        "gap": 0,
+        "measured": 0,
+        "met": true,
+        "owed_to": ""
+      },
+      "counter_4/pair_engine": {
+        "bound": 0,
+        "criterion": "criterion 4: no declared family is uninterpreted on the pair engine",
+        "gap": 0,
+        "measured": 0,
+        "met": true,
+        "owed_to": ""
+      },
+      "counter_4/receipt_walk": {
+        "bound": 0,
+        "criterion": "criterion 4: no declared family is uninterpreted on the receipt walk",
+        "gap": 14,
+        "measured": 14,
+        "met": false,
+        "owed_to": "Phase 4 S3 \u2014 one kernel, five views"
+      }
+    }
+  },
   "zero_policy_frontier": {
     "declared_default": "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry and simple_damage and overridable per call (D-24)",
     "forbidden_input_fallbacks": [],
