@@ -81,11 +81,29 @@
       "Banshee's Veil": [
         "combat_state"
       ],
+      "Catalyst of Aeons": [
+        "sustain"
+      ],
       "Death's Dance": [
         "damage_routing"
       ],
+      "Doran's Blade": [
+        "sustain"
+      ],
+      "Doran's Ring": [
+        "sustain"
+      ],
+      "Doran's Shield": [
+        "sustain"
+      ],
+      "Eclipse": [
+        "cast_proc"
+      ],
       "Edge of Night": [
         "combat_state"
+      ],
+      "Fimbulwinter": [
+        "ally_packet"
       ],
       "Force of Nature": [
         "combat_state"
@@ -110,7 +128,7 @@
     "derived_scope": "survival_ledger_transition",
     "derived_symbol": "interpreters.compilability_for",
     "flip_blocked_by": [
-      "the hand set withholds Catalyst of Aeons, Doran's Blade, Doran's Ring, Doran's Shield, Eclipse, Fimbulwinter, Immortal Path and the fold does not: every rule they compile to is Compilable in the survival-ledger scope, so flipping today would let a build the kernel cannot stage ride the compiled walk \u2014 the campaign's own incident shape.  Closing them is a migration, not a flip: a scoped ReceiptOnly on the rule the walk authors, or a new declaration where no rule models the mechanic at all."
+      "the hand set withholds Immortal Path and the fold does not: every rule they compile to is Compilable in the survival-ledger scope, so flipping today would let a build the kernel cannot stage ride the compiled walk \u2014 the campaign's own incident shape.  Closing them is a migration, not a flip: a scoped ReceiptOnly on the rule the walk authors, or a new declaration where no rule models the mechanic at all."
     ],
     "legacy": [
       "Banshee's Veil",
@@ -131,12 +149,6 @@
       "Verdant Barrier"
     ],
     "legacy_only": [
-      "Catalyst of Aeons",
-      "Doran's Blade",
-      "Doran's Ring",
-      "Doran's Shield",
-      "Eclipse",
-      "Fimbulwinter",
       "Immortal Path"
     ],
     "legacy_symbol": "survival.compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS"

@@ -22,6 +22,7 @@ from src.calculator.item_behavior import (
     EngineLane,
     PacketKind,
     ReceiptOnly,
+    ReceiptScope,
     RuleFamily,
 )
 from src.calculator.interpreters import INTERPRETERS
@@ -164,9 +165,24 @@ class TestTheCompiledLaneAnswerIsDerived:
         assert isinstance(_slot(AllyProducer.CONSONANCE).rule.compilability, Compilable)
 
     def test_a_timed_shield_names_the_kernel_clause_that_refuses_it(self) -> None:
-        compilability = _slot(AllyProducer.EVERLASTING).rule.compilability
+        compilability = _slot(AllyProducer.DEVOTION).rule.compilability
         assert isinstance(compilability, ReceiptOnly)
         assert "support_duration" in compilability.reason
+
+    def test_a_self_shield_is_refused_before_its_duration_is_reached(self) -> None:
+        """The build-level gate answers first, and says so.
+
+        Everlasting is both a self-shield and a timed one, and the kernel
+        would stop it at the earlier gate: ``uncompilable_item_receipt``
+        scans the build before any template is staged.  Reporting the
+        duration clause would hand a caller a receipt for a gate that never
+        ran, which is the wrong sentence and — because the build gate is the
+        ledger scope — also the wrong scope.
+        """
+        compilability = _slot(AllyProducer.EVERLASTING).rule.compilability
+        assert isinstance(compilability, ReceiptOnly)
+        assert "self_shield_payload" in compilability.reason
+        assert compilability.scope is ReceiptScope.SURVIVAL_LEDGER_TRANSITION
 
     def test_a_producer_that_reroutes_damage_names_its_own_clause(self) -> None:
         compilability = _slot(AllyProducer.SACRIFICE).rule.compilability

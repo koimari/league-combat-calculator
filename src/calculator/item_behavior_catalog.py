@@ -1219,6 +1219,60 @@ DEFENSE_RECEIPTS: Mapping[DefenseMechanic, SourceReceipt] = {
 }
 
 
+# ── the sustain shapes the score ledger cannot stage ──────────────────────
+
+# The hand set ``COMPILED_WALK_UNREPRESENTABLE_ITEMS`` withholds Catalyst of
+# Aeons and all three Doran's items with a per-*item* comment each, and D-43
+# calls two of those comments conservatism notes rather than representability
+# facts.  Read at the granularity the compiler actually has, they are neither
+# per-item nor conservative: each names one **sustain shape** the compiled
+# score ledger has nowhere to put, and each of those shapes has exactly one
+# owner today only because exactly one item carries it.  Keyed by the payload
+# type, so the fact stays attached to the mechanic and a second item growing
+# the same shape inherits the refusal instead of being forgotten — which is
+# the whole difference between a declaration and a name list.
+LEDGER_UNSTAGEABLE_SUSTAIN: Mapping[type, ReceiptOnly] = {
+    ManaSpentHealRule: ReceiptOnly(
+        "the compiled score kernel cannot stage a mana-spent heal: the "
+        "restore is credited by a second pass over the receipt walk's own "
+        "ledger, and the score ledger runs no second pass",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
+    ),
+    PostMitigationHealRule: ReceiptOnly(
+        "the compiled score kernel cannot stage a post-mitigation heal: the "
+        "share is taken from damage the walk has already resolved, which is a "
+        "hook the score ledger's damage rows do not carry",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
+    ),
+    ResourceDrainRule: ReceiptOnly(
+        "the compiled score kernel cannot stage a resource drain: the "
+        "restoration is a tick cadence over a combat window, and the score "
+        "ledger holds no per-second schedule to tick it on",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
+    ),
+    RegenerationRule: ReceiptOnly(
+        "the compiled score kernel cannot stage a regeneration window: the "
+        "ticks are authored inside the event walk once the window opens, "
+        "after the score ledger has been built",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
+    ),
+}
+
+# One self-shield fact, said once for the two families that can declare one:
+# a shield the holder puts on itself is stamped onto its own damage rows by
+# the receipt path, and ``survival/compile.unrepresentable_damage_receipt``
+# refuses exactly that with ``self_shield_payload``.  Eclipse declares it as a
+# cast proc and Fimbulwinter as an ally packet addressed to ``Recipients.SELF``
+# — two shapes, one refusal, and the hand set records the same fact per item.
+COMPILED_KERNEL_CANNOT_SELF_SHIELD = ReceiptOnly(
+    "the compiled score kernel cannot stage a self-shield: the receipt path "
+    "attaches it to the holder's own damage rows, which is what "
+    "survival/compile.unrepresentable_damage_receipt refuses as "
+    "self_shield_payload",
+    scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
+)
+
+
 # ── the compiled-kernel refusal every amp carries (D-101) ─────────────────
 
 # The umbrella records H5 as **SCOPED**: the compiled kernel is to be taught
@@ -2674,7 +2728,11 @@ def _cooldown_proc_rule(
             stacks=StackGate(*stack_refs) if stack_refs is not None else None,
             self_shield=SelfShield(*shield_refs) if shield_refs is not None else None,
         ),
-        compilability=Compilable(),
+        compilability=(
+            COMPILED_KERNEL_CANNOT_SELF_SHIELD
+            if shield_refs is not None
+            else Compilable()
+        ),
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -3554,7 +3612,7 @@ def _sustain_rule(
         owner=owner,
         mechanic_id=f"{_mechanic_slug(owner)}.{mechanic}",
         payload=payload,
-        compilability=Compilable(),
+        compilability=LEDGER_UNSTAGEABLE_SUSTAIN.get(type(payload), Compilable()),
         receipt=receipt_for(
             registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
         ),
@@ -4411,13 +4469,25 @@ ALLY_PACKET_UNMIGRATED_PRODUCERS: Mapping[AllyProducer, str] = {}
 def _ally_compilability(declaration: AllyPacketDeclaration) -> Compilability:
     """Whether the compiled score kernel can stage this producer's packets.
 
-    Derived from three declared axes rather than judged per item, because a
+    Derived from four declared axes rather than judged per item, because a
     per-item judgement is exactly how sixteen conservatism notes ended up
     indistinguishable from sixteen representability facts (D-43).  Each
     refusal names the kernel clause that produces it.
+
+    The order is the order the kernel would meet them, not a preference: the
+    redirect and the self-shield are refused by the *build*-level scan before
+    any template is staged, and the kind and duration clauses are the
+    template gate itself.  A producer that trips more than one is reported by
+    the first gate that would have stopped it, which is the one whose receipt
+    a caller would actually read.
     """
     if declaration.redirects_incoming_damage:
         return COMPILED_KERNEL_CANNOT_REDIRECT
+    if any(
+        spec.kind is PacketKind.SHIELD and spec.recipients is Recipients.SELF
+        for spec in declaration.packets
+    ):
+        return COMPILED_KERNEL_CANNOT_SELF_SHIELD
     unstageable = sorted(
         spec.kind.value
         for spec in declaration.packets

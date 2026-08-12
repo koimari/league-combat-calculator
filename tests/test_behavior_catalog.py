@@ -16,7 +16,9 @@ from pathlib import Path
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
+from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_behavior import (
+    Compilable,
     DefenseMechanic,
     ReceiptOnly,
     ReceiptScope,
@@ -342,3 +344,97 @@ def test_the_amp_refusal_is_the_population_h5s_stage_flips() -> None:
         and rule.compilability.scope is ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER
     }
     assert families == {RuleFamily.DELTA_AMP}
+
+
+# ── the ledger-scope refusals, derived by shape ───────────────────────────
+
+
+def _ledger_refusing_owners() -> frozenset[str]:
+    """Every owner with a rule the compiled *survival ledger* cannot stage."""
+    return frozenset(
+        owner
+        for owner in catalog.rule_owners()
+        for rule in catalog.behavior_rules(owner)
+        if isinstance(rule.compilability, ReceiptOnly)
+        and rule.compilability.scope is ReceiptScope.SURVIVAL_LEDGER_TRANSITION
+    )
+
+
+def test_each_unstageable_sustain_shape_refuses_and_the_others_do_not() -> None:
+    """The four shapes are refused *as shapes*, and nothing else is.
+
+    The hand set records these four as per-item comments, two of them called
+    conservatism notes.  Read at the compiler's granularity they are neither:
+    each is one payload type the score ledger has nowhere to put.  The second
+    half is the half that matters — a shape-keyed table that refused every
+    sustain rule would reproduce the hand set by over-withholding, which is
+    the family-predicate failure D-43 rejects.
+    """
+    refused: dict[type, set[str]] = {}
+    allowed: set[type] = set()
+    for owner in sorted(catalog.rule_owners()):
+        for rule in catalog.behavior_rules(owner):
+            if rule.family is not RuleFamily.SUSTAIN:
+                continue
+            shape = type(rule.payload)
+            if shape in catalog.LEDGER_UNSTAGEABLE_SUSTAIN:
+                refused.setdefault(shape, set()).add(owner)
+                assert isinstance(rule.compilability, ReceiptOnly)
+                assert (
+                    rule.compilability.scope is ReceiptScope.SURVIVAL_LEDGER_TRANSITION
+                )
+            else:
+                allowed.add(shape)
+                assert isinstance(rule.compilability, Compilable)
+
+    assert set(refused) == set(catalog.LEDGER_UNSTAGEABLE_SUSTAIN), (
+        "a declared unstageable shape that no live rule carries is a refusal "
+        "for nobody (D-92)"
+    )
+    assert allowed, "every sustain shape is refused; the table is a blanket"
+
+
+def test_a_self_shield_is_one_refusal_in_the_two_shapes_that_declare_one() -> None:
+    """Eclipse declares it as a cast proc, Fimbulwinter as an ally packet.
+
+    Two families can express "the holder shields itself", and the kernel
+    refuses both through one clause — ``unrepresentable_damage_receipt``'s
+    ``self_shield_payload``.  Writing the reason twice is how one fact
+    becomes two that can disagree, so both compilers reach the same constant
+    and this test is what says so.
+    """
+    carriers = {
+        rule.owner: rule.family
+        for owner in sorted(catalog.rule_owners())
+        for rule in catalog.behavior_rules(owner)
+        if rule.compilability is catalog.COMPILED_KERNEL_CANNOT_SELF_SHIELD
+    }
+    assert carriers == {
+        "Eclipse": RuleFamily.CAST_PROC,
+        "Fimbulwinter": RuleFamily.ALLY_PACKET,
+    }
+
+
+def test_the_ledger_scope_is_derived_from_shapes_and_never_from_a_name() -> None:
+    """The catalog holds no item-name literal, so none of this is a list.
+
+    Counter 1 measures the tree for item-name dispatch and this module is in
+    no exclusion set, so its own emptiness is the proof: every refusal above
+    is reached through a payload type, a packet recipient or a defence
+    mechanic, and an item joins or leaves the withheld population by growing
+    or losing that shape.
+    """
+    names = frozenset(
+        entry["name"]
+        for entry in fetch_item_data().values()
+        if isinstance(entry, dict) and entry.get("name")
+    )
+    literals = {
+        node.value
+        for node in ast.walk(ast.parse(MODULE_PATH.read_text(encoding="utf-8")))
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value in names
+    }
+    assert literals == set()
+    assert _ledger_refusing_owners()
