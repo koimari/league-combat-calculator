@@ -766,6 +766,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
             combatants=[combatant],
             index_of={"target": 0},
             ledger=ledger,
+            regeneration_windows=(None,),
         )
         run_survival_walk(
             (

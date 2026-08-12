@@ -365,9 +365,9 @@ _TEMPLATE_FED = (
 )
 _WALK_AUTHORED_BY_NAME = (
     "the walk authors this family itself and still reads its numbers out of "
-    "the registry by item name (survival/transitions.py, "
-    "survival/receipt_state.py), so the walk-lane interpreter arrives with "
-    "those sites — they are counter 1's remainder, not a route"
+    "the registry by item name (survival/receipt_state.py), so the walk-lane "
+    "interpreter arrives with those sites — they are counter 1's remainder, "
+    "not a route"
 )
 
 # One row per unserved pair a declaration reaches.  ``delta_amp`` on the

@@ -10,7 +10,7 @@ or crowd-control behavior that the packets do not provide.
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, MutableMapping
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import replace
 import math
 from operator import itemgetter
@@ -49,10 +49,11 @@ from .healing_reduction import (
     healing_reduction_profiles,
 )
 from .interpreters.reactive import thorns_effects
+from .interpreters.sustain import declared_sustain
 from .interpreters.stat_derivation import (
     declared_stat_derivations as _declared_stat_derivations,
 )
-from .item_behavior import ThresholdRegenRule
+from .item_behavior import RegenerationRule, ThresholdRegenRule
 from .item_effects import (
     ThornsEffect,
     serpents_fang_venom,
@@ -69,6 +70,7 @@ from .survival import (
     ReceiptLedger,
     ScoreLedger,
     SurvivalAction,
+    RegenerationWindow,
     TransitionContext,
     TransitionRank,
     UncompilableActionError,
@@ -396,6 +398,38 @@ def _packet_typed_actions(
         )._replace(event=None)
     packet["_typed"] = (token, by_template)
     return by_template
+
+
+def _regeneration_windows(
+    combatants: Sequence[Combatant],
+) -> tuple[RegenerationWindow | None, ...]:
+    """Compile each participant's declared regeneration window for the walk.
+
+    The walk schedules these recovery ticks and may not reach a declaration
+    to price them — the dependency runs ``interpreters -> survival`` and
+    never back — so the numbers are compiled here, where the context is
+    built, and handed over as kernel data.  Index-aligned with *combatants*,
+    ``None`` where a participant declares none.
+    """
+    windows: list[RegenerationWindow | None] = []
+    for combatant in combatants:
+        slot = declared_sustain(
+            sorted({str(item.get("name", "")) for item in combatant.items}),
+            RegenerationRule,
+        )
+        windows.append(
+            None
+            if slot is None
+            else RegenerationWindow(
+                owner=slot.owner,
+                total_melee=slot.value("total_melee"),
+                total_reduced=slot.value("total_reduced"),
+                duration=slot.value("duration"),
+                missing_health_cap=slot.value("missing_health_cap"),
+                tick_interval=slot.value("tick_interval"),
+            )
+        )
+    return tuple(windows)
 
 
 def _warmog_heart_tick_events(
@@ -2085,6 +2119,7 @@ def _simulate_survival(
         combatants=combatant_list,
         index_of=index_of,
         ledger=ledger,
+        regeneration_windows=_regeneration_windows(combatant_list),
         venom_profiles=[
             venom_profiles.get(combatant.participant_id) for combatant in combatant_list
         ],
@@ -2877,6 +2912,7 @@ def _score_with_search_context(
         combatants=all_actors,
         index_of=context.index_of,
         ledger=ledger,
+        regeneration_windows=_regeneration_windows(all_actors),
         venom_profiles=venom_packs,
     )
     run_survival_walk(actions, ctx)

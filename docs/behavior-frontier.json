@@ -57,9 +57,6 @@
     "calculator/survival/receipt_state.py": {
       "counter_1": 2
     },
-    "calculator/survival/transitions.py": {
-      "counter_1": 6
-    },
     "calculator/trigger_stream.py": {
       "class_c": 38
     }
@@ -147,7 +144,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 43
+      "value": 37
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -255,7 +252,7 @@
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "delta_amp/receipt_walk": {
-            "reason": "the walk authors this family itself and still reads its numbers out of the registry by item name (survival/transitions.py, survival/receipt_state.py), so the walk-lane interpreter arrives with those sites \u2014 they are counter 1's remainder, not a route",
+            "reason": "the walk authors this family itself and still reads its numbers out of the registry by item name (survival/receipt_state.py), so the walk-lane interpreter arrives with those sites \u2014 they are counter 1's remainder, not a route",
             "retires_at": "3.9 residue \u2014 counter 1's remaining name-dispatch sites"
           },
           "on_hit_strike/compiled_score_walk": {
@@ -315,7 +312,7 @@
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "sustain/receipt_walk": {
-            "reason": "the walk authors this family itself and still reads its numbers out of the registry by item name (survival/transitions.py, survival/receipt_state.py), so the walk-lane interpreter arrives with those sites \u2014 they are counter 1's remainder, not a route",
+            "reason": "the walk authors this family itself and still reads its numbers out of the registry by item name (survival/receipt_state.py), so the walk-lane interpreter arrives with those sites \u2014 they are counter 1's remainder, not a route",
             "retires_at": "3.9 residue \u2014 counter 1's remaining name-dispatch sites"
           },
           "threshold_defense/compiled_score_walk": {

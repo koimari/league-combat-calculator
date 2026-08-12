@@ -1285,7 +1285,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Diadem of Songs": "item_support_effects.derive_item_support_effects",
     "Doran's Blade": "interpreters.sustain.sustain_slot",
     "Doran's Ring": "interpreters.sustain.sustain_slot",
-    "Doran's Shield": "survival.transitions.schedule_doran_shield_recovery",
+    "Doran's Shield": "survival.transitions.schedule_regeneration_recovery",
     "Dusk and Dawn": "damage._add_spellblade_damage",
     "Echoes of Helia": "item_support_effects.derive_item_support_effects",
     "Eclipse": "interpreters.cast_proc.cooldown_proc_effect",

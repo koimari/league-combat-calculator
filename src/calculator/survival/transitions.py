@@ -57,7 +57,6 @@ from .actions import (
 )
 from .. import shield_ledger
 from ..healing_reduction import GRIEVOUS_WOUNDS_FACTOR, matching_healing_reduction
-from ..item_effects import sustain_effect_value
 from ..resistance import apply_resistance
 
 
@@ -139,6 +138,29 @@ def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
     )
 
 
+class RegenerationWindow(NamedTuple):
+    """One holder's regeneration window, compiled before the walk runs.
+
+    The kernel's form of a ``sustain`` regeneration declaration: the five
+    sourced numbers plus the owner whose name the scheduled ticks publish.
+    ``survival`` may not reach a declaration itself — the dependency runs
+    ``interpreters -> survival`` and never back — so the caller that builds
+    the walk context compiles it and hands it over as data, which is the
+    same device every other walk-lane number arrives by.
+
+    ``None`` for a participant declaring none.  An absent window is an
+    answer, and the alternative — five defaulted zeros — is a recovery that
+    silently pays nothing.
+    """
+
+    owner: str
+    total_melee: float
+    total_reduced: float
+    duration: float
+    missing_health_cap: float
+    tick_interval: float
+
+
 class SubjectDefenseProfile(NamedTuple):
     """Per-event defense constants for one participant (issue #171).
 
@@ -156,10 +178,12 @@ class SubjectDefenseProfile(NamedTuple):
     force_immobilize_stacks: int
     force_bonus_magic_resistance: float
     has_stack_items: bool
-    has_dorans_shield: bool
+    regeneration: RegenerationWindow | None
 
 
-def _subject_defense_profile(combatant: Any) -> SubjectDefenseProfile:
+def _subject_defense_profile(
+    combatant: Any, regeneration: RegenerationWindow | None
+) -> SubjectDefenseProfile:
     """Extract one participant's fixed combat-state defense constants."""
     defenses = combatant.defenses
     jak_interval = max(
@@ -192,9 +216,7 @@ def _subject_defense_profile(combatant: Any) -> SubjectDefenseProfile:
             (jak_interval > 0.0 and jak_max > 0)
             or (force_interval > 0.0 and force_max > 0)
         ),
-        has_dorans_shield=any(
-            str(item.get("name", "")) == "Doran's Shield" for item in combatant.items
-        ),
+        regeneration=regeneration,
     )
 
 
@@ -213,6 +235,14 @@ class TransitionContext:
     attacker-index-aligned Serpent's Fang packs and healing-reduction
     profiles (``None`` in score mode, where the compiler prebuilds the
     same data into each action's ``grievous`` field).
+
+    ``regeneration_windows`` is participant-index-aligned and **required**,
+    with no default: it is the compiled form of the ``sustain`` regeneration
+    declarations this roster brings, and ``survival`` cannot reach a
+    declaration to build it.  A default of ``None`` would make a context
+    that forgot to compile them indistinguishable from a roster declaring
+    none — a recovery that silently pays nothing, which is the failure this
+    campaign exists to remove.
     """
 
     duration: float
@@ -220,6 +250,7 @@ class TransitionContext:
     combatants: Sequence[Any]
     index_of: Mapping[str, int]
     ledger: Any
+    regeneration_windows: Sequence[RegenerationWindow | None]
     venom_profiles: list[tuple[float, float] | None] | None = None
     reduction_profiles: list[tuple[Any, ...]] | None = None
     redirect_children: MutableMapping[str, Any] = field(default_factory=dict)
@@ -234,7 +265,7 @@ class TransitionContext:
     records_event_fields: bool = field(init=False)
     record_defy_damage: bool = field(init=False)
     stack_flags: list[bool] = field(init=False, repr=False)
-    dorans_flags: list[bool] = field(init=False, repr=False)
+    regeneration_flags: list[bool] = field(init=False, repr=False)
     _defense_profiles: list["SubjectDefenseProfile"] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -253,12 +284,22 @@ class TransitionContext:
         )
         # Per-event gates read these plain lists directly (a method call per
         # damage packet is measurable at ~100k packets per request).
+        if len(self.regeneration_windows) != len(self.combatants):
+            raise ValueError(
+                f"{len(self.regeneration_windows)} compiled regeneration "
+                f"windows for {len(self.combatants)} participants; the "
+                "sequence is participant-index-aligned, so a short one would "
+                "give somebody else's window to the wrong subject"
+            )
         profiles = [
-            _subject_defense_profile(combatant) for combatant in self.combatants
+            _subject_defense_profile(combatant, window)
+            for combatant, window in zip(self.combatants, self.regeneration_windows)
         ]
         self._defense_profiles = profiles
         self.stack_flags = [profile.has_stack_items for profile in profiles]
-        self.dorans_flags = [profile.has_dorans_shield for profile in profiles]
+        self.regeneration_flags = [
+            profile.regeneration is not None for profile in profiles
+        ]
 
     def defense_profile(self, subject: int) -> "SubjectDefenseProfile":
         """The subject's cached per-event defense constants."""
@@ -538,16 +579,20 @@ def recovery_multiplier(state: Mapping[str, Any], action: SurvivalAction) -> flo
     return multiplier
 
 
-def schedule_doran_shield_recovery(
+def schedule_regeneration_recovery(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
-    """Schedule Enduring Focus only after a certified incoming hit.
+    """Schedule a regeneration window only after a certified incoming hit.
 
-    Enduring Focus does not trigger from damage absorbed entirely by a
-    shield; only health damage starts the recovery window (the caller
-    supplies the applied-to-health amount through the action's event).
+    The window does not trigger from damage absorbed entirely by a shield;
+    only health damage starts it (the caller supplies the applied-to-health
+    amount through the action's event).
+
+    Which subject has one, and every number the window pays, come from the
+    compiled declaration the context was handed — never from an item name.
     """
-    if not ctx.defense_profile(action.subject).has_dorans_shield:
+    window = ctx.defense_profile(action.subject).regeneration
+    if window is None:
         return
     event = action.event
     applied_to_health = (
@@ -556,15 +601,11 @@ def schedule_doran_shield_recovery(
     if applied_to_health <= 0.0:
         return
     combatant = ctx.combatants[action.subject]
-    total_melee = sustain_effect_value("Doran's Shield", "enduring_focus_total_melee")
-    total_reduced = sustain_effect_value(
-        "Doran's Shield", "enduring_focus_total_reduced"
-    )
-    missing_cap = sustain_effect_value(
-        "Doran's Shield", "enduring_focus_missing_health_cap"
-    )
-    duration_value = sustain_effect_value("Doran's Shield", "enduring_focus_duration")
-    tick = sustain_effect_value("Doran's Shield", "health_regen_tick_interval")
+    total_melee = window.total_melee
+    total_reduced = window.total_reduced
+    missing_cap = window.missing_health_cap
+    duration_value = window.duration
+    tick = window.tick_interval
     if missing_cap <= 0.0 or duration_value <= 0.0 or tick <= 0.0:
         return
     current_state = state
@@ -615,7 +656,7 @@ def schedule_doran_shield_recovery(
                     / ticks
                 )
             ),
-            "source": "Doran's Shield (Enduring Focus)",
+            "source": f"{window.owner} (Enduring Focus)",
             "kind": "regen",
             "attacker": combatant.participant_id,
             "target": combatant.participant_id,
@@ -1481,8 +1522,8 @@ def _apply_damage(
         ledger.write(action, damage=event_damage)
     if event_damage > 0.0:
         state["last_damage_time"] = float(event_time)
-        if ctx.dorans_flags[action.subject]:
-            schedule_doran_shield_recovery(ctx, action, state)
+        if ctx.regeneration_flags[action.subject]:
+            schedule_regeneration_recovery(ctx, action, state)
         if (
             action.attacker >= 0
             and ctx.states[action.attacker]["maw_lifeline_omnivamp_active"]

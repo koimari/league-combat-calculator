@@ -68,6 +68,7 @@ from .receipt_state import (
 from .accumulate import accumulate_damage_totals, accumulate_support_values
 from .score_state import ScoreLedger
 from .transitions import (
+    RegenerationWindow,
     TransitionContext,
     evaluate_live_raw_formula,
     expire_temporary_health,
@@ -85,6 +86,7 @@ __all__ = [
     "ReceiptLedger",
     "ScoreLedger",
     "SurvivalAction",
+    "RegenerationWindow",
     "TransitionContext",
     "TransitionRank",
     "UncompilableActionError",

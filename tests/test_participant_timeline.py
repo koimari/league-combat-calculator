@@ -21,6 +21,7 @@ from src.calculator.participant_timeline import (
     _actor_params,
     _schedule_authored_reactive_events,
     _schedule_thorns_events,
+    _regeneration_windows,
     _simulate_survival,
     build_participant_timeline,
 )
@@ -4328,6 +4329,10 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
         combatants=combatants,
         index_of={"target": 0},
         ledger=ledger,
+        # No participant declares a regeneration window; the sequence is
+        # required rather than defaulted so "none declared" and "nobody
+        # compiled them" cannot be the same context.
+        regeneration_windows=(None,) * len(combatants),
     )
     run_survival_walk([action], ctx)
     finalize_states(states, 5.0)
@@ -5042,3 +5047,66 @@ def test_search_context_walk_matches_receipts_with_thorns_support_and_heals():
         )
         legacy = timeline(items, include_receipt=False)
         assert fast == legacy
+
+
+# ── the regeneration window, compiled from the declaration (3.9) ─────────
+
+
+def _regen_combatant(*item_names: str) -> Combatant:
+    """A participant carrying only the items the window compiler reads."""
+    return Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": "Garen", "attackType": "MELEE"},
+        level=9,
+        items=tuple({"name": name} for name in item_names),
+        stats={"health": 1500.0},
+        defenses=SimpleNamespace(),
+    )
+
+
+def test_the_regeneration_window_compiles_the_declarations_own_numbers():
+    """Every number the walk pays is the key the retired branch read.
+
+    Asserted against ``sustain_effect_value`` rather than literals: this
+    migration claims the declaration reproduces the five hand reads, and a
+    literal would still pass on the commit that broke the reference.
+    """
+    from src.calculator.item_effects import sustain_effect_value
+
+    (window,) = _regeneration_windows([_regen_combatant("Doran's Shield")])
+
+    assert window is not None
+    assert window.owner == "Doran's Shield"
+    for field_name, key in (
+        ("total_melee", "enduring_focus_total_melee"),
+        ("total_reduced", "enduring_focus_total_reduced"),
+        ("duration", "enduring_focus_duration"),
+        ("missing_health_cap", "enduring_focus_missing_health_cap"),
+        ("tick_interval", "health_regen_tick_interval"),
+    ):
+        assert getattr(window, field_name) == sustain_effect_value(
+            "Doran's Shield", key
+        )
+
+
+def test_a_participant_declaring_no_regeneration_compiles_none():
+    """An absent window is an answer; five defaulted zeros would not be."""
+    assert _regeneration_windows([_regen_combatant("Ruby Crystal")]) == (None,)
+
+
+def test_a_short_window_sequence_stops_rather_than_misaligning():
+    """R-05's red: the sequence is participant-index-aligned or it is wrong."""
+    combatants = [_regen_combatant("Doran's Shield"), _regen_combatant()]
+
+    with pytest.raises(ValueError, match="participant-index-aligned"):
+        TransitionContext(
+            duration=5.0,
+            # The alignment check runs before any state is read, which is the
+            # point: a misaligned context must not get as far as a walk.
+            states=[],
+            combatants=combatants,
+            index_of={"target": 0},
+            ledger=ScoreLedger(0),
+            regeneration_windows=(None,),
+        )
