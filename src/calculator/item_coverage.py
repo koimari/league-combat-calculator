@@ -282,188 +282,16 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
 }
 
 
-# Target loadouts are currently passive recipients of the selected attacker
-# package.  Any equipped mechanic that changes their incoming damage, health,
-# shields, or combat healing must either be represented here or stop the run.
-_TARGET_MODELED_REASONS: dict[str, str] = {
-    "Armored Advance": (
-        "Noxian Endurance grants a typed five-second physical shield after an "
-        "authored champion physical-damage event; Plating reduces basic damage."
-    ),
-    "Chainlaced Crushers": (
-        "Noxian Persistence grants a typed five-second magic shield after an "
-        "authored champion magic-damage event."
-    ),
-    "Celestial Opposition": (
-        "Blessing of the Mountain applies the sourced 35% champion-damage "
-        "reduction and its two-second linger in the ordered ledger."
-    ),
-    "Bloodthirster": (
-        "Ichorshield converts certified lifesteal excess into a persistent "
-        "general shield capped by the sourced level maximum; an explicit "
-        "starting state is accepted when supplied."
-    ),
-    "Banshee's Veil": (
-        "Annul is ready at the opening and consumes every packet belonging to "
-        "the first source-backed Q/W/E/R cast; auto attacks and later casts land."
-    ),
-    "Edge of Night": (
-        "Annul is ready at the opening and consumes every packet belonging to "
-        "the first source-backed Q/W/E/R cast; auto attacks and later casts land."
-    ),
-    "Verdant Barrier": (
-        "Annul is ready at the opening and consumes every packet belonging to "
-        "the first source-backed Q/W/E/R cast; auto attacks and later casts land."
-    ),
-    "Bramble Vest": (
-        "Thorns' reactive damage and Grievous Wounds are scheduled from the "
-        "attacker's modeled basic-attack events in the coupled timeline."
-    ),
-    "Thornmail": (
-        "Thornmail's 20 magic damage plus 10% wearer bonus-armor Thorns and "
-        "Grievous Wounds are scheduled from modeled basic-attack events."
-    ),
-    "Kaenic Rookern": "Magebane's ready maximum-health magic shield is modelled.",
-    "Spirit Visage": (
-        "Boundless Vitality amplifies modeled healing, shields, and regeneration "
-        "received in the participant ledger."
-    ),
-    "Warmog's Armor": (
-        "Warmog's Vitality modifies item health; combat regeneration stays "
-        "inactive while the target is taking damage."
-    ),
-    "Doran's Shield": (
-        "Enduring Focus's sourced missing-health regeneration is replayed after "
-        "incoming champion damage."
-    ),
-    "Unending Despair": (
-        "Anguish's every-four-second magic pulse and 250% post-mitigation "
-        "self-heal are scheduled on the certified participant ledger for the "
-        "selected enemy targets assumed within its 650-unit area."
-    ),
-    "Sundered Sky": (
-        "Lightshield Strike's base-AD plus missing-health heal is replayed on "
-        "the first attack; excess healing becomes sourced 8-second temporary "
-        "health in the participant ledger."
-    ),
-    "Dusk and Dawn": (
-        "Spellblade's self-heal is replayed from each certified empowered attack "
-        "in the target actor's own participant timeline."
-    ),
-    "Cull": (
-        "Reap's 3-health champion on-hit heal is replayed for the target actor; "
-        "its minion progression and gold payout remain optimizer-only gaps."
-    ),
-    "Plated Steelcaps": "Plating's 10% non-true basic-damage reduction is modelled.",
-    "Warden's Mail": (
-        "Rock Solid's post-mitigation 15 reduction, capped at 20%, is modelled."
-    ),
-    "Randuin's Omen": (
-        "Resilience's 30% incoming critical-strike damage reduction is modelled."
-    ),
-    "Frozen Heart": (
-        "Winter's Caress applies its sourced 20% total attack-speed cripple to "
-        "the opposing participant's authored swing schedule when the selected "
-        "roster pair is assumed within the enemy-only 700-unit aura."
-    ),
-    "Knight's Vow": (
-        "Pledge redirects 14% of eligible pre-mitigation physical or magic damage "
-        "to the explicitly selected Worthy holder, and Sacrifice heals the holder "
-        "from post-mitigation Worthy damage while its sourced range and health "
-        "gates are active."
-    ),
-    "Guardian Angel": (
-        "Rebirth restores 50% base health four seconds after the first lethal "
-        "packet; the coupled survival ledger applies it once when the event "
-        "falls inside the selected window."
-    ),
-    "Seeker's Armguard": (
-        "Time Stop is priced only from the explicit bounded active-seconds "
-        "scenario input; item presence alone never assumes stasis."
-    ),
-    "Zhonya's Hourglass": (
-        "Time Stop is priced only from the explicit bounded active-seconds "
-        "scenario input; item presence alone never assumes stasis."
-    ),
-    "Locket of the Iron Solari": (
-        "Devotion is represented by the shared participant support ledger: an "
-        "explicit active_seconds input emits the sourced shield to the holder "
-        "and selected teammates. Passive target calculations do not assume the "
-        "active and therefore remain safe when no roster target is authored."
-    ),
-    "Mikael's Blessing": (
-        "Purify is represented by the shared participant support ledger: an "
-        "explicit active_seconds input emits the sourced cleanse/heal to the "
-        "selected teammate. Passive target calculations do not invent a cast."
-    ),
-    "Redemption": (
-        "Intervention is represented by the shared participant support ledger: "
-        "an explicit active_seconds input schedules its delayed ally heal and "
-        "enemy true-damage area packet for the selected roster. Passive target "
-        "calculations do not invent the active."
-    ),
-    "Spectre's Cowl": (
-        "The current full Wiki entry confirms that Incorporeal was removed in "
-        "V14.6; the remaining target-relevant behavior is its sourced base "
-        "health-regeneration stat, with no post-damage passive to schedule."
-    ),
-}
-
-# Lifeline defenses trigger mid-fight, so pricing them consumes the ordered
-# damage ledger.  They are computed for one rotation and for timed fights whose
-# every damage event carries a certified timestamp; an uncertified timed fight
-# is withheld after computation instead of reporting a mis-timed trigger.
-_TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
-    "Protoplasm Harness": (
-        "Lifeline's level-scaled temporary health and resist-scaled healing "
-        "are modeled when every damage event is event-certified. The "
-        "calculation fails closed if damage reaches the unsourced "
-        "temporary-health expiry boundary."
-    ),
-    "Hexdrinker": (
-        "Lifeline's level-scaled 30%-health magic shield is modeled when "
-        "every damage event is event-certified; uncertified timed fights are "
-        "withheld."
-    ),
-    "Immortal Shieldbow": (
-        "Lifeline's level-scaled 30%-health shield is modeled when every "
-        "damage event is event-certified; uncertified timed fights are "
-        "withheld."
-    ),
-    "Maw of Malmortius": (
-        "Lifeline's bonus-AD-scaled 30%-health magic shield is modeled when "
-        "every damage event is event-certified; uncertified timed fights are "
-        "withheld."
-    ),
-    "Seraph's Embrace": (
-        "Lifeline's maximum-mana-scaled 30%-health shield is modeled when "
-        "every damage event is event-certified; uncertified timed fights are "
-        "withheld."
-    ),
-    "Sterak's Gage": (
-        "Lifeline's bonus-health-scaled 30%-health shield is modeled when "
-        "every damage event is event-certified; uncertified timed fights are "
-        "withheld."
-    ),
-    "Fimbulwinter": (
-        "Everlasting's 100 + 4.5% current-mana shield (1.8x with more than one "
-        "nearby enemy) is scheduled after an authored immobilize, or a slow for "
-        "a melee holder; the 20%-maximum-mana gate and eight-second cooldown "
-        "are enforced, and unreviewed control packets are withheld."
-    ),
-    "Force of Nature": (
-        "Steadfast stacks are scheduled from exact incoming champion magic-damage "
-        "events, including expiry and the maximum-stack bonus resistance."
-    ),
-    "Jak'Sho, The Protean": (
-        "Voidborn Resilience's one-stack-per-second combat state is scheduled "
-        "from the exact event ledger and multiplies bonus resistances at max."
-    ),
-}
-
-_TARGET_BLOCKED_REASONS: dict[str, str] = {
-    "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
-}
+# Three containers stood here — ``_TARGET_MODELED_REASONS``,
+# ``_TARGET_EVENT_CERTIFIED_REASONS`` and ``_TARGET_BLOCKED_REASONS``: thirty-
+# nine reviewed sentences answering "what does this item do to the actor
+# wearing it" by looking the actor's item up by name.  The ladder above now
+# asks the declarations, the certification is a property of the mechanic in
+# the catalog, and the refusal is the attacker lane's own.  What the sentences
+# carried that a declaration cannot — which symbol prices each item — is the
+# evidence beside the claim, in ``_TARGET_MODELED_IMPLS`` and
+# ``_TARGET_CERTIFIED_IMPLS`` below, where it is checked against the derived
+# population rather than trusted.
 
 # What each item changes about a fight besides the damage number.  The labels
 # are deliberately descriptive: they do not claim a combat formula is
@@ -2123,7 +1951,7 @@ def _item_effects_claim(item: str) -> Claim:
 
 
 def _target_modeled_claim(item: str) -> Claim:
-    """One ``_TARGET_MODELED_REASONS`` entry and the code that admits it."""
+    """One derived target-modelled item and the code that admits it."""
     return Claim(
         subject_kind="item",
         subject=item,

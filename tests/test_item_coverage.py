@@ -12,7 +12,6 @@ from src.calculator.item_behavior_catalog import (
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
-    _TARGET_BLOCKED_REASONS,
     UTILITY_OUTCOMES,
     PRECEDENCE,
     gated_state_reason,
@@ -618,14 +617,18 @@ def test_opening_defense_items_with_blocked_target_state_never_claim_target_supp
         UtilityDimension.REVIVE,
         UtilityDimension.SHIELD,
     }
+    # The population used to be a hand table of withheld target mechanics.
+    # It is now the target ladder's own refusal set, so the assertion is that
+    # a defensive-dimension item the ladder refuses refuses for both gates —
+    # never that one of the two quietly stayed eligible.
     for item_name, dimensions in UTILITY_OUTCOMES.items():
         if not defense_dimensions.intersection(dimensions):
             continue
-        if item_name not in _TARGET_BLOCKED_REASONS:
-            continue
         coverage = target_item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "withheld", item_name
-        assert coverage["calculation_eligible"] is False
+        if coverage["status"] != "withheld":
+            continue
+        assert coverage["calculation_eligible"] is False, item_name
+        assert coverage["review_issue_refs"], item_name
 
 
 @pytest.mark.parametrize(
@@ -841,12 +844,13 @@ def test_calculation_item_coverage_accepts_runaan_secondary_bolt_model():
 
 # ── the target lane's derivation, beside the three tables ─────────────────
 #
-# 3.8's second half replaces ``_TARGET_MODELED_REASONS``,
+# 3.8's second half replaced ``_TARGET_MODELED_REASONS``,
 # ``_TARGET_EVENT_CERTIFIED_REASONS`` and ``_TARGET_BLOCKED_REASONS`` with a
-# status computed from declarations.  The derivation lands here first, read by
-# nothing, with its delta against the three tables asserted (runbook R-31):
-# the flip that follows is then a change whose every moved record was named
-# one commit earlier.
+# status computed from declarations.  The derivation landed beside them with
+# its delta asserted item by item (runbook R-31), the ladder flipped onto it,
+# and the tables are gone; what stands here now is the population each rung
+# answers for and the two rename guards on the clauses that read a field name
+# or a registry key.
 
 
 def _cached_names():
@@ -858,80 +862,39 @@ def _cached_names():
     )
 
 
-def test_the_derived_certified_set_reproduces_the_legacy_table() -> None:
-    """The nine event-certified items, derived from the mechanic declaration.
+def test_the_derived_target_populations_are_the_ones_the_flip_landed() -> None:
+    """The three populations the flip produced, pinned as sets.
 
-    Set equality and not a count: the certified population is the one half of
-    the target lane that is load-bearing rather than cosmetic — it decides
-    whether an uncertified timed fight is refused — so the derivation has to
-    reproduce it exactly before anything reads it.
+    The tables the derivation replaced are gone, so the delta assertion that
+    stood here through the flip has nothing left to compare against.  What
+    survives it is the fact the delta established: which cached items each
+    rung answers for.  Sets and never counts — a count agrees with itself
+    after a swap, and the point of the pin is that a swap is visible.
     """
-    derived = {
-        name
+    statuses = {
+        name: target_item_model_coverage(get_item_by_name(name))["status"]
         for name in _cached_names()
-        if item_coverage.certified_target_mechanics(name)
     }
-
-    assert derived == set(item_coverage._TARGET_EVENT_CERTIFIED_REASONS)
-
-
-def _legacy_target_status(name: str) -> str:
-    """What the three hand tables answered, read straight out of them.
-
-    The tables are dead code from the flip until the commit that deletes
-    them, and this reads them directly rather than through a classifier so
-    the delta assertion keeps comparing two different things.
-    """
-    if name in item_coverage._TARGET_MODELED_REASONS:
-        return "modeled"
-    if name in item_coverage._TARGET_EVENT_CERTIFIED_REASONS:
-        return "modeled_event_certified"
-    if name in item_coverage._TARGET_BLOCKED_REASONS:
-        return "withheld"
-    return "not_target_relevant"
-
-
-def test_the_derived_target_ladder_moves_exactly_the_declared_delta() -> None:
-    """R-31's asserted delta, item by item, against the tables it replaced.
-
-    The three moved sets are pinned as sets.  The ninety unavailable records
-    are *derived* from the attacker ladder's own refusal rather than typed:
-    they are the legacy and turret records the shop cannot sell, which the
-    attacker lane already withholds and the target lane still calls "no
-    reviewed effect changes durability" — a review nobody performed.
-    """
-    refused = {
+    certified = {name for name, status in statuses.items() if status == "modeled"}
+    assert {
+        name for name, status in statuses.items() if status == "modeled_event_certified"
+    } == {
+        "Fimbulwinter",
+        "Force of Nature",
+        "Hexdrinker",
+        "Immortal Shieldbow",
+        "Jak'Sho, The Protean",
+        "Maw of Malmortius",
+        "Protoplasm Harness",
+        "Seraph's Embrace",
+        "Sterak's Gage",
+    }
+    assert certified == set(item_coverage._TARGET_MODELED_IMPLS)
+    assert {name for name, status in statuses.items() if status == "withheld"} == {
         name
         for name in _cached_names()
         if item_model_coverage(name, item_coverage.TARGET_LANES).status
         in ("withheld", "review_pending")
-    }
-    moves: dict[str, set[str]] = {}
-    for name in _cached_names():
-        legacy = _legacy_target_status(name)
-        derived = target_item_model_coverage(get_item_by_name(name))["status"]
-        if legacy != derived:
-            moves.setdefault(f"{legacy}->{derived}", set()).add(name)
-
-    assert moves["modeled->not_target_relevant"] == {"Spectre's Cowl"}
-    assert moves["not_target_relevant->modeled"] == {
-        "Catalyst of Aeons",
-        "Cryptbloom",
-        "Death's Dance",
-        "Diadem of Songs",
-        "Doran's Blade",
-        "Doran's Ring",
-        "Echoes of Helia",
-        "Eclipse",
-        "Moonstone Renewer",
-        "Solstice Sleigh",
-    }
-    assert moves["not_target_relevant->withheld"] == refused - {"Guardian's Horn"}
-    assert "Guardian's Horn" in refused
-    assert set(moves) == {
-        "modeled->not_target_relevant",
-        "not_target_relevant->modeled",
-        "not_target_relevant->withheld",
     }
 
 

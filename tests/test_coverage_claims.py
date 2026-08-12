@@ -1504,21 +1504,34 @@ def test_a_shadowed_item_is_shadowed_for_a_reason_that_names_both_rungs() -> Non
     assert "before" in veil.reason
 
 
-def test_the_three_empty_containers_have_no_occurrences_left() -> None:
-    """The three empties are gone, and gone is asserted rather than assumed.
+def test_the_eight_retired_registries_have_no_occurrences_left() -> None:
+    """Ten registries collapsed to two, and gone is asserted rather than assumed.
 
-    They were asserted empty on the commit before their deletion; this is the
-    other half — a source scan proving no reference survived anywhere in
-    ``src/``, so "ten registries collapse to two" cannot be true of the
-    imports and false of the ladder.  The match is on whole identifiers:
-    ``_TARGET_BLOCKED_REASONS`` survives 3.8's first half and ends with one of
-    the retired names.
+    Three of the eight were empty and were asserted empty on the commit before
+    their deletion; this is the other half for all eight — a source scan
+    proving no reference survived anywhere in ``src/``, so the collapse cannot
+    be true of the ladder and false of the imports.  The two that survive are
+    named in the assertion below rather than left implicit, because "two" is
+    the whole claim: ``NO_RUNTIME_BEHAVIOR``, which carries an absence no
+    declaration can, and ``_REVIEW_ISSUE_REFS``, which carries a tracker id.
+
+    The match is on whole identifiers — ``_BLOCKED_REASONS`` is a suffix of
+    ``_TARGET_BLOCKED_REASONS``, and a substring scan would have called the
+    first one retired while the second still stood.
     """
     retired = {
         "_BLOCKED_REASONS",
         "_CALCULATION_ALLOWED_BLOCKED",
         "_PARTIAL_BLOCKED_REASONS",
+        "_STATEFUL_MODELED_ITEMS",
+        "_UTILITY_DIMENSIONS",
+        "_TARGET_MODELED_REASONS",
+        "_TARGET_EVENT_CERTIFIED_REASONS",
+        "_TARGET_BLOCKED_REASONS",
     }
+    assert len(retired) == 8
+    assert hasattr(item_coverage, "NO_RUNTIME_BEHAVIOR")
+    assert hasattr(item_coverage, "_REVIEW_ISSUE_REFS")
     found = [
         f"{path.relative_to(ROOT).as_posix()}: {name}"
         for path in sorted((ROOT / "src").rglob("*.py"))
