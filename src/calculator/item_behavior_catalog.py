@@ -36,6 +36,7 @@ from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
     AbsoluteWindow,
     ActiveCastRule,
+    ActiveWindowCastEconomyRule,
     AfterTrigger,
     AllyPacketRule,
     AllyProducer,
@@ -1401,6 +1402,12 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         # moving builds.
         "max_mana_to_ad_ratio": RuleFamily.STAT_DERIVATION,
         "ultimate_haste": RuleFamily.STAT_DERIVATION,
+        # The casting trade an amp entry's own active window makes.  The tag
+        # names the amp because the amp is what the item is bought for; the
+        # resource cost and the cooldown progression the window also moves are
+        # a second mechanic on the same entry, resolved before any damage
+        # exists and read by the rotation rather than by the amp chain.
+        "mana_cost_multiplier": RuleFamily.STAT_DERIVATION,
     },
     "ALLY_ITEM_EFFECTS": {
         key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)
@@ -5094,6 +5101,14 @@ ULTIMATE_REFUND_KEYS = (
     "ultimate_refund_per_lethality_ratio",
     "ultimate_refund_trigger_window",
 )
+# The casting trade an item active makes while its own window is open: what a
+# cast costs and how fast a basic ability's cooldown progresses, plus the
+# window both are paid inside.  Signature key first, as every group here.
+ACTIVE_WINDOW_CAST_ECONOMY_KEYS = (
+    "mana_cost_multiplier",
+    "basic_cooldown_progress_multiplier",
+    "mana_made_real_duration",
+)
 
 # Entries this family's tags claim whose *whole* mechanic another family
 # already declares, keyed by the signature key that proves it.  The same
@@ -5361,7 +5376,7 @@ def _manaflow_rule(
 def _keyed_stat_rules(
     owner: str, registry: ValueRegistry, schema: frozenset[str]
 ) -> list[BehaviorRule]:
-    """The three single-carrier shapes, each claimed by its own key group."""
+    """The four single-carrier shapes, each claimed by its own key group."""
     rules: list[BehaviorRule] = []
     if MANAFLOW_KEYS[0] in schema:
         rules.append(_manaflow_rule(owner, registry, schema))
@@ -5416,6 +5431,27 @@ def _keyed_stat_rules(
                     per_lethality_ratio=ValueRef(registry, owner, per_lethality),
                     trigger_window=ValueRef(registry, owner, window),
                     availability=StatAvailability.ALWAYS,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    if ACTIVE_WINDOW_CAST_ECONOMY_KEYS[0] in schema:
+        cost, cooldown_progress, window = ACTIVE_WINDOW_CAST_ECONOMY_KEYS
+        rules.append(
+            _stat_rule(
+                owner,
+                registry,
+                "active_window_cast_economy",
+                ActiveWindowCastEconomyRule(
+                    resource_cost_multiplier=ValueRef(registry, owner, cost),
+                    basic_cooldown_progress_multiplier=ValueRef(
+                        registry, owner, cooldown_progress
+                    ),
+                    window=ValueRef(registry, owner, window),
+                    # The window is opened by a bounded scenario control, not
+                    # by anything the fight produces, which is exactly what
+                    # this member means.
+                    availability=StatAvailability.BUILD_OPTION,
                     subject=Subject.HOLDER,
                 ),
             )

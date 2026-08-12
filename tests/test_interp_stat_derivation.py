@@ -1,4 +1,4 @@
-"""The stat-derivation family's front door: eight ways a stat is produced.
+"""The stat-derivation family's front door: nine ways a stat block is built.
 
 Every case pins a declaration's number against the same registry key the
 engine's own accessor in ``item_effects`` reads, because this migration's
@@ -32,6 +32,7 @@ from src.calculator.interpreters.stat_derivation import (
 )
 from src.calculator.value_ref import LevelValueRef
 from src.calculator.item_behavior import (
+    ActiveWindowCastEconomyRule,
     DURABILITY_STATS,
     DerivedStat,
     EngineLane,
@@ -58,6 +59,7 @@ GRANT_HOLDER = "Experimental Hexplate"
 AURA_HOLDER = "Frozen Heart"
 REGEN_HOLDER = "Warmog's Armor"
 REFUND_HOLDER = "Axiom Arc"
+CAST_ECONOMY_HOLDER = "Actualizer"
 
 # The one entry of the family whose whole mechanic another family declares.
 ELSEWHERE_HOLDER = "Phage"
@@ -246,6 +248,75 @@ def test_the_refund_shape_grants_no_stat_and_says_so() -> None:
             REFUND_HOLDER, "ultimate_refund_per_lethality_ratio"
         )
     )
+
+
+def test_the_cast_economy_shape_grants_no_stat_and_carries_its_window() -> None:
+    """The ninth shape: what an open active window costs the holder's casts.
+
+    Like the refund it grants nothing — it moves a cost and a cooldown
+    progression — and the window is carried on the rule rather than looked up,
+    so a reader holding it can say how long the trade lasts without reaching
+    into the amp declared from the same entry.
+    """
+    slot = _slot(CAST_ECONOMY_HOLDER, ActiveWindowCastEconomyRule)
+    assert slot.granted is None
+    assert slot.availability is StatAvailability.BUILD_OPTION
+    for field, key in (
+        ("resource_cost_multiplier", "mana_cost_multiplier"),
+        ("basic_cooldown_progress_multiplier", "basic_cooldown_progress_multiplier"),
+        ("window", "mana_made_real_duration"),
+    ):
+        assert slot.value(field) == pytest.approx(
+            item_effects.required_effect_value(CAST_ECONOMY_HOLDER, key)
+        )
+
+
+def test_the_cast_economy_lands_beside_the_amp_declared_from_one_entry() -> None:
+    """One registry entry, two mechanics, and the secondary-key table says so.
+
+    The entry's tag names the amp, so without the key routing the trade into
+    this family the two live multipliers would compile to nothing while their
+    numbers kept moving every cast the rotation prices.
+    """
+    families = [rule.family for rule in catalog.behavior_rules(CAST_ECONOMY_HOLDER)]
+    assert families == [RuleFamily.DELTA_AMP, RuleFamily.STAT_DERIVATION]
+    assert (
+        catalog.SECONDARY_KEY_FAMILY["ITEM_EFFECTS"]["mana_cost_multiplier"]
+        is RuleFamily.STAT_DERIVATION
+    )
+
+
+def test_a_build_declaring_no_cast_economy_answers_none_not_a_multiplier() -> None:
+    """``None`` is an answer: no window is open, so no cost was multiplied."""
+    assert (
+        stat_derivation.sole_declared_derivation(["Boots"], ActiveWindowCastEconomyRule)
+        is None
+    )
+    slot = stat_derivation.sole_declared_derivation(
+        [CAST_ECONOMY_HOLDER], ActiveWindowCastEconomyRule
+    )
+    assert slot is not None and slot.owner == CAST_ECONOMY_HOLDER
+
+
+def test_two_holders_of_a_non_composing_shape_are_a_stop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Nothing declares how two casting trades compose, so nothing picks one.
+
+    Reached through a planted second holder rather than a real one, because
+    the registry carries exactly one today — which is why the refusal needs a
+    test at all: a branch no live build reaches is one nobody has run.
+    """
+    rule = stat_derivation_rules([CAST_ECONOMY_HOLDER], ActiveWindowCastEconomyRule)[0]
+    monkeypatch.setattr(
+        stat_derivation,
+        "stat_derivation_rules",
+        lambda owners, kind: (rule, replace(rule, owner="Second Holder")),
+    )
+    with pytest.raises(StatDerivationInterpretationError, match="how two of them"):
+        stat_derivation.sole_declared_derivation(
+            [CAST_ECONOMY_HOLDER], ActiveWindowCastEconomyRule
+        )
 
 
 def test_an_entry_whose_whole_mechanic_is_declared_elsewhere_compiles_nothing() -> None:

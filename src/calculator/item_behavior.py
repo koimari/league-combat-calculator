@@ -1819,6 +1819,32 @@ class UltimateRefundRule:
     subject: Subject
 
 
+@dataclass(frozen=True, slots=True)
+class ActiveWindowCastEconomyRule:
+    """What an item's own active window costs the holder's casting economy.
+
+    The other half of an active that deals no damage: while its window is
+    open the holder's abilities cost more resource and their cooldowns
+    progress faster.  Both are multipliers on numbers the rotation already
+    has, resolved once from the same registry entry that declares the window,
+    which is why this is a derivation rather than a proc — and, like the
+    ultimate refund, why it grants no :class:`DerivedStat`: it moves a cost
+    and a cooldown, and naming a stat for either would invent one the block
+    does not hold.
+
+    ``window`` is the active's declared duration, the same reference the
+    entry's amp declares its :class:`AbsoluteWindow` end from.  It is carried
+    here rather than looked up so that a reader holding this rule can say how
+    long the trade lasts without reaching into another declaration.
+    """
+
+    resource_cost_multiplier: AnyValueRef
+    basic_cooldown_progress_multiplier: AnyValueRef
+    window: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
 # Which granted stats make an item's holder harder to kill.  Read by
 # ``item_coverage`` to decide whether a stat derivation belongs on the
 # passive-target lane, so "does this change durability" is answered by the
@@ -2336,6 +2362,7 @@ RulePayload = Union[
     ThresholdDefenseRule,
     CombatStateRule,
     ReactiveRule,
+    ActiveWindowCastEconomyRule,
 ]
 
 # Which family each payload type belongs to.  One entry per payload; each
@@ -2379,6 +2406,7 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     StatAuraRule: RuleFamily.STAT_DERIVATION,
     ThresholdRegenRule: RuleFamily.STAT_DERIVATION,
     UltimateRefundRule: RuleFamily.STAT_DERIVATION,
+    ActiveWindowCastEconomyRule: RuleFamily.STAT_DERIVATION,
     OpeningDefenseRule: RuleFamily.OPENING_DEFENSE,
     ThresholdDefenseRule: RuleFamily.THRESHOLD_DEFENSE,
     CombatStateRule: RuleFamily.COMBAT_STATE,
@@ -2964,6 +2992,11 @@ STAT_DERIVATION_REQUIRED_REFERENCES: dict[type, tuple[str, ...]] = {
         "per_lethality_ratio",
         "trigger_window",
     ),
+    ActiveWindowCastEconomyRule: (
+        "resource_cost_multiplier",
+        "basic_cooldown_progress_multiplier",
+        "window",
+    ),
 }
 
 STAT_DERIVATION_OPTIONAL_REFERENCES: dict[type, tuple[str, ...]] = {
@@ -2981,6 +3014,7 @@ STAT_DERIVATION_OPTIONAL_REFERENCES: dict[type, tuple[str, ...]] = {
     StatAuraRule: (),
     ThresholdRegenRule: (),
     UltimateRefundRule: (),
+    ActiveWindowCastEconomyRule: (),
 }
 
 STAT_DERIVATION_PAYLOADS: tuple[type, ...] = tuple(STAT_DERIVATION_REQUIRED_REFERENCES)
@@ -2990,10 +3024,14 @@ STAT_DERIVATION_PAYLOADS: tuple[type, ...] = tuple(STAT_DERIVATION_REQUIRED_REFE
 # can check instead of a branch that grew.
 STAT_DERIVATION_TARGET_PAYLOADS: tuple[type, ...] = (StatAuraRule,)
 
-# The one payload that grants no stat at all: an ultimate cooldown refund
-# moves a cooldown, and naming a DerivedStat for it would invent a stat the
+# The payloads that grant no stat at all: an ultimate cooldown refund moves a
+# cooldown and an active window's cast economy moves a cost and a cooldown
+# progression, and naming a DerivedStat for either would invent a stat the
 # block does not hold.  Named for the same reason as the row above.
-STAT_DERIVATION_UNGRANTED_PAYLOADS: tuple[type, ...] = (UltimateRefundRule,)
+STAT_DERIVATION_UNGRANTED_PAYLOADS: tuple[type, ...] = (
+    UltimateRefundRule,
+    ActiveWindowCastEconomyRule,
+)
 
 
 def _validate_stat_reference(
@@ -3357,6 +3395,7 @@ __all__ = [
     "AbsoluteWindow",
     "Activation",
     "ActiveCastRule",
+    "ActiveWindowCastEconomyRule",
     "AfterTrigger",
     "AllyPacketRule",
     "AllyProducer",

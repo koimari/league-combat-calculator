@@ -143,6 +143,7 @@ from .interpreters import (
     on_hit_strike,
     resistance_shred,
     secondary_target,
+    stat_derivation,
     threshold_defense,
 )
 
@@ -153,6 +154,7 @@ from .interpreters import (
 from .interpreters.spellblade import resolve_slot as resolve_spellblade_slot
 from .interpreters.sustain import declared_sustain
 from .item_behavior import (
+    ActiveWindowCastEconomyRule,
     AmpChainSlot,
     Isolation,
     ManaSpentHealRule,
@@ -2254,12 +2256,17 @@ def _resolve_combat_state(
         if config.include_actives
         else 0.0
     )
+    # What the open window does to a basic ability's cooldown, read off the
+    # declaration hung on the same registry entry the amp above is declared
+    # from.  ``actualizer_active_seconds`` already answers zero for a build
+    # that does not hold the item, so an open window *is* the presence test
+    # and the declaration is what supplies the number.
+    cast_economy = stat_derivation.sole_declared_derivation(
+        owners, ActiveWindowCastEconomyRule
+    )
     actualizer_basic_cooldown_multiplier = (
-        1.0
-        / item_effects.required_effect_value(
-            "Actualizer", "basic_cooldown_progress_multiplier"
-        )
-        if actualizer_active_until > 0.0 and item_effects.has_item(items, "Actualizer")
+        1.0 / cast_economy.value("basic_cooldown_progress_multiplier")
+        if actualizer_active_until > 0.0 and cast_economy is not None
         else 1.0
     )
 
@@ -3675,11 +3682,15 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     # (``roster_composition.resource_restores``) rather than spelled.  Empty
     # where this build declares none, which is the case where the rows came
     # from a caller staging them directly.
-    restore_slot = declared_sustain(
-        sorted({str(item.get("name", "")) for item in state.items}),
-        ManaSpentHealRule,
-    )
+    schedule_owners = sorted({str(item.get("name", "")) for item in state.items})
+    restore_slot = declared_sustain(schedule_owners, ManaSpentHealRule)
     restore_producer = "" if restore_slot is None else restore_slot.owner
+    # The casting trade an open active window makes, resolved once rather
+    # than per cast: what a cast costs is a build fact, and re-asking it
+    # inside the loop would buy the same answer at a per-event price.
+    cast_economy = stat_derivation.sole_declared_derivation(
+        schedule_owners, ActiveWindowCastEconomyRule
+    )
     for restore_index, (restore_time, restore_amount) in enumerate(
         state.resource_restore_events
     ):
@@ -3737,11 +3748,9 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         if (
             cost > 0.0
             and state.actualizer_active_until > cast_time + _CAST_SCHEDULE_EPS
-            and item_effects.has_item(state.items, "Actualizer")
+            and cast_economy is not None
         ):
-            cost *= item_effects.required_effect_value(
-                "Actualizer", "mana_cost_multiplier"
-            )
+            cost *= cast_economy.value("resource_cost_multiplier")
         if cost > remaining + _CAST_SCHEDULE_EPS:
             omitted.append(key)
             continue

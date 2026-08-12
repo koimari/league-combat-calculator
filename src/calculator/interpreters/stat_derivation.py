@@ -1,10 +1,11 @@
-"""Stat derivation: eight shapes the build's stat block is assembled from.
+"""Stat derivation: nine shapes the build's stat block is assembled from.
 
 A stat converted from another stat by a sourced ratio, a percentage
 multiplier on a total, the mana a charge ledger accrues, a stat that grows
 per stack, a flat grant, an aura that reduces a stat on the enemy, a
-regeneration a bonus-health threshold unlocks, and an ultimate cooldown
-refund bought with lethality.
+regeneration a bonus-health threshold unlocks, an ultimate cooldown refund
+bought with lethality, and the casting trade an item active makes while its
+own window is open.
 
 They are one family because of *when* they are answered, not what they say:
 every one of them is resolved before any damage exists, folded into the
@@ -199,6 +200,33 @@ def stat_slots(
     )
 
 
+def sole_declared_derivation(
+    owners: Sequence[str], payload_type: type
+) -> StatSlot | None:
+    """This build's one derivation of a shape that does not compose, or ``None``.
+
+    The companion to :func:`declared_stat_derivations` for the shapes whose
+    numbers are *multipliers* rather than grants.  Two holders' grants sum,
+    which is why the plural accessor returns a tuple; nothing declares whether
+    two casting trades multiply, take the strongest or apply in build order,
+    so a second holder here is a named stop rather than whichever slot sorts
+    first — the same refusal the shred and sustain slots make.
+
+    ``None`` is an answer and not a zero: no holder declares the shape, so no
+    rule ran and the number the caller would have multiplied stays as it was.
+    """
+    slots = declared_stat_derivations(owners, payload_type)
+    if not slots:
+        return None
+    if len(slots) > 1:
+        raise StatDerivationInterpretationError(
+            f"{[slot.owner for slot in slots]} all declare "
+            f"{payload_type.__name__} and no rule declares how two of them "
+            "compose; the slice that declares a second one owns the fold"
+        )
+    return slots[0]
+
+
 def declared_stat_derivations(
     owners: Sequence[str], payload_type: type
 ) -> tuple[StatSlot, ...]:
@@ -260,6 +288,7 @@ __all__ = [
     "StatDerivationResolverInterpreter",
     "StatSlot",
     "declared_stat_derivations",
+    "sole_declared_derivation",
     "stat_derivation_rules",
     "stat_slots",
 ]
