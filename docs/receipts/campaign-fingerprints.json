@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at_src_tree": "8cac3f5f5927137b5ca07725fa9298e6948650aa",
+  "captured_at_src_tree": "b2d419a6eabb30fa49c8f3da5616d774fea2bf86",
   "notes": [
     "The sole home of every golden shape count in the campaign. No plan document states one; every consumer reads this file.",
     "This receipt holds the ONE Phase 0A capture (R-10), re-read on the 0A tip at that phase barrier, plus the 0B phase-boundary reading beside it -- Phase 0's single re-capture of the three golden blocks (R-17, D-97) and the one refresh of every other block against the tree the six corrections produced. Every non-golden block below was measured on the tree recorded in captured_at_src_tree and on no other; each golden block additionally carries its own src_tree_sha, the tree its baseline file was captured on, and at this boundary the two agree. The mid-phase reading a668b91, the capture a0db656 and the 0A barrier refresh bbc0d5d are superseded in place, and the last notes list every value that moved with its cause. Re-reading is not re-capturing: no counter, residual, rung histogram, winner, score or golden count moved at either 0A refresh, which is the numeric evidence that 0A moved no number. 0B is the opposite by design: six semantic corrections, each declaring in advance which baseline leaves and which bench counters it would move, and this refresh is where those declarations are settled. Baselines and this receipt move only in receipt-only commits (R-32), and only the integration agent writes this file outside R-32's three carved-out keys (R-34).",
@@ -20,7 +20,8 @@
     "The three golden blocks moved at the 0B phase boundary re-capture, with one line of cause per moved value (R-34). golden.leaves 51437 -> 51438 -- Syndra Q2's recast_of declaration in the champion_baselines dump (C6). coupled_golden.leaves 14163 -> 14200 and coupled_golden.numeric_leaves 8323 -> 8334 -- the net of C6's inserted Q2 cast, damage-event and rotation rows in the two custom-order Syndra scenarios and C4's support_damage_multiplier containers on t = 0.0 events, less the containers C2's owner skip deletes from the holder's own events. golden.src_tree_sha, coupled_golden.src_tree_sha and coupled_golden_exact.src_tree_sha 66072ea -> 8cac3f5 -- the tree each capture read, now the phase tip rather than the 0A capture's tree. coupled_golden_exact.leaves stays 82 and coupled_golden_exact.numeric_leaves stays 0: that file's shape is one row per attacker per scenario, which no correction adds to, while five of its values moved (mandate_abyssal_curse_roster's main outgoing, ally:Pantheon outgoing and enemy:Aatrox incoming; syndra_custom_order_120 and _60 manual_target), each inside the allowlist of the slice that moved it. entries did not move in any block. No other value in this file moved in either re-capture commit.",
     "Moved at the 0B PHASE BOUNDARY, against the 0A barrier refresh bbc0d5d, with one line of cause each (R-34). The golden blocks moved in the two re-capture commits before this one and their causes are in the note above; everything below moved here. captured_at_src_tree e6fc3b1 -> 8cac3f5 -- the phase tip's src tree, six semantic corrections later. tests.collected 5149 -> 5435 -- 286 node ids across 0B, itemised in the tests note. bench.syndra_mandate_3champ.pair_run_fight_calls 1922 -> 3014, residual 330 -> 1422 and rungs {compiled: 546, receipt_walk_candidate: 229} -> {receipt_walk_candidate: 775} -- C1's declared routing move, enumerated in advance in docs/receipts/expected-golden-diff-C1.json with these exact three values: once the Mandate holder keeps dict rows its Command packet exists, a damage_modifier is categorically unrepresentable in the compiled score kernel (D-101, H5 descoped), so every candidate falls back to the receipt walk (D-69) and prices one pair fight per enemy per evaluation instead of none. Its public_evaluations, measured_proposals, score_memo_misses, winner and score did not move, which is what makes it a routing change rather than a search change. bench wall_best_of_5_ms 2138.0 -> 2158.0, 2056.9 -> 2113.5, 968.9 -> 999.1 and 1204.4 -> 2169.9, and no_compiled.wall_ms 3567.4 -> 3662.5, 3409.0 -> 3542.1, 1429.9 -> 1503.8 and 1609.3 -> 1741.1 -- machine noise on the first three (at most 3.1%) and the routing move on the fourth (+80%, the receipt walk's cost, and it lands within 1% of that scenario's own no-compiled wall, which is what a fully receipt-walked scenario should read); wall is a ratchet, never a pass criterion (R-28). alloc peak_bytes 251698 -> 257458, 553700 -> 560868, 219579 -> 220635 and 230830 -> 390164, with observed_spread_bytes now 63 on all four -- the three legacy rises are sub-2.3% and are C3's typed class frozensets riding every packet and every SurvivalAction; syndra_mandate_3champ's 69% is the same routing move, the receipt walk allocating a ledger where the compiled kernel allocated none. No allocation gate exists before Phase 4 S4 (R-28), and C5's allowlist already recorded the legacy rises as measured at the C4 tip. pylint gains six rows -- cast_dependency.py 10.0, champions/syndra.py 10.0, damage.py 9.708066581306017, pipeline.py 9.807280513918629, rotation_resolver.py 9.767441860465116, scenario.py 9.72972972972973 -- the files 0B touched that R-32 forbade their own commits to floor; and three floors rise, itemised in the pylint note. Nothing else moved: every counter family, residual, rung histogram, determinism verdict, counter spread, winner, score, truncated and void flag on all three legacy scenarios, every no_compiled residual and rung histogram, corpus.non_legacy_count and every provenance class are byte-identical to bbc0d5d, re-read with 'bench_coupled_optimizer.py --fixed-work --isolate --repeats 5 --determinism --json', the same command with '--no-compiled --repeats 1', 'bench_coupled_optimizer.py --alloc --json' three times, 'pylint_ratchet.py --scores' over the 25 files, 'pytest -q', 'repin_corpus.py' and 'golden_snapshot.py compare' against both re-captured baselines.",
     "PHASE 3 BOUNDARY re-capture, coupled jurisdiction only (R-11, R-17, D-97). Phases 2, 1, 3 and 5 merged since the 0B boundary and the pair baseline did not move at any of them: 'golden_snapshot.py compare scripts/golden_baseline.json' reports 'snapshot identical' on this tip, so the pair jurisdiction is NOT re-captured here and the golden block keeps its 0B src_tree_sha, which is the tree its file was captured on. The Shadowflame allowlist -- the one Phase 3 slice permitted a pair diff -- measured zero on both baselines, so nothing licenses a pair capture either. Coupled half: 'capture-coupled' and 'capture-coupled --exact' absorb 104 differing leaves, 102 of which qualify under R-15, and every one of the 102 carries an oracle receipt whose leaf_path is that path literally (R-19), verified against 'compare --report' at the phase tip before either capture ran. The 102 are exactly the union of three committed allowlists: expected-golden-diff-3.8-coverage-flip.json 24, expected-golden-diff-P5-dependencies.json 14 and expected-golden-diff-P5-seed-syndra.json 64. The other two differing leaves are the two snapshot counters umbrella criterion 4 disowns to this file. Verdicts stand as the investigators wrote them: 79 new_value_correct, 15 old_value_correct and 8 both_wrong; the 23 dissents are adjudicated in the allowlists that carry them (3.8's 'dissents' block) and in escalated-defects-P5-retire.json, and five of them remain live defects that this re-capture makes silent in the compare -- which is why that artifact exists and why the integration report names them again.",
-    "coupled_golden.leaves 14200 -> 14256 and numeric_leaves 8334 -> 8349, entries unchanged at 13, with one line of cause (R-34). The whole shape move is in three scenarios and no others -- syndra_derived_order_120 761 -> 780 leaves, syndra_derived_order_39 725 -> 743, syndra_derived_order_60 761 -> 780, numeric +5 each -- being Phase 5's seed retirement: the rotation receipt now derives what a hand seed used to state, so consume, setup, sources and the five aoe counts arrive as rows, and the five aoe counts are exactly the 15 numeric leaves. The dependency ledgers Phase 5's resolver publishes reach all thirteen scenarios but add leaves only where an edge exists: in the other ten every ledger is an empty list, which is a container and not a leaf. Phase 3's 3.8 coverage flip moves 24 item_coverage reason strings in place and moves no count. coupled_golden_exact moves no value at all -- its 82 leaves are byte-identical and only git_head and src_tree_sha changed in the file, which is the evidence that no computed number moved anywhere in the coupled snapshot. Both src_tree_sha fields 8cac3f5 -> b2d419a, the tree both captures read."
+    "coupled_golden.leaves 14200 -> 14256 and numeric_leaves 8334 -> 8349, entries unchanged at 13, with one line of cause (R-34). The whole shape move is in three scenarios and no others -- syndra_derived_order_120 761 -> 780 leaves, syndra_derived_order_39 725 -> 743, syndra_derived_order_60 761 -> 780, numeric +5 each -- being Phase 5's seed retirement: the rotation receipt now derives what a hand seed used to state, so consume, setup, sources and the five aoe counts arrive as rows, and the five aoe counts are exactly the 15 numeric leaves. The dependency ledgers Phase 5's resolver publishes reach all thirteen scenarios but add leaves only where an edge exists: in the other ten every ledger is an empty list, which is a container and not a leaf. Phase 3's 3.8 coverage flip moves 24 item_coverage reason strings in place and moves no count. coupled_golden_exact moves no value at all -- its 82 leaves are byte-identical and only git_head and src_tree_sha changed in the file, which is the evidence that no computed number moved anywhere in the coupled snapshot. Both src_tree_sha fields 8cac3f5 -> b2d419a, the tree both captures read.",
+    "Moved at the PHASE 3 BOUNDARY refresh, against the 0B boundary reading 4bc1572, with one line of cause each (R-34). The two coupled baselines and their golden blocks moved in the commit before this one and their causes are the two notes above; everything below moved here. Four phases merged since 0B -- Phase 2's trigger bus, Phase 1's coverage evidence, Phase 3's behaviour rules and Phase 5's cast dependencies -- and the headline of this reading is what did NOT move: every counter family, the residual, the rung histogram, the winner, the score, the timeline_complete flag, the truncated and void flags and every no_compiled residual and rung histogram are byte-identical to 4bc1572 on all four scenarios, re-read with 'bench_coupled_optimizer.py --fixed-work --isolate --repeats 5 --determinism --json' and the same command with '--no-compiled --repeats 1'. The optimizer does exactly the work it did before those four phases, and every determinism verdict is 'exact' with spread 0 again; only the cost of that work moved. captured_at_src_tree 8cac3f5 -> b2d419a -- the tip's src tree ('git rev-parse HEAD:src'), which agrees with both coupled blocks because the re-capture read this tree; the golden block's src_tree_sha deliberately lags it, because the pair baseline had nothing to absorb and was not re-captured, so that field still names the tree its own file was captured on. tests.collected 5435 -> 7104 -- 1669 node ids across the four phases, measured on the tip with 'pytest -q' rather than summed from commit bodies, with skipped and xfailed still 0, which is R-01 row 1's other half. frontier stops being empty and stops being deferred by rule: counters 1-4 are Phase 3's, produced by 'scripts/behavior_frontier.py --check' on this tip, and counters 5-7 stay absent because scripts/migration_frontier.py (Phase 4) does not exist. counter_4's bare 30 is the GROSS count of uninterpreted (family, lane) pairs; the two numbers Phase 3's criterion 4 is read against are pair_engine_net 0 and receipt_walk_net 0, the latter net of the 14 committed deferral rows umbrella Amendment B rules onto docs/behavior-frontier.json, which is where every exclusion, deferral and reason lives (D-40, R-36). bench wall_best_of_5_ms 2158.0 -> 3347.7, 2113.5 -> 3309.1, 999.1 -> 1457.6 and 2169.9 -> 4463.8, and no_compiled.wall_ms 3662.5 -> 6790.7, 3542.1 -> 6723.1, 1503.8 -> 2631.4 and 1741.1 -> 3589.1 -- a uniform 1.46x-2.06x on every scenario and both routings, which is a per-unit-work cost rather than a search change, because every counter beside it is identical. Profiled rather than guessed: 'bench_coupled_optimizer.py --profile --scenario mundo_3champ' reads item_behavior_catalog.behavior_rules at 142203 calls and 0.742 s cumulative inside a 3.831 s request, with registry_entries at 144744 calls inside it -- Phase 3's per-owner rule catalog consulted once per item lookup on the hot path, memoized per (owner, data_version) but not free to call. Wall is a ratchet and never a pass criterion (R-28), and no Phase 4 stage baseline exists yet to hold it against, so this refresh records it and the integration report escalates it as a Phase 4 finding rather than absorbing it. alloc peak_bytes 257458 -> 262196, 560868 -> 570394, 220635 -> 224655 and 390164 -> 394016 -- +1.0% to +1.8%, the same declaration layers allocating per evaluation, every rise far inside Phase 4 S4's 15% margin, which is not yet a gate; observed_spread_bytes 63 -> 0 on cassiopeia_3champ and 63 on the other three, this session's three captures rather than 4bc1572's, and the alloc note above already states that field is a within-session figure and not a tolerance. pylint gains 172 rows and raises 14 floors, and no recorded floor fell -- 'pylint_ratchet.py --check' was green on the 25 old rows before this refresh. The row set is the pylint note's own rule re-read on this tip, 'git diff --name-only 584071e..HEAD -- src/*.py scripts/*.py', which is 197 files: 172 of them are files some campaign slice touched and R-01 row 7 was not guarding. The 14 rises are recorded at their new value, so a later commit landing any of them back at its 0B score fails a check that was green before: scripts/golden_snapshot.py, src/app.py, ability_spec.py (now a perfect 10.0), damage.py, data_registry.py, item_support_effects.py, optimizer.py, participant_timeline.py, pipeline.py, rotation_resolver.py, survival/actions.py, survival/compile.py, survival/receipt_state.py and survival/transitions.py. One cost is disclosed rather than left to be discovered: --check runs one pylint subprocess per row, so R-01 row 7 now takes minutes rather than seconds, and that is the price of D-99's per-file rule over 197 touched files. corpus.non_legacy_count stays 18 -- 'scripts/repin_corpus.py' re-probed all eighteen receipts against this tip's engine and rewrote nothing, because the anchor is the merge-base src tree (R-21) and no receipt stopped reproducing; the re-probe is the verification, the unchanged file is its result. Nothing else in this file moved: every counter family value, prior, tolerance, provenance class, rung histogram, determinism verdict, spread, winner, score, truncated flag, no_compiled residual and rung histogram, demonstrated_red entry and the whole golden block are byte-identical to 4bc1572."
   ],
   "provenance": {
     "golden": "VERIFIED",
@@ -106,7 +107,7 @@
       },
       "score": 4003.1,
       "wall_best_of_5_ms": {
-        "value": 2158.0,
+        "value": 3347.7,
         "provenance": "VERIFIED",
         "tolerance": "ratchet only (R-28); never a pass criterion"
       },
@@ -133,7 +134,7 @@
         "rungs": {
           "receipt_walk_gate": 1249
         },
-        "wall_ms": 3662.5
+        "wall_ms": 6790.7
       }
     },
     "cassiopeia_5champ": {
@@ -188,7 +189,7 @@
       },
       "score": 5010.8,
       "wall_best_of_5_ms": {
-        "value": 2113.5,
+        "value": 3309.1,
         "provenance": "VERIFIED",
         "tolerance": "ratchet only (R-28); never a pass criterion"
       },
@@ -215,7 +216,7 @@
         "rungs": {
           "receipt_walk_gate": 967
         },
-        "wall_ms": 3542.1
+        "wall_ms": 6723.1
       }
     },
     "mundo_3champ": {
@@ -270,7 +271,7 @@
       },
       "score": 3305.0,
       "wall_best_of_5_ms": {
-        "value": 999.1,
+        "value": 1457.6,
         "provenance": "VERIFIED",
         "tolerance": "ratchet only (R-28); never a pass criterion"
       },
@@ -297,7 +298,7 @@
         "rungs": {
           "receipt_walk_gate": 577
         },
-        "wall_ms": 1503.8
+        "wall_ms": 2631.4
       }
     },
     "syndra_mandate_3champ": {
@@ -346,7 +347,7 @@
       },
       "score": 4642.3,
       "wall_best_of_5_ms": {
-        "value": 2169.9,
+        "value": 4463.8,
         "provenance": "VERIFIED",
         "tolerance": "ratchet only (R-28); never a pass criterion"
       },
@@ -373,31 +374,31 @@
         "rungs": {
           "receipt_walk_gate": 775
         },
-        "wall_ms": 1741.1
+        "wall_ms": 3589.1
       }
     }
   },
   "alloc": {
     "cassiopeia_3champ": {
-      "peak_bytes": 257458,
+      "peak_bytes": 262196,
       "provenance": "VERIFIED",
       "margin": 0.15,
-      "observed_spread_bytes": 63
+      "observed_spread_bytes": 0
     },
     "cassiopeia_5champ": {
-      "peak_bytes": 560868,
+      "peak_bytes": 570394,
       "provenance": "VERIFIED",
       "margin": 0.15,
       "observed_spread_bytes": 63
     },
     "mundo_3champ": {
-      "peak_bytes": 220635,
+      "peak_bytes": 224655,
       "provenance": "VERIFIED",
       "margin": 0.15,
       "observed_spread_bytes": 63
     },
     "syndra_mandate_3champ": {
-      "peak_bytes": 390164,
+      "peak_bytes": 394016,
       "provenance": "VERIFIED",
       "margin": 0.15,
       "observed_spread_bytes": 63
@@ -405,14 +406,34 @@
   },
   "wall": {},
   "tests": {
-    "collected": 5435,
+    "collected": 7104,
     "skipped": 0,
     "xfailed": 0
   },
   "corpus": {
     "non_legacy_count": 18
   },
-  "frontier": {},
+  "frontier": {
+    "counter_1": {
+      "value": 0,
+      "provenance": "VERIFIED"
+    },
+    "counter_2": {
+      "value": 21,
+      "provenance": "VERIFIED"
+    },
+    "counter_3": {
+      "value": 0,
+      "provenance": "VERIFIED"
+    },
+    "counter_4": {
+      "value": 30,
+      "provenance": "VERIFIED",
+      "pair_engine_net": 0,
+      "receipt_walk_net": 0,
+      "receipt_walk_deferred": 14
+    }
+  },
   "demonstrated_red": {
     "P5_syndra_seed_positive_control": {
       "sha": "83198058fee10d90cd740f8b96cad45f5e073b3b",
@@ -429,30 +450,202 @@
     }
   },
   "pylint": {
+    "scripts/behavior_frontier.py": 9.928909952606634,
     "scripts/bench_coupled_optimizer.py": 9.959514170040485,
-    "scripts/golden_snapshot.py": 9.58128078817734,
+    "scripts/capture_coverage_classification.py": 10.0,
+    "scripts/cast_dependency_audit.py": 9.663461538461538,
+    "scripts/full_entry_audit.py": 9.517241379310345,
+    "scripts/golden_snapshot.py": 9.58435207823961,
+    "scripts/item_umbrella_audit.py": 9.537037037037036,
     "scripts/patch_update.py": 9.782608695652174,
     "scripts/plan_audit.py": 10.0,
     "scripts/pylint_ratchet.py": 10.0,
     "scripts/repin_corpus.py": 9.6875,
-    "src/app.py": 9.459783913565426,
-    "src/calculator/ability_spec.py": 9.850746268656717,
+    "src/app.py": 9.467455621301776,
+    "src/calculator/ability_spec.py": 10.0,
+    "src/calculator/ally_effects.py": 10.0,
+    "src/calculator/bis.py": 9.880478087649402,
     "src/calculator/capabilities.py": 10.0,
     "src/calculator/cast_dependency.py": 10.0,
+    "src/calculator/champions/__init__.py": 9.538461538461538,
+    "src/calculator/champions/aatrox.py": 9.830508474576272,
+    "src/calculator/champions/ahri.py": 9.8,
+    "src/calculator/champions/akshan.py": 10.0,
+    "src/calculator/champions/ambessa.py": 9.438202247191011,
+    "src/calculator/champions/amumu.py": 10.0,
+    "src/calculator/champions/anivia.py": 9.67741935483871,
+    "src/calculator/champions/annie.py": 10.0,
+    "src/calculator/champions/aphelios.py": 9.56989247311828,
+    "src/calculator/champions/ashe.py": 10.0,
+    "src/calculator/champions/aurelion_sol.py": 9.871794871794872,
+    "src/calculator/champions/aurora.py": 10.0,
+    "src/calculator/champions/azir.py": 9.6875,
+    "src/calculator/champions/bard.py": 10.0,
+    "src/calculator/champions/belveth.py": 10.0,
+    "src/calculator/champions/blitzcrank.py": 9.722222222222221,
+    "src/calculator/champions/brand.py": 10.0,
+    "src/calculator/champions/braum.py": 10.0,
+    "src/calculator/champions/briar.py": 9.90566037735849,
+    "src/calculator/champions/caitlyn.py": 10.0,
+    "src/calculator/champions/camille.py": 9.68421052631579,
+    "src/calculator/champions/chogath.py": 10.0,
+    "src/calculator/champions/corki.py": 10.0,
+    "src/calculator/champions/darius.py": 9.8989898989899,
+    "src/calculator/champions/diana.py": 10.0,
+    "src/calculator/champions/dr_mundo.py": 9.8989898989899,
+    "src/calculator/champions/draven.py": 9.857142857142858,
+    "src/calculator/champions/ekko.py": 9.220779220779221,
+    "src/calculator/champions/elise.py": 9.538461538461538,
+    "src/calculator/champions/engine.py": 9.72027972027972,
+    "src/calculator/champions/evelynn.py": 9.512195121951219,
+    "src/calculator/champions/ezreal.py": 10.0,
+    "src/calculator/champions/fiddlesticks.py": 9.452054794520548,
+    "src/calculator/champions/fiora.py": 9.152542372881356,
+    "src/calculator/champions/fizz.py": 9.594594594594595,
+    "src/calculator/champions/galio.py": 10.0,
+    "src/calculator/champions/gangplank.py": 9.210526315789474,
+    "src/calculator/champions/garen.py": 9.0625,
+    "src/calculator/champions/gnar.py": 10.0,
+    "src/calculator/champions/graves.py": 9.411764705882353,
+    "src/calculator/champions/gwen.py": 9.166666666666666,
+    "src/calculator/champions/hecarim.py": 9.268292682926829,
+    "src/calculator/champions/heimerdinger.py": 9.480519480519481,
+    "src/calculator/champions/hwei.py": 9.2,
+    "src/calculator/champions/illaoi.py": 8.620689655172413,
+    "src/calculator/champions/inputs.py": 10.0,
+    "src/calculator/champions/irelia.py": 9.411764705882353,
+    "src/calculator/champions/ivern.py": 9.523809523809524,
+    "src/calculator/champions/janna.py": 9.215686274509803,
+    "src/calculator/champions/jax.py": 9.43661971830986,
+    "src/calculator/champions/jayce.py": 10.0,
+    "src/calculator/champions/jhin.py": 10.0,
+    "src/calculator/champions/jinx.py": 9.8,
+    "src/calculator/champions/kaisa.py": 9.908256880733944,
+    "src/calculator/champions/kalista.py": 9.803921568627452,
+    "src/calculator/champions/karthus.py": 10.0,
+    "src/calculator/champions/kassadin.py": 9.310344827586206,
+    "src/calculator/champions/katarina.py": 10.0,
+    "src/calculator/champions/kayn.py": 10.0,
+    "src/calculator/champions/kennen.py": 10.0,
+    "src/calculator/champions/kindred.py": 9.891304347826088,
+    "src/calculator/champions/kled.py": 9.545454545454545,
+    "src/calculator/champions/kogmaw.py": 10.0,
+    "src/calculator/champions/ksante.py": 9.58904109589041,
+    "src/calculator/champions/lillia.py": 10.0,
+    "src/calculator/champions/locke.py": 9.0,
+    "src/calculator/champions/lulu.py": 9.285714285714286,
+    "src/calculator/champions/malphite.py": 9.615384615384615,
+    "src/calculator/champions/malzahar.py": 9.777777777777779,
+    "src/calculator/champions/master_yi.py": 9.743589743589745,
+    "src/calculator/champions/mel.py": 9.45945945945946,
+    "src/calculator/champions/module_contract.py": 10.0,
+    "src/calculator/champions/nasus.py": 9.864864864864865,
+    "src/calculator/champions/neeko.py": 9.591836734693878,
+    "src/calculator/champions/nidalee.py": 9.6875,
+    "src/calculator/champions/nilah.py": 9.09090909090909,
+    "src/calculator/champions/ornn.py": 9.487179487179487,
+    "src/calculator/champions/packet_module.py": 9.710144927536232,
+    "src/calculator/champions/pantheon.py": 10.0,
+    "src/calculator/champions/pyke.py": 9.375,
+    "src/calculator/champions/qiyana.py": 9.821428571428571,
+    "src/calculator/champions/rakan.py": 9.6,
+    "src/calculator/champions/rammus.py": 8.823529411764707,
+    "src/calculator/champions/reksai.py": 8.857142857142858,
+    "src/calculator/champions/rell.py": 9.2,
+    "src/calculator/champions/renata_glasc.py": 10.0,
+    "src/calculator/champions/rengar.py": 10.0,
+    "src/calculator/champions/riven.py": 9.473684210526315,
+    "src/calculator/champions/samira.py": 10.0,
+    "src/calculator/champions/scaling.py": 10.0,
+    "src/calculator/champions/sejuani.py": 9.393939393939394,
+    "src/calculator/champions/senna.py": 9.821428571428571,
+    "src/calculator/champions/sett.py": 10.0,
+    "src/calculator/champions/shaco.py": 10.0,
+    "src/calculator/champions/shen.py": 9.89247311827957,
+    "src/calculator/champions/shyvana.py": 9.89795918367347,
+    "src/calculator/champions/sion.py": 10.0,
+    "src/calculator/champions/skarner.py": 9.574468085106384,
+    "src/calculator/champions/slotlib.py": 9.570957095709572,
+    "src/calculator/champions/smolder.py": 9.672131147540984,
     "src/calculator/champions/syndra.py": 10.0,
-    "src/calculator/damage.py": 9.708066581306017,
-    "src/calculator/data_registry.py": 9.393939393939394,
-    "src/calculator/item_support_effects.py": 9.857142857142858,
-    "src/calculator/optimizer.py": 9.6,
-    "src/calculator/participant_timeline.py": 9.698795180722891,
-    "src/calculator/pipeline.py": 9.807280513918629,
-    "src/calculator/rotation_resolver.py": 9.767441860465116,
+    "src/calculator/champions/tahm_kench.py": 9.387755102040817,
+    "src/calculator/champions/taliyah.py": 9.900990099009901,
+    "src/calculator/champions/talon.py": 9.333333333333334,
+    "src/calculator/champions/teemo.py": 10.0,
+    "src/calculator/champions/thresh.py": 10.0,
+    "src/calculator/champions/twisted_fate.py": 10.0,
+    "src/calculator/champions/twitch.py": 10.0,
+    "src/calculator/champions/udyr.py": 9.264705882352942,
+    "src/calculator/champions/urgot.py": 10.0,
+    "src/calculator/champions/varus.py": 9.89247311827957,
+    "src/calculator/champions/vayne.py": 10.0,
+    "src/calculator/champions/velkoz.py": 10.0,
+    "src/calculator/champions/vex.py": 9.0,
+    "src/calculator/champions/vi.py": 10.0,
+    "src/calculator/champions/viego.py": 9.428571428571429,
+    "src/calculator/champions/volibear.py": 9.71830985915493,
+    "src/calculator/champions/wukong.py": 9.5,
+    "src/calculator/champions/xerath.py": 9.11111111111111,
+    "src/calculator/champions/yasuo.py": 10.0,
+    "src/calculator/champions/yone.py": 10.0,
+    "src/calculator/champions/yorick.py": 9.836065573770492,
+    "src/calculator/champions/yunara.py": 9.516129032258064,
+    "src/calculator/champions/zaahen.py": 9.318181818181818,
+    "src/calculator/champions/zac.py": 9.117647058823529,
+    "src/calculator/champions/zed.py": 10.0,
+    "src/calculator/champions/zeri.py": 9.35483870967742,
+    "src/calculator/champions/ziggs.py": 10.0,
+    "src/calculator/champions/zilean.py": 10.0,
+    "src/calculator/champions/zoe.py": 8.75,
+    "src/calculator/champions/zyra.py": 10.0,
+    "src/calculator/coverage_evidence.py": 10.0,
+    "src/calculator/damage.py": 9.711902956785444,
+    "src/calculator/data_registry.py": 9.565217391304348,
+    "src/calculator/defensive_effects.py": 9.952153110047847,
+    "src/calculator/economy.py": 9.604743083003953,
+    "src/calculator/interpreters/__init__.py": 10.0,
+    "src/calculator/interpreters/active_cast.py": 10.0,
+    "src/calculator/interpreters/ally_packet.py": 10.0,
+    "src/calculator/interpreters/cast_proc.py": 10.0,
+    "src/calculator/interpreters/charged_strike.py": 10.0,
+    "src/calculator/interpreters/combat_state.py": 10.0,
+    "src/calculator/interpreters/crit_profile.py": 10.0,
+    "src/calculator/interpreters/damage_formula.py": 9.871794871794872,
+    "src/calculator/interpreters/damage_routing.py": 10.0,
+    "src/calculator/interpreters/defense_state.py": 10.0,
+    "src/calculator/interpreters/delta_amp.py": 9.897435897435898,
+    "src/calculator/interpreters/on_hit_strike.py": 10.0,
+    "src/calculator/interpreters/opening_defense.py": 10.0,
+    "src/calculator/interpreters/periodic.py": 10.0,
+    "src/calculator/interpreters/reactive.py": 10.0,
+    "src/calculator/interpreters/resistance_shred.py": 9.871794871794872,
+    "src/calculator/interpreters/secondary_target.py": 10.0,
+    "src/calculator/interpreters/spellblade.py": 10.0,
+    "src/calculator/interpreters/stat_derivation.py": 9.878048780487806,
+    "src/calculator/interpreters/sustain.py": 9.904761904761905,
+    "src/calculator/interpreters/threshold_defense.py": 10.0,
+    "src/calculator/item_behavior.py": 9.931506849315069,
+    "src/calculator/item_behavior_catalog.py": 9.921787709497206,
+    "src/calculator/item_coverage.py": 9.71326164874552,
+    "src/calculator/item_effects.py": 9.75531914893617,
+    "src/calculator/item_outcomes.py": 10.0,
+    "src/calculator/item_support_effects.py": 9.886363636363637,
+    "src/calculator/optimizer.py": 9.62532299741602,
+    "src/calculator/participant_timeline.py": 9.703389830508474,
+    "src/calculator/pipeline.py": 9.809725158562367,
+    "src/calculator/roster_composition.py": 9.90566037735849,
+    "src/calculator/rotation_resolver.py": 9.771615008156607,
+    "src/calculator/rune_effects.py": 9.831460674157304,
     "src/calculator/scenario.py": 9.72972972972973,
+    "src/calculator/stats.py": 9.726027397260275,
+    "src/calculator/support_effects.py": 9.81981981981982,
     "src/calculator/survival/__init__.py": 10.0,
-    "src/calculator/survival/actions.py": 9.699248120300751,
-    "src/calculator/survival/compile.py": 9.522388059701493,
-    "src/calculator/survival/receipt_state.py": 9.583333333333334,
-    "src/calculator/survival/transitions.py": 9.727891156462585,
+    "src/calculator/survival/actions.py": 9.700374531835205,
+    "src/calculator/survival/compile.py": 9.523809523809524,
+    "src/calculator/survival/receipt_state.py": 9.595959595959595,
+    "src/calculator/survival/transitions.py": 9.731543624161073,
+    "src/calculator/trigger_stream.py": 10.0,
+    "src/calculator/value_ref.py": 10.0,
     "src/calculator/work_counters.py": 10.0
   }
 }
