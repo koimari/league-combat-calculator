@@ -522,3 +522,36 @@ def test_every_dated_gap_row_says_what_retires_it() -> None:
         assert row.reason.strip(), f"{family.value}/{lane.value} has no reason"
         assert row.retires_at.strip(), f"{family.value}/{lane.value} has no date"
         assert (family, lane) not in interpreters.INTERPRETERS
+
+
+def test_no_gap_row_is_dated_at_a_counter_this_phase_has_retired() -> None:
+    """Every surviving row waits on the one kernel, not on a name site.
+
+    Two rows used to be dated "3.9 residue — counter 1's remaining
+    name-dispatch sites", both standing on the walk reading a sustain key by
+    item name in ``survival/receipt_state.py``.  That read is gone: the
+    below-half bonus is a declaration the walk lane's own interpreter
+    compiles.  A row outliving its stated cause is the prose-outruns-code
+    failure inside the table that exists to prevent it, so the date is
+    asserted rather than trusted.
+    """
+    for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items():
+        assert "counter 1" not in row.reason, f"{family.value}/{lane.value}"
+        assert "3.9 residue" not in row.retires_at, f"{family.value}/{lane.value}"
+
+
+def test_the_walk_lane_serves_the_family_that_authors_its_own_recoveries() -> None:
+    """``sustain``'s receipt-walk half is served, not dated.
+
+    The walk pays out two sustain shapes itself — a regeneration window's
+    ticks and the below-half healing bonus — so its lane owes an interpreter
+    rather than a route to somebody else's number.
+    """
+    assert (
+        RuleFamily.SUSTAIN,
+        EngineLane.RECEIPT_WALK,
+    ) in interpreters.INTERPRETERS
+    assert (
+        RuleFamily.SUSTAIN,
+        EngineLane.RECEIPT_WALK,
+    ) not in interpreters.UNSERVED_LANE_RECEIPTS

@@ -49,11 +49,11 @@ from .healing_reduction import (
     healing_reduction_profiles,
 )
 from .interpreters.reactive import thorns_effects
-from .interpreters.sustain import declared_sustain
+from .interpreters.sustain import walk_slot as _sustain_walk_slot
 from .interpreters.stat_derivation import (
     declared_stat_derivations as _declared_stat_derivations,
 )
-from .item_behavior import RegenerationRule, ThresholdRegenRule
+from .item_behavior import BelowHalfHealingRule, RegenerationRule, ThresholdRegenRule
 from .item_effects import (
     ThornsEffect,
     serpents_fang_venom,
@@ -413,7 +413,7 @@ def _regeneration_windows(
     """
     windows: list[RegenerationWindow | None] = []
     for combatant in combatants:
-        slot = declared_sustain(
+        slot = _sustain_walk_slot(
             sorted({str(item.get("name", "")) for item in combatant.items}),
             RegenerationRule,
         )
@@ -430,6 +430,31 @@ def _regeneration_windows(
             )
         )
     return tuple(windows)
+
+
+def _below_half_healing_bonuses(
+    combatants: Sequence[Combatant],
+) -> tuple[float, ...]:
+    """Compile each participant's declared below-half healing bonus.
+
+    The walk applies this bonus per recovery, once the fight has taken the
+    holder under the boundary, and may not reach the declaration that states
+    it — so it is compiled here beside the regeneration windows and handed to
+    the state builder as kernel data.  Index-aligned with *combatants*, and
+    ``0.0`` where a participant declares none: the walk multiplies by
+    ``1 + bonus`` only while the bonus is positive, so nobody-declares-one and
+    a sourced zero are the same answer and not a rule that failed to run.
+    """
+    return tuple(
+        0.0 if slot is None else slot.value("bonus")
+        for slot in (
+            _sustain_walk_slot(
+                sorted({str(item.get("name", "")) for item in combatant.items}),
+                BelowHalfHealingRule,
+            )
+            for combatant in combatants
+        )
+    )
 
 
 def _warmog_heart_tick_events(
@@ -1565,7 +1590,9 @@ def _simulate_survival(
         )
         for participant_id, combatant in combatant_by_id.items()
     }
-    states_list = build_states(combatant_list)
+    states_list = build_states(
+        combatant_list, _below_half_healing_bonuses(combatant_list)
+    )
     states: dict[str, dict[str, Any]] = {
         combatant.participant_id: states_list[index]
         for index, combatant in enumerate(combatant_list)
@@ -2898,7 +2925,7 @@ def _score_with_search_context(
     # Issue #137: the score adapter arms the same canonical state dicts as
     # the receipt walk and drives the identical kernel; the only difference
     # is the ledger's parallel-array observation below.
-    states = build_states(all_actors)
+    states = build_states(all_actors, _below_half_healing_bonuses(all_actors))
     ledger = ScoreLedger(n_actions)
     venom_packs = [
         serpents_fang_venom(

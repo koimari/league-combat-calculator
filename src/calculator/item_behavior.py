@@ -1550,6 +1550,30 @@ class RegenerationRule:
 
 
 @dataclass(frozen=True, slots=True)
+class BelowHalfHealingRule:
+    """A bonus share on healing the holder receives while under half health.
+
+    The sibling of :class:`ReceivedHealingRule`, and deliberately not the
+    same shape: that one is a flat multiplier the defensive resolver builds
+    into the opening state, and this one only exists once the fight has taken
+    the holder below the boundary, so it is state the walk consults per
+    recovery rather than a number resolved before the walk starts.
+
+    Half is in the name because half is the mechanic.  The registry publishes
+    the bonus under a key that spells its own gate
+    (``health_state_healing_multiplier_below_half``, "while below 50% of your
+    maximum health" on the source page) and publishes no threshold key, so
+    the boundary is the declaration's identity rather than a number a
+    declaration could carry.  A future item gated at another fraction is a
+    new member here, not a defaulted field on this one — closure is the test,
+    not the arity.
+    """
+
+    bonus: AnyValueRef
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
 class ReceivedHealingRule:
     """A multiplier on every heal and shield the subject receives.
 
@@ -2345,6 +2369,7 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ResourceDrainRule: RuleFamily.SUSTAIN,
     ManaSpentHealRule: RuleFamily.SUSTAIN,
     RegenerationRule: RuleFamily.SUSTAIN,
+    BelowHalfHealingRule: RuleFamily.SUSTAIN,
     ReceivedHealingRule: RuleFamily.SUSTAIN,
     StatConversionRule: RuleFamily.STAT_DERIVATION,
     StatMultiplierRule: RuleFamily.STAT_DERIVATION,
@@ -2905,6 +2930,7 @@ SUSTAIN_PAYLOAD_REFERENCES: dict[type, tuple[str, ...]] = {
         "missing_health_cap",
         "tick_interval",
     ),
+    BelowHalfHealingRule: ("bonus",),
 }
 
 SUSTAIN_VALUE_PAYLOADS: tuple[type, ...] = tuple(SUSTAIN_PAYLOAD_REFERENCES)
@@ -3342,6 +3368,7 @@ __all__ = [
     "Basis",
     "BehaviorRule",
     "BehaviorRuleError",
+    "BelowHalfHealingRule",
     "BonusTyping",
     "BuildContext",
     "COMPILABILITY_TYPES",

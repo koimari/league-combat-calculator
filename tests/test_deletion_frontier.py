@@ -140,3 +140,25 @@ def test_the_timeline_imports_no_catalyst_predicate() -> None:
     assert _holders("_has_catalyst") == []
     assert not hasattr(roster_composition, "has_catalyst")
     assert callable(roster_composition.mana_spent_heal_slot)
+
+
+# --- The last item name the survival kernel spelled --------------------------
+
+
+def test_the_receipt_state_names_no_item() -> None:
+    """3.9: the walk's state builder reads a declaration, not an item name.
+
+    ``receipt_state`` armed the below-half healing bonus behind
+    ``item.get("name") == "Immortal Path"`` and read the number back through
+    ``sustain_effect_value`` — the last two name-dispatch sites in the
+    survival kernel outside the compiled-walk gate the flip rewrites.  Both
+    the item name and the registry accessor are asserted absent, and the
+    state key that spelled the item is asserted renamed, so the read cannot
+    come back under any of its three old spellings.
+    """
+    text = (SURVIVAL / "receipt_state.py").read_text(encoding="utf-8")
+    assert "Immortal Path" not in text
+    assert "sustain_effect_value" not in text
+    assert "immortal_path_below_half_healing_multiplier" not in "\n".join(
+        path.read_text(encoding="utf-8") for path in sorted(SRC.rglob("*.py"))
+    )

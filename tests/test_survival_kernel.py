@@ -751,7 +751,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
     ]
 
     def _walk(ledger_cls, annotate):
-        states = build_states([combatant])
+        states = build_states([combatant], (0.0,))
         if ledger_cls is ReceiptLedger:
             ledger = ledger_cls(
                 actions=[a._replace(event={}) for a in actions],

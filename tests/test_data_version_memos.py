@@ -341,7 +341,14 @@ def test_the_unbounded_memo_set_is_the_keyed_set_minus_the_bounded_ones() -> Non
 
 
 def test_state_proto_memo_key_carries_the_version() -> None:
-    """The survival prototype memo is keyed ``(version, id(combatant))``.
+    """The survival prototype memo keys on the version and on every input.
+
+    The key gained the compiled below-half healing bonus when 3.9 made that
+    number a parameter rather than a read: the prototype is no longer
+    determined by the combatant and the generation alone, and a key that
+    stopped short of its inputs would serve one participant's state to a
+    caller that asked with another bonus — silently, which is the whole
+    failure this campaign is about.
 
     Asserted over source rather than through an import: ``receipt_state``
     is on the front-door frontier under Phase 4's name, and importing it
@@ -350,7 +357,9 @@ def test_state_proto_memo_key_carries_the_version() -> None:
     source = (SRC_ROOT / "calculator" / "survival" / "receipt_state.py").read_text(
         encoding="utf-8"
     )
-    assert "memo_key = (data_version(), id(combatant))" in source
+    assert (
+        "memo_key = (data_version(), id(combatant), below_half_healing_bonus)" in source
+    )
 
 
 def test_cast_order_params_memo_key_carries_the_version() -> None:

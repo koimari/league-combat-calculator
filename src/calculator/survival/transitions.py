@@ -563,13 +563,18 @@ def recovery_is_gated(
 
 
 def recovery_multiplier(state: Mapping[str, Any], action: SurvivalAction) -> float:
-    """Apply received-healing modifiers except to vamp stat packets."""
+    """Apply received-healing modifiers except to vamp stat packets.
+
+    ``below_half_healing_bonus`` is the sourced share a declaration compiled
+    at the walk's boundary; the half itself is the declaration's identity
+    rather than a second number — the registry publishes the bonus under a
+    key that spells its own gate and publishes no threshold beside it, so
+    ``BelowHalfHealingRule`` is named after the boundary it is defined by.
+    """
     if str(action.healing_category) == "vamp":
         return 1.0
     multiplier = float(state["healing_received_multiplier"])
-    below_half_bonus = float(
-        state.get("immortal_path_below_half_healing_multiplier", 0.0) or 0.0
-    )
+    below_half_bonus = float(state.get("below_half_healing_bonus", 0.0) or 0.0)
     if (
         below_half_bonus > 0.0
         and state["pools"].max_health > 0.0
@@ -1069,10 +1074,7 @@ def _apply_heal(
     amount_formula = action.amount_formula
     if callable(amount_formula):
         amount = max(0.0, float(amount_formula(pools.health, pools.max_health)))
-    if (
-        state["healing_received_multiplier"] != 1.0
-        or state["immortal_path_below_half_healing_multiplier"]
-    ):
+    if state["healing_received_multiplier"] != 1.0 or state["below_half_healing_bonus"]:
         # With no received-healing modifier armed, the multiplier is exactly
         # 1.0 for every category and the multiply is skipped bit-for-bit.
         amount *= recovery_multiplier(state, action)

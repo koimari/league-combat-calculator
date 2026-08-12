@@ -4321,7 +4321,7 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
         event_id="heal",
         sequence=0,
     )
-    states = build_states(combatants)
+    states = build_states(combatants, (0.0,) * len(combatants))
     ledger = ScoreLedger(1)
     ctx = TransitionContext(
         duration=5.0,
@@ -5110,3 +5110,45 @@ def test_a_short_window_sequence_stops_rather_than_misaligning():
             ledger=ScoreLedger(0),
             regeneration_windows=(None,),
         )
+
+
+def test_the_below_half_bonus_compiles_the_declarations_own_number():
+    """The walk's bonus is the key ``receipt_state`` read by item name.
+
+    Asserted against ``sustain_effect_value`` rather than a literal, for the
+    reason the regeneration window is: this migration's claim is that the
+    declaration reproduces the hand read exactly, and a literal would still
+    pass on the commit that broke the reference.
+    """
+    from src.calculator.item_effects import sustain_effect_value
+    from src.calculator.participant_timeline import _below_half_healing_bonuses
+
+    assert _below_half_healing_bonuses([_regen_combatant("Immortal Path")]) == (
+        sustain_effect_value(
+            "Immortal Path", "health_state_healing_multiplier_below_half"
+        ),
+    )
+
+
+def test_a_participant_declaring_no_below_half_bonus_compiles_zero():
+    """Nobody declares one, so the walk multiplies by nothing.
+
+    Zero rather than ``None`` here and ``None`` for the regeneration window,
+    because the two absences are different: a window is five numbers the walk
+    would otherwise have to invent, and this is one share the walk adds only
+    while it is positive — so an absent bonus and a sourced zero are the same
+    arithmetic and the same answer.
+    """
+    from src.calculator.participant_timeline import _below_half_healing_bonuses
+
+    assert _below_half_healing_bonuses([_regen_combatant("Ruby Crystal")]) == (0.0,)
+
+
+def test_a_short_bonus_sequence_stops_rather_than_misaligning():
+    """R-05's red: the state builder's sequence is aligned or it is wrong."""
+    from src.calculator.survival import build_states
+
+    combatants = [_regen_combatant("Immortal Path"), _regen_combatant()]
+
+    with pytest.raises(ValueError, match="participant-index-aligned"):
+        build_states(combatants, (0.0,))

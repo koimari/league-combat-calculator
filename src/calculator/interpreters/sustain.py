@@ -1,10 +1,11 @@
-"""Sustain: seven shapes that put health back, sharing no arithmetic.
+"""Sustain: eight shapes that put health back, sharing no arithmetic.
 
 A vampirism stat the build's stat fold sums, a flat heal one on-hit
 application pays, a share of damage dealt paid straight back, a resource
 drain that only becomes health when there is no resource left to fill, a
-heal bought with mana spent, a regeneration window a qualifying hit opens,
-and a multiplier on everything the subject *receives*.
+heal bought with mana spent, a regeneration window a qualifying hit opens, a
+multiplier on everything the subject *receives*, and a bonus share on what it
+receives once the fight has taken it below half health.
 
 They are one family because they answer one question — where does the health
 come from — and because the alternative was what this migration replaced:
@@ -12,10 +13,14 @@ six unrelated `if "<item name>" in names` branches in four modules, each
 reading the registry directly and none of them able to say what kind of
 restoration it was.
 
-Two lanes.  The pair engine and the roster path read the six holder-side
+Three lanes.  The pair engine and the roster path read the holder-side
 shapes through :func:`sustain_slot`; the defensive resolver builds the
 received-healing multiplier, because it has to run *after* every shield it
-multiplies and that position is arithmetic rather than presentation.
+multiplies and that position is arithmetic rather than presentation; and the
+receipt walk reads the two shapes it pays out itself — a regeneration
+window's ticks and the below-half healing bonus — through :func:`walk_slot`,
+compiled at the boundary that builds the walk because ``survival/`` may not
+reach a declaration.
 """
 
 from __future__ import annotations
@@ -85,6 +90,31 @@ class SustainPairInterpreter:  # pylint: disable=too-few-public-methods
         )
 
 
+class SustainWalkInterpreter:  # pylint: disable=too-few-public-methods
+    """The receipt walk's answer for the shapes the walk itself pays out.
+
+    A regeneration window's ticks and the below-half healing bonus are
+    scheduled and applied inside the walk, and ``survival/`` may not reach a
+    declaration — the dependency runs ``interpreters -> survival`` and never
+    back.  So this compiles them where the walk's context is built and hands
+    the numbers over as kernel data, which is what a walk-lane interpreter
+    *is* in this phase: build time, value-typed fields, no program type.
+
+    Flat references only, and a refusal rather than an invention where a
+    reference needs more: the boundary that builds a walk has no level, no
+    target bonus health and no range class, and a defaulted zero inside a
+    recovery is a heal that silently pays nothing.
+    """
+
+    FAMILY = RuleFamily.SUSTAIN
+    LANES = frozenset({EngineLane.RECEIPT_WALK})
+
+    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
+        """Every sourced number the walk reads off one sustain declaration."""
+        del ctx
+        return _flat_fields(rule, EngineLane.RECEIPT_WALK)
+
+
 class SustainResolverInterpreter:  # pylint: disable=too-few-public-methods
     """The defensive resolver's answer for the received-healing multiplier."""
 
@@ -124,6 +154,7 @@ class SustainResolverInterpreter:  # pylint: disable=too-few-public-methods
 
 PAIR_INTERPRETER = SustainPairInterpreter()
 RESOLVER_INTERPRETER = SustainResolverInterpreter()
+WALK_INTERPRETER = SustainWalkInterpreter()
 
 
 def received_healing_multiplier(rule: BehaviorRule) -> float:
@@ -234,6 +265,37 @@ def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot |
     stops this becoming a quiet second answer to the question
     :func:`sustain_slot` asks.  ``None`` means no holder declares the shape —
     an answer, not a zero — and two holders is the same stop as there.
+
+    :func:`walk_slot` is this same question asked for the other lane.
+    """
+    rule = _sole_rule(owners, payload_type)
+    if rule is None:
+        return None
+    return SustainSlot(rule=rule, fields=_flat_fields(rule, EngineLane.PAIR_ENGINE))
+
+
+def walk_slot(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
+    """This build's sustain of one shape, compiled for the receipt walk.
+
+    What the walk's boundary holds instead of an item name: the caller that
+    builds a walk context compiles the declaration here and hands the numbers
+    over as kernel data, because ``survival/`` may not reach a declaration
+    itself.  Field for field this is
+    :meth:`SustainWalkInterpreter.compile` — one arithmetic home, so the
+    registered interpreter and the accessor cannot answer differently.
+    """
+    rule = _sole_rule(owners, payload_type)
+    if rule is None:
+        return None
+    return SustainSlot(rule=rule, fields=_flat_fields(rule, EngineLane.RECEIPT_WALK))
+
+
+def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None:
+    """The one rule of *payload_type* this build declares, or ``None``.
+
+    ``None`` is an answer and not a zero: no holder restores health this way,
+    so no rule ran.  Two holders of one shape is a stop, because nothing
+    declares how two of them compose — the same refusal the shred slot makes.
     """
     rules = sustain_rules(owners, payload_type)
     if not rules:
@@ -244,7 +306,18 @@ def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot |
             f"{payload_type.__name__} and no rule declares how two of them "
             "compose; the slice that declares a second one owns the fold"
         )
-    rule = rules[0]
+    return rules[0]
+
+
+def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...]:
+    """One declaration's numbers, resolved without any fight context.
+
+    The arithmetic behind both fight-free readers, so the pair engine's and
+    the walk's compiled forms of one declaration differ in the lane they are
+    stamped with and in nothing else.  A reference needing a level or a fight
+    fact is a stop naming the shape: the callers that read a declaration
+    before a fight exists have nothing to resolve one against.
+    """
     payload = rule.payload
     names = SUSTAIN_PAYLOAD_REFERENCES[type(payload)]
     try:
@@ -255,17 +328,9 @@ def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot |
             "fight fact, and this accessor has neither; read it through "
             "sustain_slot, which is handed the context it resolves against"
         ) from exc
-    return SustainSlot(
-        rule=rule,
-        fields=tuple(
-            KernelField(
-                name=name,
-                value=value,
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            )
-            for name, value in zip(names, values)
-        ),
+    return tuple(
+        KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+        for name, value in zip(names, values)
     )
 
 
@@ -291,9 +356,12 @@ __all__ = [
     "SustainPairInterpreter",
     "SustainResolverInterpreter",
     "SustainSlot",
+    "SustainWalkInterpreter",
+    "WALK_INTERPRETER",
     "declared_sustain",
     "received_healing_multiplier",
     "stat_grants",
     "sustain_rules",
     "sustain_slot",
+    "walk_slot",
 ]

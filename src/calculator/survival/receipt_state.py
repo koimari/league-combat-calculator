@@ -22,7 +22,6 @@ from .actions import (
 )
 from .transitions import participant_pools
 from ..data_registry import data_version
-from ..item_effects import sustain_effect_value
 
 # The optimizer rebuilds every participant's state once per candidate
 # evaluation, but the construction below derives only from the combatant's
@@ -32,21 +31,32 @@ from ..item_effects import sustain_effect_value
 # because candidate combatants churn per evaluation.  Container
 # keys are derived from the prototype itself, so a new mutable field can
 # never be silently shared between clones.
-_STATE_PROTO_MEMO: dict[tuple[int, int], tuple[Any, dict[str, Any], list[str]]] = {}
+_STATE_PROTO_MEMO: dict[
+    tuple[int, int, float], tuple[Any, dict[str, Any], list[str]]
+] = {}
 _STATE_PROTO_MEMO_LIMIT = 512
 
 
-def build_state(combatant: Any) -> dict[str, Any]:
+def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, Any]:
     """One participant's canonical survival state (issue #137).
 
     Clones the memoized prototype for this combatant: fresh shield pools,
     fresh containers, shared scalars — field-for-field identical to an
     uncached construction (issue #171).
+
+    ``below_half_healing_bonus`` is the compiled form of this participant's
+    declared below-half healing bonus, and it is a **parameter** rather than
+    a read: ``survival`` may not reach a declaration — the dependency runs
+    ``interpreters -> survival`` and never back — so the boundary that builds
+    the walk compiles it and hands it over, the same device the regeneration
+    windows arrive by.  ``0.0`` means no holder declares one; the walk gates
+    on the bonus being positive, so an absent bonus and a declared zero are
+    the same number and the same answer.
     """
-    memo_key = (data_version(), id(combatant))
+    memo_key = (data_version(), id(combatant), below_half_healing_bonus)
     memo = _STATE_PROTO_MEMO.get(memo_key)
     if memo is None or memo[0] is not combatant:
-        proto = _build_state_uncached(combatant)
+        proto = _build_state_uncached(combatant, below_half_healing_bonus)
         container_keys = [
             key for key, value in proto.items() if value.__class__ in (list, set, dict)
         ]
@@ -68,7 +78,9 @@ def build_state(combatant: Any) -> dict[str, Any]:
     return state
 
 
-def _build_state_uncached(combatant: Any) -> dict[str, Any]:
+def _build_state_uncached(
+    combatant: Any, below_half_healing_bonus: float
+) -> dict[str, Any]:
     """The canonical state construction the prototype memo clones.
 
     Ported verbatim from the former authoritative walk's state
@@ -196,15 +208,7 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
             float(getattr(defenses, "maw_lifeline_omnivamp_percent", 0.0) or 0.0),
         ),
         "maw_lifeline_omnivamp_active": False,
-        "immortal_path_below_half_healing_multiplier": (
-            sustain_effect_value(
-                "Immortal Path", "health_state_healing_multiplier_below_half"
-            )
-            if any(
-                str(item.get("name", "")) == "Immortal Path" for item in combatant.items
-            )
-            else 0.0
-        ),
+        "below_half_healing_bonus": below_half_healing_bonus,
         "first_death_time": None,
         "revive_time": None,
         "revive_source": "",
@@ -241,9 +245,28 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
     }
 
 
-def build_states(combatants: Sequence[Any]) -> list[dict[str, Any]]:
-    """Index-aligned canonical state list for a participant roster."""
-    return [build_state(combatant) for combatant in combatants]
+def build_states(
+    combatants: Sequence[Any], below_half_healing_bonuses: Sequence[float]
+) -> list[dict[str, Any]]:
+    """Index-aligned canonical state list for a participant roster.
+
+    ``below_half_healing_bonuses`` is participant-index-aligned and required
+    with no default, for the reason the regeneration windows are: a default
+    would make a caller that forgot to compile the declarations
+    indistinguishable from a roster declaring none, and a length mismatch
+    would hand somebody else's bonus to the wrong subject.
+    """
+    if len(below_half_healing_bonuses) != len(combatants):
+        raise ValueError(
+            f"{len(below_half_healing_bonuses)} compiled below-half healing "
+            f"bonuses for {len(combatants)} participants; the sequence is "
+            "participant-index-aligned, so a short one would give somebody "
+            "else's bonus to the wrong subject"
+        )
+    return [
+        build_state(combatant, bonus)
+        for combatant, bonus in zip(combatants, below_half_healing_bonuses)
+    ]
 
 
 class ReceiptLedger:

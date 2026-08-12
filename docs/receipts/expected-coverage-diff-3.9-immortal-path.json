@@ -1,0 +1,25 @@
+{
+  "numeric_change": "none",
+  "numeric_change_proof": "No fight number moves.  The below-half healing bonus was already applied by the survival walk to every participant holding the item — `survival.transitions.recovery_multiplier` read it out of `ITEM_EFFECTS` by item name — and this slice changes only where the number is read from, not what it is: the walk now receives the same sourced value compiled from `immortal_path.below_half_healing` at the timeline boundary.  Both baselines are asserted diff-free on this commit, and the moved record is outside `item_coverage._REFUSAL_STATUSES` on both sides, so `calculation_eligible` and `review_issue_refs` are unchanged and the allowlist grants no eligibility permission at all.",
+  "reason_moves": {
+    "count": 1,
+    "items": [
+      "Immortal Path"
+    ],
+    "reason": "The target-lane reason moves with the status, from the not-target-relevant sentence to the declared-durability branch naming `Below Half Healing`."
+  },
+  "receipt": "docs/receipts/item-coverage-classification.json",
+  "rule": "R-36's allowlist: a semantic commit lands against the committed classification receipt and enumerates every key it moves here, and the receipt is re-captured in its own commit, never inside a semantic one (R-32, D-97).",
+  "slice": "3.9-immortal-path",
+  "status_moves": {
+    "target:not_target_relevant->modeled": {
+      "count": 1,
+      "items": [
+        "Immortal Path"
+      ],
+      "reason": "Immortal Path's below-half received-healing bonus is now a declared `sustain` rule (`BelowHalfHealingRule`), and sustain is a target-lane family, so the ladder prices it.  It always changed what this actor survives: the survival walk built the multiplier into every participant's state, target included, and multiplied every non-vamp recovery by it below half health.  What moved is that the ladder can now say so from a declaration instead of answering `not_target_relevant` because no rule existed to read — the claim catching up with the code, which is the direction this campaign exists to force.  Both statuses are calculation-eligible."
+    }
+  },
+  "total_leaves": 2,
+  "unclassified": []
+}

@@ -16,7 +16,7 @@
       "counter_1": 12
     },
     "calculator/item_coverage.py": {
-      "counter_2": 267
+      "counter_2": 268
     },
     "calculator/item_effects.py": {
       "class_c": 440
@@ -53,9 +53,6 @@
     },
     "calculator/survival/compile.py": {
       "counter_1": 18
-    },
-    "calculator/survival/receipt_state.py": {
-      "counter_1": 2
     },
     "calculator/trigger_stream.py": {
       "class_c": 38
@@ -96,6 +93,9 @@
       "Guardian Angel": [
         "threshold_defense"
       ],
+      "Immortal Path": [
+        "sustain"
+      ],
       "Jak'Sho, The Protean": [
         "combat_state"
       ],
@@ -112,9 +112,7 @@
     "derived_only": [],
     "derived_scope": "survival_ledger_transition",
     "derived_symbol": "interpreters.compilability_for",
-    "flip_blocked_by": [
-      "the hand set withholds Immortal Path and the fold does not: every rule they compile to is Compilable in the survival-ledger scope, so flipping today would let a build the kernel cannot stage ride the compiled walk \u2014 the campaign's own incident shape.  Closing them is a migration, not a flip: a scoped ReceiptOnly on the rule the walk authors, or a new declaration where no rule models the mechanic at all."
-    ],
+    "flip_blocked_by": [],
     "legacy": [
       "Banshee's Veil",
       "Catalyst of Aeons",
@@ -133,9 +131,7 @@
       "Maw of Malmortius",
       "Verdant Barrier"
     ],
-    "legacy_only": [
-      "Immortal Path"
-    ],
+    "legacy_only": [],
     "legacy_symbol": "survival.compile.COMPILED_WALK_UNREPRESENTABLE_ITEMS"
   },
   "counters": {
@@ -144,14 +140,14 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 36
+      "value": 34
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
       "provenance": "VERIFIED",
       "retires_at": "3.8",
       "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
-      "value": 270
+      "value": 271
     },
     "counter_3": {
       "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
@@ -192,7 +188,6 @@
         "spellblade/compiled_score_walk",
         "spellblade/receipt_walk",
         "sustain/compiled_score_walk",
-        "sustain/receipt_walk",
         "threshold_defense/compiled_score_walk",
         "threshold_defense/receipt_walk"
       ],
@@ -252,8 +247,8 @@
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "delta_amp/receipt_walk": {
-            "reason": "the walk authors this family itself and still reads its numbers out of the registry by item name (survival/receipt_state.py), so the walk-lane interpreter arrives with those sites \u2014 they are counter 1's remainder, not a route",
-            "retires_at": "3.9 residue \u2014 counter 1's remaining name-dispatch sites"
+            "reason": "the walk never reads an amp declaration: a holder-side amp reaches it already priced, inside the pair engine's damage rows, and a cross-participant one reaches it as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
           "on_hit_strike/compiled_score_walk": {
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
@@ -311,10 +306,6 @@
             "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
           },
-          "sustain/receipt_walk": {
-            "reason": "the walk authors this family itself and still reads its numbers out of the registry by item name (survival/receipt_state.py), so the walk-lane interpreter arrives with those sites \u2014 they are counter 1's remainder, not a route",
-            "retires_at": "3.9 residue \u2014 counter 1's remaining name-dispatch sites"
-          },
           "threshold_defense/compiled_score_walk": {
             "reason": "the walks stage what the defence resolver already built, so the declaration reaches them through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number",
             "retires_at": "Phase 4 S3 \u2014 one kernel, five views"
@@ -332,7 +323,7 @@
       },
       "retires_at": "3.9",
       "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
-      "value": 32
+      "value": 31
     }
   },
   "exclusions": {
@@ -341,7 +332,7 @@
         "calculator/bis.py": "three name-keyed build-profile claims that ride the same flip",
         "calculator/item_coverage.py": "the hand registries that assert coverage rather than compute it; 3.8 replaces them with a status derived from declarations"
       },
-      "sites": 270
+      "sites": 271
     },
     "class_c_declarative_homes": {
       "modules": {

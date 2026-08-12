@@ -1293,6 +1293,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Frozen Heart": "roster_composition.target_overrides",
     "Rod of Ages": "item_effects.input_option_stat_bonuses",
     "Guardian Angel": "defensive_effects.resolve_starting_defenses",
+    "Immortal Path": "survival.transitions.recovery_multiplier",
     "Kaenic Rookern": "defensive_effects.resolve_starting_defenses",
     "Knight's Vow": "item_support_effects.schedule_knights_vow",
     "Locket of the Iron Solari": "item_support_effects.derive_item_support_effects",

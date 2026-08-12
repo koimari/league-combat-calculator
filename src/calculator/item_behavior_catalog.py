@@ -46,6 +46,7 @@ from .item_behavior import (
     Attribution,
     Basis,
     BehaviorRule,
+    BelowHalfHealingRule,
     BonusTyping,
     BuildContext,
     chain_rank,
@@ -1256,6 +1257,13 @@ LEDGER_UNSTAGEABLE_SUSTAIN: Mapping[type, ReceiptOnly] = {
         "after the score ledger has been built",
         scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
     ),
+    BelowHalfHealingRule: ReceiptOnly(
+        "the compiled score kernel cannot stage a below-half healing bonus: "
+        "the bonus applies only while the walk has already taken the holder "
+        "under the boundary, which is live health state the score ledger "
+        "carries no crossing for",
+        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
+    ),
 }
 
 # One self-shield fact, said once for the two families that can declare one:
@@ -1380,6 +1388,12 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         "spell_shield_ready": RuleFamily.COMBAT_STATE,
         "stasis_duration": RuleFamily.COMBAT_STATE,
         "reactive_shield_base": RuleFamily.REACTIVE,
+        # The below-half half of a health-state passive whose tag names the
+        # above-half half: Immortal Path's entry is tagged ``damage_amp`` for
+        # the amplifier it grants above the boundary, and the healing bonus
+        # it grants below one is a second mechanic on the same entry rather
+        # than a second entry.
+        "health_state_healing_multiplier_below_half": RuleFamily.SUSTAIN,
         # A stat derivation hung on an entry whose tag names a different
         # family.  Muramana's Awe is filed under its on-hit record and three
         # ultimate-haste grants under their proc records, and every one of
@@ -3584,6 +3598,8 @@ MANA_SPENT_HEAL_KEYS = (
     "damage_taken_to_mana_ratio",
 )
 
+BELOW_HALF_HEALING_KEY = "health_state_healing_multiplier_below_half"
+
 REGENERATION_KEYS = (
     "enduring_focus_total_melee",
     "enduring_focus_total_reduced",
@@ -3753,6 +3769,18 @@ def _sustain_rule_list(
                     duration=duration,
                     missing_health_cap=cap,
                     tick_interval=tick,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
+    if BELOW_HALF_HEALING_KEY in schema:
+        rules.append(
+            _sustain_rule(
+                owner,
+                registry,
+                "below_half_healing",
+                BelowHalfHealingRule(
+                    bonus=ValueRef(registry, owner, BELOW_HALF_HEALING_KEY),
                     subject=Subject.HOLDER,
                 ),
             )

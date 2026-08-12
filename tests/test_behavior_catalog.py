@@ -438,3 +438,42 @@ def test_the_ledger_scope_is_derived_from_shapes_and_never_from_a_name() -> None
     }
     assert literals == set()
     assert _ledger_refusing_owners()
+
+
+def test_one_entry_declares_both_halves_of_a_health_state_passive() -> None:
+    """Immortal Path's tag names one half and a value key names the other.
+
+    The entry is tagged ``damage_amp`` for the amplifier it grants above the
+    boundary; the healing bonus it grants below one is a second mechanic on
+    the same entry, routed by its own value key.  Without the routing the
+    below-half number would keep moving fights with no declaration behind it,
+    which is the shape this phase exists to end — so both families are
+    asserted, not just the count.
+    """
+    families = {rule.family for rule in catalog.behavior_rules("Immortal Path")}
+    assert families == {RuleFamily.DELTA_AMP, RuleFamily.SUSTAIN}
+    assert (
+        catalog.SECONDARY_KEY_FAMILY["ITEM_EFFECTS"][catalog.BELOW_HALF_HEALING_KEY]
+        is RuleFamily.SUSTAIN
+    )
+    assert catalog.BELOW_HALF_HEALING_KEY in ITEM_EFFECTS["Immortal Path"]
+
+
+def test_the_two_halves_carry_two_scoped_refusals() -> None:
+    """One owner, two kernel refusals, and neither answers for the other.
+
+    The amp is refused by the score kernel's damage-modifier scope and the
+    healing bonus by the survival ledger's transition scope.  A fold over
+    both scopes would report an owner unstageable for a reason the asking
+    gate does not own, which is why :func:`compilability_for` takes the scope
+    it is answering for.
+    """
+    scopes = {
+        rule.family: rule.compilability.scope
+        for rule in catalog.behavior_rules("Immortal Path")
+        if isinstance(rule.compilability, ReceiptOnly)
+    }
+    assert scopes == {
+        RuleFamily.DELTA_AMP: ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER,
+        RuleFamily.SUSTAIN: ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
+    }

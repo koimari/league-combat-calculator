@@ -2154,9 +2154,9 @@
         "calculation_eligible": true,
         "name": "Immortal Path",
         "outcome_dimensions": [],
-        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
+        "reason": "Below Half Healing changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       }
     },
     {

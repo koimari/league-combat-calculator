@@ -238,8 +238,8 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
 # 4 rather than being an absence nobody measures.  ``delta_amp`` serves the
 # pair engine only — H5 is SCOPED, but the compiled-kernel extension it scopes
 # lands as its own stage after Phase 4's S7, so until that stage's flip no amp
-# is compilable — and the receipt-walk half arrives with the amps the coupled
-# walk owns.
+# is compilable — and the coupled walk never reads an amp declaration at all,
+# which is its row's reason below rather than a gap waiting on an interpreter.
 INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
     (
         RuleFamily.ACTIVE_CAST,
@@ -312,6 +312,7 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
         EngineLane.DEFENSE_RESOLVER,
     ): sustain.RESOLVER_INTERPRETER,
     (RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE): sustain.PAIR_INTERPRETER,
+    (RuleFamily.SUSTAIN, EngineLane.RECEIPT_WALK): sustain.WALK_INTERPRETER,
     (
         RuleFamily.THRESHOLD_DEFENSE,
         EngineLane.DEFENSE_RESOLVER,
@@ -341,7 +342,7 @@ class UnservedLane:
     retires_at: str
 
 
-# The three routes a declared family's number reaches an engine by when that
+# The four routes a declared family's number reaches an engine by when that
 # engine has no interpreter of its own, written once and shared by the rows
 # that stand on them.  One sentence per route rather than per pair: thirty
 # copies of one fact is how sixteen conservatism notes became indistinguishable
@@ -363,11 +364,12 @@ _TEMPLATE_FED = (
     "item_support_effects emits, not from the declaration; the packet kinds "
     "it cannot stage are refused per rule by compilability_for"
 )
-_WALK_AUTHORED_BY_NAME = (
-    "the walk authors this family itself and still reads its numbers out of "
-    "the registry by item name (survival/receipt_state.py), so the walk-lane "
-    "interpreter arrives with those sites — they are counter 1's remainder, "
-    "not a route"
+_PAIR_PRICED_OR_PACKET_FED = (
+    "the walk never reads an amp declaration: a holder-side amp reaches it "
+    "already priced, inside the pair engine's damage rows, and a "
+    "cross-participant one reaches it as the damage_modifier packet "
+    "item_support_effects emits, which survival/transitions stages as an "
+    "ActionKind.DAMAGE_MODIFIER — two routes, neither of them the rule"
 )
 
 # One row per unserved pair a declaration reaches.  ``delta_amp`` on the
@@ -375,7 +377,6 @@ _WALK_AUTHORED_BY_NAME = (
 # ``ReceiptOnly`` (D-101), which is the stronger, per-rule form of this
 # receipt, and a row here would be the stale duplicate of it.
 _ONE_KERNEL = "Phase 4 S3 — one kernel, five views"
-_COUNTER_ONE = "3.9 residue — counter 1's remaining name-dispatch sites"
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     **{
@@ -396,15 +397,11 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK): UnservedLane(
         reason=_PACKET_FED, retires_at=_ONE_KERNEL
     ),
-    # Sustain is the split case, and it is written out rather than folded into
-    # either loop: its compiled half is packet-fed like the strikes, and its
-    # receipt half is the walk authoring Enduring Focus by item name.  One row
-    # per lane, each saying the true thing about that lane.
+    # Sustain's receipt half is no longer a gap — the walk reads its two
+    # walk-paid shapes through the registered walk interpreter — so only the
+    # compiled lane has a row, packet-fed like the strikes.
     (RuleFamily.SUSTAIN, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         reason=_PACKET_FED, retires_at=_ONE_KERNEL
-    ),
-    (RuleFamily.SUSTAIN, EngineLane.RECEIPT_WALK): UnservedLane(
-        reason=_WALK_AUTHORED_BY_NAME, retires_at=_COUNTER_ONE
     ),
     **{
         (family, lane): UnservedLane(reason=_RESOLVER_FED, retires_at=_ONE_KERNEL)
@@ -420,7 +417,7 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
         reason=_TEMPLATE_FED, retires_at=_ONE_KERNEL
     ),
     (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): UnservedLane(
-        reason=_WALK_AUTHORED_BY_NAME, retires_at=_COUNTER_ONE
+        reason=_PAIR_PRICED_OR_PACKET_FED, retires_at=_ONE_KERNEL
     ),
 }
 

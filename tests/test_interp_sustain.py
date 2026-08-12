@@ -1,9 +1,11 @@
-"""The sustain family's front door: seven ways health comes back.
+"""The sustain family's front door: eight ways health comes back.
 
 Six of them are the holder's own — a vampirism stat, a flat on-hit heal, a
 share of damage dealt, a resource drain, a heal bought with mana, and a
-regeneration window — and the seventh multiplies everything the subject
-receives, which is why the defensive resolver builds it after every shield.
+regeneration window — the seventh multiplies everything the subject
+receives, which is why the defensive resolver builds it after every shield,
+and the eighth adds a share to what it receives once the fight has taken it
+below half health, which is why the walk reads that one through its own lane.
 
 The tests pin the numbers against the registry keys the retired name
 branches read, because this migration's claim is that the declarations
@@ -19,24 +21,29 @@ from src.calculator import item_effects
 from src.calculator.defensive_effects import resolve_starting_defenses
 from dataclasses import replace
 
-from src.calculator.interpreters import INTERPRETERS
+from src.calculator.interpreters import INTERPRETERS, compilability_for
 from src.calculator.interpreters import sustain
 from src.calculator.interpreters.sustain import (
     PAIR_INTERPRETER,
     RESOLVER_INTERPRETER,
+    WALK_INTERPRETER,
     SustainInterpretationError,
     declared_sustain,
     received_healing_multiplier,
     stat_grants,
     sustain_slot,
+    walk_slot,
 )
 from src.calculator.value_ref import LevelValueRef
 from src.calculator.item_behavior import (
+    BelowHalfHealingRule,
     DefenseMechanic,
     EngineLane,
     ManaSpentHealRule,
     OnHitHealRule,
     PostMitigationHealRule,
+    ReceiptOnly,
+    ReceiptScope,
     ReceivedHealingRule,
     RegenerationRule,
     ResourceDrainRule,
@@ -53,6 +60,7 @@ REGEN_HOLDER = "Doran's Shield"
 ON_HIT_HOLDER = "Cull"
 LIFESTEAL_HOLDER = "Vampiric Scepter"
 MULTIPLIER_HOLDER = "Spirit Visage"
+BELOW_HALF_HOLDER = "Immortal Path"
 
 
 def _slot(owner: str, payload_type: type):
@@ -75,8 +83,9 @@ def _rule(owner: str, payload_type: type):
     raise AssertionError(f"{owner} declares no {payload_type.__name__}")
 
 
-def test_both_lanes_are_registered() -> None:
-    """The holder's sustain is priced by the pair engine; the multiplier is not."""
+def test_all_three_lanes_are_registered() -> None:
+    """The pair engine prices the holder's own shapes, the resolver builds the
+    received-healing multiplier, and the walk compiles what it pays out itself."""
     assert (
         INTERPRETERS[(RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE)] is PAIR_INTERPRETER
     )
@@ -84,6 +93,11 @@ def test_both_lanes_are_registered() -> None:
         INTERPRETERS[(RuleFamily.SUSTAIN, EngineLane.DEFENSE_RESOLVER)]
         is RESOLVER_INTERPRETER
     )
+    assert (
+        INTERPRETERS[(RuleFamily.SUSTAIN, EngineLane.RECEIPT_WALK)] is WALK_INTERPRETER
+    )
+    assert WALK_INTERPRETER.FAMILY is RuleFamily.SUSTAIN
+    assert WALK_INTERPRETER.LANES == frozenset({EngineLane.RECEIPT_WALK})
 
 
 def test_every_sustain_entry_declares_a_rule() -> None:
@@ -358,3 +372,64 @@ def test_a_context_dependent_shape_is_refused_rather_than_guessed(
     monkeypatch.setattr(sustain, "sustain_rules", lambda owners, kind: (ramped,))
     with pytest.raises(SustainInterpretationError, match="fight fact"):
         declared_sustain([rule.owner], PostMitigationHealRule)
+
+
+def test_the_below_half_bonus_is_the_registry_number_the_walk_used_to_read() -> None:
+    """The declaration reproduces the key ``receipt_state`` read by name.
+
+    This migration's whole claim: the walk's below-half bonus is the same
+    sourced number it always was, reached through a rule instead of through
+    an item name and a registry accessor.
+    """
+    slot = walk_slot([BELOW_HALF_HOLDER], BelowHalfHealingRule)
+    assert slot is not None
+    assert slot.owner == BELOW_HALF_HOLDER
+    assert slot.value("bonus") == item_effects.sustain_effect_value(
+        BELOW_HALF_HOLDER, "health_state_healing_multiplier_below_half"
+    )
+
+
+def test_the_walk_accessor_and_the_walk_interpreter_are_one_answer() -> None:
+    """``walk_slot`` is :meth:`SustainWalkInterpreter.compile`, field for field.
+
+    Two entry points onto one arithmetic home, which is what stops the
+    registered interpreter and the accessor the boundary calls from drifting
+    into two answers for one declaration — the shape of failure this campaign
+    exists to remove.
+    """
+    rule = _rule(BELOW_HALF_HOLDER, BelowHalfHealingRule)
+    slot = walk_slot([BELOW_HALF_HOLDER], BelowHalfHealingRule)
+    assert slot is not None
+    assert slot.fields == WALK_INTERPRETER.compile(
+        rule,
+        catalog.build_context(
+            rule.owner,
+            13,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
+    )
+    assert {field.lane for field in slot.fields} == {EngineLane.RECEIPT_WALK}
+
+
+def test_the_walk_lane_answers_none_rather_than_zero_for_a_build_without_one() -> None:
+    """No holder declares the shape, so no rule ran — an answer, not a zero."""
+    assert walk_slot(["Boots"], BelowHalfHealingRule) is None
+
+
+def test_the_below_half_rule_is_receipt_only_in_the_ledger_scope() -> None:
+    """The score ledger cannot stage a boundary crossing it never simulates.
+
+    The refusal is scoped: it is the *survival ledger* that cannot stage the
+    transition, not the amp kernel, and folding the two scopes into one
+    verdict would fall a build back for a reason the build-level gate does
+    not own.
+    """
+    rule = _rule(BELOW_HALF_HOLDER, BelowHalfHealingRule)
+    assert isinstance(rule.compilability, ReceiptOnly)
+    assert rule.compilability.scope is ReceiptScope.SURVIVAL_LEDGER_TRANSITION
+    assert isinstance(
+        compilability_for(BELOW_HALF_HOLDER, ReceiptScope.SURVIVAL_LEDGER_TRANSITION),
+        ReceiptOnly,
+    )
