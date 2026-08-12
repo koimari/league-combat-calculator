@@ -1000,3 +1000,26 @@ def test_the_flip_moved_no_ordinary_item_in_or_out_of_attacker_eligibility() -> 
         assert coverage.optimizer_eligible == coverage.calculation_eligible
         if is_ordinary_sr_item(record):
             assert coverage.optimizer_eligible, record["name"]
+
+
+def test_no_cached_item_has_an_unserved_lane_on_any_public_lane_set() -> None:
+    """The three lane constants ask three questions and agree on every item.
+
+    `ATTACKER_LANES` is what the shop payload publishes, `SCORING_LANES` what
+    BIS eligibility asks and `TARGET_LANES` what the passive-target model
+    needs, and the first is a subset of the second: the day a family loses its
+    defence-resolver interpreter, an item reads `modeled_*` in the shop payload
+    and is `withheld` from the optimizer in the same request.  That is the
+    honest pair of answers to two different questions, and it is latent only
+    while no declared family lacks an interpreter anywhere — which the comment
+    above those constants claims and this asserts, because a claim about a
+    divergence being latent is worth exactly the check behind it.
+    """
+    for name in _cached_names():
+        for lanes in (
+            item_coverage.ATTACKER_LANES,
+            item_coverage.SCORING_LANES,
+            item_coverage.TARGET_LANES,
+        ):
+            assert item_coverage.unserved_lanes(name, lanes) == (), (name, lanes)
+    assert item_coverage.ATTACKER_LANES < item_coverage.SCORING_LANES
