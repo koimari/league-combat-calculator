@@ -1,0 +1,1462 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.penetration",
+  "family": "damage",
+  "behavior": "SionEArmorShred",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionEArmorShred"
+   ],
+   "evidence": "name:armorshred"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SionESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionESlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttackTower2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackTower2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttackTower2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackTower2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{17936053}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{17936053}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SionRSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SionWShieldStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionWShieldStacks"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SionWShieldStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionWShieldStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SionW",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionWAbility/SionW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SionCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttackPassive2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackPassive2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttackPassive2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackPassive2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionQDamage",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQDamage"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "SionR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRAbility/SionR"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQKnockUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQKnockUp"
+   ],
+   "evidence": "name:knockup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQAbility/SionQ"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQAbility/SionQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQAbility/SionQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQAbility/SionQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SionBasicAttackPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackPassive"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SionBasicAttackPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionBasicAttackPassive"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionEMissile"
+   ],
+   "inherited_from": "SionE",
+   "evidence": "inherited:SionE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEAbility/SionEMissile"
+   ],
+   "inherited_from": "SionE",
+   "evidence": "inherited:SionE"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ]
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQMissile"
+   ],
+   "inherited_from": "SionQ",
+   "evidence": "inherited:SionQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SionQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQMissile"
+   ],
+   "inherited_from": "SionQ",
+   "evidence": "inherited:SionQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SionQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQMissile"
+   ],
+   "inherited_from": "SionQ",
+   "evidence": "inherited:SionQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SionQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionQMissile"
+   ],
+   "inherited_from": "SionQ",
+   "evidence": "inherited:SionQ"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "SionPassiveZombie",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Glory in Death"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveZombie"
+   ],
+   "evidence": "wiki: reanimates on fatal damage, restoring 100% max health"
+  }
+ },
+ {
+  "atom_id": "heal-shield.life-steal",
+  "family": "heal-shield",
+  "behavior": "SionPassiveZombie",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Glory in Death",
+    "100% life steal"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveZombie"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "SionPassiveZombie",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Glory in Death"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveZombie"
+   ],
+   "evidence": "wiki: bonus physical damage on-hit equal to 10% max health"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ghost",
+  "family": "crowd-control-mobility",
+  "behavior": "SionPassiveZombie",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Glory in Death",
+    "Ghosting"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveZombie"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "SionPassiveDelay",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Glory in Death"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveDelay"
+   ],
+   "evidence": "wiki: enters stasis for 1.5s before reanimating"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "SionPassiveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Death Surge"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionPassiveSpeed"
+   ],
+   "evidence": "wiki: 67% bonus movement speed decaying over 2.376s"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "SionRRun",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 60.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unstoppable Onslaught"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRRun"
+   ],
+   "evidence": "wiki: immune to crowd control while charging"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ghost",
+  "family": "crowd-control-mobility",
+  "behavior": "SionRRun",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 60.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unstoppable Onslaught"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRRun"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "SionRRun",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 60.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unstoppable Onslaught"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionRRun"
+   ],
+   "evidence": "wiki: ramps movement speed up to 950 total"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "SionEMinion",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 8.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Roar of the Slayer"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEMinion"
+   ],
+   "evidence": "wiki: minions/non-epic monsters stunned 0.75s and knocked back"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "SionEMinion",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 8.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Roar of the Slayer"
+   ],
+   "binary": [
+    "Characters/Sion/Spells/SionEMinion"
+   ]
+  }
+ }
+]

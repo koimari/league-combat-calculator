@@ -1,0 +1,1259 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeblancBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LeblancBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancERoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancERoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 11.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 11.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRERoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancRERoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancRE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancRE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancRE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancRE"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancQAbility/LeblancQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancQMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancQAbility/LeblancQMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRW"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRWReturn",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRWReturn"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRWReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRWAbility/LeblancRWReturn"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancWReturn",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancWReturn"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LeblancW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancWAbility/LeblancW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRToggle",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 54.0,
+   "cooldown_rank_max": 40.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRToggle"
+   ],
+   "evidence": "name:toggle"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancRQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRQAbility/LeblancRQ"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancRQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRQAbility/LeblancRQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRQAbility/LeblancRQ"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancRQMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRQAbility/LeblancRQMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LeblancBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LeblancBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "LeblancCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 622.7000122070312,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancPBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "LeblancRStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRStealth"
+   ],
+   "evidence": "name:stealth"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "LeblancPMarkProc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPMarkProc"
+   ],
+   "evidence": "name:proc"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancPMarkProc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPMarkProc"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancPMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRAbility/LeblancR"
+   ],
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRAbility/LeblancR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancRAbility/LeblancR"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "leblanc Passive (Mirror Image)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units",
+    "Mirror Image"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 11.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancEMissile"
+   ],
+   "inherited_from": "LeblancE",
+   "evidence": "inherited:LeblancE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 11.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancEAbility/LeblancEMissile"
+   ],
+   "inherited_from": "LeblancE",
+   "evidence": "inherited:LeblancE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LeblancREMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancREMissile"
+   ],
+   "inherited_from": "LeblancRE",
+   "evidence": "inherited:LeblancRE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LeblancREMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancREMissile"
+   ],
+   "inherited_from": "LeblancRE",
+   "evidence": "inherited:LeblancRE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LeblancREMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancREAbility/LeblancREMissile"
+   ],
+   "inherited_from": "LeblancRE",
+   "evidence": "inherited:LeblancRE"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "LeblancQDetonate",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 700.0,
+   "damage_type": "magic"
+  },
+  "relations": [
+   "stack-transform-summon-resource.mark"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Sigil of Malice"
+   ],
+   "binary": [
+    "{257c9645}"
+   ],
+   "evidence": "name:detonate; wiki Q: consuming the mark deals bonus magic damage"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "LeblancRQDetonate",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 45.0,
+   "cooldown_rank_max": 25.0,
+   "range": 700.0,
+   "damage_type": "magic"
+  },
+  "relations": [
+   "stack-transform-summon-resource.mark"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Mimic"
+   ],
+   "binary": [
+    "{9c18eeef}"
+   ],
+   "evidence": "name:detonate; wiki R: mimicked Sigil of Malice mark consumption; binary key verified: {9c18eeef}"
+  }
+ }
+]

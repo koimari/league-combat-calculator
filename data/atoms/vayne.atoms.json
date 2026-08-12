@@ -1,0 +1,1244 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneCondemn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneCondemnAbility/VayneCondemn"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneCondemn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneCondemnAbility/VayneCondemn"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VayneCondemn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneCondemnAbility/VayneCondemn"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneCondemnAALock",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{3c1abe72}"
+   ],
+   "evidence": "name:aa"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneRdamagedMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{52d8f7b6}"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneEStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "{9694cb98}"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "VayneCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilverDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "true",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilverDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneInquisition",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 70.0,
+   "range": 1.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneInquisitionAbility/VayneInquisition"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "VayneTumble",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleAbility/VayneTumble"
+   ],
+   "evidence": "tag:Trait_Invisibility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VayneBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "VayneInquisitionStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneInquisitionStealth"
+   ],
+   "evidence": "name:stealth"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilveredDebuff",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "true",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilveredDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneCondemnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{0522a9f5}"
+   ],
+   "inherited_from": "VayneCondemn",
+   "evidence": "inherited:VayneCondemn"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneCondemnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "{0522a9f5}"
+   ],
+   "inherited_from": "VayneCondemn",
+   "evidence": "inherited:VayneCondemn"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VayneCondemnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{0522a9f5}"
+   ],
+   "inherited_from": "VayneCondemn",
+   "evidence": "inherited:VayneCondemn"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "VayneTumbleAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "{e12ab174}"
+   ],
+   "inherited_from": "VayneTumble",
+   "evidence": "inherited:VayneTumble"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "VaynePassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 2000.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement Speed",
+    "Night Hunter"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VaynePassiveAbility/VaynePassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "VayneHunt",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement Speed",
+    "Night Hunter"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneHunt"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Basic Attack",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneUltAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneUltAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VayneTumbleUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Basic Attack",
+    "Tumble",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleUltAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneTumbleUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "On Hit",
+    "Tumble",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleUltAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.attack-damage",
+  "family": "damage",
+  "behavior": "VayneTumbleUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack Damage",
+    "Tumble",
+    "Final Hour"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleUltAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VayneTumbleUltAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack Reset",
+    "Tumble"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneTumbleUltAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilverBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "true",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Silver Bolts"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilverBolts"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneSilverBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "true",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "On Hit",
+    "Silver Bolts"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilverBolts"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilveredBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "true",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Silver Bolts"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilveredBolts"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "VayneSilveredBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "true",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "On Hit",
+    "Silver Bolts"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilveredBolts"
+   ]
+  }
+ }
+]

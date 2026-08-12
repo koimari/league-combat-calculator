@@ -1,0 +1,742 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "XerathWSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathWSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "XerathAscended2OnHit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathAscended2OnHit"
+   ],
+   "evidence": "name:onhit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XerathAscended2OnHit",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathAscended2OnHit"
+   ],
+   "evidence": "name:ascended"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "XerathLocusOfPower2",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 130.0,
+   "range": 5000.0,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathLocusOfPower2"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XerathLocusOfPower2",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 130.0,
+   "range": 5000.0,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathLocusOfPower2"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XerathLocusOfPower2",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 130.0,
+   "range": 5000.0,
+   "damage_type": null,
+   "affects_type_flags": 15567
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathLocusOfPower2"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "XerathArcanopulseChargeUp",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 5.0,
+   "range": 750.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathArcanopulseChargeUpAbility/XerathArcanopulseChargeUp"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XerathArcanopulseChargeUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 5.0,
+   "range": 750.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathArcanopulseChargeUpAbility/XerathArcanopulseChargeUp"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XerathArcanopulseChargeUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 5.0,
+   "range": 750.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathArcanopulseChargeUpAbility/XerathArcanopulseChargeUp"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "XerathBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "XerathBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "XerathBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "XerathBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XerathMageSpear",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.5,
+   "cooldown_rank_max": 11.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathMageSpearAbility/XerathMageSpear"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XerathMageSpear",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.5,
+   "cooldown_rank_max": 11.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathMageSpearAbility/XerathMageSpear"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "XerathCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XerathLocusOfPower2Toggle",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 1600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathLocusOfPower2Toggle"
+   ],
+   "evidence": "name:toggle"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XerathAscended2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathAscended2Ability/XerathAscended2"
+   ],
+   "evidence": "name:ascended"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XerathRMSBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathRMSBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XerathArcaneBarrage2",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 9.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathArcaneBarrage2Ability/XerathArcaneBarrage2"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XerathArcaneBarrage2",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 9.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathArcaneBarrage2Ability/XerathArcaneBarrage2"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XerathMageSpearMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.5,
+   "cooldown_rank_max": 11.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{a104f46c}"
+   ],
+   "inherited_from": "XerathMageSpear",
+   "evidence": "inherited:XerathMageSpear"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XerathMageSpearMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.5,
+   "cooldown_rank_max": 11.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{a104f46c}"
+   ],
+   "inherited_from": "XerathMageSpear",
+   "evidence": "inherited:XerathMageSpear"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XerathRRampUp",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Rite of the Arcane"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathRRampUp"
+   ],
+   "evidence": "R channel ramp-up state enabling recasts; buff tooltip Buff_XerathRRampUp"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XerathLocusPulse",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Rite of the Arcane"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathLocusPulse"
+   ],
+   "evidence": "R recast shot dealing magic damage; Trait_Ultimate + Trait_FreeRecast + R icon"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XerathLocusPulse",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Rite of the Arcane"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathLocusPulse"
+   ],
+   "evidence": "R recast shot damage instance"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XerathArcanopulse2",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Arcanopulse"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathArcanopulseAbility/XerathArcanopulse2"
+   ],
+   "evidence": "Q Arcanopulse charged missile dealing magic damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XerathArcanopulse2",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "damage_type": "magic"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Arcanopulse"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathArcanopulseAbility/XerathArcanopulse2"
+   ],
+   "evidence": "Q Arcanopulse charged missile damage instance"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XerathMageChains",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shocking Orb"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathEAbility/XerathMageChains"
+   ],
+   "evidence": "E stun buff; tooltip game_buff_tooltip_XerathMageChains; E stuns 0.75-2.25s by travel distance"
+  }
+ }
+]

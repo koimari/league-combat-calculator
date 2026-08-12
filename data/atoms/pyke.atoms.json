@@ -1,0 +1,773 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "PykeQMelee",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeQAbility/PykeQMelee"
+   ],
+   "evidence": "name:melee"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 7.5,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeQAbility/PykeQ"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 7.5,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeQAbility/PykeQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "PykeQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 7.5,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeQAbility/PykeQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "PykePHealON",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykePassiveAbility/PykePHealON"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.on-heal-effect",
+  "family": "heal-shield",
+  "behavior": "PykePHealON",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykePassiveAbility/PykePHealON"
+   ],
+   "evidence": "name:onheal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "PykePHealOFF",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykePassiveAbility/PykePHealOFF"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "PykeBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "PykeBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "PykeBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "PykeBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "PykeR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 115.0,
+   "cooldown_rank_max": 25.0,
+   "range": 750.0,
+   "damage_type": "other",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeRAbility/PykeR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "PykeR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 115.0,
+   "cooldown_rank_max": 25.0,
+   "range": 750.0,
+   "damage_type": "other",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeRAbility/PykeR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "PykeR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 115.0,
+   "cooldown_rank_max": 25.0,
+   "range": 750.0,
+   "damage_type": "other",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeRAbility/PykeR"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "PykeCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "PykeE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "PykeE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "PykeW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeWAbility/PykeW"
+   ],
+   "evidence": "tag:Trait_Camouflage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeEMissile"
+   ],
+   "inherited_from": "PykeE",
+   "evidence": "inherited:PykeE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeEMissile"
+   ],
+   "inherited_from": "PykeE",
+   "evidence": "inherited:PykeE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeEMissile"
+   ],
+   "inherited_from": "PykeE",
+   "evidence": "inherited:PykeE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "PykeEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeEMissile"
+   ],
+   "inherited_from": "PykeE",
+   "evidence": "inherited:PykeE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "PykeEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 11.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeEAbility/PykeEMissile"
+   ],
+   "inherited_from": "PykeE",
+   "evidence": "inherited:PykeE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "PykeQRange (Bone Skewer charge)",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "charge_seconds": 3.0,
+   "self_slow_pct": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Bone Skewer",
+    "Channel"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykeQAbility/PykeQRange"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map; charges up to 3s to extend range, slowed 20%"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.health-as-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "PykePassive (Gift of the Drowned Ones)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "health_to_ad_ratio_pct": 7.143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gift of the Drowned Ones",
+    "Health",
+    "Attack damage"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykePassiveAbility/PykePassive"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map; max health cannot increase; bonus health converts to bonus AD"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "PykePassive (Gift of the Drowned Ones grey health)",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "grey_health_pct": 9.0,
+   "grey_health_near_enemies_pct": 40.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gift of the Drowned Ones",
+    "Healing",
+    "Grey health"
+   ],
+   "binary": [
+    "Characters/Pyke/Spells/PykePassiveAbility/PykePassive"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map; stores 9-40% post-mitigation damage as grey health, heals when unseen"
+  }
+ }
+]

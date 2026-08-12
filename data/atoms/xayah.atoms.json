@@ -1,0 +1,698 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XayahE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 2000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahEAbility/XayahE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 2000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahEAbility/XayahE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 2000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahEAbility/XayahE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "range": 1100.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahQAbility/XayahQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "range": 1100.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahQAbility/XayahQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahQMissile1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1100.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{65b1fd9e}"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "XayahW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahWAbility/XayahW"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahWAbility/XayahW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahWMissile1",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6794
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "{f657b652}"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "XayahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 7919
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "XayahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 7919
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "XayahCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 7919
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "XayahR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 100.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahRAbility/XayahR"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 100.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahRAbility/XayahR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 100.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahRAbility/XayahR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blind",
+  "family": "crowd-control-mobility",
+  "behavior": "XayahRMissile",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 1100.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "{fa63440b}"
+   ],
+   "evidence": "name:miss"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XayahEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 2000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{091bc283}"
+   ],
+   "inherited_from": "XayahE",
+   "evidence": "inherited:XayahE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 2000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{091bc283}"
+   ],
+   "inherited_from": "XayahE",
+   "evidence": "inherited:XayahE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 2000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{091bc283}"
+   ],
+   "inherited_from": "XayahE",
+   "evidence": "inherited:XayahE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XayahQMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "range": 1100.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{64b1fc0b}"
+   ],
+   "inherited_from": "XayahQ",
+   "evidence": "inherited:XayahQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahQMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "range": 1100.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{64b1fc0b}"
+   ],
+   "inherited_from": "XayahQ",
+   "evidence": "inherited:XayahQ"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "XayahWMissile2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{f557b4bf}"
+   ],
+   "inherited_from": "XayahW",
+   "evidence": "inherited:XayahW"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahWMissile2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f557b4bf}"
+   ],
+   "inherited_from": "XayahW",
+   "evidence": "inherited:XayahW"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahWHaste",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "attack_speed_bonus": true
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Deadly Plumage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahWAbility/XayahWHaste"
+   ],
+   "evidence": "buff tooltip game_buff_tooltip_XayahWHaste; W grants bonus attack speed"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahWRakanMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "damage_type": "physical"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Deadly Plumage"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahWAbility/XayahWRakanMissile"
+   ],
+   "evidence": "W empowered basic attacks fire an additional feather dealing physical damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XayahPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "linger_seconds": 6.0,
+   "effect_amount_rank1": 6.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Clean Cuts"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahPassive/XayahPassive"
+   ],
+   "evidence": "feathers linger and are planted in the ground for 6 seconds (feather resource)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "cooldown_rank1": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Clean Cuts"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahPassive/XayahPassiveAttack"
+   ],
+   "evidence": "passive feather projectile fired by basic attacks"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XayahPassiveActive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Clean Cuts"
+   ],
+   "binary": [
+    "Characters/Xayah/Spells/XayahPassive/XayahPassiveActive"
+   ],
+   "evidence": "passive feather flight on attack; same behavior as XayahPassiveAttack (duplicate script)"
+  }
+ }
+]

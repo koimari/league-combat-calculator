@@ -1,0 +1,923 @@
+[
+  {
+    "atom_id": "crowd-control-mobility.immobilize",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneQ",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 4.0,
+      "cooldown_rank_max": 4.0,
+      "range": 450.0,
+      "damage_type": "physical",
+      "affects_type_flags": 8192
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control/Summary",
+        "Tenacity"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneQAbility/YoneQ"
+      ],
+      "evidence": "tag:Trait_ImmobilizingCCAbility"
+    }
+  },
+  {
+    "atom_id": "damage.aoe",
+    "family": "damage",
+    "behavior": "YoneQ",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 4.0,
+      "cooldown_rank_max": 4.0,
+      "range": 450.0,
+      "damage_type": "physical",
+      "affects_type_flags": 8192
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Damage over time"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneQAbility/YoneQ"
+      ],
+      "evidence": "tag:Trait_AoE"
+    }
+  },
+  {
+    "atom_id": "damage.basic-attack",
+    "family": "damage",
+    "behavior": "YoneQ",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 4.0,
+      "cooldown_rank_max": 4.0,
+      "range": 450.0,
+      "damage_type": "physical",
+      "affects_type_flags": 8192
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneQAbility/YoneQ"
+      ],
+      "evidence": "tag:Trait_Strike"
+    }
+  },
+  {
+    "atom_id": "damage.damage-instance",
+    "family": "damage",
+    "behavior": "YoneQ",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 4.0,
+      "cooldown_rank_max": 4.0,
+      "range": 450.0,
+      "damage_type": "physical",
+      "affects_type_flags": 8192
+    },
+    "relations": [
+      "damage.resistance-mitigation",
+      "heal-shield.life-steal",
+      "heal-shield.omnivamp",
+      "heal-shield.grey-health"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneQAbility/YoneQ"
+      ],
+      "evidence": "tag:Trait_DamageAbility"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.immobilize",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneQ3Missile",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": 950.0,
+      "damage_type": "physical",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control/Summary",
+        "Tenacity"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneQAbility/YoneQ3Missile"
+      ],
+      "evidence": "tag:Trait_ImmobilizingCCSpell"
+    }
+  },
+  {
+    "atom_id": "damage.aoe",
+    "family": "damage",
+    "behavior": "YoneQ3Missile",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": 950.0,
+      "damage_type": "physical",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Damage over time"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneQAbility/YoneQ3Missile"
+      ],
+      "evidence": "tag:Trait_MultiTargetAttack"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.immobilize",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneQ3",
+    "trigger": "on_cast",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 4.0,
+      "cooldown_rank_max": 4.0,
+      "range": null,
+      "damage_type": "physical",
+      "affects_type_flags": 14346
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control/Summary",
+        "Tenacity"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneQAbility/YoneQ3"
+      ],
+      "evidence": "tag:Trait_ImmobilizingCCSpell"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.slow",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneQ3",
+    "trigger": "on_cast",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 4.0,
+      "cooldown_rank_max": 4.0,
+      "range": null,
+      "damage_type": "physical",
+      "affects_type_flags": 14346
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control",
+        "Types of Crowd Control/Summary",
+        "Slow resist",
+        "Movement speed",
+        "Cleanse",
+        "Combat status"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneQAbility/YoneQ3"
+      ],
+      "evidence": "tag:PositiveEffect_MoveBlock"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.airborne",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneRKnockback",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": null,
+      "damage_type": "other",
+      "affects_type_flags": null
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control",
+        "Types of Crowd Control/Summary",
+        "Dash",
+        "Blink"
+      ],
+      "binary": [
+        "{2269712e}"
+      ],
+      "evidence": "name:knockback"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.knockback",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneRKnockback",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": null,
+      "damage_type": "other",
+      "affects_type_flags": null
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Types of Crowd Control"
+      ],
+      "binary": [
+        "{2269712e}"
+      ],
+      "evidence": "name:knockback"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.stun",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneRStun",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": null,
+      "damage_type": "other",
+      "affects_type_flags": null
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control",
+        "Types of Crowd Control/Summary",
+        "Cleanse",
+        "Tenacity"
+      ],
+      "binary": [
+        "{3ce83ecb}"
+      ],
+      "evidence": "name:stun"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.dash",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneR",
+    "trigger": "on_cast",
+    "target_policy": "self",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 80.0,
+      "range": 1000.0,
+      "damage_type": "other",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Dash",
+        "Types of Crowd Control/Summary",
+        "Crowd control",
+        "Blink",
+        "Interrupt"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneRAbility/YoneR"
+      ],
+      "evidence": "tag:Trait_PlayerSelectedDashDirection"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.immobilize",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneR",
+    "trigger": "on_cast",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 80.0,
+      "range": 1000.0,
+      "damage_type": "other",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control/Summary",
+        "Tenacity"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneRAbility/YoneR"
+      ],
+      "evidence": "tag:Trait_ImmobilizingCCSpell"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.knockback",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneR",
+    "trigger": "on_cast",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 80.0,
+      "range": 1000.0,
+      "damage_type": "other",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Types of Crowd Control"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneRAbility/YoneR"
+      ],
+      "evidence": "tag:Trait_KnockBack"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.slow",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneR",
+    "trigger": "on_cast",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 80.0,
+      "range": 1000.0,
+      "damage_type": "other",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control",
+        "Types of Crowd Control/Summary",
+        "Slow resist",
+        "Movement speed",
+        "Cleanse",
+        "Combat status"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneRAbility/YoneR"
+      ],
+      "evidence": "tag:PositiveEffect_MoveBlock"
+    }
+  },
+  {
+    "atom_id": "damage.aoe",
+    "family": "damage",
+    "behavior": "YoneR",
+    "trigger": "on_cast",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 80.0,
+      "range": 1000.0,
+      "damage_type": "other",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Damage over time"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneRAbility/YoneR"
+      ],
+      "evidence": "tag:Trait_AoE"
+    }
+  },
+  {
+    "atom_id": "damage.damage-instance",
+    "family": "damage",
+    "behavior": "YoneR",
+    "trigger": "on_cast",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 80.0,
+      "range": 1000.0,
+      "damage_type": "other",
+      "affects_type_flags": 6154
+    },
+    "relations": [
+      "damage.resistance-mitigation",
+      "heal-shield.life-steal",
+      "heal-shield.omnivamp",
+      "heal-shield.grey-health"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneRAbility/YoneR"
+      ],
+      "evidence": "tag:Trait_DamageAbility"
+    }
+  },
+  {
+    "atom_id": "damage.critical-strike",
+    "family": "damage",
+    "behavior": "YoneCritAttack",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Critical strike",
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneCritAttack"
+      ],
+      "evidence": "rule:crit"
+    }
+  },
+  {
+    "atom_id": "damage.critical-strike",
+    "family": "damage",
+    "behavior": "YoneCritAttack3",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Critical strike",
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneCritAttack3"
+      ],
+      "evidence": "rule:crit"
+    }
+  },
+  {
+    "atom_id": "damage.critical-strike",
+    "family": "damage",
+    "behavior": "YoneCritAttack2",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Critical strike",
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneCritAttack2"
+      ],
+      "evidence": "rule:crit"
+    }
+  },
+  {
+    "atom_id": "damage.critical-strike",
+    "family": "damage",
+    "behavior": "YoneCritAttack4",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Critical strike",
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneCritAttack4"
+      ],
+      "evidence": "rule:crit"
+    }
+  },
+  {
+    "atom_id": "damage.basic-attack",
+    "family": "damage",
+    "behavior": "YoneBasicAttack",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneBasicAttack"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.tag-basicattack",
+    "family": "damage",
+    "behavior": "YoneBasicAttack",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneBasicAttack"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.dash",
+    "family": "crowd-control-mobility",
+    "behavior": "YoneE",
+    "trigger": "on_effect",
+    "target_policy": "self",
+    "parameters": {
+      "cooldown_rank1": 22.0,
+      "cooldown_rank_max": 10.0,
+      "range": 25000.0,
+      "damage_type": "true",
+      "affects_type_flags": 8192
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Dash",
+        "Types of Crowd Control/Summary",
+        "Crowd control",
+        "Blink",
+        "Interrupt"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneEAbility/YoneE"
+      ],
+      "evidence": "tag:Trait_PlayerSelectedDashDirection"
+    }
+  },
+  {
+    "atom_id": "stack-transform-summon-resource.mark",
+    "family": "stack-transform-summon-resource",
+    "behavior": "YoneEDeathmark",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": null,
+      "damage_type": "true",
+      "affects_type_flags": null
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Debuff"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneEAbility/YoneEDeathmark"
+      ],
+      "evidence": "name:deathmark"
+    }
+  },
+  {
+    "atom_id": "damage.aoe",
+    "family": "damage",
+    "behavior": "YoneW",
+    "trigger": "threshold",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 14.0,
+      "cooldown_rank_max": 14.0,
+      "range": 700.0,
+      "damage_type": "other",
+      "affects_type_flags": 8192
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Damage over time"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneWAbility/YoneW"
+      ],
+      "evidence": "tag:Trait_AoE"
+    }
+  },
+  {
+    "atom_id": "damage.damage-instance",
+    "family": "damage",
+    "behavior": "YoneW",
+    "trigger": "threshold",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 14.0,
+      "cooldown_rank_max": 14.0,
+      "range": 700.0,
+      "damage_type": "other",
+      "affects_type_flags": 8192
+    },
+    "relations": [
+      "damage.resistance-mitigation",
+      "heal-shield.life-steal",
+      "heal-shield.omnivamp",
+      "heal-shield.grey-health"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneWAbility/YoneW"
+      ],
+      "evidence": "tag:Trait_DamageAbility"
+    }
+  },
+  {
+    "atom_id": "heal-shield.shield",
+    "family": "heal-shield",
+    "behavior": "YoneW",
+    "trigger": "threshold",
+    "target_policy": "ally",
+    "parameters": {
+      "cooldown_rank1": 14.0,
+      "cooldown_rank_max": 14.0,
+      "range": 700.0,
+      "damage_type": "other",
+      "affects_type_flags": 8192
+    },
+    "relations": [
+      "heal-shield.shield-reduction",
+      "heal-shield.shield-destruction",
+      "heal-shield.heal-and-shield-power"
+    ],
+    "provenance": {
+      "wiki": [
+        "Shield",
+        "Heal and shield power",
+        "Grievous Wounds",
+        "Overheal"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneWAbility/YoneW"
+      ],
+      "evidence": "tag:Trait_Shield"
+    }
+  },
+  {
+    "atom_id": "damage.basic-attack",
+    "family": "damage",
+    "behavior": "YoneBasicAttack3",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneBasicAttack3"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.tag-basicattack",
+    "family": "damage",
+    "behavior": "YoneBasicAttack3",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneBasicAttack3"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.basic-attack",
+    "family": "damage",
+    "behavior": "YoneBasicAttack2",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneBasicAttack2"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.tag-basicattack",
+    "family": "damage",
+    "behavior": "YoneBasicAttack2",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneBasicAttack2"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.basic-attack",
+    "family": "damage",
+    "behavior": "YoneBasicAttack4",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneBasicAttack4"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.tag-basicattack",
+    "family": "damage",
+    "behavior": "YoneBasicAttack4",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.0,
+      "cooldown_rank_max": 0.0,
+      "range": 200.0,
+      "damage_type": null,
+      "affects_type_flags": 5327
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YoneBasicAttack4"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.magic",
+    "family": "damage",
+    "behavior": "YonePassive",
+    "trigger": "on_attack",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": null,
+      "damage_type": "magic",
+      "affects_type_flags": null
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Way of the Hunter",
+        "Yone's basic attacks alternate between his Steel Sword and Azakana Sword on-attack ... basic attacks with Azakana Sword deal 50% AD ... damage"
+      ],
+      "binary": [
+        "Characters/Yone/Spells/YonePassiveAbility/YonePassive"
+      ],
+      "evidence": "binary DataValue MagicDamageSplit=0.5 + YoneCritToAD=50 + CritChanceMultiplier=1.0; wiki: alternating on-attack damage split (crit doubling covered by existing critical-strike atoms)"
+    }
+  }
+]

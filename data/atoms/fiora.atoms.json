@@ -1,0 +1,1223 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraQAbility/FioraQ"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraQAbility/FioraQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FioraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraQAbility/FioraQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraQAbility/FioraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "FioraRHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraRAbility/FioraRHeal"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FioraRBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraRAbility/FioraRBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FioraRMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraRAbility/FioraRMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraRAbility/FioraR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "FioraR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraRAbility/FioraR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraWSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraW"
+   ],
+   "evidence": "tag:Trait_Immune"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "FioraW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraW"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FioraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FioraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FioraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraE"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "FioraE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraESlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FioraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "FioraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "FioraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "fiora Passive (Duelist's Dance (vital proc))",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "Duelist's Dance (vital proc)"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraQAbility/FioraQAttack"
+   ],
+   "inherited_from": "FioraQ",
+   "evidence": "inherited:FioraQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraQAbility/FioraQAttack"
+   ],
+   "inherited_from": "FioraQ",
+   "evidence": "inherited:FioraQ"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FioraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraQAbility/FioraQAttack"
+   ],
+   "inherited_from": "FioraQ",
+   "evidence": "inherited:FioraQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraQAbility/FioraQAttack"
+   ],
+   "inherited_from": "FioraQ",
+   "evidence": "inherited:FioraQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraWMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWMissile"
+   ],
+   "inherited_from": "FioraW",
+   "evidence": "inherited:FioraW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWMissile"
+   ],
+   "inherited_from": "FioraW",
+   "evidence": "inherited:FioraW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWMissile"
+   ],
+   "inherited_from": "FioraW",
+   "evidence": "inherited:FioraW"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "FioraWMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWMissile"
+   ],
+   "inherited_from": "FioraW",
+   "evidence": "inherited:FioraW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraWMissile2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWMissile2"
+   ],
+   "inherited_from": "FioraW",
+   "evidence": "inherited:FioraW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraWMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWMissile2"
+   ],
+   "inherited_from": "FioraW",
+   "evidence": "inherited:FioraW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraWMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWMissile2"
+   ],
+   "inherited_from": "FioraW",
+   "evidence": "inherited:FioraW"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "FioraWMissile2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 14.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraWAbility/FioraWMissile2"
+   ],
+   "inherited_from": "FioraW",
+   "evidence": "inherited:FioraW"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FioraE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraE2"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraE2"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "FioraE2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraE2"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FioraEAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraEAttack2"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraEAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraEAttack2"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "FioraEAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraEAttack2"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FioraEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraEAttack"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FioraEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraEAttack"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "FioraEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 425.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraEAbility/FioraEAttack"
+   ],
+   "inherited_from": "FioraE",
+   "evidence": "inherited:FioraE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "FioraPassiveSpeed",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Duelist's Dance"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraPassiveAbility/FioraPassiveSpeed"
+   ],
+   "evidence": "wiki-map",
+   "source": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "fiora Passive (Duelist's Dance (vital proc))",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "true"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "True damage",
+    "Duelist's Dance (vital proc)"
+   ],
+   "binary": [
+    "Characters/Fiora/Spells/FioraPassiveAbility/FioraPassive"
+   ],
+   "evidence": "wiki-map",
+   "source": "wiki-map"
+  }
+ }
+]

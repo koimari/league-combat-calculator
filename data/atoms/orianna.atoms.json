@@ -1,0 +1,731 @@
+[
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "OrianaRedactShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaRedactCommandAbility/OrianaRedactShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "OrianaRedactCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 1120.0,
+   "damage_type": null,
+   "affects_type_flags": 1
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaRedactCommandAbility/OrianaRedactCommand"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "OrianaRedactCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 1120.0,
+   "damage_type": null,
+   "affects_type_flags": 1
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaRedactCommandAbility/OrianaRedactCommand"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "OrianaRedactCommand",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 1120.0,
+   "damage_type": null,
+   "affects_type_flags": 1
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaRedactCommandAbility/OrianaRedactCommand"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "OrianaRedactCommand",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 1120.0,
+   "damage_type": null,
+   "affects_type_flags": 1
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaRedactCommandAbility/OrianaRedactCommand"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "OrianaDissonanceCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDissonanceCommandAbility/OrianaDissonanceCommand"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "OrianaDissonanceCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDissonanceCommandAbility/OrianaDissonanceCommand"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "OrianaDissonanceCommand",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDissonanceCommandAbility/OrianaDissonanceCommand"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "OriannaPStack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaPAbility/OriannaPStack"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ghost",
+  "family": "crowd-control-mobility",
+  "behavior": "OrianaGhost",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ghost",
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaGhost"
+   ],
+   "evidence": "name:ghost"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "OrianaIzunaCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 3.0,
+   "range": 825.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaIzunaCommandAbility/OrianaIzunaCommand"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "OrianaIzunaCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 3.0,
+   "range": 825.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaIzunaCommandAbility/OrianaIzunaCommand"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "OrianaDetonateCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 80.0,
+   "range": 410.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDetonateCommandAbility/OrianaDetonateCommand"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "OrianaDetonateCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 80.0,
+   "range": 410.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDetonateCommandAbility/OrianaDetonateCommand"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "OrianaDetonateCommand",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 80.0,
+   "range": 410.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDetonateCommandAbility/OrianaDetonateCommand"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "OrianaStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDetonateCommandAbility/OrianaStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.ghost",
+  "family": "crowd-control-mobility",
+  "behavior": "OrianaGhostSelf",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ghost",
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaGhostSelf"
+   ],
+   "evidence": "name:ghost"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "OriannaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "OriannaBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "OriannaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "OriannaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "OriannaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "OriannaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "OriannaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "OriannaP",
+  "trigger": "on_basic_attack",
+  "target_policy": "enemy",
+  "parameters": {
+   "bonus_magic_damage_min": 10.0,
+   "bonus_magic_damage_max": 54.71,
+   "ap_ratio": 0.15,
+   "stacks": 2,
+   "damage_type": "magic"
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Clockwork Windup"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaPAbility/OriannaP"
+   ],
+   "evidence": "wiki: basic attacks deal 10:54.71 (+15% AP) bonus magic damage on-hit, up to 2 stacks"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "OriannaPSelf",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "ball_attached_enhancement": true
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Clockwork Windup"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OriannaPAbility/OriannaPSelf"
+   ],
+   "evidence": "wiki: Ball attaches to Orianna when near; enhanced windup while attached"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "OrianaDissonanceAlly",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "bonus_movement_speed_percent": 20.0,
+   "bonus_movement_speed_percent_max": 30.0,
+   "decay_seconds": 2.0,
+   "field_duration_seconds": 3.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Command: Dissonance"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDissonanceCommandAbility/OrianaDissonanceAlly"
+   ],
+   "evidence": "wiki: 'granting bonus movement speed to Orianna and her allies... decaying over 2 seconds'"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "OrianaDissonanceEnemy",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "slow_percent": 20.0,
+   "decay_seconds": 2.0,
+   "field_duration_seconds": 3.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Command: Dissonance"
+   ],
+   "binary": [
+    "Characters/Orianna/Spells/OrianaDissonanceCommandAbility/OrianaDissonanceEnemy"
+   ],
+   "evidence": "wiki: 'Enemies that move within the field are slowed... decaying over 2 seconds'"
+  }
+ }
+]

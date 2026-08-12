@@ -1,0 +1,923 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XinZhaoQThrust1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoQThrust1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "XinZhaoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "XinZhaoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "XinZhaoEDash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{4cb7b363}"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "XinZhaoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 22538
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoEAbility/XinZhaoE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XinZhaoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 22538
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoEAbility/XinZhaoE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "XinZhaoQKnockup",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 17.0,
+   "cooldown_rank_max": 12.0,
+   "range": 20.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoQKnockup"
+   ],
+   "evidence": "name:knockup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "XinZhaoRKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoRKnockback"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "XinZhaoRKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoRKnockback"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "XinZhaoEBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoEBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "XinZhaoEBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoEBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "XinZhaoBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "XinZhaoBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "XinZhaoCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XinZhaoW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoWAbility/XinZhaoW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XinZhaoW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoWAbility/XinZhaoW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "XinZhaoW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoWAbility/XinZhaoW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "XinZhaoPassiveCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoPassiveCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XinZhaoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoRAbility/XinZhaoR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "XinZhaoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoRAbility/XinZhaoR"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XinZhaoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoRAbility/XinZhaoR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XinZhaoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoRAbility/XinZhaoR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XinZhaoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoRAbility/XinZhaoR"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "XinZhaoQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 375.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoQAbility/XinZhaoQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "XinZhaoQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 375.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoQAbility/XinZhaoQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XinZhaoQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 375.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoQAbility/XinZhaoQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "XinZhaoQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 375.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoQAbility/XinZhaoQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XinZhaoRRangedImmunity",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 17.0,
+   "cooldown_rank_max": 12.0,
+   "range": 20.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoRRangedImmunity"
+   ],
+   "evidence": "name:ranged"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "XinZhaoWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{edb8babd}"
+   ],
+   "inherited_from": "XinZhaoW",
+   "evidence": "inherited:XinZhaoW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XinZhaoWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{edb8babd}"
+   ],
+   "inherited_from": "XinZhaoW",
+   "evidence": "inherited:XinZhaoW"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "XinZhaoWMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{edb8babd}"
+   ],
+   "inherited_from": "XinZhaoW",
+   "evidence": "inherited:XinZhaoW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XinZhaoQThrust2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "effect_amount_rank1": 30.0,
+   "effect_amount_rank_max": 300.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Three Talon Strike"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoQAbility/XinZhaoQThrust2"
+   ],
+   "evidence": "Q empowered basic attack 2 dealing bonus physical damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "XinZhaoQThrust3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "effect_amount_rank1": 12.0,
+   "effect_amount_rank_max": 84.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Three Talon Strike"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoQAbility/XinZhaoQThrust3"
+   ],
+   "evidence": "Q empowered basic attack 3 dealing bonus physical damage (knockup mapped separately)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XinZhaoEBattleCry",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "attack_speed_bonus_rank1": 25.0,
+   "attack_speed_bonus_rank_max": 55.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Audacious Charge"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoEAbility/XinZhaoEBattleCry"
+   ],
+   "evidence": "E attack-speed buff after dashing; binary EffectAmount 25-55"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XinZhaoP",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "stack_cap": 3
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Determination"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoPAbility/XinZhaoP"
+   ],
+   "evidence": "Determination stacks from basic attacks on-hit and W hits, stacking up to 3"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "XinZhaoP",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "heal_on_third_stack": true
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Determination"
+   ],
+   "binary": [
+    "Characters/XinZhao/Spells/XinZhaoPAbility/XinZhaoP"
+   ],
+   "evidence": "3rd Determination stack consumed to heal Xin Zhao"
+  }
+ }
+]

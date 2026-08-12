@@ -1,0 +1,1852 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BriarW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarWAbility/BriarW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BriarWFrenzyBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{324bdf8d}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "BriarWAttackSpell",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{3c5c0e44}"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "BriarWAttackSpell",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{3c5c0e44}"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 475.0,
+   "damage_type": "physical",
+   "affects_type_flags": 22591
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarQAbility/BriarQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 475.0,
+   "damage_type": "physical",
+   "affects_type_flags": 22591
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarQAbility/BriarQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 475.0,
+   "damage_type": "physical",
+   "affects_type_flags": 22591
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarQAbility/BriarQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BriarQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 475.0,
+   "damage_type": "physical",
+   "affects_type_flags": 22591
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarQAbility/BriarQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "BriarQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 475.0,
+   "damage_type": "physical",
+   "affects_type_flags": 22591
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarQAbility/BriarQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttackFrenzy3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttackFrenzy3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttackFrenzy3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttackFrenzy3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttackFrenzy2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttackFrenzy2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttackFrenzy2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttackFrenzy2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-over-time",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BriarPBleed",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{0e50dfde}"
+   ],
+   "evidence": "name:bleed"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 70.0,
+   "range": 12000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarRAbility/BriarR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 70.0,
+   "range": 12000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarRAbility/BriarR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "BriarR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 70.0,
+   "range": 12000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarRAbility/BriarR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BriarR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 70.0,
+   "range": 12000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarRAbility/BriarR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarEKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "{39142cf5}"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarEKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "{39142cf5}"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarEKnockup",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "{875ef73b}"
+   ],
+   "evidence": "name:knockup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarEAbility/BriarE"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarEAbility/BriarE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarEAbility/BriarE"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "BriarE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarEAbility/BriarE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BriarE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarEAbility/BriarE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "BriarE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarEAbility/BriarE"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "BriarE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarEAbility/BriarE"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "BriarCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttackFrenzy",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttackFrenzy"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttackFrenzy",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttackFrenzy"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack6"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack6"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack5"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack5"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BriarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "BriarCritAttackFrenzy",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Briar/Spells/BriarCritAttackFrenzy"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BriarWAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 350.0,
+   "damage_type": "physical",
+   "affects_type_flags": 20490
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{d07cdc7a}"
+   ],
+   "inherited_from": "BriarW",
+   "evidence": "inherited:BriarW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarEMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "{b2e2167d}"
+   ],
+   "inherited_from": "BriarE",
+   "evidence": "inherited:BriarE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarEMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{b2e2167d}"
+   ],
+   "inherited_from": "BriarE",
+   "evidence": "inherited:BriarE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarEMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "{b2e2167d}"
+   ],
+   "inherited_from": "BriarE",
+   "evidence": "inherited:BriarE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "BriarEMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{b2e2167d}"
+   ],
+   "inherited_from": "BriarE",
+   "evidence": "inherited:BriarE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BriarEMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{b2e2167d}"
+   ],
+   "inherited_from": "BriarE",
+   "evidence": "inherited:BriarE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "BriarEMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{b2e2167d}"
+   ],
+   "inherited_from": "BriarE",
+   "evidence": "inherited:BriarE"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "BriarEMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{b2e2167d}"
+   ],
+   "inherited_from": "BriarE",
+   "evidence": "inherited:BriarE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BriarQShred",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [],
+   "binary": [
+    "briar.bin.json/{df0eb0c8}"
+   ],
+   "evidence": "binary object name: Q Head Rush armor-shred debuff component"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarRSelf",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 70.0,
+   "range": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [],
+   "binary": [
+    "briar.bin.json/{ab3f4a6c}"
+   ],
+   "evidence": "binary object name: R Certain Death self-charm component"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BriarRVictim",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 70.0,
+   "range": 0.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [],
+   "binary": [
+    "briar.bin.json/{db75d7ba}"
+   ],
+   "evidence": "binary object name: R Certain Death victim suppress/death-marker component"
+  }
+ }
+]

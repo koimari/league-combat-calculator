@@ -1,0 +1,1546 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoPassiveSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoPassiveSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 50.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 50.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 50.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 50.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "EkkoR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 50.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "EkkoRHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoRHeal"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoWStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoWStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "EkkoWShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoWShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoWShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoWShield"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 24.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 24.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "EkkoW",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 24.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoStunMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoStunMarker"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoStunMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoStunMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackP1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackP1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackTower"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttackTower",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttackTower"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoEAttackBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoEAttackBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "EkkoE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAbility/EkkoE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "EkkoBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "EkkoCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ekko Passive (Chronobreak (R heal))",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "Chronobreak (R heal)"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoQReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQReturn"
+   ],
+   "inherited_from": "EkkoQ",
+   "evidence": "inherited:EkkoQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoQReturn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQReturn"
+   ],
+   "inherited_from": "EkkoQ",
+   "evidence": "inherited:EkkoQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQMis"
+   ],
+   "inherited_from": "EkkoQ",
+   "evidence": "inherited:EkkoQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoQAbility/EkkoQMis"
+   ],
+   "inherited_from": "EkkoQ",
+   "evidence": "inherited:EkkoQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "EkkoEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.5,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoEAttack"
+   ],
+   "inherited_from": "EkkoE",
+   "evidence": "inherited:EkkoE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoWMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 24.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{f3b26ab9}"
+   ],
+   "inherited_from": "EkkoW",
+   "evidence": "inherited:EkkoW"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EkkoWMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 24.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{f3b26ab9}"
+   ],
+   "inherited_from": "EkkoW",
+   "evidence": "inherited:EkkoW"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "EkkoWMis",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 24.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "{f3b26ab9}"
+   ],
+   "inherited_from": "EkkoW",
+   "evidence": "inherited:EkkoW"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EkkoPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Resonance",
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoPassive"
+   ],
+   "evidence": "Z-Drive Resonance: third stack consumed to deal bonus magic damage (wiki P, MAGIC_DAMAGE)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoPassiveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoPassiveSpeed"
+   ],
+   "evidence": "passive move-speed burst buff (binary buff object name EkkoPassiveSpeed)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "EkkoRInvuln",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoRAbility/EkkoRInvuln"
+   ],
+   "evidence": "Chronobreak: Ekko becomes untargetable/invulnerable while traveling (binary EkkoRInvuln)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "EkkoRMinion",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Summon"
+   ],
+   "binary": [
+    "{71103854}"
+   ],
+   "evidence": "Chronobreak time-delayed afterimage (clone-like unit object {71103854})"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "EkkoWPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Parallel Convergence",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ekko/Spells/EkkoWAbility/EkkoWPassive"
+   ],
+   "evidence": "Parallel Convergence passive: bonus magic damage vs enemies below 30% HP scaling with missing health (wiki W)"
+  }
+ }
+]

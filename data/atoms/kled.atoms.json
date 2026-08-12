@@ -1,0 +1,1686 @@
+[
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "KledRShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KledDisMountDash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{2bcd3400}"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KledE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledEAbility/KledE2"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KledEDash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledEAbility/KledEDash"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KledESpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledEAbility/KledESpeedBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KledE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledEAbility/KledE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KledE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledEAbility/KledE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KledE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledEAbility/KledE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledEAbility/KledE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KledRiderQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.0,
+   "cooldown_rank_max": 3.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderQAbility/KledRiderQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledRiderQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.0,
+   "cooldown_rank_max": 3.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderQAbility/KledRiderQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledRiderBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KledRiderBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KledQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledQAbility/KledQSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KledQMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledQAbility/KledQMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "KledQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 800.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledQAbility/KledQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 800.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledQAbility/KledQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledRiderBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KledRiderBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KledBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KledWAttack1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KledRDash",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 180.0,
+   "cooldown_rank_max": 10.0,
+   "range": 5000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledRDash"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KledRDash",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 180.0,
+   "cooldown_rank_max": 10.0,
+   "range": 5000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledRDash"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "KledR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 110.0,
+   "range": 3500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "KledR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 110.0,
+   "range": 3500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledR"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KledR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 110.0,
+   "range": 3500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KledR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 110.0,
+   "range": 3500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 110.0,
+   "range": 3500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "KledR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 110.0,
+   "range": 3500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledR"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "KledR",
+  "trigger": "threshold",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 110.0,
+   "range": 3500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledR"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KledRChargeAllySpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledRChargeAllySpeedBuff"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KledBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KledBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KledRiderCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KledBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KledRemountDash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRemountDash"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KledRiderWAttack1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderWAttack1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAbility/KledW"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAbility/KledW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "KledW",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAbility/KledW"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KledCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KledRFormswapper",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "{dcb5f24b}"
+   ],
+   "evidence": "name:form"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KledRiderQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.0,
+   "cooldown_rank_max": 3.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderQAbility/KledRiderQMissile"
+   ],
+   "inherited_from": "KledRiderQ",
+   "evidence": "inherited:KledRiderQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledRiderQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.0,
+   "cooldown_rank_max": 3.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 12298
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRiderQAbility/KledRiderQMissile"
+   ],
+   "inherited_from": "KledRiderQ",
+   "evidence": "inherited:KledRiderQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "KledQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 800.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledQAbility/KledQMissile"
+   ],
+   "inherited_from": "KledQ",
+   "evidence": "inherited:KledQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 800.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledQAbility/KledQMissile"
+   ],
+   "inherited_from": "KledQ",
+   "evidence": "inherited:KledQ"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledWAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack4"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledWAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack4"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "KledWAttack4",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack4"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledWAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack5"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledWAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack5"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "KledWAttack5",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack5"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledWAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack2"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledWAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack2"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "KledWAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack2"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KledWAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack3"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KledWAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack3"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "KledWAttack3",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWAttack3"
+   ],
+   "inherited_from": "KledW",
+   "evidence": "inherited:KledW"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KledWActive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Violent Tendencies"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledWActive"
+   ],
+   "evidence": "passive: periodically gains Violent Tendencies, expiring on the next basic attack; buff tooltip game_buff_tooltip_KledWActive"
+  }
+ }
+]

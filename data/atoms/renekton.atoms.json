@@ -1,0 +1,876 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RenekthonSliceAndDiceDelay",
+  "trigger": "on_recast_ready",
+  "target_policy": "self",
+  "parameters": {
+   "recast_window_seconds": 4.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slice and Dice (E): if Renekton hits an enemy he can recast within the next 4 seconds"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenekthonSliceAndDiceDelay"
+   ],
+   "evidence": "E recast-window timer object"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonDice",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 18.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonDice"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonSliceAndDice",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDice"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonDice",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 18.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonDice"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonSliceAndDice",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDice"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "RenektonPredator",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "stun_seconds": 0.75,
+   "strike_count": 2.0,
+   "empowered_strike_count": 3.0,
+   "window_seconds": 7.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ruthless Predator (W): empowers next basic attack within 7s to strike twice (3 with Reign of Anger) and stun for 0.75s"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPredatorAbility/RenektonPredator"
+   ],
+   "evidence": "base W object (stun + multi-strike)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RenektonCleave",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonCleaveAbility/RenektonCleave"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RenektonReignOfTheTyrant",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonReignOfTheTyrantAbility/RenektonReignOfTheTyrant"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RenektonSliceAndDice",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDice"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RenektonBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RenektonBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "RenektonCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonCleave",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonCleaveAbility/RenektonCleave"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonPredator",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "on_hit_per_strike": true
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ruthless Predator (W): each strike deals modified physical damage and applies on-hit effects; first strike can critically strike"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPredatorAbility/RenektonPredator"
+   ],
+   "evidence": "base W damage (physical, on-hit per strike)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonReignOfTheTyrant",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonReignOfTheTyrantAbility/RenektonReignOfTheTyrant"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RenektonSliceAndDice",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDice"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "RenektonReignOfTheTyrant",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonReignOfTheTyrantAbility/RenektonReignOfTheTyrant"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "RenektonExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6191
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonExecute"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "RenektonExecuteAttack",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonExecuteAttack"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "RenektonSuperExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6191
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSuperExecute"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RenektonBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RenektonBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "RenektonCleave",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonCleaveAbility/RenektonCleave"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "RenektonPreExecute",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 300.0,
+   "damage_type": null,
+   "affects_type_flags": 14984
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonPreExecuteAbility/RenektonPreExecute"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RenektonReignOfTheTyrant",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonReignOfTheTyrantAbility/RenektonReignOfTheTyrant"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RenektonSiblingRivalryActive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "binary": [
+    "{b3b4a25c}"
+   ],
+   "evidence": "internal Renekton-vs-Nasus Sibling Rivalry interaction buff; no wiki cache entry (noted)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RenektonSliceAndDiceShred",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "duration_seconds": 4.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slice and Dice (E) Reign of Anger: Dice (recast) inflicts armor reduction to enemies hit for 4 seconds"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenektonSliceAndDiceAbility/RenektonSliceAndDiceShred"
+   ],
+   "evidence": "armor-reduction debuff on empowered Dice"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RenekthonTyrantForm",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Renekton/Spells/RenekthonTyrantForm"
+   ],
+   "evidence": "name:form"
+  }
+ }
+]

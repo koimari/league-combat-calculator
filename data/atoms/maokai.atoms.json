@@ -1,0 +1,1126 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MaokaiBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MaokaiBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiRRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQKnockback"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQKnockback",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQKnockback"
+   ],
+   "evidence": "name:knockback"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQ"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 525.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 525.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 525.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiW"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 525.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiWRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiWAbility/MaokaiWRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TrapLimiter_Maokai",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/TrapLimiter_Maokai"
+   ],
+   "evidence": "name:trap"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiSapling2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiSapling2"
+   ],
+   "evidence": "name:sapling"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiEMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_Pet"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiE"
+   ],
+   "evidence": "tag:Trait_Trap"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MaokaiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MaokaiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MaokaiCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "maokai Passive (Sapling)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets",
+    "Sapling"
+   ],
+   "binary": [
+    "maokai Passive (Sapling)"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "maokai Passive (Sap Magic)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "Sap Magic"
+   ],
+   "binary": [
+    "maokai Passive (Sap Magic)"
+   ],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMis"
+   ],
+   "inherited_from": "MaokaiR",
+   "evidence": "inherited:MaokaiR"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMis"
+   ],
+   "inherited_from": "MaokaiR",
+   "evidence": "inherited:MaokaiR"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 130.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMis"
+   ],
+   "inherited_from": "MaokaiR",
+   "evidence": "inherited:MaokaiR"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQMissile"
+   ],
+   "inherited_from": "MaokaiQ",
+   "evidence": "inherited:MaokaiQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQMissile"
+   ],
+   "inherited_from": "MaokaiQ",
+   "evidence": "inherited:MaokaiQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQMissile"
+   ],
+   "inherited_from": "MaokaiQ",
+   "evidence": "inherited:MaokaiQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiQAbility/MaokaiQMissile"
+   ],
+   "inherited_from": "MaokaiQ",
+   "evidence": "inherited:MaokaiQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MaokaiEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 14.0,
+   "range": 1100.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissile"
+   ],
+   "inherited_from": "MaokaiE",
+   "evidence": "inherited:MaokaiE"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiRMoveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Nature's Grasp"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMoveSpeed"
+   ],
+   "evidence": "binary:game_buff_tooltip_MaokaiRMoveSpeed - Nature's Grasp applies a decaying move-speed effect to enemies hit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiTrunkLine",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Twisted Advance"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiTrunkLine"
+   ],
+   "evidence": "wiki:Twisted Advance - Maokai dashes to the target (dash collision line object)"
+  }
+ }
+]

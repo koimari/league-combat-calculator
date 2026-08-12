@@ -1,0 +1,657 @@
+[
+  {
+    "atom_id": "damage.aoe",
+    "family": "damage",
+    "behavior": "CassiopeiaQ",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 3.5,
+      "cooldown_rank_max": 3.5,
+      "range": 850.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Damage over time"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaQAbility/CassiopeiaQ"
+      ],
+      "evidence": "tag:Trait_AoE"
+    }
+  },
+  {
+    "atom_id": "damage.damage-instance",
+    "family": "damage",
+    "behavior": "CassiopeiaQ",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 3.5,
+      "cooldown_rank_max": 3.5,
+      "range": 850.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [
+      "damage.resistance-mitigation",
+      "heal-shield.life-steal",
+      "heal-shield.omnivamp",
+      "heal-shield.grey-health"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaQAbility/CassiopeiaQ"
+      ],
+      "evidence": "tag:Trait_Low_Damage"
+    }
+  },
+  {
+    "atom_id": "damage.dot",
+    "family": "damage",
+    "behavior": "CassiopeiaQ",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 3.5,
+      "cooldown_rank_max": 3.5,
+      "range": 850.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [
+      "heal-shield.grievous-wounds",
+      "damage.damage-instance"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage over time",
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaQAbility/CassiopeiaQ"
+      ],
+      "evidence": "tag:Trait_DoT"
+    }
+  },
+  {
+    "atom_id": "stack-transform-summon-resource.debuff",
+    "family": "stack-transform-summon-resource",
+    "behavior": "CassiopeiaQDebuff",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": null,
+      "damage_type": "magic",
+      "affects_type_flags": null
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Debuff"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaQAbility/CassiopeiaQDebuff"
+      ],
+      "evidence": "name:debuff"
+    }
+  },
+  {
+    "atom_id": "damage.damage-instance",
+    "family": "damage",
+    "behavior": "CassiopeiaE",
+    "trigger": "on_cast",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 0.75,
+      "cooldown_rank_max": 0.75,
+      "range": 700.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [
+      "damage.resistance-mitigation",
+      "heal-shield.life-steal",
+      "heal-shield.omnivamp",
+      "heal-shield.grey-health"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaEAbility/CassiopeiaE"
+      ],
+      "evidence": "tag:Trait_DamageAbility"
+    }
+  },
+  {
+    "atom_id": "heal-shield.heal",
+    "family": "heal-shield",
+    "behavior": "CassiopeiaE",
+    "trigger": "on_cast",
+    "target_policy": "self",
+    "parameters": {
+      "cooldown_rank1": 0.75,
+      "cooldown_rank_max": 0.75,
+      "range": 700.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [
+      "heal-shield.grievous-wounds",
+      "heal-shield.heal-amplification",
+      "heal-shield.healing-negation",
+      "heal-shield.overheal"
+    ],
+    "provenance": {
+      "wiki": [
+        "Healing",
+        "Heal",
+        "Health"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaEAbility/CassiopeiaE"
+      ],
+      "evidence": "tag:Trait_ActiveHeal"
+    }
+  },
+  {
+    "atom_id": "damage.critical-strike",
+    "family": "damage",
+    "behavior": "CassiopeiaCritAttack",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": 650.0,
+      "damage_type": null,
+      "affects_type_flags": 8143
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Critical strike",
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaCritAttack"
+      ],
+      "evidence": "rule:crit"
+    }
+  },
+  {
+    "atom_id": "stack-transform-summon-resource.debuff",
+    "family": "stack-transform-summon-resource",
+    "behavior": "CassPoisonDebuffListener",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": null,
+      "damage_type": null,
+      "affects_type_flags": null
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Debuff"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassPoisonDebuffListener"
+      ],
+      "evidence": "name:debuff"
+    }
+  },
+  {
+    "atom_id": "damage.aoe",
+    "family": "damage",
+    "behavior": "CassiopeiaW",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 24.0,
+      "cooldown_rank_max": 14.0,
+      "range": 25000.0,
+      "damage_type": "magic",
+      "affects_type_flags": 7375
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Damage over time"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaW"
+      ],
+      "evidence": "tag:Trait_AoE"
+    }
+  },
+  {
+    "atom_id": "damage.damage-instance",
+    "family": "damage",
+    "behavior": "CassiopeiaW",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 24.0,
+      "cooldown_rank_max": 14.0,
+      "range": 25000.0,
+      "damage_type": "magic",
+      "affects_type_flags": 7375
+    },
+    "relations": [
+      "damage.resistance-mitigation",
+      "heal-shield.life-steal",
+      "heal-shield.omnivamp",
+      "heal-shield.grey-health"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaW"
+      ],
+      "evidence": "tag:Trait_Low_Damage"
+    }
+  },
+  {
+    "atom_id": "damage.dot",
+    "family": "damage",
+    "behavior": "CassiopeiaW",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 24.0,
+      "cooldown_rank_max": 14.0,
+      "range": 25000.0,
+      "damage_type": "magic",
+      "affects_type_flags": 7375
+    },
+    "relations": [
+      "heal-shield.grievous-wounds",
+      "damage.damage-instance"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage over time",
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaW"
+      ],
+      "evidence": "tag:Trait_DoT"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.slow",
+    "family": "crowd-control-mobility",
+    "behavior": "CassiopeiaWSlow",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 140.0,
+      "cooldown_rank_max": 10.0,
+      "range": 750.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control",
+        "Types of Crowd Control/Summary",
+        "Slow resist",
+        "Movement speed",
+        "Cleanse",
+        "Combat status"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaWSlow"
+      ],
+      "evidence": "name:slow"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.stun",
+    "family": "crowd-control-mobility",
+    "behavior": "CassiopeiaRStun",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 140.0,
+      "cooldown_rank_max": 10.0,
+      "range": 750.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control",
+        "Types of Crowd Control/Summary",
+        "Cleanse",
+        "Tenacity"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaRAbility/CassiopeiaRStun"
+      ],
+      "evidence": "name:stun"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.immobilize",
+    "family": "crowd-control-mobility",
+    "behavior": "CassiopeiaR",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 10.0,
+      "range": 825.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Crowd control",
+        "Types of Crowd Control/Summary",
+        "Tenacity"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaRAbility/CassiopeiaR"
+      ],
+      "evidence": "tag:Trait_ImmobilizingCCSpell"
+    }
+  },
+  {
+    "atom_id": "damage.aoe",
+    "family": "damage",
+    "behavior": "CassiopeiaR",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 10.0,
+      "range": 825.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Damage over time"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaRAbility/CassiopeiaR"
+      ],
+      "evidence": "tag:Trait_AoE"
+    }
+  },
+  {
+    "atom_id": "damage.damage-instance",
+    "family": "damage",
+    "behavior": "CassiopeiaR",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 120.0,
+      "cooldown_rank_max": 10.0,
+      "range": 825.0,
+      "damage_type": "magic",
+      "affects_type_flags": 6154
+    },
+    "relations": [
+      "damage.resistance-mitigation",
+      "heal-shield.life-steal",
+      "heal-shield.omnivamp",
+      "heal-shield.grey-health"
+    ],
+    "provenance": {
+      "wiki": [
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaRAbility/CassiopeiaR"
+      ],
+      "evidence": "tag:Trait_DamageAbility"
+    }
+  },
+  {
+    "atom_id": "damage.basic-attack",
+    "family": "damage",
+    "behavior": "CassiopeiaBasicAttack2",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": 650.0,
+      "damage_type": null,
+      "affects_type_flags": 8143
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaBasicAttack2"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.tag-basicattack",
+    "family": "damage",
+    "behavior": "CassiopeiaBasicAttack2",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": 650.0,
+      "damage_type": null,
+      "affects_type_flags": 8143
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaBasicAttack2"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.basic-attack",
+    "family": "damage",
+    "behavior": "CassiopeiaBasicAttack",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": 650.0,
+      "damage_type": null,
+      "affects_type_flags": 8143
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaBasicAttack"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "damage.tag-basicattack",
+    "family": "damage",
+    "behavior": "CassiopeiaBasicAttack",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": 650.0,
+      "damage_type": null,
+      "affects_type_flags": 8143
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Attack effects"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaBasicAttack"
+      ],
+      "evidence": "name:basicattack"
+    }
+  },
+  {
+    "atom_id": "heal-shield.heal",
+    "family": "heal-shield",
+    "behavior": "cassiopeia Passive (E (Twin Fang heal))",
+    "trigger": "passive",
+    "target_policy": "self",
+    "parameters": {},
+    "provenance": {
+      "wiki": [
+        "Healing",
+        "Heal",
+        "Health",
+        "E (Twin Fang heal)"
+      ],
+      "binary": [],
+      "source": "wiki-map",
+      "evidence": "wiki-map"
+    }
+  },
+  {
+    "atom_id": "damage.aoe",
+    "family": "damage",
+    "behavior": "CassiopeiaWMissile",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 24.0,
+      "cooldown_rank_max": 14.0,
+      "range": 25000.0,
+      "damage_type": "magic",
+      "affects_type_flags": 7375
+    },
+    "provenance": {
+      "wiki": [
+        "Damage",
+        "Damage over time"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaWMissile"
+      ],
+      "inherited_from": "CassiopeiaW",
+      "evidence": "inherited:CassiopeiaW"
+    }
+  },
+  {
+    "atom_id": "damage.damage-instance",
+    "family": "damage",
+    "behavior": "CassiopeiaWMissile",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 24.0,
+      "cooldown_rank_max": 14.0,
+      "range": 25000.0,
+      "damage_type": "magic",
+      "affects_type_flags": 7375
+    },
+    "provenance": {
+      "wiki": [
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaWMissile"
+      ],
+      "inherited_from": "CassiopeiaW",
+      "evidence": "inherited:CassiopeiaW"
+    }
+  },
+  {
+    "atom_id": "damage.dot",
+    "family": "damage",
+    "behavior": "CassiopeiaWMissile",
+    "trigger": "on_effect",
+    "target_policy": "enemy",
+    "parameters": {
+      "cooldown_rank1": 24.0,
+      "cooldown_rank_max": 14.0,
+      "range": 25000.0,
+      "damage_type": "magic",
+      "affects_type_flags": 7375
+    },
+    "provenance": {
+      "wiki": [
+        "Damage over time",
+        "Damage"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaWAbility/CassiopeiaWMissile"
+      ],
+      "inherited_from": "CassiopeiaW",
+      "evidence": "inherited:CassiopeiaW"
+    }
+  },
+  {
+    "atom_id": "crowd-control-mobility.movement-speed",
+    "family": "crowd-control-mobility",
+    "behavior": "CassiopeiaPassive",
+    "trigger": "passive",
+    "target_policy": "self",
+    "parameters": {
+      "cooldown_rank1": null,
+      "cooldown_rank_max": null,
+      "range": null,
+      "damage_type": null,
+      "affects_type_flags": null
+    },
+    "relations": [],
+    "provenance": {
+      "wiki": [
+        "Movement Speed",
+        "Serpentine Grace"
+      ],
+      "binary": [
+        "Characters/Cassiopeia/Spells/CassiopeiaPassiveAbility/CassiopeiaPassive"
+      ],
+      "evidence": "wiki:Serpentine Grace increases effectiveness of all movement speed bonuses"
+    }
+  }
+]

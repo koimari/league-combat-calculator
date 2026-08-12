@@ -1,0 +1,1015 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.5,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsQAbility/ZiggsQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.5,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsQAbility/ZiggsQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 70.0,
+   "range": 5000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 70.0,
+   "range": 5000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ZiggsESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 60.0,
+   "cooldown_rank_max": 60.0,
+   "range": 650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsESlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZiggsWToggle",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 12.0,
+   "range": 1200.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsWAbility/ZiggsWToggle"
+   ],
+   "evidence": "name:toggle"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZiggsW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 12.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsWAbility/ZiggsW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "ZiggsW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 12.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsWAbility/ZiggsW"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 12.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsWAbility/ZiggsW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 12.0,
+   "range": 1000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsWAbility/ZiggsW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ZiggsCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 575.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZiggsPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 12.0,
+   "range": 0.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsPassiveBuffAbility/ZiggsPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZiggsBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 575.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZiggsBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 575.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZiggsBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 575.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZiggsBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 575.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsE2"
+   ],
+   "inherited_from": "ZiggsE",
+   "evidence": "inherited:ZiggsE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsE2"
+   ],
+   "inherited_from": "ZiggsE",
+   "evidence": "inherited:ZiggsE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsE3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsE3"
+   ],
+   "inherited_from": "ZiggsE",
+   "evidence": "inherited:ZiggsE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsE3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsE3"
+   ],
+   "inherited_from": "ZiggsE",
+   "evidence": "inherited:ZiggsE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsQSpell",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsQAbility/ZiggsQSpell"
+   ],
+   "evidence": "refined:name:ZiggsQSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsQSpell",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsQAbility/ZiggsQSpell"
+   ],
+   "evidence": "refined:name:ZiggsQSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsQSpell2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsQAbility/ZiggsQSpell2"
+   ],
+   "evidence": "refined:name:ZiggsQSpell2"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsQSpell2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsQAbility/ZiggsQSpell2"
+   ],
+   "evidence": "refined:name:ZiggsQSpell2"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsQSpell3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsQAbility/ZiggsQSpell3"
+   ],
+   "evidence": "refined:name:ZiggsQSpell3"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsQSpell3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsQAbility/ZiggsQSpell3"
+   ],
+   "evidence": "refined:name:ZiggsQSpell3"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsRBoom",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRBoom"
+   ],
+   "evidence": "refined:name:ZiggsRBoom"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsRBoom",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRBoom"
+   ],
+   "evidence": "refined:name:ZiggsRBoom"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsRBoomLong",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRBoomLong"
+   ],
+   "evidence": "refined:name:ZiggsRBoomLong"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsRBoomLong",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRBoomLong"
+   ],
+   "evidence": "refined:name:ZiggsRBoomLong"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsRBoomMedium",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRBoomMedium"
+   ],
+   "evidence": "refined:name:ZiggsRBoomMedium"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsRBoomMedium",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRBoomMedium"
+   ],
+   "evidence": "refined:name:ZiggsRBoomMedium"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsRBoomExtraLong",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRBoomExtraLong"
+   ],
+   "evidence": "refined:name:ZiggsRBoomExtraLong"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsRBoomExtraLong",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRBoomExtraLong"
+   ],
+   "evidence": "refined:name:ZiggsRBoomExtraLong"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resource-duration-indicator",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZiggsRTimer",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Timer"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsRAbility/ZiggsRTimer"
+   ],
+   "evidence": "refined:name:ZiggsRTimer"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZiggsEMine",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsEMine"
+   ],
+   "evidence": "refined:name:ZiggsEMine"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZiggsEMine",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsEMine"
+   ],
+   "evidence": "refined:name:ZiggsEMine"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ZiggsEMine",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "duration": 1.5
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slow",
+    "Slow for 1.5 seconds"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsEAbility/ZiggsEMine"
+   ],
+   "evidence": "refined:wiki-E"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZiggsPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Basic attack",
+    "Bonus magic damage"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsPassiveBuffAbility/ZiggsPassiveAttack"
+   ],
+   "evidence": "refined:name:ZiggsPassiveAttack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZiggsPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsPassiveBuffAbility/ZiggsPassiveAttack"
+   ],
+   "evidence": "refined:name:ZiggsPassiveAttack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZiggsShortFuse",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Short Fuse"
+   ],
+   "binary": [
+    "Characters/Ziggs/Spells/ZiggsPassiveBuffAbility/ZiggsShortFuse"
+   ],
+   "evidence": "refined:wiki-P"
+  }
+ }
+]

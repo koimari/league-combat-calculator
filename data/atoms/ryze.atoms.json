@@ -1,0 +1,648 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "RyzeWRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeWAbility/RyzeWRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RyzeW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 8.5,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeWAbility/RyzeW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RyzeW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 8.5,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeWAbility/RyzeW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "RyzeWShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeWAbility/RyzeWShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RyzeBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RyzeBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RyzeBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RyzeBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RyzeBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RyzeBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RyzeBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RyzeBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "RyzeRChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 2000.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeRAbility/RyzeRChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "RyzeR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 180.0,
+   "cooldown_rank_max": 140.0,
+   "range": 3000.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeRAbility/RyzeR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RyzeE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.75,
+   "cooldown_rank_max": 2.5,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeEAbility/RyzeE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RyzeE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.75,
+   "cooldown_rank_max": 2.5,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeEAbility/RyzeE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "RyzeCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "RyzeR2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 180.0,
+   "cooldown_rank_max": 140.0,
+   "range": 3000.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeRAbility/RyzeR2"
+   ],
+   "inherited_from": "RyzeR",
+   "evidence": "inherited:RyzeR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "RyzeEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.75,
+   "cooldown_rank_max": 2.5,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeEAbility/RyzeEMissile"
+   ],
+   "inherited_from": "RyzeE",
+   "evidence": "inherited:RyzeE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RyzeEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 3.75,
+   "cooldown_rank_max": 2.5,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeEAbility/RyzeEMissile"
+   ],
+   "inherited_from": "RyzeE",
+   "evidence": "inherited:RyzeE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RyzeQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amount": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ]
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Overload",
+    "Magic damage",
+    "Rune stack"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeQWrapperAbility/RyzeQ",
+    "Characters/Ryze/Spells/RyzeQWrapperAbility/RyzeQWrapper"
+   ],
+   "evidence": "tags:Trait_DamageAbility,Trait_SignatureSpell,Trait_Ranged_StopsFirstHit (wrapper); classifier misjudged wrapper as noise"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RyzeQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amount": [
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    125.0,
+    150.0,
+    175.0
+   ]
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Overload",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeQWrapperAbility/RyzeQMissile"
+   ],
+   "evidence": "inherited:RyzeQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "RyzeQMS",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "effect_amount": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Overload",
+    "movement speed"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzeQWrapperAbility/RyzeQMS"
+   ],
+   "evidence": "game_buff_tooltip_RyzeQMS"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RyzePassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Arcane Mastery"
+   ],
+   "binary": [
+    "Characters/Ryze/Spells/RyzePassive"
+   ],
+   "evidence": "game_buff_tooltip_RyzePassive; max mana scaling + rune stacks"
+  }
+ }
+]

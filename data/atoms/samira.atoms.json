@@ -1,0 +1,991 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SamiraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 10.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 16386
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEAbility/SamiraE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 10.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 16386
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEAbility/SamiraE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SamiraE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 10.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 16386
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEAbility/SamiraE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SamiraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "SamiraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SamiraQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraQBufferedSword",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 7.0,
+   "range": 325.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8193
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQBufferedSword"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SamiraCritAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraCritAttackMelee"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SamiraEBuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEBuff"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SamiraEBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEBuff"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraEBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraEBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SamiraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 30.0,
+   "cooldown_rank_max": 20.0,
+   "range": 325.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8193
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraWAbility/SamiraW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 30.0,
+   "cooldown_rank_max": 20.0,
+   "range": 325.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8193
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraWAbility/SamiraW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.projectile-destruction",
+  "family": "interaction",
+  "behavior": "SamiraW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 30.0,
+   "cooldown_rank_max": 20.0,
+   "range": 325.0,
+   "damage_type": "physical",
+   "affects_type_flags": 8193
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraWAbility/SamiraW"
+   ],
+   "evidence": "tag:Trait_ProjectileDestruction"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SamiraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.taunt",
+  "family": "crowd-control-mobility",
+  "behavior": "SamiraTauntMissile",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 3.0,
+   "range": 950.0,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraTauntMissile"
+   ],
+   "evidence": "name:taunt"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttackMelee2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SamiraBasicAttackMelee2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SamiraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraRMissile"
+   ],
+   "inherited_from": "SamiraR",
+   "evidence": "inherited:SamiraR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraRMissile"
+   ],
+   "inherited_from": "SamiraR",
+   "evidence": "inherited:SamiraR"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "SamiraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraRAbility/SamiraRMissile"
+   ],
+   "inherited_from": "SamiraR",
+   "evidence": "inherited:SamiraR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraQSword",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 8193
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Flourish"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQSword"
+   ],
+   "evidence": "calc:DamageCalc (melee slash of Flourish)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraQGun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Flourish"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraQAbility/SamiraQGun"
+   ],
+   "evidence": "calc:Damage (ranged shot of Flourish)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "SamiraPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Dash"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveAbility/SamiraPassive"
+   ],
+   "evidence": "calc:QueenMaxDashRange (passive dash toward attack range)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPassive",
+  "trigger": "passive",
+  "target_policy": "enemy",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveAbility/SamiraPassive"
+   ],
+   "evidence": "calc:BonusMeleeDamage/EmpoweredMeleeDamageTooltip (bonus damage after movement)"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SamiraPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Basic attack",
+    "Daredevil Impulse"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveAttack"
+   ],
+   "evidence": "name:basicattack (passive-empowered attack)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPJuggle",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPJuggle"
+   ],
+   "evidence": "calc:DamagePerBullet/TotalDamage (juggle hit)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPSwordJuggle",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPSwordJuggle"
+   ],
+   "evidence": "calc:DamagePerBullet/TotalDamage (sword juggle)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPMissile"
+   ],
+   "evidence": "name:missile (juggled bullet)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SamiraPMissileOffhand",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPMissileOffhand"
+   ],
+   "evidence": "name:missile (off-hand juggled bullet)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraPassiveCombo",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Daredevil Impulse",
+    "Stack"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraPassiveCombo"
+   ],
+   "evidence": "name:combo + calc:QueenMaxDashRange (Style combo tracking)"
+  }
+ }
+]

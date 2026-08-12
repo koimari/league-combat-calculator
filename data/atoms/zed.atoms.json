@@ -1,0 +1,958 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZedMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 325.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedPassiveAbility/ZedMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 16.0,
+   "range": 700.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedWAbility/ZedW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZedWHandlerBuffName",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedWAbility/ZedWHandlerBuffName"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedW2",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 24.0,
+   "cooldown_rank_max": 14.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 14346
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedWAbility/ZedW2"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZedRPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZedRADBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRADBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedR"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZedR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedR"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZedR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "interaction.projectile-destruction",
+  "family": "interaction",
+  "behavior": "ZedR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedR"
+   ],
+   "evidence": "tag:Trait_ProjectileDestruction"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedR2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 80.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 14346
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedR2"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedRDashEffectShadow",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRDashEffectShadow"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "ZedUltExecute",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedUltExecute"
+   ],
+   "evidence": "name:execute"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "ZedRDeathMark",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRDeathMark"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZedRDeathMark",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRDeathMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZedShadowBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedShadowBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZedShadowBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedShadowBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZedQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedQAbility/ZedQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZedQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedQAbility/ZedQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ZedCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZedE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 3.0,
+   "range": 290.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedEAbility/ZedE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZedE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 3.0,
+   "range": 290.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedEAbility/ZedE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZedBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZedBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZedBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZedBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "zed Passive (Living Shadow)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units",
+    "Living Shadow"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedWMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 16.0,
+   "range": 700.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedWAbility/ZedWMissile"
+   ],
+   "inherited_from": "ZedW",
+   "evidence": "inherited:ZedW"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRMissile"
+   ],
+   "inherited_from": "ZedR",
+   "evidence": "inherited:ZedR"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "ZedRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRMissile"
+   ],
+   "inherited_from": "ZedR",
+   "evidence": "inherited:ZedR"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZedRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRMissile"
+   ],
+   "inherited_from": "ZedR",
+   "evidence": "inherited:ZedR"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZedRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRMissile"
+   ],
+   "inherited_from": "ZedR",
+   "evidence": "inherited:ZedR"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "interaction.projectile-destruction",
+  "family": "interaction",
+  "behavior": "ZedRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 625.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRMissile"
+   ],
+   "inherited_from": "ZedR",
+   "evidence": "inherited:ZedR"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZedQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedQAbility/ZedQMissile"
+   ],
+   "inherited_from": "ZedQ",
+   "evidence": "inherited:ZedQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZedQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedQAbility/ZedQMissile"
+   ],
+   "inherited_from": "ZedQ",
+   "evidence": "inherited:ZedQ"
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "ZedPassive",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "health_threshold": 0.5,
+   "max_health_percent_damage_min": 5.0,
+   "max_health_percent_damage_max": 10.0,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Contempt for the Weak"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedPassive"
+   ],
+   "evidence": "refined:wiki-p"
+  }
+ }
+]

@@ -1,0 +1,753 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KatarinaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "KatarinaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaR"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KatarinaQMark",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQMark"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 625.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KatarinaQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 625.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 725.0,
+   "damage_type": "magic",
+   "affects_type_flags": 23615
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaEWrapperAbility/KatarinaE"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "KatarinaE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 725.0,
+   "damage_type": "magic",
+   "affects_type_flags": 23615
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaEWrapperAbility/KatarinaE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaEDagger",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 800.0,
+   "damage_type": "magic",
+   "affects_type_flags": 23615
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaEWrapperAbility/KatarinaEDagger"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "KatarinaEDagger",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 800.0,
+   "damage_type": "magic",
+   "affects_type_flags": 23615
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaEWrapperAbility/KatarinaEDagger"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KatarinaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KatarinaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KatarinaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KatarinaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KatarinaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaRMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRMis"
+   ],
+   "inherited_from": "KatarinaR",
+   "evidence": "inherited:KatarinaR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRMis"
+   ],
+   "inherited_from": "KatarinaR",
+   "evidence": "inherited:KatarinaR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KatarinaRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRMis"
+   ],
+   "inherited_from": "KatarinaR",
+   "evidence": "inherited:KatarinaR"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "KatarinaRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRMis"
+   ],
+   "inherited_from": "KatarinaR",
+   "evidence": "inherited:KatarinaR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 625.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQMis"
+   ],
+   "inherited_from": "KatarinaQ",
+   "evidence": "inherited:KatarinaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KatarinaQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 625.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQMis"
+   ],
+   "inherited_from": "KatarinaQ",
+   "evidence": "inherited:KatarinaQ"
+  }
+ },
+ {
+  "atom_id": "interaction.cooldown-reset",
+  "family": "interaction",
+  "behavior": "KatarinaPassive",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Voracity",
+    "Cooldown reduction"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaPassiveAbility/KatarinaPassive"
+   ],
+   "evidence": "P: champion takedown reduces ability cooldowns"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KatarinaRTrigger",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Death Lotus",
+    "Grievous Wounds"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaRAbility/KatarinaRTrigger"
+   ],
+   "evidence": "R: Death Lotus applies Grievous Wounds (healing reduction)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KatarinaQDaggerArc",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Bouncing Blade",
+    "Dagger"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQDaggerArc",
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQDaggerArc2",
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQDaggerArc3",
+    "Characters/Katarina/Spells/KatarinaQAbility/KatarinaQDaggerArc4"
+   ],
+   "evidence": "Q: dagger drops at the final bounce target"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KatarinaWDaggerArc",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Preparation",
+    "Dagger"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaWAbility/KatarinaWDaggerArc"
+   ],
+   "evidence": "W: dagger tossed into the air lands at the caster"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Preparation",
+    "Movement speed",
+    "Ghost"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaWAbility/KatarinaW"
+   ],
+   "evidence": "W: brief ghosting and movement speed burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "KatarinaWHaste",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Preparation",
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaWAbility/KatarinaWHaste"
+   ],
+   "evidence": "W dagger pickup grants bonus movement speed"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KatarinaDaggerPickupPBAoE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dagger",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Katarina/Spells/KatarinaPassiveAbility/KatarinaDaggerPickupPBAoE"
+   ],
+   "evidence": "dagger pickup spin deals AoE magic damage"
+  }
+ }
+]
