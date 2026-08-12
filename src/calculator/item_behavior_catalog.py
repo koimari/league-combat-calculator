@@ -63,6 +63,7 @@ from .item_behavior import (
     DamageDeferralRule,
     DamageFormula,
     DamageThreshold,
+    DecayingAttackStacks,
     DEFENSE_FIELD_COMBINE,
     DefenseExclusivity,
     DefenseField,
@@ -112,6 +113,7 @@ from .item_behavior import (
     ReceiptScope,
     ReceivedHealingRule,
     Recipients,
+    RefundedAttackWindow,
     RegenerationRule,
     RepeatingStrikeRule,
     Resistance,
@@ -138,6 +140,7 @@ from .item_behavior import (
     Subject,
     SustainStat,
     SustainStatRule,
+    SwingScheduleRule,
     TargetBonusHealthScaled,
     TemporaryLethality,
     Term,
@@ -1400,6 +1403,14 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         # ``item_effects.resolve_stat_effects`` — so without these two keys a
         # live conversion would compile to nothing while its number kept
         # moving builds.
+        # The two shapes that re-rate the holder's own attack stream, each
+        # hung on an entry whose tag names another family: a ramp on an
+        # on-hit record and a re-armed window on a conditional-attack-speed
+        # one.  The schedule is a strike-family mechanic — it decides how
+        # many attacks land and when — and it is claimed by its signature key
+        # because neither tag says a word about it.
+        "seething_attack_speed_per_stack": RuleFamily.CHARGED_STRIKE,
+        "attack_refund_base": RuleFamily.CHARGED_STRIKE,
         "max_mana_to_ad_ratio": RuleFamily.STAT_DERIVATION,
         "ultimate_haste": RuleFamily.STAT_DERIVATION,
         # The casting trade an amp entry's own active window makes.  The tag
@@ -2963,24 +2974,149 @@ _CHARGED_STRIKE_RULES: Mapping[str, Any] = {
 }
 
 
+class SwingScheduleSchema(NamedTuple):
+    """One swing-rate mechanic's key groups and the fight modes it schedules.
+
+    Keyed by its own signature key like every other group in this module, so
+    the table says which *registry shape* re-rates the attack stream and never
+    which item does.  A group is declared whole: naming three keys and finding
+    two is a parse that dropped one, not a weaker mechanic.
+    """
+
+    stack_keys: tuple[str, str, str] | None
+    window_keys: tuple[str, str, str, str, str] | None
+    schedules_single_rotation: bool
+
+
+# The two swing-rate shapes the registry states, each under its signature
+# key.  Seething Strike is a ramp the attacks build; Flurry is a window the
+# attacks re-arm.  ``schedules_single_rotation`` carries the engine's own
+# long-standing gate — the ramp was excluded from a one-rotation fight and
+# the window was not — as a declared axis rather than an item-name test.
+SWING_SCHEDULES: Mapping[str, SwingScheduleSchema] = {
+    "seething_attack_speed_per_stack": SwingScheduleSchema(
+        (
+            "seething_attack_speed_per_stack",
+            "seething_max_stacks",
+            "seething_duration",
+        ),
+        None,
+        False,
+    ),
+    "attack_refund_base": SwingScheduleSchema(
+        None,
+        (
+            "bonus_attack_speed_percent",
+            "duration",
+            "cooldown",
+            "attack_refund_base",
+            "attack_refund_crit",
+        ),
+        True,
+    ),
+}
+
+
+def _swing_group_refs(
+    owner: str,
+    registry: ValueRegistry,
+    schema: frozenset[str],
+    keys: Sequence[str] | None,
+) -> tuple[ValueRef, ...] | None:
+    """One swing-rate key group as references, declared whole or absent."""
+    if keys is None:
+        return None
+    missing = sorted(key for key in keys if key not in schema)
+    if missing:
+        raise BehaviorCatalogError(
+            f"{registry}[{owner!r}] carries the swing-rate group {keys[0]!r} "
+            f"and is missing {missing}; a schedule is claimed whole or not at "
+            "all, because half of one re-rates the attack stream with a "
+            "number nobody sourced"
+        )
+    return tuple(ValueRef(registry, owner, key) for key in keys)
+
+
+def _swing_schedule_rules(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> list[BehaviorRule]:
+    """Every re-rating of the holder's own attack stream one entry declares.
+
+    One rule per entry rather than one per group: a single entry carrying both
+    a ramp and a re-armed window would be one mechanic scheduling one stream,
+    and the schedule the engine walks is the merge of every held rule anyway.
+    """
+    keys = _schema_keys(owner, registry, entry)
+    rules: list[BehaviorRule] = []
+    for signature, spec in SWING_SCHEDULES.items():
+        if signature not in keys:
+            continue
+        stacks = _swing_group_refs(owner, registry, keys, spec.stack_keys)
+        window = _swing_group_refs(owner, registry, keys, spec.window_keys)
+        rules.append(
+            BehaviorRule(
+                family=RuleFamily.CHARGED_STRIKE,
+                owner=owner,
+                mechanic_id=f"{_mechanic_slug(owner)}.swing_rate",
+                payload=SwingScheduleRule(
+                    decaying_stacks=(
+                        None if stacks is None else DecayingAttackStacks(*stacks)
+                    ),
+                    refunded_window=(
+                        None if window is None else RefundedAttackWindow(*window)
+                    ),
+                    schedules_single_rotation=spec.schedules_single_rotation,
+                ),
+                compilability=Compilable(),
+                receipt=receipt_for(
+                    registry,
+                    owner,
+                    declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE),
+                ),
+                zero_policy=ZeroPolicy(
+                    Disposition.STRUCTURAL_ZERO,
+                    "the schedule deals no damage of its own; it re-rates the "
+                    "holder's own attack stream, and the attacks carry the "
+                    "number",
+                ),
+            )
+        )
+    return rules
+
+
 def _compile_charged_strike(
     family: RuleFamily,
     owner: str,
     registry: ValueRegistry,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
-    """Compile the charged strike one registry entry declares.
+    """Compile the charged strikes one registry entry declares.
 
     Four tags, four shapes: a hit that spends a charge, a hit that lands every
     Nth application, a charge an ability arms, and an ultimate that empowers
     the holder's own attacks.  Dispatch is on the tag, so no item name decides
     a shape.
+
+    A fifth shape is claimed by a key group rather than by the tag — the swing
+    schedule, which re-rates the attack stream and is hung on entries whose
+    tags name other families.  An entry that reaches this compiler and claims
+    neither is a stop.
     """
     del family
-    tag = str(entry.get("type"))
-    rule = _CHARGED_STRIKE_RULES[tag](owner, registry, entry)
-    validate_rule(rule)
-    return (rule,)
+    rules: list[BehaviorRule] = []
+    shape = _CHARGED_STRIKE_RULES.get(str(entry.get("type")))
+    if shape is not None:
+        rules.append(shape(owner, registry, entry))
+    rules.extend(_swing_schedule_rules(owner, registry, entry))
+    if not rules:
+        raise BehaviorCatalogError(
+            f"{registry}[{owner!r}] is claimed by the charged-strike family and "
+            "carries neither one of its tags nor a swing-rate key group; a "
+            "charged strike that strikes nothing is a parse that failed"
+        )
+    for rule in rules:
+        validate_rule(rule)
+    return tuple(rules)
 
 
 def _compile_cast_proc(
@@ -5145,10 +5281,6 @@ STAT_DERIVATION_DEFERRED_MECHANICS: Mapping[str, str] = {
     "retribution_missing_health_min": (
         "3.9 residue — Retribution scales damage dealt by missing health, "
         "which is a delta_amp magnitude and not a stat the block holds"
-    ),
-    "attack_refund_base": (
-        "3.9 residue — Flurry refunds a share of the attack's own cooldown "
-        "per crit, which is the crit_profile family's cooldown-refund shape"
     ),
 }
 

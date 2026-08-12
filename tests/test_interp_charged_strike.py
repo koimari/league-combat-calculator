@@ -12,16 +12,25 @@ at every boundary; and that a dropped sibling number raises.
 
 import pytest
 
+from src.calculator import item_behavior_catalog
 from src.calculator.ability_spec import Disposition
 from src.calculator.interpreters import charged_strike
 from src.calculator.item_behavior import (
+    BehaviorRule,
+    BehaviorRuleError,
     EmpoweredAutoBuffRule,
     EmpoweredHitRule,
     RepeatingStrikeRule,
     RuleFamily,
     ShapedChargeRule,
+    SwingScheduleRule,
+    validate_rule,
 )
-from src.calculator.item_behavior_catalog import behavior_rules, build_context
+from src.calculator.item_behavior_catalog import (
+    BehaviorCatalogError,
+    behavior_rules,
+    build_context,
+)
 from src.calculator.item_effects import ITEM_EFFECTS, DamageInputs
 
 ENERGIZED = "Stormrazor"
@@ -245,3 +254,222 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
     )
     with pytest.raises(charged_strike.ChargedStrikeInterpretationError):
         charged_strike.PAIR_INTERPRETER.compile(foreign, ctx)
+
+
+# ── the swing schedule ────────────────────────────────────────────────────
+#
+# The fifth shape, and the one the engine used to reach by name: two call
+# paths in ``damage.py`` — the auto-count block and the swing-time block —
+# each asked whether the build held one of two items, and a third read the
+# registry for one of those names to strip its window from the opening rate.
+# What is pinned here is that the two mechanics are declarations, that the
+# walk reproduces the schedule the retired helper produced, and that the
+# one-rotation gate is a declared axis rather than an item comparison.
+
+RAMP = "Guinsoo's Rageblade"
+WINDOW = "Yun Tal Wildarrows"
+
+
+def _schedule(*owners: str):
+    """The swing schedule a build of *owners* declares."""
+    return _slots(*owners).swing_schedule
+
+
+def _swing_rule(owner: str):
+    """*owner*'s one swing-schedule declaration."""
+    (rule,) = [
+        rule
+        for rule in behavior_rules(owner)
+        if isinstance(rule.payload, SwingScheduleRule)
+    ]
+    return rule
+
+
+def test_the_two_swing_mechanics_are_declared_shapes() -> None:
+    """A ramp the attacks build and a window the attacks re-arm."""
+    ramp = _schedule(RAMP)
+    assert ramp is not None and ramp.window is None
+    assert ramp.ramp == charged_strike.DecayingStackRamp(
+        per_stack=float(ITEM_EFFECTS[RAMP]["seething_attack_speed_per_stack"]),
+        max_stacks=int(ITEM_EFFECTS[RAMP]["seething_max_stacks"]),
+        stack_duration=float(ITEM_EFFECTS[RAMP]["seething_duration"]),
+    )
+    window = _schedule(WINDOW)
+    assert window is not None and window.ramp is None
+    assert window.window == charged_strike.RearmedWindow(
+        bonus_percent=float(ITEM_EFFECTS[WINDOW]["bonus_attack_speed_percent"]),
+        duration=float(ITEM_EFFECTS[WINDOW]["duration"]),
+        cooldown=float(ITEM_EFFECTS[WINDOW]["cooldown"]),
+        refund_per_attack=float(ITEM_EFFECTS[WINDOW]["attack_refund_base"]),
+        refund_per_crit=float(ITEM_EFFECTS[WINDOW]["attack_refund_crit"]),
+    )
+
+
+def test_a_build_declaring_no_swing_mechanic_says_so_rather_than_zeroing() -> None:
+    """``None`` is the instruction to rate the stream flat, not a zero rate."""
+    assert _schedule() is None
+    assert _schedule(FIRES_ONCE) is None
+
+
+def test_two_declarations_merge_into_the_one_schedule_the_stream_has() -> None:
+    """One attack stream, one schedule, both mechanics live on it."""
+    merged = _schedule(RAMP, WINDOW)
+    assert merged is not None
+    assert merged.ramp == _schedule(RAMP).ramp
+    assert merged.window == _schedule(WINDOW).window
+
+
+def test_the_ramp_is_patch_sourced_and_capped() -> None:
+    """8% per stack, four stacks = 32%, and nothing above the cap."""
+    ramp = _schedule(RAMP).ramp
+    assert ramp.bonus_percent(0) == 0.0
+    assert ramp.bonus_percent(1) == pytest.approx(8.0)
+    assert ramp.bonus_percent(4) == pytest.approx(32.0)
+    assert ramp.bonus_percent(99) == pytest.approx(32.0)
+
+
+def test_the_ramp_accelerates_the_stream_after_stacks() -> None:
+    """Later intervals are shorter than the first, which carries no bonus."""
+    times = charged_strike.swing_times(
+        _schedule(RAMP),
+        attack_speed=1.0,
+        attack_speed_ratio=1.0,
+        duration_seconds=5.0,
+    )
+    assert times[0] == 0.0
+    assert len(times) > 5
+    assert times[1] < 1.0
+    assert times[2] - times[1] < times[1] - times[0]
+
+
+def test_the_ramp_does_not_accumulate_stale_stacks() -> None:
+    """At this rate each stack expires before the next hit, so one stays live."""
+    times = charged_strike.swing_times(
+        _schedule(RAMP),
+        attack_speed=0.2,
+        attack_speed_ratio=1.0,
+        duration_seconds=12.0,
+    )
+    assert times[-1] - times[-2] == pytest.approx(3.57142857)
+
+
+def test_the_window_starts_after_the_first_attack() -> None:
+    """The fight opens at the bare rate; the window is live from swing two."""
+    times = charged_strike.swing_times(
+        _schedule(WINDOW),
+        attack_speed=1.0,
+        attack_speed_ratio=1.0,
+        duration_seconds=3.0,
+    )
+    assert times[0] == 0.0
+    assert times[1] == pytest.approx(1.0)
+    assert times[2] - times[1] < 1.0
+
+
+def test_the_window_reads_the_registrys_numbers_and_not_a_literal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A moved registry number moves the schedule, per rule 5."""
+    patched = dict(ITEM_EFFECTS[WINDOW])
+    patched["bonus_attack_speed_percent"] = 60.0
+    patched["duration"] = 2.0
+    monkeypatch.setitem(ITEM_EFFECTS, WINDOW, patched)
+    times = charged_strike.swing_times(
+        _schedule(WINDOW),
+        attack_speed=1.0,
+        attack_speed_ratio=1.0,
+        duration_seconds=3.0,
+    )
+    assert times[2] - times[1] == pytest.approx(1.0 / 1.6)
+
+
+def test_the_refund_weights_the_crit_share_by_the_holders_chance() -> None:
+    """The refund is this window's own cooldown, weighted and clamped."""
+    window = _schedule(WINDOW).window
+    assert window.refund(0.0) == pytest.approx(window.refund_per_attack)
+    assert window.refund(1.0) == pytest.approx(
+        window.refund_per_attack + window.refund_per_crit
+    )
+    assert window.refund(4.0) == pytest.approx(window.refund(1.0))
+
+
+def test_the_one_rotation_gate_is_a_declared_axis() -> None:
+    """The ramp is excluded from a one-rotation fight; the window is not."""
+    assert _schedule(RAMP).schedules(one_rotation=False) is True
+    assert _schedule(RAMP).schedules(one_rotation=True) is False
+    assert _schedule(WINDOW).schedules(one_rotation=True) is True
+    assert _schedule(RAMP, WINDOW).schedules(one_rotation=True) is True
+
+
+def test_the_opening_rate_gives_back_exactly_what_the_walk_re_applies() -> None:
+    """The panel carries the assumed-active window; the fight opens without it."""
+    assert _schedule(WINDOW).opening_rate_bonus_percent == pytest.approx(
+        float(ITEM_EFFECTS[WINDOW]["bonus_attack_speed_percent"])
+    )
+    assert _schedule(RAMP).opening_rate_bonus_percent == 0.0
+
+
+def test_a_swing_schedule_compiles_to_its_ramp_ceiling_and_no_damage() -> None:
+    """A schedule is not spent, so what it compiles to is the ramp's ceiling."""
+    ctx = build_context(
+        RAMP,
+        18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    rule = _swing_rule(RAMP)
+    (field,) = charged_strike.PAIR_INTERPRETER.compile(rule, ctx)
+    assert field.value == pytest.approx(
+        float(ITEM_EFFECTS[RAMP]["seething_max_stacks"])  # type: ignore[arg-type]
+    )
+    assert rule.zero_policy.disposition is Disposition.STRUCTURAL_ZERO
+
+
+def test_a_window_only_schedule_compiles_to_the_no_sibling_spelling() -> None:
+    """No ramp is a declared absence, not a stack count that measured zero."""
+    ctx = build_context(
+        WINDOW,
+        18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    (field,) = charged_strike.PAIR_INTERPRETER.compile(_swing_rule(WINDOW), ctx)
+    assert field.value == charged_strike.NO_SIBLING
+
+
+def test_a_schedule_that_schedules_nothing_is_refused() -> None:
+    """A rule carrying neither mechanic raises rather than rating a stream."""
+    live = _swing_rule(RAMP)
+    with pytest.raises(BehaviorRuleError):
+        validate_rule(
+            BehaviorRule(
+                family=RuleFamily.CHARGED_STRIKE,
+                owner=RAMP,
+                mechanic_id="synthetic.swing_rate",
+                payload=SwingScheduleRule(None, None, False),
+                compilability=live.compilability,
+                receipt=live.receipt,
+                zero_policy=live.zero_policy,
+            )
+        )
+
+
+def test_a_half_declared_key_group_raises_naming_the_missing_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Half a schedule re-rates the stream with a number nobody sourced."""
+    patched = {
+        key: value
+        for key, value in ITEM_EFFECTS[RAMP].items()
+        if key != "seething_duration"
+    }
+    monkeypatch.setitem(ITEM_EFFECTS, RAMP, patched)
+    monkeypatch.setattr(
+        item_behavior_catalog,
+        "_schema_keys",
+        lambda owner, registry, entry: frozenset(entry),
+    )
+    with pytest.raises(BehaviorCatalogError, match="seething_duration"):
+        behavior_rules(RAMP)

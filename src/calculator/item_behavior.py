@@ -979,6 +979,71 @@ class EmpoweredAutoBuffRule:
     natural_crit_true_damage_ratio: AnyValueRef
 
 
+@dataclass(frozen=True, slots=True)
+class DecayingAttackStacks:
+    """Bonus attack speed gained one stack per attack and expiring per stack.
+
+    Each completed attack adds a stack that lives for ``stack_duration`` and
+    then falls off on its own, so the bonus rises while the holder keeps
+    attacking and decays the moment it stops.  ``per_stack`` is a *fraction*
+    because that is the unit the registry states it in; the schedule scales it
+    by the holder's attack-speed ratio like every other bonus percentage.
+    """
+
+    per_stack: AnyValueRef
+    max_stacks: AnyValueRef
+    stack_duration: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class RefundedAttackWindow:
+    """An attack-speed window the holder's own attacks re-arm early.
+
+    The window opens for ``duration`` and then waits ``cooldown``; every
+    attack after the first pays that cooldown down by ``refund_per_attack``
+    plus ``refund_per_crit`` weighted by the holder's critical-strike chance.
+    The refund is of *this window's* cooldown and of nothing else — it is not
+    the crit family's ability-cooldown refund, which reads a different number
+    off a different mechanic.
+    """
+
+    bonus_attack_speed_percent: AnyValueRef
+    duration: AnyValueRef
+    cooldown: AnyValueRef
+    refund_per_attack: AnyValueRef
+    refund_per_crit: AnyValueRef
+
+
+@dataclass(frozen=True, slots=True)
+class SwingScheduleRule:
+    """The rate the holder's *own* basic attacks land at, attack by attack.
+
+    The second member of this family that deals no damage of its own.  Where
+    :class:`EmpoweredAutoBuffRule` re-rates a bounded run of attacks off an
+    ultimate, this one re-rates the whole stream off the stream itself: a
+    ramp the attacks build, a window the attacks re-arm, or both at once on a
+    build holding two such items.  It lands in the strike family because that
+    is where the auto stream's schedule already lives — the engine reads this
+    and the empowered-auto window from one record and picks one schedule.
+
+    Both mechanics are optional and at least one is present, checked rather
+    than assumed: a schedule that schedules nothing is a parse that dropped a
+    key group, not an item whose attacks land at the ordinary rate.
+
+    ``schedules_single_rotation`` says whether a fight the request declared to
+    be one rotation is scheduled by this mechanic at all.  It is the engine's
+    long-standing gate, declared: a ramp was excluded from that fight and a
+    re-armed window was not.  No sourced reading distinguishes the two, so
+    what this field carries is the behaviour, named — the point being that a
+    future correction is one edit against an axis rather than a rediscovery
+    of two item names.
+    """
+
+    decaying_stacks: DecayingAttackStacks | None
+    refunded_window: RefundedAttackWindow | None
+    schedules_single_rotation: bool
+
+
 class ProcTrigger(Enum):
     """What arms a cooldown proc.
 
@@ -2333,6 +2398,7 @@ RulePayload = Union[
     ActiveCastRule,
     EmpoweredAutoBuffRule,
     EmpoweredHitRule,
+    SwingScheduleRule,
     RepeatingStrikeRule,
     ShapedChargeRule,
     CooldownProcRule,
@@ -2374,6 +2440,7 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     EmpoweredHitRule: RuleFamily.CHARGED_STRIKE,
     RepeatingStrikeRule: RuleFamily.CHARGED_STRIKE,
     ShapedChargeRule: RuleFamily.CHARGED_STRIKE,
+    SwingScheduleRule: RuleFamily.CHARGED_STRIKE,
     CooldownProcRule: RuleFamily.CAST_PROC,
     UltimateProcRule: RuleFamily.CAST_PROC,
     PeriodicRule: RuleFamily.PERIODIC,
@@ -2522,6 +2589,9 @@ def _validate_payload(rule: BehaviorRule) -> None:
                 ),
             },
         )
+        return
+    if isinstance(payload, SwingScheduleRule):
+        _validate_swing_schedule(rule, payload)
         return
     if isinstance(payload, CooldownProcRule):
         _validate_cooldown_proc(rule, payload)
@@ -2742,6 +2812,43 @@ def _validate_refs(
                 "number in the declaration"
                 + (" (or None where the mechanic has none)" if optional else "")
             )
+
+
+def _validate_swing_schedule(rule: BehaviorRule, payload: SwingScheduleRule) -> None:
+    """A swing schedule declares at least one mechanic, each one whole.
+
+    "At least one" is checked rather than assumed because the two records are
+    optional for the honest reason — a build may hold either — and a rule
+    carrying neither would be a key group the registry dropped, presented as
+    an item whose attacks land at the ordinary rate.
+    """
+    stacks, window = payload.decaying_stacks, payload.refunded_window
+    if stacks is None and window is None:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a swing schedule declares a ramp, a re-armed "
+            "window or both; one that schedules neither is a dropped key group "
+            "rather than an item whose attacks land at the ordinary rate"
+        )
+    if stacks is not None:
+        _validate_refs(
+            rule,
+            {
+                "per_stack": stacks.per_stack,
+                "max_stacks": stacks.max_stacks,
+                "stack_duration": stacks.stack_duration,
+            },
+        )
+    if window is not None:
+        _validate_refs(
+            rule,
+            {
+                "bonus_attack_speed_percent": window.bonus_attack_speed_percent,
+                "duration": window.duration,
+                "cooldown": window.cooldown,
+                "refund_per_attack": window.refund_per_attack,
+                "refund_per_crit": window.refund_per_crit,
+            },
+        )
 
 
 def _validate_formula(rule: BehaviorRule, formula: DamageFormula) -> None:
@@ -3428,6 +3535,7 @@ __all__ = [
     "DamageDeferralRule",
     "DamageFormula",
     "DamageThreshold",
+    "DecayingAttackStacks",
     "DefenseCombine",
     "DefenseExclusivity",
     "DefenseField",
@@ -3491,6 +3599,7 @@ __all__ = [
     "ReceiptScope",
     "ReceivedHealingRule",
     "Recipients",
+    "RefundedAttackWindow",
     "RegenerationRule",
     "RepeatingStrikeRule",
     "Resistance",
@@ -3526,6 +3635,7 @@ __all__ = [
     "Subject",
     "SustainStat",
     "SustainStatRule",
+    "SwingScheduleRule",
     "TRIGGER_STREAM",
     "TargetBonusHealthScaled",
     "TemporaryLethality",

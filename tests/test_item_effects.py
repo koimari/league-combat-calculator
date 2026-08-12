@@ -32,8 +32,6 @@ from src.calculator.item_effects import (
     mana_to_health_bonus,
     _muramana_bonus_ad,
     _passive_attack_speed_bonus,
-    guinsoo_attack_speed_percent,
-    guinsoo_swing_schedule,
     energized_proc_indices,
     energized_schedule_receipt,
     hydra_cleave_secondary_ad_damage,
@@ -476,70 +474,6 @@ class TestResolveDamageEffects:
 
         with pytest.raises(KeyError, match=f"{item_name}.*{key}"):
             _spellblade_slot(item_name)
-
-    def test_guinsoo_seething_attack_speed_is_patch_sourced(self) -> None:
-        build = _build("Guinsoo's Rageblade")
-        assert guinsoo_attack_speed_percent(build, 0) == 0.0
-        assert guinsoo_attack_speed_percent(build, 1) == pytest.approx(8.0)
-        assert guinsoo_attack_speed_percent(build, 4) == pytest.approx(32.0)
-        assert guinsoo_attack_speed_percent(build, 99) == pytest.approx(32.0)
-
-    def test_guinsoo_schedule_accelerates_after_stacks(self) -> None:
-        build = _build("Guinsoo's Rageblade")
-        times = guinsoo_swing_schedule(
-            build,
-            attack_speed=1.0,
-            attack_speed_ratio=1.0,
-            duration_seconds=5.0,
-        )
-        assert times[0] == 0.0
-        assert len(times) > 5
-        # First interval has no Seething bonus; later intervals are shorter.
-        assert times[1] < 1.0
-        assert times[2] - times[1] < times[1] - times[0]
-
-    def test_guinsoo_schedule_does_not_accumulate_stale_stacks(self) -> None:
-        build = _build("Guinsoo's Rageblade")
-        times = guinsoo_swing_schedule(
-            build,
-            attack_speed=0.2,
-            attack_speed_ratio=1.0,
-            duration_seconds=12.0,
-        )
-        # At this slow rate each prior stack expires before the next hit, so
-        # the schedule stays at one live stack rather than falsely reaching
-        # the 32% cap from stale state.
-        assert times[-1] - times[-2] == pytest.approx(3.57142857)
-
-    def test_yun_tal_flurry_starts_after_first_attack(self) -> None:
-        build = _build("Yun Tal Wildarrows")
-        times = guinsoo_swing_schedule(
-            build,
-            attack_speed=1.0,
-            attack_speed_ratio=1.0,
-            duration_seconds=3.0,
-        )
-        assert times[0] == 0.0
-        assert times[1] == pytest.approx(1.0)
-        assert times[2] - times[1] < 1.0
-
-    def test_yun_tal_flurry_uses_parser_owned_values(self, monkeypatch) -> None:
-        _patch_effect(
-            monkeypatch,
-            "Yun Tal Wildarrows",
-            bonus_attack_speed_percent=60.0,
-            duration=2.0,
-            cooldown=30.0,
-            attack_refund_base=1.0,
-            attack_refund_crit=2.0,
-        )
-        times = guinsoo_swing_schedule(
-            _build("Yun Tal Wildarrows"),
-            attack_speed=1.0,
-            attack_speed_ratio=1.0,
-            duration_seconds=3.0,
-        )
-        assert times[2] - times[1] == pytest.approx(1.0 / 1.6)
 
     def test_statikk_energized_attack_schedule_uses_sourced_15_stacks(self) -> None:
         assert energized_proc_indices("Statikk Shiv", 20, initial_stacks=0) == (

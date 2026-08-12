@@ -2338,17 +2338,18 @@ def _resolve_combat_state(
         as_ratio *= attack_speed_multiplier
         champion_stats["attack_speed"] = attack_speed
         champion_stats["attack_speed_ratio"] = as_ratio
-    # ``calculate_total_stats`` keeps Flurry visible in the public stat
-    # panel, but the authored fight starts before Yun Tal has attacked. Strip
-    # that conditional amount from the opening rate; the shared swing helper
-    # re-adds it only after the first attack and expires it on the sourced
-    # window/cooldown.
-    if item_effects.has_item(items, "Yun Tal Wildarrows"):
-        flurry = item_effects.required_effect_value(
-            "Yun Tal Wildarrows", "bonus_attack_speed_percent"
-        )
+    # ``calculate_total_stats`` keeps every assumed-active attack-speed window
+    # visible in the public stat panel, but the authored fight starts before
+    # the holder has attacked.  Strip whatever the declared swing schedule
+    # re-applies itself; the walk re-adds it after the first attack and
+    # expires it on the sourced window and cooldown.
+    swing_schedule = item_charged_strikes.swing_schedule
+    if swing_schedule is not None and swing_schedule.window is not None:
         champion_stats = dict(champion_stats)
-        attack_speed = max(0.0, attack_speed - as_ratio * flurry / 100.0)
+        attack_speed = max(
+            0.0,
+            attack_speed - as_ratio * swing_schedule.opening_rate_bonus_percent / 100.0,
+        )
         champion_stats["attack_speed"] = attack_speed
 
     # ── Ultimate-triggered AS buffs (Fiendhunter Bolts) ──────
@@ -2378,13 +2379,12 @@ def _resolve_combat_state(
         )
         num_auto_attacks = empowered_autos + normal_autos
     else:
-        if (
-            not config.one_rotation
-            and item_effects.has_item(items, "Guinsoo's Rageblade")
-        ) or item_effects.has_item(items, "Yun Tal Wildarrows"):
+        if swing_schedule is not None and swing_schedule.schedules(
+            one_rotation=config.one_rotation
+        ):
             num_auto_attacks = len(
-                item_effects.guinsoo_swing_schedule(
-                    items,
+                charged_strike.swing_times(
+                    swing_schedule,
                     attack_speed=attack_speed,
                     attack_speed_ratio=as_ratio,
                     duration_seconds=fight_duration_seconds,
@@ -5321,13 +5321,11 @@ def _auto_attack_timestamps(state: FightState) -> list[float]:
     buff = state.item_charged_strikes.empowered_auto_buff
     empowered = state.empowered_autos if buff is not None else 0
     if empowered <= 0:
-        if (
-            not state.one_rotation
-            and item_effects.has_item(state.items, "Guinsoo's Rageblade")
-        ) or item_effects.has_item(state.items, "Yun Tal Wildarrows"):
+        schedule = state.item_charged_strikes.swing_schedule
+        if schedule is not None and schedule.schedules(one_rotation=state.one_rotation):
             times = list(
-                item_effects.guinsoo_swing_schedule(
-                    state.items,
+                charged_strike.swing_times(
+                    schedule,
                     attack_speed=state.attack_speed,
                     attack_speed_ratio=state.attack_speed_ratio,
                     duration_seconds=state.fight_duration_seconds,

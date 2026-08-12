@@ -23,13 +23,13 @@ from src.calculator.item_effects import (
     energized_schedule_receipt,
     essence_reaver_mana_restore_per_proc,
     grouped_sustain_stat_percent,
-    guinsoo_attack_speed_percent,
     hydra_cleave_secondary_ad_damage,
     hydra_secondary_target_damage,
     required_effect_value,
     sustain_effect_value,
     sustain_stat_receipt,
 )
+from src.calculator.interpreters import charged_strike
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
 
@@ -234,10 +234,15 @@ def test_guinsoo_seething_strike_stacks_typed_and_fight_accelerates():
     assert required_effect_value(
         "Guinsoo's Rageblade", "seething_duration"
     ) == pytest.approx(3.0)
-    assert guinsoo_attack_speed_percent(_items("Guinsoo's Rageblade"), 0) == 0.0
-    assert guinsoo_attack_speed_percent(
-        _items("Guinsoo's Rageblade"), 4
-    ) == pytest.approx(32.0)
+    ramp = charged_strike.resolve_slots(
+        ["Guinsoo's Rageblade"],
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    ).swing_schedule.ramp
+    assert ramp.bonus_percent(0) == 0.0
+    assert ramp.bonus_percent(4) == pytest.approx(32.0)
 
     baseline = _calculate([])
     guinsoo = _calculate(["Guinsoo's Rageblade"])
