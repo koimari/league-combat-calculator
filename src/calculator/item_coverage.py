@@ -60,6 +60,12 @@ from .item_behavior_catalog import (
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 from .item_outcomes import UTILITY_OUTCOMES
 
+# The attacker lane's five answers.  This vocabulary is a **user-visible label
+# set**, not only a payload key: the browser prints the status verbatim with
+# underscores turned into spaces (``static/js/app.js:3423``), so a member
+# renamed here is text a player reads.  3.8's rename of ``blocked`` to
+# ``withheld`` moved 91 attacker-lane chips and 90 target-lane ones for exactly
+# that reason.
 ItemCoverageStatus = Literal[
     "modeled_effect",
     "modeled_state",
@@ -74,6 +80,34 @@ ItemCoverageStatus = Literal[
 # record that is not a shop item at all.  Neither is optimizer- or
 # calculation-eligible, and no third status is a refusal.
 _REFUSAL_STATUSES: frozenset[str] = frozenset({"withheld", "review_pending"})
+
+# The three that classify, and the whitelist both eligibility gates read.
+#
+# Positive, deliberately.  The flip that computed status from declarations also
+# rewrote eligibility as ``status not in _REFUSAL_STATUSES``, which is the same
+# answer for all five members and the *opposite* answer for a sixth: a status
+# added tomorrow would arrive optimizer- and calculation-eligible without
+# anyone ruling that it should be, which is a fail-open default inside the
+# campaign that exists to remove them.  Naming the eligible statuses instead
+# makes an unclassified answer ineligible until someone classifies it.  A test
+# asserts these two sets partition ``ItemCoverageStatus`` exactly, so "no third
+# status is a refusal" and "no sixth status is silently eligible" cannot drift
+# apart.
+_ELIGIBLE_STATUSES: frozenset[str] = frozenset(
+    {"modeled_effect", "modeled_state", "stats_only"}
+)
+
+# The target lane's own vocabulary, and its own positive whitelist.  Its three
+# classifications are ``modeled``, ``modeled_event_certified`` — a defence the
+# ladder proved the walk certifies event by event — and ``not_target_relevant``;
+# its refusals are the attacker lane's two, passed through.  Same ruling, same
+# reason: the durability question must not answer "eligible" for a status
+# nobody has classified.  No ``Literal`` closes this vocabulary, so a test
+# asserts the whitelist covers every status the ladder produces over the whole
+# cache — which is how the certified members were caught missing here.
+_TARGET_ELIGIBLE_STATUSES: frozenset[str] = frozenset(
+    {"modeled", "modeled_event_certified", "not_target_relevant"}
+)
 
 # Families whose whole subject is the holder surviving rather than the holder
 # dealing damage.  An item declaring nothing but these changes durability, and
@@ -148,15 +182,26 @@ class ItemCoverage:
     review_issue_refs: tuple[int, ...]
     needed: frozenset[EngineLane]
 
+    # The two gates below are two questions with one answer today, and that is
+    # worth saying out loud because they used to have two.  Before the flip,
+    # ``calculation_eligible`` carried an extra escape term — a named set of
+    # blocked items an explicit request was still allowed to compute — while
+    # ``optimizer_eligible`` never had one.  That set was empty, so deleting it
+    # moved no answer, and the two collapsed onto the same expression.  They
+    # stay two properties rather than one alias: the day BIS candidate
+    # generation and an explicitly requested build should diverge again, the
+    # divergence belongs here, in two expressions, and not in a caller.  A test
+    # pins that they agree for every cached item today.
+
     @property
     def optimizer_eligible(self) -> bool:
         """Whether BIS search may generate candidates holding this item."""
-        return self.status not in _REFUSAL_STATUSES
+        return self.status in _ELIGIBLE_STATUSES
 
     @property
     def calculation_eligible(self) -> bool:
         """Whether an explicit request naming this item may be calculated."""
-        return self.status not in _REFUSAL_STATUSES
+        return self.status in _ELIGIBLE_STATUSES
 
     def as_payload(self) -> dict[str, Any]:
         """The public coverage dict — one producer, read by every consumer."""
@@ -719,6 +764,17 @@ def is_unreviewed_fixture(item: Mapping[str, Any]) -> bool:
     return not _cached_record(str(item.get("name", ""))) and _has_described_effect(item)
 
 
+def target_calculation_eligible(status: str) -> bool:
+    """Whether a target-lane status permits calculating what the actor survives.
+
+    The target lane's counterpart to :attr:`ItemCoverage.calculation_eligible`,
+    and a named predicate rather than an inline expression for the same reason
+    that one is a property: it is the question a fail-closed whitelist has to
+    be able to answer for a status nobody has classified yet.
+    """
+    return status in _TARGET_ELIGIBLE_STATUSES
+
+
 def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     """Classify one item for use on a passive enemy target, from declarations.
 
@@ -749,7 +805,7 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     return {
         "name": name,
         "status": status,
-        "calculation_eligible": status not in _REFUSAL_STATUSES,
+        "calculation_eligible": target_calculation_eligible(status),
         "outcome_dimensions": [
             dimension.value for dimension in UTILITY_OUTCOMES.get(name, ())
         ],

@@ -1,6 +1,7 @@
 """Fail-closed item-mechanic coverage for BIS search."""
 
 import dataclasses
+from typing import get_args
 
 import pytest
 
@@ -1023,3 +1024,83 @@ def test_no_cached_item_has_an_unserved_lane_on_any_public_lane_set() -> None:
         ):
             assert item_coverage.unserved_lanes(name, lanes) == (), (name, lanes)
     assert item_coverage.ATTACKER_LANES < item_coverage.SCORING_LANES
+
+
+# ── eligibility, and the two whitelists that decide it ────────────────────
+#
+# Both eligibility gates are positive whitelists over their lane's statuses.
+# They were negative for the length of 3.8's flip — ``status not in
+# _REFUSAL_STATUSES`` — which is the same answer for every status that exists
+# and the opposite one for a status that does not exist yet.  These three tests
+# are the guard that makes the positive form checkable rather than stylistic.
+
+
+def test_the_five_statuses_partition_into_eligible_and_refusal() -> None:
+    """The closed vocabulary, split exactly two ways with nothing left over.
+
+    A status that is in neither set is the failure this partition exists to
+    make impossible: it would read as a real classification everywhere the
+    payload is displayed while being ineligible everywhere it is gated, and
+    nothing would say which of the two was intended.
+    """
+    declared = set(get_args(item_coverage.ItemCoverageStatus))
+
+    assert (
+        item_coverage._ELIGIBLE_STATUSES | item_coverage._REFUSAL_STATUSES == declared
+    )
+    assert not item_coverage._ELIGIBLE_STATUSES & item_coverage._REFUSAL_STATUSES
+
+
+def test_a_status_nobody_classified_is_ineligible_on_both_lanes() -> None:
+    """Fail closed, demonstrated rather than described (R-05).
+
+    The fixture is a status outside both whitelists — what a sixth member
+    would be on the commit that adds it and before anyone rules on what it
+    means.  Under the negative form both gates answered ``True`` for it; under
+    the positive form both answer ``False``, and a reviewer is required to say
+    otherwise.
+    """
+    real = item_model_coverage("Infinity Edge", ATTACKER_LANES)
+    unclassified = dataclasses.replace(real, status="modeled_someday")
+
+    assert real.optimizer_eligible is True
+    assert unclassified.optimizer_eligible is False
+    assert unclassified.calculation_eligible is False
+    assert item_coverage.target_calculation_eligible("modeled_someday") is False
+    assert item_coverage.target_calculation_eligible("modeled") is True
+
+
+def test_the_two_attacker_eligibility_gates_agree_for_every_cached_item() -> None:
+    """One answer, two questions — the collapse pinned rather than assumed.
+
+    ``calculation_eligible`` used to carry an escape term
+    ``optimizer_eligible`` never had: a named set of blocked items an explicit
+    request could still compute.  The set was empty, so the flip's deletion of
+    it moved no answer and the two gates became the same expression.  That is a
+    real reduction in what this module can express, and it is asserted here so
+    that a future divergence between "BIS may build with it" and "a request
+    naming it may be computed" has to be written deliberately, in both
+    properties, rather than appearing as a silent inequality nobody expected.
+    """
+    for name in _cached_names():
+        coverage = item_model_coverage(name, ATTACKER_LANES)
+        assert coverage.optimizer_eligible == coverage.calculation_eligible, name
+
+
+def test_every_target_status_the_cache_produces_is_in_the_target_vocabulary() -> None:
+    """The target lane has no ``Literal``; its population is the check.
+
+    ``_TARGET_ELIGIBLE_STATUSES`` is a whitelist over a vocabulary no type
+    closes, so the guard that keeps it total is the observed one: every status
+    the ladder produces over the whole cache is either eligible or a refusal
+    passed through from the attacker lane.
+    """
+    observed = {
+        target_item_model_coverage(get_item_by_name(name))["status"]
+        for name in _cached_names()
+    }
+
+    assert observed <= (
+        item_coverage._TARGET_ELIGIBLE_STATUSES | item_coverage._REFUSAL_STATUSES
+    )
+    assert observed & item_coverage._TARGET_ELIGIBLE_STATUSES
