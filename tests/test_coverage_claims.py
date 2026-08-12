@@ -1478,6 +1478,52 @@ def test_a_shadowed_item_is_shadowed_for_a_reason_that_names_both_rungs() -> Non
     assert "before" in heart.reason
 
 
+# The eight registries the collapse retired.  This is the one place in the tree
+# that spells them: every tombstone in ``item_coverage`` describes what stood
+# where in words, precisely so that the scan below reports nothing but a real
+# survivor.
+RETIRED_REGISTRIES: frozenset[str] = frozenset(
+    {
+        "_BLOCKED_REASONS",
+        "_CALCULATION_ALLOWED_BLOCKED",
+        "_PARTIAL_BLOCKED_REASONS",
+        "_STATEFUL_MODELED_ITEMS",
+        "_UTILITY_DIMENSIONS",
+        "_TARGET_MODELED_REASONS",
+        "_TARGET_EVENT_CERTIFIED_REASONS",
+        "_TARGET_BLOCKED_REASONS",
+    }
+)
+
+
+def whole_identifiers(text: str) -> set[str]:
+    """Every maximal word run in a text — an identifier, never a substring.
+
+    ``_BLOCKED_REASONS`` is a suffix of ``_TARGET_BLOCKED_REASONS``, so a
+    substring scan would call the first one retired while the second still
+    stood.  Splitting the text into whole runs and intersecting is what keeps
+    the two answerable separately, and it is a *function* rather than an
+    expression buried in an assertion so that the property has its own test.
+    """
+    return set(re.findall(r"\w+", text))
+
+
+def source_occurrences(names: frozenset[str]) -> dict[str, frozenset[str]]:
+    """Which of ``names`` each file under ``src/`` spells, as whole identifiers.
+
+    Prose counts.  A retired registry named in a comment is not a live
+    reference, but it is a name the tree still carries, and the cheapest way
+    for a scan like this to stop being able to fail is for its subject to live
+    on in prose "as documentation".
+    """
+    seen: dict[str, frozenset[str]] = {}
+    for path in sorted((ROOT / "src").rglob("*.py")):
+        hits = names & whole_identifiers(path.read_text(encoding="utf-8"))
+        if hits:
+            seen[path.relative_to(ROOT).as_posix()] = frozenset(hits)
+    return seen
+
+
 def test_the_eight_retired_registries_have_no_occurrences_left() -> None:
     """Ten registries collapsed to two, and gone is asserted rather than assumed.
 
@@ -1489,32 +1535,58 @@ def test_the_eight_retired_registries_have_no_occurrences_left() -> None:
     the whole claim: ``NO_RUNTIME_BEHAVIOR``, which carries an absence no
     declaration can, and ``_REVIEW_ISSUE_REFS``, which carries a tracker id.
 
-    The match is on whole identifiers — ``_BLOCKED_REASONS`` is a suffix of
-    ``_TARGET_BLOCKED_REASONS``, and a substring scan would have called the
-    first one retired while the second still stood.
+    The two tests after this one are not decoration.  This assertion measures a
+    deletion that has already happened, which is the one shape that passes just
+    as loudly when the instrument is broken: its first spelling put two literal
+    U+0008 bytes where the word-boundary escape was intended, matched nothing
+    in any file in the repository, and made its own ``== []`` a tautology for
+    two commits — the campaign's failure shape inside the campaign's own gate.
+    So the matcher and the reader each carry a red they can reproduce.
     """
-    retired = {
-        "_BLOCKED_REASONS",
-        "_CALCULATION_ALLOWED_BLOCKED",
-        "_PARTIAL_BLOCKED_REASONS",
-        "_STATEFUL_MODELED_ITEMS",
-        "_UTILITY_DIMENSIONS",
-        "_TARGET_MODELED_REASONS",
-        "_TARGET_EVENT_CERTIFIED_REASONS",
-        "_TARGET_BLOCKED_REASONS",
-    }
-    assert len(retired) == 8
+    assert len(RETIRED_REGISTRIES) == 8
     assert hasattr(item_coverage, "NO_RUNTIME_BEHAVIOR")
     assert hasattr(item_coverage, "_REVIEW_ISSUE_REFS")
-    found = [
-        f"{path.relative_to(ROOT).as_posix()}: {name}"
-        for path in sorted((ROOT / "src").rglob("*.py"))
-        for name in sorted(
-            retired & set(re.findall(r"\w+", path.read_text(encoding="utf-8")))
-        )
-    ]
 
-    assert found == []
+    assert source_occurrences(RETIRED_REGISTRIES) == {}
+
+
+def test_the_retired_registry_matcher_reports_a_name_it_is_handed() -> None:
+    """R-05's red for the matcher, permanent and reproducible on demand.
+
+    A text fixture rather than a tree edit, for the reason the M1-M9 negatives
+    already give: a gate whose red was demonstrated once during development is
+    the unverifiable claim about the past this campaign outlaws.
+    """
+    assert RETIRED_REGISTRIES & whole_identifiers("x = _BLOCKED_REASONS[name]") == {
+        "_BLOCKED_REASONS"
+    }
+    # Prose is an occurrence too — this is what the tombstone rewrite answered.
+    assert RETIRED_REGISTRIES & whole_identifiers(
+        "# _UTILITY_DIMENSIONS stood here"
+    ) == {"_UTILITY_DIMENSIONS"}
+    # Whole identifiers, both directions: the shorter name does not match
+    # inside the longer one, and a longer name containing it is not a hit.
+    assert RETIRED_REGISTRIES & whole_identifiers("_TARGET_BLOCKED_REASONS = {}") == {
+        "_TARGET_BLOCKED_REASONS"
+    }
+    assert (
+        RETIRED_REGISTRIES & whole_identifiers("MY_BLOCKED_REASONS_TABLE = {}") == set()
+    )
+
+
+def test_the_retired_registry_scan_reads_the_package_it_claims_to_read() -> None:
+    """R-05's red for the reader — the half a matcher fixture cannot cover.
+
+    A scan over zero files reports zero occurrences exactly as convincingly as
+    a clean tree does.  The control is a name that **is** in ``src/`` and is
+    meant to stay — the surviving reviewed registry — found through the same
+    glob, the same read and the same tokenizer the assertion above runs.  A
+    moved package, a glob that stopped matching, or a read returning ``""``
+    fails here instead of passing quietly there.
+    """
+    survivors = source_occurrences(frozenset({"NO_RUNTIME_BEHAVIOR"}))
+
+    assert survivors["src/calculator/item_coverage.py"] == {"NO_RUNTIME_BEHAVIOR"}
 
 
 # ── the numeric gate ──────────────────────────────────────────────────────
