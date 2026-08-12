@@ -398,6 +398,39 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    `RECEIPT_WALK`, with counter 2 at or below its declared `NO_RUNTIME_BEHAVIOR` reason count; Phase 4's
    migration frontier reports counters 5–7 at their stage targets. Every counter's exclusion list is
    committed beside it and diff-gated rather than living inside the measuring tool.
+
+   > **Amendment A — 2026-08-12, counter 2's clause.** A migration lane measured this clause
+   > unreachable as written and refused to resolve it from an implementation lane, which is the
+   > correct refusal; the ruling is recorded here because a phase document may not write its own
+   > descope. The arithmetic: [Phase 3](phase-3-behavior-rules.md)'s criterion 14 blesses two
+   > surviving name-keyed containers — `item_coverage.NO_RUNTIME_BEHAVIOR`, 21 sites, and
+   > `_REVIEW_ISSUE_REFS`, 22 — and **21 + 22 = 43**, already over the bound of **21** those same
+   > 21 sites are the count of; on top of that, [Phase 1](phase-1-coverage-evidence.md)'s
+   > **authored** claim-evidence corpus contributes **203** further sites in the same module, which
+   > may neither be derived (deriving evidence from the registries it describes makes Phase 1's
+   > resolution check tautological, which is the failure that module exists to catch) nor retired
+   > (Phase 1 mandates them). **Ruling:** counter 2's committed Class C exclusion set gains
+   > (i) Phase 1's authored claim-evidence corpus containers — typed, machine-resolved declarations
+   > under the resolution tier (D-21), which is precisely the cannot-drift-silently property
+   > counter 2 exists to enforce, so they are not claim prose — and (ii) `_REVIEW_ISSUE_REFS`,
+   > criterion 14's own blessed survivor, which carries issue references and not coverage claims.
+   > The target is unchanged in wording — *counter 2 at or below the reviewed `NO_RUNTIME_BEHAVIOR`
+   > reason count* — and is measured **net of the committed Class C exclusions**, which live in
+   > `docs/behavior-frontier.json` and are diff-gated by set equality, never inside the measuring
+   > tool (D-40). Measured on the commit that lands this: the two arms exclude **225** sites, the
+   > counter reads **24** against a bound of **21**, and the residual **3** are
+   > `bis.BIS_CERTIFIED_DEFENSIVE_EFFECTS` — neither corpus nor issue reference, so they stay
+   > counted and the clause stays a live gap rather than a discharged one.
+   >
+   > **Amendment B — 2026-08-12, counter 4's clause.** The enumerated `RECEIPT_WALK` `(family, lane)`
+   > gaps whose numbers arrive today through the pair engine's timed rows, and which only
+   > [Phase 4](phase-4-program-engine.md)'s S3 `OutcomeLedger`/end-of-walk projection can retire,
+   > become **committed, diff-gated deferral rows** on `docs/behavior-frontier.json`. Each row names
+   > the gap, the reason its number is not a silence, and Phase 4 S3 as the retiring stage; a row
+   > naming a gap the tree no longer holds, or a stage the tree's own receipt does not say, fails the
+   > gate. Counter 4's Phase-3 exit target is **0 net of those recorded deferral rows**, and Phase 4's
+   > exit re-asserts them retired. Measured on the commit that lands this: **14** deferral rows, all
+   > on `RECEIPT_WALK`, all retiring at Phase 4 S3; `PAIR_ENGINE` defers nothing.
 8. **One engine prices one mechanic.** One kernel invoked exactly `len(passes)` times per request, one
    `SurvivalAction` constructor, five views none of which re-runs arithmetic, zero mixed-view sums, at most
    one `APPLIED` contribution per `(mechanic, subject, event_id)`, and the pairing divergence ledger empty
