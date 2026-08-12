@@ -13,7 +13,7 @@ from src.calculator.roster_composition import (
     actor_params,
     coalesce_darius_q_heals,
     from_loadout,
-    has_catalyst,
+    mana_spent_heal_slot,
     main_combatant,
 )
 
@@ -95,5 +95,6 @@ def test_roster_helpers_keep_darius_coalescing_and_catalyst_presence_typed():
 
     assert len(events["main"]) == 1
     assert events["main"][0]["amount_formula"](500.0, 1000.0) == 170.0
-    assert has_catalyst([]) is False
-    assert has_catalyst([{"name": "Catalyst of Aeons"}]) is True
+    assert mana_spent_heal_slot([]) is None
+    slot = mana_spent_heal_slot([{"name": "Catalyst of Aeons"}])
+    assert slot is not None and slot.value("damage_taken_to_mana_ratio") > 0.0

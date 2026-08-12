@@ -40,7 +40,7 @@ from ..item_behavior import (
     SustainStatRule,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import resolve
+from ..value_ref import ValueRef, resolve
 from . import defense_state
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
@@ -217,6 +217,57 @@ def sustain_slot(
     )
 
 
+def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
+    """This build's sustain of one shape, from flat references alone.
+
+    The companion to :func:`sustain_slot`, for the two callers that author a
+    heal *before* a fight context exists: the pipeline's item-heal events are
+    built from a finished damage list, and the roster's resource ledger is
+    built from incoming packets.  Neither has a level, a target's bonus
+    health or the holder's range class to hand, and inventing them so an
+    accessor's signature is satisfied is how a defaulted zero duration gets
+    into a ramping magnitude.
+
+    So this refuses instead.  Every reference the shape declares must be a
+    plain :class:`~..value_ref.ValueRef`; a level ramp or any other
+    context-dependent reference is a stop naming the shape, which is what
+    stops this becoming a quiet second answer to the question
+    :func:`sustain_slot` asks.  ``None`` means no holder declares the shape —
+    an answer, not a zero — and two holders is the same stop as there.
+    """
+    rules = sustain_rules(owners, payload_type)
+    if not rules:
+        return None
+    if len(rules) > 1:
+        raise SustainInterpretationError(
+            f"{[rule.owner for rule in rules]} all declare "
+            f"{payload_type.__name__} and no rule declares how two of them "
+            "compose; the slice that declares a second one owns the fold"
+        )
+    rule = rules[0]
+    payload = rule.payload
+    names = SUSTAIN_PAYLOAD_REFERENCES[type(payload)]
+    references = [getattr(payload, name) for name in names]
+    if not all(isinstance(reference, ValueRef) for reference in references):
+        raise SustainInterpretationError(
+            f"{rule.mechanic_id} declares a reference that needs a level or a "
+            "fight fact, and this accessor has neither; read it through "
+            "sustain_slot, which is handed the context it resolves against"
+        )
+    return SustainSlot(
+        rule=rule,
+        fields=tuple(
+            KernelField(
+                name=name,
+                value=reference.get(),
+                lane=EngineLane.PAIR_ENGINE,
+                rule_id=rule.mechanic_id,
+            )
+            for name, reference in zip(names, references)
+        ),
+    )
+
+
 def stat_grants(owners: Sequence[str], stat: SustainStat) -> tuple[BehaviorRule, ...]:
     """Every declared grant of one vampirism stat, in build order.
 
@@ -239,6 +290,7 @@ __all__ = [
     "SustainPairInterpreter",
     "SustainResolverInterpreter",
     "SustainSlot",
+    "declared_sustain",
     "received_healing_multiplier",
     "stat_grants",
     "sustain_rules",

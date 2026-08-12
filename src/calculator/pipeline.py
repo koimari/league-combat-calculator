@@ -31,6 +31,12 @@ from .damage import (
 )
 from . import item_effects
 from .interpreters import periodic, spellblade
+from .interpreters.sustain import declared_sustain
+from .item_behavior import (
+    ManaSpentHealRule,
+    PostMitigationHealRule,
+    ResourceDrainRule,
+)
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
 from .trigger_stream import holders_in, tuple_incapable_items
@@ -109,7 +115,7 @@ def _item_self_healing_events(
     healing while the damage breakdown still records the source row.
     """
     events: list[dict[str, Any]] = []
-    item_names = {str(item.get("name", "")) for item in (items or ())}
+    item_names = sorted({str(item.get("name", "")) for item in (items or ())})
     stats = result.get("champion_stats")
     stats = stats if isinstance(stats, Mapping) else {}
     damage_events = result.get("damage_events")
@@ -133,16 +139,14 @@ def _item_self_healing_events(
             )
     duration = max(0.0, float(duration or 0.0))
 
-    # Life Draining is a direct post-mitigation heal, not the old Doran's
-    # Blade omnivamp stat.  Unknown ability scope is conservatively priced at
-    # the sourced area/pet effectiveness rather than being promoted as full.
-    if "Doran's Blade" in item_names:
-        ratio = item_effects.sustain_effect_value(
-            "Doran's Blade", "direct_heal_post_mitigation_ratio"
-        )
-        reduced = item_effects.sustain_effect_value(
-            "Doran's Blade", "direct_heal_aoe_effectiveness"
-        )
+    # A post-mitigation heal is a *shape*, not an item: a declared share of
+    # damage this build already dealt, paid straight back.  Unknown ability
+    # scope is conservatively priced at the declared area/pet effectiveness
+    # rather than being promoted as full.
+    post_mitigation = declared_sustain(item_names, PostMitigationHealRule)
+    if post_mitigation is not None:
+        ratio = post_mitigation.value("ratio")
+        reduced = post_mitigation.value("area_effectiveness")
         heal_events: list[dict[str, Any]] = []
         for event in damage_events:
             if not isinstance(event, Mapping):
@@ -172,7 +176,7 @@ def _item_self_healing_events(
                 {
                     "time": event["time"],
                     "amount": event["amount"],
-                    "source": "Doran's Blade (Life Draining)",
+                    "source": f"{post_mitigation.owner} (Life Draining)",
                     "kind": "item_proc",
                     "healing_modifier": True,
                     "_trigger_source": event["trigger_source"],
@@ -188,26 +192,17 @@ def _item_self_healing_events(
     # mana.  The result carries the end-of-window resource receipt, so a
     # manaless/full-resource actor is the only state for which a health heal
     # can be certified without inventing a starting-mana assumption.
-    if "Doran's Ring" in item_names:
+    drain = declared_sustain(item_names, ResourceDrainRule)
+    if drain is not None:
         max_mana = float(stats.get("max_mana", 0.0) or 0.0)
         remaining = float(result.get("resource_remaining", 0.0) or 0.0)
         can_only_heal = max_mana <= 0.0 or remaining >= max_mana - 1e-9
         if can_only_heal and duration > 0.0:
-            base_rate = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_restoration_per_second"
-            )
-            combat_rate = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_combat_restoration_per_second"
-            )
-            combat_window = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_combat_duration"
-            )
-            conversion = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_health_conversion"
-            )
-            tick = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_tick_interval"
-            )
+            base_rate = drain.value("restoration_per_second")
+            combat_rate = drain.value("combat_restoration_per_second")
+            combat_window = drain.value("combat_window")
+            conversion = drain.value("health_conversion")
+            tick = drain.value("tick_interval")
             champion_hits: list[float] = []
             for event in damage_events:
                 if not isinstance(event, Mapping):
@@ -230,7 +225,7 @@ def _item_self_healing_events(
                     {
                         "time": round(time, 6),
                         "amount": rate * conversion,
-                        "source": "Doran's Ring (Drain)",
+                        "source": f"{drain.owner} (Drain)",
                         "kind": "item_proc",
                         "actor_wide": True,
                         "_trigger_sequence": sequence,
@@ -244,19 +239,14 @@ def _item_self_healing_events(
     # aggregate resource total is deliberately not converted into a guessed
     # heal.  The sourced 20-per-second cap is applied in one-second buckets,
     # while each cast is independently capped at 20.
-    if "Catalyst of Aeons" in item_names:
+    mana_spent_heal = declared_sustain(item_names, ManaSpentHealRule)
+    if mana_spent_heal is not None:
         cast_timeline = result.get("cast_timeline")
         if not isinstance(cast_timeline, list):
             cast_timeline = []
-        heal_ratio = item_effects.sustain_effect_value(
-            "Catalyst of Aeons", "mana_spent_heal_ratio"
-        )
-        cast_cap = item_effects.sustain_effect_value(
-            "Catalyst of Aeons", "mana_spent_heal_cap_per_cast"
-        )
-        second_cap = item_effects.sustain_effect_value(
-            "Catalyst of Aeons", "mana_spent_heal_cap_per_second"
-        )
+        heal_ratio = mana_spent_heal.value("heal_ratio")
+        cast_cap = mana_spent_heal.value("cap_per_cast")
+        second_cap = mana_spent_heal.value("cap_per_second")
         healed_by_second: dict[int, float] = {}
         for cast in cast_timeline:
             if not isinstance(cast, Mapping):
@@ -290,7 +280,7 @@ def _item_self_healing_events(
                 {
                     "time": event_time,
                     "amount": amount,
-                    "source": "Catalyst of Aeons (Eternity)",
+                    "source": f"{mana_spent_heal.owner} (Eternity)",
                     "kind": "item_proc",
                     "_trigger_source": str(cast.get("slot", "cast")),
                     "_trigger_time": event_time,
@@ -491,9 +481,7 @@ def _has_item_self_healing(
                 or effects.first_auto_crit.heal_missing_health_ratio > 0.0
             )
         )
-        or any(
-            str(item.get("name", "")) in {"Catalyst of Aeons"} for item in (items or ())
-        )
+        or declared_sustain(names, ManaSpentHealRule) is not None
     )
 
 

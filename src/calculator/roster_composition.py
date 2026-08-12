@@ -7,7 +7,9 @@ from dataclasses import dataclass, replace
 import math
 from typing import TYPE_CHECKING, Any
 
-from .item_effects import required_effect_value, sustain_effect_value
+from .interpreters.sustain import SustainSlot, declared_sustain
+from .item_behavior import ManaSpentHealRule
+from .item_effects import required_effect_value
 from .pipeline import FightParams, require_fight_mode_support
 
 if TYPE_CHECKING:
@@ -203,20 +205,29 @@ def defensive_signature(defender: Combatant) -> tuple[Any, ...]:
     return tuple(target_overrides(defender).values())
 
 
-def has_catalyst(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Return whether a participant owns Catalyst's ordered resource passive."""
-    return any(str(item.get("name", "")) == "Catalyst of Aeons" for item in items)
+def mana_spent_heal_slot(items: Iterable[Mapping[str, Any]]) -> SustainSlot | None:
+    """The build's declared mana-spent heal, or ``None`` if it declares none.
+
+    The shape carries the damage-taken-to-resource ratio the ordered restore
+    ledger below is built from, so asking for the declaration is the same
+    question the retired ``has_catalyst`` asked by name — with the numbers
+    already attached to the answer.
+    """
+    return declared_sustain(
+        sorted({str(item.get("name", "")) for item in items}), ManaSpentHealRule
+    )
 
 
-def catalyst_resource_restores(
+def resource_restores(
     actor: Combatant,
     incoming: Mapping[str, Iterable[Mapping[str, Any]]],
     duration: float,
 ) -> tuple[tuple[tuple[float, float], ...], bool]:
-    """Derive Catalyst restores from complete incoming champion packets."""
-    if not has_catalyst(actor.items):
+    """Derive one actor's restores from complete incoming champion packets."""
+    slot = mana_spent_heal_slot(actor.items)
+    if slot is None:
         return (), True
-    ratio = sustain_effect_value("Catalyst of Aeons", "damage_taken_to_mana_ratio")
+    ratio = slot.value("damage_taken_to_mana_ratio")
     restores: list[tuple[float, float]] = []
     for event in incoming.get(actor.participant_id, ()):
         if not isinstance(event, Mapping):

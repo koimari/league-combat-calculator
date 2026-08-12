@@ -21,7 +21,8 @@ from .roster_composition import (
     Combatant,
     actor_params as _actor_params,
     actor_params_with_resource_restores as _actor_params_with_resource_restores,
-    catalyst_resource_restores as _catalyst_resource_restores,
+    mana_spent_heal_slot as _mana_spent_heal_slot,
+    resource_restores as _declared_resource_restores,
     coalesce_darius_q_heals as _coalesce_darius_q_heals,
     defensive_signature as _defensive_signature,
     from_loadout as _from_loadout,
@@ -3347,23 +3348,25 @@ def build_participant_timeline(
         )
         support_attached.add(attacker.participant_id)
 
-    # Eternity's mana restore is the one sustain branch whose state changes
-    # future ability admission.  The first pass supplies the complete
+    # A mana-spent heal's restore is the one sustain branch whose state
+    # changes future ability admission.  The first pass supplies the complete
     # incoming champion ledger; rerun the pair fights once with those exact
-    # (time, pre-mitigation-damage × typed ratio) restores attached to each
-    # Catalyst holder.  A second cache is intentional: cached baseline
-    # packets were priced without the external resource events.
+    # (time, pre-mitigation-damage × declared ratio) restores attached to each
+    # holder that declares the shape.  A second cache is intentional: cached
+    # baseline packets were priced without the external resource events.
     if not _resource_pass:
         resource_restores: dict[str, tuple[tuple[float, float], ...]] = {}
         for actor in all_actors:
-            restores, complete = _catalyst_resource_restores(
+            restores, complete = _declared_resource_restores(
                 actor, incoming, params.fight_duration_seconds
             )
             if not complete:
+                slot = _mana_spent_heal_slot(actor.items)
                 raise ValueError(
-                    f"Catalyst of Aeons resource ledger is unavailable for "
-                    f"{actor.participant_id}: an incoming champion packet "
-                    "does not expose finite pre-mitigation damage."
+                    f"{slot.owner if slot else 'resource'} restore ledger is "
+                    f"unavailable for {actor.participant_id}: an incoming "
+                    "champion packet does not expose finite pre-mitigation "
+                    "damage."
                 )
             if restores:
                 resource_restores[actor.participant_id] = restores

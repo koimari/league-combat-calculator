@@ -17,15 +17,20 @@ import pytest
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.defensive_effects import resolve_starting_defenses
+from dataclasses import replace
+
 from src.calculator.interpreters import INTERPRETERS
+from src.calculator.interpreters import sustain
 from src.calculator.interpreters.sustain import (
     PAIR_INTERPRETER,
     RESOLVER_INTERPRETER,
     SustainInterpretationError,
+    declared_sustain,
     received_healing_multiplier,
     stat_grants,
     sustain_slot,
 )
+from src.calculator.value_ref import LevelValueRef
 from src.calculator.item_behavior import (
     DefenseMechanic,
     EngineLane,
@@ -281,3 +286,75 @@ def test_the_pair_interpreter_refuses_the_received_multiplier() -> None:
                 holder_is_melee=True,
             ),
         )
+
+
+# ── the fight-free accessor (3.9) ─────────────────────────────────────────
+
+
+def test_a_flat_shape_resolves_without_inventing_a_fight() -> None:
+    """The three shapes the pipeline and the roster ledger author from.
+
+    Each is read where no fight context exists yet, and each number is the
+    same one the retired ``sustain_effect_value("<item>", key)`` branch read
+    — which is this migration's whole claim, so it is asserted against the
+    registry rather than against a copy of itself.
+    """
+    for payload_type, owner, field, key in (
+        (
+            PostMitigationHealRule,
+            "Doran's Blade",
+            "ratio",
+            "direct_heal_post_mitigation_ratio",
+        ),
+        (
+            ResourceDrainRule,
+            "Doran's Ring",
+            "health_conversion",
+            "drain_health_conversion",
+        ),
+        (
+            ManaSpentHealRule,
+            "Catalyst of Aeons",
+            "damage_taken_to_mana_ratio",
+            "damage_taken_to_mana_ratio",
+        ),
+    ):
+        slot = declared_sustain([owner], payload_type)
+        assert slot is not None
+        assert slot.owner == owner
+        assert slot.value(field) == item_effects.sustain_effect_value(owner, key)
+
+
+def test_a_build_declaring_none_answers_none_rather_than_zero() -> None:
+    """No holder restores health this way, so no rule ran."""
+    assert declared_sustain(["Boots"], ManaSpentHealRule) is None
+
+
+def test_a_context_dependent_shape_is_refused_rather_than_guessed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """R-05's red: the accessor cannot answer for a shape it cannot resolve.
+
+    A level ramp needs a level and this accessor has none.  Returning the
+    ramp's low end would be a number nobody asked for, so the refusal names
+    the shape and points at ``sustain_slot``, which is handed a context.  The
+    shape is fabricated because no live rule has one — which is exactly why
+    the branch would otherwise never be exercised (D-26).
+    """
+    rule = _rule("Doran's Blade", PostMitigationHealRule)
+    ramped = replace(
+        rule,
+        payload=replace(
+            rule.payload,
+            ratio=LevelValueRef(
+                "ITEM_EFFECTS",
+                rule.owner,
+                "direct_heal_post_mitigation_ratio",
+                "direct_heal_post_mitigation_ratio",
+                "linear_1_18",
+            ),
+        ),
+    )
+    monkeypatch.setattr(sustain, "sustain_rules", lambda owners, kind: (ramped,))
+    with pytest.raises(SustainInterpretationError, match="fight fact"):
+        declared_sustain([rule.owner], PostMitigationHealRule)

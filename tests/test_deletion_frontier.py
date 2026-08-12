@@ -130,11 +130,13 @@ def test_the_survival_action_carries_no_utility_kind() -> None:
 def test_the_timeline_imports_no_catalyst_predicate() -> None:
     """The alias was imported and never called.
 
-    ``roster_composition.has_catalyst`` itself is live — its own module
-    calls it — so the absence asserted here is the unused alias, which is
-    the only thing Phase 0 deleted.
+    Phase 0 deleted the unused alias; 3.9 then retired the predicate itself,
+    because "does this build hold Catalyst" was the item-name spelling of
+    "does this build declare a mana-spent heal".  Both spellings are asserted
+    absent here, so neither can come back as the other.
     """
     from src.calculator import roster_composition
 
     assert _holders("_has_catalyst") == []
-    assert callable(roster_composition.has_catalyst)
+    assert not hasattr(roster_composition, "has_catalyst")
+    assert callable(roster_composition.mana_spent_heal_slot)

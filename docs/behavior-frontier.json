@@ -43,13 +43,13 @@
       "class_c": 92
     },
     "calculator/pipeline.py": {
-      "counter_1": 15
+      "counter_1": 1
     },
     "calculator/role_quests.py": {
       "class_c": 21
     },
     "calculator/roster_composition.py": {
-      "counter_1": 4
+      "counter_1": 2
     },
     "calculator/rotation_resolver.py": {
       "class_d": 9
@@ -159,7 +159,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 69
+      "value": 53
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
