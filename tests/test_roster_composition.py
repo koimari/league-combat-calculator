@@ -7,6 +7,12 @@ easy to find.
 
 from types import SimpleNamespace
 
+import pytest
+
+from src.calculator import item_effects
+from src.calculator import roster_composition
+from src.calculator.interpreters.stat_derivation import StatSlot
+from src.calculator.item_behavior import KernelField, EngineLane
 from src.calculator.pipeline import FightParams
 from src.calculator.roster_composition import (
     Combatant,
@@ -15,6 +21,7 @@ from src.calculator.roster_composition import (
     from_loadout,
     mana_spent_heal_slot,
     main_combatant,
+    target_overrides,
 )
 
 
@@ -98,3 +105,101 @@ def test_roster_helpers_keep_darius_coalescing_and_catalyst_presence_typed():
     assert mana_spent_heal_slot([]) is None
     slot = mana_spent_heal_slot([{"name": "Catalyst of Aeons"}])
     assert slot is not None and slot.value("damage_taken_to_mana_ratio") > 0.0
+
+
+# ── the attack-speed aura, read from the declaration (3.9) ────────────────
+
+AURA_HOLDER = "Frozen Heart"
+
+
+def _defender(*item_names: str) -> Combatant:
+    """A defender carrying only what ``target_overrides`` reads."""
+    return Combatant(
+        participant_id=f"enemy:{'+'.join(item_names) or 'bare'}",
+        team="enemy",
+        champion_data={"name": "Malphite"},
+        level=13,
+        items=tuple({"name": name} for name in item_names),
+        stats={"health": 2000.0, "armor": 100.0, "magic_resistance": 50.0},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            basic_damage_multiplier=1.0,
+            basic_damage_flat_reduction=0.0,
+            basic_damage_flat_reduction_cap=0.0,
+            critical_strike_damage_multiplier=1.0,
+            threshold_shield_amount=0.0,
+            threshold_shield_health_ratio=0.0,
+            threshold_shield_duration=0.0,
+            threshold_shield_damage_type="",
+            threshold_health_bonus=0.0,
+            threshold_health_heal=0.0,
+            threshold_health_ratio=0.0,
+            threshold_health_duration=0.0,
+            revive_health_amount=0.0,
+            revive_delay=0.0,
+            revive_cooldown=0.0,
+        ),
+    )
+
+
+def test_the_attack_speed_cripple_is_the_declared_reduction():
+    """The aura's number and the registry key the retired branch read agree.
+
+    The claim of this migration is that the declaration reproduces the hand
+    branch exactly, so the assertion is against ``required_effect_value``'s
+    own answer rather than against a literal — a literal here would pass on
+    the commit that broke the reference.
+    """
+    reduction = item_effects.required_effect_value(
+        AURA_HOLDER, "attack_speed_reduction"
+    )
+
+    overrides = target_overrides(_defender(AURA_HOLDER))
+
+    assert overrides["attacker_attack_speed_multiplier"] == pytest.approx(
+        1.0 - reduction
+    )
+
+
+def test_a_defender_declaring_no_aura_leaves_the_attacker_alone():
+    """No declaration ran, so the multiplier is one — an answer, not a zero."""
+    overrides = target_overrides(_defender("Ruby Crystal"))
+
+    assert overrides["attacker_attack_speed_multiplier"] == 1.0
+
+
+def test_two_declared_attack_speed_auras_stop_rather_than_pick_one(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """R-05's red: nothing declares how two auras of one stat compose.
+
+    Only one item declares a ``StatAuraRule`` today, so the second holder is
+    planted — the point is that the composition question is answered by a
+    named stop instead of by whichever slot happens to be first.
+    """
+    real = roster_composition.declared_stat_derivations
+
+    def _two(owners, payload_type):
+        slots = real([AURA_HOLDER], payload_type)
+        return slots + tuple(
+            StatSlot(
+                rule=slot.rule,
+                fields=tuple(
+                    KernelField(
+                        name=field.name,
+                        value=field.value,
+                        lane=EngineLane.STAT_RESOLVER,
+                        rule_id=field.rule_id,
+                    )
+                    for field in slot.fields
+                ),
+            )
+            for slot in slots
+        )
+
+    monkeypatch.setattr(roster_composition, "declared_stat_derivations", _two)
+
+    with pytest.raises(ValueError, match="attack-speed aura"):
+        target_overrides(_defender(AURA_HOLDER))

@@ -7,9 +7,9 @@ from dataclasses import dataclass, replace
 import math
 from typing import TYPE_CHECKING, Any
 
+from .interpreters.stat_derivation import declared_stat_derivations
 from .interpreters.sustain import SustainSlot, declared_sustain
-from .item_behavior import ManaSpentHealRule
-from .item_effects import required_effect_value
+from .item_behavior import DerivedStat, ManaSpentHealRule, StatAuraRule
 from .pipeline import FightParams, require_fight_mode_support
 
 if TYPE_CHECKING:
@@ -150,14 +150,44 @@ def actor_params(base: FightParams, actor: Combatant) -> FightParams:
     )
 
 
+def _attack_speed_aura_multiplier(defender: Combatant) -> float:
+    """What a defender's declared attack-speed auras do to its attacker.
+
+    A stat aura is the one stat derivation whose subject is the enemy, so
+    the roster reads it off the *defender* and hands the attacker the
+    multiplier.  Read through the declaration rather than by item name: the
+    shape decides, so a second item growing an attack-speed aura arrives
+    here on the commit its declaration lands.
+
+    The granted stat is what selects, so an aura reducing something else is
+    not silently spent on attack speed; it is simply not this field's input.
+    Two holders of the *same* stat is a named stop, not a silent pick:
+    nothing declares whether two auras multiply, sum or take the strongest,
+    and guessing is how an unreviewed number reaches a live fight.
+    """
+    slots = [
+        slot
+        for slot in declared_stat_derivations(
+            sorted({str(item.get("name", "")) for item in defender.items}),
+            StatAuraRule,
+        )
+        if slot.granted is DerivedStat.ATTACK_SPEED_PERCENT
+    ]
+    if not slots:
+        return 1.0
+    if len(slots) > 1:
+        raise ValueError(
+            f"{[slot.owner for slot in slots]} all declare an attack-speed "
+            "aura and nothing declares how two of them compose on one "
+            "defender"
+        )
+    return 1.0 - float(slots[0].value("reduction"))
+
+
 def target_overrides(defender: Combatant) -> dict[str, float | str]:
     """Return every target field read by a one-pair fight."""
     defenses = defender.defenses
-    attack_speed_multiplier = 1.0
-    if any(item.get("name") == "Frozen Heart" for item in defender.items):
-        attack_speed_multiplier = 1.0 - float(
-            required_effect_value("Frozen Heart", "attack_speed_reduction")
-        )
+    attack_speed_multiplier = _attack_speed_aura_multiplier(defender)
     return {
         "target_health": float(defender.stats.get("health", 0.0)),
         "target_bonus_health": float(defender.stats.get("bonus_health", 0.0)),
