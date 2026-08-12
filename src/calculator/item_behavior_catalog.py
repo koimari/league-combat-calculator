@@ -5449,8 +5449,11 @@ def undeclared_owners() -> frozenset[str]:
 
     This is counter 3's population and it is **not** ``item_coverage``'s
     ``review_pending`` set — an earlier version of this sentence said the two
-    read the same set, and they do not.  All nineteen members publish as
-    modelled today (eighteen ``modeled_state``, one ``modeled_effect``),
+    read the same set, and they do not.  Every member publishes as modelled
+    today — a claim deliberately written without a count, because the
+    sentence it replaces carried one ("all nineteen members … eighteen
+    ``modeled_state``, one ``modeled_effect``") and the stat-derivation
+    migration left two members standing under it —
     because ``item_coverage._declared_families`` counts a registry *entry* as
     a declaration alongside a compiled rule.  That is deliberate and is the
     difference between *unmigrated* and *uninterpreted*: an entry whose family

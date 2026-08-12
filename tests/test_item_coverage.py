@@ -9,6 +9,7 @@ from src.calculator import item_coverage
 from src.calculator.item_behavior_catalog import (
     UNMIGRATED_TARGET_KEYS,
     behavior_rules,
+    undeclared_owners,
 )
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
@@ -935,6 +936,22 @@ def test_a_declared_defence_agrees_with_the_identifier_it_is_read_from() -> None
             assert item_coverage.declared_defence(rule) is declared, rule.mechanic_id
 
     assert checked
+
+
+def test_an_owner_the_migration_has_not_reached_still_publishes_as_modelled() -> None:
+    """``undeclared_owners``' own sentence, as a check rather than as prose.
+
+    The difference between *unmigrated* and *uninterpreted* is the whole
+    reason counter 3's population and ``review_pending`` are two sets: an
+    entry whose family no slice has declared is behaviour the engines still
+    run, and publishing it as unmodelled would be a refusal the migration
+    invented.  That sentence lived in a docstring, carrying a member count
+    that a later slice falsified — so it is asserted here, over whatever the
+    population happens to be, and it retires with the population.
+    """
+    for owner in sorted(undeclared_owners()):
+        status = item_model_coverage(owner, ATTACKER_LANES).status
+        assert status in {"modeled", "modeled_state", "modeled_effect"}, owner
 
 
 def test_every_unmigrated_target_key_is_a_key_some_entry_carries() -> None:

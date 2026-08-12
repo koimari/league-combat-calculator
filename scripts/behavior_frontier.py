@@ -379,6 +379,14 @@ def compiled_walk_delta() -> dict[str, Any]:
     Both are gated by set equality against the committed receipt rather than
     by a count, so a declaration that closes one of them shows up as a diff in
     a committed artifact (D-40).
+
+    ``flip_blocked_by``'s last clause is **derived** from the live undeclared
+    population rather than written out.  The hand-written version named
+    ``stat_derivation`` as the cause, and survived the slice that migrated
+    it: the sentence stayed true in its first half and false in its second,
+    inside the block whose whole job is to say why the flip is still blocked.
+    A blocker that names its cause from the counter it cites cannot rot that
+    way.
     """
     legacy = frozenset(compile_module.COMPILED_WALK_UNREPRESENTABLE_ITEMS)
     derived: dict[str, list[str]] = {}
@@ -417,10 +425,28 @@ def compiled_walk_delta() -> dict[str, Any]:
             "that are all Compilable; their hand-set reasons are the "
             "conservatism notes D-43 names, and turning them into "
             "declarations is a migration, not a flip.",
-            "counter_3 is not yet 0: stat_derivation is unmigrated, so the "
-            "declaration base this fold reads is knowingly incomplete.",
+            *_undeclared_base_blocker(),
         ],
     }
+
+
+def _undeclared_base_blocker() -> tuple[str, ...]:
+    """Counter 3's blocker, naming the owners that hold it above zero.
+
+    Empty when counter 3 is 0, so the clause disappears with the condition
+    rather than having to be remembered — and while it stands it names the
+    owners from :func:`catalog.undeclared_owners` instead of a family
+    somebody typed, which is how the retired version came to describe a
+    migration that had already happened.
+    """
+    undeclared = sorted(catalog.undeclared_owners())
+    if not undeclared:
+        return ()
+    return (
+        f"counter_3 is not yet 0: {', '.join(undeclared)} carry a registry "
+        "entry no family declares, so the declaration base this fold reads is "
+        "knowingly incomplete.",
+    )
 
 
 # The pre-phase size of the reviewed no-modelled-effect claim, measured on the
