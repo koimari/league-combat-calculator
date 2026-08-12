@@ -13,22 +13,13 @@ from .item_effects import (
     resolve_stat_effects,
 )
 from .data_registry import data_version, store_for_generation
+from .interpreters.stat_derivation import armor_penetration_split
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 
 # Level cap — 20 is top-lane-only as of this season, so this is
 # season-volatile. Single source of truth: the API guards and the UI
 # slider (via the index template) both read this constant.
 MAX_LEVEL = 20
-
-# Percent armor penetration that applies ONLY to BONUS armor (wiki
-# Armor_penetration section 4.1; the cache's stats panel displays these as
-# normal total pen — see the K'Sante R footnote "incorrectly displayed as
-# normal percentage armor penetration on the stats panel HUD").  The Last
-# Whisper family is the only item source; Serylda's Grudge / Perplexity are
-# TOTAL penetration and stay on the regular channel (autoresearch pass 30).
-BONUS_ARMOR_PEN_ITEM_NAMES = frozenset(
-    {"Last Whisper", "Mortal Reminder", "Lord Dominik's Regards"}
-)
 
 
 def growth_multiplier(level: int) -> float:
@@ -259,6 +250,9 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
             return stat.get("percent", 0.0)
         return 0.0
 
+    total_armor_pen_percent, bonus_armor_pen_percent = armor_penetration_split(
+        str(item_data.get("name", "")), get_percent("armorPenetration")
+    )
     extracted = {
         "health": get_flat("health"),
         "attack_damage": get_flat("attackDamage"),
@@ -270,16 +264,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "magic_penetration_percent": get_percent("magicPenetration"),
         "ability_power_percent": 0.0,
         "lethality": get_flat("lethality"),
-        "armor_penetration_percent": (
-            0.0
-            if str(item_data.get("name", "")) in BONUS_ARMOR_PEN_ITEM_NAMES
-            else get_percent("armorPenetration")
-        ),
-        "armor_penetration_bonus_percent": (
-            get_percent("armorPenetration")
-            if str(item_data.get("name", "")) in BONUS_ARMOR_PEN_ITEM_NAMES
-            else 0.0
-        ),
+        "armor_penetration_percent": total_armor_pen_percent,
+        "armor_penetration_bonus_percent": bonus_armor_pen_percent,
         "critical_strike_chance": (
             get_flat("criticalStrikeChance") + get_percent("criticalStrikeChance")
         ),

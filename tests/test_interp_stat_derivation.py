@@ -30,6 +30,8 @@ from src.calculator.interpreters.stat_derivation import (
     stat_derivation_rules,
     stat_slots,
 )
+from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.stats import get_item_stats
 from src.calculator.value_ref import LevelValueRef
 from src.calculator.item_behavior import (
     ActiveWindowCastEconomyRule,
@@ -460,3 +462,75 @@ def test_a_level_ramped_derivation_is_refused_rather_than_guessed(
     )
     with pytest.raises(StatDerivationInterpretationError, match="fight fact"):
         declared_stat_derivations(["Warmog's Armor"], ThresholdRegenRule)
+
+
+# ── the tenth shape: where a cached percentage lands ──────────────────────
+
+BONUS_CHANNEL_HOLDERS = ("Last Whisper", "Mortal Reminder", "Lord Dominik's Regards")
+TOTAL_CHANNEL_HOLDER = "Serylda's Grudge"
+
+
+@pytest.mark.parametrize("holder", BONUS_CHANNEL_HOLDERS)
+def test_a_bonus_channel_holder_routes_its_cached_percentage_to_bonus_armour(
+    holder: str,
+) -> None:
+    """The Last Whisper line cuts bonus armour, and the declaration says so.
+
+    Pinned against the cached stat rather than a literal: the percentage is
+    ``data/items.json``'s and the declaration only decides which of the two
+    stat-block fields reads it, so the test that would still pass if the
+    channel were inverted is the one asserting a number.
+    """
+    percent = float(
+        (get_item_by_name(holder)["stats"]["armorPenetration"]).get("percent", 0.0)
+    )
+    assert percent
+    assert stat_derivation.armor_penetration_split(holder, percent) == (0.0, percent)
+    stats = get_item_stats(get_item_by_name(holder))
+    assert stats["armor_penetration_bonus_percent"] == percent
+    assert stats["armor_penetration_percent"] == 0.0
+
+
+def test_a_total_channel_holder_says_so_rather_than_being_left_to_silence() -> None:
+    """Ordinary total penetration is declared, not the absence of a name."""
+    percent = float(
+        get_item_by_name(TOTAL_CHANNEL_HOLDER)["stats"]["armorPenetration"]["percent"]
+    )
+    assert stat_derivation.armor_penetration_split(TOTAL_CHANNEL_HOLDER, percent) == (
+        percent,
+        0.0,
+    )
+
+
+def test_an_item_with_no_percentage_penetration_is_asked_no_channel_question() -> None:
+    """Nothing to route is a measured zero in both channels, not a refusal."""
+    assert stat_derivation.armor_penetration_split("Boots", 0.0) == (0.0, 0.0)
+
+
+def test_an_undeclared_channel_is_a_named_stop_rather_than_the_ordinary_one() -> None:
+    """D-26's synthetic fixture for a branch no ordinary shop item reaches.
+
+    Two cached items carry percent armour penetration and are declared by
+    nobody — Perplexity is Arena-only and Ohmwrecker is a map object — so no
+    Summoner's Rift build reaches this branch today.  A synthetic holder
+    exercises it, because a fail-closed refusal nothing can trip is
+    indistinguishable from one that does not work.
+    """
+    with pytest.raises(StatDerivationInterpretationError, match="declares no channel"):
+        stat_derivation.armor_penetration_split("a synthetic holder", 30.0)
+
+
+def test_the_channel_declaration_is_not_counted_as_runtime_behaviour() -> None:
+    """A channel schedules nothing, so the coverage ladder must not read it.
+
+    The rule exists and compiles; what it must not do is make an item whose
+    described passive nobody models publish as a modelled effect.  Both halves
+    are asserted here so the two cannot drift apart.
+    """
+    (rule,) = [
+        rule
+        for rule in catalog.behavior_rules("Last Whisper")
+        if rule.family is RuleFamily.STAT_DERIVATION
+    ]
+    assert rule.payload.granted is DerivedStat.ARMOR_PENETRATION_BONUS_PERCENT
+    assert not catalog.declares_runtime_behaviour(rule)

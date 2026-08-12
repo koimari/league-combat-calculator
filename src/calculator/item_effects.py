@@ -2132,6 +2132,43 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Scales linearly: 0% at 0 bonus HP, 15% at 1500+ bonus HP
         "max_amp": 0.15,
         "bonus_hp_cap": 1500.0,
+        "armor_penetration_bonus_only": True,
+    },
+    # ── Percent armour penetration: which armour it reaches ───────────────
+    # The percentage itself is a cached stat (``stats.armorPenetration``);
+    # what the cache does not say is *which* armour it applies to.  The Last
+    # Whisper line reaches BONUS armour only (Wiki Armor penetration §4.1;
+    # the cache's stats panel displays these as ordinary total penetration —
+    # see the K'Sante R footnote "incorrectly displayed as normal percentage
+    # armor penetration on the stats panel HUD"), while Serylda's Grudge is
+    # ordinary total penetration.  It is a structural flag rather than a
+    # parsed value because no branch of the cached page carries it.
+    #
+    # Every cached item carrying the stat is here, not only the exceptional
+    # three: an undeclared channel is a stop in
+    # ``interpreters.stat_derivation``, so the two items no ordinary
+    # Summoner's Rift build can hold — Perplexity (Arena-only) and Ohmwrecker
+    # (Turret Item) (a map object) — say "total" rather than being routed
+    # there by the silence that used to carry them.
+    "Last Whisper": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": True,
+    },
+    "Mortal Reminder": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": True,
+    },
+    "Serylda's Grudge": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": False,
+    },
+    "Perplexity": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": False,
+    },
+    "Ohmwrecker (Turret Item)": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": False,
     },
     "Spear of Shojin": {
         "type": "damage_amp",
@@ -2810,6 +2847,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "energized_max_stacks",
         "energized_ability_trigger",
         "cleave_on_hit",
+        "armor_penetration_bonus_only",
     }
 )
 
@@ -3791,6 +3829,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
     {
         "ability_damage_amp",
         "active",
+        "armor_penetration_channel",
         "armor_reduction",
         "basic_damage_amp",
         "burn",

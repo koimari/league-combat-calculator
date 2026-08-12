@@ -453,7 +453,14 @@ def no_runtime_behavior_block() -> dict[str, Any]:
             for name in members
             if name in item_coverage._SOURCE_REFS  # noqa: SLF001
         ),
-        "declaring": sorted(name for name in members if catalog.behavior_rules(name)),
+        "declaring": sorted(
+            name
+            for name in members
+            if any(
+                catalog.declares_runtime_behaviour(rule)
+                for rule in catalog.behavior_rules(name)
+            )
+        ),
         "ratchet_ceiling": NO_RUNTIME_BEHAVIOR_CEILING,
         "ceiling_source": (
             "the size of item_coverage._REVIEWED_STATS_ONLY measured before "

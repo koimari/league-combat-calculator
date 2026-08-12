@@ -55,7 +55,9 @@ from .item_behavior import (
 )
 from .item_behavior_catalog import (
     EVENT_CERTIFIED_MECHANICS,
+    STAT_CHANNEL_TAGS,
     behavior_rules,
+    declares_runtime_behaviour,
     registry_entries,
 )
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
@@ -273,8 +275,10 @@ class ItemCoverage:
 # Each entry was reviewed against the cached Wiki passive/active description at
 # the revision ``_SOURCE_REFS`` records for it.
 #
-# **No member may compile a ``BehaviorRule``**, and that is asserted rather
-# than intended.  A compiled rule *is* declared runtime behaviour, so an item
+# **No member may compile a ``BehaviorRule`` that declares runtime
+# behaviour** (``item_behavior_catalog.declares_runtime_behaviour``), and that
+# is asserted rather than
+# intended.  A compiled rule *is* declared runtime behaviour, so an item
 # holding one and sitting here would assert two contradictory things at once —
 # which is what thirty-four of these entries did when the set was renamed from
 # ``_REVIEWED_STATS_ONLY``.  That name said "stats only on the outgoing-damage
@@ -284,9 +288,13 @@ class ItemCoverage:
 # claim without re-reviewing it, the widened members were unreachable (the
 # defence and state rungs answer them first), and an unreachable false claim
 # is exactly the shape this campaign exists to remove.  The set is now the
-# twenty-two the review actually covers: an item with a described passive, no
-# rule and no registry entry, where "we looked and there is nothing to model"
-# is the only thing that can be said.
+# ones the review actually covers: an item with a described passive and no
+# rule that runs it, where "we looked and there is nothing to model" is the
+# only thing that can be said.  A member may hold a registry entry whose whole
+# content is where one of its *cached stats* lands — two do — because that
+# declaration schedules nothing and moves no number the block did not already
+# hold; what the review found about the item's described passive is untouched
+# by it.
 NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions; the "
     "full Wiki entry has no champion-facing sustain branch.",
@@ -377,9 +385,24 @@ def _declared_families(name: str) -> frozenset[RuleFamily]:
     compiles to no rule but is still an item whose behaviour the engines run.
     Reading only the rules would call every unmigrated item unmodelled, which
     is a refusal invented by the migration rather than by the model.
+
+    One shape is deliberately *not* a family here: a declaration that only
+    says where a **cached stat** lands.  Its number was already in the stat
+    block before any declaration existed — the channel says which field of the
+    block reads it, not that the item does something — so counting it would
+    publish "damage-relevant effects are declared" for an item whose described
+    passive is still nothing anyone modelled.  Read off the declaration and
+    off the tag (:data:`~.item_behavior_catalog.STAT_CHANNEL_TAGS`), never off
+    a name.
     """
-    families = {family for _, family, _ in registry_entries(name)}
-    families.update(rule.family for rule in behavior_rules(name))
+    families = {
+        family
+        for _, family, entry in registry_entries(name)
+        if str(entry.get("type", "")) not in STAT_CHANNEL_TAGS
+    }
+    families.update(
+        rule.family for rule in behavior_rules(name) if declares_runtime_behaviour(rule)
+    )
     return frozenset(families)
 
 

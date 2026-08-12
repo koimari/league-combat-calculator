@@ -1720,6 +1720,8 @@ class DerivedStat(Enum):
     ATTACK_SPEED_PERCENT = "attack_speed_percent"
     CRITICAL_STRIKE_CHANCE = "critical_strike_chance"
     OMNIVAMP_PERCENT = "omnivamp_percent"
+    ARMOR_PENETRATION_PERCENT = "armor_penetration_percent"
+    ARMOR_PENETRATION_BONUS_PERCENT = "armor_penetration_bonus_percent"
 
 
 class StatBasis(Enum):
@@ -1790,6 +1792,28 @@ class StatMultiplierRule:
 
     granted: DerivedStat
     share: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class PenetrationChannelRule:
+    """Which half of a resistance a holder's percentage penetration reaches.
+
+    The only stat derivation that carries no number of its own, and it is a
+    declaration for exactly that reason: the percentage is a cached stat the
+    block already reads, and what the cache does not say is whether it cuts
+    total armour or bonus armour alone.  That answer used to be a set of
+    three item names in ``stats.py``, consulted while the block was being
+    built — a build holding a fourth such item was routed to the ordinary
+    channel by silence.
+
+    ``granted`` names the stat-block field the cached percentage lands in, so
+    the two channels are two members of the same closed enum rather than a
+    boolean somebody has to remember the polarity of.
+    """
+
+    granted: DerivedStat
     availability: StatAvailability
     subject: Subject
 
@@ -2495,6 +2519,7 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ReceivedHealingRule: RuleFamily.SUSTAIN,
     StatConversionRule: RuleFamily.STAT_DERIVATION,
     StatMultiplierRule: RuleFamily.STAT_DERIVATION,
+    PenetrationChannelRule: RuleFamily.STAT_DERIVATION,
     ManaflowRule: RuleFamily.STAT_DERIVATION,
     StackedStatRule: RuleFamily.STAT_DERIVATION,
     FlatStatGrantRule: RuleFamily.STAT_DERIVATION,
@@ -3106,6 +3131,9 @@ SUSTAIN_VALUE_PAYLOADS: tuple[type, ...] = tuple(SUSTAIN_PAYLOAD_REFERENCES)
 STAT_DERIVATION_REQUIRED_REFERENCES: dict[type, tuple[str, ...]] = {
     StatConversionRule: ("ratio",),
     StatMultiplierRule: ("share",),
+    # A channel carries no number: the percentage it routes is a cached stat
+    # and the declaration says only where it lands.
+    PenetrationChannelRule: (),
     ManaflowRule: (
         "charge_interval",
         "bonus_mana_per_trigger",
@@ -3137,6 +3165,7 @@ STAT_DERIVATION_REQUIRED_REFERENCES: dict[type, tuple[str, ...]] = {
 STAT_DERIVATION_OPTIONAL_REFERENCES: dict[type, tuple[str, ...]] = {
     StatConversionRule: ("basis_unit", "flat_base"),
     StatMultiplierRule: (),
+    PenetrationChannelRule: (),
     ManaflowRule: ("max_charges", "transform_bonus_mana"),
     StackedStatRule: (
         "max_stacks",
@@ -3632,6 +3661,7 @@ __all__ = [
     "PacketSpec",
     "PacketTrigger",
     "PartAmpRule",
+    "PenetrationChannelRule",
     "PeriodicCadence",
     "PeriodicRule",
     "Persist",

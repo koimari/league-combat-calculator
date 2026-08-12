@@ -33,6 +33,7 @@ from ..item_behavior import (
     EngineLane,
     KernelField,
     MeleeRangedSplit,
+    PenetrationChannelRule,
     RuleFamily,
     STAT_DERIVATION_OPTIONAL_REFERENCES,
     STAT_DERIVATION_PAYLOADS,
@@ -280,10 +281,49 @@ def declared_stat_derivations(
     return tuple(slots)
 
 
+def armor_penetration_split(owner: str, percent: float) -> tuple[float, float]:
+    """One item's percent armour penetration, split into the channels it feeds.
+
+    Returns ``(total_channel, bonus_channel)`` — the two stat-block fields the
+    cached ``armorPenetration`` percentage can land in, exactly one of which
+    carries it.  The item says which through its
+    :class:`~..item_behavior.PenetrationChannelRule`, so the build's stat fold
+    no longer holds a set of three item names to test membership in.
+
+    A holder with no percentage is asked no channel question: nothing to route
+    means both channels are a measured zero, and refusing there would make
+    every ordinary item a stop.  A holder that *does* carry one and declares
+    no channel **is** a stop, naming the item — which armour a penetration
+    reaches is a sourced fact about the item, and defaulting it to the
+    ordinary channel is how a bonus-armour item would silently start cutting
+    base armour too.
+    """
+    if not percent:
+        return 0.0, 0.0
+    slots = declared_stat_derivations([owner], PenetrationChannelRule)
+    if not slots:
+        raise StatDerivationInterpretationError(
+            f"{owner} carries {percent}% armour penetration and declares no "
+            "channel for it; which armour a percentage penetration reaches is "
+            "a sourced property of the item, so an undeclared one is withheld "
+            "rather than routed to the ordinary channel by default"
+        )
+    if len(slots) > 1:
+        raise StatDerivationInterpretationError(
+            f"{owner} declares {len(slots)} armour-penetration channels and "
+            "nothing declares which of them one percentage lands in"
+        )
+    granted = slots[0].granted
+    if granted is DerivedStat.ARMOR_PENETRATION_BONUS_PERCENT:
+        return 0.0, percent
+    return percent, 0.0
+
+
 __all__ = [
     "PAIR_INTERPRETER",
     "RESOLVER_INTERPRETER",
     "StatDerivationInterpretationError",
+    "armor_penetration_split",
     "StatDerivationPairInterpreter",
     "StatDerivationResolverInterpreter",
     "StatSlot",

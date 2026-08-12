@@ -97,6 +97,7 @@ from .item_behavior import (
     PacketSpec,
     PacketTrigger,
     PeriodicCadence,
+    PenetrationChannelRule,
     PeriodicRule,
     PartAmpRule,
     Persist,
@@ -219,6 +220,7 @@ TAG_FAMILY: Mapping[str, RuleFamily] = {
     "sustain": RuleFamily.SUSTAIN,
     "on_hit_heal": RuleFamily.SUSTAIN,
     "stat_conversion": RuleFamily.STAT_DERIVATION,
+    "armor_penetration_channel": RuleFamily.STAT_DERIVATION,
     "conditional_attack_speed": RuleFamily.STAT_DERIVATION,
     "target_attack_speed_aura": RuleFamily.STAT_DERIVATION,
     "ult_attack_speed_buff": RuleFamily.STAT_DERIVATION,
@@ -1355,6 +1357,24 @@ ALLY_DELTA_AMP_KEYS: frozenset[str] = frozenset(
     key for keys in ALLY_DELTA_AMP_SLOTS.values() for key in keys
 )
 
+# The signature key and the tag of the one declaration that carries no number
+# of its own: which half of a resistance an item's *cached* percent
+# penetration reaches.  ``True`` is the bonus-armour channel and ``False`` the
+# ordinary total one, and both are stated — an item whose channel is the
+# ordinary one says so, because the alternative is the silence that used to
+# route every item the three-name set did not list.
+ARMOR_PENETRATION_CHANNEL_KEY = "armor_penetration_bonus_only"
+ARMOR_PENETRATION_CHANNEL_TAG = "armor_penetration_channel"
+
+# The tags whose whole content is where a *cached stat* lands.  An entry
+# carrying one declares no effect: the number was already in the stat block
+# and the declaration only says which field of it the number belongs to.
+# ``item_coverage`` reads this to keep such an entry out of the coverage
+# ladder, because publishing "damage-relevant effects are declared" for an
+# item whose passive is still unmodelled is the prose-outruns-code shape that
+# flip removed.
+STAT_CHANNEL_TAGS: frozenset[str] = frozenset({ARMOR_PENETRATION_CHANNEL_TAG})
+
 # A registry entry's ``type`` names its *primary* mechanic, but a few entries
 # carry a second one in their value keys — Liandry's Torment is a burn that
 # also amplifies the whole total, and every ally-registry amp is a second
@@ -1419,6 +1439,12 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         "max_stack_omnivamp": RuleFamily.SUSTAIN,
         "max_mana_to_ad_ratio": RuleFamily.STAT_DERIVATION,
         "ultimate_haste": RuleFamily.STAT_DERIVATION,
+        # Where an item's cached percent armour penetration lands, hung on an
+        # entry whose tag names the amplifier the item is bought for.  Lord
+        # Dominik's Giant Slayer and its bonus-armour channel are two
+        # mechanics on one record, and the channel is resolved with the stat
+        # block rather than with the amp chain.
+        ARMOR_PENETRATION_CHANNEL_KEY: RuleFamily.STAT_DERIVATION,
         # The casting trade an amp entry's own active window makes.  The tag
         # names the amp because the amp is what the item is bought for; the
         # resource cost and the cooldown progression the window also moves are
@@ -5670,6 +5696,34 @@ def _keyed_stat_rules(
     return rules
 
 
+def _penetration_channel_rule(
+    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+) -> BehaviorRule:
+    """Where one entry says its cached percent armour penetration lands.
+
+    The value is read off the live entry rather than through a
+    :class:`~..value_ref.ValueRef` because it is not a number: it is the
+    structural flag that picks one of two stat-block fields, and the schema —
+    not the parse — is what claimed the mechanic, so a dropped key would have
+    stopped the compile before reaching here.
+    """
+    bonus_only = bool(entry.get(ARMOR_PENETRATION_CHANNEL_KEY, False))
+    return _stat_rule(
+        owner,
+        registry,
+        ARMOR_PENETRATION_CHANNEL_TAG,
+        PenetrationChannelRule(
+            granted=(
+                DerivedStat.ARMOR_PENETRATION_BONUS_PERCENT
+                if bonus_only
+                else DerivedStat.ARMOR_PENETRATION_PERCENT
+            ),
+            availability=StatAvailability.ALWAYS,
+            subject=Subject.HOLDER,
+        ),
+    )
+
+
 def _compile_stat_derivation(
     family: RuleFamily,
     owner: str,
@@ -5707,6 +5761,8 @@ def _compile_stat_derivation(
     rules.extend(_stacked_stat_rules(owner, registry, entry, schema))
     rules.extend(_flat_stat_grant_rules(owner, registry, entry, schema))
     rules.extend(_keyed_stat_rules(owner, registry, schema))
+    if ARMOR_PENETRATION_CHANNEL_KEY in schema:
+        rules.append(_penetration_channel_rule(owner, registry, entry))
     if not rules:
         elsewhere = sorted(
             reason
@@ -5881,6 +5937,25 @@ def keystone_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any],
             "not a keystone that quietly amplifies nothing"
         )
     return (("RUNE_EFFECTS", RuleFamily.DELTA_AMP, entry),)
+
+
+def declares_runtime_behaviour(rule: BehaviorRule) -> bool:
+    """Whether a compiled rule says its owner *does* something in a fight.
+
+    True of every rule but one shape.  A
+    :class:`~.item_behavior.PenetrationChannelRule` carries no number and
+    schedules no event: the percentage it speaks about is a cached stat the
+    build's block already held, and the declaration says only which field of
+    that block reads it.  An item whose sole declaration is a channel runs
+    exactly what it ran before — which is why the coverage ladder does not
+    count it as declared behaviour and why the reviewed
+    ``NO_RUNTIME_BEHAVIOR`` absence beside such an item stays true.
+
+    One home for that judgement rather than two: ``item_coverage`` and the
+    behaviour frontier both ask it, and two copies of "which declarations are
+    behaviour" is the drift this campaign removes.
+    """
+    return not isinstance(rule.payload, PenetrationChannelRule)
 
 
 def rule_owners() -> frozenset[str]:
@@ -6406,6 +6481,7 @@ __all__ = [
     "build_context",
     "cached_source_receipt",
     "declared_owners",
+    "declares_runtime_behaviour",
     "declared_tags",
     "entry_families",
     "keystone_entries",
