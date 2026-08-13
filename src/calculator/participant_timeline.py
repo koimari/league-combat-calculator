@@ -50,7 +50,7 @@ from .healing_reduction import (
 )
 from .interpreters import uncompilable_item_receipt as _uncompilable_item_receipt
 from .interpreters.reactive import thorns_effects
-from .interpreters.sustain import walk_slot as _sustain_walk_slot
+from .interpreters.sustain import SustainSlot, walk_slot as _sustain_walk_slot
 from .interpreters.stat_derivation import (
     declared_stat_derivations as _declared_stat_derivations,
 )
@@ -104,7 +104,14 @@ from .program.amp import (
     live_amp_for,
     live_amp_riders,
 )
-from .program.build import arming_stacking, pair_preview_sources
+from .program.build import ParamPatch, arming_stacking, pair_preview_sources
+from .program.dependency import (
+    CrossPassDependency,
+    IncompleteDependency,
+    PassRequest,
+    run_passes,
+)
+from .program.identity import MechanicId
 from .program.compile import (
     WalkCompiler,
     action_from_event,
@@ -149,6 +156,106 @@ def _pair_run_fight(
 # request gate below refuses the compiled path for any pass carrying a
 # cross-pass ParamPatch, so a patched pass never reaches these two sites.
 _UNPATCHED_RESTORES: tuple[tuple[float, float], ...] = ()
+
+# The one field a cross-pass patch of this composition overrides — the
+# per-participant restore ledger pass 1 derives and pass 2 prices with.  One
+# spelling, because the declaration names it, the patch keys on it and the
+# pass reads it back, and three literals could disagree.
+_RESOURCE_RESTORES = "resource_restores"
+
+
+def _cross_pass_dependency(slot: SustainSlot) -> CrossPassDependency:
+    """The two-pass declaration one mana-spent heal carries.
+
+    Built from the slot rather than named by item, because "which item is
+    the mana-spent heal" is a question ``item_behavior`` already answers and
+    a second spelling here would be the item-name list rule 6 exists to
+    remove.  ``slot`` is never ``None`` at the two call sites: a build
+    declaring no such rule produces an empty, complete restore ledger, so
+    neither the request nor the refusal below is reachable without one.
+    """
+    return CrossPassDependency(
+        mechanic=MechanicId(slot.rule.mechanic_id),
+        max_passes=2,
+        reads=_RESOURCE_RESTORES,
+    )
+
+
+def _cross_pass_dependencies(
+    items: Sequence[Mapping[str, Any]],
+    enemies: Sequence[ResolvedLoadout],
+    allies: Sequence[ResolvedLoadout],
+) -> tuple[CrossPassDependency, ...]:
+    """Every cross-pass dependency this roster's builds declare.
+
+    The pass budget is sized from the declarations and never from what a
+    pass asks for, so this is the list that decides whether a second pass
+    exists at all.  A roster holding no mana-spent heal declares nothing and
+    gets one pass — which is every roster in the four bench scenarios, and
+    the reason de-recursing costs them zero.
+    """
+    builds = [items, *(loadout.item_data for loadout in (*enemies, *allies))]
+    slots = [
+        slot for build in builds if (slot := _mana_spent_heal_slot(build)) is not None
+    ]
+    return tuple(dict.fromkeys(_cross_pass_dependency(slot) for slot in slots))
+
+
+def _compiled_lane_is_open(
+    patch: ParamPatch | None,
+    search_context: CoupledSearchContext | None,
+    *,
+    include_receipt: bool,
+    pair_result_cache: Mapping[tuple[Any, ...], dict[str, Any]] | None,
+    enemies: Sequence[ResolvedLoadout],
+    params: FightParams,
+) -> bool:
+    """Whether this pass may be priced by the compiled panel walk.
+
+    Seven clauses, grouped below into the five reasons they encode and
+    gathered here so those reasons read as a list rather than as a comment
+    stack inside a condition.
+
+    * ``patch is None`` — a pass carrying a cross-pass patch is a second
+      pricing of a fight the first pass already walked, and the compiled
+      score kernel stages no external resource ledger: ``ManaSpentHealRule``
+      declares ``ReceiptOnly`` and S8 does not flip it, because a flip is
+      owed a pass-2-compiled-equals-pass-2-receipt proof and no such fixture
+      exists (Phase 4 criterion 13).  A patched pass therefore takes the
+      receipt walk **by declaration**.  The recursive repass reached the
+      same answer by handing itself a null search context, which also put
+      its pair fights outside the work counters — a measurement hole rather
+      than a rule.
+    * A search context, with the compiled walk enabled, is what holds the
+      presorted invariant actions the lane replays.
+    * ``include_receipt`` — the compiled lane produces the scoring subset;
+      a request that displays a timeline needs the receipt walk.
+    * A pair cache and a non-empty enemy roster are what the panels are
+      built over.
+    * ``params.enemies_attack`` — the Enemy Hits constraint is enforced by
+      the receipt walk's composition gates; rather than teach the compiled
+      panels a second copy of that rule, flag-off scoring takes the receipt
+      walk.
+
+    Issue #137: the dispatch no longer names items and no longer scans
+    defense objects — the kernel is one implementation, so a defense-armed
+    mechanic (threshold lifelines, reactive shields, stasis, FoN/Jak'Sho
+    stacks, deferral/Defy, ...) rides the compiled walk exactly like the
+    receipt walk.  Grievous Wounds builds ride it too (issue #169): the
+    panel compiles the candidate's and the roster's packs from the same
+    ``resolve_grievous`` the receipt walk resolves per event.  Every
+    unrepresentable mechanic fails closed INSIDE the compiler, which raises
+    ``UncompilableActionError`` and falls back to the walk.
+    """
+    return bool(
+        patch is None
+        and search_context is not None
+        and search_context.compiled_walk_enabled
+        and not include_receipt
+        and pair_result_cache is not None
+        and enemies
+        and params.enemies_attack
+    )
 
 
 def _pair_cache_key(
@@ -3254,10 +3361,16 @@ def build_participant_timeline(
     include_receipt: bool = True,
     reuse_main_stats: bool = False,
     search_context: CoupledSearchContext | None = None,
-    _resource_restores: Mapping[str, tuple[tuple[float, float], ...]] | None = None,
-    _resource_pass: bool = False,
 ) -> dict[str, Any]:
     """Compose all selected actors and return the coupled combat receipt.
+
+    One composition, driven across as many passes as this roster's builds
+    declare (D-70).  Almost every roster declares one; a build carrying a
+    mana-spent heal declares two, because its restore ledger is a function
+    of the incoming damage the fight itself produces.  The passes are
+    siblings in :func:`~.program.dependency.run_passes`' loop rather than
+    ancestors on a stack, so "one walk per pass" is a number a counter can
+    read instead of a recursion whose depth nobody can see.
 
     ``focus_participant_id`` is used by BIS candidate evaluation.  The
     visible calculate response keeps the default focus on the main champion,
@@ -3280,8 +3393,65 @@ def build_participant_timeline(
     optimizer creates one :class:`CoupledSearchContext` per search (fixed
     params and roster) and every score-mode evaluation then replays the
     presorted invariant actions instead of re-enriching them.  Identical
-    numbers by construction and by test; ignored outside score mode.
+    numbers by construction and by test; ignored outside score mode.  It is
+    carried into every pass, along with the caller's pair cache: a later
+    pass is the same evaluation priced again, and a cold restart would put
+    its pair fights outside the work counters that measure the request.
     """
+
+    def compose(pass_index: int, patch: ParamPatch | None) -> Any:
+        """One pass of this composition, patched by its predecessor."""
+        return _compose_pass(
+            champion_data,
+            level,
+            items,
+            params,
+            main_stats=main_stats,
+            main_defenses=main_defenses,
+            enemies=enemies,
+            allies=allies,
+            focus_participant_id=focus_participant_id,
+            pair_result_cache=pair_result_cache,
+            include_receipt=include_receipt,
+            reuse_main_stats=reuse_main_stats,
+            search_context=search_context,
+            patch=patch,
+            pass_index=pass_index,
+        )
+
+    return run_passes(compose, _cross_pass_dependencies(items, enemies, allies))
+
+
+def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    champion_data: dict[str, Any],
+    level: int,
+    items: list[dict[str, Any]],
+    params: FightParams,
+    *,
+    main_stats: dict[str, float],
+    main_defenses: Any,
+    enemies: list[ResolvedLoadout],
+    allies: list[ResolvedLoadout],
+    focus_participant_id: str,
+    pair_result_cache: dict[tuple[Any, ...], dict[str, Any]] | None,
+    include_receipt: bool,
+    reuse_main_stats: bool,
+    search_context: CoupledSearchContext | None,
+    patch: ParamPatch | None,
+    pass_index: int,
+) -> Any:
+    """Compose the roster once, or ask for one more pass.
+
+    Returns the finished combat receipt, or a
+    :class:`~.program.dependency.PassRequest` carrying the restore ledger
+    this pass derived and the next pass must be priced with.  Asking is a
+    return value rather than a recursive call, which is the whole of D-70:
+    a walk that can call the thing that called it has no single invocation
+    to count and no single result for a view to project.
+    """
+    _resource_restores = (
+        patch.overrides[_RESOURCE_RESTORES] if patch is not None else None
+    )
     if _resource_restores is not None:
         params = replace(
             params,
@@ -3289,26 +3459,13 @@ def build_participant_timeline(
         )
 
     work_counters = search_context.work_counters if search_context else None
-    if (
-        search_context is not None
-        and search_context.compiled_walk_enabled
-        and not include_receipt
-        and pair_result_cache is not None
-        and enemies
-        # The Enemy Hits constraint is enforced by the receipt walk's
-        # composition gates; rather than teach the compiled panels a second
-        # copy of that rule, flag-off scoring takes the receipt walk.
-        and params.enemies_attack
-        # Issue #137: the dispatch no longer names items and no longer scans
-        # defense objects — the kernel is one implementation, so a defense-
-        # armed mechanic (threshold lifelines, reactive shields, stasis,
-        # FoN/Jak'Sho stacks, deferral/Defy, ...) rides the compiled walk
-        # exactly like the receipt walk.  Grievous Wounds builds ride it too
-        # (issue #169): the panel compiles the candidate's and the roster's
-        # packs from the same ``resolve_grievous`` the receipt walk resolves
-        # per event.  Every unrepresentable mechanic fails closed INSIDE the
-        # compiler, which raises UncompilableActionError and falls back
-        # below.
+    if _compiled_lane_is_open(
+        patch,
+        search_context,
+        include_receipt=include_receipt,
+        pair_result_cache=pair_result_cache,
+        enemies=enemies,
+        params=params,
     ):
         try:
             scored = _score_with_search_context(
@@ -3342,7 +3499,12 @@ def build_participant_timeline(
         else:
             record_rung(work_counters, Rung.COMPILED)
             return scored
-    else:
+    elif patch is None:
+        # One rung per evaluation, recorded by that evaluation's first pass.
+        # A later pass is the same evaluation priced again, not a second
+        # one, so recording its gate refusal would enter one evaluation in
+        # the four-state histogram twice and break the property that the
+        # histogram accounts for 100% of evaluations.
         record_rung(work_counters, Rung.RECEIPT_WALK_GATE)
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
@@ -3611,12 +3773,13 @@ def build_participant_timeline(
         support_attached.add(attacker.participant_id)
 
     # A mana-spent heal's restore is the one sustain branch whose state
-    # changes future ability admission.  The first pass supplies the complete
-    # incoming champion ledger; rerun the pair fights once with those exact
-    # (time, pre-mitigation-damage × declared ratio) restores attached to each
-    # holder that declares the shape.  A second cache is intentional: cached
-    # baseline packets were priced without the external resource events.
-    if not _resource_pass:
+    # changes future ability admission.  This pass supplies the complete
+    # incoming champion ledger; the next one prices the same fights with
+    # those exact (time, pre-mitigation-damage × declared ratio) restores
+    # attached to each holder that declares the shape.  Asking is a return
+    # value: the driver rebuilds the composition with the patch, so the two
+    # passes are siblings rather than a call inside a call (D-70).
+    if patch is None:
         resource_restores: dict[str, tuple[tuple[float, float], ...]] = {}
         for actor in all_actors:
             restores, complete = _declared_resource_restores(
@@ -3624,35 +3787,26 @@ def build_participant_timeline(
             )
             if not complete:
                 slot = _mana_spent_heal_slot(actor.items)
-                raise ValueError(
-                    f"{slot.owner if slot else 'resource'} restore ledger is "
-                    f"unavailable for {actor.participant_id}: an incoming "
-                    "champion packet does not expose finite pre-mitigation "
-                    "damage."
+                raise IncompleteDependency(
+                    _cross_pass_dependency(slot),
+                    pass_index,
+                    detail=(
+                        f"the restore ledger is unavailable for "
+                        f"{actor.participant_id}: an incoming champion packet "
+                        "does not expose finite pre-mitigation damage"
+                    ),
                 )
             if restores:
                 resource_restores[actor.participant_id] = restores
         if resource_restores:
-            return build_participant_timeline(
-                champion_data,
-                level,
-                items,
-                params,
-                main_stats=main_stats,
-                main_defenses=main_defenses,
-                enemies=enemies,
-                allies=allies,
-                focus_participant_id=focus_participant_id,
-                pair_result_cache={},
-                include_receipt=include_receipt,
-                reuse_main_stats=reuse_main_stats,
-                # The Catalyst repass deliberately drops the search context —
-                # its pair packets are priced with different inputs, so no
-                # compiled panel and no cached packet may serve it.  Its pair
-                # fights are therefore outside the work counters as well.
-                search_context=None,
-                _resource_restores=resource_restores,
-                _resource_pass=True,
+            requester = next(
+                actor
+                for actor in all_actors
+                if actor.participant_id in resource_restores
+            )
+            return PassRequest(
+                _cross_pass_dependency(_mana_spent_heal_slot(requester.items)),
+                resource_restores,
             )
 
     # Knight's Vow is the one ally packet whose trigger lives on the

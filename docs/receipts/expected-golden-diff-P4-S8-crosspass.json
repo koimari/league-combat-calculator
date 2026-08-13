@@ -52,6 +52,39 @@
     "coupled_golden": [],
     "coupled_golden_shape_counters": []
   },
+  "measured": {
+    "golden": 0,
+    "coupled_golden": 0,
+    "note": "`compare` against scripts/golden_baseline.json reports `snapshot identical`. The coupled compare's standing difference set is unchanged at 132 across all three of this stage's src/ commits — the same set, member for member, that the H5 stage left standing and that tests/test_coupled_golden_allowlist.py already matches against the committed receipts. Nothing in catalyst_roster moved. The declared count and the measured count agree, nothing qualifies under R-15, and no oracle receipt is owed.",
+    "bench": {
+      "measured_pre_and_post_on_the_same_box": true,
+      "verdict": "byte-identical on all four scenarios across every counter family, the residual, the four-state rung histogram, the winner and the score: cassiopeia_3champ 1324/1306/1249/2727 residual 79 score 4003.1; cassiopeia_5champ 1033/1015/967/3118 residual 19 score 5010.8; mundo_3champ 706/688/577/1424 residual 12 score 3305.0; syndra_mandate_3champ 796/782/775/1690 residual 98 score 4642.3.",
+      "routing": "R-01 row 11 (--no-compiled versus the default routing) reports an empty routing_divergences list for each of the four scenarios.",
+      "wall": "cassiopeia_5champ best-of-3 isolated 3576.5 ms against this stage's declared 3516.7 ms baseline, +1.7% and inside the 3868.4 ms ceiling."
+    }
+  },
+  "behaviour_changed_that_a_reader_should_not_have_to_derive": [
+    {
+      "what": "A pass-2 pair fight is now counted on the search's work counters.",
+      "why": "The recursive repass passed search_context=None, so every pair fight of the second pricing was invisible to R-25's residual — a request read as cheaper than it was. No committed counter moves, because none of the four bench scenarios equips a mana-spent heal."
+    },
+    {
+      "what": "An unanswerable restore ledger now leaves /api/calculate as a 500 rather than a 400.",
+      "why": "IncompleteDependency is a RuntimeError, so app.py's `except ValueError` no longer catches it. That is the point of the typing — the branch fires only when an incoming champion packet exposes non-finite pre-mitigation damage, which is a programming error and not a malformed request, and D-25's reading is that such a thing is a named refusal rather than a client's fault. D-25 rules exactly one catch in app.py, for ProjectionStarvation, so this slice adds no second handler."
+    },
+    {
+      "what": "Pass 2 no longer gets a private empty pair cache; it shares the caller's, and for a caller that supplies none (calculate.py, bis.py) pass 2 now caches nothing rather than caching into a throwaway dict.",
+      "why": "The consequence is that `copy_templates` is False in such a pass, so composed rows are appended rather than copied. Safe because nothing is replayed when nothing is cached — the same arrangement pass 1 already has for those callers — and measured zero-diff on catalyst_roster."
+    },
+    {
+      "what": "Where the caller does supply a cache, pass 2 is now *served* the pair fights the patch did not change and re-prices only the holder's own.",
+      "why": "A strict reduction in work that the fresh-dict repass threw away, and correct because the key carries the ledger: a fight whose attacker has no restores is priced identically in both passes. Pinned by a test over an ally-held Catalyst, where both halves of the split appear in one cache."
+    },
+    {
+      "what": "build_participant_timeline loses its two private keyword parameters, _resource_restores and _resource_pass.",
+      "why": "They were the recursion's private channel. Nothing outside the module passed them (checked across src/, tests/ and scripts/), and the pass driver carries the same information as a declared ParamPatch."
+    }
+  ],
   "falsifiers": {
     "a_moved_catalyst_roster_leaf": "would mean pass 2 was priced from different inputs than the recursive repass — the stale-packet failure the cache-key widening exists to make unrepresentable — and falsifies the stage rather than earning an oracle receipt.",
     "a_moved_bench_counter": "would mean the pair-cache key widening changed a hit rate on a roster holding no Catalyst, i.e. that the new key component is not constant where it was declared constant.",

@@ -5213,3 +5213,243 @@ class TestThePairCacheKeyCarriesEveryInputThatPricedIt:
         assert _pair_cache_key(
             "enemy:Aatrox", "main", (60.0, 30.0), ()
         ) != _pair_cache_key("enemy:Aatrox", "main", (), ())
+
+
+class TestCatalystIsTwoPassesAndNotARecursion:
+    """Phase 4 S8 — D-70's four clauses, over the live mana-spent heal.
+
+    Catalyst of Aeons' Eternity restore is a function of the incoming damage
+    the fight itself produces, so the composition has to be priced twice.
+    Doing that by re-entering the composer from inside itself is what made
+    the path unrepresentable: a walk that can call the thing that called it
+    has no single invocation to count and no single result to project a view
+    from.
+    """
+
+    @staticmethod
+    def _catalyst_roster():
+        """Ahri holding Catalyst, two enemies who hit her, one ally."""
+        main = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Catalyst of Aeons",)
+        ).resolve()
+        enemies = [
+            ChampionLoadout(champion=name, level=13, role="top").resolve()
+            for name in ("Aatrox", "Malphite")
+        ]
+        allies = [ChampionLoadout(champion="Pantheon", level=13).resolve()]
+        return main, enemies, allies
+
+    @classmethod
+    def _timeline(cls, **overrides):
+        main, enemies, allies = cls._catalyst_roster()
+        params = FightParams.from_request(
+            {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+        )
+        arguments = dict(
+            main_stats=main.stats,
+            main_defenses=main.defenses,
+            enemies=enemies,
+            allies=allies,
+        )
+        arguments.update(overrides)
+        return build_participant_timeline(
+            main.champion_data,
+            main.request.level,
+            list(main.item_data),
+            params,
+            **arguments,
+        )
+
+    def test_the_composer_never_calls_itself(self):
+        """Criterion 13's first clause, read off source rather than claimed."""
+        import ast
+        from pathlib import Path
+
+        source = Path("src/calculator/participant_timeline.py").read_text(
+            encoding="utf-8"
+        )
+        calls = [
+            node
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "build_participant_timeline"
+        ]
+        assert calls == []
+
+    def test_a_catalyst_roster_declares_two_passes(self):
+        from src.calculator.participant_timeline import _cross_pass_dependencies
+
+        main, enemies, allies = self._catalyst_roster()
+        declared = _cross_pass_dependencies(list(main.item_data), enemies, allies)
+
+        assert [dep.max_passes for dep in declared] == [2]
+        assert declared[0].reads == "resource_restores"
+        assert "mana_spent_heal" in declared[0].mechanic
+
+    def test_a_roster_without_one_declares_nothing(self):
+        """One pass, and therefore zero cost, for every other roster."""
+        from src.calculator.participant_timeline import _cross_pass_dependencies
+
+        plain = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Luden's Echo",)
+        ).resolve()
+        assert _cross_pass_dependencies(list(plain.item_data), [], []) == ()
+
+    def test_the_second_pass_prices_the_restores_the_first_derived(self):
+        """Two passes, and the second differs from the first only by a patch.
+
+        Spying on the pass function rather than on a heal amount, because
+        the property under test is the shape -- pass 2 exists, it runs once,
+        and everything it knows that pass 1 did not arrived in a declared
+        ``ParamPatch`` under the dependency's own ``reads`` field.
+        """
+        from src.calculator import participant_timeline as timeline
+
+        seen = []
+        original = timeline._compose_pass
+
+        def spy(*args, **kwargs):
+            seen.append((kwargs["pass_index"], kwargs["patch"]))
+            return original(*args, **kwargs)
+
+        timeline._compose_pass = spy
+        try:
+            combat = self._timeline()
+        finally:
+            timeline._compose_pass = original
+
+        assert [index for index, _ in seen] == [1, 2]
+        assert seen[0][1] is None
+        assert set(seen[1][1].overrides) == {"resource_restores"}
+        assert seen[1][1].overrides["resource_restores"]["main"]
+        assert [
+            event
+            for event in combat["healing_events"]
+            if "Catalyst of Aeons" in str(event.get("source", ""))
+        ]
+
+    def test_the_second_pass_keeps_the_search_context_and_its_counters(self):
+        """Criterion 13's "caches and search context live" clause.
+
+        The recursive repass passed ``search_context=None``, which put every
+        pair fight of the second pricing outside the work counters -- a
+        measurement hole that read as a cheaper request than it was.
+        """
+        from collections import Counter
+        from dataclasses import dataclass, field
+
+        @dataclass(slots=True)
+        class Sink:
+            measured_proposals: int = 0
+            score_memo_misses: int = 0
+            pair_run_fight_calls: int = 0
+            rungs: Counter = field(default_factory=Counter)
+
+        two_pass = Sink()
+        self._timeline(search_context=CoupledSearchContext(work_counters=two_pass))
+
+        one_pass = Sink()
+        main = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Luden's Echo",)
+        ).resolve()
+        params = FightParams.from_request(
+            {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+        )
+        _, enemies, allies = self._catalyst_roster()
+        build_participant_timeline(
+            main.champion_data,
+            main.request.level,
+            list(main.item_data),
+            params,
+            main_stats=main.stats,
+            main_defenses=main.defenses,
+            enemies=enemies,
+            allies=allies,
+            search_context=CoupledSearchContext(work_counters=one_pass),
+        )
+
+        assert two_pass.pair_run_fight_calls > one_pass.pair_run_fight_calls
+        # ...and one evaluation still lands on exactly one rung, because the
+        # rung belongs to the evaluation and not to the pass.
+        assert sum(two_pass.rungs.values()) == sum(one_pass.rungs.values()) == 1
+
+    def test_both_passes_share_the_callers_one_cache(self):
+        """The other half of "caches live": one dict, two passes, no collision.
+
+        The recursive repass handed itself a fresh dict, so pass 2 re-priced
+        every pair fight in the roster.  The key now carries the ledger that
+        priced a packet, so the two passes share the caller's cache: the
+        fights whose inputs the patch did not change are *served* from pass
+        1, and only the holder's own fights get a second entry under their
+        own ledger.  An ally holds the Catalyst here so both halves of that
+        split are visible in one cache.
+        """
+        main = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Luden's Echo",)
+        ).resolve()
+        _, enemies, _ = self._catalyst_roster()
+        holder = ChampionLoadout(
+            champion="Pantheon", level=13, items=("Catalyst of Aeons",)
+        ).resolve()
+        cache: dict = {}
+        build_participant_timeline(
+            main.champion_data,
+            main.request.level,
+            list(main.item_data),
+            FightParams.from_request(
+                {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+            ),
+            main_stats=main.stats,
+            main_defenses=main.defenses,
+            enemies=enemies,
+            allies=[holder],
+            pair_result_cache=cache,
+        )
+
+        repriced = {key[:2] for key in cache if key[3]}
+        served = {key[:2] for key in cache if not key[3]}
+        assert repriced == {
+            ("ally:Pantheon", "enemy:Aatrox"),
+            ("ally:Pantheon", "enemy:Malphite"),
+        }
+        assert repriced <= served, "pass 2 re-priced a fight pass 1 never priced"
+        assert served - repriced, "pass 2 re-priced fights the patch did not change"
+
+    def test_an_unanswerable_ledger_raises_the_typed_failure(self):
+        """Criterion 13's third clause: not an untyped ValueError.
+
+        A caller could not previously tell "this needs another pass" from
+        "this request is malformed" -- both arrived as ValueError, and
+        /api/calculate turned both into a 400.
+        """
+        from src.calculator.program.dependency import IncompleteDependency
+        from src.calculator import participant_timeline as timeline
+
+        assert not issubclass(IncompleteDependency, ValueError)
+
+        broken = lambda actor, incoming, duration: ((), False)
+        original = timeline._declared_resource_restores
+        timeline._declared_resource_restores = broken
+        try:
+            with pytest.raises(IncompleteDependency) as raised:
+                self._timeline()
+        finally:
+            timeline._declared_resource_restores = original
+
+        assert "mana_spent_heal" in raised.value.dependency.mechanic
+        assert "restore ledger is unavailable" in str(raised.value)
+
+    def test_the_compiled_lane_is_closed_to_a_patched_pass(self):
+        """Criterion 13's fourth clause: the Compilability did not flip.
+
+        The declaration still refuses the compiled kernel, so the second
+        pass takes the receipt walk by declaration rather than by the
+        accident of a null search context.
+        """
+        from src.calculator.item_behavior import ReceiptOnly
+        from src.calculator.roster_composition import mana_spent_heal_slot
+
+        slot = mana_spent_heal_slot([{"name": "Catalyst of Aeons"}])
+        assert isinstance(slot.rule.compilability, ReceiptOnly)
+        assert "second pass" in slot.rule.compilability.reason
